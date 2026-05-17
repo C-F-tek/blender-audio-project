@@ -9,7 +9,6 @@ from .common import (
     socket_by_name,
 )
 
-
 LIGHT_ENERGY_MIN = cfg_value("LIGHT_ENERGY_MIN", 105.0)
 LIGHT_ENERGY_MAX = cfg_value("LIGHT_ENERGY_MAX", 128.0)
 WORLD_STRENGTH = cfg_value("WORLD_STRENGTH", 0.115)
@@ -86,7 +85,9 @@ def remove_legacy_rhythm_objects():
 
 
 def update_area_lights(frames):
-    lights = [obj for obj in bpy.data.objects if obj.type == 'LIGHT' and obj.name.startswith("AreaLight_")]
+    lights = [
+        obj for obj in bpy.data.objects if obj.type == "LIGHT" and obj.name.startswith("AreaLight_")
+    ]
     for light in lights:
         clear_animation(light.data)
 
@@ -125,7 +126,9 @@ def update_backdrop():
         emission = get_node(material, "BackdropEmission")
         socket = socket_by_name(emission, "Strength")
         if socket is not None:
-            socket.default_value = BACKDROP_EMISSION_MIN + (BACKDROP_EMISSION_MAX - BACKDROP_EMISSION_MIN) * 0.18
+            socket.default_value = (
+                BACKDROP_EMISSION_MIN + (BACKDROP_EMISSION_MAX - BACKDROP_EMISSION_MIN) * 0.18
+            )
 
         for node in material.node_tree.nodes:
             if node.type == "TEX_NOISE" and "Scale" in node.inputs:

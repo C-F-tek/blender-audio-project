@@ -26,9 +26,7 @@ def resolve_scan_worker_backend(worker_backend: str, worker_count: int) -> str:
         return "thread"
     if normalized == "auto":
         return "process"
-    raise ValueError(
-        f"Unsupported repository consistency worker backend: {worker_backend}"
-    )
+    raise ValueError(f"Unsupported repository consistency worker backend: {worker_backend}")
 
 
 def literal_string(node: ast.AST) -> str | None:
@@ -131,9 +129,7 @@ def extract_local_import_findings(
         if isinstance(node, ast.Import):
             for alias in node.names:
                 root = alias.name.split(".", 1)[0]
-                if root in local_prefixes and not local_module_exists(
-                    alias.name, repo_root
-                ):
+                if root in local_prefixes and not local_module_exists(alias.name, repo_root):
                     findings.append(
                         {
                             "source": source,
@@ -235,9 +231,7 @@ def extract_python_inventory(
     inventory: dict[str, dict[str, Any]] = {}
     import_findings: list[dict[str, Any]] = []
     warnings: list[str] = []
-    python_files = (
-        python_files if python_files is not None else iter_files(repo_root, {".py"})
-    )
+    python_files = python_files if python_files is not None else iter_files(repo_root, {".py"})
     worker_count = bounded_worker_count(
         workers,
         len(python_files),
@@ -248,9 +242,7 @@ def extract_python_inventory(
     tasks = [(str(repo_root), str(path)) for path in python_files]
 
     if actual_backend in {"process", "thread"}:
-        executor_class = (
-            ProcessPoolExecutor if actual_backend == "process" else ThreadPoolExecutor
-        )
+        executor_class = ProcessPoolExecutor if actual_backend == "process" else ThreadPoolExecutor
         with executor_class(max_workers=worker_count) as executor:
             for rel, item, file_import_findings, file_warnings in executor.map(
                 scan_python_file_task, tasks
@@ -267,19 +259,13 @@ def extract_python_inventory(
     return inventory, import_findings, warnings
 
 
-def smoke_candidates_for_script(
-    script: str, all_python_files: Iterable[str]
-) -> list[str]:
+def smoke_candidates_for_script(script: str, all_python_files: Iterable[str]) -> list[str]:
     stem = Path(script).stem.lower()
     candidates: list[str] = []
     for path in all_python_files:
         lowered = path.lower()
-        if "/validation/" not in lowered and not lowered.startswith(
-            "tools/validation/"
-        ):
+        if "/validation/" not in lowered and not lowered.startswith("tools/validation/"):
             continue
-        if stem in lowered and (
-            "smoke" in lowered or "check" in lowered or "test" in lowered
-        ):
+        if stem in lowered and ("smoke" in lowered or "check" in lowered or "test" in lowered):
             candidates.append(path)
     return sorted(candidates)

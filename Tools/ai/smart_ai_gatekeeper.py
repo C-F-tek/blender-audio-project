@@ -48,9 +48,7 @@ def file_meta(path: Path) -> dict[str, Any]:
         item.update(
             {
                 "size_bytes": st.st_size,
-                "modified_at": datetime.fromtimestamp(
-                    st.st_mtime, timezone.utc
-                ).isoformat(),
+                "modified_at": datetime.fromtimestamp(st.st_mtime, timezone.utc).isoformat(),
             }
         )
     return item
@@ -72,9 +70,7 @@ def scan_artifact(path: Path) -> dict[str, Any]:
             else:
                 warnings.append(f"script_required_pattern_missing:{pattern}")
         if len(text) < 8000:
-            warnings.append(
-                "script_size_low: generated scene script may be fallback-like"
-            )
+            warnings.append("script_size_low: generated scene script may be fallback-like")
     if "analysis_blender_keyframes" in lowered or "keyframe" in lowered:
         positives.append("keyframe_context_present")
     else:
@@ -87,9 +83,7 @@ def scan_artifact(path: Path) -> dict[str, Any]:
     }
 
 
-def collect_report_issues(
-    report: Any, label: str
-) -> tuple[list[str], list[str], list[str]]:
+def collect_report_issues(report: Any, label: str) -> tuple[list[str], list[str], list[str]]:
     warnings: list[str] = []
     blockers: list[str] = []
     positives: list[str] = []
@@ -168,11 +162,7 @@ def gatekeep(
     if blockers:
         decision = "repair" if current_attempt < max_repair_attempts else "block"
     elif len(warnings) >= 8:
-        decision = (
-            "repair"
-            if current_attempt < max_repair_attempts
-            else "promote_with_warnings"
-        )
+        decision = "repair" if current_attempt < max_repair_attempts else "promote_with_warnings"
     else:
         decision = "promote"
     return {
@@ -260,12 +250,8 @@ def main() -> int:
     ap.add_argument("--artifact-dir", default="output/ai_pipeline")
     ap.add_argument("--target-file", action="append", default=[])
     ap.add_argument("--context-packet")
-    ap.add_argument(
-        "--output", default="output/ai_pipeline/smart_gatekeeper_decision.json"
-    )
-    ap.add_argument(
-        "--repair-output", default="output/ai_pipeline/smart_repair_packet.json"
-    )
+    ap.add_argument("--output", default="output/ai_pipeline/smart_gatekeeper_decision.json")
+    ap.add_argument("--repair-output", default="output/ai_pipeline/smart_repair_packet.json")
     ap.add_argument("--max-repair-attempts", type=int, default=2)
     ap.add_argument("--current-attempt", type=int, default=0)
     args = ap.parse_args()
@@ -273,14 +259,10 @@ def main() -> int:
     targets = [Path(item).resolve() for item in args.target_file]
     if not targets:
         targets = find_candidate_artifacts(artifact_dir)
-    decision = gatekeep(
-        artifact_dir, targets, args.max_repair_attempts, args.current_attempt
-    )
+    decision = gatekeep(artifact_dir, targets, args.max_repair_attempts, args.current_attempt)
     out = Path(args.output).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps(decision, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    out.write_text(json.dumps(decision, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     write_markdown(decision, out.with_suffix(".md"))
     if decision["decision"] in {"repair", "block"}:
         repair_packet = build_repair_packet(

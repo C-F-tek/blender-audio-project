@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
 import argparse
 import json
-import sys
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 ROOT = Path.home() / "blender"
@@ -55,12 +54,18 @@ def file_info(path: Path) -> dict[str, Any]:
     info = {"path": str(path), "exists": path.exists()}
     if path.exists() and path.is_file():
         stat = path.stat()
-        info.update({"size_bytes": stat.st_size, "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(timespec="seconds")})
+        info.update(
+            {
+                "size_bytes": stat.st_size,
+                "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(timespec="seconds"),
+            }
+        )
     return info
 
 
 def slugify(value: str) -> str:
     import re
+
     value = value.strip().lower()
     value = re.sub(r"[^a-z0-9]+", "_", value)
     return re.sub(r"_+", "_", value).strip("_") or "track"
@@ -74,8 +79,14 @@ def artifacts_for_track(track_stem: str) -> dict[str, Path]:
         "scene_brief_json": OUTPUT_DIR / f"{track_stem}_scene_brief.json",
         "dual_ai_plan_json": OUTPUT_DIR / f"{track_stem}_dual_ai_scene_plan.json",
         "implementation_draft_json": OUTPUT_DIR / f"{track_stem}_ai_implementation_draft.json",
-        "generated_scene_script": PROJECT_DIR / "indexAI" / "scene_scripts" / f"{slug}_scene_builder_candidate.py",
-        "legacy_generated_script": PROJECT_DIR / "Tools" / "npu" / "generated_blender_script_candidate.py",
+        "generated_scene_script": PROJECT_DIR
+        / "indexAI"
+        / "scene_scripts"
+        / f"{slug}_scene_builder_candidate.py",
+        "legacy_generated_script": PROJECT_DIR
+        / "Tools"
+        / "npu"
+        / "generated_blender_script_candidate.py",
         "generated_notes": PROJECT_DIR / "Tools" / "npu" / "generated_implementation_notes.md",
     }
 
@@ -84,17 +95,25 @@ def analyze_scene_brief(path: Path) -> dict[str, Any]:
     data = read_json(path)
     if not isinstance(data, dict):
         return {"available": False, "path": str(path)}
-    transcript = data.get("conversation_transcript") if isinstance(data.get("conversation_transcript"), list) else []
+    transcript = (
+        data.get("conversation_transcript")
+        if isinstance(data.get("conversation_transcript"), list)
+        else []
+    )
     assistant_empty = [
-        item for item in transcript
-        if str(item.get("role", "")).lower() == "assistant" and "Ollama non ha restituito testo" in str(item.get("content", ""))
+        item
+        for item in transcript
+        if str(item.get("role", "")).lower() == "assistant"
+        and "Ollama non ha restituito testo" in str(item.get("content", ""))
     ]
     return {
         "available": True,
         "path": str(path),
         "message_count": len(transcript),
         "assistant_empty_response_count": len(assistant_empty),
-        "memory": data.get("conversation_memory") if isinstance(data.get("conversation_memory"), dict) else {},
+        "memory": data.get("conversation_memory")
+        if isinstance(data.get("conversation_memory"), dict)
+        else {},
         "recent_messages": transcript[-8:],
     }
 
@@ -104,8 +123,17 @@ def analyze_implementation(path: Path, script_path: Path, notes_path: Path) -> d
     script = read_text(script_path, limit=40000)
     notes = read_text(notes_path, limit=12000)
     markers = []
-    haystack = "\n".join([json.dumps(draft, ensure_ascii=False) if isinstance(draft, dict) else "", script, notes]).lower()
-    for marker in ["deterministic", "fallback", "invalid", "scene_script is missing", "too short", "parse_error"]:
+    haystack = "\n".join(
+        [json.dumps(draft, ensure_ascii=False) if isinstance(draft, dict) else "", script, notes]
+    ).lower()
+    for marker in [
+        "deterministic",
+        "fallback",
+        "invalid",
+        "scene_script is missing",
+        "too short",
+        "parse_error",
+    ]:
         if marker in haystack:
             markers.append(marker)
     return {
@@ -122,17 +150,28 @@ def analyze_implementation(path: Path, script_path: Path, notes_path: Path) -> d
 
 
 def analyze_workflow_events(events: list[dict[str, Any]]) -> dict[str, Any]:
-    dual_events = [row for row in events if str(row.get("operation", "")).startswith("dual_ai") or row.get("operation") in {"run_dual_ai", "dual_ai_plan", "dual_ai_implementation"}]
+    dual_events = [
+        row
+        for row in events
+        if str(row.get("operation", "")).startswith("dual_ai")
+        or row.get("operation") in {"run_dual_ai", "dual_ai_plan", "dual_ai_implementation"}
+    ]
     ai_ops = []
     token_mismatches = []
     for row in events:
         payload = row.get("payload") if isinstance(row.get("payload"), dict) else {}
-        metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else payload.get("metadata")
+        metadata = (
+            payload.get("metadata")
+            if isinstance(payload.get("metadata"), dict)
+            else payload.get("metadata")
+        )
         if isinstance(metadata, dict):
             item = {
                 "time": row.get("time"),
                 "operation": row.get("operation"),
-                "skip_npu_heavy_pass": metadata.get("skip_npu") if "skip_npu" in metadata else metadata.get("skip_npu_heavy_pass"),
+                "skip_npu_heavy_pass": metadata.get("skip_npu")
+                if "skip_npu" in metadata
+                else metadata.get("skip_npu_heavy_pass"),
                 "skip_ollama": metadata.get("skip_ollama"),
                 "creative_model": metadata.get("creative_model"),
                 "technical_model": metadata.get("technical_model"),
@@ -191,12 +230,18 @@ def build_report(track_stem: str | None = None) -> dict[str, Any]:
 
     recs = report["recommendations"]
     if report["scene_brief_analysis"].get("assistant_empty_response_count", 0) > 0:
-        recs.append("Scene Director Chat has empty Ollama replies; inspect ollama_runtime_events.jsonl for done_reason, prompt size and eval_count.")
+        recs.append(
+            "Scene Director Chat has empty Ollama replies; inspect ollama_runtime_events.jsonl for done_reason, prompt size and eval_count."
+        )
     if report["implementation_analysis"].get("fallback_markers"):
-        recs.append("Generated script appears to come from fallback or invalid draft recovery; inspect implementation_draft validation and Ollama raw output.")
+        recs.append(
+            "Generated script appears to come from fallback or invalid draft recovery; inspect implementation_draft validation and Ollama raw output."
+        )
     last_ai = report["workflow_event_analysis"].get("recent_ai_operation_metadata", [])[-1:] or []
     if last_ai and last_ai[0].get("skip_npu_heavy_pass") is True:
-        recs.append("Skip NPU heavy pass is active: Dual AI will not call the legacy heavy NPU pass by design.")
+        recs.append(
+            "Skip NPU heavy pass is active: Dual AI will not call the legacy heavy NPU pass by design."
+        )
     return report
 
 
@@ -210,32 +255,40 @@ def markdown_report(report: dict[str, Any]) -> str:
         "## Scene Director Chat",
     ]
     chat = report.get("scene_brief_analysis", {})
-    lines.extend([
-        f"- Messages: `{chat.get('message_count', 0)}`",
-        f"- Empty Ollama assistant replies: `{chat.get('assistant_empty_response_count', 0)}`",
-        "",
-        "## Ollama",
-    ])
+    lines.extend(
+        [
+            f"- Messages: `{chat.get('message_count', 0)}`",
+            f"- Empty Ollama assistant replies: `{chat.get('assistant_empty_response_count', 0)}`",
+            "",
+            "## Ollama",
+        ]
+    )
     ollama = report.get("ollama_analysis", {})
-    lines.extend([
-        f"- Events: `{ollama.get('event_count', 0)}`",
-        f"- Generate results: `{ollama.get('generate_result_count', 0)}`",
-        f"- Generate errors: `{ollama.get('generate_error_count', 0)}`",
-        f"- Empty responses: `{ollama.get('empty_response_count', 0)}`",
-        f"- Log: `{ollama.get('log_path')}`",
-        "",
-        "## Implementation Draft / Script",
-    ])
+    lines.extend(
+        [
+            f"- Events: `{ollama.get('event_count', 0)}`",
+            f"- Generate results: `{ollama.get('generate_result_count', 0)}`",
+            f"- Generate errors: `{ollama.get('generate_error_count', 0)}`",
+            f"- Empty responses: `{ollama.get('empty_response_count', 0)}`",
+            f"- Log: `{ollama.get('log_path')}`",
+            "",
+            "## Implementation Draft / Script",
+        ]
+    )
     impl = report.get("implementation_analysis", {})
-    lines.extend([
-        f"- Script chars: `{impl.get('script_chars', 0)}`",
-        f"- Has import bpy: `{impl.get('script_has_import_bpy')}`",
-        f"- Has keyframe_insert: `{impl.get('script_has_keyframe_insert')}`",
-        f"- Fallback markers: `{', '.join(impl.get('fallback_markers', [])) or '-'}`",
-        "",
-        "## Recent AI Operation Metadata",
-    ])
-    for item in report.get("workflow_event_analysis", {}).get("recent_ai_operation_metadata", [])[-8:]:
+    lines.extend(
+        [
+            f"- Script chars: `{impl.get('script_chars', 0)}`",
+            f"- Has import bpy: `{impl.get('script_has_import_bpy')}`",
+            f"- Has keyframe_insert: `{impl.get('script_has_keyframe_insert')}`",
+            f"- Fallback markers: `{', '.join(impl.get('fallback_markers', [])) or '-'}`",
+            "",
+            "## Recent AI Operation Metadata",
+        ]
+    )
+    for item in report.get("workflow_event_analysis", {}).get("recent_ai_operation_metadata", [])[
+        -8:
+    ]:
         lines.append(f"- `{item}`")
     lines.extend(["", "## Recommendations"])
     for rec in report.get("recommendations", []):

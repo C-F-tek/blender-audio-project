@@ -29,9 +29,7 @@ def _unique_strings(items: list[Any], limit: int = 16) -> list[str]:
     return out
 
 
-def patch_plan_summary(
-    patch_plan: dict[str, Any], patch_quality: dict[str, Any]
-) -> dict[str, Any]:
+def patch_plan_summary(patch_plan: dict[str, Any], patch_quality: dict[str, Any]) -> dict[str, Any]:
     plans = list_plans(patch_plan)
     targets: list[Any] = []
     validations: list[Any] = []
@@ -67,9 +65,7 @@ def _canonical_note_area(area: Any) -> str:
     return aliases.get(value, value)
 
 
-def _area_diverse_plans(
-    plans: list[dict[str, Any]], limit: int
-) -> list[dict[str, Any]]:
+def _area_diverse_plans(plans: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
     preferred_areas = [
         "python_python",
         "doc_python",
@@ -127,21 +123,15 @@ def build_patch_notes(
                 "id": plan_id,
                 "area": _canonical_note_area(plan.get("area")),
                 "status": plan.get("status"),
-                "target_files": _unique_strings(
-                    safe_list(plan.get("target_files")), limit=12
-                ),
-                "summary": _text(
-                    plan.get("rationale") or plan.get("edit_strategy"), 700
-                ),
+                "target_files": _unique_strings(safe_list(plan.get("target_files")), limit=12),
+                "summary": _text(plan.get("rationale") or plan.get("edit_strategy"), 700),
                 "edit_strategy": _text(plan.get("edit_strategy"), 700),
                 "quality_score": score.get("score"),
                 "quality_notes": safe_list(score.get("notes"))[:8],
                 "validation_commands": _unique_strings(
                     safe_list(plan.get("validation_commands")), limit=8
                 ),
-                "stop_conditions": _unique_strings(
-                    safe_list(plan.get("stop_conditions")), limit=8
-                ),
+                "stop_conditions": _unique_strings(safe_list(plan.get("stop_conditions")), limit=8),
                 "manual_review_required": plan.get("manual_review_required") is True,
                 "evidence_basis": safe_dict(plan.get("source_evidence")),
             }
@@ -204,23 +194,18 @@ def patch_notes_applicability(notes: Any) -> dict[str, Any]:
 def score_product(
     report: dict[str, Any],
 ) -> tuple[float, list[dict[str, Any]], list[dict[str, Any]]]:
-    applicability = safe_dict(
-        report.get("patch_notes_applicability")
-    ) or patch_notes_applicability(report.get("patch_notes"))
+    applicability = safe_dict(report.get("patch_notes_applicability")) or patch_notes_applicability(
+        report.get("patch_notes")
+    )
     checks = {
         "request_summary": bool(safe_dict(report.get("request_summary")).get("title")),
-        "normalized_objective": len(str(report.get("normalized_objective") or ""))
-        >= 24,
-        "patch_plan_summary": safe_dict(report.get("patch_plan_summary")).get(
-            "patch_plan_count", 0
-        )
+        "normalized_objective": len(str(report.get("normalized_objective") or "")) >= 24,
+        "patch_plan_summary": safe_dict(report.get("patch_plan_summary")).get("patch_plan_count", 0)
         > 0,
         "patch_notes_concrete": bool(report.get("patch_notes")),
         "patch_notes_applicable": applicability.get("all_applicable") is True,
-        "evidence_coverage": safe_dict(report.get("evidence_coverage")).get("score", 0)
-        >= 60,
-        "telemetry_quality": safe_dict(report.get("telemetry_quality")).get("score", 0)
-        >= 50,
+        "evidence_coverage": safe_dict(report.get("evidence_coverage")).get("score", 0) >= 60,
+        "telemetry_quality": safe_dict(report.get("telemetry_quality")).get("score", 0) >= 50,
         "validation_commands": bool(
             safe_dict(report.get("patch_plan_summary")).get("validation_commands")
         ),
@@ -321,9 +306,7 @@ def _task_text(task: dict[str, Any]) -> str:
 def detect_product_mode(task: dict[str, Any]) -> dict[str, Any]:
     text = _task_text(task)
     lowered = text.lower()
-    all_all = (
-        "all_all" in lowered or "all-all" in lowered or "whole repository" in lowered
-    )
+    all_all = "all_all" in lowered or "all-all" in lowered or "whole repository" in lowered
     requested = [area for area in ALL_ALL_REQUIRED_AREAS if area.lower() in lowered]
     if all_all and not requested:
         requested = list(ALL_ALL_REQUIRED_AREAS)
@@ -354,9 +337,7 @@ def _bump_area(counts: dict[str, int], area: Any, amount: int = 1) -> None:
 
 def _repository_area_counts(repository_consistency: dict[str, Any]) -> dict[str, int]:
     counts: dict[str, int] = {}
-    for kind, count in safe_dict(
-        repository_consistency.get("finding_kind_counts")
-    ).items():
+    for kind, count in safe_dict(repository_consistency.get("finding_kind_counts")).items():
         area = REPOSITORY_KIND_TO_PRODUCT_AREA.get(str(kind))
         if area:
             counts[area] = counts.get(area, 0) + int(count or 0)
@@ -389,9 +370,7 @@ def _is_unpatchable_generated_path(path: str) -> bool:
     lowered = normalized.lower()
     if lowered.endswith((".db", ".sqlite")):
         return True
-    return any(
-        normalized.startswith(prefix) for prefix in UNPATCHABLE_REPOSITORY_PREFIXES
-    )
+    return any(normalized.startswith(prefix) for prefix in UNPATCHABLE_REPOSITORY_PREFIXES)
 
 
 def _finding_patch_target(finding: dict[str, Any]) -> str:
@@ -471,9 +450,7 @@ def build_product_sufficiency(
     requested_min_patch_notes: int = 0,
 ) -> dict[str, Any]:
     mode = detect_product_mode(task)
-    notes = [
-        item for item in safe_list(report.get("patch_notes")) if isinstance(item, dict)
-    ]
+    notes = [item for item in safe_list(report.get("patch_notes")) if isinstance(item, dict)]
     actual_area_counts: dict[str, int] = {}
     for note in notes:
         _bump_area(actual_area_counts, note.get("area"))
@@ -505,9 +482,7 @@ def build_product_sufficiency(
     if requested_min_patch_notes <= 0:
         requested_min_patch_notes = 1
         if mode["mode"] == "ALL_ALL":
-            requested_min_patch_notes = max(
-                5, min(40, max(1, len(available_requested_areas)) * 5)
-            )
+            requested_min_patch_notes = max(5, min(40, max(1, len(available_requested_areas)) * 5))
     patch_note_limit = max(1, int(patch_note_limit or 20))
     workflow = _workflow_summary(loaded)
     recommendation_count = int(workflow.get("recommendation_count") or 0)

@@ -54,9 +54,7 @@ def discover_suggestion_reports(
             lower_rel = rel.lower()
             if stamp.lower() not in lower_rel:
                 continue
-            if normalized_tokens and not any(
-                token in lower_rel for token in normalized_tokens
-            ):
+            if normalized_tokens and not any(token in lower_rel for token in normalized_tokens):
                 continue
             discovered.append((path.stat().st_mtime, rel))
             scan_item["matched"] += 1

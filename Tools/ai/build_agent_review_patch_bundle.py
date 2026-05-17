@@ -73,11 +73,7 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -141,18 +137,12 @@ def build_managed_block(plan: dict[str, Any], target: str) -> str:
     source = str(plan.get("source") or "unknown")
     risk = str(plan.get("risk") or "unknown")
     rationale = str(plan.get("rationale") or "").strip()
-    strategy = str(
-        plan.get("edit_strategy") or plan.get("proposed_strategy") or ""
-    ).strip()
+    strategy = str(plan.get("edit_strategy") or plan.get("proposed_strategy") or "").strip()
     validation_commands = (
-        plan.get("validation_commands")
-        if isinstance(plan.get("validation_commands"), list)
-        else []
+        plan.get("validation_commands") if isinstance(plan.get("validation_commands"), list) else []
     )
     stop_conditions = (
-        plan.get("stop_conditions")
-        if isinstance(plan.get("stop_conditions"), list)
-        else []
+        plan.get("stop_conditions") if isinstance(plan.get("stop_conditions"), list) else []
     )
     block_id = f"{plan_id}:{stable_id(target)}"
     lines = [
@@ -193,11 +183,7 @@ def collect_operations(
     seen: set[str] = set()
     for plan in plan_items(patch_plan):
         plan_id = str(plan.get("id") or "unknown")
-        targets = (
-            plan.get("target_files")
-            if isinstance(plan.get("target_files"), list)
-            else []
-        )
+        targets = plan.get("target_files") if isinstance(plan.get("target_files"), list) else []
         if not targets:
             skipped.append({"id": plan_id, "reason": "plan has no target_files"})
             continue
@@ -244,9 +230,7 @@ def collect_operations(
                     "managed_begin_prefix": MANAGED_BEGIN_PREFIX,
                     "managed_end_prefix": MANAGED_END_PREFIX,
                     "block_hash_sha256": block_hash,
-                    "original_sha256": hashlib.sha256(
-                        original.encode("utf-8")
-                    ).hexdigest(),
+                    "original_sha256": hashlib.sha256(original.encode("utf-8")).hexdigest(),
                     "block": block,
                     "manual_review_required": True,
                 }
@@ -488,9 +472,7 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
             warnings.append(f"unexpected patch plan kind: {patch_plan.get('kind')}")
         operations, skipped = collect_operations(patch_plan, repo_root)
     if not operations and not errors:
-        errors.append(
-            "no supported Markdown operations were produced from the patch plan"
-        )
+        errors.append("no supported Markdown operations were produced from the patch plan")
 
     bundle_stamp = args.stamp or stamp()
     bundle_name = f"{args.basename}_{bundle_stamp}"
@@ -522,9 +504,7 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
                 "persistent_memory_write_performed": False,
             },
         }
-        (patches_dir / "manifest.json").write_text(
-            safe_json(manifest) + "\n", encoding="utf-8"
-        )
+        (patches_dir / "manifest.json").write_text(safe_json(manifest) + "\n", encoding="utf-8")
         (bundle_root / "run_patch_bundle.py").write_text(
             bundle_runner_source(), encoding="utf-8", newline="\n"
         )
@@ -588,9 +568,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Bundle ZIP: `{report.get('bundle_zip')}`")
     lines.append(f"- Operation count: `{report['operation_count']}`")
     lines.append(f"- Skipped candidates: `{report['skipped_candidate_count']}`")
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- SQLite write performed: `{report['sqlite_write_performed']}`")
     if report.get("errors"):
         lines.append("")
@@ -610,9 +588,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
         lines.append("## Skipped candidates")
         for item in report["skipped_candidates"]:
-            lines.append(
-                f"- `{item.get('id')}` `{item.get('target', '')}`: {item.get('reason')}"
-            )
+            lines.append(f"- `{item.get('id')}` `{item.get('target', '')}`: {item.get('reason')}")
     return "\n".join(lines) + "\n"
 
 

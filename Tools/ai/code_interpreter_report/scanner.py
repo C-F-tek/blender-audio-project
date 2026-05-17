@@ -17,27 +17,19 @@ from tools.ai.github_evidence_bundle_io import line_count, read_text
 
 def split_csv_values(values: list[str]) -> set[str]:
     """Expand repeated comma-separated CLI values into a set."""
-    return {
-        item.strip() for value in values for item in value.split(",") if item.strip()
-    }
+    return {item.strip() for value in values for item in value.split(",") if item.strip()}
 
 
 def excluded_by_dir(path: Path, repo_root: Path, excluded_dirs: set[str]) -> bool:
     """Return true when any relative path component is excluded."""
     try:
-        parts = (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .parts
-        )
+        parts = path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).parts
     except ValueError:
         parts = path.parts
     return any(part in excluded_dirs for part in parts)
 
 
-def iter_python_files(
-    repo_root: Path, roots: list[Path], excluded_dirs: set[str]
-) -> list[Path]:
+def iter_python_files(repo_root: Path, roots: list[Path], excluded_dirs: set[str]) -> list[Path]:
     """Return sorted Python source files."""
     candidates: list[Path] = []
     search_roots = roots or [repo_root]
@@ -46,11 +38,7 @@ def iter_python_files(
             candidates.append(root)
         elif root.is_dir():
             candidates.extend(path for path in root.rglob("*.py") if path.is_file())
-    filtered = [
-        path
-        for path in candidates
-        if not excluded_by_dir(path, repo_root, excluded_dirs)
-    ]
+    filtered = [path for path in candidates if not excluded_by_dir(path, repo_root, excluded_dirs)]
     unique = {path.resolve(strict=False): path for path in filtered}
     return sorted(unique.values(), key=lambda path: repo_rel(repo_root, path).lower())
 
@@ -60,9 +48,7 @@ def resolve_roots(repo_root: Path, values: list[str]) -> list[Path]:
     roots: list[Path] = []
     for value in values:
         raw = Path(value)
-        roots.append(
-            raw.resolve() if raw.is_absolute() else (repo_root / raw).resolve()
-        )
+        roots.append(raw.resolve() if raw.is_absolute() else (repo_root / raw).resolve())
     return roots
 
 
@@ -104,9 +90,7 @@ def function_record(node: ast.AST) -> dict[str, Any]:
         "lineno": getattr(node, "lineno", None),
         "line_span": line_span(node),
         "arg_count": arg_count,
-        "branch_count": sum(
-            1 for child in ast.walk(node) if isinstance(child, BRANCH_NODES)
-        ),
+        "branch_count": sum(1 for child in ast.walk(node) if isinstance(child, BRANCH_NODES)),
         "docstring_present": bool(ast.get_docstring(node)),
         "async": isinstance(node, ast.AsyncFunctionDef),
     }
@@ -115,9 +99,7 @@ def function_record(node: ast.AST) -> dict[str, Any]:
 def class_record(node: ast.ClassDef) -> dict[str, Any]:
     """Return compact class metadata."""
     methods = [
-        child
-        for child in node.body
-        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
+        child for child in node.body if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
     ]
     return {
         "name": node.name,
@@ -134,9 +116,7 @@ def import_records(tree: ast.AST) -> list[dict[str, str]]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                imports.append(
-                    {"type": "import", "name": alias.name, "asname": alias.asname or ""}
-                )
+                imports.append({"type": "import", "name": alias.name, "asname": alias.asname or ""})
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
             for alias in node.names:
@@ -203,19 +183,13 @@ def analyze_file(repo_root: Path, path: Path) -> dict[str, Any]:
         for node in ast.walk(tree)
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     ]
-    classes = [
-        class_record(node) for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
-    ]
+    classes = [class_record(node) for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
     imports = import_records(tree)
     risks = risk_signals(tree)
     todos = todo_signals(source)
     branch_count = sum(1 for node in ast.walk(tree) if isinstance(node, BRANCH_NODES))
-    large_functions = [
-        item for item in functions if int(item.get("line_span") or 0) >= 80
-    ]
-    complex_functions = [
-        item for item in functions if int(item.get("branch_count") or 0) >= 12
-    ]
+    large_functions = [item for item in functions if int(item.get("line_span") or 0) >= 80]
+    complex_functions = [item for item in functions if int(item.get("branch_count") or 0) >= 12]
 
     base.update(
         {

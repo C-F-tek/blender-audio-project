@@ -9,6 +9,7 @@ bootstrap must still execute and pass when runtime broker support is enabled.
 The smoke therefore validates the bootstrap metrics and guardrails directly
 instead of requiring the full provider-backed supervised run to pass.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,7 +48,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str]:
     try:
         completed = subprocess.run(
             command,
@@ -97,8 +100,12 @@ def build_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/gpu_runtime_tool_bootstrap_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/gpu_runtime_tool_bootstrap_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/gpu_runtime_tool_bootstrap_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/gpu_runtime_tool_bootstrap_smoke.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=300)
     args = parser.parse_args()
 
@@ -130,7 +137,9 @@ def main() -> int:
     if "--enable-runtime-tool-bootstrap" in help_text:
         command.insert(command.index("--output"), "--enable-runtime-tool-bootstrap")
 
-    returncode, stdout, stderr, command_error = run_command(command, repo_root, args.timeout_seconds)
+    returncode, stdout, stderr, command_error = run_command(
+        command, repo_root, args.timeout_seconds
+    )
 
     errors: list[str] = []
     warnings: list[str] = []
@@ -153,10 +162,18 @@ def main() -> int:
 
     runtime_tool_bootstrap_executed = supervised_report.get("runtime_tool_bootstrap_executed")
     runtime_tool_bootstrap_passed = supervised_report.get("runtime_tool_bootstrap_passed")
-    runtime_tool_bootstrap_request_count = supervised_report.get("runtime_tool_bootstrap_request_count")
-    runtime_tool_bootstrap_execution_count = supervised_report.get("runtime_tool_bootstrap_execution_count")
-    runtime_tool_bootstrap_failed_count = supervised_report.get("runtime_tool_bootstrap_failed_count")
-    runtime_tool_bootstrap_blocked_count = supervised_report.get("runtime_tool_bootstrap_blocked_count")
+    runtime_tool_bootstrap_request_count = supervised_report.get(
+        "runtime_tool_bootstrap_request_count"
+    )
+    runtime_tool_bootstrap_execution_count = supervised_report.get(
+        "runtime_tool_bootstrap_execution_count"
+    )
+    runtime_tool_bootstrap_failed_count = supervised_report.get(
+        "runtime_tool_bootstrap_failed_count"
+    )
+    runtime_tool_bootstrap_blocked_count = supervised_report.get(
+        "runtime_tool_bootstrap_blocked_count"
+    )
 
     expected = {
         "runtime_tool_bootstrap_executed": True,
@@ -178,7 +195,9 @@ def main() -> int:
         "runtime_tool_bootstrap_blocked_count": runtime_tool_bootstrap_blocked_count,
         "provider_execution_performed": supervised_report.get("provider_execution_performed"),
         "patch_application_performed": supervised_report.get("patch_application_performed"),
-        "persistent_memory_write_performed": supervised_report.get("persistent_memory_write_performed", False),
+        "persistent_memory_write_performed": supervised_report.get(
+            "persistent_memory_write_performed", False
+        ),
     }
     for key, expected_value in expected.items():
         if observed.get(key) != expected_value:
@@ -192,11 +211,17 @@ def main() -> int:
         "passed": not errors,
         "errors": errors,
         "warnings": warnings,
-        "provider_execution_performed": bool(supervised_report.get("provider_execution_performed", False)),
-        "patch_application_performed": bool(supervised_report.get("patch_application_performed", False)),
+        "provider_execution_performed": bool(
+            supervised_report.get("provider_execution_performed", False)
+        ),
+        "patch_application_performed": bool(
+            supervised_report.get("patch_application_performed", False)
+        ),
         "source_writes_performed": False,
         "sqlite_write_performed": bool(supervised_report.get("sqlite_write_performed", False)),
-        "persistent_memory_write_performed": bool(supervised_report.get("persistent_memory_write_performed", False)),
+        "persistent_memory_write_performed": bool(
+            supervised_report.get("persistent_memory_write_performed", False)
+        ),
         "runtime_tool_bootstrap_executed": runtime_tool_bootstrap_executed,
         "runtime_tool_bootstrap_passed": runtime_tool_bootstrap_passed,
         "runtime_tool_bootstrap_request_count": runtime_tool_bootstrap_request_count,
@@ -230,10 +255,18 @@ def main() -> int:
                 "patch_application_performed": report["patch_application_performed"],
                 "runtime_tool_bootstrap_executed": report["runtime_tool_bootstrap_executed"],
                 "runtime_tool_bootstrap_passed": report["runtime_tool_bootstrap_passed"],
-                "runtime_tool_bootstrap_request_count": report["runtime_tool_bootstrap_request_count"],
-                "runtime_tool_bootstrap_execution_count": report["runtime_tool_bootstrap_execution_count"],
-                "runtime_tool_bootstrap_failed_count": report["runtime_tool_bootstrap_failed_count"],
-                "runtime_tool_bootstrap_blocked_count": report["runtime_tool_bootstrap_blocked_count"],
+                "runtime_tool_bootstrap_request_count": report[
+                    "runtime_tool_bootstrap_request_count"
+                ],
+                "runtime_tool_bootstrap_execution_count": report[
+                    "runtime_tool_bootstrap_execution_count"
+                ],
+                "runtime_tool_bootstrap_failed_count": report[
+                    "runtime_tool_bootstrap_failed_count"
+                ],
+                "runtime_tool_bootstrap_blocked_count": report[
+                    "runtime_tool_bootstrap_blocked_count"
+                ],
                 "persistent_memory_write_performed": report["persistent_memory_write_performed"],
             },
             indent=2,

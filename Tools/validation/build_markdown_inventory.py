@@ -6,6 +6,7 @@ Supports both regular Markdown files and IA-Carmine directory-form splits:
     name.md/README.md
     name.md/part-001.md
 """
+
 from __future__ import annotations
 
 import argparse
@@ -14,20 +15,41 @@ from pathlib import Path
 from typing import Any
 
 IGNORED_DIR_NAMES = {
-    ".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".venv", "venv",
-    "__pycache__", "node_modules", "output", "renders",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "node_modules",
+    "output",
+    "renders",
 }
 CANONICAL_INDEX_FILES = [
-    "AGENTS.md", "README.md", "WORKFLOW.md", "docs/README.md",
-    "docs/LOCAL_AI_TASKS/README.md", "docs/MODULE_MAP.md",
-    "Tools/validation/README.md", "Tools/npu/pipeline/README.md",
+    "AGENTS.md",
+    "README.md",
+    "WORKFLOW.md",
+    "docs/README.md",
+    "docs/LOCAL_AI_TASKS/README.md",
+    "docs/MODULE_MAP.md",
+    "Tools/validation/README.md",
+    "Tools/npu/pipeline/README.md",
 ]
 ROOT_COMMUNITY_DOCS = {
-    "CODE_OF_CONDUCT.md", "CONTRIBUTING.md", "LICENSE.md", "SECURITY.md", "SUPPORT.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "LICENSE.md",
+    "SECURITY.md",
+    "SUPPORT.md",
 }
 ROOT_POLICY_DOCS = {
-    "AGENTS.md", "README.md", "WORKFLOW.md", "CHANGELOG.md",
-    "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md", "TOOL_UTILI_CODING.md",
+    "AGENTS.md",
+    "README.md",
+    "WORKFLOW.md",
+    "CHANGELOG.md",
+    "AI_PATCH_BUNDLE_TECHNICAL_GOTCHAS.md",
+    "TOOL_UTILI_CODING.md",
 }
 EVIDENCE_PREFIX = "docs/LOCAL_VALIDATION_EVIDENCE/"
 TASK_PREFIX = "docs/LOCAL_AI_TASKS/"
@@ -113,7 +135,9 @@ def classify_markdown(rel_path: str, role: str) -> str:
         return "local_ai_task_entrypoint"
     if rel_path.startswith(EXECUTION_PLAN_PREFIX):
         return "execution_plan"
-    if rel_path in GENERATED_NPU_DOCS or any(rel_path.startswith(prefix) for prefix in GENERATED_INDEX_PREFIXES):
+    if rel_path in GENERATED_NPU_DOCS or any(
+        rel_path.startswith(prefix) for prefix in GENERATED_INDEX_PREFIXES
+    ):
         return "generated_or_index_context"
     if rel_path.endswith("/README.md") and rel_path.startswith("Tools/"):
         return "tool_readme"
@@ -129,7 +153,13 @@ def classify_markdown(rel_path: str, role: str) -> str:
 
 
 def lifecycle_for(category: str, rel_path: str) -> str:
-    if rel_path in {"AGENTS.md", "README.md", "WORKFLOW.md", "docs/README.md", "docs/LOCAL_AI_TASKS/README.md"}:
+    if rel_path in {
+        "AGENTS.md",
+        "README.md",
+        "WORKFLOW.md",
+        "docs/README.md",
+        "docs/LOCAL_AI_TASKS/README.md",
+    }:
         return "canonical_entrypoint"
     if category.startswith("markdown_split_"):
         return "split_container_member"
@@ -179,7 +209,8 @@ def indexed_by(rel_path: str, index_texts: dict[str, str]) -> list[str]:
 
 def collect_markdown(repo_root: Path) -> list[Path]:
     files = [
-        path for path in repo_root.rglob("*.md")
+        path
+        for path in repo_root.rglob("*.md")
         if path.is_file() and not is_under_ignored_dir(path, repo_root)
     ]
     return sorted(files, key=lambda item: repo_relative(item, repo_root).lower())
@@ -203,7 +234,12 @@ def is_prune_candidate(category: str, lifecycle: str, index_hits: list[str]) -> 
 def requires_index_review(category: str, index_hits: list[str]) -> bool:
     if category.startswith("markdown_split_") or index_hits:
         return False
-    return category in {"stable_project_doc", "tool_readme", "local_ai_task_entrypoint", "npu_tool_context_doc"}
+    return category in {
+        "stable_project_doc",
+        "tool_readme",
+        "local_ai_task_entrypoint",
+        "npu_tool_context_doc",
+    }
 
 
 def inventory_item(path: Path, repo_root: Path, index_texts: dict[str, str]) -> dict[str, Any]:
@@ -291,7 +327,8 @@ def render_table(lines: list[str], title: str, rows: list[dict[str, Any]]) -> No
 
 def render_markdown(report: dict[str, Any]) -> str:
     lines = [
-        "# Markdown Documentation Inventory", "",
+        "# Markdown Documentation Inventory",
+        "",
         f"- Kind: `{report['kind']}`",
         f"- Markdown files: `{report['markdown_count']}`",
         f"- Split containers: `{report['split_container_count']}`",
@@ -299,8 +336,12 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Missing index review count: `{report['missing_index_count']}`",
         f"- Prune candidate count: `{report['prune_candidate_count']}`",
         "- Provider execution performed: `False`",
-        "- Patch application performed: `False`", "",
-        "## Category counts", "", "| Category | Count |", "|---|---:|",
+        "- Patch application performed: `False`",
+        "",
+        "## Category counts",
+        "",
+        "| Category | Count |",
+        "|---|---:|",
     ]
     for category, count in sorted(report["category_counts"].items()):
         lines.append(f"| `{category}` | {count} |")
@@ -310,8 +351,14 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     render_table(lines, "Missing index review", report["missing_index"])
     render_table(lines, "Prune candidates", report["prune_candidates"])
-    lines.extend(["## Full Markdown map", "", "| Path | Role | Category | Lifecycle | Indexed | Lines |",
-                  "|---|---|---|---|---|---:|"])
+    lines.extend(
+        [
+            "## Full Markdown map",
+            "",
+            "| Path | Role | Category | Lifecycle | Indexed | Lines |",
+            "|---|---|---|---|---|---:|",
+        ]
+    )
     for item in report["items"]:
         lines.append(
             f"| `{item['path']}` | `{item['markdown_role']}` | `{item['category']}` | "
@@ -332,9 +379,13 @@ def write_text(path: Path, text: str) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build a report-only Markdown documentation inventory.")
+    parser = argparse.ArgumentParser(
+        description="Build a report-only Markdown documentation inventory."
+    )
     parser.add_argument("--repo-root", default=".", help="Repository root.")
-    parser.add_argument("--output", default="output/validation/markdown_inventory.json", help="JSON report output.")
+    parser.add_argument(
+        "--output", default="output/validation/markdown_inventory.json", help="JSON report output."
+    )
     parser.add_argument("--markdown-output", default=None, help="Optional Markdown report output.")
     return parser.parse_args()
 

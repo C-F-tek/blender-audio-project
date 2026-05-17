@@ -29,9 +29,7 @@ except ImportError:
     from tools.ai.code_patch_plan_common import read_json_object
     from tools.validation.report_utils import write_json_report, write_text_report
 
-DEFAULT_ORCHESTRATOR = (
-    "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
-)
+DEFAULT_ORCHESTRATOR = "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
 DEFAULT_OUTPUT = "output/patch_specs/agent_review_patch_plan.json"
 DEFAULT_MARKDOWN = "output/patch_specs/agent_review_patch_plan.md"
@@ -73,11 +71,7 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -118,9 +112,9 @@ def target_path_error(path_value: str, repo_root: Path) -> str | None:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         return f"forbidden generated/runtime target prefix: {normalized}"
     lower = normalized.lower()
-    if any(
-        fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS
-    ) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(
+        ".json"
+    ):
         return f"forbidden full-analysis JSON target: {normalized}"
     if "*" in normalized or normalized.endswith("/"):
         return "target is a glob or directory, not a concrete file"
@@ -134,9 +128,7 @@ def target_path_error(path_value: str, repo_root: Path) -> str | None:
 def compact_evidence_files(item: dict[str, Any]) -> list[dict[str, Any]]:
     compact: list[dict[str, Any]] = []
     for evidence_file in (
-        item.get("evidence_files", [])
-        if isinstance(item.get("evidence_files"), list)
-        else []
+        item.get("evidence_files", []) if isinstance(item.get("evidence_files"), list) else []
     ):
         if not isinstance(evidence_file, dict):
             continue
@@ -220,16 +212,10 @@ def npu_audit_refs(orchestrator: dict[str, Any]) -> list[dict[str, Any]]:
                 "round": audit.get("round"),
                 "status": audit.get("status"),
                 "classification": audit.get("classification"),
-                "provider_execution_requested": audit.get(
-                    "provider_execution_requested"
-                ),
+                "provider_execution_requested": audit.get("provider_execution_requested"),
                 "provider_load_attempted": audit.get("provider_load_attempted"),
-                "provider_execution_succeeded": audit.get(
-                    "provider_execution_succeeded"
-                ),
-                "provider_execution_performed": audit.get(
-                    "provider_execution_performed"
-                ),
+                "provider_execution_succeeded": audit.get("provider_execution_succeeded"),
+                "provider_execution_performed": audit.get("provider_execution_performed"),
                 "dependency_missing": audit.get("dependency_missing"),
                 "gpu_review_blocked": audit.get("gpu_review_blocked"),
                 "audit_output": audit.get("audit_output"),
@@ -280,8 +266,7 @@ def normalize_gpu_recommendation(
             "edit_strategy": rec.get("proposed_strategy")
             or "Apply only a small, reviewable patch supported by the cited evidence.",
             "risk": rec.get("risk") or "medium",
-            "validation_commands": rec.get("validation_commands")
-            or DEFAULT_VALIDATION_COMMANDS,
+            "validation_commands": rec.get("validation_commands") or DEFAULT_VALIDATION_COMMANDS,
             "stop_conditions": rec.get("stop_conditions")
             or [
                 "Stop if target files changed since the review artifact was generated.",
@@ -290,9 +275,7 @@ def normalize_gpu_recommendation(
             ],
             "source_evidence": {
                 "gpu_recommendation": rec,
-                "repository_consistency_finding": rec.get(
-                    "repository_consistency_finding"
-                ),
+                "repository_consistency_finding": rec.get("repository_consistency_finding"),
                 "npu_audit_refs": audit_refs,
             },
             "manual_review_required": True,
@@ -401,8 +384,7 @@ def plan_from_doc_doc_item(
         else []
     )
     terms_text = (
-        ", ".join(f"`{term}`" for term in missing_terms[:12])
-        or "the missing explicit terms"
+        ", ".join(f"`{term}`" for term in missing_terms[:12]) or "the missing explicit terms"
     )
     return (
         {
@@ -447,9 +429,7 @@ def fallback_plans_from_evidence(
     skipped: list[dict[str, str]] = []
     areas = evidence.get("areas", {}) if isinstance(evidence.get("areas"), dict) else {}
 
-    doc_code = (
-        areas.get("doc_code", {}) if isinstance(areas.get("doc_code"), dict) else {}
-    )
+    doc_code = areas.get("doc_code", {}) if isinstance(areas.get("doc_code"), dict) else {}
     for index, item in enumerate(
         doc_code.get("items", []) if isinstance(doc_code.get("items"), list) else [],
         start=1,
@@ -492,14 +472,10 @@ def gpu_plans_from_report(
     skipped: list[dict[str, str]] = []
     recommendations = gpu_report.get("recommendations", [])
     if not isinstance(recommendations, list):
-        return plans, [
-            {"id": "gpu_report", "reason": "GPU report recommendations is not a list"}
-        ]
+        return plans, [{"id": "gpu_report", "reason": "GPU report recommendations is not a list"}]
     for index, rec in enumerate(recommendations, start=1):
         if not isinstance(rec, dict):
-            skipped.append(
-                {"id": f"gpu_{index:03d}", "reason": "recommendation is not an object"}
-            )
+            skipped.append({"id": f"gpu_{index:03d}", "reason": "recommendation is not an object"})
             continue
         if rec.get("status") != "ready_for_patch_plan":
             continue
@@ -522,14 +498,10 @@ def build_decision(
     fallback_used: bool,
 ) -> dict[str, Any]:
     evidence_decision = (
-        evidence.get("decision", {})
-        if isinstance(evidence.get("decision"), dict)
-        else {}
+        evidence.get("decision", {}) if isinstance(evidence.get("decision"), dict) else {}
     )
     gpu_decision = (
-        gpu_report.get("decision", {})
-        if isinstance(gpu_report.get("decision"), dict)
-        else {}
+        gpu_report.get("decision", {}) if isinstance(gpu_report.get("decision"), dict) else {}
     )
     return {
         "ready_for_manual_review": bool(plans),
@@ -541,9 +513,7 @@ def build_decision(
         "evidence_ready_for_manual_patch_count": evidence_decision.get(
             "ready_for_manual_patch_count"
         ),
-        "evidence_sufficient_for_real_pr": evidence_decision.get(
-            "sufficient_for_real_pr"
-        ),
+        "evidence_sufficient_for_real_pr": evidence_decision.get("sufficient_for_real_pr"),
         "recommended_next_layer": (
             "manual_review_then_targeted_patch" if plans else "collect_more_evidence"
         ),
@@ -556,17 +526,11 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent Review Patch Plan", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Patch plan count: `{report['decision']['patch_plan_count']}`")
     lines.append(f"- Fallback used: `{report['decision']['fallback_used']}`")
-    lines.append(
-        f"- Manual review required: `{report['decision']['manual_review_required']}`"
-    )
+    lines.append(f"- Manual review required: `{report['decision']['manual_review_required']}`")
     lines.append("")
     lines.append("## Inputs")
     lines.append("")
@@ -613,32 +577,22 @@ def build_patch_plan(args: argparse.Namespace) -> dict[str, Any]:
         try:
             orchestrator = load_json_object(orchestrator_path)
         except Exception as exc:  # noqa: BLE001
-            warnings.append(
-                f"Unable to read orchestrator report: {type(exc).__name__}: {exc}"
-            )
+            warnings.append(f"Unable to read orchestrator report: {type(exc).__name__}: {exc}")
     else:
-        warnings.append(
-            f"orchestrator report missing: {repo_rel(orchestrator_path, repo_root)}"
-        )
+        warnings.append(f"orchestrator report missing: {repo_rel(orchestrator_path, repo_root)}")
 
     if evidence_path.exists():
         try:
             evidence = load_json_object(evidence_path)
         except Exception as exc:  # noqa: BLE001
-            errors.append(
-                f"Unable to read evidence report: {type(exc).__name__}: {exc}"
-            )
+            errors.append(f"Unable to read evidence report: {type(exc).__name__}: {exc}")
     else:
         errors.append(f"evidence report missing: {repo_rel(evidence_path, repo_root)}")
 
     audit_refs = npu_audit_refs(orchestrator)
-    gpu_report = (
-        load_gpu_report(repo_root, orchestrator, warnings) if orchestrator else {}
-    )
+    gpu_report = load_gpu_report(repo_root, orchestrator, warnings) if orchestrator else {}
     plans, skipped = (
-        gpu_plans_from_report(
-            gpu_report=gpu_report, repo_root=repo_root, audit_refs=audit_refs
-        )
+        gpu_plans_from_report(gpu_report=gpu_report, repo_root=repo_root, audit_refs=audit_refs)
         if gpu_report
         else ([], [])
     )

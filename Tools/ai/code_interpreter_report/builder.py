@@ -98,9 +98,7 @@ def aggregate_imports(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 module = imp.get("module") or imp.get("name") or ""
                 if module:
                     counter[str(module).split(".")[0]] += 1
-    return [
-        {"module": module, "count": count} for module, count in counter.most_common(40)
-    ]
+    return [{"module": module, "count": count} for module, count in counter.most_common(40)]
 
 
 def aggregate_file_metrics(files: list[dict[str, Any]]) -> dict[str, int]:
@@ -111,9 +109,7 @@ def aggregate_file_metrics(files: list[dict[str, Any]]) -> dict[str, int]:
         "total_lines": sum(int(item.get("line_count") or 0) for item in files),
         "total_functions": sum(int(item.get("function_count") or 0) for item in files),
         "total_classes": sum(int(item.get("class_count") or 0) for item in files),
-        "total_risk_signals": sum(
-            int(item.get("risk_signal_count") or 0) for item in files
-        ),
+        "total_risk_signals": sum(int(item.get("risk_signal_count") or 0) for item in files),
         "total_todos": sum(int(item.get("todo_count") or 0) for item in files),
     }
 
@@ -134,13 +130,10 @@ def largest_file_entries(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
     )[:30]
 
 
-def build_report(
-    repo_root: Path, roots: list[Path], excluded_dirs: set[str]
-) -> dict[str, Any]:
+def build_report(repo_root: Path, roots: list[Path], excluded_dirs: set[str]) -> dict[str, Any]:
     """Build full static code interpreter report."""
     files = [
-        analyze_file(repo_root, path)
-        for path in iter_python_files(repo_root, roots, excluded_dirs)
+        analyze_file(repo_root, path) for path in iter_python_files(repo_root, roots, excluded_dirs)
     ]
     errors = [
         f"{item.get('path')}: {'; '.join(item.get('errors') or [])}"

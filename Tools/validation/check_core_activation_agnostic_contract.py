@@ -11,10 +11,10 @@ activation workflow still wires the required layers:
 - signal refinement and PR draft generation;
 - no-apply/manual-review guardrails.
 """
+
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 from typing import Any
 
@@ -149,9 +149,15 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "forbidden_hits": forbidden_hits,
         "decision": {
             "pipeline_orchestration_present": not checks[0]["missing_terms"] if checks else False,
-            "explicit_multistep_provider_workflow_present": not checks[1]["missing_terms"] if len(checks) > 1 else False,
-            "agnostic_context_artifacts_present": not checks[2]["missing_terms"] if len(checks) > 2 else False,
-            "megalithic_review_stack_present": not checks[3]["missing_terms"] if len(checks) > 3 else False,
+            "explicit_multistep_provider_workflow_present": not checks[1]["missing_terms"]
+            if len(checks) > 1
+            else False,
+            "agnostic_context_artifacts_present": not checks[2]["missing_terms"]
+            if len(checks) > 2
+            else False,
+            "megalithic_review_stack_present": not checks[3]["missing_terms"]
+            if len(checks) > 3
+            else False,
             "guardrails_present": not checks[4]["missing_terms"] if len(checks) > 4 else False,
         },
         "guardrails": {

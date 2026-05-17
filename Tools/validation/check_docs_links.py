@@ -8,6 +8,7 @@ Generated evidence under docs/LOCAL_VALIDATION_EVIDENCE/ is treated as
 nonfatal by default because compact evidence bundles may intentionally reference
 local-only chunk/runbook directories that are not committed.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,6 @@ import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote
-
 
 DEFAULT_EXCLUDES = {
     ".git",
@@ -28,9 +28,7 @@ DEFAULT_EXCLUDES = {
     "output",
 }
 
-DEFAULT_NONFATAL_PREFIXES = (
-    "docs/LOCAL_VALIDATION_EVIDENCE/",
-)
+DEFAULT_NONFATAL_PREFIXES = ("docs/LOCAL_VALIDATION_EVIDENCE/",)
 
 LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 
@@ -68,7 +66,6 @@ def iter_markdown_files(repo_root: Path, excludes: set[str]) -> list[Path]:
     return [files[key] for key in sorted(files)]
 
 
-
 def is_external_link(target: str) -> bool:
     lowered = target.lower()
     return (
@@ -99,7 +96,9 @@ def is_nonfatal_source(path: str, prefixes: tuple[str, ...]) -> bool:
     return any(normalized.startswith(prefix) for prefix in prefixes)
 
 
-def inspect_markdown(path: Path, repo_root: Path, nonfatal_prefixes: tuple[str, ...]) -> dict[str, Any]:
+def inspect_markdown(
+    path: Path, repo_root: Path, nonfatal_prefixes: tuple[str, ...]
+) -> dict[str, Any]:
     rel = path.relative_to(repo_root).as_posix()
     text = path.read_text(encoding="utf-8", errors="replace")
     broken: list[dict[str, Any]] = []
@@ -113,7 +112,11 @@ def inspect_markdown(path: Path, repo_root: Path, nonfatal_prefixes: tuple[str, 
         if not target or target.startswith("#") or is_external_link(target):
             skipped += 1
             continue
-        if target.startswith(".") or "/" in target or target.endswith((".md", ".py", ".json", ".ps1", ".yml", ".yaml", ".txt")):
+        if (
+            target.startswith(".")
+            or "/" in target
+            or target.endswith((".md", ".py", ".json", ".ps1", ".yml", ".yaml", ".txt"))
+        ):
             checked += 1
             candidate = (path.parent / target).resolve()
             try:
@@ -137,7 +140,9 @@ def inspect_markdown(path: Path, repo_root: Path, nonfatal_prefixes: tuple[str, 
     }
 
 
-def build_report(repo_root: Path, excludes: set[str], nonfatal_prefixes: tuple[str, ...]) -> dict[str, Any]:
+def build_report(
+    repo_root: Path, excludes: set[str], nonfatal_prefixes: tuple[str, ...]
+) -> dict[str, Any]:
     files = iter_markdown_files(repo_root, excludes)
     results = [inspect_markdown(path, repo_root, nonfatal_prefixes) for path in files]
     failed = [item for item in results if not item["ok"]]
@@ -208,9 +213,7 @@ def main() -> int:
     )
     if args.strict_local_validation_evidence:
         nonfatal_prefixes = tuple(
-            prefix
-            for prefix in nonfatal_prefixes
-            if prefix != "docs/LOCAL_VALIDATION_EVIDENCE/"
+            prefix for prefix in nonfatal_prefixes if prefix != "docs/LOCAL_VALIDATION_EVIDENCE/"
         )
 
     report = build_report(repo_root, excludes, nonfatal_prefixes)

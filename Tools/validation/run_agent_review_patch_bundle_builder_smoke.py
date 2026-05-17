@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the agent review patch bundle builder."""
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 DEFAULT_OUTPUT = "output/validation/agent_review_patch_bundle_builder_smoke.json"
 DEFAULT_MARKDOWN = "output/validation/agent_review_patch_bundle_builder_smoke.md"
@@ -45,7 +50,9 @@ def load_json(path: Path) -> tuple[dict[str, Any], str | None]:
     return data, None
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -120,7 +127,9 @@ def build_fixture_patch_plan(repo_root: Path, patch_plan_path: Path) -> None:
                 "rationale": "Non-Markdown targets must be skipped by the automatic bundle builder.",
                 "edit_strategy": "Manual review only.",
                 "risk": "medium",
-                "validation_commands": ["python -m py_compile Tools/ai/run_agent_review_decision_loop.py"],
+                "validation_commands": [
+                    "python -m py_compile Tools/ai/run_agent_review_decision_loop.py"
+                ],
                 "stop_conditions": ["Stop if builder tries to mutate Python source."],
                 "manual_review_required": True,
             },
@@ -176,14 +185,22 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
     if read_error:
         errors.append(f"unable to read builder output: {read_error}")
 
-    bundle_zip = repo_root / str(builder_report.get("bundle_zip", "")) if builder_report.get("bundle_zip") else Path("")
+    bundle_zip = (
+        repo_root / str(builder_report.get("bundle_zip", ""))
+        if builder_report.get("bundle_zip")
+        else Path("")
+    )
     if builder_report:
         if builder_report.get("passed") is not True:
             errors.append("builder report did not pass")
         if builder_report.get("operation_count") != 1:
-            errors.append(f"expected operation_count=1, got {builder_report.get('operation_count')!r}")
+            errors.append(
+                f"expected operation_count=1, got {builder_report.get('operation_count')!r}"
+            )
         if builder_report.get("skipped_candidate_count") != 1:
-            errors.append(f"expected skipped_candidate_count=1, got {builder_report.get('skipped_candidate_count')!r}")
+            errors.append(
+                f"expected skipped_candidate_count=1, got {builder_report.get('skipped_candidate_count')!r}"
+            )
         if builder_report.get("patch_application_performed") is not False:
             errors.append("builder must not apply patches")
         if builder_report.get("sqlite_write_performed") is not False:
@@ -210,7 +227,9 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
         "stderr_tail": stderr,
         "builder_output": rel(builder_output, repo_root),
         "operation_count": builder_report.get("operation_count") if builder_report else None,
-        "skipped_candidate_count": builder_report.get("skipped_candidate_count") if builder_report else None,
+        "skipped_candidate_count": builder_report.get("skipped_candidate_count")
+        if builder_report
+        else None,
         "bundle_zip": builder_report.get("bundle_zip") if builder_report else "",
         "bundle_zip_exists": bundle_zip.exists() if str(bundle_zip) else False,
         "guardrails": {

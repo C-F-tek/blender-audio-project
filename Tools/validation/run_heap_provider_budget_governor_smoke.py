@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the heap provider budget governor contract."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -35,7 +40,11 @@ def validate(report: dict[str, Any]) -> list[str]:
         errors.append("governor did not pass")
     if report.get("permit_allowed") is not False:
         errors.append("provider permit must be denied by default")
-    for key in ("provider_execution_performed", "patch_application_performed", "source_writes_performed"):
+    for key in (
+        "provider_execution_performed",
+        "patch_application_performed",
+        "source_writes_performed",
+    ):
         if report.get(key) is not False:
             errors.append(f"guardrail {key} must be false")
     loop_budget = report.get("loop_budget") if isinstance(report.get("loop_budget"), dict) else {}
@@ -64,27 +73,49 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_provider_budget_governor_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_provider_budget_governor_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/heap_provider_budget_governor_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/heap_provider_budget_governor_smoke.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=120)
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    inner_output = repo_root / "output" / "validation" / f"heap_provider_budget_governor_smoke_inner_{stamp}.json"
-    inner_md = repo_root / "output" / "validation" / f"heap_provider_budget_governor_smoke_inner_{stamp}.md"
+    inner_output = (
+        repo_root
+        / "output"
+        / "validation"
+        / f"heap_provider_budget_governor_smoke_inner_{stamp}.json"
+    )
+    inner_md = (
+        repo_root
+        / "output"
+        / "validation"
+        / f"heap_provider_budget_governor_smoke_inner_{stamp}.md"
+    )
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(repo_root) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env["PYTHONPATH"] = str(repo_root) + (
+        os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
+    )
     completed = subprocess.run(
         [
             sys.executable,
             "Tools/ai/heap_provider_budget_governor.py",
-            "--repo-root", ".",
-            "--budget-minutes", "3",
-            "--max-rounds", "8",
-            "--requested-max-iterations", "2",
-            "--output", inner_output.relative_to(repo_root).as_posix(),
-            "--markdown-output", inner_md.relative_to(repo_root).as_posix(),
+            "--repo-root",
+            ".",
+            "--budget-minutes",
+            "3",
+            "--max-rounds",
+            "8",
+            "--requested-max-iterations",
+            "2",
+            "--output",
+            inner_output.relative_to(repo_root).as_posix(),
+            "--markdown-output",
+            inner_md.relative_to(repo_root).as_posix(),
         ],
         cwd=repo_root,
         env=env,
@@ -96,7 +127,9 @@ def main() -> int:
     inner = read_json(inner_output)
     errors = []
     if completed.returncode != 0:
-        errors.append(f"governor returned {completed.returncode}: {(completed.stderr or completed.stdout)[-1200:]}")
+        errors.append(
+            f"governor returned {completed.returncode}: {(completed.stderr or completed.stdout)[-1200:]}"
+        )
     errors.extend(validate(inner))
     report = {
         "schema_version": 1,

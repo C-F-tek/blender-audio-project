@@ -8,6 +8,7 @@ different guardrail fields.
 
 Default behavior performs no provider execution and no patch application.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -87,7 +88,9 @@ def required_for_output(step: SmokeStep, output: str) -> tuple[str, ...]:
     return step.required_fields_by_output.get(output, step.required_fields)
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -141,7 +144,9 @@ def validate_output(
         actual = value_at(data, field_name)
         if actual != expected:
             result["ok"] = False
-            result["errors"].append(f"unexpected {field_name}: expected {expected!r}, got {actual!r}")
+            result["errors"].append(
+                f"unexpected {field_name}: expected {expected!r}, got {actual!r}"
+            )
     return result
 
 
@@ -350,7 +355,9 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
     return steps
 
 
-def run_step(step: SmokeStep, repo_root: Path, timeout_seconds: int, *, dry_run: bool) -> dict[str, Any]:
+def run_step(
+    step: SmokeStep, repo_root: Path, timeout_seconds: int, *, dry_run: bool
+) -> dict[str, Any]:
     result: dict[str, Any] = {
         "name": step.name,
         "command": step.command,
@@ -423,7 +430,9 @@ def render_markdown(report: dict[str, Any]) -> str:
             lines.append("")
             lines.append("Outputs:")
             for output in step["outputs"]:
-                lines.append(f"- `{output['path']}` ok=`{output['ok']}` kind=`{output.get('kind')}` passed=`{output.get('passed')}`")
+                lines.append(
+                    f"- `{output['path']}` ok=`{output['ok']}` kind=`{output.get('kind')}` passed=`{output.get('passed')}`"
+                )
         lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -444,7 +453,9 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     steps = build_steps(args)
-    results = [run_step(step, repo_root, args.timeout_seconds, dry_run=args.dry_run) for step in steps]
+    results = [
+        run_step(step, repo_root, args.timeout_seconds, dry_run=args.dry_run) for step in steps
+    ]
     errors = [f"{step['name']}: {error}" for step in results for error in step.get("errors", [])]
     report = {
         "schema_version": 1,

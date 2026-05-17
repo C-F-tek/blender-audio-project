@@ -99,9 +99,7 @@ def run_command(command: list[str], repo_root: Path) -> dict[str, Any]:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def required_file(path: Path, label: str) -> None:
@@ -272,15 +270,12 @@ def main() -> int:
     revision_report = read_json_object(revision_json)
 
     causality_passed = json_file_bool(causality_json, "causal_chain_passed")
-    product_acceptance_passed = json_file_bool(
-        causality_json, "product_acceptance_passed"
-    )
+    product_acceptance_passed = json_file_bool(causality_json, "product_acceptance_passed")
     pointer_passed = json_file_bool(pointer_json, "passed")
     long_response_passed = json_file_bool(long_response_json, "passed")
     revision_passed = json_file_bool(revision_json, "passed")
     packaging_complete = all(
-        path.exists()
-        for path in (causality_json, pointer_json, long_response_md, revision_json)
+        path.exists() for path in (causality_json, pointer_json, long_response_md, revision_json)
     )
     command_failures = [result for result in results if not result.get("passed")]
 

@@ -47,11 +47,7 @@ def summarize_code_patch_plan(data: dict[str, Any]) -> dict[str, Any] | None:
     if data.get("kind") != SUPPORTED_PLAN_KIND:
         return None
     decision = data.get("decision") if isinstance(data.get("decision"), dict) else {}
-    plans = (
-        data.get("code_patch_plans")
-        if isinstance(data.get("code_patch_plans"), list)
-        else []
-    )
+    plans = data.get("code_patch_plans") if isinstance(data.get("code_patch_plans"), list) else []
     static_count = data.get("static_code_patch_plan_count")
     contract_count = data.get("code_contract_patch_plan_count")
     return {
@@ -136,9 +132,7 @@ def attach_summary_to_report(
     return False
 
 
-def discover_and_apply(
-    repo_root: Path, bundle: dict[str, Any]
-) -> tuple[int, list[str]]:
+def discover_and_apply(repo_root: Path, bundle: dict[str, Any]) -> tuple[int, list[str]]:
     """Discover code patch-plan reports referenced by the bundle and enrich it."""
     enriched = 0
     warnings: list[str] = []
@@ -190,9 +184,7 @@ def enrich_bundle(
         }
     enriched_count, enrich_warnings = discover_and_apply(repo_root, bundle)
     warnings.extend(enrich_warnings)
-    decision = (
-        bundle.get("decision") if isinstance(bundle.get("decision"), dict) else {}
-    )
+    decision = bundle.get("decision") if isinstance(bundle.get("decision"), dict) else {}
     decision["patch_plan_summary_seen"] = any(
         bool((item.get("summary") or {}).get("patch_plan_summary"))
         for item in bundle.get("reports", [])
@@ -249,11 +241,7 @@ def main() -> int:
         repo_root,
         resolve_output_path(repo_root, args.bundle),
         resolve_output_path(repo_root, args.output) if args.output else None,
-        (
-            resolve_output_path(repo_root, args.markdown_output)
-            if args.markdown_output
-            else None
-        ),
+        (resolve_output_path(repo_root, args.markdown_output) if args.markdown_output else None),
     )
     enrichment = (
         bundle.get("code_patch_plan_enrichment")

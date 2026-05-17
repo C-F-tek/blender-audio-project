@@ -1,99 +1,98 @@
 import math
 
+from fog_dynamics import animate_fog_frame
+from scene_utils import set_linear_interpolation_idblock
+
 from config import (
-    HERO_SCALE_MIN,
-    HERO_SCALE_MAX,
-    HERO_BOUNCE_Z,
-    HERO_ROT_Z,
-    HERO_ROT_X,
-    HERO_ROT_Y,
-    HERO_DRIFT_X,
-    HERO_DRIFT_Y,
-    HERO_ORBIT_X,
-    HERO_ORBIT_Y,
-    HERO_BEAT_TWIST_Z,
-    HERO_ONSET_SHAKE,
-    HERO_DEFORM_STRENGTH_MIN,
-    HERO_DEFORM_STRENGTH_MAX,
-    HERO_DEFORM_DETAIL_STRENGTH_MAX,
-    HERO_DEFORM_WAVE_HEIGHT_MAX,
-    HERO_DEFORM_TWIST_MAX,
-    HERO_DEFORM_CONTROLLER_RADIUS,
-    HERO_DEFORM_KEYFRAME_STEP,
-    HERO_MATERIAL_EMISSION_MIN,
-    HERO_MATERIAL_EMISSION_MAX,
-    HERO_MATERIAL_SELF_LIGHT_MIN,
-    HERO_MATERIAL_SELF_LIGHT_MAX,
-    HERO_MATERIAL_BUMP_MIN,
-    HERO_MATERIAL_BUMP_MAX,
-    HERO_MATERIAL_ROUGHNESS_MIN,
-    HERO_MATERIAL_ROUGHNESS_MAX,
-    HERO_MATERIAL_NOISE_SCALE_MIN,
-    HERO_MATERIAL_NOISE_SCALE_MAX,
-    HERO_MATERIAL_MAPPING_DRIFT,
-    AURA_DEFORM_KEYFRAME_STEP,
+    ALBUM_LETTER_PARTICLE_SIZE_MAX,
+    ALBUM_LETTER_PARTICLE_SIZE_MIN,
+    ALBUM_LETTER_ROOT_SCALE_MAX,
+    ALBUM_LETTER_ROOT_SCALE_MIN,
     AURA_DEFORM_FIELD_DRIFT,
     AURA_DEFORM_FIELD_SCALE,
-    SECONDARY_SCALE_MIN,
-    SECONDARY_SCALE_MAX,
-    SECONDARY_BOUNCE_Z,
-    SECONDARY_DRIFT_X,
-    SECONDARY_DRIFT_Y,
-    SECONDARY_ROT_Z,
-    SECONDARY_ROT_X,
-    CAMERA_BEAT_BUMP_Z,
+    AURA_DEFORM_KEYFRAME_STEP,
+    BACKDROP_BREATHE_SCALE,
+    BACKDROP_EMISSION_MAX,
+    BACKDROP_EMISSION_MIN,
     CAMERA_BEAT_BUMP_Y,
+    CAMERA_BEAT_BUMP_Z,
     CAMERA_ORBIT_AMOUNT,
     CAMERA_PUSH_AMOUNT,
     CAMERA_VERTICAL_SWAY,
-    LIGHT_ENERGY_MIN,
-    LIGHT_ENERGY_MAX,
-    PHYSICS_ACCENT_EMISSION_MIN,
-    PHYSICS_ACCENT_EMISSION_MAX,
-    PHYSICS_ACCENT_MIX_MIN,
-    PHYSICS_ACCENT_MIX_MAX,
-    PHYSICS_ATOM_ORBIT_SPEED_MIN,
-    PHYSICS_ATOM_ORBIT_AUDIO_SPEED,
-    PHYSICS_ATOM_ORBIT_RADIUS_PULSE,
-    PHYSICS_ATOM_ORBIT_HEIGHT_SWAY,
-    PHYSICS_ATOM_MICRO_WOBBLE,
-    COMPOSITOR_GLARE_THRESHOLD_MIN,
     COMPOSITOR_GLARE_THRESHOLD_MAX,
-    COMPOSITOR_LENS_DISTORT_MIN,
-    COMPOSITOR_LENS_DISTORT_MAX,
-    COMPOSITOR_LENS_DISPERSION_MIN,
+    COMPOSITOR_GLARE_THRESHOLD_MIN,
     COMPOSITOR_LENS_DISPERSION_MAX,
-    FIELD_STRENGTH_MIN,
-    FIELD_STRENGTH_MAX,
-    HERO_GRAVITY_STRENGTH_MIN,
+    COMPOSITOR_LENS_DISPERSION_MIN,
+    COMPOSITOR_LENS_DISTORT_MAX,
+    COMPOSITOR_LENS_DISTORT_MIN,
+    HERO_BEAT_TWIST_Z,
+    HERO_BOUNCE_Z,
+    HERO_DEFORM_CONTROLLER_RADIUS,
+    HERO_DEFORM_DETAIL_STRENGTH_MAX,
+    HERO_DEFORM_KEYFRAME_STEP,
+    HERO_DEFORM_STRENGTH_MAX,
+    HERO_DEFORM_STRENGTH_MIN,
+    HERO_DEFORM_TWIST_MAX,
+    HERO_DEFORM_WAVE_HEIGHT_MAX,
+    HERO_DRIFT_X,
+    HERO_DRIFT_Y,
     HERO_GRAVITY_STRENGTH_MAX,
-    TURB_STRENGTH_MIN,
-    TURB_STRENGTH_MAX,
-    VORTEX_STRENGTH_MIN,
-    VORTEX_STRENGTH_MAX,
-    RHYTHM_PARTICLE_SIZE_MIN,
-    RHYTHM_PARTICLE_SIZE_MAX,
-    RHYTHM_PARTICLE_NORMAL_MIN,
-    RHYTHM_PARTICLE_NORMAL_MAX,
-    RHYTHM_PARTICLE_TANGENT_MIN,
-    RHYTHM_PARTICLE_TANGENT_MAX,
-    RHYTHM_PARTICLE_BROWNIAN_MIN,
-    RHYTHM_PARTICLE_BROWNIAN_MAX,
-    RHYTHM_PARTICLE_EMIT_MIN,
-    RHYTHM_PARTICLE_EMIT_MAX,
-    RHYTHM_PARTICLE_KEYFRAME_STEP,
-    ALBUM_LETTER_PARTICLE_SIZE_MIN,
-    ALBUM_LETTER_PARTICLE_SIZE_MAX,
-    ALBUM_LETTER_ROOT_SCALE_MIN,
-    ALBUM_LETTER_ROOT_SCALE_MAX,
-    BACKDROP_EMISSION_MIN,
-    BACKDROP_EMISSION_MAX,
-    BACKDROP_BREATHE_SCALE,
-    MIST_FLOAT_AMPLITUDE,
+    HERO_GRAVITY_STRENGTH_MIN,
+    HERO_MATERIAL_BUMP_MAX,
+    HERO_MATERIAL_BUMP_MIN,
+    HERO_MATERIAL_EMISSION_MAX,
+    HERO_MATERIAL_EMISSION_MIN,
+    HERO_MATERIAL_MAPPING_DRIFT,
+    HERO_MATERIAL_NOISE_SCALE_MAX,
+    HERO_MATERIAL_NOISE_SCALE_MIN,
+    HERO_MATERIAL_ROUGHNESS_MAX,
+    HERO_MATERIAL_ROUGHNESS_MIN,
+    HERO_MATERIAL_SELF_LIGHT_MAX,
+    HERO_MATERIAL_SELF_LIGHT_MIN,
+    HERO_ONSET_SHAKE,
+    HERO_ORBIT_X,
+    HERO_ORBIT_Y,
+    HERO_ROT_X,
+    HERO_ROT_Y,
+    HERO_ROT_Z,
+    HERO_SCALE_MAX,
+    HERO_SCALE_MIN,
+    LIGHT_ENERGY_MAX,
+    LIGHT_ENERGY_MIN,
     MIST_BEAT_BOOST,
+    MIST_FLOAT_AMPLITUDE,
+    PHYSICS_ACCENT_EMISSION_MAX,
+    PHYSICS_ACCENT_EMISSION_MIN,
+    PHYSICS_ACCENT_MIX_MAX,
+    PHYSICS_ACCENT_MIX_MIN,
+    PHYSICS_ATOM_MICRO_WOBBLE,
+    PHYSICS_ATOM_ORBIT_AUDIO_SPEED,
+    PHYSICS_ATOM_ORBIT_HEIGHT_SWAY,
+    PHYSICS_ATOM_ORBIT_RADIUS_PULSE,
+    PHYSICS_ATOM_ORBIT_SPEED_MIN,
+    RHYTHM_PARTICLE_BROWNIAN_MAX,
+    RHYTHM_PARTICLE_BROWNIAN_MIN,
+    RHYTHM_PARTICLE_EMIT_MAX,
+    RHYTHM_PARTICLE_EMIT_MIN,
+    RHYTHM_PARTICLE_KEYFRAME_STEP,
+    RHYTHM_PARTICLE_NORMAL_MAX,
+    RHYTHM_PARTICLE_NORMAL_MIN,
+    RHYTHM_PARTICLE_SIZE_MAX,
+    RHYTHM_PARTICLE_SIZE_MIN,
+    RHYTHM_PARTICLE_TANGENT_MAX,
+    RHYTHM_PARTICLE_TANGENT_MIN,
+    SECONDARY_BOUNCE_Z,
+    SECONDARY_DRIFT_X,
+    SECONDARY_DRIFT_Y,
+    SECONDARY_ROT_X,
+    SECONDARY_ROT_Z,
+    SECONDARY_SCALE_MAX,
+    SECONDARY_SCALE_MIN,
+    TURB_STRENGTH_MAX,
+    TURB_STRENGTH_MIN,
+    VORTEX_STRENGTH_MAX,
+    VORTEX_STRENGTH_MIN,
 )
-from fog_dynamics import animate_fog_frame
-from scene_utils import set_linear_interpolation_idblock
 
 
 def keyframe_if_possible(idblock, data_path, frame):
@@ -155,8 +154,12 @@ def animate_scene(
     hero_deform_controller = hero_asset.get("deform_controller")
     hero_deformers = hero_asset.get("deformers", [])
     hero_material_controls = hero_asset.get("material_controls", [])
-    hero_deform_base_loc = hero_deform_controller.location.copy() if hero_deform_controller else None
-    hero_deform_base_rot = hero_deform_controller.rotation_euler.copy() if hero_deform_controller else None
+    hero_deform_base_loc = (
+        hero_deform_controller.location.copy() if hero_deform_controller else None
+    )
+    hero_deform_base_rot = (
+        hero_deform_controller.rotation_euler.copy() if hero_deform_controller else None
+    )
     hero_deform_base_scale = hero_deform_controller.scale.copy() if hero_deform_controller else None
 
     secondary_root = None
@@ -176,7 +179,9 @@ def animate_scene(
     aura_deform_field = aura_data.get("deform_field")
     aura_audio_props = aura_data.get("audio_props", [])
     aura_audio_base_loc = aura_audio_controller.location.copy() if aura_audio_controller else None
-    aura_audio_base_rot = aura_audio_controller.rotation_euler.copy() if aura_audio_controller else None
+    aura_audio_base_rot = (
+        aura_audio_controller.rotation_euler.copy() if aura_audio_controller else None
+    )
     aura_audio_base_scale = aura_audio_controller.scale.copy() if aura_audio_controller else None
     aura_field_base_loc = aura_deform_field.location.copy() if aura_deform_field else None
     aura_field_base_rot = aura_deform_field.rotation_euler.copy() if aura_deform_field else None
@@ -254,9 +259,7 @@ def animate_scene(
         onset_shake_y = math.cos(i * 0.37) * transient * HERO_ONSET_SHAKE * 0.65
 
         hero_root.rotation_euler.x = (
-            hero_base_rot.x
-            + math.sin(i * 0.030) * HERO_ROT_X * (0.30 + mid * 0.70)
-            + onset_shake_x
+            hero_base_rot.x + math.sin(i * 0.030) * HERO_ROT_X * (0.30 + mid * 0.70) + onset_shake_x
         )
         hero_root.rotation_euler.y = (
             hero_base_rot.y
@@ -286,22 +289,26 @@ def animate_scene(
         if hero_deformers and deform_keyframe:
             deform_drive = min(1.0, low * 0.58 + mid * 0.20 + transient * 0.52)
             if hero_deform_controller is not None:
-                hero_deform_controller.location.x = (
-                    hero_deform_base_loc.x
-                    + math.sin(i * 0.036) * HERO_DEFORM_CONTROLLER_RADIUS * (0.45 + deform_drive)
-                )
-                hero_deform_controller.location.y = (
-                    hero_deform_base_loc.y
-                    + math.cos(i * 0.031) * HERO_DEFORM_CONTROLLER_RADIUS * (0.35 + pulse)
-                )
+                hero_deform_controller.location.x = hero_deform_base_loc.x + math.sin(
+                    i * 0.036
+                ) * HERO_DEFORM_CONTROLLER_RADIUS * (0.45 + deform_drive)
+                hero_deform_controller.location.y = hero_deform_base_loc.y + math.cos(
+                    i * 0.031
+                ) * HERO_DEFORM_CONTROLLER_RADIUS * (0.35 + pulse)
                 hero_deform_controller.location.z = (
                     hero_deform_base_loc.z
                     + math.sin(i * 0.027) * HERO_DEFORM_CONTROLLER_RADIUS * 0.28
                     + beat * 0.08
                 )
-                hero_deform_controller.rotation_euler.x = hero_deform_base_rot.x + i * 0.006 + high * 0.14
-                hero_deform_controller.rotation_euler.y = hero_deform_base_rot.y + math.sin(i * 0.022) * 0.18
-                hero_deform_controller.rotation_euler.z = hero_deform_base_rot.z + i * 0.010 + onset * 0.24
+                hero_deform_controller.rotation_euler.x = (
+                    hero_deform_base_rot.x + i * 0.006 + high * 0.14
+                )
+                hero_deform_controller.rotation_euler.y = (
+                    hero_deform_base_rot.y + math.sin(i * 0.022) * 0.18
+                )
+                hero_deform_controller.rotation_euler.z = (
+                    hero_deform_base_rot.z + i * 0.010 + onset * 0.24
+                )
 
                 deform_scale = 1.0 + deform_drive * 0.18
                 hero_deform_controller.scale = (
@@ -356,7 +363,9 @@ def animate_scene(
                     twist_drive = min(1.0, mid * 0.42 + beat * 0.42 + onset * 0.34 + high * 0.18)
                     twist_angle_max = item.get("twist_angle_max", HERO_DEFORM_TWIST_MAX)
                     try:
-                        twist_modifier.angle = math.sin(i * 0.030 + phase) * twist_drive * twist_angle_max
+                        twist_modifier.angle = (
+                            math.sin(i * 0.030 + phase) * twist_drive * twist_angle_max
+                        )
                         keyframe_if_possible(twist_modifier, "angle", i)
                     except Exception:
                         pass
@@ -375,7 +384,9 @@ def animate_scene(
 
                 self_light_socket = control.get("self_light_socket")
                 if self_light_socket is not None:
-                    edge_drive = min(1.0, material_drive * 0.74 + surface_drive * 0.18 + pulse * 0.16)
+                    edge_drive = min(
+                        1.0, material_drive * 0.74 + surface_drive * 0.18 + pulse * 0.16
+                    )
                     self_light_socket.default_value = HERO_MATERIAL_SELF_LIGHT_MIN + edge_drive * (
                         HERO_MATERIAL_SELF_LIGHT_MAX - HERO_MATERIAL_SELF_LIGHT_MIN
                     )
@@ -383,8 +394,10 @@ def animate_scene(
 
                 roughness_socket = control.get("roughness_socket")
                 if roughness_socket is not None:
-                    roughness_socket.default_value = HERO_MATERIAL_ROUGHNESS_MAX - material_drive * (
-                        HERO_MATERIAL_ROUGHNESS_MAX - HERO_MATERIAL_ROUGHNESS_MIN
+                    roughness_socket.default_value = (
+                        HERO_MATERIAL_ROUGHNESS_MAX
+                        - material_drive
+                        * (HERO_MATERIAL_ROUGHNESS_MAX - HERO_MATERIAL_ROUGHNESS_MIN)
                     )
                     keyframe_if_possible(roughness_socket, "default_value", i)
 
@@ -397,8 +410,10 @@ def animate_scene(
 
                 noise_scale_socket = control.get("noise_scale_socket")
                 if noise_scale_socket is not None:
-                    noise_scale_socket.default_value = HERO_MATERIAL_NOISE_SCALE_MIN + surface_drive * (
-                        HERO_MATERIAL_NOISE_SCALE_MAX - HERO_MATERIAL_NOISE_SCALE_MIN
+                    noise_scale_socket.default_value = (
+                        HERO_MATERIAL_NOISE_SCALE_MIN
+                        + surface_drive
+                        * (HERO_MATERIAL_NOISE_SCALE_MAX - HERO_MATERIAL_NOISE_SCALE_MIN)
                     )
                     keyframe_if_possible(noise_scale_socket, "default_value", i)
 
@@ -428,13 +443,25 @@ def animate_scene(
                 secondary_base_scale.z * ss,
             )
 
-            secondary_root.location.x = secondary_base_loc.x + math.sin(i * 0.018) * SECONDARY_DRIFT_X * (0.35 + mid * 0.65)
-            secondary_root.location.y = secondary_base_loc.y + math.cos(i * 0.022) * SECONDARY_DRIFT_Y * (0.30 + high * 0.70)
-            secondary_root.location.z = secondary_base_loc.z + low * SECONDARY_BOUNCE_Z + pulse * 0.06
+            secondary_root.location.x = secondary_base_loc.x + math.sin(
+                i * 0.018
+            ) * SECONDARY_DRIFT_X * (0.35 + mid * 0.65)
+            secondary_root.location.y = secondary_base_loc.y + math.cos(
+                i * 0.022
+            ) * SECONDARY_DRIFT_Y * (0.30 + high * 0.70)
+            secondary_root.location.z = (
+                secondary_base_loc.z + low * SECONDARY_BOUNCE_Z + pulse * 0.06
+            )
 
-            secondary_root.rotation_euler.x = secondary_base_rot.x + math.sin(i * 0.024) * SECONDARY_ROT_X * (0.35 + high * 0.65)
-            secondary_root.rotation_euler.y = secondary_base_rot.y + math.cos(i * 0.016) * math.radians(3.0) * (0.25 + mid * 0.75)
-            secondary_root.rotation_euler.z = secondary_base_rot.z + math.sin(i * 0.014) * SECONDARY_ROT_Z * (0.35 + pulse * 0.65)
+            secondary_root.rotation_euler.x = secondary_base_rot.x + math.sin(
+                i * 0.024
+            ) * SECONDARY_ROT_X * (0.35 + high * 0.65)
+            secondary_root.rotation_euler.y = secondary_base_rot.y + math.cos(
+                i * 0.016
+            ) * math.radians(3.0) * (0.25 + mid * 0.75)
+            secondary_root.rotation_euler.z = secondary_base_rot.z + math.sin(
+                i * 0.014
+            ) * SECONDARY_ROT_Z * (0.35 + pulse * 0.65)
 
             secondary_root.keyframe_insert(data_path="scale", frame=i)
             secondary_root.keyframe_insert(data_path="location", frame=i)
@@ -498,7 +525,9 @@ def animate_scene(
             aura_audio_controller.location.y = aura_audio_base_loc.y + math.cos(i * 0.016) * 0.14
             aura_audio_controller.location.z = aura_audio_base_loc.z + aura_deform * 0.20
             aura_audio_controller.rotation_euler.x = aura_audio_base_rot.x + i * 0.006 + high * 0.18
-            aura_audio_controller.rotation_euler.y = aura_audio_base_rot.y + math.sin(i * 0.021) * 0.14
+            aura_audio_controller.rotation_euler.y = (
+                aura_audio_base_rot.y + math.sin(i * 0.021) * 0.14
+            )
             aura_audio_controller.rotation_euler.z = aura_audio_base_rot.z + phase
             aura_sampler_scale = 1.0 + aura_deform * 0.22
             aura_audio_controller.scale = (
@@ -511,11 +540,19 @@ def animate_scene(
             aura_audio_controller.keyframe_insert(data_path="scale", frame=i)
 
             if aura_deform_field is not None:
-                aura_deform_field.location.x = aura_field_base_loc.x + math.sin(i * 0.025) * AURA_DEFORM_FIELD_DRIFT * (0.35 + mid)
-                aura_deform_field.location.y = aura_field_base_loc.y + math.cos(i * 0.020) * AURA_DEFORM_FIELD_DRIFT * (0.25 + high)
-                aura_deform_field.location.z = aura_field_base_loc.z + aura_deform * 0.16 + beat * 0.06
+                aura_deform_field.location.x = aura_field_base_loc.x + math.sin(
+                    i * 0.025
+                ) * AURA_DEFORM_FIELD_DRIFT * (0.35 + mid)
+                aura_deform_field.location.y = aura_field_base_loc.y + math.cos(
+                    i * 0.020
+                ) * AURA_DEFORM_FIELD_DRIFT * (0.25 + high)
+                aura_deform_field.location.z = (
+                    aura_field_base_loc.z + aura_deform * 0.16 + beat * 0.06
+                )
                 aura_deform_field.rotation_euler.x = aura_field_base_rot.x + i * 0.009 + high * 0.22
-                aura_deform_field.rotation_euler.y = aura_field_base_rot.y + math.sin(i * 0.031) * 0.20 + onset * 0.08
+                aura_deform_field.rotation_euler.y = (
+                    aura_field_base_rot.y + math.sin(i * 0.031) * 0.20 + onset * 0.08
+                )
                 aura_deform_field.rotation_euler.z = aura_field_base_rot.z + i * 0.013 + low * 0.12
 
                 compact = 1.0 - aura_deform * AURA_DEFORM_FIELD_SCALE * 0.45
@@ -557,16 +594,21 @@ def animate_scene(
             if compositor_lens is not None:
                 try:
                     if "Distort" in compositor_lens.inputs:
-                        compositor_lens.inputs["Distort"].default_value = COMPOSITOR_LENS_DISTORT_MIN + comp_drive * (
-                            COMPOSITOR_LENS_DISTORT_MAX - COMPOSITOR_LENS_DISTORT_MIN
+                        compositor_lens.inputs["Distort"].default_value = (
+                            COMPOSITOR_LENS_DISTORT_MIN
+                            + comp_drive
+                            * (COMPOSITOR_LENS_DISTORT_MAX - COMPOSITOR_LENS_DISTORT_MIN)
                         )
                         keyframe_if_possible(compositor_lens.inputs["Distort"], "default_value", i)
                     if "Dispersion" in compositor_lens.inputs:
                         compositor_lens.inputs["Dispersion"].default_value = (
                             COMPOSITOR_LENS_DISPERSION_MIN
-                            + comp_drive * (COMPOSITOR_LENS_DISPERSION_MAX - COMPOSITOR_LENS_DISPERSION_MIN)
+                            + comp_drive
+                            * (COMPOSITOR_LENS_DISPERSION_MAX - COMPOSITOR_LENS_DISPERSION_MIN)
                         )
-                        keyframe_if_possible(compositor_lens.inputs["Dispersion"], "default_value", i)
+                        keyframe_if_possible(
+                            compositor_lens.inputs["Dispersion"], "default_value", i
+                        )
                 except Exception:
                     pass
 
@@ -590,21 +632,28 @@ def animate_scene(
         if backdrop is not None and backdrop_controls:
             backdrop_drive = min(0.22, high * 0.035 + mid * 0.025 + pulse * 0.020)
             if "emission_socket" in backdrop_controls:
-                backdrop_controls["emission_socket"].default_value = BACKDROP_EMISSION_MIN + backdrop_drive * (
-                    BACKDROP_EMISSION_MAX - BACKDROP_EMISSION_MIN
+                backdrop_controls["emission_socket"].default_value = (
+                    BACKDROP_EMISSION_MIN
+                    + backdrop_drive * (BACKDROP_EMISSION_MAX - BACKDROP_EMISSION_MIN)
                 )
-                backdrop_controls["emission_socket"].keyframe_insert(data_path="default_value", frame=i)
+                backdrop_controls["emission_socket"].keyframe_insert(
+                    data_path="default_value", frame=i
+                )
 
             if "mapping_location_socket" in backdrop_controls:
                 bloc = backdrop_controls["mapping_location_socket"].default_value
                 bloc[0] = i * 0.00018 + math.sin(i * 0.006) * 0.012
                 bloc[1] = i * 0.00012 + backdrop_drive * 0.015
                 bloc[2] = 0.0
-                backdrop_controls["mapping_location_socket"].keyframe_insert(data_path="default_value", frame=i)
+                backdrop_controls["mapping_location_socket"].keyframe_insert(
+                    data_path="default_value", frame=i
+                )
 
             if "noise_scale_socket" in backdrop_controls:
                 backdrop_controls["noise_scale_socket"].default_value = 2.18 + backdrop_drive * 0.12
-                backdrop_controls["noise_scale_socket"].keyframe_insert(data_path="default_value", frame=i)
+                backdrop_controls["noise_scale_socket"].keyframe_insert(
+                    data_path="default_value", frame=i
+                )
 
             if backdrop_base_scale is not None and backdrop_base_loc is not None:
                 bscale = 1.0 + backdrop_drive * BACKDROP_BREATHE_SCALE
@@ -621,7 +670,11 @@ def animate_scene(
                 backdrop_control.location.x = backdrop_base_loc.x
                 backdrop_control.location.y = backdrop_base_loc.y
                 backdrop_control.location.z = backdrop_base_loc.z + backdrop_drive * 0.012
-                backdrop_control.scale = (1.0 + backdrop_drive * 0.012, 1.0 + backdrop_drive * 0.012, 1.0)
+                backdrop_control.scale = (
+                    1.0 + backdrop_drive * 0.012,
+                    1.0 + backdrop_drive * 0.012,
+                    1.0,
+                )
                 backdrop_control.keyframe_insert(data_path="location", frame=i)
                 backdrop_control.keyframe_insert(data_path="scale", frame=i)
 
@@ -634,7 +687,11 @@ def animate_scene(
 
             obj.location.x = base_loc.x + math.sin(i * 0.012 + phase) * 0.16
             obj.location.y = base_loc.y + math.cos(i * 0.010 + phase) * 0.14
-            obj.location.z = base_loc.z + math.sin(i * 0.015 + phase) * MIST_FLOAT_AMPLITUDE + beat * MIST_BEAT_BOOST
+            obj.location.z = (
+                base_loc.z
+                + math.sin(i * 0.015 + phase) * MIST_FLOAT_AMPLITUDE
+                + beat * MIST_BEAT_BOOST
+            )
             obj.keyframe_insert(data_path="location", frame=i)
 
             pscale = base_scale + high * 0.02 + pulse * 0.02
@@ -741,7 +798,9 @@ def animate_scene(
 
             orbit_radius = item.get("orbit_radius")
             if orbit_radius is None:
-                orbit_radius = max(0.20, math.sqrt(base_loc.x * base_loc.x + base_loc.y * base_loc.y))
+                orbit_radius = max(
+                    0.20, math.sqrt(base_loc.x * base_loc.x + base_loc.y * base_loc.y)
+                )
             orbit_angle = item.get("orbit_angle", math.atan2(base_loc.y, base_loc.x))
             orbit_speed = item.get("orbit_speed", PHYSICS_ATOM_ORBIT_SPEED_MIN + response * 0.004)
             orbit_tilt = item.get("orbit_tilt", 0.0)
@@ -751,10 +810,7 @@ def animate_scene(
             speed = orbit_speed + accent_drive * PHYSICS_ATOM_ORBIT_AUDIO_SPEED + beat * 0.004
             angle = orbit_angle + i * speed + math.sin(i * 0.012 + phase) * 0.055
             radius = orbit_radius * (
-                1.0
-                + accent_drive * PHYSICS_ATOM_ORBIT_RADIUS_PULSE
-                + low * 0.035
-                - high * 0.012
+                1.0 + accent_drive * PHYSICS_ATOM_ORBIT_RADIUS_PULSE + low * 0.035 - high * 0.012
             )
             y_radius = radius * (0.82 + math.cos(orbit_tilt) * 0.10)
             atom_center = hero_root.location
@@ -764,7 +820,9 @@ def animate_scene(
             anchor.location.z = (
                 atom_center.z
                 + orbit_z_offset
-                + math.sin(angle * 1.31 + orbit_tilt) * PHYSICS_ATOM_ORBIT_HEIGHT_SWAY * (0.35 + accent_drive)
+                + math.sin(angle * 1.31 + orbit_tilt)
+                * PHYSICS_ATOM_ORBIT_HEIGHT_SWAY
+                * (0.35 + accent_drive)
                 + low * 0.10
                 + beat * 0.045
             )
@@ -777,8 +835,12 @@ def animate_scene(
             obj.location.z = anchor.location.z + math.sin(micro_angle * 1.17) * micro_drive * 0.54
             obj.keyframe_insert(data_path="location", frame=i)
 
-            obj.rotation_euler.x = base_rot.x + math.sin(i * 0.017 + phase) * 0.10 * (0.35 + accent_drive)
-            obj.rotation_euler.y = base_rot.y + math.cos(i * 0.015 + phase) * 0.08 * (0.35 + accent_drive)
+            obj.rotation_euler.x = base_rot.x + math.sin(i * 0.017 + phase) * 0.10 * (
+                0.35 + accent_drive
+            )
+            obj.rotation_euler.y = base_rot.y + math.cos(i * 0.015 + phase) * 0.08 * (
+                0.35 + accent_drive
+            )
             obj.rotation_euler.z = (
                 base_rot.z
                 + angle
@@ -811,17 +873,21 @@ def animate_scene(
             force_obj.location.x = hero_root.location.x
             force_obj.location.y = hero_root.location.y
             force_obj.location.z = hero_root.location.z + 0.34 + math.sin(i * 0.010) * 0.05
-            force_obj.keyframe_insert(data_path='field.strength', frame=i)
-            force_obj.keyframe_insert(data_path='location', frame=i)
+            force_obj.keyframe_insert(data_path="field.strength", frame=i)
+            force_obj.keyframe_insert(data_path="location", frame=i)
 
         if turb_obj is not None:
-            turb_strength = TURB_STRENGTH_MIN + high * (TURB_STRENGTH_MAX - TURB_STRENGTH_MIN) * 0.64 + pulse * 0.42
+            turb_strength = (
+                TURB_STRENGTH_MIN
+                + high * (TURB_STRENGTH_MAX - TURB_STRENGTH_MIN) * 0.64
+                + pulse * 0.42
+            )
             turb_obj.field.strength = turb_strength
             turb_obj.location.x = hero_root.location.x
             turb_obj.location.y = hero_root.location.y
             turb_obj.location.z = hero_root.location.z + 0.74 + math.sin(i * 0.012) * 0.08
-            turb_obj.keyframe_insert(data_path='field.strength', frame=i)
-            turb_obj.keyframe_insert(data_path='location', frame=i)
+            turb_obj.keyframe_insert(data_path="field.strength", frame=i)
+            turb_obj.keyframe_insert(data_path="location", frame=i)
 
         if vortex_obj is not None:
             vortex_strength = VORTEX_STRENGTH_MIN + (mid * 0.62 + pulse * 0.18) * (
@@ -832,19 +898,19 @@ def animate_scene(
             vortex_obj.location.y = hero_root.location.y
             vortex_obj.location.z = hero_root.location.z + 0.18
             vortex_obj.rotation_euler.z = i * (0.004 + mid * 0.003 + beat * 0.002)
-            vortex_obj.keyframe_insert(data_path='field.strength', frame=i)
-            vortex_obj.keyframe_insert(data_path='location', frame=i)
-            vortex_obj.keyframe_insert(data_path='rotation_euler', frame=i)
+            vortex_obj.keyframe_insert(data_path="field.strength", frame=i)
+            vortex_obj.keyframe_insert(data_path="location", frame=i)
+            vortex_obj.keyframe_insert(data_path="rotation_euler", frame=i)
 
         if wind_left is not None:
             wl = onset * 6.0 + beat * 2.0
             wind_left.field.strength = wl
-            wind_left.keyframe_insert(data_path='field.strength', frame=i)
+            wind_left.keyframe_insert(data_path="field.strength", frame=i)
 
         if wind_right is not None:
             wr = high * 4.0 + beat * 1.8
             wind_right.field.strength = wr
-            wind_right.keyframe_insert(data_path='field.strength', frame=i)
+            wind_right.keyframe_insert(data_path="field.strength", frame=i)
 
         # RHYTHM PARTICLE PHYSICS
         particle_keyframe = (
@@ -871,12 +937,12 @@ def animate_scene(
                     settings.normal_factor = RHYTHM_PARTICLE_NORMAL_MIN + drive * (
                         RHYTHM_PARTICLE_NORMAL_MAX - RHYTHM_PARTICLE_NORMAL_MIN
                     )
-                    settings.tangent_factor = RHYTHM_PARTICLE_TANGENT_MIN + (mid * 0.55 + drive * 0.45) * (
-                        RHYTHM_PARTICLE_TANGENT_MAX - RHYTHM_PARTICLE_TANGENT_MIN
-                    )
-                    settings.brownian_factor = RHYTHM_PARTICLE_BROWNIAN_MIN + (high * 0.45 + drive * 0.55) * (
-                        RHYTHM_PARTICLE_BROWNIAN_MAX - RHYTHM_PARTICLE_BROWNIAN_MIN
-                    )
+                    settings.tangent_factor = RHYTHM_PARTICLE_TANGENT_MIN + (
+                        mid * 0.55 + drive * 0.45
+                    ) * (RHYTHM_PARTICLE_TANGENT_MAX - RHYTHM_PARTICLE_TANGENT_MIN)
+                    settings.brownian_factor = RHYTHM_PARTICLE_BROWNIAN_MIN + (
+                        high * 0.45 + drive * 0.55
+                    ) * (RHYTHM_PARTICLE_BROWNIAN_MAX - RHYTHM_PARTICLE_BROWNIAN_MIN)
                     settings.particle_size = RHYTHM_PARTICLE_SIZE_MIN + drive * (
                         RHYTHM_PARTICLE_SIZE_MAX - RHYTHM_PARTICLE_SIZE_MIN
                     )
@@ -886,7 +952,9 @@ def animate_scene(
 
                     emitter.location.z = base_loc.z + low * 0.10 + transient * 0.06
                     scale_boost = 1.0 + drive * 0.12
-                    emitter.rotation_euler.z = base_rot.z + i * 0.010 + math.sin(i * 0.019 + phase) * 0.08
+                    emitter.rotation_euler.z = (
+                        base_rot.z + i * 0.010 + math.sin(i * 0.019 + phase) * 0.08
+                    )
 
                 elif mode == "dust":
                     drive = min(1.0, mid * 0.46 + low * 0.26 + pulse * 0.18)
@@ -894,11 +962,15 @@ def animate_scene(
                     settings.tangent_factor = 0.08 + drive * 0.42
                     settings.brownian_factor = 0.28 + (high * 0.55 + drive * 0.45) * 0.78
                     settings.particle_size = RHYTHM_PARTICLE_SIZE_MIN * (0.58 + drive * 0.55)
-                    item["emission_socket"].default_value = 0.10 + (high * 0.36 + drive * 0.38) * 0.90
+                    item["emission_socket"].default_value = (
+                        0.10 + (high * 0.36 + drive * 0.38) * 0.90
+                    )
 
                     emitter.location.x = base_loc.x + math.sin(i * 0.008 + phase) * 0.18
                     emitter.location.y = base_loc.y + math.cos(i * 0.007 + phase) * 0.16
-                    emitter.location.z = base_loc.z + math.sin(i * 0.010 + phase) * 0.08 + low * 0.05
+                    emitter.location.z = (
+                        base_loc.z + math.sin(i * 0.010 + phase) * 0.08 + low * 0.05
+                    )
                     scale_boost = 1.0 + drive * 0.04
                     emitter.rotation_euler.z = base_rot.z + i * 0.003 + phase
 
@@ -976,7 +1048,12 @@ def animate_scene(
         # CAMERA
         camera.location.x = cam_base_loc.x + math.sin(i * 0.020) * CAMERA_ORBIT_AMOUNT
         camera.location.y = cam_base_loc.y + low * CAMERA_PUSH_AMOUNT - beat * CAMERA_BEAT_BUMP_Y
-        camera.location.z = cam_base_loc.z + beat * CAMERA_BEAT_BUMP_Z + math.sin(i * 0.018) * CAMERA_VERTICAL_SWAY + high * 0.08
+        camera.location.z = (
+            cam_base_loc.z
+            + beat * CAMERA_BEAT_BUMP_Z
+            + math.sin(i * 0.018) * CAMERA_VERTICAL_SWAY
+            + high * 0.08
+        )
         camera.keyframe_insert(data_path="location", frame=i)
 
         target.location.x = target_base_loc.x + (mid - 0.5) * 0.40

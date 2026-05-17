@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
 import argparse
 import json
 from datetime import datetime
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -233,7 +232,9 @@ CHUNK:
     return fit_prompt(prefix, context, suffix, max_prompt_chars)
 
 
-def build_batch_reduce_prompt(batch_title: str, notes: str, max_prompt_chars: int, domain: str = "code") -> str:
+def build_batch_reduce_prompt(
+    batch_title: str, notes: str, max_prompt_chars: int, domain: str = "code"
+) -> str:
     if domain == "music":
         prefix = f"""
 Sei un agente NPU musicale. Devi comprimere note parziali da analysis WAV e scene JSON.
@@ -439,7 +440,9 @@ def run_onepass(pipe, context_path: Path, args: argparse.Namespace) -> str:
     return generate_text(pipe, prompt, args.max_new_tokens)
 
 
-def run_chunked(pipe, context_path: Path, chunk_dir: Path, notes_out: Path, args: argparse.Namespace) -> str:
+def run_chunked(
+    pipe, context_path: Path, chunk_dir: Path, notes_out: Path, args: argparse.Namespace
+) -> str:
     if args.reuse_notes and notes_out.exists():
         print(f"[NPU] Reusing existing notes: {notes_out}")
         notes = [(notes_out.name, read_text(notes_out))]
@@ -461,7 +464,9 @@ def run_chunked(pipe, context_path: Path, chunk_dir: Path, notes_out: Path, args
 
     for index, (title, context) in enumerate(chunks, 1):
         print(f"[NPU] Reading chunk {index}/{total}: {title}")
-        prompt = build_chunk_prompt(title, index, total, context, args.max_prompt_chars, args.domain)
+        prompt = build_chunk_prompt(
+            title, index, total, context, args.max_prompt_chars, args.domain
+        )
         note = generate_text(pipe, prompt, args.max_chunk_tokens)
         notes.append((title, note))
         write_notes(notes_out, notes)
@@ -510,11 +515,15 @@ def write_metadata_report(
         "provider_empty_response": bool(provider_empty_response),
         "source_writes_performed": False,
         "patch_application_performed": False,
-        "advisory_role": "probe_or_knowledge_broker" if args.engine == "npu" else "primary_advisory_when_quality_approved",
+        "advisory_role": "probe_or_knowledge_broker"
+        if args.engine == "npu"
+        else "primary_advisory_when_quality_approved",
         "quality_gate_required_before_advisory_use": True,
     }
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
-    metadata_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    metadata_path.write_text(
+        json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     print(f"[OK] Wrote metadata: {metadata_path}")
 
 
@@ -525,8 +534,15 @@ def main() -> None:
     parser.add_argument("--chunk-dir")
     parser.add_argument("--out")
     parser.add_argument("--notes-out")
-    parser.add_argument("--metadata-out", help="Optional JSON sidecar describing provider execution and advisory role.")
-    parser.add_argument("--metadata-only", action="store_true", help="Write metadata sidecar without loading providers or generating review text.")
+    parser.add_argument(
+        "--metadata-out",
+        help="Optional JSON sidecar describing provider execution and advisory role.",
+    )
+    parser.add_argument(
+        "--metadata-only",
+        action="store_true",
+        help="Write metadata sidecar without loading providers or generating review text.",
+    )
     parser.add_argument("--device", default="NPU")
     parser.add_argument("--engine", choices=["npu", "ollama"], default="npu")
     parser.add_argument("--ollama-model", default="qwen2.5-coder:14b")

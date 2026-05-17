@@ -6,6 +6,7 @@ write source files, delete files, or run bundle validators. It checks that a
 PatchKit bundle is syntactically usable and that operations remain explicit,
 guarded and inside the repository safety perimeter.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,7 +18,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 ALLOWED_OPERATIONS = {
     "insert_after_invoke_checked",
@@ -102,11 +107,20 @@ def validate_fragment(repo_root: Path, bundle_dir: Path, op: dict[str, Any]) -> 
     return errors
 
 
-def validate_operation(repo_root: Path, bundle_dir: Path, bundle: dict[str, Any], index: int, op: Any) -> dict[str, Any]:
+def validate_operation(
+    repo_root: Path, bundle_dir: Path, bundle: dict[str, Any], index: int, op: Any
+) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     if not isinstance(op, dict):
-        return {"index": index, "passed": False, "operation": "", "target": "", "errors": ["operation must be a JSON object"], "warnings": []}
+        return {
+            "index": index,
+            "passed": False,
+            "operation": "",
+            "target": "",
+            "errors": ["operation must be a JSON object"],
+            "warnings": [],
+        }
 
     operation = str(op.get("operation") or "")
     target = normalize_target(op.get("target") or bundle.get("target"))
@@ -124,7 +138,9 @@ def validate_operation(repo_root: Path, bundle_dir: Path, bundle: dict[str, Any]
 
     if operation == "insert_after_invoke_checked" and not str(op.get("label") or ""):
         errors.append("insert_after_invoke_checked requires label")
-    if operation in {"insert_before_marker", "insert_after_marker"} and not str(op.get("target_marker") or ""):
+    if operation in {"insert_before_marker", "insert_after_marker"} and not str(
+        op.get("target_marker") or ""
+    ):
         errors.append(f"{operation} requires target_marker")
     if operation == "replace_once" and ("old" not in op or "new" not in op):
         errors.append("replace_once requires old and new")
@@ -231,7 +247,9 @@ def validate_bundle(repo_root: Path, bundle_path: Path) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate a PatchKit bundle contract without applying it.")
+    parser = argparse.ArgumentParser(
+        description="Validate a PatchKit bundle contract without applying it."
+    )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--bundle", required=True)
     parser.add_argument("--output", default="output/validation/patchkit_bundle_contract.json")
@@ -243,7 +261,9 @@ def main() -> int:
     report = validate_bundle(repo_root, bundle_path)
     print(write_json_report(report, resolve_output_path(repo_root, args.output)), end="")
     if args.markdown_output:
-        write_text_report(render_markdown(report), resolve_output_path(repo_root, args.markdown_output))
+        write_text_report(
+            render_markdown(report), resolve_output_path(repo_root, args.markdown_output)
+        )
     return 0 if report["passed"] else 2
 
 

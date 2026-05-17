@@ -70,9 +70,7 @@ def detect_openvino_devices() -> dict[str, Any]:
         details: dict[str, Any] = {}
         for device in devices:
             details[device] = {
-                "full_device_name": _safe_openvino_property(
-                    core, device, "FULL_DEVICE_NAME"
-                ),
+                "full_device_name": _safe_openvino_property(core, device, "FULL_DEVICE_NAME"),
                 "optimization_capabilities": _safe_openvino_property(
                     core, device, "OPTIMIZATION_CAPABILITIES"
                 ),

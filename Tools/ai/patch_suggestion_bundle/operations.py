@@ -40,9 +40,7 @@ def resolve_target(repo_root: Path, rel_path: str) -> Path:
 
 def normalize_operation(raw: dict[str, Any]) -> PatchOperation | None:
     """Convert a raw suggestion dict into a supported PatchOperation."""
-    op = first_string(
-        raw, ("operation", "op", "action", "patch_operation", "edit_operation")
-    )
+    op = first_string(raw, ("operation", "op", "action", "patch_operation", "edit_operation"))
     if not op:
         return None
     op = op.strip().lower().replace("-", "_")
@@ -108,10 +106,7 @@ def is_manual_candidate(raw: dict[str, Any]) -> bool:
     operation = first_string(
         raw, ("operation", "op", "action", "patch_operation", "edit_operation")
     )
-    if (
-        operation
-        and operation.strip().lower().replace("-", "_") in PROPOSAL_ONLY_OPERATIONS
-    ):
+    if operation and operation.strip().lower().replace("-", "_") in PROPOSAL_ONLY_OPERATIONS:
         return True
 
     if (
@@ -161,9 +156,7 @@ def manual_item(raw: dict[str, Any]) -> dict[str, Any]:
         "family": first_string(raw, ("family", "suggestion_family", "area", "kind")),
         "title": first_string(raw, ("title", "description", "rationale", "details")),
         "operation": operation,
-        "apply_mode": first_string(
-            raw, ("apply_mode", "write_policy", "content_status")
-        ),
+        "apply_mode": first_string(raw, ("apply_mode", "write_policy", "content_status")),
         "target": target,
         "target_files": target_files,
         "change_type": first_string(raw, ("change_type", "artifact_kind")),
@@ -222,9 +215,7 @@ def line_count(text: str) -> int:
     return len(text.splitlines())
 
 
-def apply_operation(
-    repo_root: Path, operation: PatchOperation, apply: bool
-) -> dict[str, Any]:
+def apply_operation(repo_root: Path, operation: PatchOperation, apply: bool) -> dict[str, Any]:
     """Apply or dry-run a single deterministic operation."""
     safe, reason = is_safe_target(operation.path)
     result: dict[str, Any] = {
@@ -298,9 +289,7 @@ def apply_operation(
             if count == 0:
                 raise ValueError(f"{operation.operation} anchor not found")
             if count > 1:
-                raise ValueError(
-                    f"{operation.operation} expected 1 match, found {count}"
-                )
+                raise ValueError(f"{operation.operation} expected 1 match, found {count}")
             insert = operation.find + operation.content
             if operation.operation == "insert_before_once":
                 insert = operation.content + operation.find

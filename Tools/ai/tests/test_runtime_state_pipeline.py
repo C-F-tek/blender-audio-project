@@ -96,9 +96,7 @@ class DeterministicPipelineTests(unittest.TestCase):
             },
             lane="gpu1",
         )
-        gate = runtime_state_gate(
-            {"gpu1": "ready", "gpu0": "degraded", "npu": "ready"}, 1
-        )
+        gate = runtime_state_gate({"gpu1": "ready", "gpu0": "degraded", "npu": "ready"}, 1)
         self.assertTrue(gate["passed"])
         recommendation = write_recommendation_event(heap)["recommendation"]
         self.assertEqual(recommendation["action"], "repair_degraded_lane")
@@ -117,9 +115,7 @@ class DeterministicPipelineTests(unittest.TestCase):
         self.assertTrue(validation["tool_pointer_inputs"]["evidence_pointers"])
 
     def test_failed_gate_blocks_recommendation_step(self) -> None:
-        gate = runtime_state_gate(
-            {"gpu1": "ready", "gpu0": "degraded", "npu": "ready"}, 0
-        )
+        gate = runtime_state_gate({"gpu1": "ready", "gpu0": "degraded", "npu": "ready"}, 0)
         self.assertFalse(gate["passed"])
 
 

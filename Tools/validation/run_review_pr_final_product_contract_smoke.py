@@ -19,7 +19,9 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def run_contract(repo_root: Path, report_path: Path, output: Path, require_remote: bool) -> dict[str, Any]:
+def run_contract(
+    repo_root: Path, report_path: Path, output: Path, require_remote: bool
+) -> dict[str, Any]:
     command = [
         sys.executable,
         str(repo_root / "Tools/validation/check_review_pr_final_product_contract.py"),
@@ -73,7 +75,9 @@ def require(condition: bool, errors: list[str], message: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/review_pr_final_product_contract_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/review_pr_final_product_contract_smoke.json"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -107,14 +111,29 @@ def main() -> int:
     by_name = {case["name"]: case for case in cases}
 
     require(by_name["local_product"]["returncode"] == 0, errors, "local product case should pass")
-    require(by_name["local_product"]["report"].get("passed") is True, errors, "local product report should pass")
+    require(
+        by_name["local_product"]["report"].get("passed") is True,
+        errors,
+        "local product report should pass",
+    )
     require(by_name["remote_product"]["returncode"] == 0, errors, "remote product case should pass")
-    require(by_name["remote_product"]["report"].get("passed") is True, errors, "remote product report should pass")
+    require(
+        by_name["remote_product"]["report"].get("passed") is True,
+        errors,
+        "remote product report should pass",
+    )
 
     missing_errors = by_name["missing_remote_pr"]["report"].get("errors") or []
-    require(by_name["missing_remote_pr"]["returncode"] == 2, errors, "missing remote PR case should fail")
     require(
-        any("github_pr_created" in item or "github_pr_url_present" in item for item in missing_errors),
+        by_name["missing_remote_pr"]["returncode"] == 2,
+        errors,
+        "missing remote PR case should fail",
+    )
+    require(
+        any(
+            "github_pr_created" in item or "github_pr_url_present" in item
+            for item in missing_errors
+        ),
         errors,
         "missing remote PR case should report missing GitHub PR",
     )

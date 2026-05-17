@@ -78,11 +78,7 @@ def normalize_repo_path(value: Any) -> str:
 def repo_rel(repo_root: Path, path: Path) -> str:
     """Return a repository-relative path when possible."""
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -107,14 +103,11 @@ def parse_line_count_row(row: dict[str, Any]) -> tuple[str, int] | None:
     return parse_line_count_csv_row(row)
 
 
-def load_line_counts(
-    repo_root: Path, csv_path: Path
-) -> tuple[dict[str, int], list[str]]:
+def load_line_counts(repo_root: Path, csv_path: Path) -> tuple[dict[str, int], list[str]]:
     """Load optional line-count CSV evidence as a sizing hint."""
     counts, warnings = load_line_count_csv_map(csv_path)
     normalized_warnings = [
-        warning.replace(str(csv_path), repo_rel(repo_root, csv_path))
-        for warning in warnings
+        warning.replace(str(csv_path), repo_rel(repo_root, csv_path)) for warning in warnings
     ]
     return counts, normalized_warnings
 
@@ -138,9 +131,7 @@ def compact_list(
         return []
     compacted: list[Any] = []
     for item in value[:max_items]:
-        compacted.append(
-            compact_text(item, text_limit) if isinstance(item, str) else item
-        )
+        compacted.append(compact_text(item, text_limit) if isinstance(item, str) else item)
     return compacted
 
 
@@ -212,9 +203,7 @@ def target_path_errors(
         errors.append("target path escapes repository root")
     errors.extend(forbidden_target_errors(path))
     if require_code_like and not is_code_like_path(path):
-        errors.append(
-            "target is not a code/config script path for the code patch-plan lane"
-        )
+        errors.append("target is not a code/config script path for the code patch-plan lane")
     if require_existing and not full.is_file():
         errors.append("target file does not exist")
     return errors

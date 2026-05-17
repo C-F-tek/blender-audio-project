@@ -20,9 +20,7 @@ MODULES_TO_RELOAD = [
     "scene_tuning_panel",
 ]
 
-PACKAGE_PREFIXES_TO_RELOAD = (
-    "spaziotempo",
-)
+PACKAGE_PREFIXES_TO_RELOAD = ("spaziotempo",)
 
 
 def should_reload_module(module_name: str) -> bool:

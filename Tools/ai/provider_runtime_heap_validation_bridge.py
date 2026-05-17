@@ -29,12 +29,8 @@ except ImportError:
         write_text_report,
     )
 
-DEFAULT_OUTPUT = (
-    "output/validation/provider_runtime_heap_validation_bridge_{stamp}.json"
-)
-DEFAULT_MARKDOWN = (
-    "output/validation/provider_runtime_heap_validation_bridge_{stamp}.md"
-)
+DEFAULT_OUTPUT = "output/validation/provider_runtime_heap_validation_bridge_{stamp}.json"
+DEFAULT_MARKDOWN = "output/validation/provider_runtime_heap_validation_bridge_{stamp}.md"
 
 
 def now_iso() -> str:
@@ -43,11 +39,7 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -55,9 +47,7 @@ def repo_rel(repo_root: Path, path: Path) -> str:
 def read_report(path: Path) -> tuple[dict[str, Any], str]:
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 - validation bridge must report unreadable inputs.
+    except Exception as exc:  # noqa: BLE001 - validation bridge must report unreadable inputs.
         return {}, f"{type(exc).__name__}: {exc}"
     return (data if isinstance(data, dict) else {}), ""
 
@@ -83,9 +73,7 @@ def expand_report_files(
 def report_payload(
     repo_root: Path, path: Path, data: dict[str, Any], read_error: str
 ) -> dict[str, Any]:
-    guardrails = (
-        data.get("guardrails") if isinstance(data.get("guardrails"), dict) else {}
-    )
+    guardrails = data.get("guardrails") if isinstance(data.get("guardrails"), dict) else {}
     return {
         "source_report": repo_rel(repo_root, path),
         "kind": data.get("kind"),
@@ -97,12 +85,10 @@ def report_payload(
             or guardrails.get("provider_execution_performed")
         ),
         "patch_application_performed": bool(
-            data.get("patch_application_performed")
-            or guardrails.get("patch_application_performed")
+            data.get("patch_application_performed") or guardrails.get("patch_application_performed")
         ),
         "source_writes_performed": bool(
-            data.get("source_writes_performed")
-            or guardrails.get("source_writes_performed")
+            data.get("source_writes_performed") or guardrails.get("source_writes_performed")
         ),
         "validator_authority": "deterministic_cpu_validation_lane",
     }
@@ -113,9 +99,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     heap = ProviderRuntimeHeap.from_args(
         repo_root, args.stamp, args.events, args.snapshot, args.heap_markdown
     )
-    report_paths = expand_report_files(
-        repo_root, args.report_file, args.report_glob, args.stamp
-    )
+    report_paths = expand_report_files(repo_root, args.report_file, args.report_glob, args.stamp)
 
     events: list[dict[str, Any]] = []
     errors: list[str] = []
@@ -155,9 +139,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "failed_report_count": failed_reports,
         "heap_snapshot": {
             "event_count": snapshot.get("event_count"),
-            "pending_broker_request_count": snapshot.get(
-                "pending_broker_request_count"
-            ),
+            "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
             "event_log": snapshot.get("event_log"),
         },
         "reports": [repo_rel(repo_root, path) for path in report_paths],
@@ -210,9 +192,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     report = build_report(args)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
-    markdown = resolve_output_path(
-        repo_root, args.markdown_output.format(stamp=args.stamp)
-    )
+    markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
     print(json.dumps(report, indent=2, ensure_ascii=False))

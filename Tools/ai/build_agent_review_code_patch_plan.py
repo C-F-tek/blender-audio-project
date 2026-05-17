@@ -36,9 +36,7 @@ APPLY_MODE = "report_only_manual_review_code_patch_plan"
 DEFAULT_CODE_DRIFT_REPORT = "output/validation/code_contract_drift.json"
 DEFAULT_OUTPUT = "output/patch_specs/agent_review_code_patch_plan.json"
 DEFAULT_MARKDOWN = "output/patch_specs/agent_review_code_patch_plan.md"
-DEFAULT_LINE_COUNT_CSV = (
-    "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260501-215122.csv"
-)
+DEFAULT_LINE_COUNT_CSV = "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260501-215122.csv"
 DEFAULT_VALIDATION_COMMANDS = [
     "python .\\Tools\\validation\\check_python_syntax.py --repo-root . --output .\\output\\validation\\python_syntax.json",
     "python .\\Tools\\validation\\check_validation_report_contract.py --repo-root . --output .\\output\\validation\\validation_report_contract.json",
@@ -74,11 +72,7 @@ def stop_conditions_for(source_label: str) -> list[str]:
 def source_kind_for(plan: dict[str, Any]) -> Any:
     """Return the source kind recorded on a code patch plan."""
     source_evidence = plan.get("source_evidence")
-    return (
-        source_evidence.get("source_kind")
-        if isinstance(source_evidence, dict)
-        else None
-    )
+    return source_evidence.get("source_kind") if isinstance(source_evidence, dict) else None
 
 
 def risk_for(path_value: str, check: dict[str, Any], counts: dict[str, int]) -> str:
@@ -86,8 +80,7 @@ def risk_for(path_value: str, check: dict[str, Any], counts: dict[str, int]) -> 
     lines = line_count_for(path_value, counts)
     base = (
         "medium"
-        if list_len(check.get("missing_required_terms"))
-        or list_len(check.get("errors"))
+        if list_len(check.get("missing_required_terms")) or list_len(check.get("errors"))
         else "low"
     )
     if lines is not None and lines >= 600:
@@ -117,15 +110,11 @@ def rationale_for(check: dict[str, Any]) -> str:
     ):
         values = list_field(check, field)
         if values:
-            parts.append(
-                f"{label}: " + ", ".join(f"`{term}`" for term in values[:8]) + "."
-            )
+            parts.append(f"{label}: " + ", ".join(f"`{term}`" for term in values[:8]) + ".")
     return " ".join(parts)
 
 
-def edit_strategy_for(
-    path_value: str, check: dict[str, Any], counts: dict[str, int]
-) -> str:
+def edit_strategy_for(path_value: str, check: dict[str, Any], counts: dict[str, int]) -> str:
     """Build the manual-review edit strategy for one code patch plan."""
     hint = first_safe_action_hint(check)
     lines = line_count_for(path_value, counts)
@@ -282,14 +271,9 @@ def validate_code_interpreter_report(
 def static_rationale_for(recommendation: dict[str, Any]) -> str:
     """Build rationale for static interpreter recommendations."""
     reasons = (
-        recommendation.get("reasons")
-        if isinstance(recommendation.get("reasons"), list)
-        else []
+        recommendation.get("reasons") if isinstance(recommendation.get("reasons"), list) else []
     )
-    reason_text = (
-        ", ".join(str(item) for item in reasons[:8])
-        or "static interpreter review signal"
-    )
+    reason_text = ", ".join(str(item) for item in reasons[:8]) or "static interpreter review signal"
     return f"Static code interpreter recommendation `{recommendation.get('id')}` flagged `{recommendation.get('target_file')}` for manual review: {reason_text}."
 
 
@@ -303,9 +287,7 @@ def static_strategy_for(
         if lines is not None
         else ""
     )
-    next_layer = (
-        recommendation.get("recommended_next_layer") or "agent_review_code_patch_plan"
-    )
+    next_layer = recommendation.get("recommended_next_layer") or "agent_review_code_patch_plan"
     return (
         f"Inspect the static interpreter signals and decide whether a focused refactor, split, simplification, or guardrail improvement is warranted. Next layer: `{next_layer}`."
         + size_note
@@ -376,12 +358,8 @@ def build_static_plans(
     recommendations = validate_code_interpreter_report(code_report, errors)
     plans: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
-    for index, recommendation in enumerate(
-        recommendations[:MAX_STATIC_RECOMMENDATIONS], start=1
-    ):
-        plan, skip = plan_from_static_recommendation(
-            index, repo_root, recommendation, counts
-        )
+    for index, recommendation in enumerate(recommendations[:MAX_STATIC_RECOMMENDATIONS], start=1):
+        plan, skip = plan_from_static_recommendation(index, repo_root, recommendation, counts)
         if plan:
             plans.append(plan)
         if skip:
@@ -456,12 +434,8 @@ def build_report(
     warnings: list[str],
 ) -> dict[str, Any]:
     """Assemble the final report object."""
-    static_count = sum(
-        1 for plan in plans if source_kind_for(plan) == "code_interpreter_report"
-    )
-    drift_count = sum(
-        1 for plan in plans if source_kind_for(plan) == "code_contract_drift"
-    )
+    static_count = sum(1 for plan in plans if source_kind_for(plan) == "code_interpreter_report")
+    drift_count = sum(1 for plan in plans if source_kind_for(plan) == "code_contract_drift")
     return {
         "schema_version": 1,
         "kind": PLAN_KIND,
@@ -480,9 +454,7 @@ def build_report(
             "line_count_csv": repo_rel(repo_root, line_count_csv),
             "line_count_csv_loaded": bool(counts),
             "code_interpreter_report": (
-                repo_rel(repo_root, code_interpreter_path)
-                if code_interpreter_path
-                else None
+                repo_rel(repo_root, code_interpreter_path) if code_interpreter_path else None
             ),
             "code_interpreter_report_loaded": static_report_loaded,
         },
@@ -516,20 +488,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
     lines.append(f"- Manual review required: `{report['manual_review_required']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append(f"- Patch plan count: `{report['patch_plan_count']}`")
-    lines.append(
-        f"- Contract-drift plan count: `{report.get('code_contract_patch_plan_count')}`"
-    )
-    lines.append(
-        f"- Static-code plan count: `{report.get('static_code_patch_plan_count')}`"
-    )
+    lines.append(f"- Contract-drift plan count: `{report.get('code_contract_patch_plan_count')}`")
+    lines.append(f"- Static-code plan count: `{report.get('static_code_patch_plan_count')}`")
     lines.append("")
     lines.extend(render_inputs(report))
     lines.extend(render_plans(report.get("code_patch_plans", [])))
@@ -576,9 +540,7 @@ def render_skipped(skipped: Any) -> list[str]:
         return []
     lines = ["## Skipped candidates", ""]
     for item in skipped:
-        lines.append(
-            f"- `{item.get('id')}` `{item.get('path', '')}`: {item.get('reason')}"
-        )
+        lines.append(f"- `{item.get('id')}` `{item.get('path', '')}`: {item.get('reason')}")
     lines.append("")
     return lines
 
@@ -586,9 +548,7 @@ def render_skipped(skipped: Any) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--code-contract-drift-report", default=DEFAULT_CODE_DRIFT_REPORT
-    )
+    parser.add_argument("--code-contract-drift-report", default=DEFAULT_CODE_DRIFT_REPORT)
     parser.add_argument("--line-count-csv", default=DEFAULT_LINE_COUNT_CSV)
     parser.add_argument(
         "--code-interpreter-report",

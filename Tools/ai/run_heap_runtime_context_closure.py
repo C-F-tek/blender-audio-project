@@ -39,11 +39,7 @@ def resolve_repo_root(value: str) -> Path:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -79,9 +75,7 @@ def load_operator_request(
     try:
         return path.read_text(encoding="utf-8-sig"), str(path)
     except Exception as exc:
-        raise SystemExit(
-            f"cannot read --request-file {path}: {type(exc).__name__}: {exc}"
-        ) from exc
+        raise SystemExit(f"cannot read --request-file {path}: {type(exc).__name__}: {exc}") from exc
 
 
 def run_command(command: list[str], repo_root: Path) -> dict[str, Any]:
@@ -111,9 +105,7 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def is_complete_heap_run_dir(path: Path) -> bool:
@@ -163,9 +155,7 @@ def resolve_revision_context(
     return path, load_json(path), "explicit_revision_context"
 
 
-def revision_context_prompt(
-    payload: dict[str, Any], path: Path | None, max_tasks: int
-) -> str:
+def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
     if not payload:
         return ""
     tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
@@ -303,10 +293,7 @@ def startup_can_continue(
         return True
     if strict_startup_reload:
         return False
-    if (
-        startup_payload.get("input_ready_before_heap") is True
-        and startup_task_file.exists()
-    ):
+    if startup_payload.get("input_ready_before_heap") is True and startup_task_file.exists():
         return True
     if startup_task_file.exists() and startup_artifact_refs(startup_payload):
         return True
@@ -358,9 +345,7 @@ def write_fallback_heap_report(
             "product_status": "blocked_with_reason",
             "quality_output_passed": False,
             "provider_revision_count": 0,
-            "startup_reload_degraded": bool(
-                startup_payload.get("startup_reload_degraded")
-            ),
+            "startup_reload_degraded": bool(startup_payload.get("startup_reload_degraded")),
         },
         "real_run_output_contract": {
             "product_status": "blocked_with_reason",
@@ -376,13 +361,9 @@ def write_fallback_heap_report(
             ),
             "startup_task_file": repo_rel(
                 repo_root,
-                run_dir
-                / "startup_context_memory_reload"
-                / "heap_startup_input_ready_context.md",
+                run_dir / "startup_context_memory_reload" / "heap_startup_input_ready_context.md",
             ),
-            "startup_reload_degraded": bool(
-                startup_payload.get("startup_reload_degraded")
-            ),
+            "startup_reload_degraded": bool(startup_payload.get("startup_reload_degraded")),
             "fallback_reason": reason,
         },
         "startup_context_memory_reload": startup_payload,
@@ -686,9 +667,7 @@ def main() -> int:
         ]
         if startup_reload_degraded and can_continue and not args.strict_startup_reload:
             startup_heap_reconcile_command.append("--allow-degraded-startup")
-        startup_heap_reconcile_result = run_command(
-            startup_heap_reconcile_command, repo_root
-        )
+        startup_heap_reconcile_result = run_command(startup_heap_reconcile_command, repo_root)
 
     composer_command = [
         project_python,
@@ -724,9 +703,7 @@ def main() -> int:
     final_proposal_txt = str(composer_report.get("primary_txt", "") or "")
     final_proposal_markdown = str(composer_report.get("primary_markdown", "") or "")
     final_proposal_json = str(composer_report.get("primary_json", "") or "")
-    final_download_manifest_txt = str(
-        composer_report.get("download_manifest_txt", "") or ""
-    )
+    final_download_manifest_txt = str(composer_report.get("download_manifest_txt", "") or "")
     proposal_txt_outputs = (
         composer_report.get("proposal_txt_outputs")
         if isinstance(composer_report.get("proposal_txt_outputs"), list)
@@ -793,9 +770,7 @@ def main() -> int:
                 }
             )
 
-    external_postrun_payload = load_json(
-        Path(str(external_postrun_result.get("report") or ""))
-    )
+    external_postrun_payload = load_json(Path(str(external_postrun_result.get("report") or "")))
     external_long_response_markdown = str(
         external_postrun_payload.get("long_response_markdown", "") or ""
     )
@@ -860,9 +835,7 @@ def main() -> int:
                 "report": str(final_readable_report),
                 "markdown": str(final_readable_markdown),
                 "text": str(final_readable_text),
-                "documents_zip": str(
-                    final_readable_payload.get("documents_zip", "") or ""
-                ),
+                "documents_zip": str(final_readable_payload.get("documents_zip", "") or ""),
                 "stdout_tail": completed.get("stdout_tail", ""),
                 "stderr_tail": completed.get("stderr_tail", ""),
                 "command": final_readable_command,
@@ -877,9 +850,7 @@ def main() -> int:
         "project_python": project_python,
         "run_dir": str(run_dir),
         "revision_context_selection_policy": revision_context_selection_policy,
-        "revision_context_path": (
-            str(revision_context_path) if revision_context_path else ""
-        ),
+        "revision_context_path": (str(revision_context_path) if revision_context_path else ""),
         "revision_context_loaded": bool(revision_context_payload),
         "operator_request_file": operator_request_file,
         "request_file": str(heap_request_file),
@@ -896,9 +867,7 @@ def main() -> int:
         ),
         "revision_context_candidate_applicability_summary": (
             revision_context_payload.get("candidate_applicability_summary")
-            if isinstance(
-                revision_context_payload.get("candidate_applicability_summary"), dict
-            )
+            if isinstance(revision_context_payload.get("candidate_applicability_summary"), dict)
             else {}
         ),
         "max_iterations_requested": args.max_iterations,
@@ -908,9 +877,7 @@ def main() -> int:
         "preflight_performed": not args.skip_preflight,
         "preflight_passed": bool(preflight_result["passed"]),
         "preflight_report": str(preflight_report) if preflight_report.exists() else "",
-        "preflight_markdown": (
-            str(preflight_markdown) if preflight_markdown.exists() else ""
-        ),
+        "preflight_markdown": (str(preflight_markdown) if preflight_markdown.exists() else ""),
         "preflight_returncode": preflight_result["returncode"],
         "startup_reload_performed": startup_reload_performed,
         "startup_reload_passed": bool(startup_result["passed"]),
@@ -918,35 +885,23 @@ def main() -> int:
         "startup_can_continue": can_continue,
         "strict_startup_reload": bool(args.strict_startup_reload),
         "startup_manifest": str(startup_manifest) if startup_manifest.exists() else "",
-        "startup_heap_reconcile_returncode": startup_heap_reconcile_result[
-            "returncode"
-        ],
+        "startup_heap_reconcile_returncode": startup_heap_reconcile_result["returncode"],
         "startup_heap_reconcile_passed": bool(startup_heap_reconcile_result["passed"]),
         "startup_heap_reconcile_report": (
-            str(startup_heap_reconcile_report)
-            if startup_heap_reconcile_report.exists()
-            else ""
+            str(startup_heap_reconcile_report) if startup_heap_reconcile_report.exists() else ""
         ),
         "startup_heap_reconcile_markdown": (
-            str(startup_heap_reconcile_markdown)
-            if startup_heap_reconcile_markdown.exists()
-            else ""
+            str(startup_heap_reconcile_markdown) if startup_heap_reconcile_markdown.exists() else ""
         ),
         "startup_reconcile_degraded_policy_used": bool(
             startup_reload_degraded and can_continue and not args.strict_startup_reload
         ),
-        "startup_task_file": (
-            str(startup_task_file) if startup_task_file.exists() else ""
-        ),
+        "startup_task_file": (str(startup_task_file) if startup_task_file.exists() else ""),
         "startup_artifacts": (
-            startup_payload.get("artifacts", {})
-            if isinstance(startup_payload, dict)
-            else {}
+            startup_payload.get("artifacts", {}) if isinstance(startup_payload, dict) else {}
         ),
         "startup_artifact_ref_count": (
-            len(startup_artifact_refs(startup_payload))
-            if isinstance(startup_payload, dict)
-            else 0
+            len(startup_artifact_refs(startup_payload)) if isinstance(startup_payload, dict) else 0
         ),
         "startup_blocking_requirements": (
             startup_payload.get("blocking_requirements", [])
@@ -974,20 +929,14 @@ def main() -> int:
         "final_proposal_json": final_proposal_json,
         "final_download_manifest_txt": final_download_manifest_txt,
         "proposal_txt_outputs": proposal_txt_outputs,
-        "external_postrun_package_performed": bool(
-            external_postrun_result.get("performed")
-        ),
+        "external_postrun_package_performed": bool(external_postrun_result.get("performed")),
         "external_postrun_package_passed": bool(external_postrun_result.get("passed")),
-        "external_postrun_package_returncode": external_postrun_result.get(
-            "returncode"
-        ),
+        "external_postrun_package_returncode": external_postrun_result.get("returncode"),
         "external_postrun_package_report": external_postrun_result.get("report", ""),
         "external_long_response_markdown": external_long_response_markdown,
         "external_revision_context_json": external_revision_context_json,
         "external_pointer_manifest_json": external_pointer_manifest_json,
-        "final_readable_product_performed": bool(
-            final_readable_result.get("performed")
-        ),
+        "final_readable_product_performed": bool(final_readable_result.get("performed")),
         "final_readable_product_passed": bool(final_readable_result.get("passed")),
         "final_readable_product_report": final_readable_result.get("report", ""),
         "final_readable_product_markdown": final_readable_result.get("markdown", ""),
@@ -1021,12 +970,8 @@ def main() -> int:
         "composer_stderr_tail": composer_result["stderr_tail"],
         "external_postrun_stdout_tail": external_postrun_result.get("stdout_tail", ""),
         "external_postrun_stderr_tail": external_postrun_result.get("stderr_tail", ""),
-        "final_readable_product_stdout_tail": final_readable_result.get(
-            "stdout_tail", ""
-        ),
-        "final_readable_product_stderr_tail": final_readable_result.get(
-            "stderr_tail", ""
-        ),
+        "final_readable_product_stdout_tail": final_readable_result.get("stdout_tail", ""),
+        "final_readable_product_stderr_tail": final_readable_result.get("stderr_tail", ""),
     }
 
     launcher_report = run_dir / "heap_runtime_context_closure_launcher.json"

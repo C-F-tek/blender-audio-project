@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test orchestrator propagation of direct GPU runtime-tool counters."""
+
 from __future__ import annotations
 
 import argparse
@@ -56,8 +57,12 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/orchestrator_direct_gpu_counter_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/orchestrator_direct_gpu_counter_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/orchestrator_direct_gpu_counter_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/orchestrator_direct_gpu_counter_smoke.md"
+    )
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
 
@@ -159,12 +164,26 @@ def main() -> int:
         },
     }
 
-    output = (repo_root / args.output).resolve() if not Path(args.output).is_absolute() else Path(args.output)
-    markdown = (repo_root / args.markdown_output).resolve() if not Path(args.markdown_output).is_absolute() else Path(args.markdown_output)
+    output = (
+        (repo_root / args.output).resolve()
+        if not Path(args.output).is_absolute()
+        else Path(args.output)
+    )
+    markdown = (
+        (repo_root / args.markdown_output).resolve()
+        if not Path(args.markdown_output).is_absolute()
+        else Path(args.markdown_output)
+    )
     write_json(output, output_report)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(render_markdown(output_report), encoding="utf-8")
-    print(json.dumps({"passed": output_report["passed"], "output": str(output), "markdown": str(markdown)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"passed": output_report["passed"], "output": str(output), "markdown": str(markdown)},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if output_report["passed"] else 2
 
 

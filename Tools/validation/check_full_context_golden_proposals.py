@@ -10,11 +10,11 @@ The validator is report-only: it reads a proposal JSON file and writes a compact
 validation report. It performs no provider execution and no source writes except
 the optional validation report output.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
-import re
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +32,12 @@ REQUIRED_FAMILIES = (
         "id": "P1",
         "name": "adapter_manifest_validator",
         "description": "adapter manifest validator",
-        "terms": ("adapter manifest", "manifest validator", "adapter validator", "enrichment output consistency"),
+        "terms": (
+            "adapter manifest",
+            "manifest validator",
+            "adapter validator",
+            "enrichment output consistency",
+        ),
     },
     {
         "id": "P2",
@@ -44,7 +49,13 @@ REQUIRED_FAMILIES = (
         "id": "P3",
         "name": "full_context_golden_docs_contract",
         "description": "full-context golden path docs contract",
-        "terms": ("full-context", "golden path", "docs", "documentation contract", "local_ai_workflow"),
+        "terms": (
+            "full-context",
+            "golden path",
+            "docs",
+            "documentation contract",
+            "local_ai_workflow",
+        ),
     },
     {
         "id": "P4",
@@ -56,13 +67,27 @@ REQUIRED_FAMILIES = (
         "id": "P5",
         "name": "selected_chunks_standard_validation_block",
         "description": "selected-chunks evidence in standard validation block",
-        "terms": ("selected chunks", "selected-chunks", "selected semantic", "standard validation", "evidence block"),
+        "terms": (
+            "selected chunks",
+            "selected-chunks",
+            "selected semantic",
+            "standard validation",
+            "evidence block",
+        ),
     },
     {
         "id": "P6",
         "name": "npu_knowledge_broker",
         "description": "NPU knowledge-broker / context-oracle prototype",
-        "terms": ("npu", "knowledge broker", "knowledge-broker", "context oracle", "context-oracle", "retrieval", "ranking"),
+        "terms": (
+            "npu",
+            "knowledge broker",
+            "knowledge-broker",
+            "context oracle",
+            "context-oracle",
+            "retrieval",
+            "ranking",
+        ),
     },
 )
 
@@ -134,7 +159,9 @@ def target_path_errors(path: str) -> list[str]:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         errors.append(f"forbidden target prefix: {normalized}")
     lower = normalized.lower()
-    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(
+        ".json"
+    ):
         errors.append(f"forbidden full-analysis JSON target: {normalized}")
     return errors
 
@@ -170,7 +197,12 @@ def validate_proposal_shape(item: Any, index: int) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     if not isinstance(item, dict):
-        return {"id": f"proposals[{index}]", "ok": False, "errors": ["proposal must be an object"], "warnings": []}
+        return {
+            "id": f"proposals[{index}]",
+            "ok": False,
+            "errors": ["proposal must be an object"],
+            "warnings": [],
+        }
 
     pid = proposal_id(item, index)
     title = str(item.get("title") or "")
@@ -188,7 +220,9 @@ def validate_proposal_shape(item: Any, index: int) -> dict[str, Any]:
     if not is_manual_review_only(item):
         errors.append("proposal must be manual-review-only with apply_allowed_now false")
     if item.get("requires_provider_execution") not in (False, None):
-        warnings.append("proposal requires provider execution; prefer false for contract/prototype proposals")
+        warnings.append(
+            "proposal requires provider execution; prefer false for contract/prototype proposals"
+        )
 
     return {
         "id": pid,
@@ -201,7 +235,9 @@ def validate_proposal_shape(item: Any, index: int) -> dict[str, Any]:
     }
 
 
-def validate_golden_proposals(repo_root: Path, proposal_path: Path, min_proposals: int) -> dict[str, Any]:
+def validate_golden_proposals(
+    repo_root: Path, proposal_path: Path, min_proposals: int
+) -> dict[str, Any]:
     rel_path = repo_relative(proposal_path, repo_root)
     errors: list[str] = []
     warnings: list[str] = []
@@ -247,17 +283,25 @@ def validate_golden_proposals(repo_root: Path, proposal_path: Path, min_proposal
 
     family_checks: list[dict[str, Any]] = []
     for family in REQUIRED_FAMILIES:
-        matching = [proposal_id(item, index) for index, item in enumerate(proposals) if isinstance(item, dict) and family_matches(family, item)]
+        matching = [
+            proposal_id(item, index)
+            for index, item in enumerate(proposals)
+            if isinstance(item, dict) and family_matches(family, item)
+        ]
         ok = bool(matching)
-        family_checks.append({
-            "id": family["id"],
-            "name": family["name"],
-            "description": family["description"],
-            "ok": ok,
-            "matched_proposals": matching,
-        })
+        family_checks.append(
+            {
+                "id": family["id"],
+                "name": family["name"],
+                "description": family["description"],
+                "ok": ok,
+                "matched_proposals": matching,
+            }
+        )
         if not ok:
-            errors.append(f"missing required golden proposal family {family['id']}: {family['description']}")
+            errors.append(
+                f"missing required golden proposal family {family['id']}: {family['description']}"
+            )
 
     return {
         "path": rel_path,

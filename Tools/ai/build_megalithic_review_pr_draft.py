@@ -75,9 +75,7 @@ def proposal_titles(proposals: dict[str, Any]) -> list[str]:
     titles = []
     for item in items:
         if isinstance(item, dict):
-            title = str(
-                item.get("title") or item.get("id") or "review proposal"
-            ).strip()
+            title = str(item.get("title") or item.get("id") or "review proposal").strip()
             if title:
                 titles.append(title)
     return titles
@@ -93,9 +91,7 @@ def top_findings(review: dict[str, Any], *, limit: int = 12) -> list[str]:
     return out
 
 
-def build_pr_body(
-    review: dict[str, Any], proposals: dict[str, Any], *, branch_name: str
-) -> str:
+def build_pr_body(review: dict[str, Any], proposals: dict[str, Any], *, branch_name: str) -> str:
     summary = review_summary(review)
     proposal_count = int(proposals.get("proposal_count") or 0)
     provider_execution = bool(review.get("provider_execution_performed"))
@@ -186,9 +182,7 @@ def build_pr_draft(
         "passed": True,
         "errors": [],
         "warnings": [],
-        "provider_execution_performed": bool(
-            review.get("provider_execution_performed")
-        ),
+        "provider_execution_performed": bool(review.get("provider_execution_performed")),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "apply_mode": "manual_review_only_pr_draft",

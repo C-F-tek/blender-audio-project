@@ -6,6 +6,7 @@ output/testdata, runs the builder, verifies final summary, compact bundle,
 recursive discovery, pointer-style chunk metadata and optional bundle validation
 outputs, then writes a smoke JSON/Markdown report.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -81,9 +82,20 @@ def create_fake_inputs(repo_root: Path, stamp: str) -> dict[str, Path]:
         "gpu": base / f"shared_toolbox_ai_to_ai_{stamp}_gpu.json",
         "large_json": base / f"shared_toolbox_large_recursive_report_{stamp}.json",
     }
-    write_json(reports["python_syntax"], fake_report(kind="python_syntax_validation", extra={"checked_count": 2, "failed_count": 0}))
-    write_json(reports["code_interpreter"], fake_report(kind="code_interpreter_report", extra={"input_count": 2}))
-    write_json(reports["gpu_contract_smoke"], fake_report(kind="gpu_planner_json_contract_smoke", extra={"case_count": 3, "failed_case_count": 0}))
+    write_json(
+        reports["python_syntax"],
+        fake_report(kind="python_syntax_validation", extra={"checked_count": 2, "failed_count": 0}),
+    )
+    write_json(
+        reports["code_interpreter"],
+        fake_report(kind="code_interpreter_report", extra={"input_count": 2}),
+    )
+    write_json(
+        reports["gpu_contract_smoke"],
+        fake_report(
+            kind="gpu_planner_json_contract_smoke", extra={"case_count": 3, "failed_case_count": 0}
+        ),
+    )
     write_json(
         reports["gpu_routing"],
         fake_report(
@@ -129,7 +141,11 @@ def create_fake_inputs(repo_root: Path, stamp: str) -> dict[str, Path]:
         fake_report(
             kind="agent_gpu_deep_planning_supervised",
             provider_execution_performed=True,
-            extra={"round_count": 1, "recommendation_count": 0, "runtime_tool_broker_enabled": True},
+            extra={
+                "round_count": 1,
+                "recommendation_count": 0,
+                "runtime_tool_broker_enabled": True,
+            },
         ),
     )
     write_json(
@@ -149,13 +165,26 @@ def create_fake_inputs(repo_root: Path, stamp: str) -> dict[str, Path]:
         "large_markdown": base / f"shared_toolbox_large_recursive_artifact_{stamp}.md",
     }
     write_text(artifacts["task_md"], "# Smoke task\n\nReport-only shared toolbox smoke task.\n")
-    write_text(artifacts["architecture_md"], "# Smoke architecture\n\nProviders ask. Orchestrator decides. Broker executes. Reports become evidence.\n")
-    write_text(artifacts["code_interpreter_md"], "# Smoke code interpreter report\n\nNo provider execution.\n")
-    write_text(artifacts["orchestrator_md"], "# Smoke orchestrator report\n\nProvider flag is inherited from fake input only.\n")
-    write_text(artifacts["gpu_md"], "# Smoke GPU report\n\nNo real provider was executed by this smoke.\n")
+    write_text(
+        artifacts["architecture_md"],
+        "# Smoke architecture\n\nProviders ask. Orchestrator decides. Broker executes. Reports become evidence.\n",
+    )
+    write_text(
+        artifacts["code_interpreter_md"],
+        "# Smoke code interpreter report\n\nNo provider execution.\n",
+    )
+    write_text(
+        artifacts["orchestrator_md"],
+        "# Smoke orchestrator report\n\nProvider flag is inherited from fake input only.\n",
+    )
+    write_text(
+        artifacts["gpu_md"], "# Smoke GPU report\n\nNo real provider was executed by this smoke.\n"
+    )
     write_text(
         artifacts["large_markdown"],
-        "# Large recursive artifact\n\n" + "\n".join(f"line {index}" for index in range(1, 241)) + "\n",
+        "# Large recursive artifact\n\n"
+        + "\n".join(f"line {index}" for index in range(1, 241))
+        + "\n",
     )
     return {**reports, **artifacts}
 
@@ -234,8 +263,12 @@ def build_builder_args(repo_root: Path, paths: dict[str, Path]) -> SimpleNamespa
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/shared_toolbox_ai_to_ai_bundle_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/shared_toolbox_ai_to_ai_bundle_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/shared_toolbox_ai_to_ai_bundle_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/shared_toolbox_ai_to_ai_bundle_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -245,8 +278,12 @@ def main() -> int:
     final_summary_json = repo_root / str(builder_result.get("final_summary_json") or "")
     final_summary_md = repo_root / str(builder_result.get("final_summary_markdown") or "")
     bundle_outputs = [repo_root / str(item) for item in builder_result.get("bundle_outputs", [])]
-    bundle_json = next((path for path in bundle_outputs if path.suffix == ".json"), repo_root / "missing.json")
-    bundle_md = next((path for path in bundle_outputs if path.suffix == ".md"), repo_root / "missing.md")
+    bundle_json = next(
+        (path for path in bundle_outputs if path.suffix == ".json"), repo_root / "missing.json"
+    )
+    bundle_md = next(
+        (path for path in bundle_outputs if path.suffix == ".md"), repo_root / "missing.md"
+    )
     validation_output = repo_root / str(builder_result.get("validation_output") or "")
 
     summary = read_json(final_summary_json) or {}
@@ -255,8 +292,16 @@ def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
 
-    chunked_index = bundle.get("artifact_chunk_index") if isinstance(bundle.get("artifact_chunk_index"), list) else []
-    recursive_defaults = bundle.get("recursive_default_discovery") if isinstance(bundle.get("recursive_default_discovery"), dict) else {}
+    chunked_index = (
+        bundle.get("artifact_chunk_index")
+        if isinstance(bundle.get("artifact_chunk_index"), list)
+        else []
+    )
+    recursive_defaults = (
+        bundle.get("recursive_default_discovery")
+        if isinstance(bundle.get("recursive_default_discovery"), dict)
+        else {}
+    )
     has_chunk_next_pointer = any(
         bool(chunk.get("next_chunk_id"))
         for item in chunked_index
@@ -272,7 +317,10 @@ def main() -> int:
         "bundle_markdown_exists": bundle_md.exists(),
         "bundle_validation_passed": validation.get("passed") is True,
         "recursive_defaults_enabled": recursive_defaults.get("enabled") is True,
-        "recursive_default_files_seen": bool(recursive_defaults.get("discovered_reports") or recursive_defaults.get("discovered_artifacts")),
+        "recursive_default_files_seen": bool(
+            recursive_defaults.get("discovered_reports")
+            or recursive_defaults.get("discovered_artifacts")
+        ),
         "chunked_large_files_seen": bool(chunked_index),
         "chunk_next_pointer_seen": has_chunk_next_pointer,
     }
@@ -308,8 +356,12 @@ def main() -> int:
         "validation_output": repo_relative(validation_output, repo_root),
         "builder_result": builder_result,
         "chunked_file_count": len(chunked_index),
-        "recursive_discovered_report_count": len(recursive_defaults.get("discovered_reports") or []),
-        "recursive_discovered_artifact_count": len(recursive_defaults.get("discovered_artifacts") or []),
+        "recursive_discovered_report_count": len(
+            recursive_defaults.get("discovered_reports") or []
+        ),
+        "recursive_discovered_artifact_count": len(
+            recursive_defaults.get("discovered_artifacts") or []
+        ),
     }
 
     output = resolve_output_path(repo_root, args.output)

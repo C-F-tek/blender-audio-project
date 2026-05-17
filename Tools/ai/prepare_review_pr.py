@@ -45,9 +45,7 @@ AUTO_PRODUCT_SECTIONS = (
 
 
 def run_command(repo_root: Path, command: list[str]) -> dict[str, Any]:
-    result = subprocess.run(
-        command, cwd=repo_root, check=False, capture_output=True, text=True
-    )
+    result = subprocess.run(command, cwd=repo_root, check=False, capture_output=True, text=True)
     return {
         "command": command,
         "returncode": result.returncode,
@@ -85,9 +83,7 @@ def normalize_repo_path(repo_root: Path, raw: str) -> tuple[str, str | None]:
     return normalized, None
 
 
-def normalize_include_paths(
-    repo_root: Path, raw_paths: list[str]
-) -> tuple[list[str], list[str]]:
+def normalize_include_paths(repo_root: Path, raw_paths: list[str]) -> tuple[list[str], list[str]]:
     paths: list[str] = []
     errors: list[str] = []
     for raw in raw_paths:
@@ -99,9 +95,7 @@ def normalize_include_paths(
     return paths, errors
 
 
-def load_report(
-    repo_root: Path, raw: str
-) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+def load_report(repo_root: Path, raw: str) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     candidate = Path(raw)
     full = candidate if candidate.is_absolute() else repo_root / candidate
     try:
@@ -169,9 +163,7 @@ def discover_auto_include_paths(
             errors.append(f"{raw}: {info.get('error')}")
             continue
         if data.get("kind") != "patch_suggestion_bundle_apply":
-            warnings.append(
-                f"{info.get('path')}: unexpected report kind {data.get('kind')!r}"
-            )
+            warnings.append(f"{info.get('path')}: unexpected report kind {data.get('kind')!r}")
         for item in data.get("results") or []:
             if (
                 isinstance(item, dict)
@@ -288,9 +280,7 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
     lines.extend(f"- `{path}`" for path in (report.get("include_paths") or []))
     for title, key in (("Errors", "errors"), ("Warnings", "warnings")):
         if report.get(key):
-            lines.extend(
-                ["", f"## {title}", "", *[f"- {item}" for item in report[key]]]
-            )
+            lines.extend(["", f"## {title}", "", *[f"- {item}" for item in report[key]]])
     return write_text_report("\n".join(lines) + "\n", output)
 
 
@@ -327,9 +317,7 @@ def parse_args() -> argparse.Namespace:
 def validate_pr_flags(args: argparse.Namespace) -> list[str]:
     errors: list[str] = []
     if args.create_pr and not args.push:
-        errors.append(
-            "--create-pr requires --push so the requested branch exists on the remote"
-        )
+        errors.append("--create-pr requires --push so the requested branch exists on the remote")
     if args.draft_pr and not args.create_pr:
         errors.append("--draft-pr requires --create-pr")
     return errors
@@ -368,14 +356,10 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     output = resolve_output_path(repo_root, args.output)
     md_output = (
-        resolve_output_path(repo_root, args.markdown_output)
-        if args.markdown_output
-        else None
+        resolve_output_path(repo_root, args.markdown_output) if args.markdown_output else None
     )
     evidence_output = (
-        resolve_output_path(repo_root, args.evidence_output)
-        if args.evidence_output
-        else None
+        resolve_output_path(repo_root, args.evidence_output) if args.evidence_output else None
     )
     evidence_md = (
         resolve_output_path(repo_root, args.evidence_markdown_output)
@@ -394,9 +378,7 @@ def main() -> int:
     apply_report_infos: list[dict[str, Any]] = []
     if args.auto_include_from_apply_report:
         if not args.apply_report:
-            errors.append(
-                "--auto-include-from-apply-report requires at least one --apply-report"
-            )
+            errors.append("--auto-include-from-apply-report requires at least one --apply-report")
         else:
             auto_include_paths, apply_report_infos, auto_errors, auto_warnings = (
                 discover_auto_include_paths(repo_root, args.apply_report)
@@ -416,9 +398,7 @@ def main() -> int:
                     "run deterministic suggestions with apply enabled before prepare_review_pr.py"
                 )
             if not auto_include_paths and not args.include_path:
-                errors.append(
-                    "no safe product include paths discovered from apply reports"
-                )
+                errors.append("no safe product include paths discovered from apply reports")
             elif not auto_include_paths:
                 warnings.append(
                     "no product include paths discovered from apply reports; using explicit include paths only"
@@ -481,9 +461,7 @@ def main() -> int:
                 body = Path(args.body_file).read_text(encoding="utf-8")
             if not body:
                 body = default_pr_body(args, str(evidence_output or output))
-            pr_result = create_github_pr(
-                repo_root, args, body, output.with_suffix(".body.md")
-            )
+            pr_result = create_github_pr(repo_root, args, body, output.with_suffix(".body.md"))
             commands.append(pr_result)
             if not pr_result["ok"]:
                 errors.append("gh pr create failed")

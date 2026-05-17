@@ -7,6 +7,7 @@ entrypoint, bootstrap, local workflow docs and the dedicated P3 contract doc.
 It does not run providers, build context packs, apply patches, invoke Blender or
 read ignored runtime outputs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -197,7 +198,9 @@ def check_bootstrap_duplicate_index(repo_root: Path) -> dict[str, Any]:
     else:
         line_count = text.count("Current task index:")
         if line_count > 1:
-            warnings.append("Current task index block is duplicated; keep one block in a future docs cleanup")
+            warnings.append(
+                "Current task index block is duplicated; keep one block in a future docs cleanup"
+            )
     return {
         "path": rel_path,
         "ok": not errors,
@@ -210,10 +213,16 @@ def check_bootstrap_duplicate_index(repo_root: Path) -> dict[str, Any]:
 def validate_docs_contract(repo_root: Path) -> dict[str, Any]:
     file_checks = [check_file_exists(repo_root, rel_path) for rel_path in REQUIRED_DOCS]
     term_checks = [
-        check_terms(repo_root, "docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md", TASK_REQUIRED_TERMS),
+        check_terms(
+            repo_root, "docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md", TASK_REQUIRED_TERMS
+        ),
         check_terms(repo_root, "docs/LOCAL_AI_RUN_BOOTSTRAP.md", BOOTSTRAP_REQUIRED_TERMS),
         check_terms(repo_root, "docs/LOCAL_AI_WORKFLOW.md", WORKFLOW_REQUIRED_TERMS),
-        check_terms(repo_root, "docs/LOCAL_AI_TASKS/full-context-golden-docs-contract.md", CONTRACT_DOC_REQUIRED_TERMS),
+        check_terms(
+            repo_root,
+            "docs/LOCAL_AI_TASKS/full-context-golden-docs-contract.md",
+            CONTRACT_DOC_REQUIRED_TERMS,
+        ),
     ]
     consistency_checks = [
         check_p_family_coverage(repo_root),
@@ -223,9 +232,7 @@ def validate_docs_contract(repo_root: Path) -> dict[str, Any]:
 
     all_checks = file_checks + term_checks + consistency_checks
     errors = [
-        f"{check['path']}: {error}"
-        for check in all_checks
-        for error in check.get("errors", [])
+        f"{check['path']}: {error}" for check in all_checks for error in check.get("errors", [])
     ]
     warnings = [
         f"{check['path']}: {warning}"

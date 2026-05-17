@@ -9,6 +9,7 @@ Policy implemented:
 - generated/evidence/runtime trees are skipped by default;
 - pruning is allowlist-only and deletes only explicitly approved historical/superseded snapshots.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,7 +37,9 @@ PRUNE_ALLOWLIST = (
     "docs/LOCAL_AI_TASKS/docs-md-obsolete-pruning-next-step.md",
 )
 SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
-MD_LINK_RE = re.compile(r"(?P<prefix>!?\[[^\]]*\]\()(?P<url><[^>]+>|[^)\s]+)(?P<title>\s+\"[^\"]*\")?(?P<suffix>\))")
+MD_LINK_RE = re.compile(
+    r"(?P<prefix>!?\[[^\]]*\]\()(?P<url><[^>]+>|[^)\s]+)(?P<title>\s+\"[^\"]*\")?(?P<suffix>\))"
+)
 
 
 def repo_root(start: Path) -> Path:
@@ -122,7 +125,12 @@ def render_readme(title: str, source_note: str, part_names: list[str], max_lines
         "",
     ]
     lines += [f"{i}. [`{name}`]({name})" for i, name in enumerate(part_names, 1)]
-    lines += ["", "## Regola", "", "Split directory-form conforme alla policy: `nomefile.md/part-xxx.md`."]
+    lines += [
+        "",
+        "## Regola",
+        "",
+        "Split directory-form conforme alla policy: `nomefile.md/part-xxx.md`.",
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -165,7 +173,11 @@ def migrate_legacy_dir(old_dir: Path, root: Path, max_lines: int, apply: bool) -
     source_file = old_dir.with_name(old_dir.name + ".md")
     new_dir = source_file
     if new_dir.exists() and new_dir.is_dir():
-        return {"path": rel(old_dir, root), "action": "skip_already_migrated", "target_dir": rel(new_dir, root)}
+        return {
+            "path": rel(old_dir, root),
+            "action": "skip_already_migrated",
+            "target_dir": rel(new_dir, root),
+        }
     parts = sorted(old_dir.glob("part-*.md"))
     if not parts:
         return {"path": rel(old_dir, root), "action": "skip_no_parts"}
@@ -179,11 +191,17 @@ def migrate_legacy_dir(old_dir: Path, root: Path, max_lines: int, apply: bool) -
     source_note = f"Documento migrato da layout legacy `{rel(old_dir, root)}/part-xxx.md`."
     if readme_source.exists():
         source_note += f" Stub precedente: `{rel(readme_source, root)}`."
-    readme_lines = write(tmp / "README.md", render_readme(source_file.name, source_note, part_names, max_lines), apply)
+    readme_lines = write(
+        tmp / "README.md",
+        render_readme(source_file.name, source_note, part_names, max_lines),
+        apply,
+    )
     migrated_parts: list[dict[str, Any]] = []
     for idx, part in enumerate(parts, 1):
         text = rewrite_links_for_part(read(part), source_file.name)
-        header_re = re.compile(r"\A<!-- IA-CARMINE-MD-SPLIT: part -->.*?## Navigazione\n\n(?:- .+\n)+\n", re.S)
+        header_re = re.compile(
+            r"\A<!-- IA-CARMINE-MD-SPLIT: part -->.*?## Navigazione\n\n(?:- .+\n)+\n", re.S
+        )
         text = header_re.sub("", text)
         out = render_part_header(source_file.stem, idx, len(parts)) + text
         lines = write(tmp / part.name, out, apply)
@@ -204,7 +222,13 @@ def migrate_legacy_dir(old_dir: Path, root: Path, max_lines: int, apply: bool) -
             source_file.unlink()
         shutil.rmtree(old_dir)
         tmp.rename(new_dir)
-    return {"path": rel(old_dir, root), "action": "migrate_legacy_split", "target_dir": rel(new_dir, root), "readme_lines": readme_lines, "parts": migrated_parts}
+    return {
+        "path": rel(old_dir, root),
+        "action": "migrate_legacy_split",
+        "target_dir": rel(new_dir, root),
+        "readme_lines": readme_lines,
+        "parts": migrated_parts,
+    }
 
 
 def split_monolithic_file(path: Path, root: Path, max_lines: int, apply: bool) -> dict[str, Any]:
@@ -223,14 +247,36 @@ def split_monolithic_file(path: Path, root: Path, max_lines: int, apply: bool) -
     for idx, chunk in enumerate(chunks, 1):
         text = render_part_header(path.stem, idx, len(chunks)) + "\n".join(chunk) + "\n"
         lines_after = write(tmp / part_names[idx - 1], text, apply)
-        part_results.append({"path": f"{rel(new_dir, root)}/{part_names[idx - 1]}", "lines": lines_after})
+        part_results.append(
+            {"path": f"{rel(new_dir, root)}/{part_names[idx - 1]}", "lines": lines_after}
+        )
     source_note = f"Documento monolitico trasformato da file `{rel(path, root)}` a directory-form."
-    readme_lines = write(tmp / "README.md", render_readme(path.name, source_note, part_names, max_lines), apply)
+    readme_lines = write(
+        tmp / "README.md", render_readme(path.name, source_note, part_names, max_lines), apply
+    )
     if apply:
-        (tmp / MARKER_MANIFEST).write_text(json.dumps({"kind": "ia_carmine_markdown_split_manifest", "layout": "directory_form_md_suffix", "source_path": rel(path, root), "part_count": len(chunks)}, indent=2) + "\n", encoding="utf-8")
+        (tmp / MARKER_MANIFEST).write_text(
+            json.dumps(
+                {
+                    "kind": "ia_carmine_markdown_split_manifest",
+                    "layout": "directory_form_md_suffix",
+                    "source_path": rel(path, root),
+                    "part_count": len(chunks),
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         path.unlink()
         tmp.rename(new_dir)
-    return {"path": rel(path, root), "action": "split_monolithic", "target_dir": rel(new_dir, root), "readme_lines": readme_lines, "parts": part_results}
+    return {
+        "path": rel(path, root),
+        "action": "split_monolithic",
+        "target_dir": rel(new_dir, root),
+        "readme_lines": readme_lines,
+        "parts": part_results,
+    }
 
 
 def prune_obsolete(root: Path, apply: bool) -> list[dict[str, Any]]:
@@ -248,7 +294,15 @@ def prune_obsolete(root: Path, apply: bool) -> list[dict[str, Any]]:
         lines = line_count(path)
         if apply:
             path.unlink()
-        out.append({"path": item, "action": "deleted_obsolete_snapshot" if apply else "would_delete_obsolete_snapshot", "lines": lines})
+        out.append(
+            {
+                "path": item,
+                "action": "deleted_obsolete_snapshot"
+                if apply
+                else "would_delete_obsolete_snapshot",
+                "lines": lines,
+            }
+        )
     return out
 
 
@@ -330,7 +384,13 @@ def main() -> int:
     if args.split_monolithic:
         for scope in scopes:
             base = (root / scope).resolve()
-            files = [base] if base.is_file() else [p for p in base.rglob("*.md") if p.is_file()] if base.exists() else []
+            files = (
+                [base]
+                if base.is_file()
+                else [p for p in base.rglob("*.md") if p.is_file()]
+                if base.exists()
+                else []
+            )
             for path in sorted(files):
                 if not skipped(path, root) and path.suffix == ".md" and path.exists():
                     item = split_monolithic_file(path, root, args.max_lines, args.apply)
@@ -361,9 +421,20 @@ def main() -> int:
 
 
 def render_md(report: dict[str, Any]) -> str:
-    lines = ["# Markdown refactor report", "", f"- Apply: `{report['apply']}`", f"- Max lines: `{report['max_lines']}`", f"- Results: `{len(report['results'])}`", "", "## Results", ""]
+    lines = [
+        "# Markdown refactor report",
+        "",
+        f"- Apply: `{report['apply']}`",
+        f"- Max lines: `{report['max_lines']}`",
+        f"- Results: `{len(report['results'])}`",
+        "",
+        "## Results",
+        "",
+    ]
     for item in report["results"]:
-        lines.append(f"- `{item.get('path')}` action=`{item.get('action')}` target=`{item.get('target_dir', '')}`")
+        lines.append(
+            f"- `{item.get('path')}` action=`{item.get('action')}` target=`{item.get('target_dir', '')}`"
+        )
     return "\n".join(lines) + "\n"
 
 

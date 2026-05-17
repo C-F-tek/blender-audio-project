@@ -23,23 +23,29 @@ def load_or_build_report(repo: Path, report_arg: str, max_lines: int) -> dict[st
         builder = repo / "Tools" / "docs" / "build_code_aware_md_coherence.py"
         if not builder.exists():
             raise SystemExit(f"[FAIL] Missing report and builder: {report_path}")
-        subprocess.run([
-            sys.executable,
-            str(builder),
-            "--repo-root",
-            str(repo),
-            "--max-lines",
-            str(max_lines),
-            "--output",
-            report_arg,
-            "--markdown-output",
-            "output/validation/md_code_coherence_report.md",
-        ], cwd=repo, check=True)
+        subprocess.run(
+            [
+                sys.executable,
+                str(builder),
+                "--repo-root",
+                str(repo),
+                "--max-lines",
+                str(max_lines),
+                "--output",
+                report_arg,
+                "--markdown-output",
+                "output/validation/md_code_coherence_report.md",
+            ],
+            cwd=repo,
+            check=True,
+        )
     return json.loads(report_path.read_text(encoding="utf-8-sig"))
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate code-aware Markdown coherence report thresholds.")
+    parser = argparse.ArgumentParser(
+        description="Validate code-aware Markdown coherence report thresholds."
+    )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--report", default="output/validation/md_code_coherence_report.json")
     parser.add_argument("--max-lines", type=int, default=400)
@@ -63,7 +69,11 @@ def main() -> int:
         "source_writes_performed": False,
         "thresholds": {"max_high": args.max_high, "max_medium": args.max_medium},
         "observed": {"high": high, "medium": medium},
-        "errors": [] if passed else [f"threshold exceeded: high={high}/{args.max_high}, medium={medium}/{args.max_medium}"],
+        "errors": []
+        if passed
+        else [
+            f"threshold exceeded: high={high}/{args.max_high}, medium={medium}/{args.max_medium}"
+        ],
         "warnings": [],
     }
     out = repo / args.output

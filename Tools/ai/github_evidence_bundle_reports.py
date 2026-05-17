@@ -91,12 +91,8 @@ def compact_patch_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "edit_strategy": compact_value(
             plan.get("edit_strategy") or "", max_string=MAX_PATCH_PLAN_TEXT_CHARS
         ),
-        "validation_commands": compact_value(
-            plan.get("validation_commands") or [], max_string=500
-        ),
-        "stop_conditions": compact_value(
-            plan.get("stop_conditions") or [], max_string=500
-        ),
+        "validation_commands": compact_value(plan.get("validation_commands") or [], max_string=500),
+        "stop_conditions": compact_value(plan.get("stop_conditions") or [], max_string=500),
         "manual_review_required": plan.get("manual_review_required"),
     }
 
@@ -125,9 +121,7 @@ def summarize_patch_plan_report(data: dict[str, Any]) -> dict[str, Any] | None:
         return None
 
     decision = data.get("decision") if isinstance(data.get("decision"), dict) else {}
-    patch_plans = (
-        data.get("patch_plans") if isinstance(data.get("patch_plans"), list) else []
-    )
+    patch_plans = data.get("patch_plans") if isinstance(data.get("patch_plans"), list) else []
 
     return {
         "patch_plan_count": data.get("patch_plan_count", len(patch_plans)),
@@ -136,9 +130,7 @@ def summarize_patch_plan_report(data: dict[str, Any]) -> dict[str, Any] | None:
         "provider_execution_performed": data.get("provider_execution_performed"),
         "patch_application_performed": data.get("patch_application_performed"),
         "source_writes_performed": data.get("source_writes_performed"),
-        "plans": [
-            compact_patch_plan(plan) for plan in patch_plans if isinstance(plan, dict)
-        ],
+        "plans": [compact_patch_plan(plan) for plan in patch_plans if isinstance(plan, dict)],
     }
 
 
@@ -152,22 +144,13 @@ def summarize_patch_notes_quality_product_report(
     concrete patch waves. Each note is compacted field-by-field so the GitHub
     evidence bundle can carry all proposals without embedding full raw reports.
     """
-    patch_notes = (
-        data.get("patch_notes") if isinstance(data.get("patch_notes"), list) else []
-    )
-    if (
-        "patch_notes_quality_product" not in str(data.get("kind") or "")
-        and not patch_notes
-    ):
+    patch_notes = data.get("patch_notes") if isinstance(data.get("patch_notes"), list) else []
+    if "patch_notes_quality_product" not in str(data.get("kind") or "") and not patch_notes:
         return None
 
-    compact_notes = [
-        compact_patch_note(note) for note in patch_notes if isinstance(note, dict)
-    ]
+    compact_notes = [compact_patch_note(note) for note in patch_notes if isinstance(note, dict)]
     product_sufficiency = (
-        data.get("product_sufficiency")
-        if isinstance(data.get("product_sufficiency"), dict)
-        else {}
+        data.get("product_sufficiency") if isinstance(data.get("product_sufficiency"), dict) else {}
     )
     applicability = (
         data.get("patch_notes_applicability")
@@ -185,13 +168,9 @@ def summarize_patch_notes_quality_product_report(
         "classification": data.get("classification"),
         "quality_score": data.get("quality_score"),
         "requested_areas": product_sufficiency.get("requested_areas"),
-        "available_requested_areas": product_sufficiency.get(
-            "available_requested_areas"
-        ),
+        "available_requested_areas": product_sufficiency.get("available_requested_areas"),
         "missing_available_areas": product_sufficiency.get("missing_available_areas"),
-        "requested_min_patch_notes": product_sufficiency.get(
-            "requested_min_patch_notes"
-        ),
+        "requested_min_patch_notes": product_sufficiency.get("requested_min_patch_notes"),
         "patch_note_limit": product_sufficiency.get("patch_note_limit"),
         "sufficient": product_sufficiency.get("sufficient"),
         "insufficiency_reasons": product_sufficiency.get("insufficiency_reasons"),
@@ -261,9 +240,7 @@ def add_nested_summary_fields(summary: dict[str, Any], data: dict[str, Any]) -> 
             summary[key] = compact_value(value, max_string=900)
 
 
-def promote_peer_mesh_lane_fields(
-    summary: dict[str, Any], data: dict[str, Any]
-) -> None:
+def promote_peer_mesh_lane_fields(summary: dict[str, Any], data: dict[str, Any]) -> None:
     """Promote peer-mesh lane fields from nested product reports into compact summaries."""
 
     lane_state = (
@@ -290,10 +267,7 @@ def promote_peer_mesh_lane_fields(
             "peer_mesh_product_blockers": "product_blockers",
         }
         for summary_key, state_key in mapping.items():
-            if (
-                summary.get(summary_key) is None
-                and lane_state.get(state_key) is not None
-            ):
+            if summary.get(summary_key) is None and lane_state.get(state_key) is not None:
                 summary[summary_key] = compact_value(lane_state.get(state_key))
         summary["peer_mesh_lane_state"] = compact_value(lane_state, max_string=900)
 
@@ -415,8 +389,4 @@ def discover_selected_chunks_evidence(
 
 def report_summaries(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return summary dicts from report entries."""
-    return [
-        item.get("summary", {})
-        for item in reports
-        if isinstance(item.get("summary"), dict)
-    ]
+    return [item.get("summary", {}) for item in reports if isinstance(item.get("summary"), dict)]

@@ -14,16 +14,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines += ["", "## Fallback path notes", ""]
     if report["fallback_path_notes"]:
         for note in report["fallback_path_notes"]:
-            lines.append(
-                f"- `{note.get('reason')}` — {note.get('recommended_followup', '')}"
-            )
+            lines.append(f"- `{note.get('reason')}` — {note.get('recommended_followup', '')}")
     else:
         lines.append("- None.")
     lines += ["", "## Plan scores", ""]
     for item in report["quality"]["plan_scores"]:
-        lines.append(
-            f"- `{item['id']}` score=`{item['score']}` targets=`{item['target_files']}`"
-        )
+        lines.append(f"- `{item['id']}` score=`{item['score']}` targets=`{item['target_files']}`")
     lines += ["", "## Concrete utility", ""]
     for effect in report["tool_utility_proof"]["concrete_effects"]:
         lines.append(f"- {effect}")

@@ -4,6 +4,7 @@
 This validator makes the domain registry part of the report-only quality gate.
 It does not execute providers, run Blender, apply patches or write source files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,7 +16,12 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 from Tools.ai.artifact_domain_registry import registry_report, validate_registry  # noqa: E402
-from Tools.ai.code_patch_plan_common import now_iso, report_only_guardrails, resolve_output_path, write_json_report  # noqa: E402
+from Tools.ai.code_patch_plan_common import (  # noqa: E402
+    now_iso,
+    report_only_guardrails,
+    resolve_output_path,
+    write_json_report,
+)
 
 
 def build_report(repo_root: Path) -> dict[str, object]:

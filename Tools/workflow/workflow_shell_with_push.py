@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
 import sys
 
 from git_auto_push import run_auto_push_generated_data
 from workflow_state import (
-    DEFAULT_WAV,
     EVENT_LOG_PATH,
     LAST_RESULT_PATH,
     SESSION_PATH,
@@ -62,7 +60,9 @@ def menu() -> None:
     print("  4  Dry-run push generated data")
     print("  5  Project storage stats")
     print("  0  Esci")
-    print("\nNota: per tutte le altre operazioni usa workflow_shell.py o workflow_shell.ps1 originale.")
+    print(
+        "\nNota: per tutte le altre operazioni usa workflow_shell.py o workflow_shell.ps1 originale."
+    )
 
 
 def main() -> None:
@@ -93,7 +93,9 @@ def main() -> None:
 
             elif choice == "4":
                 include_output = ask_bool("Includere output JSON nel dry-run?", default=True)
-                run_auto_push_generated_data(include_output_json=include_output, dry_run=True, check=False)
+                run_auto_push_generated_data(
+                    include_output_json=include_output, dry_run=True, check=False
+                )
                 session = load_session()
 
             elif choice == "5":

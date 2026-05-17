@@ -11,9 +11,7 @@ def read_jsonl(path: Path, limit: int) -> list[dict]:
     if not path.is_file():
         return []
     rows: list[dict] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[
-        -limit:
-    ]:
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
         try:
             rows.append(json.loads(line))
         except json.JSONDecodeError:
@@ -64,12 +62,12 @@ def main() -> int:
     ]
     for event in progress[-10:]:
         lines.append(
-            f"- `{event.get('timestamp','')}` `{event.get('phase','')}` `{event.get('status','')}` {event.get('message','')}"
+            f"- `{event.get('timestamp', '')}` `{event.get('phase', '')}` `{event.get('status', '')}` {event.get('message', '')}"
         )
     lines += ["", "## Recent AI public exchange"]
     for event in exchange[-10:]:
         lines.append(
-            f"- `{event.get('speaker','')}` `{event.get('event_type','')}` {event.get('summary','')}"
+            f"- `{event.get('speaker', '')}` `{event.get('event_type', '')}` {event.get('summary', '')}"
         )
     markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(

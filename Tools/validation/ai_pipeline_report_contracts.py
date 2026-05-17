@@ -4,12 +4,12 @@ The checks in this module validate report shape and field meanings only. They
 do not execute pipeline steps, Blender, FFmpeg, NPU/GPU workloads or generated
 artifacts.
 """
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
 from typing import Any
-
 
 PIPELINE_SCHEMA_VERSION = 6
 KNOWN_LANES = {"CPU", "NPU", "GPU", "IO", "VALIDATION"}
@@ -88,7 +88,9 @@ def load_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return data, None
 
 
-def validate_agent_state_packet(packet: Any, path: str, errors: list[str], warnings: list[str]) -> None:
+def validate_agent_state_packet(
+    packet: Any, path: str, errors: list[str], warnings: list[str]
+) -> None:
     """Validate the optional agent_state_packet metadata sub-contract."""
     if not isinstance(packet, dict):
         add_error(errors, path, "must be an object when present")
@@ -111,8 +113,12 @@ def validate_agent_state_packet(packet: Any, path: str, errors: list[str], warni
             add_error(errors, f"{path}.source", 'must be "cli" when enabled=true')
         if not is_non_empty_string(packet_path):
             add_error(errors, f"{path}.path", "must be a non-empty string when enabled=true")
-        if "repo_relative_path" in packet and not is_non_empty_string(packet.get("repo_relative_path")):
-            add_error(errors, f"{path}.repo_relative_path", "must be a non-empty string when present")
+        if "repo_relative_path" in packet and not is_non_empty_string(
+            packet.get("repo_relative_path")
+        ):
+            add_error(
+                errors, f"{path}.repo_relative_path", "must be a non-empty string when present"
+            )
     elif enabled is False:
         if exists is not False:
             add_error(errors, f"{path}.exists", "must be false when enabled=false")
@@ -121,7 +127,15 @@ def validate_agent_state_packet(packet: Any, path: str, errors: list[str], warni
         if packet_path is not None and not is_non_empty_string(packet_path):
             add_error(errors, f"{path}.path", "must be null/absent or a non-empty string")
 
-    allowed_fields = {"enabled", "path", "exists", "source", "repo_relative_path", "size_bytes", "modified_time"}
+    allowed_fields = {
+        "enabled",
+        "path",
+        "exists",
+        "source",
+        "repo_relative_path",
+        "size_bytes",
+        "modified_time",
+    }
     extra_fields = sorted(set(packet) - allowed_fields)
     if extra_fields:
         add_warning(warnings, path, f"accepted extra fields: {', '.join(extra_fields)}")
@@ -173,10 +187,18 @@ def validate_summary(summary: Any, path: str, errors: list[str], step_count: int
     ok_count = summary.get("ok_count")
     failed_count = summary.get("failed_count")
     planned_only_count = summary.get("planned_only_count")
-    if step_count is not None and is_non_negative_int(ok_count) and is_non_negative_int(failed_count):
+    if (
+        step_count is not None
+        and is_non_negative_int(ok_count)
+        and is_non_negative_int(failed_count)
+    ):
         if ok_count + failed_count != step_count:
             add_error(errors, path, f"ok_count + failed_count must equal step_count {step_count}")
-    if step_count is not None and is_non_negative_int(planned_only_count) and planned_only_count > step_count:
+    if (
+        step_count is not None
+        and is_non_negative_int(planned_only_count)
+        and planned_only_count > step_count
+    ):
         add_error(errors, f"{path}.planned_only_count", "must be <= step_count")
 
 
@@ -194,7 +216,8 @@ def validate_schedule(schedule: Any, path: str, errors: list[str], step_names: l
         if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
             add_error(errors, f"{path}.{field}", "must be a list of strings")
     if "parallel_lanes" in schedule and not (
-        isinstance(schedule.get("parallel_lanes"), list) and all(isinstance(item, str) for item in schedule["parallel_lanes"])
+        isinstance(schedule.get("parallel_lanes"), list)
+        and all(isinstance(item, str) for item in schedule["parallel_lanes"])
     ):
         add_error(errors, f"{path}.parallel_lanes", "must be a list of strings when present")
 
@@ -208,7 +231,11 @@ def validate_schedule(schedule: Any, path: str, errors: list[str], step_names: l
     if is_non_negative_int(parallel_count) and len(parallel) != parallel_count:
         add_error(errors, f"{path}.parallel_count", "must equal len(parallel)")
     if is_non_negative_int(total_count):
-        if is_non_negative_int(serial_count) and is_non_negative_int(parallel_count) and total_count != serial_count + parallel_count:
+        if (
+            is_non_negative_int(serial_count)
+            and is_non_negative_int(parallel_count)
+            and total_count != serial_count + parallel_count
+        ):
             add_error(errors, f"{path}.total_count", "must equal serial_count + parallel_count")
         if total_count != len(step_names):
             add_error(errors, f"{path}.total_count", "must equal step_count")
@@ -217,7 +244,9 @@ def validate_schedule(schedule: Any, path: str, errors: list[str], step_names: l
         add_error(errors, path, "serial + parallel step names must match report steps")
 
 
-def validate_lanes(lanes: Any, path: str, errors: list[str], warnings: list[str], step_names: list[str]) -> None:
+def validate_lanes(
+    lanes: Any, path: str, errors: list[str], warnings: list[str], step_names: list[str]
+) -> None:
     """Validate lane grouping semantics."""
     if not isinstance(lanes, dict):
         add_error(errors, path, "must be an object")
@@ -240,7 +269,9 @@ def validate_lanes(lanes: Any, path: str, errors: list[str], warnings: list[str]
         add_error(errors, path, "lane step names must match report steps")
 
 
-def validate_step(step: Any, index: int, errors: list[str], warnings: list[str], require_dry_run: bool) -> str | None:
+def validate_step(
+    step: Any, index: int, errors: list[str], warnings: list[str], require_dry_run: bool
+) -> str | None:
     """Validate one schema-v6 step payload."""
     path = f"steps[{index}]"
     if not isinstance(step, dict):
@@ -260,12 +291,17 @@ def validate_step(step: Any, index: int, errors: list[str], warnings: list[str],
     if "purpose" in step and not isinstance(step.get("purpose"), str):
         add_error(errors, f"{path}.purpose", "must be string when present")
     command = step.get("command")
-    if not isinstance(command, list) or not command or not all(isinstance(item, str) for item in command):
+    if (
+        not isinstance(command, list)
+        or not command
+        or not all(isinstance(item, str) for item in command)
+    ):
         add_error(errors, f"{path}.command", "must be a non-empty list of strings")
 
     expected_outputs = step.get("expected_outputs")
     if expected_outputs is not None and not (
-        isinstance(expected_outputs, list) and all(isinstance(item, str) for item in expected_outputs)
+        isinstance(expected_outputs, list)
+        and all(isinstance(item, str) for item in expected_outputs)
     ):
         add_error(errors, f"{path}.expected_outputs", "must be a list of strings when present")
 
@@ -361,7 +397,9 @@ def validate_expected_outputs(value: Any, path: str, errors: list[str]) -> None:
         if "size_bytes" in item and not is_non_negative_int(item.get("size_bytes")):
             add_error(errors, f"{item_path}.size_bytes", "must be int >= 0 when present")
         if "modified_time" in item and not is_non_empty_string(item.get("modified_time")):
-            add_error(errors, f"{item_path}.modified_time", "must be a non-empty string when present")
+            add_error(
+                errors, f"{item_path}.modified_time", "must be a non-empty string when present"
+            )
 
 
 def validate_ai_pipeline_report_payload(
@@ -394,8 +432,16 @@ def validate_ai_pipeline_report_payload(
     if not isinstance(payload.get("passed"), bool):
         add_error(errors, f"{path}.passed", "must be bool")
 
-    preflight_passed = validate_preflight(payload.get("preflight"), f"{path}.preflight", errors) if "preflight" in payload else None
-    is_preflight_failed_report = preflight_passed is False and payload.get("passed") is False and payload.get("step_count") == 0
+    preflight_passed = (
+        validate_preflight(payload.get("preflight"), f"{path}.preflight", errors)
+        if "preflight" in payload
+        else None
+    )
+    is_preflight_failed_report = (
+        preflight_passed is False
+        and payload.get("passed") is False
+        and payload.get("step_count") == 0
+    )
     missing_extended = sorted(EXTENDED_PIPELINE_REPORT_FIELDS - set(payload))
     for field in missing_extended:
         if is_preflight_failed_report:
@@ -433,29 +479,48 @@ def validate_ai_pipeline_report_payload(
     if "lanes" in payload:
         validate_lanes(payload.get("lanes"), f"{path}.lanes", errors, warnings, step_names)
     if "wave_entrypoint_review" in payload:
-        validate_enabled_path_ref(payload.get("wave_entrypoint_review"), f"{path}.wave_entrypoint_review", errors, "report")
+        validate_enabled_path_ref(
+            payload.get("wave_entrypoint_review"),
+            f"{path}.wave_entrypoint_review",
+            errors,
+            "report",
+        )
     if "smart_context" in payload:
         smart_context = payload.get("smart_context")
         validate_enabled_path_ref(smart_context, f"{path}.smart_context", errors, "packet")
         smart_task = smart_context.get("task") if isinstance(smart_context, dict) else None
         smart_enabled = smart_context.get("enabled") if isinstance(smart_context, dict) else None
         if smart_enabled is True and not is_non_empty_string(smart_task):
-            add_error(errors, f"{path}.smart_context.task", "must be a non-empty string when enabled=true")
+            add_error(
+                errors, f"{path}.smart_context.task", "must be a non-empty string when enabled=true"
+            )
     if "agent_state_packet" in payload:
-        validate_agent_state_packet(payload.get("agent_state_packet"), f"{path}.agent_state_packet", errors, warnings)
+        validate_agent_state_packet(
+            payload.get("agent_state_packet"), f"{path}.agent_state_packet", errors, warnings
+        )
     if "guardrail_remediation_loop" in payload:
-        validate_guardrail_loop(payload.get("guardrail_remediation_loop"), f"{path}.guardrail_remediation_loop", errors)
+        validate_guardrail_loop(
+            payload.get("guardrail_remediation_loop"), f"{path}.guardrail_remediation_loop", errors
+        )
     if "post_run_expected_outputs" in payload:
-        validate_expected_outputs(payload.get("post_run_expected_outputs"), f"{path}.post_run_expected_outputs", errors)
+        validate_expected_outputs(
+            payload.get("post_run_expected_outputs"), f"{path}.post_run_expected_outputs", errors
+        )
 
     if payload.get("passed") is True and isinstance(steps, list):
         failed_steps = [
             item.get("name") or f"steps[{index}]"
             for index, item in enumerate(steps)
-            if isinstance(item, dict) and item.get("returncode") != 0 and item.get("allow_failure") is not True
+            if isinstance(item, dict)
+            and item.get("returncode") != 0
+            and item.get("allow_failure") is not True
         ]
         if failed_steps:
-            add_error(errors, f"{path}.passed", f"true but failed steps exist: {', '.join(str(item) for item in failed_steps)}")
+            add_error(
+                errors,
+                f"{path}.passed",
+                f"true but failed steps exist: {', '.join(str(item) for item in failed_steps)}",
+            )
 
     return {
         "passed": not errors,
@@ -474,7 +539,9 @@ def validate_ai_pipeline_report_payload(
     }
 
 
-def validate_ai_pipeline_report_file(path: Path, *, require_dry_run: bool = False) -> dict[str, Any]:
+def validate_ai_pipeline_report_file(
+    path: Path, *, require_dry_run: bool = False
+) -> dict[str, Any]:
     """Load and validate one AI pipeline schema-v6 report file."""
     payload, load_error = load_json_object(path)
     if load_error:

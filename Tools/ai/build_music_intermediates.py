@@ -57,9 +57,7 @@ def find_series(data: Any) -> dict[str, list[float]]:
             for key, child in value.items():
                 walk(child, f"{path}.{key}" if path else key)
         elif isinstance(value, list):
-            if value and all(
-                isinstance(x, (int, float)) for x in value[: min(200, len(value))]
-            ):
+            if value and all(isinstance(x, (int, float)) for x in value[: min(200, len(value))]):
                 if any(token in path.lower() for token in wanted):
                     out[path] = [float(x) for x in value if isinstance(x, (int, float))]
             elif value and isinstance(value[0], dict):
@@ -122,9 +120,7 @@ def trend(values: list[float]) -> str:
     return "mixed"
 
 
-def top_events(
-    values: list[float], duration: float, limit: int = 16
-) -> list[dict[str, Any]]:
+def top_events(values: list[float], duration: float, limit: int = 16) -> list[dict[str, Any]]:
     if not values or duration <= 0:
         return []
     norm = normalize(values)
@@ -154,27 +150,23 @@ def synthetic_beats(duration: float, bpm: float | None) -> list[float]:
     return beats
 
 
-def visual_directive(
-    name: str, intensity: float | None, event_count: int
-) -> dict[str, Any]:
+def visual_directive(name: str, intensity: float | None, event_count: int) -> dict[str, Any]:
     level = "medium"
     if intensity is not None:
-        level = (
-            "high" if intensity >= 0.66 else "low" if intensity <= 0.33 else "medium"
-        )
+        level = "high" if intensity >= 0.66 else "low" if intensity <= 0.33 else "medium"
     return {
         "intensity_level": level,
         "camera": (
             "slow reveal"
             if name == "intro"
-            else (
-                "impact moves on peaks" if level == "high" else "stable rhythmic motion"
-            )
+            else ("impact moves on peaks" if level == "high" else "stable rhythmic motion")
         ),
         "lighting": (
             "soft establishing light"
             if name == "intro"
-            else "burst accents" if event_count else "controlled ambient variation"
+            else "burst accents"
+            if event_count
+            else "controlled ambient variation"
         ),
         "materials": (
             "subtle shader modulation"
@@ -199,9 +191,7 @@ def segments(duration: float, events: list[dict[str, Any]]) -> list[dict[str, An
         start = i * step
         end = duration if i == len(names) - 1 else (i + 1) * step
         local = [e for e in events if start <= e["time_sec"] < end]
-        intensity = (
-            round(statistics.mean([e["score"] for e in local]), 4) if local else None
-        )
+        intensity = round(statistics.mean([e["score"] for e in local]), 4) if local else None
         result.append(
             {
                 "name": name,
@@ -263,17 +253,11 @@ def assumptions(
 ) -> list[str]:
     out = []
     if not duration:
-        out.append(
-            "Duration was not found in the analysis JSON; segment timing may be empty."
-        )
+        out.append("Duration was not found in the analysis JSON; segment timing may be empty.")
     if not bpm:
-        out.append(
-            "BPM was not found; beat map may be empty or synthetic beat mapping disabled."
-        )
+        out.append("BPM was not found; beat map may be empty or synthetic beat mapping disabled.")
     if not primary_name:
-        out.append(
-            "No usable energy/intensity series was found; peak events may be empty."
-        )
+        out.append("No usable energy/intensity series was found; peak events may be empty.")
     if series_count:
         out.append(
             "Primary intensity series was selected heuristically from available numeric series."
@@ -294,9 +278,7 @@ def main() -> int:
     out = Path(args.output_dir).resolve()
     data = load_json(source)
     duration = (
-        first_number(
-            data, ("duration_sec", "duration_seconds", "duration", "track_duration_sec")
-        )
+        first_number(data, ("duration_sec", "duration_seconds", "duration", "track_duration_sec"))
         or 0.0
     )
     bpm = first_number(data, ("bpm", "estimated_bpm", "tempo"))
@@ -330,8 +312,7 @@ def main() -> int:
                 "has_bpm": bool(bpm),
                 "has_primary_series": bool(primary_name),
                 "score": round(
-                    sum([bool(duration), bool(bpm), bool(primary_name), bool(segs)])
-                    / 4,
+                    sum([bool(duration), bool(bpm), bool(primary_name), bool(segs)]) / 4,
                     3,
                 ),
             },
@@ -398,9 +379,7 @@ def main() -> int:
             "source_analysis": str(source),
             "candidates": mapping_candidates(segs, bpm, peaks),
         },
-        "ai_assumptions.md": "# AI Assumptions\n\n"
-        + "\n".join(f"- {item}" for item in ass)
-        + "\n",
+        "ai_assumptions.md": "# AI Assumptions\n\n" + "\n".join(f"- {item}" for item in ass) + "\n",
     }
 
     written = {}

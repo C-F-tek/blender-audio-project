@@ -1,34 +1,35 @@
-import bpy
 from pathlib import Path
 
-from config import (
-    PEACE_PALETTE,
-    WORLD_STRENGTH,
-    WORLD_CAMERA_STRENGTH,
-    WORLD_LIGHT_COLOR,
-    WORLD_CAMERA_COLOR,
-    USE_HDRI_WORLD,
-    HDRI_PATH,
-    HDRI_STRENGTH,
-    HDRI_ROT_Z,
-    LIGHT_ENERGY_MIN,
-    FLOOR_SIZE,
-    FLOOR_RENDER_VISIBLE,
-    FLOOR_VIEWPORT_VISIBLE,
-    USE_SOFT_BACKDROP,
-    BACKDROP_SIZE,
-    BACKDROP_LOCATION,
-    BACKDROP_ROT_X,
-    USE_INVISIBLE_COLLISION_PLANE,
-    INVISIBLE_COLLISION_PLANE_SIZE,
-    INVISIBLE_COLLISION_PLANE_Z,
-)
+import bpy
 from materials import (
-    build_reflective_floor_material,
     build_invisible_surface_material,
+    build_reflective_floor_material,
     build_soft_backdrop_material,
 )
 from scene_utils import create_controller_empty
+
+from config import (
+    BACKDROP_LOCATION,
+    BACKDROP_ROT_X,
+    BACKDROP_SIZE,
+    FLOOR_RENDER_VISIBLE,
+    FLOOR_SIZE,
+    FLOOR_VIEWPORT_VISIBLE,
+    HDRI_PATH,
+    HDRI_ROT_Z,
+    HDRI_STRENGTH,
+    INVISIBLE_COLLISION_PLANE_SIZE,
+    INVISIBLE_COLLISION_PLANE_Z,
+    LIGHT_ENERGY_MIN,
+    PEACE_PALETTE,
+    USE_HDRI_WORLD,
+    USE_INVISIBLE_COLLISION_PLANE,
+    USE_SOFT_BACKDROP,
+    WORLD_CAMERA_COLOR,
+    WORLD_CAMERA_STRENGTH,
+    WORLD_LIGHT_COLOR,
+    WORLD_STRENGTH,
+)
 
 
 def configure_world(scene):
@@ -187,7 +188,7 @@ def create_area_lights():
     ]
 
     for idx, (pos, col) in enumerate(zip(positions, colors)):
-        bpy.ops.object.light_add(type='AREA', location=pos)
+        bpy.ops.object.light_add(type="AREA", location=pos)
         light = bpy.context.active_object
         light.name = f"AreaLight_{idx:02d}"
         light.data.energy = LIGHT_ENERGY_MIN

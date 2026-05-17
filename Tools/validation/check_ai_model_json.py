@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate the reusable AI model JSON parser with deterministic samples."""
+
 from __future__ import annotations
 
 import argparse
@@ -38,15 +39,29 @@ def import_model_json(repo_root: Path) -> dict[str, Any]:
     }
 
 
-def run_case(name: str, func: Any, text: str, expected: Any = None, *, expect_error: bool = False) -> dict[str, Any]:
+def run_case(
+    name: str, func: Any, text: str, expected: Any = None, *, expect_error: bool = False
+) -> dict[str, Any]:
     """Run one parser test case."""
     try:
         value = func(text)
         passed = not expect_error and (value == expected if expected is not None else True)
-        return {"name": name, "passed": passed, "value": value, "expected": expected, "expect_error": expect_error}
+        return {
+            "name": name,
+            "passed": passed,
+            "value": value,
+            "expected": expected,
+            "expect_error": expect_error,
+        }
     except Exception as exc:
         passed = expect_error
-        return {"name": name, "passed": passed, "error_type": type(exc).__name__, "error": str(exc), "expect_error": expect_error}
+        return {
+            "name": name,
+            "passed": passed,
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+            "expect_error": expect_error,
+        }
 
 
 def check_model_json(repo_root: Path) -> dict[str, Any]:
@@ -62,23 +77,62 @@ def check_model_json(repo_root: Path) -> dict[str, Any]:
 
     cases = [
         run_case("plain_object", parse_model_json_object, '{"ok": true}', {"ok": True}),
-        run_case("markdown_fenced_object", parse_model_json_object, '```json\n{"ok": true}\n```', {"ok": True}),
-        run_case("surrounding_text_object", parse_model_json_object, 'Here is the JSON:\n{"ok": true, "items": [1, 2]}\nDone.', {"ok": True, "items": [1, 2]}),
+        run_case(
+            "markdown_fenced_object",
+            parse_model_json_object,
+            '```json\n{"ok": true}\n```',
+            {"ok": True},
+        ),
+        run_case(
+            "surrounding_text_object",
+            parse_model_json_object,
+            'Here is the JSON:\n{"ok": true, "items": [1, 2]}\nDone.',
+            {"ok": True, "items": [1, 2]},
+        ),
         run_case("trailing_comma_repair", parse_model_json_object, '{"ok": true,}', {"ok": True}),
-        run_case("line_comment_repair", parse_model_json_object, '{\n  // model note\n  "ok": true\n}', {"ok": True}),
+        run_case(
+            "line_comment_repair",
+            parse_model_json_object,
+            '{\n  // model note\n  "ok": true\n}',
+            {"ok": True},
+        ),
         run_case("array_allowed", parse_model_json, '[{"a": 1}, {"a": 2}]', [{"a": 1}, {"a": 2}]),
-        run_case("array_rejected_by_object_parser", parse_model_json_object, '[1, 2, 3]', expect_error=True),
-        run_case("invalid_text_fails", parse_model_json, 'not json at all', expect_error=True),
-        run_case("ollama_parse_json_response_plain", parse_json_response, '{"ok": true}', {"ok": True}),
-        run_case("ollama_parse_json_response_fenced", parse_json_response, '```json\n{"ok": true}\n```', {"ok": True}),
-        run_case("ollama_parse_json_response_surrounding_text", parse_json_response, 'prefix {"ok": true} suffix', {"ok": True}),
-        run_case("ollama_parse_json_response_invalid_raises_jsondecode", parse_json_response, 'not json at all', expect_error=True),
+        run_case(
+            "array_rejected_by_object_parser",
+            parse_model_json_object,
+            "[1, 2, 3]",
+            expect_error=True,
+        ),
+        run_case("invalid_text_fails", parse_model_json, "not json at all", expect_error=True),
+        run_case(
+            "ollama_parse_json_response_plain", parse_json_response, '{"ok": true}', {"ok": True}
+        ),
+        run_case(
+            "ollama_parse_json_response_fenced",
+            parse_json_response,
+            '```json\n{"ok": true}\n```',
+            {"ok": True},
+        ),
+        run_case(
+            "ollama_parse_json_response_surrounding_text",
+            parse_json_response,
+            'prefix {"ok": true} suffix',
+            {"ok": True},
+        ),
+        run_case(
+            "ollama_parse_json_response_invalid_raises_jsondecode",
+            parse_json_response,
+            "not json at all",
+            expect_error=True,
+        ),
     ]
 
     direct_checks = {
-        "strip_markdown_json_fence": strip_markdown_json_fence('```json\n{"a": 1}\n```') == '{"a": 1}',
+        "strip_markdown_json_fence": strip_markdown_json_fence('```json\n{"a": 1}\n```')
+        == '{"a": 1}',
         "strip_json_fence_legacy_wrapper": strip_json_fence('```json\n{"a": 1}\n```') == '{"a": 1}',
-        "extract_json_candidate": extract_json_candidate('prefix {"a": [1, 2]} suffix') == '{"a": [1, 2]}',
+        "extract_json_candidate": extract_json_candidate('prefix {"a": [1, 2]} suffix')
+        == '{"a": [1, 2]}',
         "repair_common_model_json": repair_common_model_json('{"a": 1,}') == '{"a": 1}',
     }
 

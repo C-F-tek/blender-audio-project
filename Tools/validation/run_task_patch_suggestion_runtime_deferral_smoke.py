@@ -17,7 +17,9 @@ except ImportError:
 def run_case(source_repo: Path, repo: Path, task_rel: str, name: str) -> dict[str, Any]:
     task_path = repo / task_rel
     task_path.parent.mkdir(parents=True, exist_ok=True)
-    task_path.write_text("# Runtime entry task\n\nNo embedded patch suggestions.\n", encoding="utf-8")
+    task_path.write_text(
+        "# Runtime entry task\n\nNo embedded patch suggestions.\n", encoding="utf-8"
+    )
     out = repo / "output/validation" / f"{name}.json"
     cmd = [
         "python",
@@ -45,7 +47,9 @@ def run_case(source_repo: Path, repo: Path, task_rel: str, name: str) -> dict[st
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/task_patch_suggestion_runtime_deferral_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/task_patch_suggestion_runtime_deferral_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -54,7 +58,12 @@ def main() -> int:
         repo = Path(temp_dir) / "repo"
         repo.mkdir(parents=True)
         cases = [
-            run_case(source_repo, repo, "output/local_ai_task_inputs/process-gate.md", "process_gate_entry"),
+            run_case(
+                source_repo,
+                repo,
+                "output/local_ai_task_inputs/process-gate.md",
+                "process_gate_entry",
+            ),
             run_case(source_repo, repo, "docs/LOCAL_AI_TASKS/plain-task.md", "plain_task"),
         ]
     process_report = cases[0]["report"]

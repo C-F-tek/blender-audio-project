@@ -26,12 +26,7 @@ except ImportError:
     DEFAULT_NPU_PYTHON = Path(
         os.environ.get(
             "SPAZIOTEMPO_NPU_PYTHON",
-            Path.home()
-            / "blender"
-            / "venvs"
-            / "blender-npu-ai"
-            / "Scripts"
-            / "python.exe",
+            Path.home() / "blender" / "venvs" / "blender-npu-ai" / "Scripts" / "python.exe",
         )
     )
 
@@ -72,8 +67,7 @@ def run_command(command: list[str], timeout_seconds: int) -> tuple[int, str, str
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     npu_python = Path(
-        args.npu_python
-        or os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))
+        args.npu_python or os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))
     ).expanduser()
     code = """
 import json
@@ -111,13 +105,9 @@ print(json.dumps(result))
         if error:
             errors.append(error)
         try:
-            parsed = (
-                json.loads(stdout.strip().splitlines()[-1]) if stdout.strip() else {}
-            )
+            parsed = json.loads(stdout.strip().splitlines()[-1]) if stdout.strip() else {}
         except Exception as exc:  # noqa: BLE001
-            errors.append(
-                f"unable to parse NPU Python probe JSON: {type(exc).__name__}: {exc}"
-            )
+            errors.append(f"unable to parse NPU Python probe JSON: {type(exc).__name__}: {exc}")
     openvino_ok = bool(parsed.get("openvino_import"))
     genai_ok = bool(parsed.get("openvino_genai_import"))
     npu_available = bool(parsed.get("npu_available"))
@@ -175,9 +165,7 @@ print(json.dumps(result))
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def render_markdown(report: dict[str, Any]) -> str:

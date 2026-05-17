@@ -6,6 +6,7 @@ remediation report for NPU/OpenVINO decoding quality. It does not execute NPU,
 OpenVINO, Ollama or any provider; it only describes safe follow-up actions for
 human review or an explicitly scoped future milestone.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -51,7 +52,9 @@ def _diagnose_npu(result: dict[str, Any] | None) -> tuple[list[str], list[str], 
 
     if not result:
         findings.append("npu quality result is missing")
-        remediation.append("Regenerate ai_workload_report_quality.json before changing NPU decode settings.")
+        remediation.append(
+            "Regenerate ai_workload_report_quality.json before changing NPU decode settings."
+        )
         stop_conditions.append("No NPU quality metrics are available.")
         return findings, remediation, stop_conditions
 
@@ -68,7 +71,9 @@ def _diagnose_npu(result: dict[str, Any] | None) -> tuple[list[str], list[str], 
     if digit_ratio > 0.75:
         findings.append(f"Digit ratio is abnormally high for Markdown output: {digit_ratio}.")
     if hexish_ratio > 0.82:
-        findings.append(f"Hex-like character ratio indicates non-linguistic decoding: {hexish_ratio}.")
+        findings.append(
+            f"Hex-like character ratio indicates non-linguistic decoding: {hexish_ratio}."
+        )
     if word_count < 20:
         findings.append(f"Word count is too low for advisory use: {word_count}.")
 
@@ -93,7 +98,9 @@ def _diagnose_npu(result: dict[str, Any] | None) -> tuple[list[str], list[str], 
     return findings, remediation, stop_conditions
 
 
-def build_npu_decode_quality_remediation_report(repo_root: Path, quality_report_path: Path) -> dict[str, Any]:
+def build_npu_decode_quality_remediation_report(
+    repo_root: Path, quality_report_path: Path
+) -> dict[str, Any]:
     quality_report = _load_json(quality_report_path)
     errors: list[str] = []
     warnings: list[str] = []
@@ -138,7 +145,9 @@ def build_npu_decode_quality_remediation_report(repo_root: Path, quality_report_
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--quality-report", default="output/validation/ai_workload_report_quality.json")
+    parser.add_argument(
+        "--quality-report", default="output/validation/ai_workload_report_quality.json"
+    )
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()
 

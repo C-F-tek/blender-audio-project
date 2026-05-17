@@ -80,12 +80,29 @@ def build_broker_request(path: Path) -> None:
 def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     stamp = args.stamp or now_stamp()
-    direct_output = repo_root / "output" / "validation" / f"heap_virtual_dev_environment_smoke_direct_{stamp}.json"
+    direct_output = (
+        repo_root
+        / "output"
+        / "validation"
+        / f"heap_virtual_dev_environment_smoke_direct_{stamp}.json"
+    )
     direct_markdown = direct_output.with_suffix(".md")
-    broker_request = repo_root / "output" / "validation" / f"heap_virtual_dev_environment_smoke_broker_request_{stamp}.json"
-    broker_output = repo_root / "output" / "validation" / f"heap_virtual_dev_environment_smoke_broker_{stamp}.json"
+    broker_request = (
+        repo_root
+        / "output"
+        / "validation"
+        / f"heap_virtual_dev_environment_smoke_broker_request_{stamp}.json"
+    )
+    broker_output = (
+        repo_root
+        / "output"
+        / "validation"
+        / f"heap_virtual_dev_environment_smoke_broker_{stamp}.json"
+    )
     broker_markdown = broker_output.with_suffix(".md")
-    broker_tool_dir = repo_root / "output" / "ai_runtime_tools" / f"heap_virtual_dev_environment_smoke_{stamp}"
+    broker_tool_dir = (
+        repo_root / "output" / "ai_runtime_tools" / f"heap_virtual_dev_environment_smoke_{stamp}"
+    )
     build_broker_request(broker_request)
     direct = run(
         [
@@ -155,7 +172,14 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         "errors": [] if passed else ["virtual dev environment smoke failed"],
         "warnings": [],
     }
-    output = Path(args.output).resolve() if args.output else repo_root / "output" / "validation" / f"heap_virtual_dev_environment_smoke_{stamp}.json"
+    output = (
+        Path(args.output).resolve()
+        if args.output
+        else repo_root
+        / "output"
+        / "validation"
+        / f"heap_virtual_dev_environment_smoke_{stamp}.json"
+    )
     write_json(output, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return report

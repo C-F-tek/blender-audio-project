@@ -37,12 +37,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request-file", required=True)
-    parser.add_argument(
-        "--output", default="output/validation/agent_runtime_debug_lab.json"
-    )
-    parser.add_argument(
-        "--markdown-output", default="output/validation/agent_runtime_debug_lab.md"
-    )
+    parser.add_argument("--output", default="output/validation/agent_runtime_debug_lab.json")
+    parser.add_argument("--markdown-output", default="output/validation/agent_runtime_debug_lab.md")
     parser.add_argument("--timeout-seconds", type=int, default=300)
     parser.add_argument("--tail-chars", type=int, default=4000)
     return parser.parse_args()

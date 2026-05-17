@@ -178,9 +178,7 @@ def caller_modes(usage_report: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_tool_rows(
-    repo_root: Path, usage: dict[str, dict[str, Any]]
-) -> list[dict[str, Any]]:
+def build_tool_rows(repo_root: Path, usage: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for name in sorted(TOOL_SPECS):
         spec = TOOL_SPECS[name]
@@ -210,9 +208,7 @@ def build_tool_rows(
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    usage_path = (
-        resolve_output_path(repo_root, args.tool_usage) if args.tool_usage else None
-    )
+    usage_path = resolve_output_path(repo_root, args.tool_usage) if args.tool_usage else None
     usage_report = read_json(usage_path) if usage_path else {}
     usage = usage_by_tool(usage_report)
     sources = [
@@ -301,12 +297,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(
         f"- Declared not executed count: `{usage_summary.get('declared_not_executed_count')}`"
     )
-    lines.append(
-        f"- Provider execution performed: `{report.get('provider_execution_performed')}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report.get('patch_application_performed')}`"
-    )
+    lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
+    lines.append(f"- Patch application performed: `{report.get('patch_application_performed')}`")
     lines.append("")
     lines.append("## Cloud handoff policy")
     lines.append("")
@@ -349,9 +341,7 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--tool-usage", default="", help="runtime_tool_usage_telemetry JSON path"
-    )
+    parser.add_argument("--tool-usage", default="", help="runtime_tool_usage_telemetry JSON path")
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
     args = parser.parse_args()

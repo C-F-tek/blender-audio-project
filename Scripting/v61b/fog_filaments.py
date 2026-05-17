@@ -2,23 +2,22 @@ import math
 import random
 
 import bpy
-from mathutils import Euler, Vector
-
-from config import (
-    FOG_FILAMENTS_ENABLED,
-    FOG_FILAMENT_COUNT,
-    FOG_FILAMENT_WIDTH_MIN,
-    FOG_FILAMENT_WIDTH_MAX,
-    FOG_FILAMENT_HEIGHT_MIN,
-    FOG_FILAMENT_HEIGHT_MAX,
-    FOG_FILAMENT_DEPTH_MIN,
-    FOG_FILAMENT_DEPTH_MAX,
-    FOG_FILAMENT_Z_MIN,
-    FOG_FILAMENT_Z_MAX,
-)
 from materials import build_fog_filament_material
+from mathutils import Euler, Vector
 from scene_utils import create_controller_empty
 
+from config import (
+    FOG_FILAMENT_COUNT,
+    FOG_FILAMENT_DEPTH_MAX,
+    FOG_FILAMENT_DEPTH_MIN,
+    FOG_FILAMENT_HEIGHT_MAX,
+    FOG_FILAMENT_HEIGHT_MIN,
+    FOG_FILAMENT_WIDTH_MAX,
+    FOG_FILAMENT_WIDTH_MIN,
+    FOG_FILAMENT_Z_MAX,
+    FOG_FILAMENT_Z_MIN,
+    FOG_FILAMENTS_ENABLED,
+)
 
 ROOT_NAME = "FogFilamentsRoot"
 OBJECT_PREFIX = "FogFilament_"
@@ -99,11 +98,11 @@ def ensure_fog_filaments(parent=None):
     if root is None:
         root = create_controller_empty(
             ROOT_NAME,
-        location=(0, 4.8, 3.1),
-        parent=parent,
-        display_size=0.50,
-        hide_view=False,
-    )
+            location=(0, 4.8, 3.1),
+            parent=parent,
+            display_size=0.50,
+            hide_view=False,
+        )
     elif parent is not None and root.parent is None:
         root.parent = parent
     root.hide_render = True
@@ -143,13 +142,15 @@ def ensure_fog_filaments(parent=None):
         if "st_base_location" not in obj:
             _store_base_transform(obj, float(index) * 0.73)
 
-        active.append({
-            "object": obj,
-            "phase": float(obj.get("st_phase", index * 0.73)),
-            "base_location": _base_vector(obj, "st_base_location", obj.location),
-            "base_scale": _base_vector(obj, "st_base_scale", obj.scale),
-            "base_rotation": _base_euler(obj, "st_base_rotation", obj.rotation_euler),
-        })
+        active.append(
+            {
+                "object": obj,
+                "phase": float(obj.get("st_phase", index * 0.73)),
+                "base_location": _base_vector(obj, "st_base_location", obj.location),
+                "base_scale": _base_vector(obj, "st_base_scale", obj.scale),
+                "base_rotation": _base_euler(obj, "st_base_rotation", obj.rotation_euler),
+            }
+        )
 
     return {
         "root": root,

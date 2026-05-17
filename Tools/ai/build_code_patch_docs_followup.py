@@ -134,9 +134,7 @@ DEFAULT_VALIDATION_COMMANDS = (
 )
 
 
-def existing_doc_targets(
-    repo_root: Path, candidates: list[str]
-) -> tuple[list[str], list[str]]:
+def existing_doc_targets(repo_root: Path, candidates: list[str]) -> tuple[list[str], list[str]]:
     """Split candidate docs into existing and missing repository files."""
     existing: list[str] = []
     missing: list[str] = []
@@ -185,9 +183,7 @@ def unique_candidates(candidates: list[str]) -> list[str]:
 def normalized_target_files(plan: dict[str, Any]) -> list[str]:
     """Return normalized code target files from a patch plan."""
     target_files = (
-        plan.get("target_files", [])
-        if isinstance(plan.get("target_files"), list)
-        else []
+        plan.get("target_files", []) if isinstance(plan.get("target_files"), list) else []
     )
     return [normalize_repo_path(target) for target in target_files]
 
@@ -208,9 +204,7 @@ def source_evidence_for_plan(plan: dict[str, Any], plan_id: str) -> dict[str, An
     }
 
 
-def docs_followup_for_plan(
-    repo_root: Path, plan: dict[str, Any], index: int
-) -> dict[str, Any]:
+def docs_followup_for_plan(repo_root: Path, plan: dict[str, Any], index: int) -> dict[str, Any]:
     """Build one docs follow-up suggestion from one code patch-plan item."""
     plan_id = str(plan.get("id") or f"code_patch_{index:03d}")
     existing_targets, missing_targets = existing_doc_targets(
@@ -267,9 +261,7 @@ def build_docs_followup(repo_root: Path, code_plan_path: Path) -> dict[str, Any]
             for index, plan in enumerate(plans, start=1)
         ]
         if not suggestions:
-            warnings.append(
-                "no docs follow-up suggestions were produced from the code patch plan"
-            )
+            warnings.append("no docs follow-up suggestions were produced from the code patch plan")
 
     return {
         "schema_version": 1,
@@ -287,9 +279,7 @@ def build_docs_followup(repo_root: Path, code_plan_path: Path) -> dict[str, Any]
         "inputs": {
             "code_patch_plan": repo_rel(repo_root, code_plan_path),
             "code_patch_plan_kind": code_plan.get("kind") if code_plan else None,
-            "code_patch_plan_count": (
-                code_plan.get("patch_plan_count") if code_plan else None
-            ),
+            "code_patch_plan_count": (code_plan.get("patch_plan_count") if code_plan else None),
         },
         "docs_followup_count": len(suggestions),
         "docs_followup_suggestions": suggestions,
@@ -313,12 +303,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
     lines.append(f"- Manual review required: `{report['manual_review_required']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append(f"- Docs follow-up count: `{report['docs_followup_count']}`")
     lines.append("")
@@ -330,9 +316,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(render_suggestion(suggestion))
     lines.append("## Guardrail")
     lines.append("")
-    lines.append(
-        "This report notifies the documentation lane only. It is not a patch apply queue."
-    )
+    lines.append("This report notifies the documentation lane only. It is not a patch apply queue.")
     return "\n".join(lines) + "\n"
 
 

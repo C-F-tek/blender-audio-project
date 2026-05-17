@@ -127,9 +127,7 @@ def split_path_values(items: list[str]) -> list[str]:
     return out
 
 
-def is_excluded(
-    path: Path, repo_root: Path, *, include_output: bool, include_index: bool
-) -> bool:
+def is_excluded(path: Path, repo_root: Path, *, include_output: bool, include_index: bool) -> bool:
     rel_parts = path.relative_to(repo_root).parts
     excludes = set(DEFAULT_EXCLUDE_DIRS)
     if not include_output:
@@ -167,8 +165,7 @@ def iter_files(
         suffix = path.suffix.lower()
         rel = path.relative_to(repo_root).as_posix()
         if suffix in DOC_EXTENSIONS and (
-            include_all_docs
-            or rel.startswith(("docs/", "tools/", "AGENTS", "WORKFLOW"))
+            include_all_docs or rel.startswith(("docs/", "tools/", "AGENTS", "WORKFLOW"))
         ):
             docs.append(path)
         elif suffix in CODE_EXTENSIONS and (
@@ -178,17 +175,12 @@ def iter_files(
         if (
             include_raw
             and suffix in RAW_EXTENSIONS
-            and rel.startswith(
-                ("output/", "docs/LOCAL_VALIDATION_EVIDENCE/", "indexAI/")
-            )
+            and rel.startswith(("output/", "docs/LOCAL_VALIDATION_EVIDENCE/", "indexAI/"))
         ):
             raw.append(path)
         if include_sqlite_memory and suffix in SQLITE_EXTENSIONS:
             sqlite_files.append(path)
-        if (
-            max_files > 0
-            and len(docs) + len(code) + len(raw) + len(sqlite_files) >= max_files
-        ):
+        if max_files > 0 and len(docs) + len(code) + len(raw) + len(sqlite_files) >= max_files:
             break
     return docs, code, raw, sqlite_files
 
@@ -211,13 +203,7 @@ def python_symbols(text: str) -> tuple[str, ...]:
             tree = ast.parse(text)
     except SyntaxError:
         return tuple(
-            sorted(
-                set(
-                    re.findall(
-                        r"(?m)^\s*(?:def|class)\s+([A-Za-z_][A-Za-z0-9_]*)", text
-                    )
-                )
-            )
+            sorted(set(re.findall(r"(?m)^\s*(?:def|class)\s+([A-Za-z_][A-Za-z0-9_]*)", text)))
         )
     names: list[str] = []
     for node in ast.walk(tree):
@@ -299,20 +285,16 @@ def collect_reports(repo_root: Path, report_files: list[str]) -> list[dict[str, 
                 "passed": data.get("passed") if isinstance(data, dict) else None,
                 "errors": (
                     data.get("errors", [])[:10]
-                    if isinstance(data, dict)
-                    and isinstance(data.get("errors", []), list)
+                    if isinstance(data, dict) and isinstance(data.get("errors", []), list)
                     else []
                 ),
                 "warnings": (
                     data.get("warnings", [])[:10]
-                    if isinstance(data, dict)
-                    and isinstance(data.get("warnings", []), list)
+                    if isinstance(data, dict) and isinstance(data.get("warnings", []), list)
                     else []
                 ),
                 "provider_execution_performed": (
-                    data.get("provider_execution_performed")
-                    if isinstance(data, dict)
-                    else None
+                    data.get("provider_execution_performed") if isinstance(data, dict) else None
                 ),
                 "error": item.get("error"),
             }
@@ -365,9 +347,9 @@ def inspect_sqlite_memory(
                 ).fetchall()
                 for (name,) in rows[:max_tables]:
                     try:
-                        count = conn.execute(
-                            f"select count(*) from {json.dumps(name)}"
-                        ).fetchone()[0]
+                        count = conn.execute(f"select count(*) from {json.dumps(name)}").fetchone()[
+                            0
+                        ]
                     except Exception:
                         count = None
                     item["tables"].append({"name": name, "row_count": count})
@@ -471,9 +453,7 @@ def compare_docs_to_docs(repo_root: Path, records: list[FileRecord]) -> dict[str
     for rel in CANONICAL_DOCS:
         path = repo_root / rel
         text, _truncated, error = (
-            read_text(path, max_chars=220_000)
-            if path.exists()
-            else ("", False, "missing")
+            read_text(path, max_chars=220_000) if path.exists() else ("", False, "missing")
         )
         missing_terms = [term for term in CONTRACT_TERMS if term not in text]
         canonical_results.append(
@@ -501,9 +481,7 @@ def compare_docs_to_docs(repo_root: Path, records: list[FileRecord]) -> dict[str
         "canonical_doc_count": len(CANONICAL_DOCS),
         "canonical_docs": canonical_results,
         "canonical_missing_count": sum(
-            1
-            for item in canonical_results
-            if item["missing_terms"] or not item["exists"]
+            1 for item in canonical_results if item["missing_terms"] or not item["exists"]
         ),
         "duplicate_heading_count": len(duplicates),
         "duplicate_headings": duplicates,
@@ -546,9 +524,7 @@ def deterministic_findings(
                 "severity": "high",
                 "area": "validation_reports",
                 "title": "Some validation reports are failing",
-                "details": [
-                    f"{r['path']}: {r.get('errors')}" for r in failed_reports[:10]
-                ],
+                "details": [f"{r['path']}: {r.get('errors')}" for r in failed_reports[:10]],
             }
         )
     if missing_reports:
@@ -604,9 +580,7 @@ def deterministic_findings(
                 "severity": "low",
                 "area": "sqlite_memory",
                 "title": "Some SQLite memory databases could not be read in read-only mode",
-                "details": [
-                    f"{item['path']}: {item['error']}" for item in sqlite_errors[:12]
-                ],
+                "details": [f"{item['path']}: {item['error']}" for item in sqlite_errors[:12]],
             }
         )
     if not findings:
@@ -668,12 +642,8 @@ def maybe_run_ollama(
     from Tools.npu.ollama_runtime import OllamaSession
 
     try:
-        with OllamaSession(
-            model=model, shutdown_server=False, unload_model=True
-        ) as session:
-            text = session.generate(
-                prompt, max_new_tokens=max_new_tokens, temperature=0.1
-            )
+        with OllamaSession(model=model, shutdown_server=False, unload_model=True) as session:
+            text = session.generate(prompt, max_new_tokens=max_new_tokens, temperature=0.1)
         parsed: Any = None
         try:
             from tools.ai.model_json import parse_model_json_object
@@ -708,7 +678,7 @@ def build_proposals(review: dict[str, Any]) -> dict[str, Any]:
         if finding.get("severity") in {"high", "medium", "low"}:
             proposals.append(
                 {
-                    "id": f"MEGA-{len(proposals)+1:03d}",
+                    "id": f"MEGA-{len(proposals) + 1:03d}",
                     "title": finding.get("title"),
                     "area": finding.get("area"),
                     "apply_mode": "manual_review_only",
@@ -721,7 +691,7 @@ def build_proposals(review: dict[str, Any]) -> dict[str, Any]:
         for item in ollama_json.get("patch_proposals", []) or []:
             if isinstance(item, dict):
                 proposal = dict(item)
-                proposal.setdefault("id", f"OLLAMA-MEGA-{len(proposals)+1:03d}")
+                proposal.setdefault("id", f"OLLAMA-MEGA-{len(proposals) + 1:03d}")
                 proposal.setdefault("apply_mode", "manual_review_only")
                 proposal.setdefault("content_status", "proposal_only")
                 proposals.append(proposal)
@@ -743,18 +713,12 @@ def build_proposals(review: dict[str, Any]) -> dict[str, Any]:
 def render_markdown(review: dict[str, Any], proposals: dict[str, Any]) -> str:
     lines = ["# Megalithic Repository Review", ""]
     lines.append(f"- Generated at: `{review['generated_at']}`")
-    lines.append(
-        f"- Provider execution performed: `{review['provider_execution_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{review['provider_execution_performed']}`")
     lines.append(f"- Ollama used: `{review['ollama_review']['used']}`")
     lines.append(f"- Docs scanned: `{review['summary']['doc_count']}`")
     lines.append(f"- Code files scanned: `{review['summary']['code_count']}`")
-    lines.append(
-        f"- RAW artifacts scanned: `{review['summary']['raw_artifact_count']}`"
-    )
-    lines.append(
-        f"- SQLite memory DBs scanned: `{review['summary']['sqlite_memory_count']}`"
-    )
+    lines.append(f"- RAW artifacts scanned: `{review['summary']['raw_artifact_count']}`")
+    lines.append(f"- SQLite memory DBs scanned: `{review['summary']['sqlite_memory_count']}`")
     lines.append(f"- Proposal count: `{proposals['proposal_count']}`")
     lines.append("")
     lines.append("## Resource lanes")
@@ -814,18 +778,14 @@ def run_review(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, Any]
         else []
     )
     sqlite_memory = (
-        inspect_sqlite_memory(
-            repo_root, sqlite_files, max_tables=args.max_sqlite_tables
-        )
+        inspect_sqlite_memory(repo_root, sqlite_files, max_tables=args.max_sqlite_tables)
         if args.include_sqlite_memory
         else []
     )
     doc_code = compare_docs_to_code(repo_root, docs, records)
     doc_doc = compare_docs_to_docs(repo_root, records)
     code_code = compare_code_to_code(records)
-    findings = deterministic_findings(
-        reports, doc_code, doc_doc, code_code, sqlite_memory
-    )
+    findings = deterministic_findings(reports, doc_code, doc_doc, code_code, sqlite_memory)
     review: dict[str, Any] = {
         "schema_version": 1,
         "kind": "megalithic_repo_review",
@@ -890,9 +850,7 @@ def run_review(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, Any]
             model=args.ollama_model,
             max_new_tokens=args.ollama_max_new_tokens,
         )
-        review["provider_execution_performed"] = bool(
-            review["ollama_review"].get("used")
-        )
+        review["provider_execution_performed"] = bool(review["ollama_review"].get("used"))
         if review["ollama_review"].get("error"):
             review["warnings"].append(review["ollama_review"]["error"])
     proposals = build_proposals(review)
@@ -908,9 +866,7 @@ def write_outputs(
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
     proposal_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(review, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(review, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     proposal_output.write_text(
         json.dumps(proposals, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )

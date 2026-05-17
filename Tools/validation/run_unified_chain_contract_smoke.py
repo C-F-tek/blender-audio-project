@@ -6,6 +6,7 @@ fixed internal reasoning path: the dynamic AI entities may collaborate freely,
 but the run must leave observable exchange/evidence and concrete patch products
 when review-PR generation is requested.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,14 +20,20 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 MODE_NAME = "agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke"
 
 
 def run(command: list[str], cwd: Path) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, timeout=120)
+    result = subprocess.run(
+        command, cwd=cwd, capture_output=True, text=True, check=False, timeout=120
+    )
     return {
         "command": command,
         "returncode": result.returncode,
@@ -61,7 +68,14 @@ def render_markdown(report: dict[str, Any]) -> str:
 def prepare_case(repo: Path, stamp: str, *, exchange: bool, concrete: bool, product: bool) -> None:
     write_json(
         repo / f"output/validation/{stamp}_phase_official.json",
-        {"schema_version": 1, "kind": "unified_launcher_phase_status", "phase": "official", "passed": True, "status": "passed", "return_code": 0},
+        {
+            "schema_version": 1,
+            "kind": "unified_launcher_phase_status",
+            "phase": "official",
+            "passed": True,
+            "status": "passed",
+            "return_code": 0,
+        },
     )
     write_json(
         repo / f"output/validation/openvino_gpu0_workload_{stamp}.json",
@@ -76,14 +90,22 @@ def prepare_case(repo: Path, stamp: str, *, exchange: bool, concrete: bool, prod
         },
     )
     write_json(
-        repo / f"output/local_ai_runs/{stamp}_unified/pipeline/unified_local_ai_refactor_manifest.json",
+        repo
+        / f"output/local_ai_runs/{stamp}_unified/pipeline/unified_local_ai_refactor_manifest.json",
         {"schema_version": 1, "kind": "unified_local_ai_refactor_manifest", "stamp": stamp},
     )
     observer = repo / f"output/local_ai_runs/{stamp}_observer"
     observer.mkdir(parents=True, exist_ok=True)
     if exchange:
         (observer / "ai_public_events.jsonl").write_text(
-            json.dumps({"kind": "proposal", "entity": "heap.exchange", "summary": "concrete patch proposal published"}) + "\n",
+            json.dumps(
+                {
+                    "kind": "proposal",
+                    "entity": "heap.exchange",
+                    "summary": "concrete patch proposal published",
+                }
+            )
+            + "\n",
             encoding="utf-8",
         )
 
@@ -102,20 +124,34 @@ def prepare_case(repo: Path, stamp: str, *, exchange: bool, concrete: bool, prod
                 "changed": bool(concrete),
                 "ok": True,
             }
-        ] if concrete else [],
+        ]
+        if concrete
+        else [],
     }
-    write_json(repo / f"output/validation/patch_suggestion_bundle_apply_{MODE_NAME}_{stamp}.json", apply_report)
+    write_json(
+        repo / f"output/validation/patch_suggestion_bundle_apply_{MODE_NAME}_{stamp}.json",
+        apply_report,
+    )
 
     product_report = {
         "schema_version": 1,
         "kind": "patch_suggestion_product_separation",
         "passed": bool(product),
-        "patch_product_status": "deterministic_patch_operations_ready" if product else "no_applicable_patch_product",
+        "patch_product_status": "deterministic_patch_operations_ready"
+        if product
+        else "no_applicable_patch_product",
         "ready_for_patch_suggestion_review": bool(product),
-        "essential_patch_suggestion_items": [{"id": "example", "path": "docs/LOCAL_AI_TASKS/example.md"}] if product else [],
+        "essential_patch_suggestion_items": [
+            {"id": "example", "path": "docs/LOCAL_AI_TASKS/example.md"}
+        ]
+        if product
+        else [],
         "supplemental_telemetry_debug_items": [],
     }
-    write_json(repo / f"output/validation/patch_suggestion_product_separation_{MODE_NAME}_{stamp}.json", product_report)
+    write_json(
+        repo / f"output/validation/patch_suggestion_product_separation_{MODE_NAME}_{stamp}.json",
+        product_report,
+    )
 
 
 def run_contract(repo: Path, validator: Path, stamp: str, output: str) -> dict[str, Any]:
@@ -141,7 +177,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/unified_chain_contract_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/unified_chain_contract_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/unified_chain_contract_smoke.md"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -155,22 +193,43 @@ def main() -> int:
         # The validator itself runs from the source repository but inspects temp evidence.
         missing_stamp = "missing_exchange_metadata_only"
         prepare_case(repo, missing_stamp, exchange=False, concrete=False, product=False)
-        missing_result = run_contract(repo, validator, missing_stamp, "output/validation/missing_contract.json")
+        missing_result = run_contract(
+            repo, validator, missing_stamp, "output/validation/missing_contract.json"
+        )
         missing_combined = f"{missing_result['stdout_tail']}\n{missing_result['stderr_tail']}"
         missing_ok = (
             missing_result["returncode"] == 2
             and "provider_to_ai_exchange" in missing_combined
             and "patch_specs_to_review_bridge" in missing_combined
         )
-        cases.append({"name": "missing_exchange_metadata_only_fails", "passed": missing_ok, "command": missing_result})
+        cases.append(
+            {
+                "name": "missing_exchange_metadata_only_fails",
+                "passed": missing_ok,
+                "command": missing_result,
+            }
+        )
         if not missing_ok:
-            errors.append("missing exchange / metadata-only case did not fail with expected broken edges")
+            errors.append(
+                "missing exchange / metadata-only case did not fail with expected broken edges"
+            )
 
         passing_stamp = "heap_exchange_concrete_product"
         prepare_case(repo, passing_stamp, exchange=True, concrete=True, product=True)
-        passing_result = run_contract(repo, validator, passing_stamp, "output/validation/passing_contract.json")
-        passing_ok = passing_result["returncode"] == 0 and '"passed": true' in passing_result["stdout_tail"].lower()
-        cases.append({"name": "heap_exchange_concrete_product_passes", "passed": passing_ok, "command": passing_result})
+        passing_result = run_contract(
+            repo, validator, passing_stamp, "output/validation/passing_contract.json"
+        )
+        passing_ok = (
+            passing_result["returncode"] == 0
+            and '"passed": true' in passing_result["stdout_tail"].lower()
+        )
+        cases.append(
+            {
+                "name": "heap_exchange_concrete_product_passes",
+                "passed": passing_ok,
+                "command": passing_result,
+            }
+        )
         if not passing_ok:
             errors.append("heap exchange concrete product case did not pass")
 

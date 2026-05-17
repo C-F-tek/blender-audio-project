@@ -41,11 +41,7 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -102,9 +98,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         if not gpu1:
             errors.append(f"missing or invalid gpu1 report: {args.gpu1_report}")
         if not task_packet:
-            errors.append(
-                f"missing or invalid gpu0 task packet: {args.gpu0_task_packet}"
-            )
+            errors.append(f"missing or invalid gpu0 task packet: {args.gpu0_task_packet}")
         if not errors:
             events.append(
                 heap.append_event(
@@ -145,15 +139,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                         payload={
                             "broker_report": existing(repo_root, args.broker_report),
                             "passed": broker_report.get("passed"),
-                            "tool_request_count": broker_report.get(
-                                "tool_request_count"
-                            ),
-                            "tool_execution_count": broker_report.get(
-                                "tool_execution_count"
-                            ),
-                            "blocked_tool_count": broker_report.get(
-                                "blocked_tool_count"
-                            ),
+                            "tool_request_count": broker_report.get("tool_request_count"),
+                            "tool_execution_count": broker_report.get("tool_execution_count"),
+                            "blocked_tool_count": broker_report.get("blocked_tool_count"),
                             "failed_tool_count": broker_report.get("failed_tool_count"),
                         },
                     )
@@ -203,12 +191,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                         "summary": "NPU micro/support lane published live support evidence to GPU1.",
                         "npu_report": existing(repo_root, args.npu_report),
                         "npu_passed": npu.get("passed"),
-                        "provider_execution_requested": npu.get(
-                            "provider_execution_requested"
-                        ),
-                        "provider_execution_performed": npu.get(
-                            "provider_execution_performed"
-                        ),
+                        "provider_execution_requested": npu.get("provider_execution_requested"),
+                        "provider_execution_performed": npu.get("provider_execution_performed"),
                         "non_blocking": npu.get("non_blocking"),
                         "tool_request_count": npu.get("tool_request_count"),
                         "product_pass_blocker": npu.get("product_pass_blocker"),
@@ -225,9 +209,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                 f"missing or invalid runtime capability report: {args.runtime_capability}"
             )
         if not runtime_usage:
-            errors.append(
-                f"missing or invalid runtime usage report: {args.runtime_usage}"
-            )
+            errors.append(f"missing or invalid runtime usage report: {args.runtime_usage}")
         if not errors:
             correlation_id = f"{args.stamp}:tool-catalog-exchange"
             catalog_payload = {
@@ -280,9 +262,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "events": events,
         "heap_snapshot": {
             "event_count": snapshot.get("event_count"),
-            "pending_broker_request_count": snapshot.get(
-                "pending_broker_request_count"
-            ),
+            "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
             "event_log": snapshot.get("event_log"),
         },
         "guardrails": {
@@ -301,9 +281,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- {key}: `{report.get(key)}`")
     heap = safe_dict(report.get("heap_snapshot"))
     lines.append(f"- heap_event_count: `{heap.get('event_count')}`")
-    lines.append(
-        f"- pending_broker_request_count: `{heap.get('pending_broker_request_count')}`"
-    )
+    lines.append(f"- pending_broker_request_count: `{heap.get('pending_broker_request_count')}`")
     lines.append(f"- event_log: `{heap.get('event_log')}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
@@ -351,9 +329,7 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     report = build_report(args)
-    output = resolve_output_path(
-        repo_root, args.output.format(stamp=args.stamp, mode=args.mode)
-    )
+    output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp, mode=args.mode))
     markdown = resolve_output_path(
         repo_root, args.markdown_output.format(stamp=args.stamp, mode=args.mode)
     )

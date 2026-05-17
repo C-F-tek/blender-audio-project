@@ -152,7 +152,9 @@ def build_heap_command(config: LauncherConfig) -> list[str]:
     for key, value in (cfg.profile_overrides or {}).items():
         if value not in ("", None):
             profile[key] = value
-    revision_context = cfg.revision_context or str(profile.get("revision_context_mode") or "auto_latest")
+    revision_context = cfg.revision_context or str(
+        profile.get("revision_context_mode") or "auto_latest"
+    )
     command = [
         cfg.python_exe,
         "Tools/ai/run_heap_runtime_context_closure.py",
@@ -182,7 +184,9 @@ def build_heap_command(config: LauncherConfig) -> list[str]:
 
 def command_env(repo_root: Path, python_exe: str) -> dict[str, str]:
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(repo_root) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env["PYTHONPATH"] = str(repo_root) + (
+        os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
+    )
     env["IA_CARMINE_PYTHON"] = python_exe
     return env
 
@@ -255,7 +259,9 @@ def analyze_code_product(
     require_all_integrated: bool = False,
 ) -> dict[str, Any]:
     tool_root = Path(__file__).resolve().parents[2]
-    output = output_dir / ("code_product_apply_safe.json" if apply_safe else "code_product_review.json")
+    output = output_dir / (
+        "code_product_apply_safe.json" if apply_safe else "code_product_review.json"
+    )
     markdown = output.with_suffix(".md")
     command = [
         resolve_project_python(repo_root),
@@ -281,7 +287,11 @@ def analyze_code_product(
 
 
 def render_run_markdown(report: dict[str, Any]) -> str:
-    summary = report.get("launcher_summary_payload") if isinstance(report.get("launcher_summary_payload"), dict) else {}
+    summary = (
+        report.get("launcher_summary_payload")
+        if isinstance(report.get("launcher_summary_payload"), dict)
+        else {}
+    )
     lines = [
         "# Operator Product Launcher Run",
         "",
@@ -295,7 +305,9 @@ def render_run_markdown(report: dict[str, Any]) -> str:
     ]
     result = report.get("run_result") if isinstance(report.get("run_result"), dict) else {}
     if result.get("returncode") not in (0, None):
-        lines.extend(["", "## Stderr Tail", "", "```text", str(result.get("stderr_tail") or ""), "```"])
+        lines.extend(
+            ["", "## Stderr Tail", "", "```text", str(result.get("stderr_tail") or ""), "```"]
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -304,7 +316,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request-file", default="")
     parser.add_argument("--profile", default=DEFAULT_PROFILE)
-    parser.add_argument("--intermediate-root", default="output/validation/operator_product_launcher")
+    parser.add_argument(
+        "--intermediate-root", default="output/validation/operator_product_launcher"
+    )
     parser.add_argument("--final-root", default="")
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--stamp", default="")
@@ -330,8 +344,12 @@ def main() -> int:
         print(json.dumps({"profiles": profile_names(repo_root)}, indent=2))
         return 0
     stamp = args.stamp or now_stamp()
-    final_root = args.final_root or str(Path.home() / "Documents" / f"aicarmine_operator_launcher_{stamp}")
-    request_file = Path(args.request_file) if args.request_file else repo_root / "docs" / "README.md"
+    final_root = args.final_root or str(
+        Path.home() / "Documents" / f"aicarmine_operator_launcher_{stamp}"
+    )
+    request_file = (
+        Path(args.request_file) if args.request_file else repo_root / "docs" / "README.md"
+    )
     config = LauncherConfig(
         repo_root=repo_root,
         request_file=request_file,
@@ -371,7 +389,11 @@ def main() -> int:
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 0 if report.get("passed") else 2
     command = build_heap_command(config)
-    print(json.dumps({"command": command, "profiles": profile_names(repo_root)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"command": command, "profiles": profile_names(repo_root)}, indent=2, ensure_ascii=False
+        )
+    )
     return 0
 
 

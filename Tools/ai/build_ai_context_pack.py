@@ -299,9 +299,7 @@ def path_policy_error(path: str) -> str | None:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_PATH_PREFIXES):
         return f"forbidden path prefix: {normalized}"
     lower = normalized.lower()
-    if any(
-        fragment in lower for fragment in FORBIDDEN_PATH_FRAGMENTS
-    ) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_PATH_FRAGMENTS) and lower.endswith(".json"):
         return f"forbidden full-analysis JSON path: {normalized}"
     if "*" in normalized or normalized.endswith("/"):
         return "context profile entries must be concrete files"
@@ -429,14 +427,10 @@ def build_file_entry(
 
 def profile_items(profile: dict[str, Any]) -> list[tuple[dict[str, Any], bool]]:
     required = [
-        (item, True)
-        for item in profile.get("required_files", [])
-        if isinstance(item, dict)
+        (item, True) for item in profile.get("required_files", []) if isinstance(item, dict)
     ]
     optional = [
-        (item, False)
-        for item in profile.get("optional_files", [])
-        if isinstance(item, dict)
+        (item, False) for item in profile.get("optional_files", []) if isinstance(item, dict)
     ]
     return [*required, *optional]
 
@@ -461,9 +455,7 @@ def build_pack(
     for item, required in profile_items(profile):
         path = normalize_repo_path(item.get("path"))
         if path in seen_paths:
-            warnings.append(
-                f"duplicate profile path ignored after first occurrence: {path}"
-            )
+            warnings.append(f"duplicate profile path ignored after first occurrence: {path}")
             continue
         seen_paths.add(path)
         entry, remaining = build_file_entry(
@@ -474,9 +466,7 @@ def build_pack(
             max_file_chars=max_file_chars,
         )
         file_entries.append(entry)
-        if required and (
-            not entry["exists"] or not entry["included"] or not entry["policy_ok"]
-        ):
+        if required and (not entry["exists"] or not entry["included"] or not entry["policy_ok"]):
             errors.append(
                 f"required file unavailable for context: {path} ({context_unavailable_reason(entry)})"
             )
@@ -508,16 +498,10 @@ def build_pack(
         "warnings": warnings,
         "max_total_chars": max_total_chars,
         "max_file_chars": max_file_chars,
-        "total_included_chars": sum(
-            int(item.get("included_chars") or 0) for item in file_entries
-        ),
+        "total_included_chars": sum(int(item.get("included_chars") or 0) for item in file_entries),
         "file_count": len(file_entries),
-        "included_file_count": sum(
-            1 for item in file_entries if item.get("included") is True
-        ),
-        "truncated_file_count": sum(
-            1 for item in file_entries if item.get("truncated") is True
-        ),
+        "included_file_count": sum(1 for item in file_entries if item.get("included") is True),
+        "truncated_file_count": sum(1 for item in file_entries if item.get("truncated") is True),
         "validation_commands": validation_commands,
         "stop_conditions": stop_conditions,
         "files": file_entries,
@@ -527,9 +511,7 @@ def build_pack(
     md_path = output_dir / f"{basename}.md"
     pack["pack_json"] = repo_relative(json_path, repo_root)
     pack["pack_markdown"] = repo_relative(md_path, repo_root)
-    json_path.write_text(
-        json.dumps(pack, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    json_path.write_text(json.dumps(pack, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     md_path.write_text(render_pack_markdown(pack), encoding="utf-8")
     return pack
 
@@ -566,9 +548,7 @@ def build_evidence(
             if item.get("required") is True
             and (item.get("exists") is not True or item.get("included") is not True)
         ],
-        "forbidden_path_count": sum(
-            1 for item in files if item.get("policy_ok") is not True
-        ),
+        "forbidden_path_count": sum(1 for item in files if item.get("policy_ok") is not True),
         "blender_runtime_touched": any(
             str(item.get("path") or "").startswith("Scripting/") for item in files
         ),
@@ -587,9 +567,7 @@ def build_evidence(
         "decision": {
             "context_pack_built": pack.get("passed") is True,
             "provider_execution_seen": False,
-            "forbidden_paths_blocked": sum(
-                1 for item in files if item.get("policy_ok") is not True
-            )
+            "forbidden_paths_blocked": sum(1 for item in files if item.get("policy_ok") is not True)
             == 0,
             "source_writes_performed": False,
         },
@@ -607,12 +585,8 @@ def render_pack_markdown(pack: dict[str, Any]) -> str:
     lines = [f"# AI Context Pack: {pack['profile']}", ""]
     lines.append(f"- Generated at: `{pack['generated_at']}`")
     lines.append(f"- Passed: `{pack['passed']}`")
-    lines.append(
-        f"- Provider execution performed: `{pack['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Included files: `{pack['included_file_count']}/{pack['file_count']}`"
-    )
+    lines.append(f"- Provider execution performed: `{pack['provider_execution_performed']}`")
+    lines.append(f"- Included files: `{pack['included_file_count']}/{pack['file_count']}`")
     lines.append(f"- Included chars: `{pack['total_included_chars']}`")
     lines.append("")
     lines.append("## Validation Commands")
@@ -651,13 +625,9 @@ def render_evidence_markdown(evidence: dict[str, Any]) -> str:
     lines = [f"# AI Context Pack Evidence: {evidence['profile']}", ""]
     lines.append(f"- Generated at: `{evidence['generated_at']}`")
     lines.append(f"- Passed: `{evidence['passed']}`")
-    lines.append(
-        f"- Provider execution performed: `{evidence['provider_execution_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{evidence['provider_execution_performed']}`")
     lines.append(f"- Source pack: `{evidence['source_pack']}`")
-    lines.append(
-        f"- Included files: `{evidence['included_file_count']}/{evidence['file_count']}`"
-    )
+    lines.append(f"- Included files: `{evidence['included_file_count']}/{evidence['file_count']}`")
     lines.append(f"- Truncated files: `{evidence['truncated_file_count']}`")
     lines.append(f"- Forbidden path count: `{evidence['forbidden_path_count']}`")
     lines.append(f"- Blender runtime touched: `{evidence['blender_runtime_touched']}`")
@@ -721,9 +691,7 @@ def main() -> int:
                 "profile": pack["profile"],
                 "pack_json": pack["pack_json"],
                 "pack_markdown": pack["pack_markdown"],
-                "evidence_json": (
-                    None if evidence is None else evidence["evidence_json"]
-                ),
+                "evidence_json": (None if evidence is None else evidence["evidence_json"]),
                 "included_file_count": pack["included_file_count"],
                 "truncated_file_count": pack["truncated_file_count"],
                 "provider_execution_performed": False,

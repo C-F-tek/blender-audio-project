@@ -24,11 +24,7 @@ def resolve(repo_root: Path, value: str) -> Path:
 
 def rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -158,9 +154,7 @@ def render_md(report: dict[str, Any]) -> str:
         "",
         "## Tasks",
     ]
-    lines += [
-        f"- `{task['id']}`: {task['objective']}" for task in report["companion_tasks"]
-    ]
+    lines += [f"- `{task['id']}`: {task['objective']}" for task in report["companion_tasks"]]
     return "\n".join(lines) + "\n"
 
 
@@ -182,10 +176,7 @@ def main() -> int:
     tool_req_out = resolve(repo_root, args.tool_requests_output)
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    sources = [
-        summarize_source(repo_root, resolve(repo_root, item))
-        for item in args.source_report
-    ]
+    sources = [summarize_source(repo_root, resolve(repo_root, item)) for item in args.source_report]
     companion_tasks = tasks_from_sources(sources)
     requests = tool_requests(companion_tasks)
     workload, workload_meta = run_gpu0_workload(
@@ -245,9 +236,7 @@ def main() -> int:
             "source_writes_performed": False,
         },
     }
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown.write_text(render_md(report), encoding="utf-8")
     tool_req_out.write_text(
         json.dumps(

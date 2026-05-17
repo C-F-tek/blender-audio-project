@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test prepare_review_pr.py PR creation flag guardrails."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,14 +15,20 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 TARGET = "docs/LOCAL_AI_TASKS/flag-smoke-target.md"
 
 
 def run(command: list[str], cwd: Path, env: dict[str, str], timeout: int) -> dict[str, Any]:
     try:
-        result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, check=False, timeout=timeout)
+        result = subprocess.run(
+            command, cwd=cwd, env=env, capture_output=True, text=True, check=False, timeout=timeout
+        )
         return {
             "command": command,
             "returncode": result.returncode,
@@ -43,18 +50,26 @@ def run(command: list[str], cwd: Path, env: dict[str, str], timeout: int) -> dic
 def seed_repo(root: Path) -> Path:
     repo = root / "repo"
     repo.mkdir()
-    subprocess.run(["git", "init", "-b", "master"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "init", "-b", "master"], cwd=repo, check=True, capture_output=True, text=True
+    )
     subprocess.run(["git", "config", "user.email", "smoke@example.invalid"], cwd=repo, check=True)
-    subprocess.run(["git", "config", "user.name", "Prepare Review PR Flag Smoke"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "config", "user.name", "Prepare Review PR Flag Smoke"], cwd=repo, check=True
+    )
     target = repo / TARGET
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("# Flag Smoke Target\n\nSeed content.\n", encoding="utf-8")
     subprocess.run(["git", "add", TARGET], cwd=repo, check=True, capture_output=True, text=True)
-    subprocess.run(["git", "commit", "-m", "seed target"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "commit", "-m", "seed target"], cwd=repo, check=True, capture_output=True, text=True
+    )
     return repo
 
 
-def write_apply_report(repo: Path, *, source_writes_performed: bool, patch_application_performed: bool) -> Path:
+def write_apply_report(
+    repo: Path, *, source_writes_performed: bool, patch_application_performed: bool
+) -> Path:
     report_path = repo / "output/validation/dry_run_apply_report.json"
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report = {
@@ -82,7 +97,9 @@ def write_apply_report(repo: Path, *, source_writes_performed: bool, patch_appli
     return report_path
 
 
-def prepare_command(source_repo: Path, repo: Path, output: str, extra_flags: list[str]) -> list[str]:
+def prepare_command(
+    source_repo: Path, repo: Path, output: str, extra_flags: list[str]
+) -> list[str]:
     return [
         sys.executable,
         str(source_repo / "Tools/ai/prepare_review_pr.py"),
@@ -109,7 +126,9 @@ def prepare_command(source_repo: Path, repo: Path, output: str, extra_flags: lis
     ]
 
 
-def auto_include_command(source_repo: Path, repo: Path, output: str, apply_report: Path) -> list[str]:
+def auto_include_command(
+    source_repo: Path, repo: Path, output: str, apply_report: Path
+) -> list[str]:
     return [
         sys.executable,
         str(source_repo / "Tools/ai/prepare_review_pr.py"),
@@ -136,7 +155,9 @@ def auto_include_command(source_repo: Path, repo: Path, output: str, apply_repor
     ]
 
 
-def run_case(source_repo: Path, repo: Path, env: dict[str, str], timeout: int, name: str, flags: list[str]) -> dict[str, Any]:
+def run_case(
+    source_repo: Path, repo: Path, env: dict[str, str], timeout: int, name: str, flags: list[str]
+) -> dict[str, Any]:
     output = f"output/validation/{name}.json"
     command = prepare_command(source_repo, repo, output, flags)
     command_result = run(command, repo, env, timeout)
@@ -145,14 +166,23 @@ def run_case(source_repo: Path, repo: Path, env: dict[str, str], timeout: int, n
     return {"name": name, "flags": flags, "command": command_result, "report": report}
 
 
-def run_auto_include_case(source_repo: Path, repo: Path, env: dict[str, str], timeout: int) -> dict[str, Any]:
+def run_auto_include_case(
+    source_repo: Path, repo: Path, env: dict[str, str], timeout: int
+) -> dict[str, Any]:
     output = "output/validation/auto_include_dry_run_apply_report.json"
-    apply_report = write_apply_report(repo, source_writes_performed=False, patch_application_performed=False)
+    apply_report = write_apply_report(
+        repo, source_writes_performed=False, patch_application_performed=False
+    )
     command = auto_include_command(source_repo, repo, output, apply_report)
     command_result = run(command, repo, env, timeout)
     report_path = repo / output
     report = json.loads(report_path.read_text(encoding="utf-8-sig")) if report_path.exists() else {}
-    return {"name": "auto_include_dry_run_apply_report", "flags": ["--auto-include-from-apply-report"], "command": command_result, "report": report}
+    return {
+        "name": "auto_include_dry_run_apply_report",
+        "flags": ["--auto-include-from-apply-report"],
+        "command": command_result,
+        "report": report,
+    }
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -174,7 +204,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/prepare_review_pr_flag_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/prepare_review_pr_flag_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/prepare_review_pr_flag_smoke.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=60)
     return parser.parse_args()
 
@@ -189,8 +221,26 @@ def main() -> int:
     cases: list[dict[str, Any]] = []
     with tempfile.TemporaryDirectory(prefix="prepare-review-pr-flag-smoke-") as tmp_raw:
         repo = seed_repo(Path(tmp_raw))
-        cases.append(run_case(source_repo, repo, env, args.timeout_seconds, "create_pr_without_push", ["--create-pr"]))
-        cases.append(run_case(source_repo, repo, env, args.timeout_seconds, "draft_without_create_pr", ["--draft-pr"]))
+        cases.append(
+            run_case(
+                source_repo,
+                repo,
+                env,
+                args.timeout_seconds,
+                "create_pr_without_push",
+                ["--create-pr"],
+            )
+        )
+        cases.append(
+            run_case(
+                source_repo,
+                repo,
+                env,
+                args.timeout_seconds,
+                "draft_without_create_pr",
+                ["--draft-pr"],
+            )
+        )
         cases.append(run_auto_include_case(source_repo, repo, env, args.timeout_seconds))
     expected_errors = {
         "create_pr_without_push": "--create-pr requires --push",

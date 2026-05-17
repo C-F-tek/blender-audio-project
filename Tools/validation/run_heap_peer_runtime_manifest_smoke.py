@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test heap peer runtime manifest builder."""
+
 from __future__ import annotations
 
 import argparse
@@ -32,7 +33,9 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_peer_runtime_manifest_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/heap_peer_runtime_manifest_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -59,7 +62,11 @@ def main() -> int:
                     {"name": "gpu1", "role": "primary advisory planner", "available": True},
                     {"name": "gpu0", "role": "companion openvino tool worker", "available": True},
                     {"name": "npu", "role": "microoperation efficiency peer", "available": True},
-                    {"name": "deterministic_audit", "role": "deterministic script audit lane", "available": True},
+                    {
+                        "name": "deterministic_audit",
+                        "role": "deterministic script audit lane",
+                        "available": True,
+                    },
                 ],
             },
         )
@@ -67,8 +74,16 @@ def main() -> int:
             runtime_state,
             [
                 {"kind": "lane_registered", "lane": "gpu1", "role": "primary advisory planner"},
-                {"kind": "lane_registered", "lane": "gpu0", "role": "companion openvino tool worker"},
-                {"kind": "lane_registered", "lane": "npu", "role": "microoperation efficiency peer"},
+                {
+                    "kind": "lane_registered",
+                    "lane": "gpu0",
+                    "role": "companion openvino tool worker",
+                },
+                {
+                    "kind": "lane_registered",
+                    "lane": "npu",
+                    "role": "microoperation efficiency peer",
+                },
                 {"kind": "shared_memory", "summary": "heap exchange blackboard ai-to-ai bundle"},
             ],
         )

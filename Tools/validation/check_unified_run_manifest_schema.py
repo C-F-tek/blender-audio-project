@@ -5,6 +5,7 @@ This validator guards the large PowerShell wrapper while manifest construction i
 still partly inline. It checks the fields that downstream AI-to-AI/tooling uses:
 phase_status, phase_reports, report_files, context_files and unified-run identity.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -77,7 +78,9 @@ def validate_manifest(manifest: dict[str, Any]) -> tuple[list[str], list[str]]:
         if key not in manifest:
             errors.append(f"missing unified-run field: {key}")
         elif manifest.get(key) != EXPECTED_UNIFIED_VALUES[key]:
-            errors.append(f"{key} must be {EXPECTED_UNIFIED_VALUES[key]!r}, got {manifest.get(key)!r}")
+            errors.append(
+                f"{key} must be {EXPECTED_UNIFIED_VALUES[key]!r}, got {manifest.get(key)!r}"
+            )
 
     phase_status = manifest.get("phase_status")
     phase_reports = manifest.get("phase_reports")
@@ -112,7 +115,9 @@ def validate_manifest(manifest: dict[str, Any]) -> tuple[list[str], list[str]]:
                     if not is_rel_report_path(item):
                         errors.append(f"phase_reports.{key} contains invalid path: {item}")
             elif value is not None:
-                errors.append(f"phase_reports.{key} must be string/list/null, got {type(value).__name__}")
+                errors.append(
+                    f"phase_reports.{key} must be string/list/null, got {type(value).__name__}"
+                )
 
     if isinstance(report_files, list):
         seen = set()
@@ -132,7 +137,6 @@ def validate_manifest(manifest: dict[str, Any]) -> tuple[list[str], list[str]]:
                 warnings.append(f"duplicate context_files entry: {item}")
             seen.add(item)
 
-
     runtime_correlation_requested = manifest.get("runtime_evidence_correlation_requested")
     if runtime_correlation_requested not in {True, False, None}:
         errors.append("runtime_evidence_correlation_requested must be boolean/null")
@@ -141,7 +145,9 @@ def validate_manifest(manifest: dict[str, Any]) -> tuple[list[str], list[str]]:
         if not isinstance(phase_reports, dict):
             errors.append("runtime evidence correlation requires phase_reports object")
         elif not phase_reports.get("runtime_evidence_correlation"):
-            errors.append("runtime evidence correlation requested but phase_reports.runtime_evidence_correlation is missing")
+            errors.append(
+                "runtime evidence correlation requested but phase_reports.runtime_evidence_correlation is missing"
+            )
 
         if not isinstance(report_files, list):
             errors.append("runtime evidence correlation requires report_files list")
@@ -153,7 +159,9 @@ def validate_manifest(manifest: dict[str, Any]) -> tuple[list[str], list[str]]:
                 for item in report_files
             )
             if not has_runtime_correlation_report:
-                errors.append("runtime evidence correlation requested but report_files does not include runtime_evidence_correlation JSON")
+                errors.append(
+                    "runtime evidence correlation requested but report_files does not include runtime_evidence_correlation JSON"
+                )
 
         if not isinstance(context_files, list):
             errors.append("runtime evidence correlation requires context_files list")
@@ -165,8 +173,9 @@ def validate_manifest(manifest: dict[str, Any]) -> tuple[list[str], list[str]]:
                 for item in context_files
             )
             if not has_runtime_correlation_context:
-                warnings.append("runtime evidence correlation requested but context_files does not include runtime_evidence_correlation Markdown")
-
+                warnings.append(
+                    "runtime evidence correlation requested but context_files does not include runtime_evidence_correlation Markdown"
+                )
 
     return errors, warnings
 

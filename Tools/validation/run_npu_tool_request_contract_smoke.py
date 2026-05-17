@@ -22,14 +22,18 @@ def write_json(path: Path, data: dict) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/npu_tool_request_contract_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/npu_tool_request_contract_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/npu_tool_request_contract_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/npu_tool_request_contract_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = resolve_repo_root(args.repo_root)
     from Tools.ai.run_npu_gpu_deep_review_auditor import extract_npu_tool_requests_from_text
 
-    sample = "NPU audit result.\n\n```json\n{\n  \"tool_requests\": [\n    {\"id\": \"npu_need_syntax\", \"tool\": \"check_python_syntax\", \"reason\": \"Validate syntax before review\", \"args\": {}},\n    {\"id\": \"npu_bad\", \"tool\": \"free_shell\", \"reason\": \"Should be blocked\", \"args\": {}}\n  ]\n}\n```\n"
+    sample = 'NPU audit result.\n\n```json\n{\n  "tool_requests": [\n    {"id": "npu_need_syntax", "tool": "check_python_syntax", "reason": "Validate syntax before review", "args": {}},\n    {"id": "npu_bad", "tool": "free_shell", "reason": "Should be blocked", "args": {}}\n  ]\n}\n```\n'
     valid, errors = extract_npu_tool_requests_from_text(sample, max_requests=8)
     passed = (
         len(valid) == 1
@@ -61,8 +65,16 @@ def main() -> int:
             "persistent_memory_write_performed": False,
         },
     }
-    output = (repo_root / args.output).resolve() if not Path(args.output).is_absolute() else Path(args.output)
-    markdown = (repo_root / args.markdown_output).resolve() if not Path(args.markdown_output).is_absolute() else Path(args.markdown_output)
+    output = (
+        (repo_root / args.output).resolve()
+        if not Path(args.output).is_absolute()
+        else Path(args.output)
+    )
+    markdown = (
+        (repo_root / args.markdown_output).resolve()
+        if not Path(args.markdown_output).is_absolute()
+        else Path(args.markdown_output)
+    )
     write_json(output, report)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(
@@ -72,17 +84,23 @@ def main() -> int:
         f"- invalid_tool_request_count: `{len(errors)}`\n",
         encoding="utf-8",
     )
-    print(json.dumps({
-        "passed": passed,
-        "output": str(output),
-        "markdown": str(markdown),
-        "provider_execution_performed": False,
-        "patch_application_performed": False,
-        "sqlite_write_performed": False,
-        "persistent_memory_write_performed": False,
-        "npu_tool_request_count": len(valid),
-        "invalid_tool_request_count": len(errors),
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": passed,
+                "output": str(output),
+                "markdown": str(markdown),
+                "provider_execution_performed": False,
+                "patch_application_performed": False,
+                "sqlite_write_performed": False,
+                "persistent_memory_write_performed": False,
+                "npu_tool_request_count": len(valid),
+                "invalid_tool_request_count": len(errors),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if passed else 2
 
 

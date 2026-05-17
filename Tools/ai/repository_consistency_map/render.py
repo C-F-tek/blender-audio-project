@@ -9,9 +9,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Repository Consistency Map", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Finding count: `{report['finding_count']}`")
-    lines.append(
-        f"- Repository files: `{report['scope'].get('repository_file_count')}`"
-    )
+    lines.append(f"- Repository files: `{report['scope'].get('repository_file_count')}`")
     lines.append(
         f"- File metadata records: `{report['scope'].get('repository_file_metadata_count')}`"
     )
@@ -23,39 +21,23 @@ def render_markdown(report: dict[str, Any]) -> str:
     )
     lines.append(f"- Markdown files: `{report['scope']['markdown_file_count']}`")
     lines.append(f"- Python files: `{report['scope']['python_file_count']}`")
-    lines.append(
-        f"- Markdown references: `{report['scope']['markdown_reference_count']}`"
-    )
+    lines.append(f"- Markdown references: `{report['scope']['markdown_reference_count']}`")
     lines.append(
         f"- Markdown Python commands: `{report['scope']['markdown_python_command_count']}`"
     )
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
     if report.get("performance"):
         performance = report["performance"]
         lines.append(f"- Workers requested: `{performance.get('workers_requested')}`")
-        lines.append(
-            f"- Adaptive worker mode: `{performance.get('adaptive_worker_mode')}`"
-        )
+        lines.append(f"- Adaptive worker mode: `{performance.get('adaptive_worker_mode')}`")
         lines.append(
             f"- Single file manifest: `{performance.get('single_file_discovery_manifest_enabled')}`"
         )
-        lines.append(
-            f"- File metadata enabled: `{performance.get('file_metadata_enabled')}`"
-        )
-        lines.append(
-            f"- Total build seconds: `{performance.get('total_build_report_seconds')}`"
-        )
-        lines.append(
-            f"- Markdown scan seconds: `{performance.get('markdown_scan_seconds')}`"
-        )
-        lines.append(
-            f"- Python inventory seconds: `{performance.get('python_inventory_seconds')}`"
-        )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+        lines.append(f"- File metadata enabled: `{performance.get('file_metadata_enabled')}`")
+        lines.append(f"- Total build seconds: `{performance.get('total_build_report_seconds')}`")
+        lines.append(f"- Markdown scan seconds: `{performance.get('markdown_scan_seconds')}`")
+        lines.append(f"- Python inventory seconds: `{performance.get('python_inventory_seconds')}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append("")
     lines.append("## Severity counts")
     lines.append("")
@@ -89,9 +71,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("## Provider hints")
     lines.append("")
     for hint in report.get("provider_hints_for_gpu_planner", [])[:40]:
-        sample_targets = ", ".join(
-            "`" + item + "`" for item in hint.get("sample_targets", [])[:5]
-        )
+        sample_targets = ", ".join("`" + item + "`" for item in hint.get("sample_targets", [])[:5])
         lines.append(
             f"- `{hint.get('kind')}` count `{hint.get('count')}`; sample targets: {sample_targets}"
         )

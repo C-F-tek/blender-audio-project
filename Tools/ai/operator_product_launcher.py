@@ -50,7 +50,9 @@ class OperatorLauncherApp:
         cwd = Path.cwd()
         self.repo_root = tk.StringVar(value=str(cwd))
         self.request_file = tk.StringVar(value=str(cwd / "docs" / "README.md"))
-        self.intermediate_root = tk.StringVar(value=str(cwd / "output" / "validation" / "operator_product_launcher"))
+        self.intermediate_root = tk.StringVar(
+            value=str(cwd / "output" / "validation" / "operator_product_launcher")
+        )
         self.final_root = tk.StringVar(value=str(Path.home() / "Documents"))
         self.python_exe = tk.StringVar(value=str(cwd / ".venv" / "Scripts" / "python.exe"))
         self.profile = tk.StringVar(value=DEFAULT_PROFILE)
@@ -81,12 +83,20 @@ class OperatorLauncherApp:
             ]
         ):
             ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=2)
-            ttk.Entry(frame, textvariable=variable, width=88).grid(row=row, column=1, sticky="ew", pady=2)
-            ttk.Button(frame, text="...", width=3, command=lambda v=variable, k=kind: self._browse(v, k)).grid(row=row, column=2, padx=4)
+            ttk.Entry(frame, textvariable=variable, width=88).grid(
+                row=row, column=1, sticky="ew", pady=2
+            )
+            ttk.Button(
+                frame, text="...", width=3, command=lambda v=variable, k=kind: self._browse(v, k)
+            ).grid(row=row, column=2, padx=4)
         ttk.Label(frame, text="Intensity").grid(row=6, column=0, sticky="w", pady=2)
-        self.profile_combo = ttk.Combobox(frame, textvariable=self.profile, width=40, state="readonly")
+        self.profile_combo = ttk.Combobox(
+            frame, textvariable=self.profile, width=40, state="readonly"
+        )
         self.profile_combo.grid(row=6, column=1, sticky="w", pady=2)
-        self.profile_combo.bind("<<ComboboxSelected>>", lambda _event: self._sync_profile_defaults())
+        self.profile_combo.bind(
+            "<<ComboboxSelected>>", lambda _event: self._sync_profile_defaults()
+        )
         for row, (label, variable) in enumerate(
             [
                 ("Memory chars", self.startup_max_memory_chars),
@@ -97,14 +107,22 @@ class OperatorLauncherApp:
             start=7,
         ):
             ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=2)
-            ttk.Entry(frame, textvariable=variable, width=18).grid(row=row, column=1, sticky="w", pady=2)
+            ttk.Entry(frame, textvariable=variable, width=18).grid(
+                row=row, column=1, sticky="w", pady=2
+            )
         ttk.Label(frame, text="Stamp").grid(row=11, column=0, sticky="w", pady=2)
-        ttk.Entry(frame, textvariable=self.stamp, width=40).grid(row=11, column=1, sticky="w", pady=2)
+        ttk.Entry(frame, textvariable=self.stamp, width=40).grid(
+            row=11, column=1, sticky="w", pady=2
+        )
         buttons = ttk.Frame(frame)
         buttons.grid(row=12, column=0, columnspan=3, sticky="ew", pady=8)
-        ttk.Button(buttons, text="Build Command", command=self.build_command).pack(side="left", padx=3)
+        ttk.Button(buttons, text="Build Command", command=self.build_command).pack(
+            side="left", padx=3
+        )
         ttk.Button(buttons, text="Run Full", command=self.run_full).pack(side="left", padx=3)
-        ttk.Button(buttons, text="Review Code Product", command=self.review_code_product).pack(side="left", padx=3)
+        ttk.Button(buttons, text="Review Code Product", command=self.review_code_product).pack(
+            side="left", padx=3
+        )
         ttk.Button(buttons, text="Apply Safe", command=self.apply_safe).pack(side="left", padx=3)
         self.log = tk.Text(frame, height=24, width=110, wrap="word")
         self.log.grid(row=13, column=0, columnspan=3, sticky="nsew")
@@ -218,7 +236,9 @@ class OperatorLauncherApp:
         self.worker("review", lambda: self._analyze(False))
 
     def apply_safe(self) -> None:
-        if not messagebox.askyesno("Apply safe sections", "Apply only sections classified safe by the intake tool?"):
+        if not messagebox.askyesno(
+            "Apply safe sections", "Apply only sections classified safe by the intake tool?"
+        ):
             return
         self.worker("apply-safe", lambda: self._analyze(True))
 

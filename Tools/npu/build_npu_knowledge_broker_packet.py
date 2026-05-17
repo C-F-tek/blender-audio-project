@@ -6,6 +6,7 @@ Blender, FFmpeg or any provider. It ranks local context candidates from existing
 selected-chunks/context-pack/adapter-manifest metadata so a primary advisory
 model can receive bounded, validated context.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -70,7 +71,9 @@ def path_allowed(path: str) -> bool:
     return True
 
 
-def score_candidate(path: str, objective_terms: set[str], base_score: int = 0) -> tuple[int, list[str]]:
+def score_candidate(
+    path: str, objective_terms: set[str], base_score: int = 0
+) -> tuple[int, list[str]]:
     text = normalize_path(path).lower()
     matched = sorted(term for term in objective_terms if term and term in text)
     score = base_score + len(matched) * 4
@@ -93,7 +96,14 @@ def score_candidate(path: str, objective_terms: set[str], base_score: int = 0) -
     return score, matched
 
 
-def add_candidate(candidates: dict[str, dict[str, Any]], path: str, source: str, objective_terms: set[str], reason: str, base_score: int = 0) -> None:
+def add_candidate(
+    candidates: dict[str, dict[str, Any]],
+    path: str,
+    source: str,
+    objective_terms: set[str],
+    reason: str,
+    base_score: int = 0,
+) -> None:
     normalized = normalize_path(path)
     if not path_allowed(normalized):
         return
@@ -119,16 +129,35 @@ def add_candidate(candidates: dict[str, dict[str, Any]], path: str, source: str,
     }
 
 
-def add_selected_chunks(candidates: dict[str, dict[str, Any]], repo_root: Path, selected_chunks: str, objective_terms: set[str]) -> list[str]:
+def add_selected_chunks(
+    candidates: dict[str, dict[str, Any]],
+    repo_root: Path,
+    selected_chunks: str,
+    objective_terms: set[str],
+) -> list[str]:
     selected_path = resolve_repo_path(repo_root, selected_chunks)
     data = read_json(selected_path)
     source_paths: list[str] = []
     if not data:
         return source_paths
-    add_candidate(candidates, repo_relative(selected_path, repo_root), "selected_chunks_bundle", objective_terms, "selected chunks bundle", 20)
+    add_candidate(
+        candidates,
+        repo_relative(selected_path, repo_root),
+        "selected_chunks_bundle",
+        objective_terms,
+        "selected chunks bundle",
+        20,
+    )
     markdown_path = selected_path.with_suffix(".md")
     if markdown_path.exists():
-        add_candidate(candidates, repo_relative(markdown_path, repo_root), "selected_chunks_markdown", objective_terms, "selected chunks markdown summary", 18)
+        add_candidate(
+            candidates,
+            repo_relative(markdown_path, repo_root),
+            "selected_chunks_markdown",
+            objective_terms,
+            "selected chunks markdown summary",
+            18,
+        )
     chunks = data.get("selected_chunks")
     if isinstance(chunks, list):
         for chunk in chunks:
@@ -138,44 +167,93 @@ def add_selected_chunks(candidates: dict[str, dict[str, Any]], repo_root: Path, 
             if not path:
                 continue
             source_paths.append(path)
-            add_candidate(candidates, path, "selected_chunk_source", objective_terms, "source file referenced by selected chunk", int(chunk.get("score") or 0))
+            add_candidate(
+                candidates,
+                path,
+                "selected_chunk_source",
+                objective_terms,
+                "source file referenced by selected chunk",
+                int(chunk.get("score") or 0),
+            )
     return source_paths
 
 
-def add_adapter_manifest(candidates: dict[str, dict[str, Any]], repo_root: Path, manifest: str, objective_terms: set[str]) -> list[str]:
+def add_adapter_manifest(
+    candidates: dict[str, dict[str, Any]], repo_root: Path, manifest: str, objective_terms: set[str]
+) -> list[str]:
     manifest_path = resolve_repo_path(repo_root, manifest)
     data = read_json(manifest_path)
     refs: list[str] = []
     if not data:
         return refs
-    add_candidate(candidates, repo_relative(manifest_path, repo_root), "adapter_manifest", objective_terms, "local AI adapter manifest", 18)
+    add_candidate(
+        candidates,
+        repo_relative(manifest_path, repo_root),
+        "adapter_manifest",
+        objective_terms,
+        "local AI adapter manifest",
+        18,
+    )
     for key in ("context_files",):
         values = data.get(key)
         if isinstance(values, list):
             for item in values:
                 path = normalize_path(item)
                 refs.append(path)
-                add_candidate(candidates, path, "adapter_manifest_context", objective_terms, "context file recorded by adapter manifest", 10)
+                add_candidate(
+                    candidates,
+                    path,
+                    "adapter_manifest_context",
+                    objective_terms,
+                    "context file recorded by adapter manifest",
+                    10,
+                )
     enrichment_outputs = data.get("enrichment_outputs")
     if isinstance(enrichment_outputs, dict):
         for key, item in enrichment_outputs.items():
             path = normalize_path(item)
             if path:
                 refs.append(path)
-                add_candidate(candidates, path, f"adapter_manifest_output:{key}", objective_terms, "enrichment output recorded by adapter manifest", 8)
+                add_candidate(
+                    candidates,
+                    path,
+                    f"adapter_manifest_output:{key}",
+                    objective_terms,
+                    "enrichment output recorded by adapter manifest",
+                    8,
+                )
     return refs
 
 
-def add_context_pack(candidates: dict[str, dict[str, Any]], repo_root: Path, context_pack: str, objective_terms: set[str]) -> list[str]:
+def add_context_pack(
+    candidates: dict[str, dict[str, Any]],
+    repo_root: Path,
+    context_pack: str,
+    objective_terms: set[str],
+) -> list[str]:
     pack_path = resolve_repo_path(repo_root, context_pack)
     data = read_json(pack_path)
     refs: list[str] = []
     if not data:
         return refs
-    add_candidate(candidates, repo_relative(pack_path, repo_root), "context_pack", objective_terms, "bounded context pack", 16)
+    add_candidate(
+        candidates,
+        repo_relative(pack_path, repo_root),
+        "context_pack",
+        objective_terms,
+        "bounded context pack",
+        16,
+    )
     md_path = pack_path.with_suffix(".md")
     if md_path.exists():
-        add_candidate(candidates, repo_relative(md_path, repo_root), "context_pack_markdown", objective_terms, "bounded context pack markdown", 14)
+        add_candidate(
+            candidates,
+            repo_relative(md_path, repo_root),
+            "context_pack_markdown",
+            objective_terms,
+            "bounded context pack markdown",
+            14,
+        )
     for key in ("included_files", "files", "context_files"):
         values = data.get(key)
         if isinstance(values, list):
@@ -186,12 +264,30 @@ def add_context_pack(candidates: dict[str, dict[str, Any]], repo_root: Path, con
                     path = normalize_path(item)
                 if path:
                     refs.append(path)
-                    add_candidate(candidates, path, f"context_pack:{key}", objective_terms, "file referenced by context pack", 7)
+                    add_candidate(
+                        candidates,
+                        path,
+                        f"context_pack:{key}",
+                        objective_terms,
+                        "file referenced by context pack",
+                        7,
+                    )
     return refs
 
 
-def build_packet(repo_root: Path, objective: str, selected_chunks: str, context_pack: str, adapter_manifest: str, max_candidates: int) -> dict[str, Any]:
-    objective_terms = {term.lower() for term in objective.replace("/", " ").replace("-", " ").replace("_", " ").split() if len(term) >= 3}
+def build_packet(
+    repo_root: Path,
+    objective: str,
+    selected_chunks: str,
+    context_pack: str,
+    adapter_manifest: str,
+    max_candidates: int,
+) -> dict[str, Any]:
+    objective_terms = {
+        term.lower()
+        for term in objective.replace("/", " ").replace("-", " ").replace("_", " ").split()
+        if len(term) >= 3
+    }
     candidates: dict[str, dict[str, Any]] = {}
     source_refs: dict[str, list[str]] = {
         "selected_chunks": [],
@@ -200,11 +296,17 @@ def build_packet(repo_root: Path, objective: str, selected_chunks: str, context_
     }
 
     if selected_chunks:
-        source_refs["selected_chunks"] = add_selected_chunks(candidates, repo_root, selected_chunks, objective_terms)
+        source_refs["selected_chunks"] = add_selected_chunks(
+            candidates, repo_root, selected_chunks, objective_terms
+        )
     if context_pack:
-        source_refs["context_pack"] = add_context_pack(candidates, repo_root, context_pack, objective_terms)
+        source_refs["context_pack"] = add_context_pack(
+            candidates, repo_root, context_pack, objective_terms
+        )
     if adapter_manifest:
-        source_refs["adapter_manifest"] = add_adapter_manifest(candidates, repo_root, adapter_manifest, objective_terms)
+        source_refs["adapter_manifest"] = add_adapter_manifest(
+            candidates, repo_root, adapter_manifest, objective_terms
+        )
 
     # Always keep core contract files visible as fallback context.
     fallback_files = [
@@ -219,9 +321,18 @@ def build_packet(repo_root: Path, objective: str, selected_chunks: str, context_
     ]
     for path in fallback_files:
         if (repo_root / path).exists():
-            add_candidate(candidates, path, "fallback_contract", objective_terms, "core local AI/NPU contract file", 5)
+            add_candidate(
+                candidates,
+                path,
+                "fallback_contract",
+                objective_terms,
+                "core local AI/NPU contract file",
+                5,
+            )
 
-    ranked = sorted(candidates.values(), key=lambda item: (-int(item["score"]), item["path"]))[:max_candidates]
+    ranked = sorted(candidates.values(), key=lambda item: (-int(item["score"]), item["path"]))[
+        :max_candidates
+    ]
     return {
         "schema_version": 1,
         "kind": PACKET_KIND,
@@ -294,7 +405,9 @@ def main() -> int:
     parser.add_argument("--context-pack", default="")
     parser.add_argument("--adapter-manifest", default="")
     parser.add_argument("--output", default="output/ai_pipeline/npu_knowledge_broker_packet.json")
-    parser.add_argument("--markdown-output", default="output/ai_pipeline/npu_knowledge_broker_packet.md")
+    parser.add_argument(
+        "--markdown-output", default="output/ai_pipeline/npu_knowledge_broker_packet.md"
+    )
     parser.add_argument("--max-candidates", type=int, default=24)
     args = parser.parse_args()
 
@@ -313,13 +426,19 @@ def main() -> int:
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(packet, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output.write_text(render_markdown(packet), encoding="utf-8")
-    print(json.dumps({
-        "passed": True,
-        "kind": PACKET_KIND,
-        "candidate_count": packet["candidate_count"],
-        "output": repo_relative(output, repo_root),
-        "markdown_output": repo_relative(markdown_output, repo_root),
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": True,
+                "kind": PACKET_KIND,
+                "candidate_count": packet["candidate_count"],
+                "output": repo_relative(output, repo_root),
+                "markdown_output": repo_relative(markdown_output, repo_root),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 

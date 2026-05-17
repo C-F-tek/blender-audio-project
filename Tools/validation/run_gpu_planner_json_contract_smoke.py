@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test GPU planner JSON contract helpers."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,10 @@ except ImportError:  # Script-style execution from Tools/validation.
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.gpu_planner_json_contract import result_to_dict, validate_model_response_contract  # type: ignore
+    from Tools.ai.gpu_planner_json_contract import (  # type: ignore
+        result_to_dict,
+        validate_model_response_contract,
+    )
 
 
 def now_iso() -> str:

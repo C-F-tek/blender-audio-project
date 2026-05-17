@@ -109,9 +109,7 @@ def read_json_if_exists(path: Path) -> dict[str, Any]:
         }
 
 
-def with_source_metadata(
-    report: dict[str, Any], data: dict[str, Any]
-) -> dict[str, Any]:
+def with_source_metadata(report: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
     copied = dict(data)
     copied.setdefault("_source_path", str(report.get("path") or ""))
     return copied
@@ -149,9 +147,7 @@ def infer_stamp_from_values(*values: str) -> str:
     return ""
 
 
-def value_contains_stamp(
-    value: Any, stamp: str, *, depth: int = 0, max_depth: int = 6
-) -> bool:
+def value_contains_stamp(value: Any, stamp: str, *, depth: int = 0, max_depth: int = 6) -> bool:
     if not stamp or depth > max_depth:
         return False
     if isinstance(value, str):
@@ -187,10 +183,7 @@ def report_matches_stamp(path: Path, data: Any, stamp: str) -> bool:
 def report_time_key(report: dict[str, Any]) -> tuple[str, str]:
     return (
         str(
-            report.get("generated_at")
-            or report.get("timestamp")
-            or report.get("created_at")
-            or ""
+            report.get("generated_at") or report.get("timestamp") or report.get("created_at") or ""
         ),
         str(report.get("_source_path") or ""),
     )
@@ -202,16 +195,12 @@ def latest_report(reports: list[dict[str, Any]]) -> dict[str, Any]:
     return sorted(reports, key=report_time_key)[-1]
 
 
-def discover_runtime_report_paths(
-    repo_root: Path, stamp: str, max_files: int
-) -> list[str]:
+def discover_runtime_report_paths(repo_root: Path, stamp: str, max_files: int) -> list[str]:
     candidates: list[Path] = []
     for pattern in RUNTIME_REPORT_PATTERNS:
         candidates.extend(path for path in repo_root.glob(pattern) if path.is_file())
     unique = {path.resolve(): path for path in candidates}
-    ordered = sorted(
-        unique.values(), key=lambda item: item.stat().st_mtime, reverse=True
-    )
+    ordered = sorted(unique.values(), key=lambda item: item.stat().st_mtime, reverse=True)
     selected: list[str] = []
     for path in ordered:
         if len(selected) >= max_files:
@@ -264,9 +253,7 @@ def all_provider_observability_green(by_kind: dict[str, dict[str, Any]]) -> bool
     provider_probe = by_kind.get("local_provider_probe")
 
     ready_lanes = (
-        set(resource_lanes.get("ready_lanes") or [])
-        if isinstance(resource_lanes, dict)
-        else set()
+        set(resource_lanes.get("ready_lanes") or []) if isinstance(resource_lanes, dict) else set()
     )
     return (
         report_passed(resource_lanes)
@@ -301,20 +288,14 @@ def workload_quality_decision(by_kind: dict[str, dict[str, Any]]) -> dict[str, A
             "ollama_gpu_primary_advisory_allowed": False,
             "npu_excluded_from_primary_advisory": True,
         }
-    decision = (
-        report.get("decision") if isinstance(report.get("decision"), dict) else {}
-    )
+    decision = report.get("decision") if isinstance(report.get("decision"), dict) else {}
     return {
         "quality_report_present": True,
         "usable_lanes": report.get("usable_lanes") or [],
         "unusable_lanes": report.get("unusable_lanes") or [],
-        "ollama_gpu_primary_advisory_allowed": decision.get(
-            "ollama_gpu_primary_advisory_allowed"
-        )
+        "ollama_gpu_primary_advisory_allowed": decision.get("ollama_gpu_primary_advisory_allowed")
         is True,
-        "npu_excluded_from_primary_advisory": decision.get(
-            "npu_excluded_from_primary_advisory"
-        )
+        "npu_excluded_from_primary_advisory": decision.get("npu_excluded_from_primary_advisory")
         is not False,
         "routing_policy": decision.get("routing_policy") or report.get("policy"),
     }
@@ -404,16 +385,12 @@ def runtime_peer_evidence_summary(
     lifecycle_reports = by_kind_multi.get("heap_exchange_runtime_lifecycle", [])
     chain_contract_reports = by_kind_multi.get("unified_chain_contract", [])
     correlation_reports = by_kind_multi.get("runtime_evidence_correlation", [])
-    apply_reports = by_kind_multi.get(
-        "patch_suggestion_bundle_apply", []
-    ) + by_kind_multi.get("generated_patch_specs_review_pr_apply", [])
+    apply_reports = by_kind_multi.get("patch_suggestion_bundle_apply", []) + by_kind_multi.get(
+        "generated_patch_specs_review_pr_apply", []
+    )
 
     latest_apply = latest_report(apply_reports)
-    manual_items = (
-        latest_apply.get("manual_review_items")
-        if isinstance(latest_apply, dict)
-        else []
-    )
+    manual_items = latest_apply.get("manual_review_items") if isinstance(latest_apply, dict) else []
     if not isinstance(manual_items, list):
         manual_items = []
 
@@ -423,14 +400,10 @@ def runtime_peer_evidence_summary(
         if isinstance(item, dict) and "metadata-only" in str(item.get("reason") or "")
     )
     operation_count = (
-        int(latest_apply.get("operation_count") or 0)
-        if isinstance(latest_apply, dict)
-        else 0
+        int(latest_apply.get("operation_count") or 0) if isinstance(latest_apply, dict) else 0
     )
     changed_count = (
-        int(latest_apply.get("changed_count") or 0)
-        if isinstance(latest_apply, dict)
-        else 0
+        int(latest_apply.get("changed_count") or 0) if isinstance(latest_apply, dict) else 0
     )
 
     return {
@@ -468,8 +441,7 @@ def runtime_peer_evidence_summary(
         "patch_apply_operation_count": operation_count,
         "patch_apply_changed_count": changed_count,
         "metadata_only_manual_review_count": metadata_only_count,
-        "needs_concrete_generated_product": bool(apply_reports)
-        and operation_count == 0,
+        "needs_concrete_generated_product": bool(apply_reports) and operation_count == 0,
     }
 
 
@@ -723,11 +695,7 @@ def build_proposals(
         proposals.append(runtime_peer_evidence_proposal(runtime_summary))
 
     execution_plan_status = by_kind.get("execution_plan_status")
-    if (
-        not proposals
-        and execution_plan_status
-        and execution_plan_status.get("passed") is False
-    ):
+    if not proposals and execution_plan_status and execution_plan_status.get("passed") is False:
         proposals.append(
             proposal(
                 proposal_id="P-EXEC-PLAN-STATUS",
@@ -821,11 +789,7 @@ def build_proposals(
             )
 
     validation_contract = by_kind.get("validation_report_contract")
-    if (
-        not proposals
-        and validation_contract
-        and validation_contract.get("passed") is False
-    ):
+    if not proposals and validation_contract and validation_contract.get("passed") is False:
         proposals.append(
             proposal(
                 proposal_id="P-REPORT-CONTRACT-CONSISTENCY",
@@ -892,9 +856,7 @@ def render_markdown(report: dict[str, Any]) -> str:
             lines.append("### Evidence summary")
             lines.append("")
             lines.append("```json")
-            lines.append(
-                json.dumps(item["evidence_summary"], indent=2, ensure_ascii=False)
-            )
+            lines.append(json.dumps(item["evidence_summary"], indent=2, ensure_ascii=False))
             lines.append("```")
             lines.append("")
         lines.append("### Target files")
@@ -928,9 +890,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Guardrail")
     lines.append("")
-    lines.append(
-        "These are proposals only. They must not be auto-applied without explicit review."
-    )
+    lines.append("These are proposals only. They must not be auto-applied without explicit review.")
     return "\n".join(lines) + "\n"
 
 
@@ -963,9 +923,7 @@ def main() -> int:
         )
 
     report_paths = list(DEFAULT_REPORTS) + explicit_report_paths + runtime_report_paths
-    loaded_reports = [
-        read_json_if_exists(repo_root / path) for path in dict.fromkeys(report_paths)
-    ]
+    loaded_reports = [read_json_if_exists(repo_root / path) for path in dict.fromkeys(report_paths)]
     proposals = build_proposals(
         loaded_reports,
         profile=args.profile,

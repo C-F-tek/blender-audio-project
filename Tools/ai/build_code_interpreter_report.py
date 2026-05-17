@@ -57,9 +57,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     excluded_dirs = set(DEFAULT_EXCLUDED_DIRS)
     excluded_dirs.update(split_csv_values(args.exclude_dir))
-    report = build_report(
-        repo_root, resolve_roots(repo_root, args.input), excluded_dirs
-    )
+    report = build_report(repo_root, resolve_roots(repo_root, args.input), excluded_dirs)
     print(
         write_json_and_markdown(
             repo_root,

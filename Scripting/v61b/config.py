@@ -1,13 +1,15 @@
-import os
-from pathlib import Path
 import json
 import math
+import os
+from pathlib import Path
 
 # ============================================================
 # PROJECT PATHS
 # ============================================================
 ROOT = Path(os.environ.get("BAP_ROOT", Path.home() / "blender")).expanduser().resolve()
-PROJECT_DIR = Path(os.environ.get("BAP_PROJECT_DIR", ROOT / "blender-audio-project")).expanduser().resolve()
+PROJECT_DIR = (
+    Path(os.environ.get("BAP_PROJECT_DIR", ROOT / "blender-audio-project")).expanduser().resolve()
+)
 OUTPUT_DIR = Path(os.environ.get("BAP_OUTPUT_DIR", PROJECT_DIR / "output")).expanduser().resolve()
 ASSETS_DIR = Path(os.environ.get("BAP_ASSETS_DIR", ROOT / "assets")).expanduser().resolve()
 AUDIO_DIR = Path(os.environ.get("BAP_AUDIO_DIR", ROOT / "audio")).expanduser().resolve()
@@ -27,10 +29,14 @@ WORKFLOW_SESSION_ARTIFACTS = {}
 if WORKFLOW_SESSION_PATH.exists():
     try:
         _workflow_session = json.loads(WORKFLOW_SESSION_PATH.read_text(encoding="utf-8"))
-        if _workflow_session.get("use_session_track") and isinstance(_workflow_session.get("artifacts"), dict):
+        if _workflow_session.get("use_session_track") and isinstance(
+            _workflow_session.get("artifacts"), dict
+        ):
             WORKFLOW_SESSION_ACTIVE = True
             WORKFLOW_SESSION_ARTIFACTS = _workflow_session["artifacts"]
-            ANALYSIS_JSON_PATH = Path(WORKFLOW_SESSION_ARTIFACTS.get("analysis_json", ANALYSIS_JSON_PATH))
+            ANALYSIS_JSON_PATH = Path(
+                WORKFLOW_SESSION_ARTIFACTS.get("analysis_json", ANALYSIS_JSON_PATH)
+            )
             AUDIO_PATH = Path(WORKFLOW_SESSION_ARTIFACTS.get("audio_path", AUDIO_PATH))
             OUTPUT_MP4 = Path(WORKFLOW_SESSION_ARTIFACTS.get("render_mp4", OUTPUT_MP4))
             OUTPUT_IMAGE_SEQUENCE_DIR = Path(
@@ -72,7 +78,7 @@ USE_MOTION_BLUR = True if FINAL_FOR_YOUTUBE else False
 
 EEVEE_TAA_RENDER_SAMPLES = 64 if FINAL_FOR_YOUTUBE else 40
 VOLUMETRIC_SAMPLES = 24 if FINAL_FOR_YOUTUBE else 12
-VOLUMETRIC_TILE_SIZE = '8'
+VOLUMETRIC_TILE_SIZE = "8"
 
 USE_COMPOSITING = True
 COMPOSITOR_GLARE_THRESHOLD_MIN = 1.05
@@ -92,8 +98,8 @@ VIDEO_MAXRATE = 45000 if USE_4K else (30000 if FINAL_FOR_YOUTUBE else 16000)
 VIDEO_MINRATE = 0
 VIDEO_BUFFERSIZE = 1792
 AUDIO_BITRATE = 320
-IMAGE_SEQUENCE_FORMAT = 'PNG'
-IMAGE_SEQUENCE_COLOR_DEPTH = '16'
+IMAGE_SEQUENCE_FORMAT = "PNG"
+IMAGE_SEQUENCE_COLOR_DEPTH = "16"
 IMAGE_SEQUENCE_COMPRESSION = 15
 ENCODE_SEQUENCE_AUTO_RENDER = False
 ENCODE_SEQUENCE_SYNC_AUDIO_TO_FRAME_NUMBER = True
@@ -103,9 +109,13 @@ ENCODE_SEQUENCE_SWITCH_TO_SEQUENCER = True
 ENCODE_USE_EXTERNAL_FFMPEG = True
 FFMPEG_EXE_PATH = ""
 FFMPEG_OUTPUT_SUFFIX = "_ffmpeg"
-FFMPEG_OUTPUT_MP4 = OUTPUT_MP4.with_name(f"{OUTPUT_MP4.stem}{FFMPEG_OUTPUT_SUFFIX}{OUTPUT_MP4.suffix}")
+FFMPEG_OUTPUT_MP4 = OUTPUT_MP4.with_name(
+    f"{OUTPUT_MP4.stem}{FFMPEG_OUTPUT_SUFFIX}{OUTPUT_MP4.suffix}"
+)
 FFMPEG_LAUNCH_VISIBLE_SHELL = False
-FFMPEG_PROFILE = "GPU_AV1_YOUTUBE_SAFE"  # GPU_AV1_YOUTUBE_SAFE, X264_HIGH_QUALITY, CPU_SVTAV1_YOUTUBE
+FFMPEG_PROFILE = (
+    "GPU_AV1_YOUTUBE_SAFE"  # GPU_AV1_YOUTUBE_SAFE, X264_HIGH_QUALITY, CPU_SVTAV1_YOUTUBE
+)
 FFMPEG_GPU_INDEX = 0
 FFMPEG_NVENC_PRESET = "p7"
 FFMPEG_NVENC_TUNE = "hq"

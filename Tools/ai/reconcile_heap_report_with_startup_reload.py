@@ -49,19 +49,13 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def relpath(path_value: str, repo_root: Path) -> str:
     p = Path(path_value)
     try:
-        return (
-            p.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return p.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except Exception:
         return str(path_value).replace("\\", "/")
 
@@ -123,9 +117,7 @@ def completed_from_startup(
 
 
 def startup_input_ready(startup: dict[str, Any]) -> bool:
-    contract = (
-        startup.get("contract") if isinstance(startup.get("contract"), dict) else {}
-    )
+    contract = startup.get("contract") if isinstance(startup.get("contract"), dict) else {}
     return bool(
         startup.get("passed") is True
         or startup.get("input_ready_before_heap") is True
@@ -185,9 +177,7 @@ def main() -> int:
         else heap_report_path.with_name("heap_startup_context_reconciliation.json")
     )
     markdown_output = (
-        Path(args.markdown_output).resolve()
-        if args.markdown_output
-        else output.with_suffix(".md")
+        Path(args.markdown_output).resolve() if args.markdown_output else output.with_suffix(".md")
     )
 
     startup = load_json(startup_manifest_path)
@@ -202,13 +192,10 @@ def main() -> int:
 
     startup_passed = startup_input_ready(startup)
     startup_degraded = bool(
-        startup.get("startup_reload_degraded") is True
-        or startup.get("degraded_requirements")
+        startup.get("startup_reload_degraded") is True or startup.get("degraded_requirements")
     )
     if not startup_passed:
-        errors.append(
-            "startup manifest did not pass and is not input_ready_before_heap"
-        )
+        errors.append("startup manifest did not pass and is not input_ready_before_heap")
     if startup_degraded and not args.allow_degraded_startup:
         errors.append(
             "startup manifest is degraded; pass --allow-degraded-startup to reconcile useful artifacts"
@@ -220,12 +207,7 @@ def main() -> int:
 
     completed_from_preload, requirement_refs = completed_from_startup(startup)
     artifact_refs = useful_artifact_refs(startup)
-    if (
-        args.allow_degraded_startup
-        and startup_degraded
-        and startup_passed
-        and not artifact_refs
-    ):
+    if args.allow_degraded_startup and startup_degraded and startup_passed and not artifact_refs:
         errors.append(
             "degraded startup reconciliation requested but no useful artifact refs were found"
         )
@@ -248,9 +230,7 @@ def main() -> int:
             "startup_preload_seen_by_provider_lanes", "unknown"
         )
         heap["startup_manifest"] = relpath(str(startup_manifest_path), repo_root)
-        heap["startup_preload_integrated_at"] = datetime.now().isoformat(
-            timespec="seconds"
-        )
+        heap["startup_preload_integrated_at"] = datetime.now().isoformat(timespec="seconds")
         heap["startup_preload_requirement_refs"] = requirement_refs
         heap["startup_reload_degraded"] = startup_degraded
         heap["completed_requirements"] = completed
@@ -260,18 +240,14 @@ def main() -> int:
         )
         heap.setdefault("warnings", [])
         if isinstance(heap["warnings"], list):
-            heap["warnings"].append(
-                "startup preload artifacts reconciled into heap report state"
-            )
+            heap["warnings"].append("startup preload artifacts reconciled into heap report state")
             if startup_degraded:
                 heap["warnings"].append(
                     "startup preload was degraded; reconciliation did not prove provider consumption"
                 )
         if missing:
             heap["product_status"] = "blocked_with_reason"
-        elif not heap.get("proposal_iteration_artifacts") and not heap.get(
-            "provider_results"
-        ):
+        elif not heap.get("proposal_iteration_artifacts") and not heap.get("provider_results"):
             heap["product_status"] = "blocked_waiting_for_provider_or_proposal"
         else:
             heap["product_status"] = heap.get("product_status") or "ready"

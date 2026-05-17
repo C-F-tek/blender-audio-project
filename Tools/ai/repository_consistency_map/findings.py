@@ -182,11 +182,7 @@ def build_findings(
         )
     all_py = sorted(py_inventory)
     cited_scripts = sorted(
-        {
-            command["script_resolved"]
-            for command in md_commands
-            if command.get("script_exists")
-        }
+        {command["script_resolved"] for command in md_commands if command.get("script_exists")}
     )
     for script in cited_scripts:
         if script not in py_inventory:
@@ -211,9 +207,7 @@ def build_provider_hints(findings: list[dict[str, Any]]) -> list[dict[str, Any]]
     for finding in findings:
         by_kind[str(finding.get("kind"))].append(finding)
     hints: list[dict[str, Any]] = []
-    for kind, items in sorted(
-        by_kind.items(), key=lambda pair: (-len(pair[1]), pair[0])
-    ):
+    for kind, items in sorted(by_kind.items(), key=lambda pair: (-len(pair[1]), pair[0])):
         targets = sorted(
             {
                 str(item.get("target") or item.get("source") or "")
@@ -221,16 +215,12 @@ def build_provider_hints(findings: list[dict[str, Any]]) -> list[dict[str, Any]]
                 if item.get("target") or item.get("source")
             }
         )
-        sources = sorted(
-            {str(item.get("source") or "") for item in items if item.get("source")}
-        )
+        sources = sorted({str(item.get("source") or "") for item in items if item.get("source")})
         hints.append(
             {
                 "kind": kind,
                 "count": len(items),
-                "severity_counts": dict(
-                    Counter(str(item.get("severity")) for item in items)
-                ),
+                "severity_counts": dict(Counter(str(item.get("severity")) for item in items)),
                 "sample_sources": sources[:12],
                 "sample_targets": targets[:12],
                 "planner_instruction": "Prioritize concrete patch plans that correct the cited source/target pairs without touching generated output, SQLite, provider settings or Blender runtime.",

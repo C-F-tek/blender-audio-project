@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test repository hygiene planner delete guards."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,18 +15,38 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def env_for(source_repo: Path) -> dict[str, str]:
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(source_repo) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env["PYTHONPATH"] = str(source_repo) + (
+        os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
+    )
     return env
 
 
 def run(command: list[str], cwd: Path, source_repo: Path) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=cwd, env=env_for(source_repo), capture_output=True, text=True, check=False, timeout=120)
-    return {"command": command, "returncode": result.returncode, "stdout_tail": result.stdout[-4000:], "stderr_tail": result.stderr[-4000:], "ok": result.returncode == 0}
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        env=env_for(source_repo),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+    )
+    return {
+        "command": command,
+        "returncode": result.returncode,
+        "stdout_tail": result.stdout[-4000:],
+        "stderr_tail": result.stderr[-4000:],
+        "ok": result.returncode == 0,
+    }
 
 
 def write(path: Path, content: str) -> None:
@@ -73,9 +94,18 @@ def smoke_delete_marker_guards(source_repo: Path) -> dict[str, Any]:
         repo = Path(tmp) / "repo"
         repo.mkdir()
         write(repo / ".git/HEAD", "ref: refs/heads/main\n")
-        write(repo / "docs/LOCAL_AI_TASKS/README.md/part-001.md", "<!-- IA-CARMINE-MD-SPLIT: part -->\n# Current operational README\n\nHistorical wording exists, but this path is protected.\n")
-        write(repo / "docs/OLD_SPLIT.md/part-001.md", "<!-- IA-CARMINE-MD-SPLIT: part -->\n# Old split\n\nHistorical obsolete legacy text without an explicit delete marker.\n")
-        write(repo / "docs/DELETE_ME.md/part-001.md", "<!-- IA-CARMINE-MD-SPLIT: part -->\n# Delete me\n\nStatus: obsolete\nHistorical obsolete legacy split snapshot.\n")
+        write(
+            repo / "docs/LOCAL_AI_TASKS/README.md/part-001.md",
+            "<!-- IA-CARMINE-MD-SPLIT: part -->\n# Current operational README\n\nHistorical wording exists, but this path is protected.\n",
+        )
+        write(
+            repo / "docs/OLD_SPLIT.md/part-001.md",
+            "<!-- IA-CARMINE-MD-SPLIT: part -->\n# Old split\n\nHistorical obsolete legacy text without an explicit delete marker.\n",
+        )
+        write(
+            repo / "docs/DELETE_ME.md/part-001.md",
+            "<!-- IA-CARMINE-MD-SPLIT: part -->\n# Delete me\n\nStatus: obsolete\nHistorical obsolete legacy split snapshot.\n",
+        )
         write(repo / "docs/LOCAL_AI_TASKS/README.md/_ia_carmine_md_split_manifest.json", "{}\n")
         write(repo / "docs/OLD_SPLIT.md/_ia_carmine_md_split_manifest.json", "{}\n")
         write(repo / "docs/DELETE_ME.md/_ia_carmine_md_split_manifest.json", "{}\n")
@@ -124,7 +154,9 @@ def main() -> int:
         "warnings": [],
     }
     print(write_json_report(report, resolve_output_path(source_repo, args.output)), end="")
-    write_text_report(render_markdown(report), resolve_output_path(source_repo, args.markdown_output))
+    write_text_report(
+        render_markdown(report), resolve_output_path(source_repo, args.markdown_output)
+    )
     return 0 if report["passed"] else 2
 
 

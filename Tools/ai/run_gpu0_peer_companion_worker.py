@@ -28,11 +28,7 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -101,8 +97,7 @@ def response_items(
                 "status": status,
                 "findings": findings,
                 "requires_gpu1_followup": not primary.get("passed"),
-                "requires_broker_context": "runtime_tool" in task_id
-                or "patch_spec" in task_id,
+                "requires_broker_context": "runtime_tool" in task_id or "patch_spec" in task_id,
             }
         )
     return items
@@ -117,9 +112,7 @@ def tool_requests(
         if isinstance(item, dict)
     ]
     task_ids = {
-        str(item.get("task_id"))
-        for item in response
-        if item.get("requires_broker_context")
+        str(item.get("task_id")) for item in response if item.get("requires_broker_context")
     }
     requests: list[dict[str, Any]] = []
     for index, template in enumerate(templates, start=1):
@@ -184,9 +177,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, An
         "role": "companion_peer_worker",
         "lane": "GPU0/OpenVINO",
         "production_role": "tool_request_producing_companion",
-        "provider_execution_performed": bool(
-            workload.get("provider_execution_performed")
-        ),
+        "provider_execution_performed": bool(workload.get("provider_execution_performed")),
         "semantic_execution_mode": semantic_mode,
         "gpu0_model_dir_configured": bool(model_dir),
         "task_packet": repo_rel(repo_root, task_path),
@@ -258,9 +249,7 @@ def append_runtime_heap_events(
             "GPU0 peer companion worker completed.",
             {
                 "passed": report.get("passed"),
-                "provider_execution_performed": report.get(
-                    "provider_execution_performed"
-                ),
+                "provider_execution_performed": report.get("provider_execution_performed"),
                 "classifications": report.get("classifications", []),
                 "errors": report.get("errors", []),
                 "warnings": report.get("warnings", []),
@@ -279,9 +268,7 @@ def append_runtime_heap_events(
                 "summary": "GPU0 coworker produced live response for GPU1 through runtime heap.",
                 "gpu0_report": report.get("stamp"),
                 "passed": report.get("passed"),
-                "provider_execution_performed": report.get(
-                    "provider_execution_performed"
-                ),
+                "provider_execution_performed": report.get("provider_execution_performed"),
                 "response_count": report.get("response_count"),
                 "tool_request_count": report.get("tool_request_count"),
                 "classifications": report.get("classifications", []),
@@ -353,9 +340,7 @@ def main() -> int:
     parser.add_argument("--stamp", required=True)
     parser.add_argument("--task-packet", required=True)
     parser.add_argument("--primary-advisory", required=True)
-    parser.add_argument(
-        "--output", default="output/validation/gpu0_peer_response_{stamp}.json"
-    )
+    parser.add_argument("--output", default="output/validation/gpu0_peer_response_{stamp}.json")
     parser.add_argument(
         "--markdown-output", default="output/validation/gpu0_peer_response_{stamp}.md"
     )
@@ -375,9 +360,7 @@ def main() -> int:
     report, requests = build_report(args)
     append_runtime_heap_events(args, repo_root, report, requests)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
-    markdown = resolve_output_path(
-        repo_root, args.markdown_output.format(stamp=args.stamp)
-    )
+    markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
     request_output = resolve_output_path(
         repo_root, args.tool_requests_output.format(stamp=args.stamp)
     )

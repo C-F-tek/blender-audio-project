@@ -18,9 +18,7 @@ class Candidate:
     recursive_root: str | None = None
 
 
-def discover_stamp_files(
-    evidence_dir: Path, stamp: str, basename: str
-) -> list[Candidate]:
+def discover_stamp_files(evidence_dir: Path, stamp: str, basename: str) -> list[Candidate]:
     """Discover stamped compact evidence files directly under evidence_dir."""
     if not evidence_dir.exists() or not evidence_dir.is_dir():
         return []
@@ -45,9 +43,7 @@ def discover_recursive_dir_files(
     """Return safe file members below a recursive root and skipped entries."""
     files: list[Path] = []
     skipped: list[dict[str, Any]] = []
-    for path in sorted(
-        root.rglob("*"), key=lambda item: repo_relative(item, repo_root).lower()
-    ):
+    for path in sorted(root.rglob("*"), key=lambda item: repo_relative(item, repo_root).lower()):
         if not path.is_file():
             continue
         rel = repo_relative(path, repo_root)
@@ -91,9 +87,7 @@ def collect_candidates(
     if include_default_stamp_files:
         candidates.extend(discover_stamp_files(evidence_dir, stamp, basename))
     for raw in artifacts:
-        candidates.append(
-            Candidate(resolve_repo_path(repo_root, raw), source="explicit_artifact")
-        )
+        candidates.append(Candidate(resolve_repo_path(repo_root, raw), source="explicit_artifact"))
     for raw in artifact_roots:
         root = resolve_repo_path(repo_root, raw)
         candidates.append(
@@ -124,9 +118,7 @@ def collect_candidates(
     return dedupe_candidates(candidates)
 
 
-def candidate_entry(
-    candidate: Candidate, repo_root: Path, *, allow_output: bool
-) -> dict[str, Any]:
+def candidate_entry(candidate: Candidate, repo_root: Path, *, allow_output: bool) -> dict[str, Any]:
     """Build a manifest entry for a candidate path."""
     rel = repo_relative(candidate.path, repo_root)
     entry: dict[str, Any] = {

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """CLI entrypoint for full-run evidence ZIP completeness validation."""
+
 from __future__ import annotations
 
 import sys
@@ -38,8 +39,12 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     zip_path = resolve_repo_path(repo_root, args.bundle)
-    report_path = resolve_repo_path(repo_root, args.completeness_report) if args.completeness_report else None
-    report = validate_bundle(repo_root, zip_path, report_path, split_values(args.required_recursive_root))
+    report_path = (
+        resolve_repo_path(repo_root, args.completeness_report) if args.completeness_report else None
+    )
+    report = validate_bundle(
+        repo_root, zip_path, report_path, split_values(args.required_recursive_root)
+    )
     output = resolve_output_path(repo_root, args.output) if args.output else None
     print(write_json_report(report, output), end="")
     return 0 if report["passed"] else 2

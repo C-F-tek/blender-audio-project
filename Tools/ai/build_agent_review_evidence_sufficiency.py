@@ -72,11 +72,7 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -92,17 +88,13 @@ def load_json_object(path: Path) -> dict[str, Any]:
     return data
 
 
-def compact_snippet(
-    text: str, terms: list[str], *, max_chars: int = MAX_SNIPPET_CHARS
-) -> str:
+def compact_snippet(text: str, terms: list[str], *, max_chars: int = MAX_SNIPPET_CHARS) -> str:
     """Return a compact snippet around the first matching term."""
     if not text:
         return ""
     lower = text.lower()
     positions = [
-        lower.find(term.lower())
-        for term in terms
-        if term and lower.find(term.lower()) >= 0
+        lower.find(term.lower()) for term in terms if term and lower.find(term.lower()) >= 0
     ]
     if positions:
         start = max(0, min(positions) - max_chars / 3)
@@ -166,24 +158,17 @@ def load_optional_report(repo_root: Path, value: str) -> dict[str, Any]:
         return out
     out["kind"] = data.get("kind")
     out["passed"] = data.get("passed")
-    out["summary"] = (
-        data.get("summary") if isinstance(data.get("summary"), dict) else {}
-    )
+    out["summary"] = data.get("summary") if isinstance(data.get("summary"), dict) else {}
     return out
 
 
 def extract_doc_code_targets(refined: dict[str, Any]) -> list[dict[str, Any]]:
-    targets = (
-        refined.get("refinement", {}).get("doc_code", {}).get("actionable_refs", [])
-        or []
-    )
+    targets = refined.get("refinement", {}).get("doc_code", {}).get("actionable_refs", []) or []
     return [item for item in targets if isinstance(item, dict)]
 
 
 def extract_doc_doc_targets(refined: dict[str, Any]) -> list[dict[str, Any]]:
-    targets = (
-        refined.get("refinement", {}).get("doc_doc", {}).get("actionable", []) or []
-    )
+    targets = refined.get("refinement", {}).get("doc_doc", {}).get("actionable", []) or []
     return [item for item in targets if isinstance(item, dict)]
 
 
@@ -193,9 +178,7 @@ def normalize_candidate(candidate: Any) -> str:
     return str(candidate).replace("\\", "/").strip().strip('`.,:)];"').lstrip("/")
 
 
-def candidate_exists(
-    repo_root: Path, candidates: list[Any]
-) -> tuple[str | None, list[str]]:
+def candidate_exists(repo_root: Path, candidates: list[Any]) -> tuple[str | None, list[str]]:
     normalized = [normalize_candidate(item) for item in candidates]
     for item in normalized:
         if item and (repo_root / item).exists():
@@ -221,17 +204,13 @@ def analyze_doc_code(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]
             kind="source_markdown",
         )
         target_evidence = (
-            inspect_file(
-                repo_root, existing or normalized_ref, terms=[], kind="target_path"
-            )
+            inspect_file(repo_root, existing or normalized_ref, terms=[], kind="target_path")
             if existing
             else inspect_file(repo_root, normalized_ref, kind="target_path")
         )
         sufficient = doc_evidence.exists and normalized_ref and existing is None
         recommendation = (
-            "manual_doc_reference_patch_candidate"
-            if sufficient
-            else "needs_more_context"
+            "manual_doc_reference_patch_candidate" if sufficient else "needs_more_context"
         )
         if sufficient:
             ready += 1
@@ -282,9 +261,7 @@ def analyze_doc_doc(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]:
                 "missing_terms": terms,
                 "evidence_sufficient": sufficient,
                 "recommendation": (
-                    "manual_cross_reference_patch_candidate"
-                    if sufficient
-                    else "needs_more_context"
+                    "manual_cross_reference_patch_candidate" if sufficient else "needs_more_context"
                 ),
                 "confidence": "medium" if sufficient else "low",
                 "reason": (
@@ -305,17 +282,13 @@ def analyze_doc_doc(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]:
 
 
 def analyze_code_code(refined: dict[str, Any], repo_root: Path) -> dict[str, Any]:
-    targets = (
-        refined.get("refinement", {}).get("code_code", {}).get("actionable", []) or []
-    )
+    targets = refined.get("refinement", {}).get("code_code", {}).get("actionable", []) or []
     items = []
     for target in targets:
         symbol = str(target.get("symbol") or "")
         paths = [str(path) for path in target.get("paths", [])]
         evidence_files = [
-            evidence_to_dict(
-                inspect_file(repo_root, path, terms=[symbol], kind="symbol_file")
-            )
+            evidence_to_dict(inspect_file(repo_root, path, terms=[symbol], kind="symbol_file"))
             for path in paths[:8]
         ]
         items.append(
@@ -454,9 +427,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     doc_doc = analyze_doc_doc(refined, repo_root)
     code_code = analyze_code_code(refined, repo_root)
     decision = build_decision(doc_code, doc_doc, code_code)
-    context_reports = [
-        load_optional_report(repo_root, value) for value in args.report_file
-    ]
+    context_reports = [load_optional_report(repo_root, value) for value in args.report_file]
     warnings = [
         f"context report missing/unreadable: {item['path']} ({item['error']})"
         for item in context_reports
@@ -501,22 +472,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent Review Evidence Sufficiency", ""]
     lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Recommended mode: `{report['decision']['recommended_mode']}`")
-    lines.append(
-        f"- Sufficient for real PR: `{report['decision']['sufficient_for_real_pr']}`"
-    )
+    lines.append(f"- Sufficient for real PR: `{report['decision']['sufficient_for_real_pr']}`")
     lines.append(
         f"- Ready patch candidates: `{report['decision']['ready_for_manual_patch_count']}`"
     )
-    lines.append(
-        f"- Needs more context: `{report['decision']['needs_more_context_count']}`"
-    )
+    lines.append(f"- Needs more context: `{report['decision']['needs_more_context_count']}`")
     lines.append("")
     for step in report["decision"].get("next_steps", []):
         lines.append(f"- {step}")
@@ -565,12 +528,8 @@ def main() -> int:
                 "passed": report["passed"],
                 "output": str(output),
                 "markdown": str(markdown_output),
-                "ready_for_manual_patch_count": report["decision"][
-                    "ready_for_manual_patch_count"
-                ],
-                "needs_more_context_count": report["decision"][
-                    "needs_more_context_count"
-                ],
+                "ready_for_manual_patch_count": report["decision"]["ready_for_manual_patch_count"],
+                "needs_more_context_count": report["decision"]["needs_more_context_count"],
                 "sufficient_for_real_pr": report["decision"]["sufficient_for_real_pr"],
                 "provider_execution_performed": False,
                 "patch_application_performed": False,

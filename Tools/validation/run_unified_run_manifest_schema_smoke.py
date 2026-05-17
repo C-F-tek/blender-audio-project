@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test final unified run manifest schema validator."""
+
 from __future__ import annotations
 
 import argparse
@@ -24,7 +25,9 @@ def write_json(path: Path, payload: dict) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/unified_run_manifest_schema_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/unified_run_manifest_schema_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -34,7 +37,9 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="unified-manifest-schema-smoke-") as tmp_raw:
         repo = Path(tmp_raw) / "repo"
         repo.mkdir()
-        manifest = repo / "output/local_ai_runs/stamp/pipeline/unified_local_ai_refactor_manifest.json"
+        manifest = (
+            repo / "output/local_ai_runs/stamp/pipeline/unified_local_ai_refactor_manifest.json"
+        )
         output = repo / "output/validation/manifest_validation.json"
         write_json(
             manifest,
@@ -80,7 +85,13 @@ def main() -> int:
             check=False,
         )
         report = json.loads(output.read_text(encoding="utf-8-sig")) if output.exists() else {}
-        cases.append({"returncode": result.returncode, "report": report, "stderr_tail": result.stderr[-2000:]})
+        cases.append(
+            {
+                "returncode": result.returncode,
+                "report": report,
+                "stderr_tail": result.stderr[-2000:],
+            }
+        )
         if result.returncode != 0 or report.get("passed") is not True:
             errors.append("valid manifest fixture failed schema validation")
 

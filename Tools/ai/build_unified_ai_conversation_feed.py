@@ -24,9 +24,7 @@ def read_jsonl(path: Path, limit: int) -> list[dict]:
     if not path.is_file():
         return []
     rows: list[dict] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[
-        -limit:
-    ]:
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
         try:
             rows.append(json.loads(line))
         except json.JSONDecodeError:
@@ -66,11 +64,7 @@ def summarize_json(path: Path) -> dict:
         ),
         "warning_count": data.get(
             "warning_count",
-            (
-                len(data.get("warnings", []))
-                if isinstance(data.get("warnings"), list)
-                else None
-            ),
+            (len(data.get("warnings", [])) if isinstance(data.get("warnings"), list) else None),
         ),
         "failed_count": data.get("failed_count", None),
         "provider_execution_performed": data.get("provider_execution_performed", None),
@@ -116,9 +110,7 @@ def main() -> int:
     for path in candidate_files(repo_root, args.limit):
         item = {
             "path": str(path),
-            "mtime": datetime.fromtimestamp(path.stat().st_mtime).isoformat(
-                timespec="seconds"
-            ),
+            "mtime": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds"),
         }
         if path.suffix.lower() == ".json":
             item.update(summarize_json(path))
@@ -156,12 +148,12 @@ def main() -> int:
     ]
     for event in events[-20:]:
         lines.append(
-            f"- `{event.get('speaker','')}` `{event.get('event_type','')}` {event.get('summary', event.get('message',''))}"
+            f"- `{event.get('speaker', '')}` `{event.get('event_type', '')}` {event.get('summary', event.get('message', ''))}"
         )
     lines.extend(["", "## Public report surfaces"])
     for item in surfaces[:20]:
         lines.append(
-            f"- `{item.get('kind','')}` passed=`{item.get('passed','')}` `{item.get('path','')}`"
+            f"- `{item.get('kind', '')}` passed=`{item.get('passed', '')}` `{item.get('path', '')}`"
         )
     markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(

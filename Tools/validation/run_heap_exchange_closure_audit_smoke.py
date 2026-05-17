@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test heap/exchange closure audit helper."""
+
 from __future__ import annotations
 
 import argparse
@@ -32,7 +33,9 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_exchange_closure_audit_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/heap_exchange_closure_audit_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -70,7 +73,10 @@ def main() -> int:
             runtime_state,
             [
                 {"kind": "heap_peer_runtime_manifest", "summary": "GPU1/GPU0/NPU registered"},
-                {"kind": "deterministic_audit", "summary": "script audit lane reusable before closure"},
+                {
+                    "kind": "deterministic_audit",
+                    "summary": "script audit lane reusable before closure",
+                },
             ],
         )
 

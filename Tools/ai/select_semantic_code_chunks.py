@@ -93,9 +93,7 @@ def score_chunk(
     return score, sorted(set(matched))
 
 
-def source_excerpt(
-    repo_root: Path, chunk: dict[str, Any], max_chars: int
-) -> tuple[str, bool]:
+def source_excerpt(repo_root: Path, chunk: dict[str, Any], max_chars: int) -> tuple[str, bool]:
     path = repo_root / str(chunk.get("path") or "")
     if not path.exists() or not path.is_file():
         return "", False

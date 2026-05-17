@@ -50,9 +50,7 @@ def file_meta(path: Path, root: Path) -> dict[str, Any]:
         meta.update(
             {
                 "size_bytes": stat.st_size,
-                "modified_time": datetime.fromtimestamp(
-                    stat.st_mtime, timezone.utc
-                ).isoformat(),
+                "modified_time": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
             }
         )
     return meta
@@ -70,8 +68,7 @@ def planned_outputs(repo: Path, out: Path, args: Any) -> list[dict[str, Any]]:
         outputs += [out / item for item in EXPECTED_MUSIC_ARTIFACTS]
     if args.smart_context:
         outputs += [
-            out / item.format(track_slug=track_slug)
-            for item in EXPECTED_SMART_CONTEXT_ARTIFACTS
+            out / item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS
         ]
     if args.use_npu:
         outputs.append(out / "npu_artifact_review.json")

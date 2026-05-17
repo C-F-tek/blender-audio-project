@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate that review PR preparation has concrete product inputs."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,7 +12,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def load_json(path: Path) -> tuple[dict[str, Any] | None, str]:
@@ -95,17 +100,26 @@ def build_report(repo_root: Path, args_report_path: Path) -> dict[str, Any]:
         errors.append("review PR args report did not pass")
     if require_product_input and not has_product_input:
         errors.append("review PR product input missing: no include paths and no apply report")
-    if require_product_input and has_apply_report and not has_product_paths and not apply_report_product:
+    if (
+        require_product_input
+        and has_apply_report
+        and not has_product_paths
+        and not apply_report_product
+    ):
         errors.append("review PR apply report is present but not concrete")
     if prepare_script_reference_count == 0:
         errors.append("prepare_review_pr.py is not referenced by argv")
     elif prepare_script_reference_count > 1:
         errors.append("prepare_review_pr.py is referenced more than once by argv")
     if missing_prepare_flags:
-        errors.append("prepare_review_pr.py argv missing required flags: " + ", ".join(missing_prepare_flags))
+        errors.append(
+            "prepare_review_pr.py argv missing required flags: " + ", ".join(missing_prepare_flags)
+        )
 
     review_pr_args_ready = args_report_passed and prepare_script_referenced
-    prepare_review_pr_ready = review_pr_args_ready and (not require_product_input or has_concrete_product)
+    prepare_review_pr_ready = review_pr_args_ready and (
+        not require_product_input or has_concrete_product
+    )
 
     return {
         "schema_version": 1,

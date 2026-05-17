@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
-from datetime import datetime
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
-
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
 
 THIS_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = THIS_DIR.parents[1]
@@ -301,7 +300,8 @@ def build_report(project: Path = PROJECT_DIR, workspace_root: Path = WORKSPACE_R
         missing = [
             key
             for key, value in status.items()
-            if key in {"analysis_json", "music_context_json", "blender_keyframes_json"} and not value
+            if key in {"analysis_json", "music_context_json", "blender_keyframes_json"}
+            and not value
         ]
         add(
             checks,
@@ -312,16 +312,8 @@ def build_report(project: Path = PROJECT_DIR, workspace_root: Path = WORKSPACE_R
     except Exception as exc:
         add(checks, "Workflow session", "WARN", str(exc))
 
-    errors = [
-        f"{item.name}: {item.detail}"
-        for item in checks
-        if item.status in {"DOWN", "MISS"}
-    ]
-    warnings = [
-        f"{item.name}: {item.detail}"
-        for item in checks
-        if item.status == "WARN"
-    ]
+    errors = [f"{item.name}: {item.detail}" for item in checks if item.status in {"DOWN", "MISS"}]
+    warnings = [f"{item.name}: {item.detail}" for item in checks if item.status == "WARN"]
     passed = not errors
 
     return {
@@ -391,7 +383,9 @@ def save_report(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Spaziotempo startup service check")
-    parser.add_argument("--project", default=str(PROJECT_DIR), help="Project/repository directory to inspect.")
+    parser.add_argument(
+        "--project", default=str(PROJECT_DIR), help="Project/repository directory to inspect."
+    )
     parser.add_argument(
         "--repo-root",
         default="",

@@ -77,9 +77,7 @@ def append_runtime_heap_event(
                     "raw_output": payload,
                 },
             )
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 - heap telemetry must not block provider orchestration.
+    except Exception as exc:  # noqa: BLE001 - heap telemetry must not block provider orchestration.
         warnings.append(
             f"runtime heap append failed for {source}:{event_type}: {type(exc).__name__}: {exc}"
         )
@@ -138,8 +136,6 @@ def write_runtime_heap_snapshot(
             getattr(args, "runtime_heap_markdown", ""),
         )
         return heap.write_snapshot()
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 - heap telemetry must not block provider orchestration.
+    except Exception as exc:  # noqa: BLE001 - heap telemetry must not block provider orchestration.
         warnings.append(f"runtime heap snapshot failed: {type(exc).__name__}: {exc}")
         return {}

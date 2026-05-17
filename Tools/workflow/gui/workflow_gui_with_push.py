@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 from tkinter import messagebox, ttk
 
 THIS_DIR = Path(__file__).resolve().parent
@@ -9,10 +9,10 @@ WORKFLOW_DIR = THIS_DIR.parent
 if str(WORKFLOW_DIR) not in sys.path:
     sys.path.insert(0, str(WORKFLOW_DIR))
 
+import workflow_state as wf  # noqa: E402
 from components.artifact_browser import ArtifactBrowserWindow  # noqa: E402
 from git_auto_push import run_auto_push_full_project, run_auto_push_generated_data  # noqa: E402
 from workflow_gui_modern import WorkflowGui as BaseWorkflowGui  # noqa: E402
-import workflow_state as wf  # noqa: E402
 
 
 class WorkflowGuiWithPush(BaseWorkflowGui):
@@ -44,11 +44,15 @@ class WorkflowGuiWithPush(BaseWorkflowGui):
                 return
 
             parent = anchor_button.master
-            button = ttk.Button(parent, text="Artifact browser", command=self.open_artifact_browser_window)
+            button = ttk.Button(
+                parent, text="Artifact browser", command=self.open_artifact_browser_window
+            )
             button.pack(in_=parent, after=anchor_button, fill="x", padx=8, pady=3)
             self.always_enabled_buttons.append(button)
         except Exception as exc:
-            messagebox.showwarning("Artifact browser", f"Impossibile aggiungere il browser artefatti: {exc}")
+            messagebox.showwarning(
+                "Artifact browser", f"Impossibile aggiungere il browser artefatti: {exc}"
+            )
 
     def inject_ai_runtime_diagnostics_button(self) -> None:
         try:
@@ -80,12 +84,17 @@ class WorkflowGuiWithPush(BaseWorkflowGui):
             button = ttk.Button(
                 parent,
                 text="AI runtime diagnostics",
-                command=lambda: self.run_task("AI runtime diagnostics", self.run_ai_runtime_diagnostics),
+                command=lambda: self.run_task(
+                    "AI runtime diagnostics", self.run_ai_runtime_diagnostics
+                ),
             )
             button.pack(in_=parent, after=anchor_button, fill="x", padx=8, pady=3)
             self.always_enabled_buttons.append(button)
         except Exception as exc:
-            messagebox.showwarning("AI runtime diagnostics", f"Impossibile aggiungere il pulsante diagnostica AI: {exc}")
+            messagebox.showwarning(
+                "AI runtime diagnostics",
+                f"Impossibile aggiungere il pulsante diagnostica AI: {exc}",
+            )
 
     def run_ai_runtime_diagnostics(self):
         return wf.run_command(
@@ -169,7 +178,9 @@ class WorkflowGuiWithPush(BaseWorkflowGui):
             all_button.pack(in_=parent, after=data_button, fill="x", padx=8, pady=3)
             self.buttons.append(all_button)
         except Exception as exc:
-            messagebox.showwarning("Publish button", f"Impossibile aggiungere i pulsanti Git: {exc}")
+            messagebox.showwarning(
+                "Publish button", f"Impossibile aggiungere i pulsanti Git: {exc}"
+            )
 
 
 def main() -> None:

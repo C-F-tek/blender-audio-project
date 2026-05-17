@@ -25,15 +25,10 @@ def selected_chunks_evidence_seen(
 def selected_chunks_built(selected_chunks_evidence: list[dict[str, Any]]) -> bool:
     """Return whether selected chunk evidence shows a successful non-empty build."""
     for summary in report_summaries(selected_chunks_evidence):
-        decision = (
-            summary.get("decision") if isinstance(summary.get("decision"), dict) else {}
-        )
+        decision = summary.get("decision") if isinstance(summary.get("decision"), dict) else {}
         if decision.get("selected_chunks_built") is True:
             return True
-        if (
-            isinstance(summary.get("selected_count"), int)
-            and summary.get("selected_count", 0) > 0
-        ):
+        if isinstance(summary.get("selected_count"), int) and summary.get("selected_count", 0) > 0:
             return True
     return False
 
@@ -43,9 +38,7 @@ def selected_chunks_budget_respected(
 ) -> bool:
     """Return whether selected-chunks evidence stayed within its character budget."""
     for summary in report_summaries(selected_chunks_evidence):
-        decision = (
-            summary.get("decision") if isinstance(summary.get("decision"), dict) else {}
-        )
+        decision = summary.get("decision") if isinstance(summary.get("decision"), dict) else {}
         if decision.get("budget_respected") is True:
             return True
         total_chars = summary.get("total_selected_chars")
@@ -63,10 +56,7 @@ def npu_checks_mark_unusable(checks: dict[str, Any]) -> bool:
     """Return whether a checks block marks NPU as unusable for advisory."""
     if checks.get("npu_usable_for_advisory") is False:
         return True
-    return (
-        str(checks.get("npu_classification") or "").lower()
-        in NPU_UNUSABLE_CLASSIFICATIONS
-    )
+    return str(checks.get("npu_classification") or "").lower() in NPU_UNUSABLE_CLASSIFICATIONS
 
 
 def npu_marked_unusable(reports: list[dict[str, Any]]) -> bool:
@@ -74,9 +64,7 @@ def npu_marked_unusable(reports: list[dict[str, Any]]) -> bool:
     for summary in report_summaries(reports):
         if list_contains(summary.get("unusable_lanes"), "npu"):
             return True
-        checks = (
-            summary.get("checks") if isinstance(summary.get("checks"), dict) else {}
-        )
+        checks = summary.get("checks") if isinstance(summary.get("checks"), dict) else {}
         if npu_checks_mark_unusable(checks):
             return True
     return False
@@ -87,9 +75,7 @@ def routing_excludes_npu(routing: dict[str, Any]) -> bool:
     if list_contains(routing.get("excluded_advisory_lanes"), "npu"):
         return True
     return any(
-        isinstance(ctx, dict)
-        and ctx.get("lane") == "npu"
-        and ctx.get("trusted") is False
+        isinstance(ctx, dict) and ctx.get("lane") == "npu" and ctx.get("trusted") is False
         for ctx in as_list(routing.get("excluded_context_files"))
     )
 
@@ -110,14 +96,10 @@ def context_excludes_npu(context: dict[str, Any]) -> bool:
 def npu_marked_excluded_from_advisory(reports: list[dict[str, Any]]) -> bool:
     """Return whether routing/evidence excludes NPU from advisory context."""
     for summary in report_summaries(reports):
-        routing = (
-            summary.get("routing") if isinstance(summary.get("routing"), dict) else {}
-        )
+        routing = summary.get("routing") if isinstance(summary.get("routing"), dict) else {}
         if routing_excludes_npu(routing):
             return True
-        context = (
-            summary.get("context") if isinstance(summary.get("context"), dict) else {}
-        )
+        context = summary.get("context") if isinstance(summary.get("context"), dict) else {}
         if context_excludes_npu(context):
             return True
     return False
@@ -131,15 +113,10 @@ def npu_excluded_when_unusable(reports: list[dict[str, Any]]) -> bool:
 def ollama_gpu_primary_advisory(reports: list[dict[str, Any]]) -> bool:
     """Return whether reports indicate Ollama/GPU as the primary advisory lane."""
     return any(
-        (item.get("summary", {}).get("primary_advisory_provider", {}) or {}).get(
-            "provider"
-        )
+        (item.get("summary", {}).get("primary_advisory_provider", {}) or {}).get("provider")
         == "ollama"
         or (
-            item.get("summary", {})
-            .get("routing", {})
-            .get("primary_advisory_provider", {})
-            or {}
+            item.get("summary", {}).get("routing", {}).get("primary_advisory_provider", {}) or {}
         ).get("provider")
         == "ollama"
         or (item.get("summary", {}).get("ollama", {}) or {}).get("used") is True
@@ -160,16 +137,13 @@ def npu_decode_smoke_passed(reports: list[dict[str, Any]]) -> bool:
 def provider_execution_seen(reports: list[dict[str, Any]]) -> bool:
     """Return whether any summarized report performed provider execution."""
     return any(
-        item.get("summary", {}).get("provider_execution_performed") is True
-        for item in reports
+        item.get("summary", {}).get("provider_execution_performed") is True for item in reports
     )
 
 
 def patch_plan_summary_seen(reports: list[dict[str, Any]]) -> bool:
     """Return whether any summarized report contains native patch-plan details."""
-    return any(
-        bool(item.get("summary", {}).get("patch_plan_summary")) for item in reports
-    )
+    return any(bool(item.get("summary", {}).get("patch_plan_summary")) for item in reports)
 
 
 def build_decision(
@@ -184,9 +158,7 @@ def build_decision(
         "npu_excluded_when_unusable": npu_excluded_when_unusable(reports),
         "provider_execution_seen": provider_execution_seen(reports),
         "npu_decode_smoke_passed": npu_decode_smoke_passed(reports),
-        "selected_chunks_evidence_seen": selected_chunks_evidence_seen(
-            selected_chunks_evidence
-        ),
+        "selected_chunks_evidence_seen": selected_chunks_evidence_seen(selected_chunks_evidence),
         "selected_chunks_built": selected_chunks_built(selected_chunks_evidence),
         "budget_respected": selected_chunks_budget_respected(selected_chunks_evidence),
         "artifact_manifest_built": bool(artifact_manifest),

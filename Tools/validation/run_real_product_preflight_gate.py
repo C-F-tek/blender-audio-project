@@ -13,7 +13,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 PREVIEW_CHARS = 4000
@@ -93,7 +97,9 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
         "",
     ]
     for step in report.get("steps") or []:
-        lines.append(f"- `{step.get('name')}`: passed=`{step.get('passed')}`, rc=`{step.get('returncode')}`, script=`{step.get('script')}`")
+        lines.append(
+            f"- `{step.get('name')}`: passed=`{step.get('passed')}`, rc=`{step.get('returncode')}`, script=`{step.get('script')}`"
+        )
     if report.get("failed_steps"):
         lines.extend(["", "## Failed steps", ""])
         for step in report["failed_steps"]:
@@ -113,26 +119,61 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/real_product_preflight_gate.json")
-    parser.add_argument("--markdown-output", default="output/validation/real_product_preflight_gate.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/real_product_preflight_gate.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=120)
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     steps_config = [
         ("real_product_profile", "Tools/validation/run_real_product_profile_smoke.py"),
-        ("real_product_single_entry_exit", "Tools/validation/run_real_product_single_entry_exit_smoke.py"),
-        ("intrinsic_capability_contract", "Tools/validation/run_real_product_intrinsic_capability_contract_smoke.py"),
-        ("runtime_mesh_contract", "Tools/validation/run_real_product_runtime_mesh_contract_smoke.py"),
+        (
+            "real_product_single_entry_exit",
+            "Tools/validation/run_real_product_single_entry_exit_smoke.py",
+        ),
+        (
+            "intrinsic_capability_contract",
+            "Tools/validation/run_real_product_intrinsic_capability_contract_smoke.py",
+        ),
+        (
+            "runtime_mesh_contract",
+            "Tools/validation/run_real_product_runtime_mesh_contract_smoke.py",
+        ),
         ("openvino_peer_topology", "Tools/validation/run_openvino_peer_topology_contract_smoke.py"),
         ("review_pr_prepare_args", "Tools/validation/run_review_pr_prepare_args_smoke.py"),
-        ("review_pr_product_readiness", "Tools/validation/run_review_pr_product_readiness_smoke.py"),
-        ("heap_provider_budget_governor", "Tools/validation/run_heap_provider_budget_governor_smoke.py"),
-        ("heap_provider_invocation_contract", "Tools/validation/run_heap_provider_invocation_contract_smoke.py"),
-        ("heap_runtime_completeness_gate", "Tools/validation/run_heap_runtime_completeness_gate_smoke.py"),
-        ("runtime_evidence_correlation", "Tools/validation/run_runtime_evidence_correlation_smoke.py"),
-        ("runtime_evidence_correlation_launcher_wiring", "Tools/validation/run_runtime_evidence_correlation_launcher_wiring_smoke.py"),
-        ("manifest_runtime_evidence_correlation_schema", "Tools/validation/run_unified_manifest_runtime_evidence_correlation_smoke.py"),
-        ("review_pr_final_product_contract", "Tools/validation/run_review_pr_final_product_contract_smoke.py"),
+        (
+            "review_pr_product_readiness",
+            "Tools/validation/run_review_pr_product_readiness_smoke.py",
+        ),
+        (
+            "heap_provider_budget_governor",
+            "Tools/validation/run_heap_provider_budget_governor_smoke.py",
+        ),
+        (
+            "heap_provider_invocation_contract",
+            "Tools/validation/run_heap_provider_invocation_contract_smoke.py",
+        ),
+        (
+            "heap_runtime_completeness_gate",
+            "Tools/validation/run_heap_runtime_completeness_gate_smoke.py",
+        ),
+        (
+            "runtime_evidence_correlation",
+            "Tools/validation/run_runtime_evidence_correlation_smoke.py",
+        ),
+        (
+            "runtime_evidence_correlation_launcher_wiring",
+            "Tools/validation/run_runtime_evidence_correlation_launcher_wiring_smoke.py",
+        ),
+        (
+            "manifest_runtime_evidence_correlation_schema",
+            "Tools/validation/run_unified_manifest_runtime_evidence_correlation_smoke.py",
+        ),
+        (
+            "review_pr_final_product_contract",
+            "Tools/validation/run_review_pr_final_product_contract_smoke.py",
+        ),
     ]
 
     steps: list[dict[str, Any]] = []

@@ -1,50 +1,51 @@
-import bpy
 import math
 import random
 
-from config import (
-    USE_PHYSICS_ACCENTS,
-    PHYSICS_ACCENT_COUNT,
-    PRIMARY_BASE_Z,
-    TURB_STRENGTH_MIN,
-    VORTEX_STRENGTH_MIN,
-    PHYSICS_ORBIT_RADIUS_MIN,
-    PHYSICS_ORBIT_RADIUS_MAX,
-    PHYSICS_ATOM_ORBIT_SPEED_MIN,
-    PHYSICS_ATOM_ORBIT_SPEED_MAX,
-    PHYSICS_ATOM_MICRO_WOBBLE,
-    HERO_GRAVITY_STRENGTH_MIN,
-    TETHER_SPRING_STIFFNESS,
-    TETHER_SPRING_DAMPING,
-    USE_RHYTHM_PARTICLE_PHYSICS,
-    RHYTHM_PARTICLE_COUNT,
-    RHYTHM_DUST_PARTICLE_COUNT,
-    RHYTHM_STREAK_PARTICLE_COUNT,
-    RHYTHM_PARTICLE_LIFETIME,
-    RHYTHM_DUST_LIFETIME,
-    RHYTHM_PARTICLE_EMITTER_RADIUS,
-    RHYTHM_PARTICLE_EMITTER_Z,
-    PARTICLE_SOURCE_LOCATION,
-    RHYTHM_PARTICLE_SOURCE_RADIUS,
-    RHYTHM_PARTICLE_SIZE_MIN,
-    RHYTHM_PARTICLE_NORMAL_MIN,
-    RHYTHM_PARTICLE_TANGENT_MIN,
-    RHYTHM_PARTICLE_BROWNIAN_MIN,
-    USE_ALBUM_LETTER_PARTICLES,
-    ALBUM_PARTICLE_TEXT,
-    ALBUM_LETTER_PARTICLE_COUNT,
-    ALBUM_LETTER_PARTICLE_LIFETIME,
-    ALBUM_LETTER_SOURCE_SIZE,
-    ALBUM_LETTER_EXTRUDE,
-    ALBUM_LETTER_EMISSION_STRENGTH,
-    ALBUM_LETTER_PARTICLE_SIZE_MIN,
-    PHYSICS_ACCENT_EMISSION_MIN,
-    PHYSICS_ACCENT_MIX_MIN,
-    PALETTE_LIST,
-    PEACE_PALETTE,
-)
+import bpy
 from materials import build_variant_material
 from scene_utils import deselect_all, safe_active
+
+from config import (
+    ALBUM_LETTER_EMISSION_STRENGTH,
+    ALBUM_LETTER_EXTRUDE,
+    ALBUM_LETTER_PARTICLE_COUNT,
+    ALBUM_LETTER_PARTICLE_LIFETIME,
+    ALBUM_LETTER_PARTICLE_SIZE_MIN,
+    ALBUM_LETTER_SOURCE_SIZE,
+    ALBUM_PARTICLE_TEXT,
+    HERO_GRAVITY_STRENGTH_MIN,
+    PALETTE_LIST,
+    PARTICLE_SOURCE_LOCATION,
+    PEACE_PALETTE,
+    PHYSICS_ACCENT_COUNT,
+    PHYSICS_ACCENT_EMISSION_MIN,
+    PHYSICS_ACCENT_MIX_MIN,
+    PHYSICS_ATOM_MICRO_WOBBLE,
+    PHYSICS_ATOM_ORBIT_SPEED_MAX,
+    PHYSICS_ATOM_ORBIT_SPEED_MIN,
+    PHYSICS_ORBIT_RADIUS_MAX,
+    PHYSICS_ORBIT_RADIUS_MIN,
+    PRIMARY_BASE_Z,
+    RHYTHM_DUST_LIFETIME,
+    RHYTHM_DUST_PARTICLE_COUNT,
+    RHYTHM_PARTICLE_BROWNIAN_MIN,
+    RHYTHM_PARTICLE_COUNT,
+    RHYTHM_PARTICLE_EMITTER_RADIUS,
+    RHYTHM_PARTICLE_EMITTER_Z,
+    RHYTHM_PARTICLE_LIFETIME,
+    RHYTHM_PARTICLE_NORMAL_MIN,
+    RHYTHM_PARTICLE_SIZE_MIN,
+    RHYTHM_PARTICLE_SOURCE_RADIUS,
+    RHYTHM_PARTICLE_TANGENT_MIN,
+    RHYTHM_STREAK_PARTICLE_COUNT,
+    TETHER_SPRING_DAMPING,
+    TETHER_SPRING_STIFFNESS,
+    TURB_STRENGTH_MIN,
+    USE_ALBUM_LETTER_PARTICLES,
+    USE_PHYSICS_ACCENTS,
+    USE_RHYTHM_PARTICLE_PHYSICS,
+    VORTEX_STRENGTH_MIN,
+)
 
 
 def set_if_available(obj, attr, value):
@@ -84,9 +85,9 @@ def build_invisible_emitter_material():
     mat.use_nodes = True
 
     if hasattr(mat, "blend_method"):
-        mat.blend_method = 'BLEND'
+        mat.blend_method = "BLEND"
     if hasattr(mat, "shadow_method"):
-        mat.shadow_method = 'NONE'
+        mat.shadow_method = "NONE"
 
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
@@ -123,8 +124,8 @@ def add_particle_collision(obj):
         return
 
     try:
-        if not any(mod.type == 'COLLISION' for mod in obj.modifiers):
-            obj.modifiers.new("ParticleFloorCollision", 'COLLISION')
+        if not any(mod.type == "COLLISION" for mod in obj.modifiers):
+            obj.modifiers.new("ParticleFloorCollision", "COLLISION")
 
         if hasattr(obj, "collision") and obj.collision is not None:
             obj.collision.damping_factor = 0.55
@@ -139,7 +140,7 @@ def add_passive_rigidbody(obj):
     deselect_all()
     safe_active(obj)
     bpy.ops.rigidbody.object_add()
-    obj.rigid_body.type = 'PASSIVE'
+    obj.rigid_body.type = "PASSIVE"
     obj.rigid_body.friction = 0.6
     obj.rigid_body.restitution = 0.0
 
@@ -148,11 +149,11 @@ def add_active_rigidbody(obj, mass=0.15):
     deselect_all()
     safe_active(obj)
     bpy.ops.rigidbody.object_add()
-    obj.rigid_body.type = 'ACTIVE'
+    obj.rigid_body.type = "ACTIVE"
     obj.rigid_body.mass = mass
     obj.rigid_body.linear_damping = 0.28
     obj.rigid_body.angular_damping = 0.45
-    obj.rigid_body.collision_shape = 'SPHERE'
+    obj.rigid_body.collision_shape = "SPHERE"
     obj.rigid_body.use_deactivation = False
 
 
@@ -162,7 +163,7 @@ def create_hidden_anchor(name, location):
     anchor.name = name
     anchor.hide_render = True
     try:
-        anchor.display_type = 'WIRE'
+        anchor.display_type = "WIRE"
     except Exception:
         pass
     add_passive_rigidbody(anchor)
@@ -171,13 +172,13 @@ def create_hidden_anchor(name, location):
 
 def create_spring_constraint(name, object1, object2, location):
     try:
-        bpy.ops.object.empty_add(type='PLAIN_AXES', location=location)
+        bpy.ops.object.empty_add(type="PLAIN_AXES", location=location)
         cobj = bpy.context.active_object
         cobj.name = name
 
         deselect_all()
         safe_active(cobj)
-        bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
+        bpy.ops.rigidbody.constraint_add(type="GENERIC_SPRING")
 
         rbc = cobj.rigid_body_constraint
         rbc.object1 = object1
@@ -259,12 +260,12 @@ def create_album_letter_particle_collection(parent=None):
     collection = bpy.data.collections.new("AlbumLetterParticleCollection")
     bpy.context.scene.collection.children.link(collection)
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=PARTICLE_SOURCE_LOCATION)
+    bpy.ops.object.empty_add(type="PLAIN_AXES", location=PARTICLE_SOURCE_LOCATION)
     root = bpy.context.active_object
     root.name = "AlbumLetterParticleSources"
     root.hide_viewport = False
     root.hide_render = False
-    root.display_type = 'WIRE'
+    root.display_type = "WIRE"
     if parent is not None:
         root.parent = parent
 
@@ -293,8 +294,8 @@ def create_album_letter_particle_collection(parent=None):
         obj = bpy.context.active_object
         obj.name = f"AlbumLetterParticle_{idx:02d}_{char}"
         obj.data.body = char
-        obj.data.align_x = 'CENTER'
-        obj.data.align_y = 'CENTER'
+        obj.data.align_x = "CENTER"
+        obj.data.align_y = "CENTER"
         obj.data.size = ALBUM_LETTER_SOURCE_SIZE
         obj.data.extrude = ALBUM_LETTER_EXTRUDE
         obj.data.resolution_u = 8
@@ -309,7 +310,7 @@ def create_album_letter_particle_collection(parent=None):
         deselect_all()
         safe_active(obj)
         try:
-            bpy.ops.object.convert(target='MESH')
+            bpy.ops.object.convert(target="MESH")
             obj = bpy.context.active_object
             obj.name = f"AlbumLetterParticle_{idx:02d}_{char}"
         except Exception:
@@ -327,11 +328,13 @@ def create_album_letter_particle_collection(parent=None):
         except Exception:
             pass
 
-        letters.append({
-            "object": obj,
-            "base_scale": obj.scale.copy(),
-            "phase": idx * 0.37,
-        })
+        letters.append(
+            {
+                "object": obj,
+                "base_scale": obj.scale.copy(),
+                "phase": idx * 0.37,
+            }
+        )
 
     return collection, root, letters
 
@@ -359,7 +362,7 @@ def create_particle_emitter(name, kind, invisible_mat):
     emitter = bpy.context.active_object
     emitter.name = name
     emitter.data.materials.append(invisible_mat)
-    emitter.display_type = 'WIRE'
+    emitter.display_type = "WIRE"
     emitter.hide_select = True
     return emitter
 
@@ -379,23 +382,23 @@ def configure_particle_system(
     child_percent,
     instance_collection=None,
 ):
-    mod = emitter.modifiers.new(name=name, type='PARTICLE_SYSTEM')
+    mod = emitter.modifiers.new(name=name, type="PARTICLE_SYSTEM")
     ps = mod.particle_system
     settings = ps.settings
     settings.name = f"{name}Settings"
 
     frame_end = max(1, int(bpy.context.scene.frame_end))
 
-    settings.type = 'EMITTER'
-    settings.physics_type = 'NEWTON'
+    settings.type = "EMITTER"
+    settings.physics_type = "NEWTON"
     if instance_collection is not None:
-        settings.render_type = 'COLLECTION'
+        settings.render_type = "COLLECTION"
         set_if_available(settings, "instance_collection", instance_collection)
         set_if_available(settings, "use_collection_pick_random", True)
         set_if_available(settings, "use_whole_collection", False)
         set_if_available(settings, "use_collection_count", False)
     else:
-        settings.render_type = 'OBJECT'
+        settings.render_type = "OBJECT"
         settings.instance_object = instance_obj
     settings.count = count
     settings.frame_start = 1
@@ -413,15 +416,15 @@ def configure_particle_system(
     settings.use_dead = False
     settings.use_die_on_collision = False
 
-    set_if_available(settings, "emit_from", 'FACE')
-    set_if_available(settings, "distribution", 'RAND')
+    set_if_available(settings, "emit_from", "FACE")
+    set_if_available(settings, "distribution", "RAND")
     set_if_available(settings, "use_emit_random", True)
     set_if_available(settings, "use_modifier_stack", True)
     set_if_available(settings, "use_rotations", True)
-    set_if_available(settings, "rotation_mode", 'VEL')
-    set_if_available(settings, "angular_velocity_mode", 'VELOCITY')
+    set_if_available(settings, "rotation_mode", "VEL")
+    set_if_available(settings, "angular_velocity_mode", "VELOCITY")
     set_if_available(settings, "angular_velocity_factor", 0.72)
-    set_if_available(settings, "child_type", 'INTERPOLATED')
+    set_if_available(settings, "child_type", "INTERPOLATED")
     set_if_available(settings, "rendered_child_count", child_count)
     set_if_available(settings, "child_percent", child_percent)
     set_if_available(settings, "roughness_1_size", 0.65)
@@ -446,7 +449,7 @@ def create_rhythm_particle_physics(parent=None):
     if not USE_RHYTHM_PARTICLE_PHYSICS:
         return []
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))
+    bpy.ops.object.empty_add(type="PLAIN_AXES", location=(0, 0, 0))
     root = bpy.context.active_object
     root.name = "RhythmParticlePhysicsRoot"
     if parent is not None:
@@ -470,17 +473,23 @@ def create_rhythm_particle_physics(parent=None):
         0.32,
         shape="streak",
     )
-    letter_collection, letter_root, letter_sources = create_album_letter_particle_collection(parent=root)
+    letter_collection, letter_root, letter_sources = create_album_letter_particle_collection(
+        parent=root
+    )
 
     for obj in [spark_obj, dust_obj, streak_obj]:
         obj.parent = root
 
     pulse_emitter = create_particle_emitter("BeatPulseParticleEmitter", "ring", invisible_mat)
     dust_emitter = create_particle_emitter("OrbitDustParticleEmitter", "sphere", invisible_mat)
-    streak_emitter = create_particle_emitter("HighStreakParticleEmitter", "wide_ring", invisible_mat)
+    streak_emitter = create_particle_emitter(
+        "HighStreakParticleEmitter", "wide_ring", invisible_mat
+    )
     letter_emitter = None
     if letter_collection is not None and letter_sources:
-        letter_emitter = create_particle_emitter("AlbumLetterParticleEmitter", "wide_ring", invisible_mat)
+        letter_emitter = create_particle_emitter(
+            "AlbumLetterParticleEmitter", "wide_ring", invisible_mat
+        )
 
     for emitter in [pulse_emitter, dust_emitter, streak_emitter, letter_emitter]:
         if emitter is not None:
@@ -585,20 +594,22 @@ def create_rhythm_particle_physics(parent=None):
     ]
 
     if letter_emitter is not None and letter_settings:
-        systems.append({
-            "mode": "letters",
-            "emitter": letter_emitter,
-            "settings": letter_settings[0],
-            "settings_list": letter_settings,
-            "material": None,
-            "emission_socket": None,
-            "base_location": letter_emitter.location.copy(),
-            "base_rotation": letter_emitter.rotation_euler.copy(),
-            "base_scale": letter_emitter.scale.copy(),
-            "phase": 4.4,
-            "letter_root": letter_root,
-            "letter_sources": letter_sources,
-        })
+        systems.append(
+            {
+                "mode": "letters",
+                "emitter": letter_emitter,
+                "settings": letter_settings[0],
+                "settings_list": letter_settings,
+                "material": None,
+                "emission_socket": None,
+                "base_location": letter_emitter.location.copy(),
+                "base_rotation": letter_emitter.rotation_euler.copy(),
+                "base_scale": letter_emitter.scale.copy(),
+                "phase": 4.4,
+                "letter_root": letter_root,
+                "letter_sources": letter_sources,
+            }
+        )
 
     return systems
 
@@ -626,7 +637,7 @@ def create_physics_accents(parent=None):
     if floor:
         add_passive_rigidbody(floor)
 
-    bpy.ops.object.effector_add(type='FORCE', location=(0, 0, PRIMARY_BASE_Z + 1.20))
+    bpy.ops.object.effector_add(type="FORCE", location=(0, 0, PRIMARY_BASE_Z + 1.20))
     force_obj = bpy.context.active_object
     force_obj.name = "HeroGravityField"
     force_obj.field.strength = -HERO_GRAVITY_STRENGTH_MIN
@@ -634,27 +645,27 @@ def create_physics_accents(parent=None):
     force_obj.field.noise = 0.10
     force_obj.field.falloff_power = 1.55
 
-    bpy.ops.object.effector_add(type='TURBULENCE', location=(0, 0, PRIMARY_BASE_Z + 1.50))
+    bpy.ops.object.effector_add(type="TURBULENCE", location=(0, 0, PRIMARY_BASE_Z + 1.50))
     turb_obj = bpy.context.active_object
     turb_obj.name = "AtmosphereTurbulence"
     turb_obj.field.strength = TURB_STRENGTH_MIN
     turb_obj.field.size = 2.0
     turb_obj.field.flow = 0.45
 
-    bpy.ops.object.effector_add(type='VORTEX', location=(0, 0, PRIMARY_BASE_Z + 1.00))
+    bpy.ops.object.effector_add(type="VORTEX", location=(0, 0, PRIMARY_BASE_Z + 1.00))
     vortex_obj = bpy.context.active_object
     vortex_obj.name = "OrbitVortex"
     vortex_obj.rotation_euler.x = math.radians(90.0)
     vortex_obj.field.strength = VORTEX_STRENGTH_MIN
 
-    bpy.ops.object.effector_add(type='WIND', location=(-3.0, -1.2, PRIMARY_BASE_Z + 1.8))
+    bpy.ops.object.effector_add(type="WIND", location=(-3.0, -1.2, PRIMARY_BASE_Z + 1.8))
     wind_left = bpy.context.active_object
     wind_left.name = "WindLeft"
     wind_left.rotation_euler = (math.radians(90), 0, math.radians(20))
     wind_left.field.strength = 0.0
     wind_left.field.flow = 1.0
 
-    bpy.ops.object.effector_add(type='WIND', location=(3.0, -1.2, PRIMARY_BASE_Z + 1.8))
+    bpy.ops.object.effector_add(type="WIND", location=(3.0, -1.2, PRIMARY_BASE_Z + 1.8))
     wind_right = bpy.context.active_object
     wind_right.name = "WindRight"
     wind_right.rotation_euler = (math.radians(90), 0, math.radians(-20))
@@ -706,25 +717,31 @@ def create_physics_accents(parent=None):
             loc,
         )
 
-        accents.append({
-            "object": obj,
-            "anchor": anchor,
-            "constraint": constraint,
-            "base_location": obj.location.copy(),
-            "base_rotation": obj.rotation_euler.copy(),
-            "phase": random.uniform(0.0, math.tau),
-            "orbit_radius": radius,
-            "orbit_angle": angle,
-            "orbit_z_offset": z_offset,
-            "orbit_speed": random.uniform(PHYSICS_ATOM_ORBIT_SPEED_MIN, PHYSICS_ATOM_ORBIT_SPEED_MAX),
-            "orbit_tilt": random.uniform(-0.42, 0.42),
-            "micro_radius": random.uniform(PHYSICS_ATOM_MICRO_WOBBLE * 0.45, PHYSICS_ATOM_MICRO_WOBBLE * 1.25),
-            "band": ["low", "mid", "high", "beat", "onset"][i % 5],
-            "response": random.uniform(0.42, 1.0),
-            "emission_socket": emit_socket,
-            "mix_socket": mix_socket,
-            "material": mat,
-        })
+        accents.append(
+            {
+                "object": obj,
+                "anchor": anchor,
+                "constraint": constraint,
+                "base_location": obj.location.copy(),
+                "base_rotation": obj.rotation_euler.copy(),
+                "phase": random.uniform(0.0, math.tau),
+                "orbit_radius": radius,
+                "orbit_angle": angle,
+                "orbit_z_offset": z_offset,
+                "orbit_speed": random.uniform(
+                    PHYSICS_ATOM_ORBIT_SPEED_MIN, PHYSICS_ATOM_ORBIT_SPEED_MAX
+                ),
+                "orbit_tilt": random.uniform(-0.42, 0.42),
+                "micro_radius": random.uniform(
+                    PHYSICS_ATOM_MICRO_WOBBLE * 0.45, PHYSICS_ATOM_MICRO_WOBBLE * 1.25
+                ),
+                "band": ["low", "mid", "high", "beat", "onset"][i % 5],
+                "response": random.uniform(0.42, 1.0),
+                "emission_socket": emit_socket,
+                "mix_socket": mix_socket,
+                "material": mat,
+            }
+        )
 
     return {
         "accents": accents,

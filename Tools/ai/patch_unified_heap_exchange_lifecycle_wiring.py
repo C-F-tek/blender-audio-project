@@ -37,9 +37,7 @@ def detect_newline(text: str) -> str:
 
 
 def write_preserved(path: Path, text_lf: str, newline: str) -> None:
-    path.write_text(
-        text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig"
-    )
+    path.write_text(text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig")
 
 
 def run_parser(path: Path) -> tuple[bool, str]:
@@ -210,12 +208,9 @@ def insert_before_anchor(
             )
         ]
         raise RuntimeError(
-            "could not locate insertion anchor. Diagnostics:\n"
-            + "\n".join(diagnostics[:80])
+            "could not locate insertion anchor. Diagnostics:\n" + "\n".join(diagnostics[:80])
         )
-    new_lines = (
-        lines[:anchor_index] + ["", *block.splitlines(), ""] + lines[anchor_index:]
-    )
+    new_lines = lines[:anchor_index] + ["", *block.splitlines(), ""] + lines[anchor_index:]
     return "\n".join(new_lines) + "\n", True
 
 
@@ -311,15 +306,11 @@ def validate_policy(text_lf: str) -> list[str]:
     if entry_pos < 0 or exit_pos < 0 or lifecycle_pos < 0:
         errors.append("one or more lifecycle phase labels are missing after patch")
     if official_pos >= 0 and entry_pos > official_pos:
-        errors.append(
-            "heap/exchange entry must be before official/provider dynamic center"
-        )
+        errors.append("heap/exchange entry must be before official/provider dynamic center")
     if chain_pos >= 0 and exit_pos > chain_pos:
         errors.append("heap/exchange exit must be before unified chain contract")
     if chain_pos >= 0 and lifecycle_pos > chain_pos:
-        errors.append(
-            "heap/exchange lifecycle gate must be before unified chain contract"
-        )
+        errors.append("heap/exchange lifecycle gate must be before unified chain contract")
     if re.search(r"^\s*throw\s*$", text_lf, flags=re.MULTILINE):
         errors.append("naked throw remains in launcher")
     return errors
@@ -328,17 +319,13 @@ def validate_policy(text_lf: str) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1"
-    )
+    parser.add_argument("--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
     target = (repo / args.target).resolve()
-    backup_dir = (
-        repo / "output" / "validation" / "heap_exchange_lifecycle_wiring_backups"
-    )
+    backup_dir = repo / "output" / "validation" / "heap_exchange_lifecycle_wiring_backups"
     backup_dir.mkdir(parents=True, exist_ok=True)
 
     parser_ok, parser_output = run_parser(target)
@@ -363,9 +350,7 @@ def main() -> int:
         print(f"line_count={len(original_lf.splitlines())}")
         return 0
 
-    backup = (
-        backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
-    )
+    backup = backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
     shutil.copy2(target, backup)
     if args.dry_run:
         print("DRY_RUN")

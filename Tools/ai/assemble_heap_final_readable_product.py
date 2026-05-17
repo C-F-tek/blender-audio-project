@@ -12,20 +12,20 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.heap_final_readable_synthesis import render_markdown
     from tools.ai.heap_final_code_product import (
         code_product_items,
         render_full_code_product_markdown,
     )
+    from tools.ai.heap_final_readable_synthesis import render_markdown
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.heap_final_readable_synthesis import render_markdown  # type: ignore
     from tools.ai.heap_final_code_product import (  # type: ignore
         code_product_items,
         render_full_code_product_markdown,
     )
+    from tools.ai.heap_final_readable_synthesis import render_markdown  # type: ignore
 
 
 def now_iso() -> str:
@@ -121,9 +121,7 @@ def append_download_manifest(manifest_path: Path, paths: list[Path]) -> None:
     if not manifest_path:
         return
     try:
-        lines = manifest_path.read_text(
-            encoding="utf-8-sig", errors="replace"
-        ).splitlines()
+        lines = manifest_path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
     except Exception:
         lines = []
     existing = set(lines)
@@ -173,8 +171,12 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     )
     full_code_product = render_full_code_product_markdown(matrix, matrix_path)
     output = resolve_path(repo_root, args.output or run_dir / "heap_final_readable_product.json")
-    markdown_output = resolve_path(repo_root, args.markdown_output or run_dir / "heap_final_readable_product.md")
-    text_output = resolve_path(repo_root, args.text_output or run_dir / "heap_final_readable_product.txt")
+    markdown_output = resolve_path(
+        repo_root, args.markdown_output or run_dir / "heap_final_readable_product.md"
+    )
+    text_output = resolve_path(
+        repo_root, args.text_output or run_dir / "heap_final_readable_product.txt"
+    )
     full_code_product_output = run_dir / "CODE_PRODUCT_FULL_PATCH.md"
     write_text(markdown_output, markdown)
     write_text(text_output, markdown)

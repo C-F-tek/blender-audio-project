@@ -6,6 +6,7 @@ tool_requests can be converted into safe deterministic fallback requests through
 the existing runtime-tool guidance path, without executing providers, applying
 patches, running Blender or writing SQLite databases.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,7 +21,9 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.run_agent_gpu_deep_planning_review import extract_valid_tool_requests  # type: ignore
+    from Tools.ai.run_agent_gpu_deep_planning_review import (
+        extract_valid_tool_requests,  # type: ignore
+    )
 
 
 def write_text(path: Path, text: str) -> None:
@@ -60,9 +63,15 @@ def run_cases() -> tuple[list[dict[str, Any]], list[str]]:
 
     for name, parsed in fallback_inputs:
         requests, request_errors = extract_valid_tool_requests(parsed, max_requests=3)
-        ok = len(requests) == 3 and not request_errors and all(item.get("source") == "deterministic_fallback" for item in requests)
+        ok = (
+            len(requests) == 3
+            and not request_errors
+            and all(item.get("source") == "deterministic_fallback" for item in requests)
+        )
         if not ok:
-            errors.append(f"{name}: expected 3 deterministic fallback requests, got {len(requests)} errors={request_errors}")
+            errors.append(
+                f"{name}: expected 3 deterministic fallback requests, got {len(requests)} errors={request_errors}"
+            )
         cases.append(
             {
                 "name": name,
@@ -89,10 +98,18 @@ def run_cases() -> tuple[list[dict[str, Any]], list[str]]:
         "missing_evidence": [],
         "next_best_action": "execute requested tool",
     }
-    provider_requests, provider_errors = extract_valid_tool_requests(provider_request_input, max_requests=3)
-    provider_ok = len(provider_requests) == 1 and not provider_errors and provider_requests[0].get("source") != "deterministic_fallback"
+    provider_requests, provider_errors = extract_valid_tool_requests(
+        provider_request_input, max_requests=3
+    )
+    provider_ok = (
+        len(provider_requests) == 1
+        and not provider_errors
+        and provider_requests[0].get("source") != "deterministic_fallback"
+    )
     if not provider_ok:
-        errors.append("provider_valid_request: expected exactly one provider request and no deterministic fallback")
+        errors.append(
+            "provider_valid_request: expected exactly one provider request and no deterministic fallback"
+        )
     cases.append(
         {
             "name": "provider_valid_request",
@@ -124,7 +141,9 @@ def run_cases() -> tuple[list[dict[str, Any]], list[str]]:
         "missing_evidence": [],
         "next_best_action": "build patch plan",
     }
-    ready_requests, ready_errors = extract_valid_tool_requests(recommendation_ready_input, max_requests=3)
+    ready_requests, ready_errors = extract_valid_tool_requests(
+        recommendation_ready_input, max_requests=3
+    )
     ready_ok = not ready_requests and not ready_errors
     if not ready_ok:
         errors.append("recommendation_ready: expected no fallback when recommendation exists")
@@ -144,20 +163,34 @@ def run_cases() -> tuple[list[dict[str, Any]], list[str]]:
 
 def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Runtime Tool Guidance Fallback Smoke", ""]
-    for key in ["passed", "case_count", "failed_case_count", "provider_execution_performed", "patch_application_performed", "sqlite_write_performed", "persistent_memory_write_performed"]:
+    for key in [
+        "passed",
+        "case_count",
+        "failed_case_count",
+        "provider_execution_performed",
+        "patch_application_performed",
+        "sqlite_write_performed",
+        "persistent_memory_write_performed",
+    ]:
         lines.append(f"- `{key}`: `{report.get(key)}`")
     lines.append("")
     lines.append("## Cases")
     for case in report["cases"]:
-        lines.append(f"- `{case['name']}`: passed=`{case['passed']}` requests=`{case['request_count']}` tools=`{case['request_tools']}` sources=`{case['request_sources']}`")
+        lines.append(
+            f"- `{case['name']}`: passed=`{case['passed']}` requests=`{case['request_count']}` tools=`{case['request_tools']}` sources=`{case['request_sources']}`"
+        )
     return "\n".join(lines) + "\n"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/runtime_tool_guidance_fallback_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/runtime_tool_guidance_fallback_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/runtime_tool_guidance_fallback_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/runtime_tool_guidance_fallback_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -182,7 +215,19 @@ def main() -> int:
     markdown_output = repo_root / args.markdown_output
     write_json(output, report)
     write_text(markdown_output, render_markdown(report))
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown": str(markdown_output), "case_count": report["case_count"], "failed_case_count": report["failed_case_count"]}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown": str(markdown_output),
+                "case_count": report["case_count"],
+                "failed_case_count": report["failed_case_count"],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

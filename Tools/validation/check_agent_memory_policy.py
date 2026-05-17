@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate the generic agent memory retention and promotion policy."""
+
 from __future__ import annotations
 
 import argparse
@@ -90,7 +91,9 @@ def check_policy(repo_root: Path, memory_db: Path | None) -> dict[str, Any]:
             "risk_count": synthetic["risk_count"],
             "action_counts": synthetic["action_counts"],
         },
-        "actual": None if actual_report is None else {
+        "actual": None
+        if actual_report is None
+        else {
             "record_count": actual_report["record_count"],
             "promotion_candidate_count": actual_report["promotion_candidate_count"],
             "review_count": actual_report["review_count"],

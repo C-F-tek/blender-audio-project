@@ -109,9 +109,7 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
     return commands
 
 
-def build_serial_steps(
-    commands: dict[str, list[str]], track_slug: str
-) -> list[PipelineStep]:
+def build_serial_steps(commands: dict[str, list[str]], track_slug: str) -> list[PipelineStep]:
     """Build ordered CPU-side pipeline steps."""
     serial: list[PipelineStep] = []
     if "review_wave_entrypoints" in commands:
@@ -150,10 +148,7 @@ def build_serial_steps(
                 "build_smart_ai_context",
                 "CPU",
                 "Build hierarchical capsules and ranked smart context packet for central AI.",
-                [
-                    item.format(track_slug=track_slug)
-                    for item in EXPECTED_SMART_CONTEXT_ARTIFACTS
-                ],
+                [item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS],
                 commands["build_smart_ai_context"],
             )
         )

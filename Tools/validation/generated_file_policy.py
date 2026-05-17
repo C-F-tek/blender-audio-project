@@ -4,12 +4,14 @@ The module is intentionally generic. Domain-specific validators, such as a
 Blender generated-script policy, should define rules and feed text into this
 small policy engine instead of hard-coding unrelated checks everywhere.
 """
+
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Literal
+from typing import Literal
 
 Severity = Literal["error", "warning"]
 RuleKind = Literal["required", "forbidden"]
@@ -111,14 +113,18 @@ def evaluate_text(label: str, text: str, rules: Iterable[PolicyRule]) -> PolicyR
     findings: list[PolicyFinding] = []
     for rule in rules:
         matched = rule.matches(text)
-        violated = (rule.kind == "required" and not matched) or (rule.kind == "forbidden" and matched)
+        violated = (rule.kind == "required" and not matched) or (
+            rule.kind == "forbidden" and matched
+        )
         if not violated:
             continue
         if rule.kind == "required":
             message = f"Required pattern not found: {rule.description}"
         else:
             message = f"Forbidden pattern found: {rule.description}"
-        findings.append(PolicyFinding(rule_id=rule.rule_id, severity=rule.severity, message=message))
+        findings.append(
+            PolicyFinding(rule_id=rule.rule_id, severity=rule.severity, message=message)
+        )
     passed = not any(item.severity == "error" for item in findings)
     return PolicyResult(label=label, passed=passed, findings=findings)
 
@@ -170,7 +176,11 @@ def _matches_prefix(relative_path: str, prefixes: Iterable[str]) -> bool:
 def repo_relative_policy_path(repo_root: Path, artifact_path: Path) -> tuple[Path, str | None]:
     """Resolve an artifact destination and return its repo-relative path when possible."""
     root = repo_root.resolve()
-    resolved = (root / artifact_path).resolve() if not artifact_path.is_absolute() else artifact_path.resolve()
+    resolved = (
+        (root / artifact_path).resolve()
+        if not artifact_path.is_absolute()
+        else artifact_path.resolve()
+    )
     try:
         relative = resolved.relative_to(root).as_posix()
     except ValueError:
@@ -178,7 +188,9 @@ def repo_relative_policy_path(repo_root: Path, artifact_path: Path) -> tuple[Pat
     return resolved, relative
 
 
-def evaluate_generated_artifact_path(repo_root: Path, artifact_path: Path, policy: PathPolicy) -> PathPolicyResult:
+def evaluate_generated_artifact_path(
+    repo_root: Path, artifact_path: Path, policy: PathPolicy
+) -> PathPolicyResult:
     """Evaluate one generated artifact destination against a repository path policy."""
     resolved, relative = repo_relative_policy_path(repo_root, artifact_path)
     findings: list[PolicyFinding] = []
@@ -192,7 +204,9 @@ def evaluate_generated_artifact_path(repo_root: Path, artifact_path: Path, polic
                 message=f"Generated artifact path resolves outside the repository: {resolved}",
             )
         )
-    elif not _matches_exact(relative, policy.allowed_exact_paths) and not _matches_prefix(relative, policy.allowed_prefixes):
+    elif not _matches_exact(relative, policy.allowed_exact_paths) and not _matches_prefix(
+        relative, policy.allowed_prefixes
+    ):
         findings.append(
             PolicyFinding(
                 rule_id="path_not_allowed",
@@ -200,7 +214,11 @@ def evaluate_generated_artifact_path(repo_root: Path, artifact_path: Path, polic
                 message=f"Generated artifact path is not in an allowed destination: {relative}",
             )
         )
-    if relative and policy.max_repo_relative_path_chars and len(relative) > policy.max_repo_relative_path_chars:
+    if (
+        relative
+        and policy.max_repo_relative_path_chars
+        and len(relative) > policy.max_repo_relative_path_chars
+    ):
         findings.append(
             PolicyFinding(
                 rule_id="repo_relative_path_too_long",
@@ -208,7 +226,11 @@ def evaluate_generated_artifact_path(repo_root: Path, artifact_path: Path, polic
                 message=f"Generated artifact path is {len(relative)} chars; max allowed is {policy.max_repo_relative_path_chars}: {relative}",
             )
         )
-    if relative and policy.max_filename_chars and len(Path(relative).name) > policy.max_filename_chars:
+    if (
+        relative
+        and policy.max_filename_chars
+        and len(Path(relative).name) > policy.max_filename_chars
+    ):
         findings.append(
             PolicyFinding(
                 rule_id="filename_too_long",

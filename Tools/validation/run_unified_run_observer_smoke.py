@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
@@ -19,11 +19,21 @@ def main() -> int:
     observer_dir = repo_root / "output/validation/unified_run_observer_smoke_observer"
     observer_dir.mkdir(parents=True, exist_ok=True)
     (observer_dir / "progress.jsonl").write_text(
-        json.dumps({"kind": "unified_run_progress_event", "phase": "smoke", "status": "passed"}) + "\n",
+        json.dumps({"kind": "unified_run_progress_event", "phase": "smoke", "status": "passed"})
+        + "\n",
         encoding="utf-8",
     )
     (observer_dir / "ai_public_events.jsonl").write_text(
-        json.dumps({"kind": "ai_public_exchange_event", "speaker": "AI1", "event_type": "recommendation", "summary": "smoke public event", "raw_thinking_exposed": False}) + "\n",
+        json.dumps(
+            {
+                "kind": "ai_public_exchange_event",
+                "speaker": "AI1",
+                "event_type": "recommendation",
+                "summary": "smoke public event",
+                "raw_thinking_exposed": False,
+            }
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -59,11 +69,12 @@ def main() -> int:
     markdown = Path(args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    markdown.write_text(f"# Unified Run Observer Smoke\n\n- Passed: `{report['passed']}`\n", encoding="utf-8")
+    markdown.write_text(
+        f"# Unified Run Observer Smoke\n\n- Passed: `{report['passed']}`\n", encoding="utf-8"
+    )
     print(json.dumps({"passed": report["passed"], "output": str(output)}, indent=2))
     return 0 if report["passed"] else 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

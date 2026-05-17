@@ -72,9 +72,13 @@ def apply_system_theme(root) -> None:
     style.configure("TButton", padding=(9, 5))
     style.configure("TLabelframe.Label", font=("Segoe UI", 9, "bold"))
     style.configure("TNotebook.Tab", padding=(12, 5))
-    style.configure("Treeview", background=window, fieldbackground=window, foreground=text, rowheight=24)
+    style.configure(
+        "Treeview", background=window, fieldbackground=window, foreground=text, rowheight=24
+    )
     style.configure("Treeview.Heading", font=("Segoe UI", 9, "bold"))
-    style.map("Treeview", background=[("selected", highlight)], foreground=[("selected", highlight_text)])
+    style.map(
+        "Treeview", background=[("selected", highlight)], foreground=[("selected", highlight_text)]
+    )
 
 
 def text_widget_colors(root) -> dict[str, str]:

@@ -22,14 +22,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Task digest: `{input_info.get('task_digest')}`")
     lines.append(f"- Manual review required: `{report.get('manual_review_required')}`")
     telemetry = (
-        report.get("telemetry_quality")
-        if isinstance(report.get("telemetry_quality"), dict)
-        else {}
+        report.get("telemetry_quality") if isinstance(report.get("telemetry_quality"), dict) else {}
     )
     coverage = (
-        report.get("evidence_coverage")
-        if isinstance(report.get("evidence_coverage"), dict)
-        else {}
+        report.get("evidence_coverage") if isinstance(report.get("evidence_coverage"), dict) else {}
     )
     applicability = (
         report.get("patch_notes_applicability")
@@ -39,9 +35,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Telemetry quality score: `{telemetry.get('score')}`")
     lines.append(f"- Evidence coverage score: `{coverage.get('score')}`")
     lines.append(f"- Patch notes applicable: `{applicability.get('all_applicable')}`")
-    lines.append(
-        f"- Patch notes invalid count: `{applicability.get('invalid_note_count')}`"
-    )
+    lines.append(f"- Patch notes invalid count: `{applicability.get('invalid_note_count')}`")
     lines += ["", "## Request", "", str(report.get("normalized_objective") or "")]
     lines += ["", "## Patch Plan Summary", ""]
     summary = (
@@ -84,19 +78,13 @@ def render_markdown(report: dict[str, Any]) -> str:
     ):
         lines.append(f"- {key}: `{sufficiency.get(key)}`")
     lines.append(f"- requested_areas: `{sufficiency.get('requested_areas')}`")
-    lines.append(
-        f"- available_requested_areas: `{sufficiency.get('available_requested_areas')}`"
-    )
+    lines.append(f"- available_requested_areas: `{sufficiency.get('available_requested_areas')}`")
     lines.append(
         f"- unavailable_requested_areas: `{sufficiency.get('unavailable_requested_areas')}`"
     )
     lines.append(f"- actual_areas: `{sufficiency.get('actual_areas')}`")
-    lines.append(
-        f"- missing_available_areas: `{sufficiency.get('missing_available_areas')}`"
-    )
-    lines.append(
-        f"- insufficiency_reasons: `{sufficiency.get('insufficiency_reasons')}`"
-    )
+    lines.append(f"- missing_available_areas: `{sufficiency.get('missing_available_areas')}`")
+    lines.append(f"- insufficiency_reasons: `{sufficiency.get('insufficiency_reasons')}`")
     lines += ["", "## Generated Patch Notes", ""]
     for note in _items(report.get("patch_notes"), 20):
         lines.append(
@@ -115,9 +103,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     if report.get("fallback_path_notes"):
         lines += ["", "## Fallback Path Notes", ""]
         for note in _items(report.get("fallback_path_notes"), 20):
-            lines.append(
-                f"- `{note.get('reason')}` {note.get('recommended_followup', '')}"
-            )
+            lines.append(f"- `{note.get('reason')}` {note.get('recommended_followup', '')}")
     if report.get("success_cases"):
         lines += ["", "## Success Cases", ""]
         for case in _items(report.get("success_cases"), 20):

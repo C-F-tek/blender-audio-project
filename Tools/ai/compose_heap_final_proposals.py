@@ -28,6 +28,7 @@ if str(REPO_ROOT_FOR_IMPORT) not in sys.path:
 def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
 
+
 try:
     from Tools.ai.heap_proposal_gate import (
         build_operator_decision,
@@ -42,6 +43,7 @@ except ImportError:  # pragma: no cover
         load_allowlist,
         record_operator_decision,
     )
+
 
 def read_json(path: Path) -> dict[str, Any]:
     try:
@@ -63,11 +65,7 @@ def read_text(path: Path, limit: int | None = None) -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -155,8 +153,7 @@ def discover_run_dir(repo_root: Path, report_file: str, run_dir: str) -> Path:
         [
             path
             for path in validation.glob("*")
-            if path.is_dir()
-            and (path / "heap_runtime_completeness_gate_report.json").exists()
+            if path.is_dir() and (path / "heap_runtime_completeness_gate_report.json").exists()
         ],
         key=lambda path: path.stat().st_mtime,
         reverse=True,
@@ -173,9 +170,7 @@ def documents_root(custom_root: str, stamp: str) -> Path:
 
 def load_startup_manifest(run_dir: Path) -> dict[str, Any]:
     return read_json(
-        run_dir
-        / "startup_context_memory_reload"
-        / "heap_context_memory_reload_manifest.json"
+        run_dir / "startup_context_memory_reload" / "heap_context_memory_reload_manifest.json"
     )
 
 
@@ -191,9 +186,7 @@ def append_artifact_ref(refs: list[str], value: Any) -> None:
         refs.append(normalized)
 
 
-def startup_artifact_refs(
-    startup_manifest: dict[str, Any], report: dict[str, Any]
-) -> list[str]:
+def startup_artifact_refs(startup_manifest: dict[str, Any], report: dict[str, Any]) -> list[str]:
     refs: list[str] = []
     artifacts = (
         startup_manifest.get("artifacts")
@@ -246,9 +239,7 @@ def compute_product_causality(
         if isinstance(report.get("real_run_output_contract"), dict)
         else {}
     )
-    product_status = metrics.get("product_status") or output_contract.get(
-        "product_status"
-    )
+    product_status = metrics.get("product_status") or output_contract.get("product_status")
     startup_contract = (
         startup_manifest.get("contract")
         if isinstance(startup_manifest.get("contract"), dict)
@@ -284,13 +275,9 @@ def compute_product_causality(
     if startup_manifest and not artifact_refs:
         failed_reasons.append("startup/context artifact refs are empty")
     if product_status == "ready" and not provider_execution:
-        failed_reasons.append(
-            "product_status=ready without provider execution evidence"
-        )
+        failed_reasons.append("product_status=ready without provider execution evidence")
     if product_status == "ready" and proposal_count == 0:
-        failed_reasons.append(
-            "product_status=ready without proposal iteration artifacts"
-        )
+        failed_reasons.append("product_status=ready without proposal iteration artifacts")
     if not startup_manifest:
         unknown_reasons.append("startup manifest missing")
     if not report:
@@ -343,9 +330,7 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
             else {}
         )
         progress = (
-            data.get("proposal_progress")
-            if isinstance(data.get("proposal_progress"), dict)
-            else {}
+            data.get("proposal_progress") if isinstance(data.get("proposal_progress"), dict) else {}
         )
         quality_errors = []
         for source in (impl, progress):
@@ -371,15 +356,11 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
                 ),
                 "implementation_quality": impl,
                 "proposal_progress": progress,
-                "response_file_reference_quality": data.get(
-                    "response_file_reference_quality", {}
-                ),
+                "response_file_reference_quality": data.get("response_file_reference_quality", {}),
                 "gpu0_review": data.get("gpu0_review", []),
                 "npu_micro_task_piece": data.get("npu_micro_task_piece", []),
                 "npu_workload_audit": data.get("npu_workload_audit", {}),
-                "anchored_source_candidates": data.get(
-                    "anchored_source_candidates", []
-                ),
+                "anchored_source_candidates": data.get("anchored_source_candidates", []),
                 "response_text": data.get("response_text", ""),
             }
         )
@@ -406,9 +387,7 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
                 "kind": data.get("kind") or data.get("report_kind"),
                 "lane": lane,
                 "passed": data.get("passed"),
-                "provider_execution_performed": provider_report_execution_performed(
-                    data
-                ),
+                "provider_execution_performed": provider_report_execution_performed(data),
                 "response_text": data.get("response_text", ""),
                 "npu_device_workload": data.get("npu_device_workload"),
                 "warnings": data.get("warnings", []),
@@ -516,9 +495,7 @@ def collect_gpu0_reviews(
                         else str(provider.get("path") or "")
                     ),
                     "passed": provider.get("passed"),
-                    "provider_execution_performed": provider.get(
-                        "provider_execution_performed"
-                    ),
+                    "provider_execution_performed": provider.get("provider_execution_performed"),
                     "summary": str(provider.get("response_text") or "")[:1200],
                     "warnings": provider.get("warnings") or [],
                 }
@@ -549,9 +526,7 @@ def collect_npu_audits(
                 {
                     "source": str(provider.get("path") or ""),
                     "passed": provider.get("passed"),
-                    "provider_execution_performed": provider.get(
-                        "provider_execution_performed"
-                    ),
+                    "provider_execution_performed": provider.get("provider_execution_performed"),
                     "npu_device_workload": provider.get("npu_device_workload"),
                     "warnings": provider.get("warnings") or [],
                 }
@@ -595,9 +570,7 @@ def build_action_list(
     return list(dict.fromkeys(actions))
 
 
-def render_startup_section(
-    repo_root: Path, startup_manifest: dict[str, Any]
-) -> list[str]:
+def render_startup_section(repo_root: Path, startup_manifest: dict[str, Any]) -> list[str]:
     if not startup_manifest:
         return ["## Startup preload manifest", "", "- No startup manifest found.", ""]
     artifacts = (
@@ -757,9 +730,7 @@ def render_markdown(
 
     lines.extend(["## NPU workload/audit pieces", ""])
     if not npu_audits:
-        lines.append(
-            "- Nessun audit/workload NPU trovato nei proposal/provider report."
-        )
+        lines.append("- Nessun audit/workload NPU trovato nei proposal/provider report.")
     for audit in npu_audits:
         lines.extend(
             [
@@ -774,9 +745,7 @@ def render_markdown(
     lines.extend(["## Provider reports", ""])
     for provider in provider_reports:
         rel = (
-            repo_rel(repo_root, provider["path"])
-            if isinstance(provider.get("path"), Path)
-            else ""
+            repo_rel(repo_root, provider["path"]) if isinstance(provider.get("path"), Path) else ""
         )
         workload = (
             provider.get("npu_device_workload")
@@ -906,9 +875,7 @@ def write_documents_package(
             proposal_chunk_outputs.append(str(target))
         txt_name = f"{Path(str(proposal.get('name') or 'proposal')).stem}.txt"
         txt_target = chunk_txt_dir / txt_name
-        txt_target.write_text(
-            proposal_text_for_review(proposal, None), encoding="utf-8"
-        )
+        txt_target.write_text(proposal_text_for_review(proposal, None), encoding="utf-8")
         written.append(str(txt_target))
         proposal_txt_outputs.append(str(txt_target))
 
@@ -973,9 +940,7 @@ def main() -> int:
 
     raw_proposals = list_proposals(run_dir)
     try:
-        similarity_threshold = float(
-            os.getenv("PROPOSAL_SIMILARITY_THRESHOLD", "0.95")
-        )
+        similarity_threshold = float(os.getenv("PROPOSAL_SIMILARITY_THRESHOLD", "0.95"))
     except ValueError:
         similarity_threshold = 0.95
     allowlist_path = os.getenv("PROPOSAL_ALLOWLIST_PATH", "config/allowlist.json")
@@ -1031,9 +996,7 @@ def main() -> int:
         "run_dir": repo_rel(repo_root, run_dir),
         "report_file": repo_rel(repo_root, report_file),
         "startup_manifest": startup_manifest,
-        "startup_reload_degraded": bool(
-            startup_manifest.get("startup_reload_degraded")
-        ),
+        "startup_reload_degraded": bool(startup_manifest.get("startup_reload_degraded")),
         "proposal_count": len(proposals),
         "accepted_proposal_count": len(accepted),
         "rejected_proposal_count": len(rejected),
@@ -1045,9 +1008,7 @@ def main() -> int:
         "action_list": action_list,
         "product_status": (report.get("metrics") or {}).get("product_status")
         or (report.get("real_run_output_contract") or {}).get("product_status"),
-        "quality_output_passed": (report.get("metrics") or {}).get(
-            "quality_output_passed"
-        ),
+        "quality_output_passed": (report.get("metrics") or {}).get("quality_output_passed"),
         "operator_decision": operator_decision,
         "product_causality": product_causality,
         "product_causality_status": product_causality.get("product_causality_status"),
@@ -1075,24 +1036,19 @@ def main() -> int:
         ],
         "accepted_proposals": [item.get("name") for item in accepted],
         "rejected_proposals": [
-            {"name": item.get("name"), "reason": item.get("reject_reason")}
-            for item in rejected
+            {"name": item.get("name"), "reason": item.get("reject_reason")} for item in rejected
         ],
         "gpu0_reviews": gpu0_reviews,
         "npu_audits": npu_audits,
         "provider_reports": [
             {
                 "path": (
-                    repo_rel(repo_root, item["path"])
-                    if isinstance(item.get("path"), Path)
-                    else ""
+                    repo_rel(repo_root, item["path"]) if isinstance(item.get("path"), Path) else ""
                 ),
                 "kind": item.get("kind"),
                 "lane": item.get("lane"),
                 "passed": item.get("passed"),
-                "provider_execution_performed": item.get(
-                    "provider_execution_performed"
-                ),
+                "provider_execution_performed": item.get("provider_execution_performed"),
                 "npu_device_workload": item.get("npu_device_workload"),
                 "errors": item.get("errors"),
                 "warnings": item.get("warnings"),

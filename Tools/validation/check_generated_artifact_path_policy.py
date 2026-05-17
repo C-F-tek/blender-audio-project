@@ -5,6 +5,7 @@ This validator is intentionally input-agnostic and output-application-agnostic.
 It checks where generated files may be written, not what source data produced
 them and not which runtime will consume them.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,7 +24,10 @@ except ImportError:  # Allows direct execution from Tools/validation.
     repo_root = Path(__file__).resolve().parents[2]
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.validation.generated_file_policy import PathPolicy, evaluate_generated_artifact_paths  # type: ignore
+    from Tools.validation.generated_file_policy import (  # type: ignore
+        PathPolicy,
+        evaluate_generated_artifact_paths,
+    )
 
 
 DEFAULT_ALLOWED_PREFIXES: tuple[str, ...] = (
@@ -79,7 +83,11 @@ def collect_artifact_paths_from_report(value: Any) -> list[str]:
     def walk(node: Any, key: str | None = None) -> None:
         if isinstance(node, dict):
             for child_key, child_value in node.items():
-                if child_key in ARTIFACT_PATH_KEYS and isinstance(child_value, str) and looks_like_artifact_path(child_value):
+                if (
+                    child_key in ARTIFACT_PATH_KEYS
+                    and isinstance(child_value, str)
+                    and looks_like_artifact_path(child_value)
+                ):
                     paths.append(child_value)
                 else:
                     walk(child_value, child_key)
@@ -93,7 +101,9 @@ def collect_artifact_paths_from_report(value: Any) -> list[str]:
     return list(dict.fromkeys(paths))
 
 
-def collect_artifact_paths_from_reports(repo_root: Path, report_paths: list[str]) -> tuple[list[str], list[dict[str, Any]], list[str]]:
+def collect_artifact_paths_from_reports(
+    repo_root: Path, report_paths: list[str]
+) -> tuple[list[str], list[dict[str, Any]], list[str]]:
     """Load JSON reports and return collected artifact paths plus metadata."""
     collected: list[str] = []
     reports: list[dict[str, Any]] = []
@@ -110,7 +120,9 @@ def collect_artifact_paths_from_reports(repo_root: Path, report_paths: list[str]
         try:
             payload = load_json_report(report_path)
         except Exception as exc:
-            errors.append(f"artifact report parse failed: {report_path}: {type(exc).__name__}: {exc}")
+            errors.append(
+                f"artifact report parse failed: {report_path}: {type(exc).__name__}: {exc}"
+            )
             reports.append({"path": str(report_path), "exists": True, "path_count": 0})
             continue
         paths = collect_artifact_paths_from_report(payload)
@@ -131,7 +143,9 @@ def sample_results(repo_root: Path, policy: PathPolicy) -> list[dict[str, Any]]:
         "blocked_workflow_source": (".github/workflows/apply_repo_mods.yml", False),
         "blocked_outside_repo": ("../generated_outside_repo.txt", False),
     }
-    results = evaluate_generated_artifact_paths(repo_root, [Path(value) for value, _ in samples.values()], policy)
+    results = evaluate_generated_artifact_paths(
+        repo_root, [Path(value) for value, _ in samples.values()], policy
+    )
     rendered: list[dict[str, Any]] = []
     for result, (label, (_, expected)) in zip(results, samples.items(), strict=True):
         data = result.to_dict()
@@ -151,7 +165,9 @@ def build_policy(
     """Build an active policy from defaults plus optional CLI additions."""
     return PathPolicy(
         allowed_prefixes=tuple(dict.fromkeys([*DEFAULT_ALLOWED_PREFIXES, *allowed_prefixes])),
-        allowed_exact_paths=tuple(dict.fromkeys([*DEFAULT_ALLOWED_EXACT_PATHS, *allowed_exact_paths])),
+        allowed_exact_paths=tuple(
+            dict.fromkeys([*DEFAULT_ALLOWED_EXACT_PATHS, *allowed_exact_paths])
+        ),
         max_repo_relative_path_chars=max_repo_relative_path_chars,
         max_filename_chars=max_filename_chars,
     )
@@ -167,16 +183,26 @@ def check_policy(
     max_filename_chars: int | None,
 ) -> dict[str, Any]:
     """Evaluate sample and explicit generated artifact destinations."""
-    policy = build_policy(allowed_prefixes, allowed_exact_paths, max_repo_relative_path_chars, max_filename_chars)
+    policy = build_policy(
+        allowed_prefixes, allowed_exact_paths, max_repo_relative_path_chars, max_filename_chars
+    )
     samples = sample_results(repo_root, policy)
-    report_paths, report_inputs, report_errors = collect_artifact_paths_from_reports(repo_root, artifact_reports)
+    report_paths, report_inputs, report_errors = collect_artifact_paths_from_reports(
+        repo_root, artifact_reports
+    )
     explicit_paths = [Path(item) for item in [*paths, *report_paths]]
-    path_results = evaluate_generated_artifact_paths(repo_root, explicit_paths, policy) if explicit_paths else []
+    path_results = (
+        evaluate_generated_artifact_paths(repo_root, explicit_paths, policy)
+        if explicit_paths
+        else []
+    )
 
     errors = list(report_errors)
     for item in samples:
         if not item["sample_passed"]:
-            errors.append(f"sample {item['label']} expected passed={item['expected_passed']}, got {item['passed']}")
+            errors.append(
+                f"sample {item['label']} expected passed={item['expected_passed']}, got {item['passed']}"
+            )
     for item in path_results:
         if not item.passed:
             errors.append(f"path policy failed: {item.label}")
@@ -199,10 +225,10 @@ def check_policy(
         "path_results": [item.to_dict() for item in path_results],
         "notes": [
             "This validator checks generated artifact destinations, not input domains or output applications.",
-        "Use --path for proposed generated files before writing or committing them.",
-        "Use --allowed-prefix or --allowed-exact-path for deliberate workflow-specific extensions.",
-        "Use --max-repo-relative-path-chars and --max-filename-chars to catch bundle names that may fail Windows/Git push workflows.",
-    ],
+            "Use --path for proposed generated files before writing or committing them.",
+            "Use --allowed-prefix or --allowed-exact-path for deliberate workflow-specific extensions.",
+            "Use --max-repo-relative-path-chars and --max-filename-chars to catch bundle names that may fail Windows/Git push workflows.",
+        ],
     }
 
 
@@ -229,10 +255,30 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--path", action="append", default=[], help="Generated artifact destination path to validate. Can be repeated.")
-    parser.add_argument("--artifact-report", action="append", default=[], help="JSON report to scan for generated artifact destination fields. Can be repeated.")
-    parser.add_argument("--allowed-prefix", action="append", default=[], help="Additional allowed repo-relative prefix.")
-    parser.add_argument("--allowed-exact-path", action="append", default=[], help="Additional allowed repo-relative exact path.")
+    parser.add_argument(
+        "--path",
+        action="append",
+        default=[],
+        help="Generated artifact destination path to validate. Can be repeated.",
+    )
+    parser.add_argument(
+        "--artifact-report",
+        action="append",
+        default=[],
+        help="JSON report to scan for generated artifact destination fields. Can be repeated.",
+    )
+    parser.add_argument(
+        "--allowed-prefix",
+        action="append",
+        default=[],
+        help="Additional allowed repo-relative prefix.",
+    )
+    parser.add_argument(
+        "--allowed-exact-path",
+        action="append",
+        default=[],
+        help="Additional allowed repo-relative exact path.",
+    )
     parser.add_argument("--max-repo-relative-path-chars", type=int, default=None)
     parser.add_argument("--max-filename-chars", type=int, default=None)
     parser.add_argument("--output", help="Optional JSON report path.")

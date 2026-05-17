@@ -7,6 +7,7 @@ probe must prove that the requested live lanes executed and passed. This avoids
 falling through to metadata-only proposal products when Ollama/provider lanes
 silently degrade.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,7 +19,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str]:
@@ -166,8 +171,12 @@ def main() -> int:
     parser.add_argument("--model", default="")
     parser.add_argument("--require-ollama", action="store_true")
     parser.add_argument("--require-npu", action="store_true")
-    parser.add_argument("--output", default="output/validation/real_product_live_provider_gate.json")
-    parser.add_argument("--markdown-output", default="output/validation/real_product_live_provider_gate.md")
+    parser.add_argument(
+        "--output", default="output/validation/real_product_live_provider_gate.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/real_product_live_provider_gate.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()

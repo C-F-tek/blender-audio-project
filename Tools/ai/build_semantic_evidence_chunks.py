@@ -273,7 +273,7 @@ def build_chunk_from_sections(sections: list[dict[str, Any]]) -> dict[str, Any]:
     start = min(int(item["line_start"]) for item in sections)
     end = max(int(item["line_end"]) for item in sections)
     titles = [str(item.get("title") or "") for item in sections if item.get("title")]
-    kinds = sorted(set(str(item.get("kind") or "section") for item in sections))
+    kinds = sorted({str(item.get("kind") or "section") for item in sections})
     return {
         "line_start": start,
         "line_end": end,
@@ -377,9 +377,7 @@ def render_chunk_file(
     ]
     if context_before:
         lines.extend(["## Context before", "", context_before, ""])
-    lines.extend(
-        ["## Chunk content", "", f"{fence}{language_hint}", content, fence, ""]
-    )
+    lines.extend(["## Chunk content", "", f"{fence}{language_hint}", content, fence, ""])
     if context_after:
         lines.extend(["## Context after", "", context_after, ""])
     return "\n".join(lines)
@@ -425,13 +423,9 @@ def chunk_one_source(
         context_before = (
             section_text(lines, before_start, start - 1) if before_start < start else ""
         )
-        context_after = (
-            section_text(lines, end + 1, after_end) if end < after_end else ""
-        )
+        context_after = section_text(lines, end + 1, after_end) if end < after_end else ""
         summary_source = "deterministic"
-        summary = deterministic_summary(
-            content, list(chunk.get("section_titles") or [])
-        )
+        summary = deterministic_summary(content, list(chunk.get("section_titles") or []))
         ollama_elapsed = 0.0
         ollama_error = None
         if not args.no_ollama:
@@ -448,9 +442,7 @@ def chunk_one_source(
                 summary = generated
                 summary_source = "ollama"
             elif ollama_error:
-                warnings.append(
-                    f"{rel} chunk {idx}: Ollama summary fallback used: {ollama_error}"
-                )
+                warnings.append(f"{rel} chunk {idx}: Ollama summary fallback used: {ollama_error}")
         previous_file = pending_files[idx - 2] if idx > 1 else None
         next_file = pending_files[idx] if idx < len(pending_files) else None
         chunk_file = chunk_dir / f"{source_slug}_chunk_{idx:04d}.md"
@@ -554,9 +546,7 @@ def main() -> int:
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--chunk-output-dir", default="")
     parser.add_argument("--chunk-max-chars", type=int, default=DEFAULT_CHUNK_MAX_CHARS)
-    parser.add_argument(
-        "--chunk-overlap-lines", type=int, default=DEFAULT_CHUNK_OVERLAP_LINES
-    )
+    parser.add_argument("--chunk-overlap-lines", type=int, default=DEFAULT_CHUNK_OVERLAP_LINES)
     parser.add_argument(
         "--no-ollama",
         action="store_true",
@@ -599,16 +589,10 @@ def main() -> int:
             continue
         sources.append(chunk_one_source(args, repo_root, path, chunk_dir, warnings))
 
-    chunk_files = [
-        chunk["chunk_file"] for source in sources for chunk in source.get("chunks", [])
-    ]
-    duplicated_chunk_files = sorted(
-        {path for path in chunk_files if chunk_files.count(path) > 1}
-    )
+    chunk_files = [chunk["chunk_file"] for source in sources for chunk in source.get("chunks", [])]
+    duplicated_chunk_files = sorted({path for path in chunk_files if chunk_files.count(path) > 1})
     if duplicated_chunk_files:
-        errors.append(
-            f"duplicate chunk_file paths detected: {duplicated_chunk_files[:20]}"
-        )
+        errors.append(f"duplicate chunk_file paths detected: {duplicated_chunk_files[:20]}")
     report = {
         "schema_version": 1,
         "kind": "semantic_evidence_chunk_manifest",

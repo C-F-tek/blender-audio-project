@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
 import argparse
 import hashlib
 import json
 import math
 import statistics
 from datetime import datetime
+from pathlib import Path
 
 from ai_memory_context import build_ai_memory_context
-
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / "output"
@@ -21,7 +20,9 @@ DEFAULT_ANALYSIS = OUTPUT_DIR / f"{DEFAULT_TRACK_STEM}_analysis.json"
 DEFAULT_TRACK_SUMMARY = OUTPUT_DIR / f"{DEFAULT_TRACK_STEM}_track_summary.json"
 DEFAULT_COMPACT_JSON = OUTPUT_DIR / f"{DEFAULT_TRACK_STEM}_music_context.json"
 DEFAULT_ANALYSIS_AI_CONTEXT = OUTPUT_DIR / f"{DEFAULT_TRACK_STEM}_analysis_ai_context.json"
-DEFAULT_BLENDER_KEYFRAMES_JSON = OUTPUT_DIR / f"{DEFAULT_TRACK_STEM}_analysis_blender_keyframes.json"
+DEFAULT_BLENDER_KEYFRAMES_JSON = (
+    OUTPUT_DIR / f"{DEFAULT_TRACK_STEM}_analysis_blender_keyframes.json"
+)
 OUT_MD = OUT_DIR / "npu_music_context.md"
 OUT_JSON = OUT_DIR / "npu_music_manifest.json"
 
@@ -54,7 +55,7 @@ def read_text(path: Path) -> str:
 
 
 def load_json(path: Path) -> dict:
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, encoding="utf-8") as handle:
         return json.load(handle)
 
 
@@ -168,7 +169,9 @@ def control_suggestions(stats: dict, beat_count: int) -> dict:
         "hero_deformation": round_float(stats["low"]["p90"] * 0.55 + stats["onset"]["p90"] * 0.20),
         "material_shimmer": round_float(stats["mid"]["p90"] * 0.45 + stats["high"]["p90"] * 0.35),
         "fog_motion": round_float(stats["low"]["avg"] * 0.35 + stats["mid"]["avg"] * 0.25),
-        "accent_emission": round_float(stats["high"]["p90"] * 0.65 + min(1.0, beat_count / 32.0) * 0.20),
+        "accent_emission": round_float(
+            stats["high"]["p90"] * 0.65 + min(1.0, beat_count / 32.0) * 0.20
+        ),
         "camera_pressure": round_float(stats["onset"]["p98"] * 0.28 + stats["beat"]["avg"] * 0.12),
     }
 
@@ -240,7 +243,9 @@ def build_segments(analysis: dict, segment_seconds: float) -> list[dict]:
     meta = analysis.get("meta", {})
     frames = analysis.get("frames", [])
     beats = [round_float(beat, 8) for beat in analysis.get("beats", [])]
-    duration = round_float(meta.get("duration_sec") or (frames[-1].get("time", 0.0) if frames else 0.0), 8)
+    duration = round_float(
+        meta.get("duration_sec") or (frames[-1].get("time", 0.0) if frames else 0.0), 8
+    )
 
     segments = []
     for index, segment_frames in enumerate(split_segments(frames, segment_seconds, duration), 1):
@@ -279,7 +284,9 @@ def summarize_analysis(analysis_path: Path, segment_seconds: float) -> tuple[dic
     segments = build_segments(analysis, segment_seconds)
 
     top_by_energy = sorted(segments, key=lambda item: item["intensity_score"], reverse=True)[:8]
-    top_by_onset = sorted(segments, key=lambda item: item["stats"]["onset"]["p98"], reverse=True)[:8]
+    top_by_onset = sorted(segments, key=lambda item: item["stats"]["onset"]["p98"], reverse=True)[
+        :8
+    ]
 
     summary = {
         "source": rel_to_root(analysis_path),
@@ -338,9 +345,7 @@ def scene_summary_from_json(path: Path, data: dict) -> dict:
         "audio_mapping_count": len(audio_mapping) if isinstance(audio_mapping, list) else 0,
         "node_animation_count": len(node_animation) if isinstance(node_animation, list) else 0,
         "object_names": [
-            item.get("name")
-            for item in objects
-            if isinstance(item, dict) and item.get("name")
+            item.get("name") for item in objects if isinstance(item, dict) and item.get("name")
         ][:30],
         "audio_targets": [
             f"{item.get('target')}:{item.get('property')}:{item.get('band')}"
@@ -420,7 +425,11 @@ def write_music_chunks(context: dict, scene_records: list[dict]) -> list[dict]:
         {
             "index": chunk_index,
             "kind": "overview",
-            **write_chunk(chunk_path, "NPU Music Overview", f"```json\n{json.dumps(overview, indent=2, ensure_ascii=False)}\n```"),
+            **write_chunk(
+                chunk_path,
+                "NPU Music Overview",
+                f"```json\n{json.dumps(overview, indent=2, ensure_ascii=False)}\n```",
+            ),
         }
     )
     chunk_index += 1
@@ -430,11 +439,7 @@ def write_music_chunks(context: dict, scene_records: list[dict]) -> list[dict]:
             segment.get("sampled_frames", []),
             ["time", "low", "mid", "high", "onset", "beat"],
         )
-        payload = {
-            key: value
-            for key, value in segment.items()
-            if key not in {"sampled_frames"}
-        }
+        payload = {key: value for key, value in segment.items() if key not in {"sampled_frames"}}
         body = [
             "## Segment Summary\n",
             f"```json\n{json.dumps(payload, indent=2, ensure_ascii=False)}\n```\n",
@@ -449,7 +454,9 @@ def write_music_chunks(context: dict, scene_records: list[dict]) -> list[dict]:
                 "segment_index": segment["index"],
                 "start_sec": segment["start_sec"],
                 "end_sec": segment["end_sec"],
-                **write_chunk(chunk_path, f"NPU Audio Segment {segment['index']:03d}", "\n\n".join(body)),
+                **write_chunk(
+                    chunk_path, f"NPU Audio Segment {segment['index']:03d}", "\n\n".join(body)
+                ),
             }
         )
         chunk_index += 1
@@ -590,8 +597,12 @@ def build_music_context(
     analysis_path = Path(analysis_path or DEFAULT_ANALYSIS).resolve()
     track_summary_path = Path(track_summary_path or DEFAULT_TRACK_SUMMARY).resolve()
     compact_json_path = Path(compact_json_path or DEFAULT_COMPACT_JSON).resolve()
-    analysis_ai_context_path = Path(analysis_ai_context_path or DEFAULT_ANALYSIS_AI_CONTEXT).resolve()
-    blender_keyframes_path = Path(blender_keyframes_path or DEFAULT_BLENDER_KEYFRAMES_JSON).resolve()
+    analysis_ai_context_path = Path(
+        analysis_ai_context_path or DEFAULT_ANALYSIS_AI_CONTEXT
+    ).resolve()
+    blender_keyframes_path = Path(
+        blender_keyframes_path or DEFAULT_BLENDER_KEYFRAMES_JSON
+    ).resolve()
     scene_files = scene_files or DEFAULT_SCENE_FILES
 
     if not analysis_path.exists():
@@ -606,7 +617,8 @@ def build_music_context(
         "analysis_summary": analysis_summary,
         "track_summary": track_summary,
         "ai_memory_context": build_ai_memory_context(
-            track_stem=analysis_summary.get("track_name") or analysis_path.stem.replace("_analysis", ""),
+            track_stem=analysis_summary.get("track_name")
+            or analysis_path.stem.replace("_analysis", ""),
             output_dir=compact_json_path.parent,
         ),
         "scene_summaries": [record["summary"] for record in scene_records],
@@ -622,7 +634,9 @@ def build_music_context(
         "analysis_json": rel_to_root(analysis_path),
         "blender_keyframes_json": rel_to_root(blender_keyframes_path),
         "analysis_ai_context_json": rel_to_root(analysis_ai_context_path),
-        "track_summary_json": rel_to_root(track_summary_path) if track_summary_path.exists() else None,
+        "track_summary_json": rel_to_root(track_summary_path)
+        if track_summary_path.exists()
+        else None,
         "compact_json": rel_to_root(compact_json_path),
         "ai_memory_context": context.get("ai_memory_context"),
         "context_md": rel_to_root(OUT_MD),
@@ -645,7 +659,9 @@ def build_music_context(
 
     OUT_JSON.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     compact_json_path.parent.mkdir(parents=True, exist_ok=True)
-    compact_json_path.write_text(json.dumps(context, indent=2, ensure_ascii=False), encoding="utf-8")
+    compact_json_path.write_text(
+        json.dumps(context, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     analysis_ai_context_path.parent.mkdir(parents=True, exist_ok=True)
     analysis_ai_context_path.write_text(
         json.dumps(build_analysis_ai_context(context), indent=2, ensure_ascii=False),
@@ -663,18 +679,24 @@ def build_music_context(
             )
         except Exception as exc:
             manifest["ollama_error"] = str(exc)
-            OUT_JSON.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+            OUT_JSON.write_text(
+                json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
             print(f"[WARN] Ollama music agent non eseguito: {exc}")
         else:
             manifest["ollama_music_insights_json"] = rel_to_root(ollama_result["out_json"])
             manifest["ollama_music_insights_md"] = rel_to_root(ollama_result["out_md"])
-            OUT_JSON.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+            OUT_JSON.write_text(
+                json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
 
     return manifest
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build long-context music data files for the local NPU agent.")
+    parser = argparse.ArgumentParser(
+        description="Build long-context music data files for the local NPU agent."
+    )
     parser.add_argument("--analysis", default=str(DEFAULT_ANALYSIS))
     parser.add_argument("--track-summary", default=str(DEFAULT_TRACK_SUMMARY))
     parser.add_argument("--compact-json", default=str(DEFAULT_COMPACT_JSON))

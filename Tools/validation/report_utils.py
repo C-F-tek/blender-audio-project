@@ -1,9 +1,11 @@
 """Shared helpers for lightweight validation reports."""
+
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 
 def resolve_output_path(repo_root: Path, output_arg: str) -> Path:
@@ -23,7 +25,9 @@ def write_json_report(report: dict[str, Any], output: Path | None = None) -> str
     return text
 
 
-def failed_result_errors(results: Iterable[dict[str, Any]], *, label_key: str = "path") -> list[str]:
+def failed_result_errors(
+    results: Iterable[dict[str, Any]], *, label_key: str = "path"
+) -> list[str]:
     """Build compact root-level error strings from result entries with ok=false."""
     errors: list[str] = []
     for item in results:
@@ -35,7 +39,9 @@ def failed_result_errors(results: Iterable[dict[str, Any]], *, label_key: str = 
     return errors
 
 
-def warning_result_messages(results: Iterable[dict[str, Any]], *, label_key: str = "path") -> list[str]:
+def warning_result_messages(
+    results: Iterable[dict[str, Any]], *, label_key: str = "path"
+) -> list[str]:
     """Build compact root-level warning strings from result entries exposing warnings."""
     warnings: list[str] = []
     for item in results:
@@ -48,6 +54,7 @@ def warning_result_messages(results: Iterable[dict[str, Any]], *, label_key: str
         else:
             warnings.append(f"{label}: {raw}")
     return warnings
+
 
 def read_json_report(path: Path, *, default: dict[str, Any] | None = None) -> dict[str, Any]:
     """Read a JSON report object, returning a safe default on missing/invalid input."""
@@ -142,7 +149,11 @@ def line_count_for_path(path_value: str, counts: dict[str, int]) -> int | None:
     normalized = _normalize_line_count_path(path_value)
     if normalized in counts:
         return counts[normalized]
-    matches = [lines for path, lines in counts.items() if _normalize_line_count_path(path).endswith(normalized)]
+    matches = [
+        lines
+        for path, lines in counts.items()
+        if _normalize_line_count_path(path).endswith(normalized)
+    ]
     return matches[0] if len(matches) == 1 else None
 
 
@@ -157,7 +168,9 @@ def load_line_count_csv_rows(csv_path: Path) -> list[dict[str, str]]:
     return sorted(rows, key=lambda item: int(item.get("Lines") or 0), reverse=True)
 
 
-def render_full_python_line_count_markdown(*, stamp: str, csv_path: Path, rows: list[dict[str, str]]) -> str:
+def render_full_python_line_count_markdown(
+    *, stamp: str, csv_path: Path, rows: list[dict[str, str]]
+) -> str:
     """Render an untruncated Markdown inventory from line-count CSV rows."""
     total_lines = sum(int(row.get("Lines") or 0) for row in rows)
     lines: list[str] = [
@@ -177,7 +190,9 @@ def render_full_python_line_count_markdown(*, stamp: str, csv_path: Path, rows: 
     return "\n".join(lines) + "\n"
 
 
-def write_full_python_line_count_markdown(*, stamp: str, csv_path: Path, output: Path) -> dict[str, Any]:
+def write_full_python_line_count_markdown(
+    *, stamp: str, csv_path: Path, output: Path
+) -> dict[str, Any]:
     """Build and write full line-count Markdown from a line-count CSV."""
     rows = load_line_count_csv_rows(csv_path)
     markdown = render_full_python_line_count_markdown(stamp=stamp, csv_path=csv_path, rows=rows)

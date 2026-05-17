@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
 import argparse
 import json
 from datetime import datetime
+from pathlib import Path
 
 from ollama_runtime import OllamaSession, parse_json_response
-
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / "output"
@@ -20,7 +19,7 @@ DEFAULT_OUT_MD = TOOLS_DIR / "ollama_music_insights.md"
 
 
 def read_json(path: Path) -> dict:
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, encoding="utf-8") as handle:
         return json.load(handle)
 
 
@@ -205,7 +204,9 @@ def run_ollama_music_agent(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Ollama on compact WAV/scene context and write AI insights.")
+    parser = argparse.ArgumentParser(
+        description="Run Ollama on compact WAV/scene context and write AI insights."
+    )
     parser.add_argument("--context-json", default=str(DEFAULT_CONTEXT_JSON))
     parser.add_argument("--fallback-context-json", default=str(DEFAULT_MUSIC_CONTEXT_JSON))
     parser.add_argument("--out-json", default=str(DEFAULT_OUT_JSON))

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate textual quality of AI workload reports."""
+
 from __future__ import annotations
 
 import argparse
@@ -21,7 +22,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--report-dir", default=DEFAULT_REPORT_DIR)
-    parser.add_argument("--report", action="append", default=[], help="Strict report spec as lane=path. Repeatable or comma-separated.")
+    parser.add_argument(
+        "--report",
+        action="append",
+        default=[],
+        help="Strict report spec as lane=path. Repeatable or comma-separated.",
+    )
     parser.add_argument("--include-missing-known-reports", action="store_true")
     parser.add_argument("--output")
     return parser.parse_args()

@@ -118,9 +118,9 @@ def target_path_error(path: str, repo_root: Path) -> str | None:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         return f"forbidden target prefix: {normalized}"
     lower = normalized.lower()
-    if any(
-        fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS
-    ) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(
+        ".json"
+    ):
         return f"forbidden full-analysis JSON target: {normalized}"
     if "*" in normalized or normalized.endswith("/"):
         return "target is a path group, glob or directory"
@@ -158,16 +158,12 @@ def validate_replacement(item: Any) -> str | None:
     if kind == "regex" and not isinstance(item.get("pattern"), str):
         return "regex replacement requires pattern string"
     if kind in {"insert_after", "insert_before"}:
-        if not isinstance(item.get("anchor"), str) or not isinstance(
-            item.get("insert"), str
-        ):
+        if not isinstance(item.get("anchor"), str) or not isinstance(item.get("insert"), str):
             return f"{kind} replacement requires anchor and insert strings"
     return None
 
 
-def validate_inputs(
-    draft: dict[str, Any], plan: dict[str, Any], repo_root: Path
-) -> list[str]:
+def validate_inputs(draft: dict[str, Any], plan: dict[str, Any], repo_root: Path) -> list[str]:
     errors: list[str] = []
     if draft.get("kind") != EXPECTED_DRAFT_KIND:
         errors.append(f"draft kind must be {EXPECTED_DRAFT_KIND}")
@@ -192,9 +188,7 @@ def validate_inputs(
 
     if isinstance(draft_operations, list) and isinstance(plan_operations, list):
         draft_paths = {
-            normalize_repo_path(op.get("path"))
-            for op in draft_operations
-            if isinstance(op, dict)
+            normalize_repo_path(op.get("path")) for op in draft_operations if isinstance(op, dict)
         }
         for index, operation in enumerate(plan_operations):
             if not isinstance(operation, dict):
@@ -202,17 +196,13 @@ def validate_inputs(
                 continue
             path = normalize_repo_path(operation.get("path"))
             if path not in draft_paths:
-                errors.append(
-                    f"plan operations[{index}] path is not present in draft: {path}"
-                )
+                errors.append(f"plan operations[{index}] path is not present in draft: {path}")
             path_error = target_path_error(path, repo_root)
             if path_error:
                 errors.append(f"plan operations[{index}] {path}: {path_error}")
             replacements = operation.get("replacements")
             if not isinstance(replacements, list) or not replacements:
-                errors.append(
-                    f"plan operations[{index}] replacements must be a non-empty list"
-                )
+                errors.append(f"plan operations[{index}] replacements must be a non-empty list")
             elif len(replacements) > 12:
                 errors.append(
                     f"plan operations[{index}] has too many replacements; keep reviewed patches small"
@@ -266,14 +256,10 @@ def build_reviewed_operation(
     return output
 
 
-def dry_run_spec(
-    repo_root: Path, spec: dict[str, Any]
-) -> tuple[bool, list[dict[str, Any]], str]:
+def dry_run_spec(repo_root: Path, spec: dict[str, Any]) -> tuple[bool, list[dict[str, Any]], str]:
     apply_spec, patch_error = load_patch_runner(repo_root)
     try:
-        reports = apply_spec(
-            repo_root, copy.deepcopy(spec), write=False, no_backup=True
-        )
+        reports = apply_spec(repo_root, copy.deepcopy(spec), write=False, no_backup=True)
     except patch_error as exc:
         return False, [], str(exc)
     return (
@@ -315,9 +301,7 @@ def build_reviewed_spec(
         draft_operation = draft_by_path.get(path)
         if draft_operation is None:
             continue
-        reviewed_operations.append(
-            build_reviewed_operation(plan_operation, draft_operation)
-        )
+        reviewed_operations.append(build_reviewed_operation(plan_operation, draft_operation))
 
     reviewed_spec = {
         "version": 1,
@@ -333,16 +317,12 @@ def build_reviewed_spec(
         "apply_mode": EXPECTED_APPLY_MODE,
         "review_status": EXPECTED_REVIEW_STATUS,
         "provider_execution_performed": False,
-        "description": plan.get("description")
-        or draft.get("description")
-        or "Reviewed patch spec",
+        "description": plan.get("description") or draft.get("description") or "Reviewed patch spec",
         "operations": reviewed_operations,
         "validation_commands": plan.get("validation_commands")
         or draft.get("validation_commands")
         or [],
-        "stop_conditions": plan.get("stop_conditions")
-        or draft.get("stop_conditions")
-        or [],
+        "stop_conditions": plan.get("stop_conditions") or draft.get("stop_conditions") or [],
         "do_not_touch": draft.get("do_not_touch") or [],
         "guardrails": DEFAULT_GUARDRAILS,
     }
@@ -354,9 +334,7 @@ def build_reviewed_spec(
     dry_run_reports: list[dict[str, Any]] = []
     dry_run_error = ""
     if not errors:
-        dry_run_passed, dry_run_reports, dry_run_error = dry_run_spec(
-            repo_root, reviewed_spec
-        )
+        dry_run_passed, dry_run_reports, dry_run_error = dry_run_spec(repo_root, reviewed_spec)
         if not dry_run_passed:
             errors.append(f"dry-run failed: {dry_run_error}")
         elif not any(item.get("changed") for item in dry_run_reports):
@@ -424,9 +402,7 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
     lines.append(f"- Source draft: `{manifest['source_draft_spec']}`")
     lines.append(f"- Replacement plan: `{manifest['source_replacement_plan']}`")
     lines.append(f"- Passed: `{manifest['passed']}`")
-    lines.append(
-        f"- Provider execution performed: `{manifest['provider_execution_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{manifest['provider_execution_performed']}`")
     lines.append("")
     lines.append("## Specs")
     lines.append("")
@@ -444,21 +420,15 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Guardrail")
     lines.append("")
-    lines.append(
-        "This reviewed spec has been dry-run only. It is not queued and was not applied."
-    )
+    lines.append("This reviewed spec has been dry-run only. It is not queued and was not applied.")
     return "\n".join(lines) + "\n"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--draft", required=True, help="Draft proposal patch spec JSON."
-    )
-    parser.add_argument(
-        "--replacement-plan", required=True, help="Explicit replacement plan JSON."
-    )
+    parser.add_argument("--draft", required=True, help="Draft proposal patch spec JSON.")
+    parser.add_argument("--replacement-plan", required=True, help="Explicit replacement plan JSON.")
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--basename", default=DEFAULT_BASENAME)
     args = parser.parse_args()

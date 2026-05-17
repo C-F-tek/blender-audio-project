@@ -1,4 +1,5 @@
 import bpy
+from spaziotempo.core.collections import classify_scene_objects, compact_structure_summary
 
 from .accent_patch import update_physics_accents
 from .common import load_analysis
@@ -11,7 +12,6 @@ from .lighting_patch import (
     update_world,
 )
 from .render_patch import configure_existing_render
-from spaziotempo.core.collections import classify_scene_objects, compact_structure_summary
 
 
 def print_result(title, result):

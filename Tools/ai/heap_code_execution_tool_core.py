@@ -57,11 +57,7 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -139,9 +135,7 @@ def git_diff_excerpt(repo_root: Path, rel_path: str, max_chars: int) -> dict[str
     diff = completed.stdout or ""
     if status_text.startswith("??") and not diff.strip():
         try:
-            text = (repo_root / rel_path).read_text(
-                encoding="utf-8-sig", errors="replace"
-            )
+            text = (repo_root / rel_path).read_text(encoding="utf-8-sig", errors="replace")
         except OSError:
             text = ""
         diff = f"new file: {rel_path}\n\n{text}"
@@ -241,9 +235,9 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def default_debug_lab_paths(repo_root: Path, output: Path) -> tuple[Path, Path]:
     stem = output.stem or "heap_code_execution_tool"
-    safe_stem = "".join(
-        char if char.isalnum() or char in "._-" else "_" for char in stem
-    ).strip("._-")
+    safe_stem = "".join(char if char.isalnum() or char in "._-" else "_" for char in stem).strip(
+        "._-"
+    )
     safe_stem = safe_stem or "heap_code_execution_tool"
     debug_dir = repo_root / "output" / "validation" / "heap_code_execution_tool_debug"
     return (
@@ -266,9 +260,7 @@ def matrix_target_items(
             {
                 "target_file": target,
                 "implementation_status": (
-                    "developed_change_present"
-                    if changed
-                    else "verified_target_no_worktree_diff"
+                    "developed_change_present" if changed else "verified_target_no_worktree_diff"
                 ),
                 "code_or_patch_sketch": diff.get("diff_excerpt") or "",
                 "git_status": diff.get("git_status") or "",

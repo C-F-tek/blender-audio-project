@@ -5,6 +5,7 @@ This validator executes the report-only patch-plan builder and checks that it
 converts GPU recommendations or evidence-sufficiency fallback candidates into a
 manual-review patch plan without applying any patch.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -61,7 +62,9 @@ def value_at(data: dict[str, Any], dotted: str) -> Any:
     return current
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -79,7 +82,9 @@ def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tu
         return 1, "", "", f"{type(exc).__name__}: {exc}"
 
 
-def validate_patch_plan(repo_root: Path, path_value: str, *, min_patch_plans: int, expect_fallback: bool) -> tuple[list[str], list[str], dict[str, Any] | None]:
+def validate_patch_plan(
+    repo_root: Path, path_value: str, *, min_patch_plans: int, expect_fallback: bool
+) -> tuple[list[str], list[str], dict[str, Any] | None]:
     path = repo_path(repo_root, path_value)
     errors: list[str] = []
     warnings: list[str] = []
@@ -136,18 +141,31 @@ def validate_patch_plan(repo_root: Path, path_value: str, *, min_patch_plans: in
     if not isinstance(patch_plan_count, int):
         errors.append("patch_plan_count must be an integer")
     elif patch_plan_count < min_patch_plans:
-        errors.append(f"patch_plan_count below minimum: expected >= {min_patch_plans}, got {patch_plan_count}")
+        errors.append(
+            f"patch_plan_count below minimum: expected >= {min_patch_plans}, got {patch_plan_count}"
+        )
 
     if not isinstance(patch_plans, list):
         errors.append("patch_plans must be a list")
     elif isinstance(patch_plan_count, int) and len(patch_plans) != patch_plan_count:
-        errors.append(f"patch_plans length mismatch: count={patch_plan_count}, len={len(patch_plans)}")
+        errors.append(
+            f"patch_plans length mismatch: count={patch_plan_count}, len={len(patch_plans)}"
+        )
     else:
         for index, plan in enumerate(patch_plans if isinstance(patch_plans, list) else [], start=1):
             if not isinstance(plan, dict):
                 errors.append(f"patch_plans[{index}] is not an object")
                 continue
-            for field in ["id", "source", "area", "status", "target_files", "rationale", "edit_strategy", "manual_review_required"]:
+            for field in [
+                "id",
+                "source",
+                "area",
+                "status",
+                "target_files",
+                "rationale",
+                "edit_strategy",
+                "manual_review_required",
+            ]:
                 if field not in plan:
                     errors.append(f"patch_plans[{index}] missing {field}")
             if plan.get("manual_review_required") is not True:
@@ -164,7 +182,9 @@ def validate_patch_plan(repo_root: Path, path_value: str, *, min_patch_plans: in
     if expect_fallback and fallback_used is not True:
         errors.append(f"expected fallback_used true, got {fallback_used!r}")
     if not expect_fallback and fallback_used is True:
-        warnings.append("fallback_used is true; GPU planner produced no usable ready recommendation")
+        warnings.append(
+            "fallback_used is true; GPU planner produced no usable ready recommendation"
+        )
 
     return errors, warnings, data
 

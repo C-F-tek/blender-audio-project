@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate report-only selective execution plan artifacts."""
+
 from __future__ import annotations
 
 import argparse
@@ -145,7 +146,9 @@ def validate_plan(path: Path, repo_root: Path) -> dict[str, Any]:
             if not _is_non_empty_string(item.get("command")):
                 errors.append(f"recommended_validators[{index}].command must be a non-empty string")
             if item.get("provider_execution_performed") is not False:
-                errors.append(f"recommended_validators[{index}].provider_execution_performed must be false")
+                errors.append(
+                    f"recommended_validators[{index}].provider_execution_performed must be false"
+                )
         for required in ("python_syntax", "selective_execution_plan", "validation_report_contract"):
             if required not in names:
                 errors.append(f"recommended_validators missing {required}")
@@ -162,16 +165,26 @@ def validate_plan(path: Path, repo_root: Path) -> dict[str, Any]:
             if not _is_non_empty_string(item.get("id")):
                 errors.append(f"recommended_patch_specs[{index}].id must be a non-empty string")
             if item.get("apply_mode") != "manual_review_only":
-                errors.append(f"recommended_patch_specs[{index}].apply_mode must be manual_review_only")
+                errors.append(
+                    f"recommended_patch_specs[{index}].apply_mode must be manual_review_only"
+                )
             if item.get("provider_execution_performed") is not False:
-                errors.append(f"recommended_patch_specs[{index}].provider_execution_performed must be false")
+                errors.append(
+                    f"recommended_patch_specs[{index}].provider_execution_performed must be false"
+                )
             if item.get("patch_application_performed") is not False:
-                errors.append(f"recommended_patch_specs[{index}].patch_application_performed must be false")
+                errors.append(
+                    f"recommended_patch_specs[{index}].patch_application_performed must be false"
+                )
             targets = item.get("target_files")
             if not isinstance(targets, list) or not targets:
-                errors.append(f"recommended_patch_specs[{index}].target_files must be a non-empty list")
+                errors.append(
+                    f"recommended_patch_specs[{index}].target_files must be a non-empty list"
+                )
             elif any(not _is_non_empty_string(target) for target in targets):
-                errors.append(f"recommended_patch_specs[{index}].target_files must contain only strings")
+                errors.append(
+                    f"recommended_patch_specs[{index}].target_files must contain only strings"
+                )
 
     for list_key in (
         "blocked_actions",
@@ -229,7 +242,9 @@ def main() -> int:
         "results": [result],
     }
 
-    text = write_json_report(report, resolve_output_path(repo_root, args.output) if args.output else None)
+    text = write_json_report(
+        report, resolve_output_path(repo_root, args.output) if args.output else None
+    )
     print(text, end="")
     return 0 if report["passed"] else 2
 

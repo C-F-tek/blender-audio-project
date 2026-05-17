@@ -131,10 +131,7 @@ def build_lanes(
 
     official_passed = bool(
         official_report
-        and (
-            official_report.get("passed") is True
-            or official_report.get("status") == "passed"
-        )
+        and (official_report.get("passed") is True or official_report.get("status") == "passed")
     )
     workload_ok = bool(workload_report and workload_report.get("passed") is True)
 
@@ -142,33 +139,24 @@ def build_lanes(
         lane(
             "gpu0",
             "companion_workload_lane",
-            bool_from_report(gpu0_report, "openvino_gpu0_visible")
-            or "GPU.0" in devices,
+            bool_from_report(gpu0_report, "openvino_gpu0_visible") or "GPU.0" in devices,
             "openvino_gpu0_workload_report",
             {
                 "selected_device": (gpu0_report or {}).get("selected_device", ""),
-                "workload_passed": bool_from_report(
-                    gpu0_report, "openvino_gpu0_workload_passed"
-                ),
+                "workload_passed": bool_from_report(gpu0_report, "openvino_gpu0_workload_passed"),
             },
         ),
         lane(
             "gpu1",
             "reserved_or_provider_lane",
-            bool_from_report(gpu0_report, "openvino_gpu1_reserved_visible")
-            or "GPU.1" in devices,
+            bool_from_report(gpu0_report, "openvino_gpu1_reserved_visible") or "GPU.1" in devices,
             "openvino_device_visibility",
-            {
-                "reserved_visible": bool_from_report(
-                    gpu0_report, "openvino_gpu1_reserved_visible"
-                )
-            },
+            {"reserved_visible": bool_from_report(gpu0_report, "openvino_gpu1_reserved_visible")},
         ),
         lane(
             "npu",
             "microoperation_efficiency_peer_lane",
-            "NPU" in devices
-            or bool((official_report or {}).get("npu_probe_requested")),
+            "NPU" in devices or bool((official_report or {}).get("npu_probe_requested")),
             "openvino_device_visibility_or_official_adapter",
             {
                 "device_visible": "NPU" in devices,
@@ -328,9 +316,7 @@ def main() -> int:
     runtime_state = repo_path(repo_root, args.runtime_state) or (
         packets_dir / "heap_exchange_runtime_state.jsonl"
     )
-    output = repo_path(repo_root, args.output) or (
-        packets_dir / "heap_exchange_runtime_entry.json"
-    )
+    output = repo_path(repo_root, args.output) or (packets_dir / "heap_exchange_runtime_entry.json")
     markdown_output = repo_path(repo_root, args.markdown_output) or (
         packets_dir / "heap_exchange_runtime_entry.md"
     )

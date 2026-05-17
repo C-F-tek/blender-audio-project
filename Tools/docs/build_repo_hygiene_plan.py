@@ -6,18 +6,29 @@ large split snapshots and refactor candidates, then emits a reviewable bundle
 with guarded delete_file operations only for high-confidence candidates that
 carry an explicit marker already present in the target text.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import re
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
-SKIP_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", "output", "renders", "node_modules"}
+SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    "output",
+    "renders",
+    "node_modules",
+}
 SKIP_PREFIXES = (
     "docs/LOCAL_VALIDATION_EVIDENCE/",
     "indexAI/code_chunks/",
@@ -143,16 +154,42 @@ def classify_markdown(root: Path, path: Path, max_lines: int) -> HygieneItem:
     lower_r = r.lower()
     split_manifest = (path.parent / MD_SPLIT_MANIFEST).exists()
     current = has_any(text, CURRENT_DOC_HINTS) or any(hint in lower_r for hint in CURRENT_DOC_HINTS)
-    obsolete = has_any(text, OBSOLETE_HINTS) or "next-chat-handoff" in lower_r or "handoff" in lower_r
+    obsolete = (
+        has_any(text, OBSOLETE_HINTS) or "next-chat-handoff" in lower_r or "handoff" in lower_r
+    )
     delete_marker = explicit_delete_marker(text)
     commands = bool(COMMAND_RE.search(text))
 
     if r.startswith("CHATGPT/") and ("handoff" in lower_r or "next-chat" in lower_r):
-        return HygieneItem(r, "markdown", "historical_chat_handoff", "high", "archive_or_delete_after_index", "handoff file under CHATGPT is forensic context", lines)
+        return HygieneItem(
+            r,
+            "markdown",
+            "historical_chat_handoff",
+            "high",
+            "archive_or_delete_after_index",
+            "handoff file under CHATGPT is forensic context",
+            lines,
+        )
     if current or protected_current_delete_path(r):
         if lines > max_lines:
-            return HygieneItem(r, "markdown", "oversized_current", "medium", "split_refactor_keep", f"current doc exceeds {max_lines} lines", lines)
-        return HygieneItem(r, "markdown", "current_oriented", "high", "keep", "contains current orientation anchors or protected current path", lines)
+            return HygieneItem(
+                r,
+                "markdown",
+                "oversized_current",
+                "medium",
+                "split_refactor_keep",
+                f"current doc exceeds {max_lines} lines",
+                lines,
+            )
+        return HygieneItem(
+            r,
+            "markdown",
+            "current_oriented",
+            "high",
+            "keep",
+            "contains current orientation anchors or protected current path",
+            lines,
+        )
     if split_manifest and obsolete and has_any(text, DELETE_HINTS):
         if delete_marker:
             return HygieneItem(
@@ -165,14 +202,54 @@ def classify_markdown(root: Path, path: Path, max_lines: int) -> HygieneItem:
                 lines,
                 delete_marker,
             )
-        return HygieneItem(r, "markdown", "obsolete_split_snapshot_needs_marker", "medium", "review_before_delete_marker", "split snapshot has obsolete signals but no explicit delete marker", lines)
+        return HygieneItem(
+            r,
+            "markdown",
+            "obsolete_split_snapshot_needs_marker",
+            "medium",
+            "review_before_delete_marker",
+            "split snapshot has obsolete signals but no explicit delete marker",
+            lines,
+        )
     if obsolete and not current and not commands:
-        return HygieneItem(r, "markdown", "obsolete_reference", "medium", "delete_or_archive_after_link_check", "marked old without current-map anchors or executable commands", lines)
+        return HygieneItem(
+            r,
+            "markdown",
+            "obsolete_reference",
+            "medium",
+            "delete_or_archive_after_link_check",
+            "marked old without current-map anchors or executable commands",
+            lines,
+        )
     if obsolete and commands:
-        return HygieneItem(r, "markdown", "historical_with_commands", "medium", "classify_then_refactor_or_delete", "old document still carries command-like text", lines)
+        return HygieneItem(
+            r,
+            "markdown",
+            "historical_with_commands",
+            "medium",
+            "classify_then_refactor_or_delete",
+            "old document still carries command-like text",
+            lines,
+        )
     if lines > max_lines and not current:
-        return HygieneItem(r, "markdown", "oversized_noncanonical", "medium", "split_or_demote", f"line_count={lines} exceeds {max_lines}", lines)
-    return HygieneItem(r, "markdown", "unclassified", "low", "review_later", "no strong current or obsolete signal", lines)
+        return HygieneItem(
+            r,
+            "markdown",
+            "oversized_noncanonical",
+            "medium",
+            "split_or_demote",
+            f"line_count={lines} exceeds {max_lines}",
+            lines,
+        )
+    return HygieneItem(
+        r,
+        "markdown",
+        "unclassified",
+        "low",
+        "review_later",
+        "no strong current or obsolete signal",
+        lines,
+    )
 
 
 def classify_split_dirs(root: Path) -> list[HygieneItem]:
@@ -200,7 +277,17 @@ def classify_split_dirs(root: Path) -> list[HygieneItem]:
         obsolete = has_any(text_join, OBSOLETE_HINTS)
         classification = f"{layout}_obsolete" if obsolete else layout
         confidence = "high" if obsolete or layout == "legacy_split_layout" else "medium"
-        items.append(HygieneItem(r, "markdown_split_dir", classification, confidence, action, f"part_count={len(parts)}", lines))
+        items.append(
+            HygieneItem(
+                r,
+                "markdown_split_dir",
+                classification,
+                confidence,
+                action,
+                f"part_count={len(parts)}",
+                lines,
+            )
+        )
     return items
 
 
@@ -241,7 +328,9 @@ def build_bundle(report: dict[str, Any], root: Path, bundle_path: Path) -> dict[
         "validators": ["git_diff_check"],
     }
     bundle_path.parent.mkdir(parents=True, exist_ok=True)
-    bundle_path.write_text(json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    bundle_path.write_text(
+        json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     return {"path": rel(root, bundle_path), "operation_count": len(operations)}
 
 
@@ -296,8 +385,12 @@ def main() -> int:
     items_dicts = [asdict(item) for item in sorted(items, key=lambda i: (i.classification, i.path))]
     summary = {
         "item_count": len(items_dicts),
-        "by_classification": dict(Counter(item["classification"] for item in items_dicts).most_common()),
-        "by_action": dict(Counter(item["recommended_action"] for item in items_dicts).most_common()),
+        "by_classification": dict(
+            Counter(item["classification"] for item in items_dicts).most_common()
+        ),
+        "by_action": dict(
+            Counter(item["recommended_action"] for item in items_dicts).most_common()
+        ),
     }
     report: dict[str, Any] = {
         "schema_version": 1,
@@ -318,7 +411,13 @@ def main() -> int:
     md.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     md.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({"passed": True, "summary": summary, "patchkit_bundle": report.get("patchkit_bundle")}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"passed": True, "summary": summary, "patchkit_bundle": report.get("patchkit_bundle")},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 

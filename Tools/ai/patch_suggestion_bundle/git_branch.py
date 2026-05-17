@@ -16,9 +16,7 @@ PROTECTED_BRANCHES = {"main", "master"}
 INVALID_REF_CHARS = set(" ~^:?*[\\")
 
 
-def validate_branch_name(
-    branch: str, allowed_prefixes: list[str]
-) -> tuple[bool, str | None]:
+def validate_branch_name(branch: str, allowed_prefixes: list[str]) -> tuple[bool, str | None]:
     """Validate a branch name for explicit review-branch preparation."""
     if not branch:
         return False, "empty branch name"
@@ -55,17 +53,13 @@ def git_result(repo_root: Path, args: list[str]) -> dict[str, Any]:
 
 def remote_branch_exists(repo_root: Path, remote: str, branch: str) -> bool:
     """Return true when a remote branch already exists."""
-    result = git_result(
-        repo_root, ["ls-remote", "--exit-code", "--heads", remote, branch]
-    )
+    result = git_result(repo_root, ["ls-remote", "--exit-code", "--heads", remote, branch])
     return bool(result["ok"])
 
 
 def local_branch_exists(repo_root: Path, branch: str) -> bool:
     """Return true when a local branch already exists."""
-    result = git_result(
-        repo_root, ["show-ref", "--verify", "--quiet", f"refs/heads/{branch}"]
-    )
+    result = git_result(repo_root, ["show-ref", "--verify", "--quiet", f"refs/heads/{branch}"])
     return bool(result["ok"])
 
 
@@ -126,8 +120,7 @@ def create_review_branch(
             out["warnings"].append(f"reused existing remote branch: origin/{branch}")
         else:
             out["errors"].append(
-                result["stderr"]
-                or f"git switch --track failed for remote branch: {branch}"
+                result["stderr"] or f"git switch --track failed for remote branch: {branch}"
             )
         out["status_after"] = git_status_short(repo_root)
         return out

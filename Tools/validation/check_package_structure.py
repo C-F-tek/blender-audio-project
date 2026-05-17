@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Inspect Blender package folders under Scripting/."""
+
 from __future__ import annotations
 
 import argparse
@@ -25,8 +26,14 @@ def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:
     python_files = sorted(path.glob("*.py"))
     readme = path / "README.md"
     config = path / "config.py"
-    main_candidates = [item for item in python_files if item.name == "main.py" or item.name.startswith("main_")]
-    encode_candidates = [item for item in python_files if "encode" in item.name.lower() or "ffmpeg" in item.name.lower()]
+    main_candidates = [
+        item for item in python_files if item.name == "main.py" or item.name.startswith("main_")
+    ]
+    encode_candidates = [
+        item
+        for item in python_files
+        if "encode" in item.name.lower() or "ffmpeg" in item.name.lower()
+    ]
 
     warnings: list[str] = []
     if not readme.exists():
@@ -46,7 +53,9 @@ def inspect_package(path: Path, scripting_root: Path) -> dict[str, Any]:
         "python_file_count": len(python_files),
         "main_candidates": [item.name for item in main_candidates],
         "encode_candidates": [item.name for item in encode_candidates],
-        "line_counts": {item.name: count_file_lines(item, encoding="utf-8")[0] for item in python_files},
+        "line_counts": {
+            item.name: count_file_lines(item, encoding="utf-8")[0] for item in python_files
+        },
         "warnings": warnings,
         "status": "ok" if not warnings else "review",
     }
@@ -81,7 +90,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", help="Optional JSON report path.")
-    parser.add_argument("--strict", action="store_true", help="Return non-zero when warnings are found.")
+    parser.add_argument(
+        "--strict", action="store_true", help="Return non-zero when warnings are found."
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()

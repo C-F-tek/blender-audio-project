@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate AI context pack and compact evidence contracts."""
+
 from __future__ import annotations
 
 import argparse
@@ -202,7 +203,9 @@ def validate_file_entry(entry: Any, index: int) -> dict[str, Any]:
         if bool_field in entry and not isinstance(entry.get(bool_field), bool):
             errors.append(f"{bool_field} must be a boolean")
     if entry.get("policy_ok") is not True:
-        errors.append(f"policy_ok must be true for included context paths: {entry.get('policy_error')}")
+        errors.append(
+            f"policy_ok must be true for included context paths: {entry.get('policy_error')}"
+        )
     if entry.get("required") is True and entry.get("included") is not True:
         errors.append("required context file must be included")
     if entry.get("included") is True and not isinstance(entry.get("content"), str):
@@ -281,7 +284,9 @@ def validate_pack(path: Path, repo_root: Path) -> dict[str, Any]:
                 errors.append(f"{check.get('path')}: {error}")
             for warning in check.get("warnings", []):
                 warnings.append(f"{check.get('path')}: {warning}")
-        included_count = sum(1 for item in files if isinstance(item, dict) and item.get("included") is True)
+        included_count = sum(
+            1 for item in files if isinstance(item, dict) and item.get("included") is True
+        )
         if data.get("included_file_count") != included_count:
             errors.append("included_file_count does not match files")
 
@@ -364,7 +369,9 @@ def validate_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
     }
 
 
-def validate_ai_context_packs(repo_root: Path, pack_paths: list[Path], evidence_paths: list[Path]) -> dict[str, Any]:
+def validate_ai_context_packs(
+    repo_root: Path, pack_paths: list[Path], evidence_paths: list[Path]
+) -> dict[str, Any]:
     pack_checks = [validate_pack(path, repo_root) for path in pack_paths]
     evidence_checks = [validate_evidence(path, repo_root) for path in evidence_paths]
     errors = [
@@ -397,23 +404,36 @@ def validate_ai_context_packs(repo_root: Path, pack_paths: list[Path], evidence_
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--pack", action="append", default=[], help="Context pack JSON path. Repeatable or comma-separated.")
-    parser.add_argument("--evidence", action="append", default=[], help="Context pack evidence JSON path. Repeatable or comma-separated.")
+    parser.add_argument(
+        "--pack",
+        action="append",
+        default=[],
+        help="Context pack JSON path. Repeatable or comma-separated.",
+    )
+    parser.add_argument(
+        "--evidence",
+        action="append",
+        default=[],
+        help="Context pack evidence JSON path. Repeatable or comma-separated.",
+    )
     parser.add_argument("--output", help="Optional JSON validation report path.")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     pack_paths = [
-        resolve_repo_path(repo_root, raw)
-        for raw in split_path_values(list(args.pack or []))
+        resolve_repo_path(repo_root, raw) for raw in split_path_values(list(args.pack or []))
     ]
     evidence_paths = [
-        resolve_repo_path(repo_root, raw)
-        for raw in split_path_values(list(args.evidence or []))
+        resolve_repo_path(repo_root, raw) for raw in split_path_values(list(args.evidence or []))
     ]
     if not pack_paths and not evidence_paths:
         pack_paths = [repo_root / "output" / "ai_context_packs" / "project_self_improvement.json"]
-        evidence_paths = [repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE" / "project_self_improvement_context_pack_evidence.json"]
+        evidence_paths = [
+            repo_root
+            / "docs"
+            / "LOCAL_VALIDATION_EVIDENCE"
+            / "project_self_improvement_context_pack_evidence.json"
+        ]
 
     report = validate_ai_context_packs(repo_root, pack_paths, evidence_paths)
     output = resolve_output_path(repo_root, args.output) if args.output else None

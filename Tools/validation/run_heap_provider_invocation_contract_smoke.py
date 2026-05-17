@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke test for the heap provider invocation contract."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,16 +9,32 @@ import sys
 from pathlib import Path
 
 try:
-    from Tools.ai.heap_provider_budget_governor import ProviderBudgetConfig, build_heap_provider_budget_governor
+    from Tools.ai.heap_provider_budget_governor import (
+        ProviderBudgetConfig,
+        build_heap_provider_budget_governor,
+    )
     from Tools.ai.heap_provider_invocation_contract import build_heap_provider_invocation_contract
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from Tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.heap_provider_budget_governor import ProviderBudgetConfig, build_heap_provider_budget_governor  # type: ignore
-    from Tools.ai.heap_provider_invocation_contract import build_heap_provider_invocation_contract  # type: ignore
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.ai.heap_provider_budget_governor import (  # type: ignore
+        ProviderBudgetConfig,
+        build_heap_provider_budget_governor,
+    )
+    from Tools.ai.heap_provider_invocation_contract import (
+        build_heap_provider_invocation_contract,  # type: ignore
+    )
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def render_markdown(report: dict[str, object]) -> str:
@@ -35,8 +52,12 @@ def render_markdown(report: dict[str, object]) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_provider_invocation_contract_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_provider_invocation_contract_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/heap_provider_invocation_contract_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/heap_provider_invocation_contract_smoke.md"
+    )
     return parser.parse_args()
 
 
@@ -63,9 +84,17 @@ def main() -> int:
     )
     governor = build_heap_provider_budget_governor(config, requested_max_iterations=4)
     contract = build_heap_provider_invocation_contract(governor)
-    telemetry = contract.get("expected_telemetry_contract") if isinstance(contract.get("expected_telemetry_contract"), dict) else {}
+    telemetry = (
+        contract.get("expected_telemetry_contract")
+        if isinstance(contract.get("expected_telemetry_contract"), dict)
+        else {}
+    )
     gate = contract.get("real_run_gate") if isinstance(contract.get("real_run_gate"), dict) else {}
-    required_events = telemetry.get("events_required") if isinstance(telemetry.get("events_required"), list) else []
+    required_events = (
+        telemetry.get("events_required")
+        if isinstance(telemetry.get("events_required"), list)
+        else []
+    )
     errors: list[str] = []
     if contract.get("kind") != "heap_provider_invocation_contract":
         errors.append("kind mismatch")

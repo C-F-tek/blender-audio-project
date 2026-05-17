@@ -22,9 +22,7 @@ except ImportError:
     from tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
 
 
-def append_gpu_peer_smoke(
-    heap: ProviderRuntimeHeap, *, round_id: int
-) -> list[dict[str, Any]]:
+def append_gpu_peer_smoke(heap: ProviderRuntimeHeap, *, round_id: int) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     correlation_id = "gpu-peer-evidence-001"
     events.append(
@@ -58,9 +56,7 @@ def append_gpu_peer_smoke(
                 "recommended_broker_requests": [
                     {
                         "tool": "build_code_interpreter_report",
-                        "args": {
-                            "input": "tools/ai,tools/validation,tools/workflow,tools/npu"
-                        },
+                        "args": {"input": "tools/ai,tools/validation,tools/workflow,tools/npu"},
                     },
                     {
                         "tool": "check_validation_report_contract",
@@ -100,9 +96,7 @@ def main() -> int:
         "events": events,
         "heap_snapshot": {
             "event_count": snapshot.get("event_count"),
-            "pending_broker_request_count": snapshot.get(
-                "pending_broker_request_count"
-            ),
+            "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
             "event_log": snapshot.get("event_log"),
         },
         "guardrails": {

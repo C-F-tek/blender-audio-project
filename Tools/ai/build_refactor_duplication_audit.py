@@ -78,9 +78,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
     },
     {
         "candidate_id": "dup_markdown_renderers",
-        "name_pattern": re.compile(
-            r"^(render_markdown|build_markdown|render_.*markdown)$"
-        ),
+        "name_pattern": re.compile(r"^(render_markdown|build_markdown|render_.*markdown)$"),
         "repeated_logic": "Local Markdown renderers with repeated status/guardrail sections.",
         "existing_helper_available": False,
         "preferred_existing_helper_or_module": "Keep report-specific renderers local unless a stable shared status-section schema emerges.",
@@ -152,11 +150,7 @@ def now_stamp() -> str:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -221,9 +215,7 @@ def iter_python_files(repo_root: Path, roots: list[str]) -> list[Path]:
     return sorted(unique.values(), key=lambda item: repo_rel(item, repo_root).lower())
 
 
-def collect_functions(
-    repo_root: Path, files: list[Path]
-) -> tuple[list[dict[str, Any]], list[str]]:
+def collect_functions(repo_root: Path, files: list[Path]) -> tuple[list[dict[str, Any]], list[str]]:
     functions: list[dict[str, Any]] = []
     warnings: list[str] = []
     for path in files:
@@ -263,24 +255,16 @@ def collect_functions(
 
 
 def files_involved(items: list[dict[str, Any]], limit: int = 16) -> list[str]:
-    values = [
-        f"{item['path']}#L{item['line_start']}-L{item['line_end']}" for item in items
-    ]
+    values = [f"{item['path']}#L{item['line_start']}-L{item['line_end']}" for item in items]
     return values[:limit]
 
 
 def build_rule_candidates(functions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     candidates: list[dict[str, Any]] = []
     for rule in HELPER_RULES:
-        matched = [
-            item for item in functions if rule["name_pattern"].match(str(item["name"]))
-        ]
+        matched = [item for item in functions if rule["name_pattern"].match(str(item["name"]))]
         if rule["candidate_id"] == "dup_line_count_helpers":
-            matched = [
-                item
-                for item in matched
-                if not item.get("uses_shared_line_count_helper")
-            ]
+            matched = [item for item in matched if not item.get("uses_shared_line_count_helper")]
         distinct_files = sorted({str(item["path"]) for item in matched})
         if len(matched) < 2 or len(distinct_files) < 2:
             continue
@@ -294,9 +278,7 @@ def build_rule_candidates(functions: list[dict[str, Any]]) -> list[dict[str, Any
                 "occurrence_count": len(matched),
                 "distinct_file_count": len(distinct_files),
                 "existing_helper_available": bool(rule["existing_helper_available"]),
-                "preferred_existing_helper_or_module": rule[
-                    "preferred_existing_helper_or_module"
-                ],
+                "preferred_existing_helper_or_module": rule["preferred_existing_helper_or_module"],
                 "recommendation_type": rule["recommendation_type"],
                 "risk": rule["risk"],
                 "schema_or_cli_impact": rule["schema_or_cli_impact"],
@@ -328,7 +310,9 @@ def build_exact_name_candidates(
         if candidate_id in helper_rule_ids:
             continue
         recommendation = "needs_more_context"
-        preferred = "Review whether same-name helper semantics are intentionally local before extracting."
+        preferred = (
+            "Review whether same-name helper semantics are intentionally local before extracting."
+        )
         risk = "medium"
         if name in {"main", "parse_args"}:
             recommendation = "keep_local_by_design"
@@ -391,9 +375,7 @@ def collect_report_status(
             "provider_execution_performed": data.get("provider_execution_performed"),
             "patch_application_performed": data.get("patch_application_performed"),
             "sqlite_write_performed": data.get("sqlite_write_performed"),
-            "persistent_memory_write_performed": data.get(
-                "persistent_memory_write_performed"
-            ),
+            "persistent_memory_write_performed": data.get("persistent_memory_write_performed"),
             "errors": data.get("errors", []),
             "warnings": data.get("warnings", []),
         }
@@ -411,16 +393,14 @@ def verify_layering(repo_root: Path) -> dict[str, Any]:
         "bundle": repo_root / "tools/ai/build_github_evidence_bundle.py",
         "artifacts": repo_root / "tools/ai/github_evidence_bundle_artifacts.py",
         "validator": repo_root / "tools/validation/check_github_evidence_bundle.py",
-        "smoke": repo_root
-        / "tools/validation/run_shared_toolbox_ai_to_ai_bundle_smoke.py",
+        "smoke": repo_root / "tools/validation/run_shared_toolbox_ai_to_ai_bundle_smoke.py",
     }
     content = {key: read_text(path)[0] for key, path in files.items()}
     checks = {
         "layering_preserved": all(path.exists() for path in files.values()),
         "builder_delegates_to_common_bundle": "build_bundle" in content["builder"]
         and "tools.ai.build_github_evidence_bundle" in content["builder"],
-        "chunking_in_common_evidence_layer": "artifact_chunk_index"
-        in content["artifacts"]
+        "chunking_in_common_evidence_layer": "artifact_chunk_index" in content["artifacts"]
         or "build_artifact_chunk_index" in content["artifacts"],
         "validator_reused": "validate_github_evidence_bundles" in content["builder"]
         and "check_github_evidence_bundle" in content["builder"],
@@ -434,8 +414,7 @@ def verify_layering(repo_root: Path) -> dict[str, Any]:
         ),
         "cli_schema_preserved": "parse_args" in content["builder"]
         and "--validate-bundle" in content["builder"],
-        "report_schema_preserved": "shared_toolbox_ai_to_ai_final_summary"
-        in content["builder"]
+        "report_schema_preserved": "shared_toolbox_ai_to_ai_final_summary" in content["builder"]
         and "github_validation_evidence_bundle" in content["bundle"],
     }
     checks["passed"] = all(bool(value) for value in checks.values())
@@ -459,9 +438,7 @@ def normalize_imported_candidate(
         or candidate.get("title")
         or candidate.get("repeated_logic")
     )
-    candidate["candidate_id"] = safe_id(
-        str(fallback or f"imported_audit_candidate_{index:03d}")
-    )
+    candidate["candidate_id"] = safe_id(str(fallback or f"imported_audit_candidate_{index:03d}"))
     candidate.setdefault("source", source)
     candidate.setdefault(
         "repeated_logic",
@@ -492,9 +469,7 @@ def normalize_imported_candidate(
     return candidate
 
 
-def merge_existing_audit_candidates(
-    repo_root: Path, paths: list[str]
-) -> list[dict[str, Any]]:
+def merge_existing_audit_candidates(repo_root: Path, paths: list[str]) -> list[dict[str, Any]]:
     merged: list[dict[str, Any]] = []
     candidate_keys = (
         "duplication_candidates",
@@ -513,17 +488,13 @@ def merge_existing_audit_candidates(
         for key in candidate_keys:
             for item in audit_list(data, key):
                 index += 1
-                candidate = normalize_imported_candidate(
-                    item, source=source, index=index
-                )
+                candidate = normalize_imported_candidate(item, source=source, index=index)
                 candidate.setdefault("imported_from_key", key)
                 merged.append(candidate)
     return merged
 
 
-def summarize_existing_audit_reports(
-    repo_root: Path, paths: list[str]
-) -> dict[str, Any]:
+def summarize_existing_audit_reports(repo_root: Path, paths: list[str]) -> dict[str, Any]:
     summaries: list[dict[str, Any]] = []
     helper_recommendations: list[str] = []
     advisory_findings: list[str] = []
@@ -543,9 +514,7 @@ def summarize_existing_audit_reports(
             "patch_application_performed": (
                 data.get("patch_application_performed") if data else None
             ),
-            "sqlite_write_performed": (
-                data.get("sqlite_write_performed") if data else None
-            ),
+            "sqlite_write_performed": (data.get("sqlite_write_performed") if data else None),
             "persistent_memory_write_performed": (
                 data.get("persistent_memory_write_performed") if data else None
             ),
@@ -553,9 +522,7 @@ def summarize_existing_audit_reports(
                 len(audit_list(data, "duplication_candidates")) if data else 0
             ),
             "manual_review_patch_plan_candidate_count": (
-                len(audit_list(data, "manual_review_patch_plan_candidates"))
-                if data
-                else 0
+                len(audit_list(data, "manual_review_patch_plan_candidates")) if data else 0
             ),
         }
         summaries.append(summary)
@@ -589,9 +556,7 @@ def summarize_existing_audit_reports(
 def dedupe_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
     deduped: dict[str, dict[str, Any]] = {}
     for item in candidates:
-        key = str(
-            item.get("candidate_id") or item.get("repeated_logic") or len(deduped)
-        )
+        key = str(item.get("candidate_id") or item.get("repeated_logic") or len(deduped))
         if key not in deduped:
             deduped[key] = item
             continue
@@ -625,16 +590,11 @@ def build_manual_review_patch_plan_candidates(
                 "candidate_id": f"patch_plan_{item.get('candidate_id')}",
                 "title": f"Manual-review refactor for {item.get('candidate_id')}",
                 "recommendation_type": (
-                    "ready_for_patch_plan"
-                    if item.get("risk") == "low"
-                    else "needs_more_context"
+                    "ready_for_patch_plan" if item.get("risk") == "low" else "needs_more_context"
                 ),
                 "source_candidate_id": item.get("candidate_id"),
                 "target_files": sorted(
-                    {
-                        str(value).split("#L", 1)[0]
-                        for value in item.get("files_involved", [])
-                    }
+                    {str(value).split("#L", 1)[0] for value in item.get("files_involved", [])}
                 )[:8],
                 "preferred_existing_helper_or_module": item.get(
                     "preferred_existing_helper_or_module"
@@ -726,9 +686,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         if value not in report_paths:
             report_paths.append(value)
     input_audit_paths = split_values(args.input_audit_report)
-    existing_audit_summary = summarize_existing_audit_reports(
-        repo_root, input_audit_paths
-    )
+    existing_audit_summary = summarize_existing_audit_reports(repo_root, input_audit_paths)
 
     files = iter_python_files(repo_root, roots)
     functions, parse_warnings = collect_functions(repo_root, files)
@@ -758,9 +716,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "No duplication candidates detected; verify roots and patterns before treating this as complete."
         )
 
-    generated_patch_plan_candidates = build_manual_review_patch_plan_candidates(
-        candidates
-    )
+    generated_patch_plan_candidates = build_manual_review_patch_plan_candidates(candidates)
     imported_patch_plan_candidates = list(
         existing_audit_summary.get("manual_review_patch_plan_candidates") or []
     )
@@ -861,8 +817,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     markdown = resolve_output_path(
         repo_root,
-        args.markdown_output
-        or f"output/analysis/refactor_duplication_audit_{stamp}.md",
+        args.markdown_output or f"output/analysis/refactor_duplication_audit_{stamp}.md",
     )
     report = build_report(args)
     write_json_report(report, output)
@@ -883,9 +838,7 @@ def main(argv: list[str] | None = None) -> int:
                 "provider_execution_performed": report["provider_execution_performed"],
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
-                "persistent_memory_write_performed": report[
-                    "persistent_memory_write_performed"
-                ],
+                "persistent_memory_write_performed": report["persistent_memory_write_performed"],
             },
             indent=2,
             ensure_ascii=False,

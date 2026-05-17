@@ -5,6 +5,7 @@ The smoke verifies boundary semantics only: entry creates a dynamic runtime
 session, state records lane availability, exit fails without concrete product
 and passes when concrete operations are present.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,14 +20,22 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def build_env(source_repo: Path) -> dict[str, str]:
     env = os.environ.copy()
     existing_pythonpath = env.get("PYTHONPATH", "")
     source_pythonpath = str(source_repo)
-    env["PYTHONPATH"] = source_pythonpath if not existing_pythonpath else source_pythonpath + os.pathsep + existing_pythonpath
+    env["PYTHONPATH"] = (
+        source_pythonpath
+        if not existing_pythonpath
+        else source_pythonpath + os.pathsep + existing_pythonpath
+    )
     return env
 
 
@@ -56,7 +65,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def prepare_base(repo: Path, stamp: str) -> None:
     (repo / "output/local_ai_task_inputs").mkdir(parents=True, exist_ok=True)
-    (repo / f"output/local_ai_task_inputs/task-{stamp}.md").write_text("# Task\n\nRuntime lifecycle smoke.\n", encoding="utf-8")
+    (repo / f"output/local_ai_task_inputs/task-{stamp}.md").write_text(
+        "# Task\n\nRuntime lifecycle smoke.\n", encoding="utf-8"
+    )
     write_json(
         repo / f"output/validation/openvino_gpu0_workload_{stamp}.json",
         {
@@ -72,9 +83,17 @@ def prepare_base(repo: Path, stamp: str) -> None:
     )
     write_json(
         repo / f"output/validation/{stamp}_phase_official.json",
-        {"kind": "unified_launcher_phase_status", "passed": True, "status": "passed", "return_code": 0},
+        {
+            "kind": "unified_launcher_phase_status",
+            "passed": True,
+            "status": "passed",
+            "return_code": 0,
+        },
     )
-    write_json(repo / "output/validation/ai_workload_report_quality.json", {"kind": "ai_workload_report_quality", "passed": True})
+    write_json(
+        repo / "output/validation/ai_workload_report_quality.json",
+        {"kind": "ai_workload_report_quality", "passed": True},
+    )
 
 
 def write_apply_report(repo: Path, stamp: str, *, concrete: bool) -> Path:
@@ -88,17 +107,37 @@ def write_apply_report(repo: Path, stamp: str, *, concrete: bool) -> Path:
             "changed_count": 1 if concrete else 0,
             "applied_count": 1 if concrete else 0,
             "manual_review_required": not concrete,
-            "manual_review_items": [] if concrete else [{"id": "metadata", "reason": "metadata-only draft operation has no concrete replacements"}],
+            "manual_review_items": []
+            if concrete
+            else [
+                {
+                    "id": "metadata",
+                    "reason": "metadata-only draft operation has no concrete replacements",
+                }
+            ],
             "results": [
-                {"operation": "append_once", "path": "docs/LOCAL_AI_TASKS/example.md", "changed": True, "applied": True, "ok": True}
-            ] if concrete else [],
+                {
+                    "operation": "append_once",
+                    "path": "docs/LOCAL_AI_TASKS/example.md",
+                    "changed": True,
+                    "applied": True,
+                    "ok": True,
+                }
+            ]
+            if concrete
+            else [],
         },
     )
     return path
 
 
 def render_markdown(report: dict[str, Any]) -> str:
-    lines = ["# Heap Exchange Runtime Lifecycle Smoke", "", f"- Passed: `{report.get('passed')}`", ""]
+    lines = [
+        "# Heap Exchange Runtime Lifecycle Smoke",
+        "",
+        f"- Passed: `{report.get('passed')}`",
+        "",
+    ]
     for case in report.get("cases") or []:
         lines.append(f"- `{case.get('name')}`: `{case.get('passed')}`")
     if report.get("errors"):
@@ -110,8 +149,12 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_exchange_runtime_lifecycle_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_exchange_runtime_lifecycle_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/heap_exchange_runtime_lifecycle_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/heap_exchange_runtime_lifecycle_smoke.md"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -128,48 +171,146 @@ def main() -> int:
         missing_stamp = "missing_concrete"
         prepare_base(repo, missing_stamp)
         missing_apply = write_apply_report(repo, missing_stamp, concrete=False)
-        entry_result = run([
-            sys.executable, str(entry_tool), "--repo-root", str(repo), "--stamp", missing_stamp,
-            "--task-file", f"output/local_ai_task_inputs/task-{missing_stamp}.md",
-            "--observer-dir", f"output/local_ai_runs/{missing_stamp}_observer",
-        ], repo, source_repo)
-        exit_result = run([
-            sys.executable, str(exit_tool), "--repo-root", str(repo), "--stamp", missing_stamp,
-            "--apply-report", str(missing_apply), "--observer-dir", f"output/local_ai_runs/{missing_stamp}_observer",
-            "--require-concrete-product",
-        ], repo, source_repo)
-        lifecycle_result = run([
-            sys.executable, str(lifecycle_tool), "--repo-root", str(repo), "--stamp", missing_stamp,
-            "--observer-dir", f"output/local_ai_runs/{missing_stamp}_observer",
-            "--require-public-events", "--require-concrete-exit", "--require-knowledge-surface",
-            "--output", "output/validation/missing_lifecycle.json",
-        ], repo, source_repo)
-        missing_ok = entry_result["returncode"] == 0 and exit_result["returncode"] == 2 and lifecycle_result["returncode"] == 2
-        cases.append({"name": "entry_passes_exit_blocks_without_concrete_product", "passed": missing_ok, "entry": entry_result, "exit": exit_result, "lifecycle": lifecycle_result})
+        entry_result = run(
+            [
+                sys.executable,
+                str(entry_tool),
+                "--repo-root",
+                str(repo),
+                "--stamp",
+                missing_stamp,
+                "--task-file",
+                f"output/local_ai_task_inputs/task-{missing_stamp}.md",
+                "--observer-dir",
+                f"output/local_ai_runs/{missing_stamp}_observer",
+            ],
+            repo,
+            source_repo,
+        )
+        exit_result = run(
+            [
+                sys.executable,
+                str(exit_tool),
+                "--repo-root",
+                str(repo),
+                "--stamp",
+                missing_stamp,
+                "--apply-report",
+                str(missing_apply),
+                "--observer-dir",
+                f"output/local_ai_runs/{missing_stamp}_observer",
+                "--require-concrete-product",
+            ],
+            repo,
+            source_repo,
+        )
+        lifecycle_result = run(
+            [
+                sys.executable,
+                str(lifecycle_tool),
+                "--repo-root",
+                str(repo),
+                "--stamp",
+                missing_stamp,
+                "--observer-dir",
+                f"output/local_ai_runs/{missing_stamp}_observer",
+                "--require-public-events",
+                "--require-concrete-exit",
+                "--require-knowledge-surface",
+                "--output",
+                "output/validation/missing_lifecycle.json",
+            ],
+            repo,
+            source_repo,
+        )
+        missing_ok = (
+            entry_result["returncode"] == 0
+            and exit_result["returncode"] == 2
+            and lifecycle_result["returncode"] == 2
+        )
+        cases.append(
+            {
+                "name": "entry_passes_exit_blocks_without_concrete_product",
+                "passed": missing_ok,
+                "entry": entry_result,
+                "exit": exit_result,
+                "lifecycle": lifecycle_result,
+            }
+        )
         if not missing_ok:
-            errors.append("missing concrete product case did not produce expected entry pass / exit fail / lifecycle fail")
+            errors.append(
+                "missing concrete product case did not produce expected entry pass / exit fail / lifecycle fail"
+            )
 
         concrete_stamp = "concrete_product"
         prepare_base(repo, concrete_stamp)
         concrete_apply = write_apply_report(repo, concrete_stamp, concrete=True)
-        entry_result = run([
-            sys.executable, str(entry_tool), "--repo-root", str(repo), "--stamp", concrete_stamp,
-            "--task-file", f"output/local_ai_task_inputs/task-{concrete_stamp}.md",
-            "--observer-dir", f"output/local_ai_runs/{concrete_stamp}_observer",
-        ], repo, source_repo)
-        exit_result = run([
-            sys.executable, str(exit_tool), "--repo-root", str(repo), "--stamp", concrete_stamp,
-            "--apply-report", str(concrete_apply), "--observer-dir", f"output/local_ai_runs/{concrete_stamp}_observer",
-            "--require-concrete-product",
-        ], repo, source_repo)
-        lifecycle_result = run([
-            sys.executable, str(lifecycle_tool), "--repo-root", str(repo), "--stamp", concrete_stamp,
-            "--observer-dir", f"output/local_ai_runs/{concrete_stamp}_observer",
-            "--require-public-events", "--require-concrete-exit", "--require-knowledge-surface",
-            "--output", "output/validation/concrete_lifecycle.json",
-        ], repo, source_repo)
-        concrete_ok = entry_result["returncode"] == 0 and exit_result["returncode"] == 0 and lifecycle_result["returncode"] == 0
-        cases.append({"name": "entry_exit_lifecycle_pass_with_concrete_product", "passed": concrete_ok, "entry": entry_result, "exit": exit_result, "lifecycle": lifecycle_result})
+        entry_result = run(
+            [
+                sys.executable,
+                str(entry_tool),
+                "--repo-root",
+                str(repo),
+                "--stamp",
+                concrete_stamp,
+                "--task-file",
+                f"output/local_ai_task_inputs/task-{concrete_stamp}.md",
+                "--observer-dir",
+                f"output/local_ai_runs/{concrete_stamp}_observer",
+            ],
+            repo,
+            source_repo,
+        )
+        exit_result = run(
+            [
+                sys.executable,
+                str(exit_tool),
+                "--repo-root",
+                str(repo),
+                "--stamp",
+                concrete_stamp,
+                "--apply-report",
+                str(concrete_apply),
+                "--observer-dir",
+                f"output/local_ai_runs/{concrete_stamp}_observer",
+                "--require-concrete-product",
+            ],
+            repo,
+            source_repo,
+        )
+        lifecycle_result = run(
+            [
+                sys.executable,
+                str(lifecycle_tool),
+                "--repo-root",
+                str(repo),
+                "--stamp",
+                concrete_stamp,
+                "--observer-dir",
+                f"output/local_ai_runs/{concrete_stamp}_observer",
+                "--require-public-events",
+                "--require-concrete-exit",
+                "--require-knowledge-surface",
+                "--output",
+                "output/validation/concrete_lifecycle.json",
+            ],
+            repo,
+            source_repo,
+        )
+        concrete_ok = (
+            entry_result["returncode"] == 0
+            and exit_result["returncode"] == 0
+            and lifecycle_result["returncode"] == 0
+        )
+        cases.append(
+            {
+                "name": "entry_exit_lifecycle_pass_with_concrete_product",
+                "passed": concrete_ok,
+                "entry": entry_result,
+                "exit": exit_result,
+                "lifecycle": lifecycle_result,
+            }
+        )
         if not concrete_ok:
             errors.append("concrete product case did not pass lifecycle")
 

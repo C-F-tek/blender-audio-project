@@ -80,9 +80,7 @@ except ImportError:  # Script-style execution from tools/ai.
     )
 
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
-DEFAULT_REFINED = (
-    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
-)
+DEFAULT_REFINED = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
 DEFAULT_OUTPUT = "output/ai_pipeline/agent_gpu_deep_planning_review.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/agent_gpu_deep_planning_review.md"
 TEXT_EXTENSIONS = {".md", ".py", ".ps1", ".sh", ".json", ".yaml", ".yml", ".txt"}
@@ -132,11 +130,7 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -298,9 +292,7 @@ def compact_json(data: Any, max_chars: int) -> str:
 def split_batches(items: list[ContextFile], batch_size: int) -> list[list[ContextFile]]:
     if batch_size <= 0:
         return [items]
-    return [
-        items[index : index + batch_size] for index in range(0, len(items), batch_size)
-    ]
+    return [items[index : index + batch_size] for index in range(0, len(items), batch_size)]
 
 
 def build_prompt(
@@ -414,8 +406,7 @@ def parse_model_json_with_diagnostics(
         **contract,
         "contract": contract,
         "contract_empty_recommendations_reason": contract_result.empty_recommendations_reason,
-        "model_output_schema_mismatch": contract_result.json_ok
-        and not contract_result.schema_ok,
+        "model_output_schema_mismatch": contract_result.json_ok and not contract_result.schema_ok,
         # Legacy field retained for report consumers that still read the old name.
         "model_output_missing_required_fields": contract_result.json_ok
         and not contract_result.schema_ok,
@@ -525,9 +516,7 @@ def extract_valid_tool_requests(
         fallback_reason = deterministic_tool_fallback_reason_from_parsed(parsed)
         if fallback_reason:
             return (
-                deterministic_fallback_tool_requests(
-                    fallback_reason, max_requests=max_requests
-                ),
+                deterministic_fallback_tool_requests(fallback_reason, max_requests=max_requests),
                 [],
             )
         return [], []
@@ -542,9 +531,7 @@ def extract_valid_tool_requests(
             errors.extend(item_errors)
             continue
         if len(valid) >= max_requests:
-            errors.append(
-                f"tool_requests[{index}] skipped: max_requests={max_requests} reached"
-            )
+            errors.append(f"tool_requests[{index}] skipped: max_requests={max_requests} reached")
             continue
         valid.append(dict(item))
     return valid, errors
@@ -599,16 +586,12 @@ def recommendation_diagnostics_for_round(
         model_output_missing_required_fields=bool(
             parse_diagnostics.get("model_output_missing_required_fields")
         ),
-        model_output_schema_mismatch=bool(
-            parse_diagnostics.get("model_output_schema_mismatch")
-        ),
+        model_output_schema_mismatch=bool(parse_diagnostics.get("model_output_schema_mismatch")),
         context_echo_detected=bool(parse_diagnostics.get("context_echo_detected")),
         raw_recommendation_candidate_count=raw_count,
         filtered_recommendation_count=filtered_count,
         evidence_ready_for_manual_patch_count_value=evidence_ready_for_manual_patch_count_value,
-        valid_tool_request_count=int(
-            parse_diagnostics.get("valid_tool_request_count") or 0
-        ),
+        valid_tool_request_count=int(parse_diagnostics.get("valid_tool_request_count") or 0),
     )
     return {
         "json_ok": bool(parse_diagnostics.get("json_ok")),
@@ -616,9 +599,7 @@ def recommendation_diagnostics_for_round(
         "schema_ok": bool(parse_diagnostics.get("schema_ok")),
         "schema_errors": list(parse_diagnostics.get("schema_errors") or []),
         "context_echo_detected": bool(parse_diagnostics.get("context_echo_detected")),
-        "model_output_schema_mismatch": bool(
-            parse_diagnostics.get("model_output_schema_mismatch")
-        ),
+        "model_output_schema_mismatch": bool(parse_diagnostics.get("model_output_schema_mismatch")),
         "contract_empty_recommendations_reason": str(
             parse_diagnostics.get("contract_empty_recommendations_reason") or ""
         ),
@@ -628,12 +609,8 @@ def recommendation_diagnostics_for_round(
         "filtered_recommendation_count": filtered_count,
         "recommendation_count": filtered_count,
         "tool_request_count": tool_request_count,
-        "valid_tool_request_count": int(
-            parse_diagnostics.get("valid_tool_request_count") or 0
-        ),
-        "invalid_tool_request_count": int(
-            parse_diagnostics.get("invalid_tool_request_count") or 0
-        ),
+        "valid_tool_request_count": int(parse_diagnostics.get("valid_tool_request_count") or 0),
+        "invalid_tool_request_count": int(parse_diagnostics.get("invalid_tool_request_count") or 0),
         "empty_recommendations_reason": reason,
         "evidence_ready_for_manual_patch_count": evidence_ready_for_manual_patch_count_value,
         "provider_tool_request_absence_reason": (
@@ -641,8 +618,7 @@ def recommendation_diagnostics_for_round(
         ),
         "recommended_next_layer": (
             "build_agent_review_patch_plan.py"
-            if reason
-            in {"evidence_ready_but_no_gpu_plan", "evidence_ready_but_no_tool_requests"}
+            if reason in {"evidence_ready_but_no_gpu_plan", "evidence_ready_but_no_tool_requests"}
             else ""
         ),
     }
@@ -653,8 +629,7 @@ def aggregate_recommendation_diagnostics(
 ) -> dict[str, Any]:
     evidence_ready_count = evidence_ready_for_manual_patch_count(evidence)
     raw_count = sum(
-        int(round_result.get("raw_recommendation_candidate_count") or 0)
-        for round_result in rounds
+        int(round_result.get("raw_recommendation_candidate_count") or 0) for round_result in rounds
     )
     filtered_count = len(merge_recommendations(rounds))
     repair_attempt_count = sum(
@@ -670,8 +645,7 @@ def aggregate_recommendation_diagnostics(
         1
         for round_result in rounds
         if round_result.get("model_output_schema_mismatch")
-        or round_result.get("empty_recommendations_reason")
-        == "model_output_schema_mismatch"
+        or round_result.get("empty_recommendations_reason") == "model_output_schema_mismatch"
         or round_result.get("empty_recommendations_reason")
         == "model_output_missing_required_fields"
     )
@@ -679,12 +653,10 @@ def aggregate_recommendation_diagnostics(
         int(round_result.get("tool_request_count") or 0) for round_result in rounds
     )
     valid_tool_request_count = sum(
-        int(round_result.get("valid_tool_request_count") or 0)
-        for round_result in rounds
+        int(round_result.get("valid_tool_request_count") or 0) for round_result in rounds
     )
     invalid_tool_request_count = sum(
-        int(round_result.get("invalid_tool_request_count") or 0)
-        for round_result in rounds
+        int(round_result.get("invalid_tool_request_count") or 0) for round_result in rounds
     )
     parse_errors = [
         str(round_result.get("parse_error"))
@@ -738,9 +710,7 @@ def merge_recommendations(rounds: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     for round_result in rounds:
         parsed = round_result.get("parsed_response") or {}
-        for rec in (
-            parsed.get("recommendations", []) if isinstance(parsed, dict) else []
-        ):
+        for rec in parsed.get("recommendations", []) if isinstance(parsed, dict) else []:
             if not isinstance(rec, dict):
                 continue
             if validate_recommendation_object(rec, len(merged)):
@@ -765,12 +735,8 @@ def merge_recommendations(rounds: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent GPU Deep Planning Review", ""]
     lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Model: `{report.get('model_used')}`")
     lines.append(f"- Elapsed seconds: `{report['elapsed_seconds']}`")
     lines.append(f"- Round count: `{report['round_count']}`")
@@ -782,22 +748,14 @@ def build_markdown(report: dict[str, Any]) -> str:
         f"- Filtered recommendation count: `{report.get('filtered_recommendation_count')}`"
     )
     lines.append(f"- Tool request count: `{report.get('tool_request_count')}`")
-    lines.append(
-        f"- Valid tool request count: `{report.get('valid_tool_request_count')}`"
-    )
-    lines.append(
-        f"- Invalid tool request count: `{report.get('invalid_tool_request_count')}`"
-    )
+    lines.append(f"- Valid tool request count: `{report.get('valid_tool_request_count')}`")
+    lines.append(f"- Invalid tool request count: `{report.get('invalid_tool_request_count')}`")
     lines.append(f"- JSON parse error count: `{report.get('json_parse_error_count')}`")
-    lines.append(
-        f"- Context echo detected count: `{report.get('context_echo_detected_count')}`"
-    )
+    lines.append(f"- Context echo detected count: `{report.get('context_echo_detected_count')}`")
     lines.append(
         f"- Model output schema mismatch count: `{report.get('model_output_schema_mismatch_count')}`"
     )
-    lines.append(
-        f"- Empty recommendations reason: `{report.get('empty_recommendations_reason')}`"
-    )
+    lines.append(f"- Empty recommendations reason: `{report.get('empty_recommendations_reason')}`")
     lines.append(
         f"- Evidence ready for manual patch count: `{report.get('evidence_ready_for_manual_patch_count')}`"
     )
@@ -845,13 +803,9 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
                     }
                 )
             except Exception as exc:  # noqa: BLE001
-                context_reports.append(
-                    {"path": repo_rel(path, repo_root), "error": str(exc)}
-                )
+                context_reports.append({"path": repo_rel(path, repo_root), "error": str(exc)})
         else:
-            context_reports.append(
-                {"path": repo_rel(path, repo_root), "error": "missing"}
-            )
+            context_reports.append({"path": repo_rel(path, repo_root), "error": "missing"})
 
     evidence_paths = extract_evidence_files(evidence)
     context_roots = list(args.context_root or []) + evidence_paths
@@ -977,12 +931,8 @@ def run_deep_review(args: argparse.Namespace) -> dict[str, Any]:
 
     recommendations = merge_recommendations(rounds)
     diagnostics = aggregate_recommendation_diagnostics(rounds, evidence)
-    ready = [
-        rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"
-    ]
-    needs_context = [
-        rec for rec in recommendations if rec.get("status") == "needs_more_context"
-    ]
+    ready = [rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"]
+    needs_context = [rec for rec in recommendations if rec.get("status") == "needs_more_context"]
     fallback_recommended = (
         diagnostics["evidence_ready_for_manual_patch_count"] > 0
         and diagnostics["filtered_recommendation_count"] == 0
@@ -1063,9 +1013,7 @@ def main() -> int:
     markdown_output = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output.write_text(build_markdown(report), encoding="utf-8")
     print(
         json.dumps(
@@ -1081,22 +1029,16 @@ def main() -> int:
                 "raw_recommendation_candidate_count": report.get(
                     "raw_recommendation_candidate_count"
                 ),
-                "filtered_recommendation_count": report.get(
-                    "filtered_recommendation_count"
-                ),
+                "filtered_recommendation_count": report.get("filtered_recommendation_count"),
                 "tool_request_count": report.get("tool_request_count"),
                 "valid_tool_request_count": report.get("valid_tool_request_count"),
                 "invalid_tool_request_count": report.get("invalid_tool_request_count"),
-                "empty_recommendations_reason": report.get(
-                    "empty_recommendations_reason"
-                ),
+                "empty_recommendations_reason": report.get("empty_recommendations_reason"),
                 "evidence_ready_for_manual_patch_count": report.get(
                     "evidence_ready_for_manual_patch_count"
                 ),
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),
-                "recommended_next_layer": report["decision"].get(
-                    "recommended_next_layer"
-                ),
+                "recommended_next_layer": report["decision"].get("recommended_next_layer"),
             },
             indent=2,
             ensure_ascii=False,

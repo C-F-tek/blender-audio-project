@@ -18,19 +18,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-DEFAULT_REVIEW = (
-    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.json"
+DEFAULT_REVIEW = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review.json"
+DEFAULT_PROPOSALS = (
+    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review_proposals.json"
 )
-DEFAULT_PROPOSALS = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_repo_review_proposals.json"
-DEFAULT_OUTPUT = (
-    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
-)
+DEFAULT_OUTPUT = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.json"
 DEFAULT_PROPOSALS_OUTPUT = (
     "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_proposals.json"
 )
-DEFAULT_MARKDOWN = (
-    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.md"
-)
+DEFAULT_MARKDOWN = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review.md"
 
 KNOWN_TOP_LEVELS = {
     ".github",
@@ -121,9 +117,7 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def repo_root_from_review(review: dict[str, Any]) -> Path:
@@ -187,9 +181,7 @@ def is_placeholder_reference(reference: str) -> bool:
 
 def classify_ai_workload_failure(report: dict[str, Any]) -> dict[str, Any]:
     errors = report.get("errors") or []
-    npu_only = bool(errors) and all(
-        str(item).lower().startswith("npu:") for item in errors
-    )
+    npu_only = bool(errors) and all(str(item).lower().startswith("npu:") for item in errors)
     if report.get("kind") == "ai_workload_report_quality" and npu_only:
         return {
             "classification": "expected_guardrail",
@@ -240,9 +232,7 @@ def refine_doc_code(
     review: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     repo_root = repo_root_from_review(review)
-    missing = (
-        review.get("doc_code_consistency", {}).get("missing_path_references", []) or []
-    )
+    missing = review.get("doc_code_consistency", {}).get("missing_path_references", []) or []
     actionable_refs = []
     ignored_refs = []
     resolved_refs = []
@@ -325,9 +315,7 @@ def refine_doc_code(
 def refine_doc_doc(
     review: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    canonical_docs = (
-        review.get("doc_doc_consistency", {}).get("canonical_docs", []) or []
-    )
+    canonical_docs = review.get("doc_doc_consistency", {}).get("canonical_docs", []) or []
     actionable = []
     informational = []
     for item in canonical_docs:
@@ -356,9 +344,7 @@ def refine_doc_doc(
                 "severity": "medium",
                 "area": "doc_doc",
                 "title": "Dedicated contract docs may need targeted cross-references",
-                "details": [
-                    f"{item['path']}: {item['missing_terms']}" for item in actionable
-                ],
+                "details": [f"{item['path']}: {item['missing_terms']}" for item in actionable],
             }
         )
     return findings, {"actionable": actionable, "informational": informational}
@@ -410,18 +396,14 @@ def is_low_signal_duplicate(symbol: str, paths: list[str]) -> bool:
 def refine_code_code(
     review: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    duplicates = (
-        review.get("code_code_consistency", {}).get("duplicate_symbols", []) or []
-    )
+    duplicates = review.get("code_code_consistency", {}).get("duplicate_symbols", []) or []
     actionable = []
     ignored = []
     for item in duplicates:
         symbol = str(item.get("symbol") or "")
         paths = [str(path) for path in item.get("paths", [])]
         if is_low_signal_duplicate(symbol, paths):
-            ignored.append(
-                {**item, "reason": "generic_generated_or_cross_package_duplicate"}
-            )
+            ignored.append({**item, "reason": "generic_generated_or_cross_package_duplicate"})
         elif paths and all(is_backup_or_generated_path(path) for path in paths):
             ignored.append({**item, "reason": "backup_or_generated_only"})
         elif any("Scripting/v61b_backgood/" in path for path in paths) and any(
@@ -438,8 +420,7 @@ def refine_code_code(
                 "area": "code_code",
                 "title": "Duplicate code symbols remain after generic/generated filtering",
                 "details": [
-                    f"{item.get('symbol')} -> {item.get('paths')}"
-                    for item in actionable[:30]
+                    f"{item.get('symbol')} -> {item.get('paths')}" for item in actionable[:30]
                 ],
             }
         )
@@ -450,15 +431,13 @@ def refine_code_code(
     }
 
 
-def build_proposals(
-    findings: list[dict[str, Any]], review: dict[str, Any]
-) -> dict[str, Any]:
+def build_proposals(findings: list[dict[str, Any]], review: dict[str, Any]) -> dict[str, Any]:
     proposals = []
     for finding in findings:
         if finding.get("severity") in {"high", "medium", "low"}:
             proposals.append(
                 {
-                    "id": f"REFINED-MEGA-{len(proposals)+1:03d}",
+                    "id": f"REFINED-MEGA-{len(proposals) + 1:03d}",
                     "title": finding.get("title"),
                     "area": finding.get("area"),
                     "apply_mode": "manual_review_only",
@@ -473,9 +452,7 @@ def build_proposals(
         "passed": True,
         "errors": [],
         "warnings": [],
-        "provider_execution_performed": bool(
-            review.get("provider_execution_performed")
-        ),
+        "provider_execution_performed": bool(review.get("provider_execution_performed")),
         "patch_application_performed": False,
         "apply_mode": "manual_review_only",
         "proposal_count": len(proposals),
@@ -488,9 +465,7 @@ def refine_review(review: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any
     doc_code_findings, doc_code_meta = refine_doc_code(review)
     doc_doc_findings, doc_doc_meta = refine_doc_doc(review)
     code_code_findings, code_code_meta = refine_code_code(review)
-    findings = (
-        validation_findings + doc_code_findings + doc_doc_findings + code_code_findings
-    )
+    findings = validation_findings + doc_code_findings + doc_doc_findings + code_code_findings
     informational = validation_info
     if not findings:
         findings.append(
@@ -511,9 +486,7 @@ def refine_review(review: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any
         "passed": True,
         "errors": [],
         "warnings": [],
-        "provider_execution_performed": bool(
-            review.get("provider_execution_performed")
-        ),
+        "provider_execution_performed": bool(review.get("provider_execution_performed")),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "apply_mode": "report_only_manual_review_only",
@@ -567,9 +540,7 @@ def render_markdown(refined: dict[str, Any], proposals: dict[str, Any]) -> str:
     lines.append(
         f"- Resolved doc/code refs: `{refined['refinement']['doc_code'].get('resolved_count', 0)}`"
     )
-    lines.append(
-        f"- Ignored doc/code refs: `{refined['refinement']['doc_code']['ignored_count']}`"
-    )
+    lines.append(f"- Ignored doc/code refs: `{refined['refinement']['doc_code']['ignored_count']}`")
     lines.append(
         f"- Ignored code/code duplicates: `{refined['refinement']['code_code']['ignored_count']}`"
     )
@@ -590,9 +561,7 @@ def main() -> int:
     args = parser.parse_args()
 
     review = read_json(Path(args.review))
-    _original_proposals = (
-        read_json(Path(args.proposals)) if Path(args.proposals).exists() else {}
-    )
+    read_json(Path(args.proposals)) if Path(args.proposals).exists() else {}
     refined, proposals = refine_review(review)
     write_json(Path(args.output), refined)
     write_json(Path(args.proposal_output), proposals)

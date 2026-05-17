@@ -38,9 +38,7 @@ def normalize_status(value: Any) -> str:
 
 
 def degraded_lanes(lane_status: dict[str, str]) -> list[str]:
-    return sorted(
-        lane for lane, status in lane_status.items() if status in DEGRADED_STATUSES
-    )
+    return sorted(lane for lane, status in lane_status.items() if status in DEGRADED_STATUSES)
 
 
 @dataclass
@@ -97,9 +95,7 @@ class RuntimeState:
             "recommendation_count": len(self.recommendations),
             "patch_plan_count": len(self.patch_plans),
             "validation_count": len(self.validations),
-            "latest_recommendation": self.recommendations[-1]
-            if self.recommendations
-            else {},
+            "latest_recommendation": self.recommendations[-1] if self.recommendations else {},
             "latest_patch_plan": self.patch_plans[-1] if self.patch_plans else {},
             "latest_validation": self.validations[-1] if self.validations else {},
             "updated_at": self.updated_at,

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-import json
-
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / "output"
@@ -32,12 +31,16 @@ def file_status(path: Path) -> dict[str, Any]:
         "path": str(path),
         "exists": exists,
         "bytes": path.stat().st_size if exists and path.is_file() else 0,
-        "updated": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds") if exists else None,
+        "updated": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds")
+        if exists
+        else None,
     }
 
 
 def compact_assets(asset_inventory: dict[str, Any]) -> list[dict[str, Any]]:
-    assets = asset_inventory.get("assets") if isinstance(asset_inventory.get("assets"), list) else []
+    assets = (
+        asset_inventory.get("assets") if isinstance(asset_inventory.get("assets"), list) else []
+    )
     result = []
     for asset in assets:
         if not isinstance(asset, dict):
@@ -101,7 +104,9 @@ def compact_track_read(music_context: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
-def deterministic_track_opinion(track_identity: dict[str, Any], music_context: dict[str, Any] | None) -> str:
+def deterministic_track_opinion(
+    track_identity: dict[str, Any], music_context: dict[str, Any] | None
+) -> str:
     read = compact_track_read(music_context)
     title = track_identity.get("title") or track_identity.get("track_stem")
     artist = track_identity.get("artist")
@@ -119,7 +124,9 @@ def deterministic_track_opinion(track_identity: dict[str, Any], music_context: d
 
     lines = [
         f"Parlo del brano del progetto, `{name}`, non di metadati esterni.",
-        f"Dai JSON lo leggo come una traccia con {segment_count} segmenti compatti" + (f" e BPM stimato {round(float(bpm), 2)}" if bpm else "") + ".",
+        f"Dai JSON lo leggo come una traccia con {segment_count} segmenti compatti"
+        + (f" e BPM stimato {round(float(bpm), 2)}" if bpm else "")
+        + ".",
         (
             f"L'apertura sembra guidata da banda `{first.get('dominant_band')}` con intensita `{first.get('intensity')}`, "
             f"mentre la coda arriva su `{last.get('dominant_band')}` / `{last.get('intensity')}`."
@@ -128,16 +135,22 @@ def deterministic_track_opinion(track_identity: dict[str, Any], music_context: d
     ]
     if top_bits:
         lines.append("I punti da far respirare visivamente sono: " + "; ".join(top_bits) + ".")
-    lines.append("Quindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat.")
+    lines.append(
+        "Quindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat."
+    )
     return "\n".join(lines)
 
 
-def build_verified_answers(awareness: dict[str, Any], music_context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def build_verified_answers(
+    awareness: dict[str, Any], music_context: dict[str, Any] | None = None
+) -> list[dict[str, Any]]:
     music_context = music_context or {}
     files = awareness.get("technical_files", {})
     state = awareness.get("pipeline_state", {})
     assets = (awareness.get("asset_awareness") or {}).get("primary_assets", [])
-    primary_ball = next((asset for asset in assets if asset.get("role") == "primary_ball_asset"), None)
+    primary_ball = next(
+        (asset for asset in assets if asset.get("role") == "primary_ball_asset"), None
+    )
     track_identity = awareness.get("track_identity", {})
 
     answers = [
@@ -195,7 +208,11 @@ def build_verified_answers(awareness: dict[str, Any], music_context: dict[str, A
         {
             "question": "Quanti segmenti musicali compatti sono disponibili?",
             "answer": f"Sono disponibili {state.get('segment_count', len(music_context.get('segments') or []))} segmenti compatti.",
-            "evidence": {"segment_count": state.get("segment_count", len(music_context.get("segments") or []))},
+            "evidence": {
+                "segment_count": state.get(
+                    "segment_count", len(music_context.get("segments") or [])
+                )
+            },
         },
     ]
     return answers
@@ -257,7 +274,9 @@ def build_project_awareness(
         "dual_ai_plan_json": output_dir / f"{track_stem}_dual_ai_scene_plan.json",
         "gpu_task_packet_json": output_dir / f"{track_stem}_gpu_task_packet.json",
         "ai_implementation_draft_json": output_dir / f"{track_stem}_ai_implementation_draft.json",
-        "generated_scene_script": INDEX_AI_DIR / "scene_scripts" / f"{slug}_scene_builder_candidate.py",
+        "generated_scene_script": INDEX_AI_DIR
+        / "scene_scripts"
+        / f"{slug}_scene_builder_candidate.py",
         "project_code_index": INDEX_AI_DIR / "project_code_index.md",
         "project_code_manifest": INDEX_AI_DIR / "project_code_manifest.json",
         "npu_music_context_md": NPU_DIR / "npu_music_context.md",
@@ -268,9 +287,26 @@ def build_project_awareness(
     }
 
     statuses = {name: file_status(path) for name, path in key_paths.items()}
-    missing = [name for name, item in statuses.items() if not item["exists"] and name not in {"ai_implementation_draft_json", "generated_scene_script"}]
-    ready_inputs = all(statuses[name]["exists"] for name in ["analysis_json", "music_context_json", "analysis_ai_context_json", "blender_keyframes_json"])
-    can_generate_script = ready_inputs and statuses["scene_brief_json"]["exists"] and statuses["asset_inventory_json"]["exists"]
+    missing = [
+        name
+        for name, item in statuses.items()
+        if not item["exists"]
+        and name not in {"ai_implementation_draft_json", "generated_scene_script"}
+    ]
+    ready_inputs = all(
+        statuses[name]["exists"]
+        for name in [
+            "analysis_json",
+            "music_context_json",
+            "analysis_ai_context_json",
+            "blender_keyframes_json",
+        ]
+    )
+    can_generate_script = (
+        ready_inputs
+        and statuses["scene_brief_json"]["exists"]
+        and statuses["asset_inventory_json"]["exists"]
+    )
 
     music_context = music_context or read_json(key_paths["music_context_json"])
     asset_inventory = asset_inventory or read_json(output_dir / "spaziotempo_asset_inventory.json")
@@ -309,7 +345,9 @@ def build_project_awareness(
         },
         "npu_context": {
             "preflight_ready": bool(npu_preflight.get("ready")) if npu_preflight else False,
-            "available_devices": npu_preflight.get("available_devices", []) if npu_preflight else [],
+            "available_devices": npu_preflight.get("available_devices", [])
+            if npu_preflight
+            else [],
             "can_delegate_uncertainty": bool(npu_preflight.get("ready")),
             "fallback": "If NPU is not ready, use deterministic project awareness and existing chunks instead of pretending uncertainty.",
         },
@@ -331,7 +369,9 @@ def build_project_awareness(
 def save_project_awareness(awareness: dict[str, Any]) -> dict[str, str]:
     patch_dir = INDEX_AI_DIR / "patch_library"
     patch_dir.mkdir(parents=True, exist_ok=True)
-    slug = "".join(ch.lower() if ch.isalnum() else "_" for ch in str(awareness.get("track_stem", "track"))).strip("_")
+    slug = "".join(
+        ch.lower() if ch.isalnum() else "_" for ch in str(awareness.get("track_stem", "track"))
+    ).strip("_")
     slug = "_".join(part for part in slug.split("_") if part)
     json_path = patch_dir / f"{slug}_project_awareness.json"
     md_path = patch_dir / f"{slug}_project_awareness.md"

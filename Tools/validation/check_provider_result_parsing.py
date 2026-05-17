@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Validate app-agnostic provider result parsing/reporting helpers."""
+
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -15,16 +15,25 @@ def check_provider_result_parsing(repo_root: Path) -> dict[str, object]:
     if root_text not in sys.path:
         sys.path.insert(0, root_text)
 
-    from Tools.npu.pipeline import build_provider_result_report, parse_provider_result  # noqa: PLC0415
+    from Tools.npu.pipeline import (  # noqa: PLC0415
+        build_provider_result_report,
+        parse_provider_result,
+    )
 
     samples = [
         ("ollama", {"response": '{"ok": true}', "eval_count": 8, "prompt_eval_count": 3}, True),
-        ("openai_compatible", {"choices": [{"message": {"content": "plain text"}}], "usage": {"total_tokens": 12}}, False),
+        (
+            "openai_compatible",
+            {"choices": [{"message": {"content": "plain text"}}], "usage": {"total_tokens": 12}},
+            False,
+        ),
         ("npu", {"text": '{"device": "NPU"}', "total_duration": 10}, True),
         ("broken", {"error": "simulated failure", "response": ""}, False),
     ]
     parsed = [
-        parse_provider_result(raw, provider=provider, model="smoke-model", executed=False, allow_json=allow_json)
+        parse_provider_result(
+            raw, provider=provider, model="smoke-model", executed=False, allow_json=allow_json
+        )
         for provider, raw, allow_json in samples
     ]
     report = build_provider_result_report(

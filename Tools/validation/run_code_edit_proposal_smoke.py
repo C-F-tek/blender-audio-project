@@ -8,6 +8,7 @@ The validator checks the metadata contract for either:
 
 It does not apply patches, execute providers, run Blender or write source files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -46,7 +47,11 @@ REQUIRED_LISTS = ("validation_commands", "stop_conditions")
 
 def validate_required_strings(data: dict[str, Any]) -> list[str]:
     """Validate required non-empty string fields."""
-    return [f"missing or invalid string field: {field}" for field in REQUIRED_STRINGS if not isinstance(data.get(field), str) or not data.get(field).strip()]
+    return [
+        f"missing or invalid string field: {field}"
+        for field in REQUIRED_STRINGS
+        if not isinstance(data.get(field), str) or not data.get(field).strip()
+    ]
 
 
 def validate_non_empty_string_list(data: dict[str, Any], field: str) -> list[str]:
@@ -75,7 +80,9 @@ def unwrap_proposal(data: dict[str, Any]) -> tuple[dict[str, Any], list[str], li
         errors.append("code_edit_proposal_build.proposal must be a non-empty object")
         return {}, errors, warnings, "wrapper_missing_proposal"
     if data.get("passed") is not True:
-        warnings.append("code_edit_proposal_build.passed is not true; validating nested proposal anyway")
+        warnings.append(
+            "code_edit_proposal_build.passed is not true; validating nested proposal anyway"
+        )
     return proposal, errors, warnings, "code_edit_proposal_build_wrapper"
 
 
@@ -96,9 +103,13 @@ def validate_target(repo_root: Path, data: dict[str, Any]) -> tuple[list[str], l
     if metadata.get("suffix") != Path(target).suffix.lower():
         errors.append("target_metadata.suffix must match target_file suffix")
     if metadata.get("sha256") is None:
-        warnings.append("target_metadata.sha256 is null; regenerate proposal from local filesystem for stronger review evidence")
+        warnings.append(
+            "target_metadata.sha256 is null; regenerate proposal from local filesystem for stronger review evidence"
+        )
     if metadata.get("line_count") is None:
-        warnings.append("target_metadata.line_count is null; regenerate proposal from local filesystem for stronger review evidence")
+        warnings.append(
+            "target_metadata.line_count is null; regenerate proposal from local filesystem for stronger review evidence"
+        )
     return errors, warnings
 
 
@@ -118,7 +129,11 @@ def validate_edit_payload(data: dict[str, Any]) -> list[str]:
     if edit_kind == EDIT_KIND_STRUCTURED and not structured_operations:
         errors.append("structured_edit requires non-empty structured_operations")
     if edit_kind == EDIT_KIND_UNIFIED_DIFF:
-        errors.extend(validate_unified_diff_text(str(unified_diff or ""), normalize_repo_path(data.get("target_file"))))
+        errors.extend(
+            validate_unified_diff_text(
+                str(unified_diff or ""), normalize_repo_path(data.get("target_file"))
+            )
+        )
     return errors
 
 

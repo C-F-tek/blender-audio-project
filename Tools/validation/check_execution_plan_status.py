@@ -6,6 +6,7 @@ abandoned. Completed and abandoned plans should live in their matching folders.
 
 Folder README files are documentation, not execution plans, and are ignored.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -72,7 +73,11 @@ def check_execution_plan_status(repo_root: Path) -> dict[str, object]:
             elif folder_name == "abandoned" and status != "abandoned":
                 ok = False
                 reason = "abandoned/ plan must have top-level status abandoned"
-            elif folder_name == "active" and status != "missing" and status not in ALLOWED_ACTIVE_STATUSES:
+            elif (
+                folder_name == "active"
+                and status != "missing"
+                and status not in ALLOWED_ACTIVE_STATUSES
+            ):
                 ok = False
                 reason = f"active/ plan has unsupported top-level status: {status}"
             if not ok:
@@ -98,7 +103,9 @@ def check_execution_plan_status(repo_root: Path) -> dict[str, object]:
             "plan_count": len(results),
             "ignored_files": ignored_files,
             "active_terminal_status_count": sum(
-                1 for item in results if item["folder"] == "active" and item["status"] in TERMINAL_STATUSES
+                1
+                for item in results
+                if item["folder"] == "active" and item["status"] in TERMINAL_STATUSES
             ),
             "results": results,
         },

@@ -5,6 +5,7 @@ This validator converts the launcher from a loose sequence of phases into a
 machine-checkable chain contract. Each edge verifies that a producer phase emits
 an artifact that the next consumer phase can actually use.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover - direct execution from repo root
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 DEFAULT_MODE_NAME = "agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke"
@@ -49,7 +54,15 @@ TOOL_EVIDENCE_HINTS = (
 REQUIRED_HEAP_PEERS = {
     "gpu1": ("gpu1", "primary", "advisory", "planner"),
     "gpu0": ("gpu0", "companion", "tool", "openvino", "worker"),
-    "npu": ("npu", "microoperation", "micro-operation", "micro_ops", "micro-ops", "efficiency", "peer"),
+    "npu": (
+        "npu",
+        "microoperation",
+        "micro-operation",
+        "micro_ops",
+        "micro-ops",
+        "efficiency",
+        "peer",
+    ),
 }
 
 SHARED_MEMORY_HINTS = (
@@ -85,7 +98,9 @@ def load_jsonl(path: Path) -> tuple[list[dict[str, Any]], str | None]:
         return [], "missing"
     events: list[dict[str, Any]] = []
     errors: list[str] = []
-    for index, line in enumerate(path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1):
+    for index, line in enumerate(
+        path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1
+    ):
         stripped = line.strip()
         if not stripped:
             continue
@@ -101,7 +116,11 @@ def load_jsonl(path: Path) -> tuple[list[dict[str, Any]], str | None]:
 
 def discover_first(repo_root: Path, patterns: list[str]) -> Path | None:
     for pattern in patterns:
-        matches = sorted(repo_root.glob(pattern), key=lambda item: item.stat().st_mtime if item.exists() else 0, reverse=True)
+        matches = sorted(
+            repo_root.glob(pattern),
+            key=lambda item: item.stat().st_mtime if item.exists() else 0,
+            reverse=True,
+        )
         if matches:
             return matches[0]
     return None
@@ -115,7 +134,9 @@ def discover_apply_report(repo_root: Path, stamp: str, mode_name: str) -> Path |
         f"output/validation/*patch_suggestion_bundle_apply*{stamp}*.json",
     ]
     for pattern in patterns:
-        for path in sorted(repo_root.glob(pattern), key=lambda item: item.stat().st_mtime, reverse=True):
+        for path in sorted(
+            repo_root.glob(pattern), key=lambda item: item.stat().st_mtime, reverse=True
+        ):
             data, error = load_json(path)
             if error:
                 continue
@@ -179,19 +200,33 @@ def has_tool_usage_evidence(report: dict[str, Any] | None) -> bool:
     if report.get("passed") is False:
         return False
     text = json.dumps(report, ensure_ascii=False).lower()
-    for key in ("tool_usage_count", "runtime_tool_usage_count", "tool_invocation_count", "used_tool_count"):
+    for key in (
+        "tool_usage_count",
+        "runtime_tool_usage_count",
+        "tool_invocation_count",
+        "used_tool_count",
+    ):
         try:
             if int(report.get(key) or 0) > 0:
                 return True
         except (TypeError, ValueError):
             pass
-    for key in ("tool_usage", "tool_usages", "runtime_tool_usage", "tool_invocations", "used_tools", "tools_used"):
+    for key in (
+        "tool_usage",
+        "tool_usages",
+        "runtime_tool_usage",
+        "tool_invocations",
+        "used_tools",
+        "tools_used",
+    ):
         value = report.get(key)
         if isinstance(value, list) and value:
             return True
         if isinstance(value, dict) and value:
             return True
-    return ("tool" in text or "capability" in text) and any(token in text for token in ("used", "usage", "invoked", "telemetry"))
+    return ("tool" in text or "capability" in text) and any(
+        token in text for token in ("used", "usage", "invoked", "telemetry")
+    )
 
 
 def peer_presence(report: dict[str, Any] | None, events: list[dict[str, Any]]) -> dict[str, bool]:
@@ -248,17 +283,30 @@ def concrete_operation_count_from_apply(report: dict[str, Any]) -> int:
     return concrete
 
 
-def add_edge(edges: list[dict[str, Any]], *, name: str, producer: str, consumer: str, expected: str, actual: str, passed: bool, action: str, artifacts: list[str] | None = None) -> None:
-    edges.append({
-        "edge": name,
-        "producer": producer,
-        "consumer": consumer,
-        "expected": expected,
-        "actual": actual,
-        "passed": passed,
-        "action": action,
-        "artifacts": artifacts or [],
-    })
+def add_edge(
+    edges: list[dict[str, Any]],
+    *,
+    name: str,
+    producer: str,
+    consumer: str,
+    expected: str,
+    actual: str,
+    passed: bool,
+    action: str,
+    artifacts: list[str] | None = None,
+) -> None:
+    edges.append(
+        {
+            "edge": name,
+            "producer": producer,
+            "consumer": consumer,
+            "expected": expected,
+            "actual": actual,
+            "passed": passed,
+            "action": action,
+            "artifacts": artifacts or [],
+        }
+    )
 
 
 def rel(repo_root: Path, path: Path | None) -> str:
@@ -290,16 +338,18 @@ def render_markdown(report: dict[str, Any]) -> str:
     if report.get("broken_edges"):
         lines.extend(["", "## Broken edges", ""])
         for edge in report["broken_edges"]:
-            lines.extend([
-                f"### {edge.get('edge')}",
-                "",
-                f"- Producer: `{edge.get('producer')}`",
-                f"- Consumer: `{edge.get('consumer')}`",
-                f"- Expected: {edge.get('expected')}",
-                f"- Actual: {edge.get('actual')}",
-                f"- Action: {edge.get('action')}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"### {edge.get('edge')}",
+                    "",
+                    f"- Producer: `{edge.get('producer')}`",
+                    f"- Consumer: `{edge.get('consumer')}`",
+                    f"- Expected: {edge.get('expected')}",
+                    f"- Actual: {edge.get('actual')}",
+                    f"- Action: {edge.get('action')}",
+                    "",
+                ]
+            )
     return "\n".join(lines) + "\n"
 
 
@@ -339,60 +389,113 @@ def main() -> int:
     stamp = args.stamp
     mode_name = args.mode_name
 
-    manifest_path = repo_path(repo_root, args.manifest) if args.manifest else discover_first(
-        repo_root,
-        [f"output/local_ai_runs/*{stamp}*/pipeline/unified_local_ai_refactor_manifest.json"],
+    manifest_path = (
+        repo_path(repo_root, args.manifest)
+        if args.manifest
+        else discover_first(
+            repo_root,
+            [f"output/local_ai_runs/*{stamp}*/pipeline/unified_local_ai_refactor_manifest.json"],
+        )
     )
-    official_path = repo_path(repo_root, args.official_report) if args.official_report else repo_root / f"output/validation/{stamp}_phase_official.json"
-    gpu0_path = repo_path(repo_root, args.gpu0_report) if args.gpu0_report else repo_root / f"output/validation/openvino_gpu0_workload_{stamp}.json"
-    apply_path = repo_path(repo_root, args.apply_report) if args.apply_report else discover_apply_report(repo_root, stamp, mode_name)
-    product_path = repo_path(repo_root, args.product_separation_report) if args.product_separation_report else repo_root / f"output/validation/patch_suggestion_product_separation_{mode_name}_{stamp}.json"
-    review_pr_path = repo_path(repo_root, args.review_pr_report) if args.review_pr_report else repo_root / f"output/validation/review_pr_prepare_{mode_name}_{stamp}.json"
-    observer_dir = repo_path(repo_root, args.observer_dir) if args.observer_dir else discover_observer_dir(repo_root, stamp)
-    ai_events_path = repo_path(repo_root, args.ai_public_events) if args.ai_public_events else ((observer_dir / "ai_public_events.jsonl") if observer_dir else None)
-    tool_capability_path = repo_path(repo_root, args.tool_capability_manifest) if args.tool_capability_manifest else discover_first(
-        repo_root,
-        [
-            f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
-            f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
-            f"output/**/tool_capability_manifest*{stamp}*.json",
-        ],
+    official_path = (
+        repo_path(repo_root, args.official_report)
+        if args.official_report
+        else repo_root / f"output/validation/{stamp}_phase_official.json"
     )
-    tool_usage_path = repo_path(repo_root, args.tool_usage_telemetry) if args.tool_usage_telemetry else discover_first(
-        repo_root,
-        [
-            f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
-            f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
-            f"output/**/tool_usage*{stamp}*.json",
-            f"output/**/runtime_tool_usage*{stamp}*.json",
-        ],
+    gpu0_path = (
+        repo_path(repo_root, args.gpu0_report)
+        if args.gpu0_report
+        else repo_root / f"output/validation/openvino_gpu0_workload_{stamp}.json"
     )
-    heap_peer_path = repo_path(repo_root, args.heap_peer_runtime) if args.heap_peer_runtime else discover_first(
-        repo_root,
-        [
-            f"output/**/heap_peer_runtime*{stamp}*.json",
-            f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
-            f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
-            f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
-            f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
-        ],
+    apply_path = (
+        repo_path(repo_root, args.apply_report)
+        if args.apply_report
+        else discover_apply_report(repo_root, stamp, mode_name)
     )
-    shared_memory_path = repo_path(repo_root, args.shared_memory_evidence) if args.shared_memory_evidence else discover_first(
-        repo_root,
-        [
-            f"output/**/shared_toolbox_ai_to_ai_bundle*{stamp}*.json",
-            f"docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle*{stamp}*.json",
-            f"output/**/full_memory_tool_regeneration_bundle*{stamp}*.json",
-            f"docs/LOCAL_VALIDATION_EVIDENCE/full_memory_tool_regeneration_bundle*{stamp}*.json",
-            f"output/**/heap_exchange*{stamp}*.json",
-        ],
+    product_path = (
+        repo_path(repo_root, args.product_separation_report)
+        if args.product_separation_report
+        else repo_root
+        / f"output/validation/patch_suggestion_product_separation_{mode_name}_{stamp}.json"
     )
-    closure_audit_path = repo_path(repo_root, args.closure_audit_report) if args.closure_audit_report else discover_first(
-        repo_root,
-        [
-            f"output/**/heap_exchange_closure_audit*{stamp}*.json",
-            f"docs/LOCAL_VALIDATION_EVIDENCE/heap_exchange_closure_audit*{stamp}*.json",
-        ],
+    review_pr_path = (
+        repo_path(repo_root, args.review_pr_report)
+        if args.review_pr_report
+        else repo_root / f"output/validation/review_pr_prepare_{mode_name}_{stamp}.json"
+    )
+    observer_dir = (
+        repo_path(repo_root, args.observer_dir)
+        if args.observer_dir
+        else discover_observer_dir(repo_root, stamp)
+    )
+    ai_events_path = (
+        repo_path(repo_root, args.ai_public_events)
+        if args.ai_public_events
+        else ((observer_dir / "ai_public_events.jsonl") if observer_dir else None)
+    )
+    tool_capability_path = (
+        repo_path(repo_root, args.tool_capability_manifest)
+        if args.tool_capability_manifest
+        else discover_first(
+            repo_root,
+            [
+                f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
+                f"output/**/tool_capability_manifest*{stamp}*.json",
+            ],
+        )
+    )
+    tool_usage_path = (
+        repo_path(repo_root, args.tool_usage_telemetry)
+        if args.tool_usage_telemetry
+        else discover_first(
+            repo_root,
+            [
+                f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
+                f"output/**/tool_usage*{stamp}*.json",
+                f"output/**/runtime_tool_usage*{stamp}*.json",
+            ],
+        )
+    )
+    heap_peer_path = (
+        repo_path(repo_root, args.heap_peer_runtime)
+        if args.heap_peer_runtime
+        else discover_first(
+            repo_root,
+            [
+                f"output/**/heap_peer_runtime*{stamp}*.json",
+                f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
+                f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
+            ],
+        )
+    )
+    shared_memory_path = (
+        repo_path(repo_root, args.shared_memory_evidence)
+        if args.shared_memory_evidence
+        else discover_first(
+            repo_root,
+            [
+                f"output/**/shared_toolbox_ai_to_ai_bundle*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle*{stamp}*.json",
+                f"output/**/full_memory_tool_regeneration_bundle*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/full_memory_tool_regeneration_bundle*{stamp}*.json",
+                f"output/**/heap_exchange*{stamp}*.json",
+            ],
+        )
+    )
+    closure_audit_path = (
+        repo_path(repo_root, args.closure_audit_report)
+        if args.closure_audit_report
+        else discover_first(
+            repo_root,
+            [
+                f"output/**/heap_exchange_closure_audit*{stamp}*.json",
+                f"docs/LOCAL_VALIDATION_EVIDENCE/heap_exchange_closure_audit*{stamp}*.json",
+            ],
+        )
     )
 
     edges: list[dict[str, Any]] = []
@@ -404,35 +507,51 @@ def main() -> int:
         producer="unified launcher",
         consumer="chain contract",
         expected="unified_local_ai_refactor_manifest.json exists and is JSON object",
-        actual="present" if manifest and not manifest_error else f"missing/invalid: {manifest_error}",
+        actual="present"
+        if manifest and not manifest_error
+        else f"missing/invalid: {manifest_error}",
         passed=bool(manifest and not manifest_error),
         action="Ensure the unified launcher completed far enough to write the pipeline manifest.",
         artifacts=[rel(repo_root, manifest_path)],
     )
 
     official, official_error = load_json(official_path)
-    official_passed = bool(official and not official_error and (official.get("passed") is True or official.get("status") == "passed"))
+    official_passed = bool(
+        official
+        and not official_error
+        and (official.get("passed") is True or official.get("status") == "passed")
+    )
     add_edge(
         edges,
         name="context_to_official_adapter",
         producer="context_pack/agent_state/provider inputs",
         consumer="official local AI adapter",
         expected="official phase report exists and passed=true/status=passed",
-        actual=(f"passed={official.get('passed')} status={official.get('status')} return_code={official.get('return_code')}" if official else f"missing/invalid: {official_error}"),
+        actual=(
+            f"passed={official.get('passed')} status={official.get('status')} return_code={official.get('return_code')}"
+            if official
+            else f"missing/invalid: {official_error}"
+        ),
         passed=official_passed,
         action="Inspect output/validation/<stamp>_phase_official.json and its stdout/stderr process logs.",
         artifacts=[rel(repo_root, official_path)],
     )
 
     gpu0, gpu0_error = load_json(gpu0_path)
-    gpu0_passed = bool(gpu0 and not gpu0_error and gpu0.get("openvino_gpu0_workload_passed") is True)
+    gpu0_passed = bool(
+        gpu0 and not gpu0_error and gpu0.get("openvino_gpu0_workload_passed") is True
+    )
     add_edge(
         edges,
         name="provider_to_gpu0_workload",
         producer="provider workload routing",
         consumer="OpenVINO GPU.0 evidence",
         expected="GPU.0 visible and workload passed",
-        actual=(f"visible={gpu0.get('openvino_gpu0_visible')} performed={gpu0.get('openvino_gpu0_workload_performed')} passed={gpu0.get('openvino_gpu0_workload_passed')}" if gpu0 else f"missing/invalid: {gpu0_error}"),
+        actual=(
+            f"visible={gpu0.get('openvino_gpu0_visible')} performed={gpu0.get('openvino_gpu0_workload_performed')} passed={gpu0.get('openvino_gpu0_workload_passed')}"
+            if gpu0
+            else f"missing/invalid: {gpu0_error}"
+        ),
         passed=gpu0_passed,
         action="Run with -RunOpenVinoGpu0Workload and repository .venv containing numpy/openvino.",
         artifacts=[rel(repo_root, gpu0_path)],
@@ -442,25 +561,47 @@ def main() -> int:
     events_error = "not required"
     exchange_passed = True
     if args.require_ai_exchange:
-        events, events_error = load_jsonl(ai_events_path) if ai_events_path else ([], "missing observer ai_public_events.jsonl")
-        exchange_passed = bool(events and not events_error and has_productive_exchange_event(events))
+        events, events_error = (
+            load_jsonl(ai_events_path)
+            if ai_events_path
+            else ([], "missing observer ai_public_events.jsonl")
+        )
+        exchange_passed = bool(
+            events and not events_error and has_productive_exchange_event(events)
+        )
     add_edge(
         edges,
         name="provider_to_ai_exchange",
         producer="provider/Ollama/official adapter",
         consumer="AI public or peer exchange evidence",
-        expected="ai_public_events.jsonl has at least one proposal/decision/patch/recommendation event" if args.require_ai_exchange else "not required for this invocation",
-        actual=(f"event_count={len(events)} error={events_error}" if args.require_ai_exchange else "not required"),
+        expected="ai_public_events.jsonl has at least one proposal/decision/patch/recommendation event"
+        if args.require_ai_exchange
+        else "not required for this invocation",
+        actual=(
+            f"event_count={len(events)} error={events_error}"
+            if args.require_ai_exchange
+            else "not required"
+        ),
         passed=exchange_passed,
         action="Emit public exchange events from provider/official phases or disable --require-ai-exchange only for diagnostic runs.",
         artifacts=[rel(repo_root, ai_events_path)],
     )
 
-    tool_capability_report, tool_capability_error = load_json(tool_capability_path) if tool_capability_path else (None, "missing")
-    tool_usage_report, tool_usage_error = load_json(tool_usage_path) if tool_usage_path else (None, "missing")
-    heap_peer_report, heap_peer_error = load_json(heap_peer_path) if heap_peer_path else (None, "missing")
-    shared_memory_report, shared_memory_error = load_json(shared_memory_path) if shared_memory_path else (None, "missing")
-    closure_audit_report, closure_audit_error = load_json(closure_audit_path) if closure_audit_path else (None, "missing")
+    tool_capability_report, tool_capability_error = (
+        load_json(tool_capability_path) if tool_capability_path else (None, "missing")
+    )
+    tool_usage_report, tool_usage_error = (
+        load_json(tool_usage_path) if tool_usage_path else (None, "missing")
+    )
+    heap_peer_report, heap_peer_error = (
+        load_json(heap_peer_path) if heap_peer_path else (None, "missing")
+    )
+    shared_memory_report, shared_memory_error = (
+        load_json(shared_memory_path) if shared_memory_path else (None, "missing")
+    )
+    closure_audit_report, closure_audit_error = (
+        load_json(closure_audit_path) if closure_audit_path else (None, "missing")
+    )
 
     tool_capability_ok = has_tool_capability_evidence(tool_capability_report)
     tool_usage_ok = has_tool_usage_evidence(tool_usage_report)
@@ -472,7 +613,9 @@ def main() -> int:
         name="provider_to_tool_evidence",
         producer="provider/heap exchange runtime",
         consumer="runtime tool capability and usage evidence",
-        expected="tool capability manifest and runtime tool usage telemetry" if args.require_provider_tool_evidence else "not required for this invocation",
+        expected="tool capability manifest and runtime tool usage telemetry"
+        if args.require_provider_tool_evidence
+        else "not required for this invocation",
         actual=(
             f"capability_ok={tool_capability_ok} capability_error={tool_capability_error} "
             f"usage_ok={tool_usage_ok} usage_error={tool_usage_error}"
@@ -491,7 +634,9 @@ def main() -> int:
         name="heap_exchange_to_peer_runtime",
         producer="dynamic heap/exchange center",
         consumer="GPU1/GPU0/NPU peer runtime",
-        expected="GPU1 primary advisory, GPU0 companion/tool worker and NPU microoperation/efficiency peer" if args.require_heap_peer_runtime else "not required for this invocation",
+        expected="GPU1 primary advisory, GPU0 companion/tool worker and NPU microoperation/efficiency peer"
+        if args.require_heap_peer_runtime
+        else "not required for this invocation",
         actual=f"peers={peers} heap_peer_error={heap_peer_error}",
         passed=peer_runtime_passed,
         action="Emit heap peer runtime evidence showing GPU1, GPU0 and NPU participating as linked heap/exchange peers. Audit remains a deterministic/script lane that can be reused for a complete heap/exchange audit before closure; it is not the dynamic NPU peer role.",
@@ -507,7 +652,9 @@ def main() -> int:
         name="heap_exchange_to_shared_memory",
         producer="dynamic heap/exchange center",
         consumer="shared memory / AI-to-AI bundle evidence",
-        expected="shared memory or AI-to-AI bundle evidence" if args.require_shared_memory_evidence else "not required for this invocation",
+        expected="shared memory or AI-to-AI bundle evidence"
+        if args.require_shared_memory_evidence
+        else "not required for this invocation",
         actual=f"shared_memory_ok={shared_memory_ok} shared_memory_error={shared_memory_error}",
         passed=shared_memory_passed,
         action="Emit shared memory / AI-to-AI bundle evidence so the heap remains the source of knowledge for provider peers.",
@@ -523,7 +670,9 @@ def main() -> int:
         name="heap_exchange_to_closure_audit",
         producer="dynamic heap/exchange center",
         consumer="deterministic/script closure audit lane",
-        expected="heap_exchange_closure_audit passed and ready_for_final_chain_contract" if args.require_heap_closure_audit else "not required for this invocation",
+        expected="heap_exchange_closure_audit passed and ready_for_final_chain_contract"
+        if args.require_heap_closure_audit
+        else "not required for this invocation",
         actual=f"closure_audit_ok={closure_audit_ok} closure_audit_error={closure_audit_error}",
         passed=closure_audit_passed,
         action="Run deterministic/script closure audit before final chain contract. This lane can audit the complete heap/exchange without changing the NPU dynamic microoperation/efficiency role.",
@@ -542,8 +691,14 @@ def main() -> int:
         name="patch_specs_to_review_bridge",
         producer="generated patch specs",
         consumer="apply_generated_patch_specs_for_review_pr",
-        expected="current-stamp apply report with concrete deterministic operations" if args.require_concrete_patch_specs else "not required for this invocation",
-        actual=(f"operation_count={apply_report.get('operation_count')} concrete_ops={concrete_ops} changed_count={changed_count} applied_count={applied_count}" if apply_report else f"missing/invalid: {apply_error}"),
+        expected="current-stamp apply report with concrete deterministic operations"
+        if args.require_concrete_patch_specs
+        else "not required for this invocation",
+        actual=(
+            f"operation_count={apply_report.get('operation_count')} concrete_ops={concrete_ops} changed_count={changed_count} applied_count={applied_count}"
+            if apply_report
+            else f"missing/invalid: {apply_error}"
+        ),
         passed=patch_specs_passed,
         action="Generate replace_once/append_once/insert_after_once/insert_before_once/write_file operations; metadata-only specs must not advance to PR product.",
         artifacts=[rel(repo_root, apply_path)],
@@ -556,7 +711,8 @@ def main() -> int:
         and (
             product_report.get("passed") is True
             or product_report.get("ready_for_patch_suggestion_review") is True
-            or product_report.get("patch_product_status") in {"deterministic_patch_operations_ready", "product_facing_patch_suggestions_ready"}
+            or product_report.get("patch_product_status")
+            in {"deterministic_patch_operations_ready", "product_facing_patch_suggestions_ready"}
         )
     )
     if args.require_review_pr_product:
@@ -566,9 +722,17 @@ def main() -> int:
         name="review_bridge_to_product_separation",
         producer="generated patch specs review bridge",
         consumer="patch suggestion product separation / prepare_review_pr",
-        expected="product separation passed and review PR has concrete changed files" if args.require_review_pr_product else "product separation report when present",
-        actual=(f"passed={product_report.get('passed')} status={product_report.get('patch_product_status')} ready={product_report.get('ready_for_patch_suggestion_review')} changed_count={changed_count}" if product_report else f"missing/invalid: {product_error}"),
-        passed=product_ready if args.require_review_pr_product else bool(product_report and not product_error),
+        expected="product separation passed and review PR has concrete changed files"
+        if args.require_review_pr_product
+        else "product separation report when present",
+        actual=(
+            f"passed={product_report.get('passed')} status={product_report.get('patch_product_status')} ready={product_report.get('ready_for_patch_suggestion_review')} changed_count={changed_count}"
+            if product_report
+            else f"missing/invalid: {product_error}"
+        ),
+        passed=product_ready
+        if args.require_review_pr_product
+        else bool(product_report and not product_error),
         action="Block prepare_review_pr until product separation has deterministic operations or product-facing suggestions with concrete targets.",
         artifacts=[rel(repo_root, product_path)],
     )
@@ -592,8 +756,14 @@ def main() -> int:
         name="product_separation_to_review_pr_product",
         producer="patch suggestion product separation / apply report",
         consumer="prepare_review_pr.py",
-        expected="review_pr_prepare report passed with product commit and staged files" if args.require_review_pr_product else "not required for this invocation",
-        actual=(f"passed={review_pr_report.get('passed')} commit={review_pr_report.get('git_commit_performed')} product_commit={review_pr_report.get('product_commit')} staged_files={len(staged_paths)} pr_created={review_pr_report.get('github_pr_created')}" if review_pr_report else f"missing/invalid: {review_pr_error}"),
+        expected="review_pr_prepare report passed with product commit and staged files"
+        if args.require_review_pr_product
+        else "not required for this invocation",
+        actual=(
+            f"passed={review_pr_report.get('passed')} commit={review_pr_report.get('git_commit_performed')} product_commit={review_pr_report.get('product_commit')} staged_files={len(staged_paths)} pr_created={review_pr_report.get('github_pr_created')}"
+            if review_pr_report
+            else f"missing/invalid: {review_pr_error}"
+        ),
         passed=review_pr_ready if args.require_review_pr_product else True,
         action="Run prepare_review_pr.py after deterministic apply and require a concrete product commit before declaring the chain complete.",
         artifacts=[rel(repo_root, review_pr_path)],
@@ -624,7 +794,9 @@ def main() -> int:
     output = resolve_output_path(repo_root, args.output)
     print(write_json_report(report, output), end="")
     if args.markdown_output:
-        write_text_report(render_markdown(report), resolve_output_path(repo_root, args.markdown_output))
+        write_text_report(
+            render_markdown(report), resolve_output_path(repo_root, args.markdown_output)
+        )
     return 0 if report["passed"] else 2
 
 

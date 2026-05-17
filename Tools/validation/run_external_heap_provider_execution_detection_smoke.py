@@ -6,6 +6,7 @@ provider text, for example "performed=True", while downstream artifacts expose
 provider_execution_performed=false. This smoke keeps the test bounded and does
 not execute providers, Blender, SQLite or patch application.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,8 +48,14 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/external_heap_provider_execution_detection_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/external_heap_provider_execution_detection_smoke.md")
+    parser.add_argument(
+        "--output",
+        default="output/validation/external_heap_provider_execution_detection_smoke.json",
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/external_heap_provider_execution_detection_smoke.md",
+    )
     return parser.parse_args()
 
 
@@ -61,7 +68,9 @@ def main() -> int:
     from Tools.ai import compose_heap_final_proposals as legacy_composer
     from Tools.ai import normalize_heap_final_causality as causality_normalizer
 
-    smoke_dir = repo_root / "output" / "validation" / "external_heap_provider_execution_detection_smoke_run"
+    smoke_dir = (
+        repo_root / "output" / "validation" / "external_heap_provider_execution_detection_smoke_run"
+    )
     shutil.rmtree(smoke_dir, ignore_errors=True)
     provider_dir = smoke_dir / "provider_teamwork"
     provider_dir.mkdir(parents=True, exist_ok=True)
@@ -77,7 +86,9 @@ def main() -> int:
     }
     write_json(provider_dir / "npu_micro_task_auditor.json", provider_payload)
 
-    pointer_report = pointer_manifest.build_report(repo_root, smoke_dir, max_block_chars=9000, max_blocks=0)
+    pointer_report = pointer_manifest.build_report(
+        repo_root, smoke_dir, max_block_chars=9000, max_blocks=0
+    )
     composer_provider_reports = legacy_composer.list_provider_reports(smoke_dir)
     composer = {
         "provider_execution_performed": False,
@@ -108,12 +119,18 @@ def main() -> int:
         "rejected_proposal_count": 0,
         "blocking_issues": ["smoke blocked product"],
     }
-    causality_report = causality_normalizer.build_report(composer, smoke_dir / "heap_final_proposal_composer.json")
+    causality_report = causality_normalizer.build_report(
+        composer, smoke_dir / "heap_final_proposal_composer.json"
+    )
 
     checks = {
         "pointer_provider_execution": pointer_report.get("provider_execution_performed") is True,
-        "composer_provider_execution": bool(composer_provider_reports and composer_provider_reports[0].get("provider_execution_performed") is True),
-        "causality_provider_execution": causality_report.get("provider_execution_performed") is True,
+        "composer_provider_execution": bool(
+            composer_provider_reports
+            and composer_provider_reports[0].get("provider_execution_performed") is True
+        ),
+        "causality_provider_execution": causality_report.get("provider_execution_performed")
+        is True,
         "no_patch_application": pointer_report.get("patch_application_performed") is False,
         "no_source_writes": pointer_report.get("source_writes_performed") is False,
     }

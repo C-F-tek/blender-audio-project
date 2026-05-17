@@ -68,9 +68,7 @@ def preflight(repo: Path, out: Path, args: Any) -> dict[str, Any]:
     if agent_packet and not agent_packet.exists():
         errors.append(f"Agent state packet not found: {agent_packet}")
     if agent_packet and agent_packet.suffix.lower() != ".json":
-        warnings.append(
-            "Agent state packet path does not end with .json; expected a JSON packet."
-        )
+        warnings.append("Agent state packet path does not end with .json; expected a JSON packet.")
     if args.npu_workers > 4:
         warnings.append(
             "npu_workers is greater than 4; local workstation policy recommends 4 or fewer."
@@ -80,9 +78,7 @@ def preflight(repo: Path, out: Path, args: Any) -> dict[str, Any]:
             "NPU guardrail works best with smart context; falling back to artifact directory review."
         )
     if args.guardrail_auto_remediate and not args.npu_guardrail:
-        warnings.append(
-            "Guardrail auto-remediation was requested but npu_guardrail is disabled."
-        )
+        warnings.append("Guardrail auto-remediation was requested but npu_guardrail is disabled.")
     if args.review_wave_entrypoints and not (repo / "analyze_wav.py").exists():
         warnings.append(
             "Wave entrypoint review enabled but analyze_wav.py was not found at repository root."

@@ -158,9 +158,7 @@ def build_npu_audit_hooks(governor: dict[str, Any]) -> dict[str, Any]:
         ],
         "sample_count": npu_lane.get("max_samples", 3),
         "promotion_allowed": False,
-        "model_load_required_for_contract": bool(
-            npu_lane.get("model_load_required", False)
-        ),
+        "model_load_required_for_contract": bool(npu_lane.get("model_load_required", False)),
     }
     hooks.update(SAFETY_FLAGS)
     return hooks
@@ -178,9 +176,7 @@ def build_real_run_gate(
     permit = safe_dict(governor.get("permit"))
     permit_allowed = bool(permit.get("permit_allowed"))
     requirements = [
-        requirement(
-            "operator_intent", operator_intent, "explicit operator intent required"
-        ),
+        requirement("operator_intent", operator_intent, "explicit operator intent required"),
         requirement(
             "allow_provider_generation",
             allow_provider_generation,
@@ -223,9 +219,7 @@ def build_real_run_gate(
         "decision": "allow_future_real_run" if allowed else "block_real_run",
         "deny_is_failure": False,
         "errors": [],
-        "warnings": (
-            [] if allowed else ["real provider run blocked by heap invocation gate"]
-        ),
+        "warnings": ([] if allowed else ["real provider run blocked by heap invocation gate"]),
     }
     gate.update(SAFETY_FLAGS)
     return gate
@@ -249,9 +243,7 @@ def build_command_plan(
                 "would_execute": False,
                 "requires_gate_allowed": True,
                 "budget": telemetry_contract.get("budget"),
-                "expected_outputs": workload_contract.get(
-                    "reports_required_after_real_run", []
-                ),
+                "expected_outputs": workload_contract.get("reports_required_after_real_run", []),
             },
             {
                 "name": "npu_after_run_audit",
@@ -327,9 +319,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Provider lane: `{report.get('provider_lane')}`")
     lines.append(f"- Permit decision: `{report.get('permit_decision')}`")
     lines.append(f"- Real run decision: `{gate.get('decision')}`")
-    lines.append(
-        f"- Provider execution performed: `{report.get('provider_execution_performed')}`"
-    )
+    lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
     lines.extend(["", "## Required heap events", ""])
     for item in telemetry.get("events_required", []):
         lines.append(f"- `{item}`")

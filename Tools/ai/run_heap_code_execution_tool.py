@@ -18,8 +18,8 @@ try:
         now_iso,
         read_json,
         render_markdown,
-        resolve_path,
         repo_rel,
+        resolve_path,
         run_debug_lab,
         split_values,
         validate_target,
@@ -38,8 +38,8 @@ except ImportError:
         now_iso,
         read_json,
         render_markdown,
-        resolve_path,
         repo_rel,
+        resolve_path,
         run_debug_lab,
         split_values,
         validate_target,
@@ -59,8 +59,7 @@ def validation_commands(
     if target_files:
         commands.append("python -m py_compile " + " ".join(target_files))
     commands.extend(
-        f"python {script} {' '.join(validation_args)}".strip()
-        for script in validation_scripts
+        f"python {script} {' '.join(validation_args)}".strip() for script in validation_scripts
     )
     commands.append("git diff --check")
     return commands
@@ -88,11 +87,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
     validation_args = split_values(args.validation_arg)
     output = resolve_path(repo_root, args.output)
-    markdown = resolve_path(repo_root, args.markdown_output)
+    resolve_path(repo_root, args.markdown_output)
     request_path = resolve_path(repo_root, args.request_output)
-    default_debug_report, default_debug_markdown = default_debug_lab_paths(
-        repo_root, output
-    )
+    default_debug_report, default_debug_markdown = default_debug_lab_paths(repo_root, output)
     debug_report = (
         resolve_path(repo_root, args.debug_lab_output)
         if args.debug_lab_output

@@ -1,4 +1,5 @@
 """Lane role policy for AI workload quality validation."""
+
 from __future__ import annotations
 
 from typing import Any

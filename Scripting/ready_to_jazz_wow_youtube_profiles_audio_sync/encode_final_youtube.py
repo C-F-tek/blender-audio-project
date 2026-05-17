@@ -8,6 +8,7 @@ Run from PowerShell after Blender has rendered the frame sequence:
 This script uses explicit Rec.709/bt709 tags and yuv420p.
 It also keeps audio in sync when the first rendered frame is not frame 1.
 """
+
 import re
 import shutil
 import subprocess
@@ -22,7 +23,9 @@ TRACK_STEM = "Ready To Jazz-Luca Vera_Master"
 FPS = 30
 
 # Preferisci H264 per massima compatibilita social; SVT_AV1 per master YouTube piu moderno.
-ENCODER_PROFILE = "H264_YOUTUBE_SOCIAL"  # H264_YOUTUBE_SOCIAL | CPU_SVTAV1_YOUTUBE | NVENC_AV1_YOUTUBE
+ENCODER_PROFILE = (
+    "H264_YOUTUBE_SOCIAL"  # H264_YOUTUBE_SOCIAL | CPU_SVTAV1_YOUTUBE | NVENC_AV1_YOUTUBE
+)
 CPU_THREADS = 12
 
 PROFILES = {
@@ -134,7 +137,6 @@ def audio_offset_seconds(first_number: int, fps: int = FPS) -> float:
     return (first_number - 1) / float(fps)
 
 
-
 def build_command(ffmpeg, frames_dir, first_number, audio, output, profile):
     width, height, bitrate, maxrate, crf = PROFILES[profile]
     pattern = str(frames_dir / f"{OUTPUT_FRAME_PREFIX}%04d.png")
@@ -144,36 +146,90 @@ def build_command(ffmpeg, frames_dir, first_number, audio, output, profile):
         audio_input_args.extend(["-ss", f"{audio_offset:.6f}"])
 
     common = [
-        ffmpeg, "-y",
-        "-framerate", str(FPS),
-        "-start_number", str(first_number),
-        "-i", pattern,
+        ffmpeg,
+        "-y",
+        "-framerate",
+        str(FPS),
+        "-start_number",
+        str(first_number),
+        "-i",
+        pattern,
         *audio_input_args,
-        "-i", str(audio),
-        "-map", "0:v:0", "-map", "1:a:0",
-        "-vf", "eq=brightness=0.012:contrast=1.012:saturation=1.035,format=yuv420p",
-        "-colorspace", "bt709",
-        "-color_primaries", "bt709",
-        "-color_trc", "bt709",
-        "-r", str(FPS),
-        "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
-        "-movflags", "+faststart",
+        "-i",
+        str(audio),
+        "-map",
+        "0:v:0",
+        "-map",
+        "1:a:0",
+        "-vf",
+        "eq=brightness=0.012:contrast=1.012:saturation=1.035,format=yuv420p",
+        "-colorspace",
+        "bt709",
+        "-color_primaries",
+        "bt709",
+        "-color_trc",
+        "bt709",
+        "-r",
+        str(FPS),
+        "-c:a",
+        "aac",
+        "-b:a",
+        "320k",
+        "-ar",
+        "48000",
+        "-movflags",
+        "+faststart",
         "-shortest",
     ]
     if ENCODER_PROFILE == "CPU_SVTAV1_YOUTUBE":
-        return common + ["-c:v", "libsvtav1", "-preset", "4", "-crf", "24", "-threads", str(CPU_THREADS), str(output)]
+        return common + [
+            "-c:v",
+            "libsvtav1",
+            "-preset",
+            "4",
+            "-crf",
+            "24",
+            "-threads",
+            str(CPU_THREADS),
+            str(output),
+        ]
     if ENCODER_PROFILE == "NVENC_AV1_YOUTUBE":
-        return common + ["-c:v", "av1_nvenc", "-gpu", "0", "-preset", "p7", "-tune", "hq", "-rc:v", "vbr", "-cq:v", "18", "-b:v", "0", str(output)]
+        return common + [
+            "-c:v",
+            "av1_nvenc",
+            "-gpu",
+            "0",
+            "-preset",
+            "p7",
+            "-tune",
+            "hq",
+            "-rc:v",
+            "vbr",
+            "-cq:v",
+            "18",
+            "-b:v",
+            "0",
+            str(output),
+        ]
     return common + [
-        "-c:v", "libx264",
-        "-preset", "slow",
-        "-crf", str(crf),
-        "-b:v", f"{bitrate}k",
-        "-maxrate", f"{maxrate}k",
-        "-bufsize", f"{maxrate * 2}k",
-        "-profile:v", "high",
-        "-level", "5.1",
-        "-threads", str(CPU_THREADS),
+        "-c:v",
+        "libx264",
+        "-preset",
+        "slow",
+        "-crf",
+        str(crf),
+        "-b:v",
+        f"{bitrate}k",
+        "-maxrate",
+        f"{maxrate}k",
+        "-bufsize",
+        f"{maxrate * 2}k",
+        "-profile:v",
+        "high",
+        "-level",
+        "5.1",
+        "-threads",
+        str(CPU_THREADS),
         str(output),
     ]
 

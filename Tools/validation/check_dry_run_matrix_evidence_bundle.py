@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate compact dry-run matrix evidence bundles."""
+
 from __future__ import annotations
 
 import argparse
@@ -113,7 +114,9 @@ def validate_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
         errors.append("evidence passed must be true")
     if data.get("errors") not in ([], None):
         errors.append("evidence errors must be empty")
-    if not isinstance(data.get("source_matrix_report"), str) or not data.get("source_matrix_report"):
+    if not isinstance(data.get("source_matrix_report"), str) or not data.get(
+        "source_matrix_report"
+    ):
         errors.append("source_matrix_report must be a non-empty string")
 
     matrix = data.get("matrix")
@@ -166,9 +169,17 @@ def validate_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
                 errors.append("matrix.case_count must equal case_summary.case_count")
             if matrix.get("result_count") != case_count:
                 errors.append("matrix.result_count must equal case_summary.case_count")
-        for coverage_key in ("validation_case_count", "chunk_case_count", "music_summary_case_count", "npu_planning_case_count", "gpu_planning_case_count"):
+        for coverage_key in (
+            "validation_case_count",
+            "chunk_case_count",
+            "music_summary_case_count",
+            "npu_planning_case_count",
+            "gpu_planning_case_count",
+        ):
             if summary.get(coverage_key) == 0:
-                errors.append(f"case_summary.{coverage_key} must be greater than 0 for baseline coverage")
+                errors.append(
+                    f"case_summary.{coverage_key} must be greater than 0 for baseline coverage"
+                )
 
     validations = data.get("validation_reports")
     validation_kinds: set[str] = set()
@@ -274,7 +285,12 @@ def default_evidence_paths(repo_root: Path) -> list[Path]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--evidence", action="append", default=[], help="Evidence JSON path. Repeatable or comma-separated.")
+    parser.add_argument(
+        "--evidence",
+        action="append",
+        default=[],
+        help="Evidence JSON path. Repeatable or comma-separated.",
+    )
     parser.add_argument("--output", help="Optional JSON validation report path.")
     args = parser.parse_args()
 
@@ -286,15 +302,9 @@ def main() -> int:
         else default_evidence_paths(repo_root)
     )
     results = [validate_evidence(path, repo_root) for path in evidence_paths]
-    errors = [
-        f"{item['path']}: {error}"
-        for item in results
-        for error in item.get("errors", [])
-    ]
+    errors = [f"{item['path']}: {error}" for item in results for error in item.get("errors", [])]
     warnings = [
-        f"{item['path']}: {warning}"
-        for item in results
-        for warning in item.get("warnings", [])
+        f"{item['path']}: {warning}" for item in results for warning in item.get("warnings", [])
     ]
     if not evidence_paths:
         errors.append("no dry-run matrix evidence bundles found")

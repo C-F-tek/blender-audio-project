@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the integrated agent review warning policy."""
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 DEFAULT_OUTPUT = "output/validation/agent_review_warning_policy_smoke.json"
 DEFAULT_MARKDOWN = "output/validation/agent_review_warning_policy_smoke.md"
@@ -45,7 +50,9 @@ def load_json(path: Path) -> tuple[dict[str, Any], str | None]:
     return data, None
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -176,14 +183,22 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
         if policy.get("passed") is not True:
             errors.append("policy report did not pass")
         if policy.get("input_nonfatal_warning_count") != 2:
-            errors.append(f"expected two input_nonfatal warnings, got {policy.get('input_nonfatal_warning_count')!r}")
+            errors.append(
+                f"expected two input_nonfatal warnings, got {policy.get('input_nonfatal_warning_count')!r}"
+            )
         if policy.get("fatal_report_failure_count") != 0:
-            errors.append(f"expected zero fatal failures, got {policy.get('fatal_report_failure_count')!r}")
+            errors.append(
+                f"expected zero fatal failures, got {policy.get('fatal_report_failure_count')!r}"
+            )
         level_counts = policy.get("warning_level_counts", {})
         if level_counts.get("provider", 0) < 2:
-            errors.append(f"expected provider warning level count >= 2, got {level_counts.get('provider', 0)!r}")
+            errors.append(
+                f"expected provider warning level count >= 2, got {level_counts.get('provider', 0)!r}"
+            )
         if level_counts.get("memory", 0) < 1:
-            errors.append(f"expected memory warning level count >= 1, got {level_counts.get('memory', 0)!r}")
+            errors.append(
+                f"expected memory warning level count >= 1, got {level_counts.get('memory', 0)!r}"
+            )
 
     return {
         "schema_version": 1,
@@ -203,7 +218,9 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
         "stdout_tail": stdout,
         "stderr_tail": stderr,
         "policy_output": rel(policy_output, repo_root),
-        "input_nonfatal_warning_count": policy.get("input_nonfatal_warning_count") if policy else None,
+        "input_nonfatal_warning_count": policy.get("input_nonfatal_warning_count")
+        if policy
+        else None,
         "fatal_report_failure_count": policy.get("fatal_report_failure_count") if policy else None,
         "warning_level_counts": policy.get("warning_level_counts") if policy else {},
         "guardrails": {

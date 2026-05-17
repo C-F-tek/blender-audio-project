@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Safe repository patch runner.
 
@@ -161,7 +160,9 @@ def _apply_exact(text: str, replacement: dict[str, Any], path: Path) -> tuple[st
 
     found = text.count(old)
     if found < count:
-        raise PatchError(f"{path}: exact replacement non applicabile: trovate {found}, richieste {count}")
+        raise PatchError(
+            f"{path}: exact replacement non applicabile: trovate {found}, richieste {count}"
+        )
 
     return text.replace(old, new, count), count
 
@@ -180,7 +181,9 @@ def _apply_regex(text: str, replacement: dict[str, Any], path: Path) -> tuple[st
     compiled = re.compile(pattern, flags)
     matches = compiled.findall(text)
     if len(matches) < count:
-        raise PatchError(f"{path}: regex replacement non applicabile: match {len(matches)}, richiesti {count}")
+        raise PatchError(
+            f"{path}: regex replacement non applicabile: match {len(matches)}, richiesti {count}"
+        )
 
     new_text, applied = compiled.subn(new, text, count=count)
     if applied != count:
@@ -201,7 +204,9 @@ def _apply_insert_after(text: str, replacement: dict[str, Any], path: Path) -> t
 
     found = text.count(anchor)
     if found < count:
-        raise PatchError(f"{path}: anchor non trovato abbastanza volte: trovate {found}, richieste {count}")
+        raise PatchError(
+            f"{path}: anchor non trovato abbastanza volte: trovate {found}, richieste {count}"
+        )
 
     result = text
     for _ in range(count):
@@ -226,7 +231,9 @@ def _apply_insert_before(text: str, replacement: dict[str, Any], path: Path) -> 
 
     found = text.count(anchor)
     if found < count:
-        raise PatchError(f"{path}: anchor non trovato abbastanza volte: trovate {found}, richieste {count}")
+        raise PatchError(
+            f"{path}: anchor non trovato abbastanza volte: trovate {found}, richieste {count}"
+        )
 
     result = text
     offset = 0
@@ -290,7 +297,9 @@ def _run_git_diff(root: Path, paths: list[Path]) -> None:
         print("[WARN] git non trovato nel PATH: diff saltato", file=sys.stderr)
 
 
-def apply_spec(root: Path, spec: dict[str, Any], *, write: bool, no_backup: bool) -> list[FileReport]:
+def apply_spec(
+    root: Path, spec: dict[str, Any], *, write: bool, no_backup: bool
+) -> list[FileReport]:
     if int(spec.get("version", 1)) != 1:
         raise PatchError("Solo spec version=1 e supportato")
 
@@ -323,7 +332,9 @@ def apply_spec(root: Path, spec: dict[str, Any], *, write: bool, no_backup: bool
                         repl[key] = repl[key].replace("\r\n", "\n").replace("\n", newline)
 
         before_lines = _count_lines(text)
-        _require_strings(text, op.get("require_contains_before", []), "require_contains_before", path)
+        _require_strings(
+            text, op.get("require_contains_before", []), "require_contains_before", path
+        )
         _forbid_strings(text, op.get("forbid_contains_before", []), "forbid_contains_before", path)
 
         new_text, replacements_applied = _apply_replacements(text, op, path)
@@ -333,8 +344,12 @@ def apply_spec(root: Path, spec: dict[str, Any], *, write: bool, no_backup: bool
             new_text = new_text.lstrip("\ufeff")
             bom_removed = True
 
-        _require_strings(new_text, op.get("require_contains_after", []), "require_contains_after", path)
-        _forbid_strings(new_text, op.get("forbid_contains_after", []), "forbid_contains_after", path)
+        _require_strings(
+            new_text, op.get("require_contains_after", []), "require_contains_after", path
+        )
+        _forbid_strings(
+            new_text, op.get("forbid_contains_after", []), "forbid_contains_after", path
+        )
 
         expected_delta = op.get("expected_line_delta")
         after_lines = _count_lines(new_text)
@@ -380,11 +395,17 @@ def load_spec(path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Safe repository patch runner")
     parser.add_argument("--spec", required=True, help="Percorso del file JSON con le modifiche")
-    parser.add_argument("--repo-root", default=None, help="Root del repository; default: directory corrente")
+    parser.add_argument(
+        "--repo-root", default=None, help="Root del repository; default: directory corrente"
+    )
     parser.add_argument("--write", action="store_true", help="Scrive davvero le modifiche")
     parser.add_argument("--dry-run", action="store_true", help="Simula senza scrivere")
-    parser.add_argument("--no-backup", action="store_true", help="Non crea backup prima della scrittura")
-    parser.add_argument("--show-diff", action="store_true", help="Mostra git diff dopo l'applicazione")
+    parser.add_argument(
+        "--no-backup", action="store_true", help="Non crea backup prima della scrittura"
+    )
+    parser.add_argument(
+        "--show-diff", action="store_true", help="Mostra git diff dopo l'applicazione"
+    )
     args = parser.parse_args(argv)
 
     if args.write and args.dry_run:

@@ -1,4 +1,5 @@
 """Support helpers for the Python full-toolbox decision-loop engine."""
+
 from __future__ import annotations
 
 import csv
@@ -54,7 +55,9 @@ def add_existing(items: list[str], path: str | Path | None) -> None:
 
 def git_output(repo_root: Path, *args: str) -> str:
     try:
-        return subprocess.check_output(["git", *args], cwd=repo_root, text=True, stderr=subprocess.DEVNULL).strip()
+        return subprocess.check_output(
+            ["git", *args], cwd=repo_root, text=True, stderr=subprocess.DEVNULL
+        ).strip()
     except (OSError, subprocess.SubprocessError):
         return ""
 
@@ -170,9 +173,17 @@ class WorkflowContext:
                 script_parts.append(quote_ps(value))
 
         command_text = "$ErrorActionPreference = 'Stop'; " + " ".join(script_parts)
-        command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command_text]
+        command = [
+            "powershell.exe",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            command_text,
+        ]
         return self.run(label, command)
         # IA-CARMINE-PS-SPLAT-ARRAY-SAFE-END
+
 
 def build_paths(stamp: str, evidence_dir: str) -> dict[str, str]:
     s = compact_artifact_stamp(stamp)

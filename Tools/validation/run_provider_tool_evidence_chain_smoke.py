@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test provider tool evidence in the unified chain contract."""
+
 from __future__ import annotations
 
 import argparse
@@ -32,7 +33,9 @@ def write_jsonl(path: Path, events: list[dict]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/provider_tool_evidence_chain_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/provider_tool_evidence_chain_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -41,7 +44,9 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="provider-tool-evidence-chain-") as tmp_raw:
         repo = Path(tmp_raw) / "repo"
         repo.mkdir()
-        manifest = repo / f"output/local_ai_runs/{STAMP}/pipeline/unified_local_ai_refactor_manifest.json"
+        manifest = (
+            repo / f"output/local_ai_runs/{STAMP}/pipeline/unified_local_ai_refactor_manifest.json"
+        )
         official = repo / f"output/validation/{STAMP}_phase_official.json"
         gpu0 = repo / f"output/validation/openvino_gpu0_workload_{STAMP}.json"
         observer = repo / f"output/local_ai_runs/{STAMP}_observer"
@@ -50,12 +55,59 @@ def main() -> int:
         usage = repo / f"output/validation/full_toolbox_run_telemetry_summary_{STAMP}.json"
         output = repo / "output/validation/unified_chain_contract.json"
 
-        write_json(manifest, {"schema_version": 1, "kind": "unified_local_ai_refactor_manifest", "stamp": STAMP})
-        write_json(official, {"schema_version": 1, "kind": "official", "passed": True, "status": "passed", "return_code": 0})
-        write_json(gpu0, {"schema_version": 1, "kind": "gpu0", "openvino_gpu0_visible": True, "openvino_gpu0_workload_performed": True, "openvino_gpu0_workload_passed": True})
-        write_jsonl(ai_events, [{"kind": "decision", "summary": "provider selected tool_result for patch recommendation"}])
-        write_json(capability, {"schema_version": 1, "kind": "runtime_tool_capability_manifest", "passed": True, "tool_count": 3, "tools": ["repo_search", "patchkit", "validator"]})
-        write_json(usage, {"schema_version": 1, "kind": "full_toolbox_run_telemetry_summary", "passed": True, "tool_usage_count": 2, "tool_usage": [{"tool": "repo_search"}, {"tool": "validator"}]})
+        write_json(
+            manifest,
+            {"schema_version": 1, "kind": "unified_local_ai_refactor_manifest", "stamp": STAMP},
+        )
+        write_json(
+            official,
+            {
+                "schema_version": 1,
+                "kind": "official",
+                "passed": True,
+                "status": "passed",
+                "return_code": 0,
+            },
+        )
+        write_json(
+            gpu0,
+            {
+                "schema_version": 1,
+                "kind": "gpu0",
+                "openvino_gpu0_visible": True,
+                "openvino_gpu0_workload_performed": True,
+                "openvino_gpu0_workload_passed": True,
+            },
+        )
+        write_jsonl(
+            ai_events,
+            [
+                {
+                    "kind": "decision",
+                    "summary": "provider selected tool_result for patch recommendation",
+                }
+            ],
+        )
+        write_json(
+            capability,
+            {
+                "schema_version": 1,
+                "kind": "runtime_tool_capability_manifest",
+                "passed": True,
+                "tool_count": 3,
+                "tools": ["repo_search", "patchkit", "validator"],
+            },
+        )
+        write_json(
+            usage,
+            {
+                "schema_version": 1,
+                "kind": "full_toolbox_run_telemetry_summary",
+                "passed": True,
+                "tool_usage_count": 2,
+                "tool_usage": [{"tool": "repo_search"}, {"tool": "validator"}],
+            },
+        )
 
         env = dict(os.environ)
         env["PYTHONPATH"] = str(source_repo)
@@ -95,7 +147,10 @@ def main() -> int:
             errors.append(f"chain contract command failed: {result.stderr[-500:]}")
         if report.get("passed") is not True:
             errors.append(f"chain contract did not pass: {report.get('errors')}")
-        if not any(edge.get("edge") == "provider_to_tool_evidence" and edge.get("passed") is True for edge in report.get("edges") or []):
+        if not any(
+            edge.get("edge") == "provider_to_tool_evidence" and edge.get("passed") is True
+            for edge in report.get("edges") or []
+        ):
             errors.append("provider_to_tool_evidence edge missing or failed")
 
     final = {

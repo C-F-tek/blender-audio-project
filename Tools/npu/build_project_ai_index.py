@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
 import argparse
 import ast
 import hashlib
 import json
 import re
 import warnings
-
+from datetime import datetime
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 INDEX_DIR = ROOT / "indexAI"
@@ -216,14 +215,20 @@ def format_symbol_summary(record: dict) -> str:
     if symbols.get("syntax_error"):
         lines.append(f"- Syntax error: `{symbols['syntax_error']}`")
     if symbols.get("syntax_warnings"):
-        lines.append("- Syntax warnings: " + "; ".join(f"`{item}`" for item in symbols["syntax_warnings"][:12]))
+        lines.append(
+            "- Syntax warnings: "
+            + "; ".join(f"`{item}`" for item in symbols["syntax_warnings"][:12])
+        )
     if symbols.get("imports"):
         lines.append("- Imports: " + ", ".join(f"`{item}`" for item in symbols["imports"][:24]))
     if symbols.get("classes"):
         bits = []
         for item in symbols["classes"][:20]:
             methods = ", ".join(method["name"] for method in item.get("methods", [])[:10])
-            bits.append(f"`{item['name']}` line {item['line']}" + (f" methods: {methods}" if methods else ""))
+            bits.append(
+                f"`{item['name']}` line {item['line']}"
+                + (f" methods: {methods}" if methods else "")
+            )
         lines.append("- Classes: " + "; ".join(bits))
     if symbols.get("functions"):
         bits = []
@@ -233,7 +238,9 @@ def format_symbol_summary(record: dict) -> str:
             bits.append(f"`{prefix}{item['name']}({args})` line {item['line']}")
         lines.append("- Functions: " + "; ".join(bits))
     if symbols.get("assignments"):
-        lines.append("- Assignments: " + ", ".join(f"`{name}`" for name in symbols["assignments"][:80]))
+        lines.append(
+            "- Assignments: " + ", ".join(f"`{name}`" for name in symbols["assignments"][:80])
+        )
     return "\n".join(lines)
 
 
@@ -273,7 +280,11 @@ def source_fingerprint(records: list[dict]) -> str:
 
 
 def existing_cache_valid(fingerprint: str) -> bool:
-    if not PROJECT_MANIFEST_JSON.exists() or not PROJECT_INDEX_MD.exists() or not PROJECT_CHUNK_DIR.exists():
+    if (
+        not PROJECT_MANIFEST_JSON.exists()
+        or not PROJECT_INDEX_MD.exists()
+        or not PROJECT_CHUNK_DIR.exists()
+    ):
         return False
     try:
         manifest = json.loads(PROJECT_MANIFEST_JSON.read_text(encoding="utf-8"))
@@ -317,7 +328,9 @@ def write_chunks(records: list[dict], max_chunk_chars: int) -> list[dict]:
     for record in records:
         path = ROOT / record["file"]
         source = path.read_text(encoding="utf-8", errors="replace")
-        for part, (start_line, end_line, lines) in enumerate(split_source(source, max_chunk_chars), 1):
+        for part, (start_line, end_line, lines) in enumerate(
+            split_source(source, max_chunk_chars), 1
+        ):
             pending.append(
                 {
                     "file": record["file"],
@@ -366,22 +379,34 @@ def write_index(records: list[dict], chunks: list[dict], created_at: str, finger
     lines.append("# Spaziotempo Primary Project Code Index\n\n")
     lines.append(f"Generated: `{created_at}`\n\n")
     lines.append(f"Source fingerprint: `{fingerprint}`\n\n")
-    lines.append("Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.\n\n")
+    lines.append(
+        "Priority: this is the primary library for project structure. AI patches must respect these files before Blender manuals.\n\n"
+    )
     lines.append("## Rules For AI Implementers\n")
     lines.append("- Prefer existing files, functions and panel patterns.\n")
-    lines.append("- Do not generate monolithic replacement scripts when a targeted patch is possible.\n")
-    lines.append("- Full frame-by-frame keyframe JSON files are data inputs and must not be compacted or rewritten.\n")
+    lines.append(
+        "- Do not generate monolithic replacement scripts when a targeted patch is possible.\n"
+    )
+    lines.append(
+        "- Full frame-by-frame keyframe JSON files are data inputs and must not be compacted or rewritten.\n"
+    )
     lines.append("- `indexAI` is generated context and must not be re-indexed as source.\n\n")
     lines.append("## Files\n")
     for record in records:
-        lines.append(f"- `{record['file']}`: {record['lines']} lines, {record['chars']} chars, sha256 `{record['sha256']}`\n")
+        lines.append(
+            f"- `{record['file']}`: {record['lines']} lines, {record['chars']} chars, sha256 `{record['sha256']}`\n"
+        )
     lines.append("\n## Chunks\n")
     for chunk in chunks:
-        lines.append(f"- `{chunk['path']}` -> `{chunk['file']}` lines {chunk['start_line']}-{chunk['end_line']}\n")
+        lines.append(
+            f"- `{chunk['path']}` -> `{chunk['file']}` lines {chunk['start_line']}-{chunk['end_line']}\n"
+        )
     PROJECT_INDEX_MD.write_text("".join(lines), encoding="utf-8")
 
 
-def build_project_ai_index(force: bool = False, max_chunk_chars: int = DEFAULT_MAX_CHUNK_CHARS) -> dict:
+def build_project_ai_index(
+    force: bool = False, max_chunk_chars: int = DEFAULT_MAX_CHUNK_CHARS
+) -> dict:
     INDEX_DIR.mkdir(parents=True, exist_ok=True)
     PATCH_LIBRARY_DIR.mkdir(parents=True, exist_ok=True)
     write_readme()
@@ -417,7 +442,9 @@ def build_project_ai_index(force: bool = False, max_chunk_chars: int = DEFAULT_M
         "chunks": chunks,
         "cache_hit": False,
     }
-    PROJECT_MANIFEST_JSON.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    PROJECT_MANIFEST_JSON.write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     print(f"[OK] Wrote: {PROJECT_INDEX_MD}")
     print(f"[OK] Wrote: {PROJECT_MANIFEST_JSON}")
     print(f"[OK] Wrote chunks: {PROJECT_CHUNK_DIR} ({len(chunks)} files)")
@@ -425,7 +452,9 @@ def build_project_ai_index(force: bool = False, max_chunk_chars: int = DEFAULT_M
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build primary project code index for AI patch planning.")
+    parser = argparse.ArgumentParser(
+        description="Build primary project code index for AI patch planning."
+    )
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--max-chunk-chars", type=int, default=DEFAULT_MAX_CHUNK_CHARS)
     args = parser.parse_args()

@@ -31,11 +31,7 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -55,16 +51,14 @@ def is_generated_evidence_chunk_path(rel_posix: str) -> bool:
 
 def should_skip(path: Path, repo_root: Path) -> bool:
     try:
-        rel_path = path.resolve(strict=False).relative_to(
-            repo_root.resolve(strict=False)
-        )
+        rel_path = path.resolve(strict=False).relative_to(repo_root.resolve(strict=False))
     except ValueError:
         return True
     rel_parts = rel_path.parts
     rel_posix = rel_path.as_posix()
-    return any(
-        part in EXCLUDE_DIRS for part in rel_parts
-    ) or is_generated_evidence_chunk_path(rel_posix)
+    return any(part in EXCLUDE_DIRS for part in rel_parts) or is_generated_evidence_chunk_path(
+        rel_posix
+    )
 
 
 def build_repo_file_manifest(repo_root: Path) -> list[Path]:
@@ -80,9 +74,7 @@ def build_repo_file_manifest(repo_root: Path) -> list[Path]:
     return sorted(files, key=lambda item: repo_rel(item, repo_root))
 
 
-def filter_manifest_by_extensions(
-    files: list[Path], extensions: set[str]
-) -> list[Path]:
+def filter_manifest_by_extensions(files: list[Path], extensions: set[str]) -> list[Path]:
     return [path for path in files if path.suffix.lower() in extensions]
 
 
@@ -91,9 +83,7 @@ def iter_files(
 ) -> list[Path]:
     if files is not None:
         return filter_manifest_by_extensions(files, extensions)
-    return filter_manifest_by_extensions(
-        build_repo_file_manifest(repo_root), extensions
-    )
+    return filter_manifest_by_extensions(build_repo_file_manifest(repo_root), extensions)
 
 
 LINE_COUNT_EXTENSIONS = TEXT_EXTENSIONS | {

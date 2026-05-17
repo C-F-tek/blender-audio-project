@@ -5,6 +5,7 @@ This validator runs the evidence-sufficiency analyzer against a refined
 megalithic review and validates that the result remains report-only while
 classifying patch candidates versus findings that need more context.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,8 +21,12 @@ try:
 except ImportError:
     from Tools.validation.report_utils import resolve_output_path, write_json_report  # type: ignore
 
-DEFAULT_REFINED_REVIEW = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review_v3.json"
-DEFAULT_REFINED_PROPOSALS = "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_proposals_v3.json"
+DEFAULT_REFINED_REVIEW = (
+    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_review_v3.json"
+)
+DEFAULT_REFINED_PROPOSALS = (
+    "output/ai_pipeline/local_ai_core_tool_activation_megalithic_refined_proposals_v3.json"
+)
 DEFAULT_OUTPUT = "output/validation/agent_review_evidence_sufficiency_smoke.json"
 DEFAULT_MARKDOWN = "output/validation/agent_review_evidence_sufficiency_smoke.md"
 DEFAULT_REPORT_OUTPUT = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
@@ -58,7 +63,9 @@ def value_at(data: dict[str, Any], dotted: str) -> Any:
     return current
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -84,7 +91,16 @@ def validate_report(repo_root: Path, path_value: str) -> tuple[list[str], dict[s
     data, error = load_json(path)
     if error or data is None:
         return [f"invalid JSON: {error}"], None
-    required = ["schema_version", "kind", "passed", "provider_execution_performed", "patch_application_performed", "decision", "areas", "guardrails"]
+    required = [
+        "schema_version",
+        "kind",
+        "passed",
+        "provider_execution_performed",
+        "patch_application_performed",
+        "decision",
+        "areas",
+        "guardrails",
+    ]
     for field in required:
         if value_at(data, field) is None:
             errors.append(f"missing required field: {field}")

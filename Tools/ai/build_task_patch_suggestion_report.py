@@ -24,9 +24,7 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--task-file", required=True)
     parser.add_argument("--Stamp", default="")
-    parser.add_argument(
-        "--output", default="output/validation/task_patch_suggestions.json"
-    )
+    parser.add_argument("--output", default="output/validation/task_patch_suggestions.json")
     parser.add_argument("--markdown-output", default="")
     parser.add_argument("--allow-empty", action="store_true")
     parser.add_argument("--empty-reason", default="")

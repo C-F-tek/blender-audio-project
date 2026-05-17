@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test GPU1/GPU0/NPU peer runtime and shared-memory chain evidence."""
+
 from __future__ import annotations
 
 import argparse
@@ -42,7 +43,9 @@ def main() -> int:
         repo = Path(tmp_raw) / "repo"
         repo.mkdir()
 
-        manifest = repo / f"output/local_ai_runs/{STAMP}/pipeline/unified_local_ai_refactor_manifest.json"
+        manifest = (
+            repo / f"output/local_ai_runs/{STAMP}/pipeline/unified_local_ai_refactor_manifest.json"
+        )
         official = repo / f"output/validation/{STAMP}_phase_official.json"
         gpu0 = repo / f"output/validation/openvino_gpu0_workload_{STAMP}.json"
         observer = repo / f"output/local_ai_runs/{STAMP}_observer"
@@ -53,9 +56,30 @@ def main() -> int:
         shared_memory = repo / f"output/validation/shared_toolbox_ai_to_ai_bundle_{STAMP}.json"
         output = repo / "output/validation/unified_chain_contract.json"
 
-        write_json(manifest, {"schema_version": 1, "kind": "unified_local_ai_refactor_manifest", "stamp": STAMP})
-        write_json(official, {"schema_version": 1, "kind": "official", "passed": True, "status": "passed", "return_code": 0})
-        write_json(gpu0, {"schema_version": 1, "kind": "gpu0", "openvino_gpu0_visible": True, "openvino_gpu0_workload_performed": True, "openvino_gpu0_workload_passed": True})
+        write_json(
+            manifest,
+            {"schema_version": 1, "kind": "unified_local_ai_refactor_manifest", "stamp": STAMP},
+        )
+        write_json(
+            official,
+            {
+                "schema_version": 1,
+                "kind": "official",
+                "passed": True,
+                "status": "passed",
+                "return_code": 0,
+            },
+        )
+        write_json(
+            gpu0,
+            {
+                "schema_version": 1,
+                "kind": "gpu0",
+                "openvino_gpu0_visible": True,
+                "openvino_gpu0_workload_performed": True,
+                "openvino_gpu0_workload_passed": True,
+            },
+        )
         write_jsonl(
             ai_events,
             [
@@ -65,8 +89,26 @@ def main() -> int:
                 {"kind": "summary", "shared_memory": "heap exchange context bundle"},
             ],
         )
-        write_json(capability, {"schema_version": 1, "kind": "runtime_tool_capability_manifest", "passed": True, "tool_count": 3, "tools": ["repo_search", "patchkit", "validator"]})
-        write_json(usage, {"schema_version": 1, "kind": "full_toolbox_run_telemetry_summary", "passed": True, "tool_usage_count": 2, "tool_usage": [{"tool": "repo_search"}, {"tool": "validator"}]})
+        write_json(
+            capability,
+            {
+                "schema_version": 1,
+                "kind": "runtime_tool_capability_manifest",
+                "passed": True,
+                "tool_count": 3,
+                "tools": ["repo_search", "patchkit", "validator"],
+            },
+        )
+        write_json(
+            usage,
+            {
+                "schema_version": 1,
+                "kind": "full_toolbox_run_telemetry_summary",
+                "passed": True,
+                "tool_usage_count": 2,
+                "tool_usage": [{"tool": "repo_search"}, {"tool": "validator"}],
+            },
+        )
         write_json(
             heap_peer,
             {
@@ -135,8 +177,15 @@ def main() -> int:
             errors.append(f"chain contract command failed: {result.stderr[-500:]}")
         if report.get("passed") is not True:
             errors.append(f"chain contract did not pass: {report.get('errors')}")
-        for edge_name in ("heap_exchange_to_peer_runtime", "heap_exchange_to_shared_memory", "provider_to_tool_evidence"):
-            if not any(edge.get("edge") == edge_name and edge.get("passed") is True for edge in report.get("edges") or []):
+        for edge_name in (
+            "heap_exchange_to_peer_runtime",
+            "heap_exchange_to_shared_memory",
+            "provider_to_tool_evidence",
+        ):
+            if not any(
+                edge.get("edge") == edge_name and edge.get("passed") is True
+                for edge in report.get("edges") or []
+            ):
                 errors.append(f"{edge_name} edge missing or failed")
 
     final = {

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test deterministic NPU runtime-tool fallback request generation."""
+
 from __future__ import annotations
 
 import argparse
@@ -59,12 +60,18 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/npu_runtime_tool_fallback_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/npu_runtime_tool_fallback_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/npu_runtime_tool_fallback_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/npu_runtime_tool_fallback_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    runtime_context = [{"kind": "runtime_tool_feedback_context", "tool_results": [{"tool": "check_python_syntax"}]}]
+    runtime_context = [
+        {"kind": "runtime_tool_feedback_context", "tool_results": [{"tool": "check_python_syntax"}]}
+    ]
     should_use = should_use_npu_deterministic_tool_fallback(
         run_npu=True,
         metadata_only=False,
@@ -130,12 +137,31 @@ def main() -> int:
         },
     }
 
-    output = (repo_root / args.output).resolve() if not Path(args.output).is_absolute() else Path(args.output)
-    markdown = (repo_root / args.markdown_output).resolve() if not Path(args.markdown_output).is_absolute() else Path(args.markdown_output)
+    output = (
+        (repo_root / args.output).resolve()
+        if not Path(args.output).is_absolute()
+        else Path(args.output)
+    )
+    markdown = (
+        (repo_root / args.markdown_output).resolve()
+        if not Path(args.markdown_output).is_absolute()
+        else Path(args.markdown_output)
+    )
     write_json(output, report)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown": str(markdown), "request_count": len(requests)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown": str(markdown),
+                "request_count": len(requests),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

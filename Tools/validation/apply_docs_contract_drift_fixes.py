@@ -8,10 +8,10 @@ small Markdown contract blocks that make the quality-gate docs discoverable.
 It does not execute providers, apply code patches, run Blender, read ignored
 runtime outputs or edit generated indexes.
 """
+
 from __future__ import annotations
 
 import argparse
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -208,9 +208,17 @@ def insert_block(text: str, spec: PatchSpec) -> tuple[str, bool, str]:
     if spec.anchor and spec.anchor in text:
         index = text.index(spec.anchor)
         if spec.insert_before_anchor:
-            return text[:index].rstrip() + block + "\n" + text[index:].lstrip(), True, f"inserted before {spec.anchor}"
+            return (
+                text[:index].rstrip() + block + "\n" + text[index:].lstrip(),
+                True,
+                f"inserted before {spec.anchor}",
+            )
         end = index + len(spec.anchor)
-        return text[:end].rstrip() + block + "\n" + text[end:].lstrip(), True, f"inserted after {spec.anchor}"
+        return (
+            text[:end].rstrip() + block + "\n" + text[end:].lstrip(),
+            True,
+            f"inserted after {spec.anchor}",
+        )
 
     return text.rstrip() + block, True, "appended at end"
 
@@ -248,15 +256,9 @@ def apply_one(repo_root: Path, spec: PatchSpec, *, apply: bool) -> dict[str, Any
 
 def build_report(repo_root: Path, *, apply: bool) -> dict[str, Any]:
     results = [apply_one(repo_root, spec, apply=apply) for spec in specs()]
-    errors = [
-        f"{item['path']}: {error}"
-        for item in results
-        for error in item.get("errors", [])
-    ]
+    errors = [f"{item['path']}: {error}" for item in results for error in item.get("errors", [])]
     warnings = [
-        f"{item['path']}: {warning}"
-        for item in results
-        for warning in item.get("warnings", [])
+        f"{item['path']}: {warning}" for item in results for warning in item.get("warnings", [])
     ]
     return {
         "schema_version": 1,
@@ -300,14 +302,20 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Guardrails")
     lines.append("")
-    lines.append("This tool only edits Markdown contract documentation when --apply is explicitly passed.")
+    lines.append(
+        "This tool only edits Markdown contract documentation when --apply is explicitly passed."
+    )
     return "\n".join(lines) + "\n"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--apply", action="store_true", help="Actually write docs-only changes. Without this flag the tool is dry-run only.")
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Actually write docs-only changes. Without this flag the tool is dry-run only.",
+    )
     parser.add_argument("--output", help="Optional JSON report path.")
     parser.add_argument("--markdown-output", help="Optional Markdown report path.")
     args = parser.parse_args()

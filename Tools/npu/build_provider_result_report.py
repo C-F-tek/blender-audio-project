@@ -6,6 +6,7 @@ opens Ollama/NPU sessions, never touches Blender, and never mutates legacy
 runtime outputs. It only consumes payloads that already exist or deterministic
 inline samples and writes a normalized provider_result_report JSON.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -40,19 +41,22 @@ def sample_payloads() -> list[dict[str, Any]]:
         {
             "provider": "ollama",
             "model": "sample-model",
-            "payload": {"response": "```json\n{\"ok\": true, \"lane\": \"ollama\"}\n```"},
+            "payload": {"response": '```json\n{"ok": true, "lane": "ollama"}\n```'},
             "allow_json": True,
         },
         {
             "provider": "openvino_npu",
             "model": "device-probe",
-            "payload": {"text": "{\"ok\": true, \"lane\": \"npu\"}"},
+            "payload": {"text": '{"ok": true, "lane": "npu"}'},
             "allow_json": True,
         },
         {
             "provider": "openai_compatible",
             "model": "sample-chat-model",
-            "payload": {"choices": [{"message": {"content": "plain text response"}}], "usage": {"total_tokens": 4}},
+            "payload": {
+                "choices": [{"message": {"content": "plain text response"}}],
+                "usage": {"total_tokens": 4},
+            },
             "allow_json": False,
         },
     ]
@@ -70,7 +74,9 @@ def normalize_input_payloads(repo_root: Path, args: argparse.Namespace) -> list[
                 "model": args.model,
                 "payload": load_json_payload(path),
                 "allow_json": not args.no_json_parse,
-                "source_path": path.relative_to(repo_root).as_posix() if path.is_relative_to(repo_root) else str(path),
+                "source_path": path.relative_to(repo_root).as_posix()
+                if path.is_relative_to(repo_root)
+                else str(path),
             }
         )
     for raw_inline in args.inline_json or []:
@@ -90,7 +96,10 @@ def normalize_input_payloads(repo_root: Path, args: argparse.Namespace) -> list[
 
 def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
-    from Tools.npu.pipeline import build_provider_result_report, parse_provider_result  # noqa: PLC0415
+    from Tools.npu.pipeline import (  # noqa: PLC0415
+        build_provider_result_report,
+        parse_provider_result,
+    )
 
     payloads = normalize_input_payloads(repo_root, args)
     parsed_results = [
@@ -125,9 +134,21 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--provider", default="runtime_safe_payload")
     parser.add_argument("--model", default="payload-only")
-    parser.add_argument("--payload", action="append", default=[], help="Existing provider payload JSON file. Repeatable or comma-separated.")
-    parser.add_argument("--inline-json", action="append", default=[], help="Inline provider payload JSON object. Repeatable.")
-    parser.add_argument("--use-samples", action="store_true", help="Include deterministic sample payloads.")
+    parser.add_argument(
+        "--payload",
+        action="append",
+        default=[],
+        help="Existing provider payload JSON file. Repeatable or comma-separated.",
+    )
+    parser.add_argument(
+        "--inline-json",
+        action="append",
+        default=[],
+        help="Inline provider payload JSON object. Repeatable.",
+    )
+    parser.add_argument(
+        "--use-samples", action="store_true", help="Include deterministic sample payloads."
+    )
     parser.add_argument("--no-json-parse", action="store_true")
     parser.add_argument("--output", default="output/validation/provider_result_report.json")
     args = parser.parse_args()
@@ -139,7 +160,16 @@ def main() -> int:
         output = repo_root / output
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({"passed": report.get("passed"), "output": str(output), "provider_execution_performed": report.get("provider_execution_performed")}, indent=2))
+    print(
+        json.dumps(
+            {
+                "passed": report.get("passed"),
+                "output": str(output),
+                "provider_execution_performed": report.get("provider_execution_performed"),
+            },
+            indent=2,
+        )
+    )
     return 0 if report.get("passed") is True else 2
 
 

@@ -41,7 +41,9 @@ def build_migration_readiness_report(
     }
 
 
-def default_runtime_wiring_readiness(*, local_validation_passed: bool, indexes_regenerated: bool) -> dict[str, Any]:
+def default_runtime_wiring_readiness(
+    *, local_validation_passed: bool, indexes_regenerated: bool
+) -> dict[str, Any]:
     """Return the default gate for wiring helpers into the legacy runtime file."""
 
     checks = [

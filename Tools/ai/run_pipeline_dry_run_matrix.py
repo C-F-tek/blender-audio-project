@@ -51,13 +51,7 @@ def _planned_gpu_placeholder_command() -> str:
 
 def ensure_sample_analysis_json(repo_root: Path) -> Path:
     """Create a tiny deterministic analysis JSON so music-summary dry-runs pass preflight."""
-    sample = (
-        repo_root
-        / "output"
-        / "ai_pipeline"
-        / "dry_run_matrix_inputs"
-        / "sample_analysis.json"
-    )
+    sample = repo_root / "output" / "ai_pipeline" / "dry_run_matrix_inputs" / "sample_analysis.json"
     sample.parent.mkdir(parents=True, exist_ok=True)
     if not sample.exists():
         payload = {
@@ -85,9 +79,7 @@ def ensure_sample_analysis_json(repo_root: Path) -> Path:
     return sample
 
 
-def repeat_cases(
-    cases: tuple[MatrixCase, ...], repeat_count: int
-) -> tuple[MatrixCase, ...]:
+def repeat_cases(cases: tuple[MatrixCase, ...], repeat_count: int) -> tuple[MatrixCase, ...]:
     """Repeat matrix cases for stress testing while keeping output directories unique."""
     repeat_count = max(1, repeat_count)
     if repeat_count == 1:
@@ -108,9 +100,7 @@ def repeat_cases(
 
 def default_cases(repo_root: Path | None = None) -> tuple[MatrixCase, ...]:
     agent_state_packet = None
-    sample_analysis_json = Path(
-        "output/ai_pipeline/dry_run_matrix_inputs/sample_analysis.json"
-    )
+    sample_analysis_json = Path("output/ai_pipeline/dry_run_matrix_inputs/sample_analysis.json")
     if repo_root is not None:
         candidate = (
             repo_root
@@ -555,8 +545,7 @@ def run_case(repo_root: Path, output_dir: Path, case: MatrixCase) -> dict[str, A
         command,
         cwd=str(repo_root),
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
     duration_sec = round(time.perf_counter() - started, 4)
@@ -582,23 +571,13 @@ def run_case(repo_root: Path, output_dir: Path, case: MatrixCase) -> dict[str, A
             report_payload.get("passed") if isinstance(report_payload, dict) else None
         ),
         "step_count": (
-            report_payload.get("step_count")
-            if isinstance(report_payload, dict)
-            else None
+            report_payload.get("step_count") if isinstance(report_payload, dict) else None
         ),
-        "lanes": (
-            report_payload.get("lanes") if isinstance(report_payload, dict) else None
-        ),
-        "summary": (
-            report_payload.get("summary") if isinstance(report_payload, dict) else None
-        ),
-        "schedule": (
-            report_payload.get("schedule") if isinstance(report_payload, dict) else None
-        ),
+        "lanes": (report_payload.get("lanes") if isinstance(report_payload, dict) else None),
+        "summary": (report_payload.get("summary") if isinstance(report_payload, dict) else None),
+        "schedule": (report_payload.get("schedule") if isinstance(report_payload, dict) else None),
         "agent_state_packet": (
-            report_payload.get("agent_state_packet")
-            if isinstance(report_payload, dict)
-            else None
+            report_payload.get("agent_state_packet") if isinstance(report_payload, dict) else None
         ),
     }
 
@@ -657,12 +636,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output-dir", default="output/ai_pipeline/dry_run_matrix")
-    parser.add_argument(
-        "--output", default="output/ai_pipeline/dry_run_matrix_report.json"
-    )
-    parser.add_argument(
-        "--markdown-output", default="output/ai_pipeline/dry_run_matrix_report.md"
-    )
+    parser.add_argument("--output", default="output/ai_pipeline/dry_run_matrix_report.json")
+    parser.add_argument("--markdown-output", default="output/ai_pipeline/dry_run_matrix_report.md")
     parser.add_argument("--continue-on-error", action="store_true")
     parser.add_argument(
         "--matrix-workers",
@@ -685,14 +660,9 @@ def main() -> int:
     repeat_count = max(1, args.repeat_cases)
     base_cases = default_cases(repo_root)
     cases = repeat_cases(base_cases, repeat_count)
-    results = run_cases(
-        repo_root, output_dir, cases, matrix_workers, args.continue_on_error
-    )
+    results = run_cases(repo_root, output_dir, cases, matrix_workers, args.continue_on_error)
 
-    passed = all(
-        item["returncode"] == 0 and item.get("report_passed") is True
-        for item in results
-    )
+    passed = all(item["returncode"] == 0 and item.get("report_passed") is True for item in results)
     report = {
         "schema_version": 1,
         "repo_root": str(repo_root),
@@ -708,14 +678,10 @@ def main() -> int:
 
     output = Path(args.output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output = write_dry_run_matrix_markdown(args.markdown_output, report)
     report["markdown_output"] = str(markdown_output)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if passed else 2
 

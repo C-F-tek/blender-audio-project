@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the report-only runtime tool broker without providers."""
+
 from __future__ import annotations
 
 import argparse
@@ -31,7 +32,9 @@ def read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
-def run_broker(repo_root: Path, request_file: Path, output: Path, markdown: Path, stamp: str, dry_run: bool) -> tuple[int, str, str]:
+def run_broker(
+    repo_root: Path, request_file: Path, output: Path, markdown: Path, stamp: str, dry_run: bool
+) -> tuple[int, str, str]:
     command = [
         sys.executable,
         "Tools/ai/agent_runtime_tool_broker.py",
@@ -94,14 +97,19 @@ def build_smoke_request() -> dict[str, Any]:
                     "scope": "operational",
                     "summary": "runtime broker smoke operational memory",
                     "content": "This is a temporary operational memory record created by smoke validation.",
-                    "tag": ["smoke", "operational_memory"]
+                    "tag": ["smoke", "operational_memory"],
                 },
             },
             {
                 "id": "operational_memory_search",
                 "tool": "runtime_sqlite_memory",
                 "reason": "Doctor tool retrieves transient working context.",
-                "args": {"action": "search", "scope": "operational", "query": "temporary operational", "limit": 5},
+                "args": {
+                    "action": "search",
+                    "scope": "operational",
+                    "query": "temporary operational",
+                    "limit": 5,
+                },
             },
             {
                 "id": "persistent_memory_status",
@@ -148,7 +156,9 @@ def validate_report(report: dict[str, Any], *, dry_run: bool) -> list[str]:
     if report.get("guardrails", {}).get("allowlist_enforced") is not True:
         errors.append("allowlist_enforced guardrail must be true")
     if report.get("operational_sqlite_write_performed") is not True:
-        errors.append("operational_sqlite_write_performed should be true after operational remember")
+        errors.append(
+            "operational_sqlite_write_performed should be true after operational remember"
+        )
     if report.get("sqlite_write_performed") is not False:
         errors.append("protected sqlite_write_performed must remain false")
     if report.get("persistent_memory_write_performed") is not False:
@@ -166,14 +176,29 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     stamp = now_stamp()
-    request_file = resolve_path(repo_root, f"output/validation/agent_runtime_tool_broker_smoke_request_{stamp}.json")
-    broker_output = resolve_path(repo_root, f"output/validation/agent_runtime_tool_broker_smoke_{stamp}.json")
-    broker_markdown = resolve_path(repo_root, f"output/validation/agent_runtime_tool_broker_smoke_{stamp}.md")
-    final_output = resolve_path(repo_root, args.output or f"output/validation/agent_runtime_tool_broker_smoke_result_{stamp}.json")
-    final_markdown = resolve_path(repo_root, args.markdown_output or f"output/validation/agent_runtime_tool_broker_smoke_result_{stamp}.md")
+    request_file = resolve_path(
+        repo_root, f"output/validation/agent_runtime_tool_broker_smoke_request_{stamp}.json"
+    )
+    broker_output = resolve_path(
+        repo_root, f"output/validation/agent_runtime_tool_broker_smoke_{stamp}.json"
+    )
+    broker_markdown = resolve_path(
+        repo_root, f"output/validation/agent_runtime_tool_broker_smoke_{stamp}.md"
+    )
+    final_output = resolve_path(
+        repo_root,
+        args.output or f"output/validation/agent_runtime_tool_broker_smoke_result_{stamp}.json",
+    )
+    final_markdown = resolve_path(
+        repo_root,
+        args.markdown_output
+        or f"output/validation/agent_runtime_tool_broker_smoke_result_{stamp}.md",
+    )
 
     write_json(request_file, build_smoke_request())
-    returncode, stdout, stderr = run_broker(repo_root, request_file, broker_output, broker_markdown, stamp, args.dry_run)
+    returncode, stdout, stderr = run_broker(
+        repo_root, request_file, broker_output, broker_markdown, stamp, args.dry_run
+    )
     broker_report = read_json(broker_output) if broker_output.exists() else {}
     errors = validate_report(broker_report, dry_run=args.dry_run)
     if returncode not in {0, 2}:
@@ -228,17 +253,22 @@ def main() -> int:
         ),
         encoding="utf-8",
     )
-    print(json.dumps({
-        "passed": report["passed"],
-        "output": str(final_output),
-        "markdown": str(final_markdown),
-        **report["broker_summary"],
-        "provider_execution_performed": False,
-        "patch_application_performed": False,
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(final_output),
+                "markdown": str(final_markdown),
+                **report["broker_summary"],
+                "provider_execution_performed": False,
+                "patch_application_performed": False,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

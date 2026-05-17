@@ -93,15 +93,13 @@ def build_bundle(
         include_unstamped=recursive_include_unstamped,
         max_files=recursive_max_files,
     )
-    recursive_artifact_paths, skipped_recursive_artifacts = (
-        discover_recursive_artifacts(
-            repo_root,
-            split_path_values(list(recursive_artifact_roots or [])),
-            suffixes=(".json", ".md"),
-            stamp=recursive_stamp,
-            include_unstamped=recursive_include_unstamped,
-            max_files=recursive_max_files,
-        )
+    recursive_artifact_paths, skipped_recursive_artifacts = discover_recursive_artifacts(
+        repo_root,
+        split_path_values(list(recursive_artifact_roots or [])),
+        suffixes=(".json", ".md"),
+        stamp=recursive_stamp,
+        include_unstamped=recursive_include_unstamped,
+        max_files=recursive_max_files,
     )
 
     resolved_reports = dedupe_paths(resolved_reports + recursive_report_paths)
@@ -109,9 +107,7 @@ def build_bundle(
     recursive_artifact_paths = dedupe_paths(recursive_artifact_paths)
 
     reports = [summarize_report(path, repo_root) for path in resolved_reports]
-    artifact_manifest = [
-        summarize_artifact(path, repo_root) for path in resolved_reports
-    ]
+    artifact_manifest = [summarize_artifact(path, repo_root) for path in resolved_reports]
     selected_paths = discover_selected_chunks_evidence(
         repo_root,
         selected_chunks_paths,
@@ -150,8 +146,7 @@ def build_bundle(
             normalize_manifest_path(path, repo_root) for path in recursive_report_paths
         ],
         "discovered_artifacts": [
-            normalize_manifest_path(path, repo_root)
-            for path in recursive_artifact_paths
+            normalize_manifest_path(path, repo_root) for path in recursive_artifact_paths
         ],
         "skipped_reports": skipped_recursive_reports[:200],
         "skipped_artifacts": skipped_recursive_artifacts[:200],
@@ -163,9 +158,7 @@ def build_bundle(
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": str(repo_root),
         "source_reports": [item["path"] for item in reports],
-        "source_selected_chunks_evidence": [
-            item["path"] for item in selected_chunks_evidence
-        ],
+        "source_selected_chunks_evidence": [item["path"] for item in selected_chunks_evidence],
         "source_included_artifacts": [item["path"] for item in included_artifacts],
         "reports": reports,
         "selected_chunks_evidence": selected_chunks_evidence,
@@ -190,9 +183,7 @@ def build_bundle(
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / f"{basename}.json"
     md_path = output_dir / f"{basename}.md"
-    json_path.write_text(
-        json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    json_path.write_text(json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     md_path.write_text(render_markdown(bundle), encoding="utf-8")
     return bundle, f"{json_path}\n{md_path}"
 
@@ -245,9 +236,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Allow recursive discovery of files without the recursive stamp. Use only on narrow roots.",
     )
-    parser.add_argument(
-        "--recursive-max-files", type=int, default=DEFAULT_RECURSIVE_MAX_FILES
-    )
+    parser.add_argument("--recursive-max-files", type=int, default=DEFAULT_RECURSIVE_MAX_FILES)
     parser.add_argument(
         "--chunk-large-files-lines",
         type=int,

@@ -1,4 +1,5 @@
 """Patch-notes quality product phase for the Python workflow."""
+
 from __future__ import annotations
 
 from pathlib import Path

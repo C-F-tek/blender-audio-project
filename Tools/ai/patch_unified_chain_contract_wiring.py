@@ -32,9 +32,7 @@ def detect_newline(text: str) -> str:
 
 
 def write_preserved(path: Path, text_lf: str, newline: str) -> None:
-    path.write_text(
-        text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig"
-    )
+    path.write_text(text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig")
 
 
 def run_parser(path: Path) -> tuple[bool, str]:
@@ -112,11 +110,7 @@ def patch_launcher(text_lf: str) -> tuple[str, list[str]]:
         diagnostics = []
         for index, line in enumerate(lines):
             lowered = line.lower()
-            if (
-                "product" in lowered
-                or "separation" in lowered
-                or "patch_suggestion" in lowered
-            ):
+            if "product" in lowered or "separation" in lowered or "patch_suggestion" in lowered:
                 diagnostics.append(f"{index + 1}: {line}")
         preview = "\n".join(diagnostics[:40])
         raise RuntimeError(
@@ -157,17 +151,13 @@ def validate_policy(text_lf: str) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1"
-    )
+    parser.add_argument("--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
     target = (repo / args.target).resolve()
-    backup_dir = (
-        repo / "output" / "validation" / "unified_chain_contract_wiring_backups"
-    )
+    backup_dir = repo / "output" / "validation" / "unified_chain_contract_wiring_backups"
     backup_dir.mkdir(parents=True, exist_ok=True)
 
     parser_ok, parser_output = run_parser(target)
@@ -192,9 +182,7 @@ def main() -> int:
         print(f"line_count={len(original_lf.splitlines())}")
         return 0
 
-    backup = (
-        backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
-    )
+    backup = backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
     shutil.copy2(target, backup)
 
     if args.dry_run:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke test for prepare_review_pr.py apply-report include-path autodiscovery."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 STAMP = "prepare_review_pr_auto_include_smoke_20990101-010203"
 TARGET = "docs/LOCAL_AI_TASKS/auto-include-target.md"
@@ -23,7 +28,9 @@ MARKER = "prepare_review_pr_auto_include_marker"
 
 def run(command: list[str], cwd: Path, env: dict[str, str], timeout: int) -> dict[str, Any]:
     try:
-        result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, check=False, timeout=timeout)
+        result = subprocess.run(
+            command, cwd=cwd, env=env, capture_output=True, text=True, check=False, timeout=timeout
+        )
         return {
             "command": command,
             "returncode": result.returncode,
@@ -45,14 +52,18 @@ def run(command: list[str], cwd: Path, env: dict[str, str], timeout: int) -> dic
 def seed_repo(root: Path) -> Path:
     repo = root / "repo"
     repo.mkdir()
-    subprocess.run(["git", "init", "-b", "master"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "init", "-b", "master"], cwd=repo, check=True, capture_output=True, text=True
+    )
     subprocess.run(["git", "config", "user.email", "smoke@example.invalid"], cwd=repo, check=True)
     subprocess.run(["git", "config", "user.name", "Prepare Review PR Smoke"], cwd=repo, check=True)
     target = repo / TARGET
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("# Auto Include Target\n\nSeed content.\n", encoding="utf-8")
     subprocess.run(["git", "add", TARGET], cwd=repo, check=True, capture_output=True, text=True)
-    subprocess.run(["git", "commit", "-m", "seed target"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "commit", "-m", "seed target"], cwd=repo, check=True, capture_output=True, text=True
+    )
     target.write_text(target.read_text(encoding="utf-8") + f"\n{MARKER}\n", encoding="utf-8")
     report = {
         "schema_version": 1,
@@ -74,7 +85,11 @@ def seed_repo(root: Path) -> Path:
         "manual_review_product": {
             "ready_for_patch_suggestion_review": True,
             "product_facing_manual_review_items": [
-                {"id": "auto-include-smoke", "target_files": [TARGET], "title": "Auto include smoke"}
+                {
+                    "id": "auto-include-smoke",
+                    "target_files": [TARGET],
+                    "title": "Auto include smoke",
+                }
             ],
         },
     }
@@ -102,8 +117,12 @@ def render_markdown(report: dict[str, Any]) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/prepare_review_pr_auto_include_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/prepare_review_pr_auto_include_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/prepare_review_pr_auto_include_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/prepare_review_pr_auto_include_smoke.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=60)
     return parser.parse_args()
 
@@ -143,13 +162,17 @@ def main() -> int:
             "--allow-dirty-branch",
         ]
         command_result = run(command, repo, env, args.timeout_seconds)
-        review_report = json.loads(review_json.read_text(encoding="utf-8-sig")) if review_json.exists() else {}
+        review_report = (
+            json.loads(review_json.read_text(encoding="utf-8-sig")) if review_json.exists() else {}
+        )
         if not command_result["ok"]:
             errors.append(f"prepare_review_pr.py failed rc={command_result['returncode']}")
         if review_report.get("passed") is not True:
             errors.append("review PR prepare report did not pass")
         if review_report.get("auto_include_paths") != [TARGET]:
-            errors.append(f"unexpected auto include paths: {review_report.get('auto_include_paths')}")
+            errors.append(
+                f"unexpected auto include paths: {review_report.get('auto_include_paths')}"
+            )
         if review_report.get("manual_include_paths"):
             errors.append("manual include paths should be empty in auto-include smoke")
         if review_report.get("git_commit_performed") is not True:

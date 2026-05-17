@@ -32,7 +32,6 @@ try:
     from tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
     from tools.validation.report_utils import (
         read_json_report,
-        split_csv_values,
         write_json_report,
     )
 except ImportError:
@@ -54,9 +53,7 @@ class ToolSpec:
     name: str
     description: str
     allowed_args: tuple[str, ...]
-    builder: Callable[
-        [Path, Path, str, dict[str, Any]], tuple[list[str], dict[str, str]]
-    ]
+    builder: Callable[[Path, Path, str, dict[str, Any]], tuple[list[str], dict[str, str]]]
 
 
 def now_iso() -> str:
@@ -72,11 +69,7 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -151,9 +144,9 @@ def normalized_child_path(repo_root: Path, value: str) -> str:
     path = Path(text)
     if path.is_absolute():
         try:
-            text = path.resolve(strict=False).relative_to(
-                repo_root.resolve(strict=False)
-            ).as_posix()
+            text = (
+                path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+            )
         except ValueError:
             text = path.as_posix()
     return text.lstrip("./")
@@ -204,9 +197,7 @@ def output_owned_artifact_write(
 def fixture_repo_write(
     repo_root: Path, report_data: dict[str, Any], outputs: dict[str, Any]
 ) -> bool:
-    child_repo_root = normalized_child_path(
-        repo_root, str(report_data.get("repo_root") or "")
-    )
+    child_repo_root = normalized_child_path(repo_root, str(report_data.get("repo_root") or ""))
     if fixture_repo_path(child_repo_root):
         return True
     paths = collect_normalized_paths(
@@ -283,10 +274,7 @@ def build_agent_memory_inventory(
         "--repo-root",
         ".",
         "--objective",
-        str(
-            args.get("objective")
-            or "Runtime read-only memory inventory for IA-Carmine planner."
-        ),
+        str(args.get("objective") or "Runtime read-only memory inventory for IA-Carmine planner."),
         "--memory-db",
         str(args.get("memory_db") or "indexAI/agent_memory/agent_memory.sqlite"),
         "--output",
@@ -303,9 +291,7 @@ def build_agent_memory_inventory(
 def build_agent_agnostic_tool_inventory(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, str]]:
-    report, markdown = base_outputs(
-        out_dir, request_id, "agent_agnostic_tool_inventory"
-    )
+    report, markdown = base_outputs(out_dir, request_id, "agent_agnostic_tool_inventory")
     command = [
         resolve_child_python(repo_root),
         "tools/ai/build_agent_agnostic_tool_inventory.py",
@@ -327,19 +313,14 @@ def build_agent_agnostic_tool_inventory(
 def build_agent_transient_request_context(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, str]]:
-    report, markdown = base_outputs(
-        out_dir, request_id, "agent_transient_request_context"
-    )
+    report, markdown = base_outputs(out_dir, request_id, "agent_transient_request_context")
     command = [
         resolve_child_python(repo_root),
         "tools/ai/build_agent_transient_request_context.py",
         "--repo-root",
         ".",
         "--objective",
-        str(
-            args.get("objective")
-            or "Runtime request-scoped context for IA-Carmine planner."
-        ),
+        str(args.get("objective") or "Runtime request-scoped context for IA-Carmine planner."),
         "--output",
         str(report),
         "--markdown-output",
@@ -394,9 +375,7 @@ def check_validation_report_contract(
 def run_gpu_planner_json_contract_smoke(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, str]]:
-    report, markdown = base_outputs(
-        out_dir, request_id, "gpu_planner_json_contract_smoke"
-    )
+    report, markdown = base_outputs(out_dir, request_id, "gpu_planner_json_contract_smoke")
     command = [
         resolve_child_python(repo_root),
         "tools/validation/run_gpu_planner_json_contract_smoke.py",
@@ -477,9 +456,7 @@ def build_refactor_duplication_audit(
 def build_semantic_code_chunk_selection(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, str]]:
-    report, markdown = base_outputs(
-        out_dir, request_id, "selected_semantic_code_chunks"
-    )
+    report, markdown = base_outputs(out_dir, request_id, "selected_semantic_code_chunks")
     command = [
         resolve_child_python(repo_root),
         "tools/ai/select_semantic_code_chunks.py",
@@ -526,9 +503,7 @@ def build_ai_context_pack_tool(
     )
     evidence_dir = resolve_path(
         repo_root,
-        str(
-            args.get("evidence_dir") or out_dir / f"{request_id}_context_pack_evidence"
-        ),
+        str(args.get("evidence_dir") or out_dir / f"{request_id}_context_pack_evidence"),
     )
     evidence_basename = safe_id(
         args.get("evidence_basename") or f"{basename}_evidence",
@@ -616,21 +591,14 @@ def run_agent_runtime_debug_lab(
 ) -> tuple[list[str], dict[str, str]]:
     request_file = str(args.get("request_file") or "").strip()
     if not request_file:
-        request_file = str(
-            out_dir / f"{request_id}_agent_runtime_debug_lab_request.json"
-        )
+        request_file = str(out_dir / f"{request_id}_agent_runtime_debug_lab_request.json")
     report = resolve_path(
         repo_root,
-        str(
-            args.get("output") or out_dir / f"{request_id}_agent_runtime_debug_lab.json"
-        ),
+        str(args.get("output") or out_dir / f"{request_id}_agent_runtime_debug_lab.json"),
     )
     markdown = resolve_path(
         repo_root,
-        str(
-            args.get("markdown_output")
-            or out_dir / f"{request_id}_agent_runtime_debug_lab.md"
-        ),
+        str(args.get("markdown_output") or out_dir / f"{request_id}_agent_runtime_debug_lab.md"),
     )
     command = [
         resolve_child_python(repo_root),
@@ -1008,9 +976,7 @@ def infer_request_source(requests_data: dict[str, Any], request_path: Path) -> s
         if value:
             return value
 
-    tool_request_source = first_tool_request_source(
-        extract_tool_requests(requests_data)
-    )
+    tool_request_source = first_tool_request_source(extract_tool_requests(requests_data))
     if tool_request_source:
         return tool_request_source
 
@@ -1118,9 +1084,7 @@ def execute_tool_request(
     base_result["started_at"] = timed.started_at
     base_result["finished_at"] = timed.finished_at
     base_result["elapsed_seconds"] = timed.elapsed_seconds
-    base_result["status"] = (
-        "executed_ok" if timed.returncode == 0 else "executed_failed"
-    )
+    base_result["status"] = "executed_ok" if timed.returncode == 0 else "executed_failed"
     base_result["stdout_tail"] = timed.stdout_tail
     base_result["stderr_tail"] = timed.stderr_tail
     if timed.error:
@@ -1154,23 +1118,17 @@ def execute_tool_request(
                 or guardrails.get("patch_application_performed")
             )
             git_write = bool(
-                report_data.get("git_write_performed")
-                or guardrails.get("git_write_performed")
+                report_data.get("git_write_performed") or guardrails.get("git_write_performed")
             )
             fixture_write = fixture_repo_write(repo_root, report_data, outputs)
-            output_artifact_write = output_owned_artifact_write(
-                repo_root, report_data, outputs
-            )
+            output_artifact_write = output_owned_artifact_write(repo_root, report_data, outputs)
             if source_writes and fixture_write:
                 source_writes = False
                 base_result["warnings"].append(
                     "fixture/output write ignored for source-write guardrail"
                 )
             elif (
-                source_writes
-                and output_artifact_write
-                and not patch_application
-                and not git_write
+                source_writes and output_artifact_write and not patch_application and not git_write
             ):
                 source_writes = False
                 base_result["warnings"].append(
@@ -1211,9 +1169,7 @@ def execute_tool_request(
                         report_data.get("operational_memory_clear_performed")
                         or guardrails.get("operational_memory_clear_performed")
                     ),
-                    "blender_runtime_touched": bool(
-                        guardrails.get("blender_runtime_touched")
-                    ),
+                    "blender_runtime_touched": bool(guardrails.get("blender_runtime_touched")),
                     "git_write_performed": git_write,
                 }
             )
@@ -1227,9 +1183,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     tool_requests = extract_tool_requests(requests_data)
     request_source = infer_request_source(requests_data, request_path)
     stamp = args.stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
-    out_dir = resolve_path(
-        repo_root, args.tool_output_dir or f"output/ai_runtime_tools/{stamp}"
-    )
+    out_dir = resolve_path(repo_root, args.tool_output_dir or f"output/ai_runtime_tools/{stamp}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     results = [
@@ -1246,9 +1200,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
     blocked = [item for item in results if item.get("blocked")]
     executed = [item for item in results if item.get("executed")]
-    failed = [
-        item for item in results if item.get("errors") and not item.get("blocked")
-    ]
+    failed = [item for item in results if item.get("errors") and not item.get("blocked")]
     dangerous_guardrail = [
         item
         for item in results
@@ -1278,9 +1230,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         if item.get("guardrails", {}).get("operational_sqlite_write_performed")
     )
     persistent_memory_write_count = sum(
-        1
-        for item in results
-        if item.get("guardrails", {}).get("persistent_memory_write_performed")
+        1 for item in results if item.get("guardrails", {}).get("persistent_memory_write_performed")
     )
     source_write_count = sum(
         1 for item in results if item.get("guardrails", {}).get("source_writes_performed")
@@ -1305,15 +1255,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "source_classification": request_source,
         "tool_output_dir": repo_rel(out_dir, repo_root),
         "passed": not failed and not dangerous_guardrail,
-        "errors": [
-            f"{item.get('id')}: {err}"
-            for item in failed
-            for err in item.get("errors", [])
-        ]
+        "errors": [f"{item.get('id')}: {err}" for item in failed for err in item.get("errors", [])]
         + [f"{item.get('id')}: guardrail violation" for item in dangerous_guardrail],
-        "warnings": [
-            f"{item.get('id')}: blocked {item.get('errors')}" for item in blocked
-        ],
+        "warnings": [f"{item.get('id')}: blocked {item.get('errors')}" for item in blocked],
         "provider_execution_performed": False,
         "patch_application_performed": patch_application_count > 0,
         "source_writes_performed": source_write_count > 0,
@@ -1428,21 +1372,11 @@ def main() -> int:
                 "provider_execution_performed": report["provider_execution_performed"],
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
-                "persistent_memory_write_performed": report[
-                    "persistent_memory_write_performed"
-                ],
-                "persistent_memory_write_count": report.get(
-                    "persistent_memory_write_count", 0
-                ),
-                "operational_sqlite_write_performed": report[
-                    "operational_sqlite_write_performed"
-                ],
-                "operational_sqlite_write_count": report[
-                    "operational_sqlite_write_count"
-                ],
-                "operational_memory_clear_count": report[
-                    "operational_memory_clear_count"
-                ],
+                "persistent_memory_write_performed": report["persistent_memory_write_performed"],
+                "persistent_memory_write_count": report.get("persistent_memory_write_count", 0),
+                "operational_sqlite_write_performed": report["operational_sqlite_write_performed"],
+                "operational_sqlite_write_count": report["operational_sqlite_write_count"],
+                "operational_memory_clear_count": report["operational_memory_clear_count"],
             },
             indent=2,
             ensure_ascii=False,

@@ -9,6 +9,7 @@ The service is intentionally safe:
 - it emits structured remediation requests that an orchestrator or AI agent can
   use to enrich intermediates or request Python/code corrections.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,7 +33,7 @@ EVENT_LOG = ROOT / "output" / "workflow_logs" / "npu_guardrail_events.jsonl"
 
 BLOCKED_PATTERNS = {
     "ShaderNodeTexMusgrave": "Musgrave node unavailable in the Blender 5.x target environment.",
-    "bpy.ops.wm.open_mainfile": "Generated scripts should not open project files implicitly."
+    "bpy.ops.wm.open_mainfile": "Generated scripts should not open project files implicitly.",
 }
 WARNING_PATTERNS = {
     "C:\\Users\\": "Potential hardcoded local Windows user path.",
@@ -46,7 +47,12 @@ INTERMEDIATE_ENRICHMENT_FIELDS = {
     "track_summary": ["duration_sec", "estimated_bpm", "primary_series", "ai_readiness"],
     "music_segments": ["segments", "visual_directive", "estimated_intensity"],
     "audio_event_map": ["peak_events", "beats_sec", "series_used_for_peaks"],
-    "scene_brief": ["creative_intent", "technical_intent", "recommended_visual_progression", "assumptions"],
+    "scene_brief": [
+        "creative_intent",
+        "technical_intent",
+        "recommended_visual_progression",
+        "assumptions",
+    ],
     "smart_context_packet": ["selected_capsules", "capsule_manifest", "task", "recommended_inputs"],
 }
 
@@ -59,7 +65,12 @@ def append_event(event: str, payload: dict[str, Any]) -> None:
     try:
         EVENT_LOG.parent.mkdir(parents=True, exist_ok=True)
         with EVENT_LOG.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps({"time": now_iso(), "event": event, "payload": payload}, ensure_ascii=False) + "\n")
+            handle.write(
+                json.dumps(
+                    {"time": now_iso(), "event": event, "payload": payload}, ensure_ascii=False
+                )
+                + "\n"
+            )
     except Exception:
         pass
 
@@ -88,7 +99,9 @@ def pattern_findings(text: str, patterns: dict[str, str], prefix: str) -> list[s
     return findings
 
 
-def idea_scan(text: str, ideas: list[str], prefix: str, required: bool) -> tuple[list[str], list[str]]:
+def idea_scan(
+    text: str, ideas: list[str], prefix: str, required: bool
+) -> tuple[list[str], list[str]]:
     warnings: list[str] = []
     positives: list[str] = []
     for idea in ideas:
@@ -170,109 +183,127 @@ def remediation_requests(
 
     for finding in blocking:
         if "ShaderNodeTexMusgrave" in finding:
-            requests.append(remediation(
-                "fix_python_code",
-                "high",
-                path,
-                "Generated or indexed code references a Blender node that is blocked for the target Blender 5.x environment.",
-                "Replace ShaderNodeTexMusgrave with a Blender 5.x compatible procedural material strategy such as ShaderNodeTexNoise, ShaderNodeTexVoronoi and ColorRamp. Keep the change local and configurable.",
-                "python_patch_or_regenerate_code",
-                False,
-                finding,
-            ))
+            requests.append(
+                remediation(
+                    "fix_python_code",
+                    "high",
+                    path,
+                    "Generated or indexed code references a Blender node that is blocked for the target Blender 5.x environment.",
+                    "Replace ShaderNodeTexMusgrave with a Blender 5.x compatible procedural material strategy such as ShaderNodeTexNoise, ShaderNodeTexVoronoi and ColorRamp. Keep the change local and configurable.",
+                    "python_patch_or_regenerate_code",
+                    False,
+                    finding,
+                )
+            )
         elif pythonish:
-            requests.append(remediation(
-                "fix_python_code",
-                "high",
-                path,
-                "Blocking pattern detected in a Python-like artifact.",
-                "Request a focused Python correction patch. Do not rewrite the whole package; remove the blocked construct and preserve configurable paths and entry points.",
-                "python_patch_or_regenerate_code",
-                False,
-                finding,
-            ))
+            requests.append(
+                remediation(
+                    "fix_python_code",
+                    "high",
+                    path,
+                    "Blocking pattern detected in a Python-like artifact.",
+                    "Request a focused Python correction patch. Do not rewrite the whole package; remove the blocked construct and preserve configurable paths and entry points.",
+                    "python_patch_or_regenerate_code",
+                    False,
+                    finding,
+                )
+            )
         else:
-            requests.append(remediation(
-                "review_generated_artifact",
-                "high",
-                path,
-                "Blocking pattern detected in an AI artifact.",
-                "Request a revised artifact from the planner/generator with the blocked pattern removed and the assumption documented.",
-                "regenerate_ai_artifact",
-                False,
-                finding,
-            ))
+            requests.append(
+                remediation(
+                    "review_generated_artifact",
+                    "high",
+                    path,
+                    "Blocking pattern detected in an AI artifact.",
+                    "Request a revised artifact from the planner/generator with the blocked pattern removed and the assumption documented.",
+                    "regenerate_ai_artifact",
+                    False,
+                    finding,
+                )
+            )
 
     for finding in warnings:
         if "schema_version_missing" in finding or "explicit_assumptions_missing" in finding:
-            requests.append(remediation(
-                "enrich_intermediate_data",
-                "medium",
-                path,
-                "Intermediate artifact is missing metadata required for reliable downstream AI planning.",
-                "Rerun or enrich the intermediate builder so the artifact includes schema_version, explicit assumptions and planner-ready metadata.",
-                "enrich_intermediates",
-                True,
-                finding,
-            ))
+            requests.append(
+                remediation(
+                    "enrich_intermediate_data",
+                    "medium",
+                    path,
+                    "Intermediate artifact is missing metadata required for reliable downstream AI planning.",
+                    "Rerun or enrich the intermediate builder so the artifact includes schema_version, explicit assumptions and planner-ready metadata.",
+                    "enrich_intermediates",
+                    True,
+                    finding,
+                )
+            )
         elif "artifact_large_for_npu_light_guardrail" in finding:
-            requests.append(remediation(
-                "create_compact_summary",
-                "medium",
-                path,
-                "Artifact is too large for NPU-light review.",
-                "Create a compact summary artifact and use the full JSON only as a read-only source of truth.",
-                "compact_context_generation",
-                True,
-                finding,
-            ))
+            requests.append(
+                remediation(
+                    "create_compact_summary",
+                    "medium",
+                    path,
+                    "Artifact is too large for NPU-light review.",
+                    "Create a compact summary artifact and use the full JSON only as a read-only source of truth.",
+                    "compact_context_generation",
+                    True,
+                    finding,
+                )
+            )
         elif "local_windows_paths_present" in finding or "C:\\Users" in finding:
-            requests.append(remediation(
-                "parameterize_path",
-                "medium",
-                path,
-                "Local workstation path detected.",
-                "Move the path into config or mark the artifact as local-only. Do not hardcode private paths in reusable generated packages.",
-                "python_patch_or_config_enrichment",
-                False,
-                finding,
-            ))
+            requests.append(
+                remediation(
+                    "parameterize_path",
+                    "medium",
+                    path,
+                    "Local workstation path detected.",
+                    "Move the path into config or mark the artifact as local-only. Do not hardcode private paths in reusable generated packages.",
+                    "python_patch_or_config_enrichment",
+                    False,
+                    finding,
+                )
+            )
         elif "too_few_selected_capsules" in finding or "smart_context_idea_missing" in finding:
-            requests.append(remediation(
-                "rerun_context_selection",
-                "medium",
-                path,
-                "Smart context packet is under-specified for the requested task.",
-                "Rerun smart context generation with a more specific task and include additional task capsules, code chunks and artifact references.",
-                "smart_context_generation",
-                True,
-                finding,
-            ))
+            requests.append(
+                remediation(
+                    "rerun_context_selection",
+                    "medium",
+                    path,
+                    "Smart context packet is under-specified for the requested task.",
+                    "Rerun smart context generation with a more specific task and include additional task capsules, code chunks and artifact references.",
+                    "smart_context_generation",
+                    True,
+                    finding,
+                )
+            )
 
     miss = missing_fields(payload, kind)
     if miss:
-        requests.append(remediation(
-            "enrich_intermediate_data",
-            "medium" if score >= 0.5 else "high",
-            path,
-            f"{kind} artifact is missing planner-useful fields: {', '.join(miss)}.",
-            "Add the missing fields through the relevant deterministic builder or a small AI enrichment pass. Preserve the original source analysis JSON as read-only.",
-            "enrich_intermediates",
-            True,
-            "missing_fields:" + ",".join(miss),
-        ))
+        requests.append(
+            remediation(
+                "enrich_intermediate_data",
+                "medium" if score >= 0.5 else "high",
+                path,
+                f"{kind} artifact is missing planner-useful fields: {', '.join(miss)}.",
+                "Add the missing fields through the relevant deterministic builder or a small AI enrichment pass. Preserve the original source analysis JSON as read-only.",
+                "enrich_intermediates",
+                True,
+                "missing_fields:" + ",".join(miss),
+            )
+        )
 
     if score < 0.55 and not blocking:
-        requests.append(remediation(
-            "multi_pass_review",
-            "medium",
-            path,
-            "Guardrail score is low but no blocking pattern was found.",
-            "Run an additional review/enrichment pass before using this artifact as central AI context.",
-            "guardrail_second_pass",
-            True,
-            f"low_score:{score}",
-        ))
+        requests.append(
+            remediation(
+                "multi_pass_review",
+                "medium",
+                path,
+                "Guardrail score is low but no blocking pattern was found.",
+                "Run an additional review/enrichment pass before using this artifact as central AI context.",
+                "guardrail_second_pass",
+                True,
+                f"low_score:{score}",
+            )
+        )
 
     return requests
 
@@ -298,7 +329,9 @@ def review(path: Path, max_chars: int) -> dict[str, Any]:
     positives.extend(base_positives)
 
     if kind == "smart_context_packet":
-        smart_warnings, smart_positives = idea_scan(text, SMART_CONTEXT_IDEAS, "smart_context_idea", required=True)
+        smart_warnings, smart_positives = idea_scan(
+            text, SMART_CONTEXT_IDEAS, "smart_context_idea", required=True
+        )
         warnings.extend(smart_warnings)
         positives.extend(smart_positives)
 
@@ -319,7 +352,19 @@ def review(path: Path, max_chars: int) -> dict[str, Any]:
         if kind in {"scene_brief", "smart_context_packet"} and not assumptions:
             warnings.append("explicit_assumptions_missing")
 
-    score = max(0.0, min(1.0, round(1.0 - len(blocking) * 0.35 - len(warnings) * 0.045 + min(0.22, len(positives) * 0.015), 4)))
+    score = max(
+        0.0,
+        min(
+            1.0,
+            round(
+                1.0
+                - len(blocking) * 0.35
+                - len(warnings) * 0.045
+                + min(0.22, len(positives) * 0.015),
+                4,
+            ),
+        ),
+    )
     severity = "blocking" if blocking else "warning" if warnings else "clean"
     requests = remediation_requests(path, payload, text, kind, blocking, warnings, score)
     return {
@@ -337,7 +382,9 @@ def review(path: Path, max_chars: int) -> dict[str, Any]:
 
 
 def aggregate_remediation(reviews: list[dict[str, Any]]) -> dict[str, Any]:
-    requests = [item for review_item in reviews for item in review_item.get("remediation_requests", [])]
+    requests = [
+        item for review_item in reviews for item in review_item.get("remediation_requests", [])
+    ]
     by_stage: dict[str, list[dict[str, Any]]] = {}
     by_type: dict[str, int] = {}
     for item in requests:
@@ -397,7 +444,9 @@ def write_md(report: dict[str, Any], path: Path) -> None:
         for warning in item.get("warnings", [])[:24]:
             lines.append(f"- Warning: {warning}")
         for request in item.get("remediation_requests", [])[:12]:
-            lines.append(f"- Request `{request.get('action_type')}` / `{request.get('priority')}`: {request.get('instruction')}")
+            lines.append(
+                f"- Request `{request.get('action_type')}` / `{request.get('priority')}`: {request.get('instruction')}"
+            )
         for positive in item.get("positives", [])[:16]:
             lines.append(f"- OK: {positive}")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -411,7 +460,9 @@ def write_action_queue(remediation_plan: dict[str, Any], report_path: Path) -> P
         "source_report": str(report_path),
         "queue": remediation_plan.get("requests", []),
     }
-    queue_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    queue_path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     return queue_path
 
 
@@ -424,7 +475,9 @@ def main() -> int:
     ap.add_argument("--model-dir", default=str(DEFAULT_MODEL_DIR))
     ap.add_argument("--max-chars", type=int, default=180000)
     ap.add_argument("--recursive", action="store_true")
-    ap.add_argument("--strict", action="store_true", help="Return non-zero when blocking findings are present.")
+    ap.add_argument(
+        "--strict", action="store_true", help="Return non-zero when blocking findings are present."
+    )
     ap.add_argument("--soft-fail", dest="soft_fail", action="store_true", default=True)
     ap.add_argument("--hard-fail", dest="soft_fail", action="store_false")
     ap.add_argument("--write-action-queue", action="store_true", default=True)
@@ -451,7 +504,9 @@ def main() -> int:
         "input": str(input_path),
         "review_count": len(reviews),
         "passed": passed,
-        "average_score": round(sum(r.get("score", 0.0) for r in reviews) / len(reviews), 4) if reviews else 0.0,
+        "average_score": round(sum(r.get("score", 0.0) for r in reviews) / len(reviews), 4)
+        if reviews
+        else 0.0,
         "blocking": blocking,
         "warnings": warnings,
         "remediation_plan": remediation_plan,

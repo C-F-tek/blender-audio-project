@@ -1,43 +1,44 @@
-import bpy
-from mathutils import Vector
 from pathlib import Path
 
+import bpy
+from mathutils import Vector
+from scene_utils import create_controller_empty
+
 from config import (
+    HERO_DEFORM_CONTROLLER_Z,
+    HERO_DEFORM_DETAIL_DIM_FACTOR,
+    HERO_DEFORM_DETAIL_NOISE_SIZE,
+    HERO_DEFORM_DETAIL_STRENGTH_MAX,
+    HERO_DEFORM_MAIN_DIM_FACTOR,
+    HERO_DEFORM_NOISE_CONTRAST,
+    HERO_DEFORM_NOISE_SIZE,
+    HERO_DEFORM_STRENGTH_MAX,
+    HERO_DEFORM_STRENGTH_MIN,
+    HERO_DEFORM_SUBDIV_RENDER,
+    HERO_DEFORM_SUBDIV_VIEW,
+    HERO_DEFORM_TWIST_MAX,
+    HERO_DEFORM_WAVE_DIM_FACTOR,
+    HERO_DEFORM_WAVE_HEIGHT_MAX,
+    HERO_MATERIAL_BUMP_MIN,
+    HERO_MATERIAL_EMISSION_MIN,
+    HERO_MATERIAL_NOISE_SCALE_MIN,
+    HERO_MATERIAL_ROUGHNESS_MAX,
+    HERO_MATERIAL_SELF_LIGHT_MIN,
+    PEACE_PALETTE,
     PRIMARY_ASSET_DIR,
-    PRIMARY_TARGET_SIZE,
     PRIMARY_BASE_Z,
-    SUPPORTED_ASSET_EXTENSIONS,
-    USE_SECONDARY_ASSET,
+    PRIMARY_TARGET_SIZE,
     SECONDARY_ASSET_DIR,
-    SECONDARY_TARGET_SIZE,
-    SECONDARY_BASE_Z,
     SECONDARY_BASE_OFFSET_X,
     SECONDARY_BASE_OFFSET_Y,
     SECONDARY_BASE_OFFSET_Z,
-    PEACE_PALETTE,
-    USE_HERO_MESH_DEFORM,
-    HERO_DEFORM_STRENGTH_MAX,
-    HERO_DEFORM_STRENGTH_MIN,
-    HERO_DEFORM_DETAIL_STRENGTH_MAX,
-    HERO_DEFORM_WAVE_HEIGHT_MAX,
-    HERO_DEFORM_MAIN_DIM_FACTOR,
-    HERO_DEFORM_DETAIL_DIM_FACTOR,
-    HERO_DEFORM_WAVE_DIM_FACTOR,
-    HERO_DEFORM_TWIST_MAX,
-    HERO_DEFORM_SUBDIV_VIEW,
-    HERO_DEFORM_SUBDIV_RENDER,
-    HERO_DEFORM_NOISE_SIZE,
-    HERO_DEFORM_DETAIL_NOISE_SIZE,
-    HERO_DEFORM_NOISE_CONTRAST,
-    HERO_DEFORM_CONTROLLER_Z,
+    SECONDARY_BASE_Z,
+    SECONDARY_TARGET_SIZE,
+    SUPPORTED_ASSET_EXTENSIONS,
     USE_HERO_MATERIAL_AUDIO_NODES,
-    HERO_MATERIAL_EMISSION_MIN,
-    HERO_MATERIAL_SELF_LIGHT_MIN,
-    HERO_MATERIAL_BUMP_MIN,
-    HERO_MATERIAL_ROUGHNESS_MAX,
-    HERO_MATERIAL_NOISE_SCALE_MIN,
+    USE_HERO_MESH_DEFORM,
+    USE_SECONDARY_ASSET,
 )
-from scene_utils import create_controller_empty
 
 
 def find_asset_file(asset_dir: Path) -> Path:
@@ -125,14 +126,14 @@ def get_world_bbox(objects):
 
 
 def create_scene_core():
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))
+    bpy.ops.object.empty_add(type="PLAIN_AXES", location=(0, 0, 0))
     root = bpy.context.active_object
     root.name = "SceneCore"
     return root
 
 
 def make_asset_root(name):
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))
+    bpy.ops.object.empty_add(type="PLAIN_AXES", location=(0, 0, 0))
     root = bpy.context.active_object
     root.name = name
     return root
@@ -163,7 +164,7 @@ def center_and_scale_asset(root, objects, target_size, base_z):
     center, _, min_v, _ = get_world_bbox(objects)
     root.location.x += -center.x
     root.location.y += -center.y
-    root.location.z += (base_z - min_v.z)
+    root.location.z += base_z - min_v.z
 
     bpy.context.view_layer.update()
 
@@ -303,7 +304,7 @@ def ensure_hero_surface_light_layer(mat, principled):
         "HeroMatSelfLightEdgeMultiply",
         (125, 445),
     )
-    edge_mul.operation = 'MULTIPLY'
+    edge_mul.operation = "MULTIPLY"
 
     emission = get_or_create_node(
         nodes,
@@ -321,10 +322,16 @@ def ensure_hero_surface_light_layer(mat, principled):
     )
 
     link_node_sockets(links, self_light.outputs[0], edge_mul.inputs[0], replace_existing=True)
-    link_node_sockets(links, layer.outputs.get("Fresnel"), edge_ramp.inputs["Fac"], replace_existing=True)
+    link_node_sockets(
+        links, layer.outputs.get("Fresnel"), edge_ramp.inputs["Fac"], replace_existing=True
+    )
     link_node_sockets(links, edge_ramp.outputs["Color"], edge_mul.inputs[1], replace_existing=True)
-    link_node_sockets(links, edge_mul.outputs[0], emission.inputs["Strength"], replace_existing=True)
-    link_node_sockets(links, emission.outputs["Emission"], add_shader.inputs[1], replace_existing=True)
+    link_node_sockets(
+        links, edge_mul.outputs[0], emission.inputs["Strength"], replace_existing=True
+    )
+    link_node_sockets(
+        links, emission.outputs["Emission"], add_shader.inputs[1], replace_existing=True
+    )
 
     surface_input = output.inputs["Surface"]
     if surface_input.is_linked and surface_input.links[0].from_node == add_shader:
@@ -346,8 +353,12 @@ def ensure_hero_surface_light_layer(mat, principled):
 def get_local_mesh_extent(obj):
     try:
         corners = [Vector(corner) for corner in obj.bound_box]
-        min_v = Vector((min(v.x for v in corners), min(v.y for v in corners), min(v.z for v in corners)))
-        max_v = Vector((max(v.x for v in corners), max(v.y for v in corners), max(v.z for v in corners)))
+        min_v = Vector(
+            (min(v.x for v in corners), min(v.y for v in corners), min(v.z for v in corners))
+        )
+        max_v = Vector(
+            (max(v.x for v in corners), max(v.y for v in corners), max(v.z for v in corners))
+        )
         size = max_v - min_v
         return max(size.x, size.y, size.z, 0.001)
     except Exception:
@@ -434,25 +445,33 @@ def add_hero_material_audio_nodes(meshes):
 
             self_light_socket = ensure_hero_surface_light_layer(mat, principled)
 
-            link_node_sockets(links, emission_value.outputs[0], emission_strength_input, replace_existing=True)
+            link_node_sockets(
+                links, emission_value.outputs[0], emission_strength_input, replace_existing=True
+            )
             link_node_sockets(links, roughness_value.outputs[0], rough_input, replace_existing=True)
-            link_node_sockets(links, texcoord.outputs.get("Generated"), mapping.inputs.get("Vector"))
+            link_node_sockets(
+                links, texcoord.outputs.get("Generated"), mapping.inputs.get("Vector")
+            )
             link_node_sockets(links, mapping.outputs.get("Vector"), noise.inputs.get("Vector"))
             link_node_sockets(links, noise.outputs.get("Fac"), bump.inputs.get("Height"))
-            link_node_sockets(links, bump_value.outputs[0], bump.inputs.get("Strength"), replace_existing=True)
+            link_node_sockets(
+                links, bump_value.outputs[0], bump.inputs.get("Strength"), replace_existing=True
+            )
             link_node_sockets(links, bump.outputs.get("Normal"), normal_input)
 
-            controls.append({
-                "material": mat,
-                "node_tree": mat.node_tree,
-                "emission_socket": emission_value.outputs[0],
-                "self_light_socket": self_light_socket,
-                "roughness_socket": roughness_value.outputs[0],
-                "bump_socket": bump_value.outputs[0],
-                "noise_scale_socket": noise.inputs["Scale"],
-                "mapping_location_socket": mapping.inputs["Location"],
-                "mapping_rotation_socket": mapping.inputs["Rotation"],
-            })
+            controls.append(
+                {
+                    "material": mat,
+                    "node_tree": mat.node_tree,
+                    "emission_socket": emission_value.outputs[0],
+                    "self_light_socket": self_light_socket,
+                    "roughness_socket": roughness_value.outputs[0],
+                    "bump_socket": bump_value.outputs[0],
+                    "noise_scale_socket": noise.inputs["Scale"],
+                    "mapping_location_socket": mapping.inputs["Location"],
+                    "mapping_rotation_socket": mapping.inputs["Rotation"],
+                }
+            )
 
     return controls
 
@@ -474,7 +493,7 @@ def duplicate_hierarchy(root, name_prefix):
     created_root = None
 
     for obj in created:
-        if obj.type == 'EMPTY':
+        if obj.type == "EMPTY":
             created_root = obj
             break
 
@@ -486,8 +505,8 @@ def duplicate_hierarchy(root, name_prefix):
 
 
 def assign_material_to_hierarchy(root, material):
-    meshes = [obj for obj in root.children_recursive if obj.type == 'MESH']
-    if root.type == 'MESH':
+    meshes = [obj for obj in root.children_recursive if obj.type == "MESH"]
+    if root.type == "MESH":
         meshes.append(root)
 
     for obj in meshes:
@@ -513,22 +532,28 @@ def add_hero_mesh_deformers(asset_root, meshes):
     deformers = []
     for idx, obj in enumerate(meshes):
         local_extent = get_local_mesh_extent(obj)
-        main_strength_max = max(HERO_DEFORM_STRENGTH_MAX, local_extent * HERO_DEFORM_MAIN_DIM_FACTOR)
-        detail_strength_max = max(HERO_DEFORM_DETAIL_STRENGTH_MAX, local_extent * HERO_DEFORM_DETAIL_DIM_FACTOR)
-        wave_height_max = max(HERO_DEFORM_WAVE_HEIGHT_MAX, local_extent * HERO_DEFORM_WAVE_DIM_FACTOR)
+        main_strength_max = max(
+            HERO_DEFORM_STRENGTH_MAX, local_extent * HERO_DEFORM_MAIN_DIM_FACTOR
+        )
+        detail_strength_max = max(
+            HERO_DEFORM_DETAIL_STRENGTH_MAX, local_extent * HERO_DEFORM_DETAIL_DIM_FACTOR
+        )
+        wave_height_max = max(
+            HERO_DEFORM_WAVE_HEIGHT_MAX, local_extent * HERO_DEFORM_WAVE_DIM_FACTOR
+        )
 
         try:
-            subdiv = obj.modifiers.new("HeroAudioSubdivision", 'SUBSURF')
+            subdiv = obj.modifiers.new("HeroAudioSubdivision", "SUBSURF")
             subdiv.levels = HERO_DEFORM_SUBDIV_VIEW
             subdiv.render_levels = HERO_DEFORM_SUBDIV_RENDER
         except Exception:
             subdiv = None
 
         try:
-            tex = bpy.data.textures.new(f"HeroAudioDisplaceTexture_{idx:02d}", type='VORONOI')
+            tex = bpy.data.textures.new(f"HeroAudioDisplaceTexture_{idx:02d}", type="VORONOI")
         except Exception:
             try:
-                tex = bpy.data.textures.new(f"HeroAudioDisplaceTexture_{idx:02d}", type='CLOUDS')
+                tex = bpy.data.textures.new(f"HeroAudioDisplaceTexture_{idx:02d}", type="CLOUDS")
             except Exception:
                 continue
 
@@ -542,18 +567,18 @@ def add_hero_mesh_deformers(asset_root, meshes):
             except Exception:
                 pass
 
-        mod = obj.modifiers.new("HeroAudioMeshDisplace", 'DISPLACE')
+        mod = obj.modifiers.new("HeroAudioMeshDisplace", "DISPLACE")
         mod.strength = HERO_DEFORM_STRENGTH_MIN
         mod.mid_level = 0.50
         mod.texture = tex
 
         try:
-            mod.direction = 'NORMAL'
+            mod.direction = "NORMAL"
         except Exception:
             pass
 
         try:
-            mod.texture_coords = 'OBJECT'
+            mod.texture_coords = "OBJECT"
             mod.texture_coords_object = controller
         except Exception:
             pass
@@ -564,24 +589,26 @@ def add_hero_mesh_deformers(asset_root, meshes):
         except Exception:
             pass
 
-        deformers.append({
-            "mesh": obj,
-            "subdivision": subdiv,
-            "modifier": mod,
-            "texture": tex,
-            "detail_modifier": None,
-            "detail_texture": None,
-            "wave_modifier": None,
-            "twist_modifier": None,
-            "phase": idx * 0.61,
-            "main_strength_max": main_strength_max,
-            "detail_strength_max": detail_strength_max,
-            "wave_height_max": wave_height_max,
-            "twist_angle_max": HERO_DEFORM_TWIST_MAX,
-        })
+        deformers.append(
+            {
+                "mesh": obj,
+                "subdivision": subdiv,
+                "modifier": mod,
+                "texture": tex,
+                "detail_modifier": None,
+                "detail_texture": None,
+                "wave_modifier": None,
+                "twist_modifier": None,
+                "phase": idx * 0.61,
+                "main_strength_max": main_strength_max,
+                "detail_strength_max": detail_strength_max,
+                "wave_height_max": wave_height_max,
+                "twist_angle_max": HERO_DEFORM_TWIST_MAX,
+            }
+        )
 
         try:
-            detail_tex = bpy.data.textures.new(f"HeroAudioDetailTexture_{idx:02d}", type='CLOUDS')
+            detail_tex = bpy.data.textures.new(f"HeroAudioDetailTexture_{idx:02d}", type="CLOUDS")
             for attr, value in [
                 ("noise_scale", HERO_DEFORM_DETAIL_NOISE_SIZE),
                 ("noise_depth", 6),
@@ -592,13 +619,13 @@ def add_hero_mesh_deformers(asset_root, meshes):
                 except Exception:
                     pass
 
-            detail = obj.modifiers.new("HeroAudioFineDisplace", 'DISPLACE')
+            detail = obj.modifiers.new("HeroAudioFineDisplace", "DISPLACE")
             detail.strength = HERO_DEFORM_STRENGTH_MIN
             detail.mid_level = 0.50
             detail.texture = detail_tex
             try:
-                detail.direction = 'NORMAL'
-                detail.texture_coords = 'OBJECT'
+                detail.direction = "NORMAL"
+                detail.texture_coords = "OBJECT"
                 detail.texture_coords_object = controller
             except Exception:
                 pass
@@ -609,13 +636,13 @@ def add_hero_mesh_deformers(asset_root, meshes):
             pass
 
         try:
-            wave = obj.modifiers.new("HeroAudioSurfaceWave", 'WAVE')
+            wave = obj.modifiers.new("HeroAudioSurfaceWave", "WAVE")
             wave.height = 0.0
             wave.width = 1.20
             wave.narrowness = 1.75
             wave.speed = 0.16
             try:
-                wave.type = 'RINGS'
+                wave.type = "RINGS"
                 wave.use_x = True
                 wave.use_y = True
                 wave.use_normal = True
@@ -628,11 +655,11 @@ def add_hero_mesh_deformers(asset_root, meshes):
             pass
 
         try:
-            twist = obj.modifiers.new("HeroAudioTwistDeform", 'SIMPLE_DEFORM')
-            twist.deform_method = 'TWIST'
+            twist = obj.modifiers.new("HeroAudioTwistDeform", "SIMPLE_DEFORM")
+            twist.deform_method = "TWIST"
             twist.angle = 0.0
             try:
-                twist.deform_axis = 'Z'
+                twist.deform_axis = "Z"
             except Exception:
                 pass
             try:
@@ -666,10 +693,14 @@ def _create_asset_from_dir(asset_dir, target_size, base_z, root_name, parent=Non
     meshes = collect_meshes(imported_objects)
     soften_materials_to_peace(meshes)
     material_controls = add_hero_material_audio_nodes(meshes) if root_name == "HeroRoot" else []
-    deform_data = add_hero_mesh_deformers(asset_root, meshes) if root_name == "HeroRoot" else {
-        "controller": None,
-        "deformers": [],
-    }
+    deform_data = (
+        add_hero_mesh_deformers(asset_root, meshes)
+        if root_name == "HeroRoot"
+        else {
+            "controller": None,
+            "deformers": [],
+        }
+    )
 
     return {
         "asset_file": asset_file,

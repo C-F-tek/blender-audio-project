@@ -9,13 +9,26 @@ from pathlib import Path
 import bpy
 from mathutils import Vector
 
-
-TRACK_STEM = 'LLL-Luca Vera_Master'
-ANALYSIS_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_analysis.json')
-MUSIC_CONTEXT_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_music_context.json')
-AI_CONTEXT_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_analysis_ai_context.json')
-BLENDER_KEYFRAMES_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_analysis_blender_keyframes.json')
-ASSET_INVENTORY_JSON = Path('C:\\Users\\carmi\\blender\\blender-audio-project\\output\\spaziotempo_asset_inventory.json') if True else None
+TRACK_STEM = "LLL-Luca Vera_Master"
+ANALYSIS_JSON = Path(
+    "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_analysis.json"
+)
+MUSIC_CONTEXT_JSON = Path(
+    "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_music_context.json"
+)
+AI_CONTEXT_JSON = Path(
+    "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_analysis_ai_context.json"
+)
+BLENDER_KEYFRAMES_JSON = Path(
+    "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_analysis_blender_keyframes.json"
+)
+ASSET_INVENTORY_JSON = (
+    Path(
+        "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\spaziotempo_asset_inventory.json"
+    )
+    if True
+    else None
+)
 USE_DUAL_FOCUS = True
 
 
@@ -85,7 +98,13 @@ def get_world_bbox(objects: list[bpy.types.Object]):
     return (min_v + max_v) * 0.5, max_v - min_v, min_v
 
 
-def make_asset_focus(name: str, asset_path: Path, location, material: bpy.types.Material, fallback_radius: float = 1.0) -> bpy.types.Object:
+def make_asset_focus(
+    name: str,
+    asset_path: Path,
+    location,
+    material: bpy.types.Material,
+    fallback_radius: float = 1.0,
+) -> bpy.types.Object:
     try:
         objects = import_asset_file(asset_path)
     except Exception as exc:
@@ -144,8 +163,12 @@ def create_material(name: str, color, emission_strength: float = 0.0) -> bpy.typ
     return mat
 
 
-def add_uv_sphere(name: str, radius: float, location, material: bpy.types.Material, segments: int = 64) -> bpy.types.Object:
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=segments, ring_count=max(16, segments // 2), radius=radius, location=location)
+def add_uv_sphere(
+    name: str, radius: float, location, material: bpy.types.Material, segments: int = 64
+) -> bpy.types.Object:
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        segments=segments, ring_count=max(16, segments // 2), radius=radius, location=location
+    )
     obj = bpy.context.object
     obj.name = name
     obj.data.name = name + "Mesh"
@@ -153,7 +176,9 @@ def add_uv_sphere(name: str, radius: float, location, material: bpy.types.Materi
     return obj
 
 
-def add_text_label(text: str, location, size: float, material: bpy.types.Material) -> bpy.types.Object:
+def add_text_label(
+    text: str, location, size: float, material: bpy.types.Material
+) -> bpy.types.Object:
     bpy.ops.object.text_add(location=location, rotation=(math.radians(72), 0.0, 0.0))
     obj = bpy.context.object
     obj.name = "AlbumTitle_Text"
@@ -166,7 +191,9 @@ def add_text_label(text: str, location, size: float, material: bpy.types.Materia
     return obj
 
 
-def animate_value(obj: bpy.types.Object, data_path: str, frames: list[tuple[int, float]], index: int | None = None) -> None:
+def animate_value(
+    obj: bpy.types.Object, data_path: str, frames: list[tuple[int, float]], index: int | None = None
+) -> None:
     for frame, value in frames:
         if index is None:
             setattr(obj, data_path, value)
@@ -188,7 +215,13 @@ def keyframe_material_emission(mat: bpy.types.Material, frame: int, strength: fl
     socket.keyframe_insert(data_path="default_value", frame=frame)
 
 
-def apply_full_audio_keyframes(hero: bpy.types.Object, disp: bpy.types.Modifier, hero_mat: bpy.types.Material, keyframes: dict, fps: float) -> int:
+def apply_full_audio_keyframes(
+    hero: bpy.types.Object,
+    disp: bpy.types.Modifier,
+    hero_mat: bpy.types.Material,
+    keyframes: dict,
+    fps: float,
+) -> int:
     audio_frames = keyframes.get("frames") or []
     inserted = 0
     for audio in audio_frames:
@@ -216,7 +249,13 @@ def apply_full_audio_keyframes(hero: bpy.types.Object, disp: bpy.types.Modifier,
     return inserted
 
 
-def apply_full_audio_keyframes_inverted(hero: bpy.types.Object, disp: bpy.types.Modifier, hero_mat: bpy.types.Material, keyframes: dict, fps: float) -> int:
+def apply_full_audio_keyframes_inverted(
+    hero: bpy.types.Object,
+    disp: bpy.types.Modifier,
+    hero_mat: bpy.types.Material,
+    keyframes: dict,
+    fps: float,
+) -> int:
     audio_frames = keyframes.get("frames") or []
     inserted = 0
     for audio in audio_frames:
@@ -247,7 +286,12 @@ def build_scene() -> None:
     keyframes = load_json(BLENDER_KEYFRAMES_JSON)
     asset_inventory = load_json(ASSET_INVENTORY_JSON) if ASSET_INVENTORY_JSON else {}
 
-    meta = keyframes.get("meta") or analysis.get("meta") or (ai_context.get("analysis_summary") or {}).get("meta") or {}
+    meta = (
+        keyframes.get("meta")
+        or analysis.get("meta")
+        or (ai_context.get("analysis_summary") or {}).get("meta")
+        or {}
+    )
     fps = float(meta.get("fps") or 30.0)
     duration = float(meta.get("duration_sec") or 180.0)
     scene = bpy.context.scene
@@ -270,7 +314,13 @@ def build_scene() -> None:
 
     ball_asset = preferred_ball_asset_path(asset_inventory)
     hero_location = (-0.95, 0, 1.75) if USE_DUAL_FOCUS else (0, 0, 1.75)
-    hero = add_uv_sphere("AI_HeroAura_DeformableCore", 1.20 if USE_DUAL_FOCUS else 1.35, hero_location, hero_mat, segments=96)
+    hero = add_uv_sphere(
+        "AI_HeroAura_DeformableCore",
+        1.20 if USE_DUAL_FOCUS else 1.35,
+        hero_location,
+        hero_mat,
+        segments=96,
+    )
     link_to(col_core, hero)
     disp = hero.modifiers.new("AI_Audio_Displace_LowMid", "DISPLACE")
     tex = bpy.data.textures.new("AI_Audio_Deformation_Texture", "VORONOI")
@@ -283,9 +333,17 @@ def build_scene() -> None:
     counter_disp = None
     if USE_DUAL_FOCUS:
         if ball_asset:
-            counter_hero = make_asset_focus("AI_BallAsset_CounterCore", ball_asset, (0.95, 0, 1.75), counter_mat, fallback_radius=1.12)
+            counter_hero = make_asset_focus(
+                "AI_BallAsset_CounterCore",
+                ball_asset,
+                (0.95, 0, 1.75),
+                counter_mat,
+                fallback_radius=1.12,
+            )
         else:
-            counter_hero = add_uv_sphere("AI_CounterSphere_DeformableCore", 1.12, (0.95, 0, 1.75), counter_mat, segments=96)
+            counter_hero = add_uv_sphere(
+                "AI_CounterSphere_DeformableCore", 1.12, (0.95, 0, 1.75), counter_mat, segments=96
+            )
         link_to(col_core, counter_hero)
         counter_disp = counter_hero.modifiers.new("AI_Audio_Displace_InvertedBall", "DISPLACE")
         counter_tex = bpy.data.textures.new("AI_Audio_Deformation_Texture_InvertedBall", "VORONOI")
@@ -295,7 +353,7 @@ def build_scene() -> None:
         counter_disp.strength = 0.07
 
     segments = music.get("segments") or []
-    sample_segments = segments[::max(1, len(segments) // 16)] or segments[:16]
+    sample_segments = segments[:: max(1, len(segments) // 16)] or segments[:16]
     for idx, segment in enumerate(sample_segments[:18]):
         controls = segment.get("controls") or {}
         angle = idx * (math.tau / max(1, len(sample_segments[:18])))
@@ -304,7 +362,13 @@ def build_scene() -> None:
         radius = 3.4 + score * 1.8
         z = 1.45 + math.sin(angle * 2.0) * 0.55
         mat = accent_mat if band == "high" else cool_mat if band == "mid" else hero_mat
-        sat = add_uv_sphere(f"AI_AudioSatellite_{idx+1:02d}_{band}", 0.12 + score * 0.18, (math.cos(angle) * radius, math.sin(angle) * radius, z), mat, segments=32)
+        sat = add_uv_sphere(
+            f"AI_AudioSatellite_{idx + 1:02d}_{band}",
+            0.12 + score * 0.18,
+            (math.cos(angle) * radius, math.sin(angle) * radius, z),
+            mat,
+            segments=32,
+        )
         link_to(col_orbits, sat)
         sat["segment_index"] = int(segment.get("index") or idx + 1)
         sat["audio_band"] = str(band)
@@ -322,9 +386,11 @@ def build_scene() -> None:
     for idx in range(24):
         angle = idx * math.tau / 24
         length = 0.9 + (idx % 5) * 0.24
-        bpy.ops.mesh.primitive_cube_add(size=1, location=(math.cos(angle) * 2.6, math.sin(angle) * 2.6, 1.0 + (idx % 6) * 0.22))
+        bpy.ops.mesh.primitive_cube_add(
+            size=1, location=(math.cos(angle) * 2.6, math.sin(angle) * 2.6, 1.0 + (idx % 6) * 0.22)
+        )
         fog = bpy.context.object
-        fog.name = f"AI_FogFilament_{idx+1:02d}"
+        fog.name = f"AI_FogFilament_{idx + 1:02d}"
         fog.scale = (0.035, length, 0.035)
         fog.rotation_euler[2] = angle
         fog.data.materials.append(fog_mat)
@@ -339,11 +405,15 @@ def build_scene() -> None:
     inserted_full_keyframes = apply_full_audio_keyframes(hero, disp, hero_mat, keyframes, fps)
     hero["full_audio_keyframes_inserted"] = inserted_full_keyframes
     if counter_hero and counter_disp:
-        counter_inserted = apply_full_audio_keyframes_inverted(counter_hero, counter_disp, counter_mat, keyframes, fps)
+        counter_inserted = apply_full_audio_keyframes_inverted(
+            counter_hero, counter_disp, counter_mat, keyframes, fps
+        )
         counter_hero["full_audio_keyframes_inserted"] = counter_inserted
         counter_hero["source_asset"] = str(ball_asset) if ball_asset else "procedural_fallback"
 
-    bpy.ops.object.light_add(type="AREA", location=(0, -4.8, 4.8), rotation=(math.radians(60), 0, 0))
+    bpy.ops.object.light_add(
+        type="AREA", location=(0, -4.8, 4.8), rotation=(math.radians(60), 0, 0)
+    )
     key = bpy.context.object
     key.name = "AI_Soft_Key_Light"
     key.data.energy = 450
@@ -362,7 +432,9 @@ def build_scene() -> None:
 
     scene["ai_generated_from"] = str(MUSIC_CONTEXT_JSON)
     scene["full_keyframes_reference"] = str(BLENDER_KEYFRAMES_JSON)
-    scene["note"] = "Standalone AI scene draft. Existing project files were used only as style reference."
+    scene["note"] = (
+        "Standalone AI scene draft. Existing project files were used only as style reference."
+    )
 
 
 if __name__ == "__main__":

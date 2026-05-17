@@ -1,9 +1,8 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 
@@ -12,8 +11,7 @@ def run(cmd: list[str], cwd: Path) -> dict:
         cmd,
         cwd=str(cwd),
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
     )
     return {
         "command": cmd,

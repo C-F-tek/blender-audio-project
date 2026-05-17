@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """NPU-sized artifact reviewer with deterministic fallback."""
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,9 @@ def list_targets(path: Path) -> list[Path]:
     return []
 
 
-def expect_for_name(path: Path, data: dict[str, Any], warnings: list[str], positives: list[str]) -> None:
+def expect_for_name(
+    path: Path, data: dict[str, Any], warnings: list[str], positives: list[str]
+) -> None:
     name = path.name
     if name == "track_summary.json":
         readiness = data.get("ai_readiness") or {}
@@ -57,7 +60,13 @@ def review(path: Path) -> dict[str, Any]:
         data = load(path)
         text = json.dumps(data, ensure_ascii=False)
     except Exception as exc:
-        return {"path": str(path), "review_score": 0.0, "warnings": [f"JSON read error: {exc}"], "positives": [], "ai_usefulness": "blocked"}
+        return {
+            "path": str(path),
+            "review_score": 0.0,
+            "warnings": [f"JSON read error: {exc}"],
+            "positives": [],
+            "ai_usefulness": "blocked",
+        }
 
     warnings: list[str] = []
     positives: list[str] = []
@@ -96,10 +105,16 @@ def main() -> int:
     ap.add_argument("--max-workers", type=int, default=4)
     args = ap.parse_args()
     items = list_targets(Path(args.input).resolve())
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(args.max_workers, 4))) as pool:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=max(1, min(args.max_workers, 4))
+    ) as pool:
         reviews = list(pool.map(review, items))
     warnings = [w for r in reviews for w in r.get("warnings", [])]
-    avg = round(sum(r.get("review_score", 0.0) for r in reviews) / len(reviews), 4) if reviews else 0.0
+    avg = (
+        round(sum(r.get("review_score", 0.0) for r in reviews) / len(reviews), 4)
+        if reviews
+        else 0.0
+    )
     report = {
         "schema_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),

@@ -23,32 +23,57 @@ def main() -> int:
     observer_dir = repo_root / "output/validation/unified_observer_extended_smoke_observer"
     observer_dir.mkdir(parents=True, exist_ok=True)
 
-    (observer_dir / "current_state.json").write_text(json.dumps({
-        "kind": "unified_run_observer_state",
-        "schema_version": 1,
-        "stamp": "extended_observer_smoke",
-        "repo_root": str(repo_root),
-        "run_dir": str(repo_root / "output/validation/unified_observer_extended_smoke_run"),
-        "observer_dir": str(observer_dir),
-        "raw_thinking_exposed": False,
-        "ai_public_exchange_only": True,
-    }, indent=2), encoding="utf-8")
+    (observer_dir / "current_state.json").write_text(
+        json.dumps(
+            {
+                "kind": "unified_run_observer_state",
+                "schema_version": 1,
+                "stamp": "extended_observer_smoke",
+                "repo_root": str(repo_root),
+                "run_dir": str(repo_root / "output/validation/unified_observer_extended_smoke_run"),
+                "observer_dir": str(observer_dir),
+                "raw_thinking_exposed": False,
+                "ai_public_exchange_only": True,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
 
     (observer_dir / "progress.jsonl").write_text(
-        json.dumps({"kind": "unified_run_progress_event", "phase": "observer", "status": "initialized", "message": ""}) + "\n" +
-        json.dumps({"kind": "unified_run_progress_event", "phase": "smoke", "status": "passed", "message": ""}) + "\n",
+        json.dumps(
+            {
+                "kind": "unified_run_progress_event",
+                "phase": "observer",
+                "status": "initialized",
+                "message": "",
+            }
+        )
+        + "\n"
+        + json.dumps(
+            {
+                "kind": "unified_run_progress_event",
+                "phase": "smoke",
+                "status": "passed",
+                "message": "",
+            }
+        )
+        + "\n",
         encoding="utf-8",
     )
 
     (observer_dir / "ai_public_events.jsonl").write_text(
-        json.dumps({
-            "kind": "ai_public_exchange_event",
-            "lane": "official",
-            "speaker": "AI1",
-            "event_type": "recommendation",
-            "summary": "Extended observer smoke public recommendation.",
-            "raw_thinking_exposed": False,
-        }) + "\n",
+        json.dumps(
+            {
+                "kind": "ai_public_exchange_event",
+                "lane": "official",
+                "speaker": "AI1",
+                "event_type": "recommendation",
+                "summary": "Extended observer smoke public recommendation.",
+                "raw_thinking_exposed": False,
+            }
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -94,7 +119,9 @@ def main() -> int:
         else:
             passed = False
 
-    passed = passed and all(payload.get("raw_hidden_chain_of_thought_exposed") is False for payload in payloads)
+    passed = passed and all(
+        payload.get("raw_hidden_chain_of_thought_exposed") is False for payload in payloads
+    )
 
     report = {
         "kind": "unified_observer_extended_smoke",
@@ -126,7 +153,11 @@ def main() -> int:
         "- Raw hidden chain-of-thought exposed: `False`\n",
         encoding="utf-8",
     )
-    print(json.dumps({"passed": passed, "output": str(output), "markdown_output": str(markdown)}, indent=2))
+    print(
+        json.dumps(
+            {"passed": passed, "output": str(output), "markdown_output": str(markdown)}, indent=2
+        )
+    )
     return 0 if passed else 1
 
 

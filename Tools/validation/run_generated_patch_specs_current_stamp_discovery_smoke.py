@@ -1,5 +1,6 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Smoke-test generated patch spec discovery does not reuse stale manifests."""
+
 from __future__ import annotations
 
 import argparse
@@ -13,11 +14,17 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def run(command: list[str], cwd: Path) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, timeout=120)
+    result = subprocess.run(
+        command, cwd=cwd, capture_output=True, text=True, check=False, timeout=120
+    )
     return {
         "command": command,
         "returncode": result.returncode,
@@ -71,7 +78,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     for item in report.get("commands", []):
-        lines.append(f"- `{item['name']}` rc=`{item['result']['returncode']}` ok=`{item['result']['ok']}`")
+        lines.append(
+            f"- `{item['name']}` rc=`{item['result']['returncode']}` ok=`{item['result']['ok']}`"
+        )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])
@@ -81,8 +90,14 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/generated_patch_specs_current_stamp_discovery_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/generated_patch_specs_current_stamp_discovery_smoke.md")
+    parser.add_argument(
+        "--output",
+        default="output/validation/generated_patch_specs_current_stamp_discovery_smoke.json",
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/generated_patch_specs_current_stamp_discovery_smoke.md",
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -117,15 +132,24 @@ def main() -> int:
             "--allow-dirty-branch",
         ]
         result = run(command, source_repo)
-        commands.append({"name": "apply_generated_patch_specs_for_review_pr_no_current_manifest", "result": result})
+        commands.append(
+            {
+                "name": "apply_generated_patch_specs_for_review_pr_no_current_manifest",
+                "result": result,
+            }
+        )
 
         report_path = repo / output
-        data = json.loads(report_path.read_text(encoding="utf-8-sig")) if report_path.exists() else {}
+        data = (
+            json.loads(report_path.read_text(encoding="utf-8-sig")) if report_path.exists() else {}
+        )
         manifest = data.get("manifest") or {}
         if result["returncode"] == 0:
             errors.append("tool unexpectedly passed with only stale manifest available")
         if manifest.get("discovered"):
-            errors.append(f"stale manifest was discovered unexpectedly: {manifest.get('discovered')}")
+            errors.append(
+                f"stale manifest was discovered unexpectedly: {manifest.get('discovered')}"
+            )
         if manifest.get("discovery_filter_stamp") != current_stamp:
             errors.append("current stamp was not inferred from output path")
         if str(stale_manifest.relative_to(repo).as_posix()) == str(manifest.get("path")):

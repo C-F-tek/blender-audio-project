@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate generic policy checks for generated Python scripts."""
+
 from __future__ import annotations
 
 import argparse
@@ -41,20 +42,30 @@ def sample_results() -> list[dict[str, Any]]:
         "warning_eval_exec": ("value = eval('1 + 1')\n", True, 1),
         "warning_os_system": ("import os\nos.system('echo ok')\n", True, 1),
         "warning_os_system_alias": ("import os as os_mod\nos_mod.system('echo ok')\n", True, 1),
-        "warning_subprocess_shell_true": ("import subprocess\nsubprocess.run('echo ok', shell=True)\n", True, 1),
+        "warning_subprocess_shell_true": (
+            "import subprocess\nsubprocess.run('echo ok', shell=True)\n",
+            True,
+            1,
+        ),
         "warning_subprocess_alias_shell_true": (
             "from subprocess import check_output as run_cmd\nrun_cmd('echo ok', shell=True)\n",
             True,
             1,
         ),
-        "safe_subprocess_no_shell": ("import subprocess\nsubprocess.run(['echo', 'ok'], check=False)\n", True, 0),
+        "safe_subprocess_no_shell": (
+            "import subprocess\nsubprocess.run(['echo', 'ok'], check=False)\n",
+            True,
+            0,
+        ),
     }
     rendered: list[dict[str, Any]] = []
     for label, (text, expected_passed, expected_min_warnings) in samples.items():
         data = evaluate_python_text(label, text).to_dict()
         data["expected_passed"] = expected_passed
         data["expected_min_warnings"] = expected_min_warnings
-        data["sample_passed"] = data["passed"] is expected_passed and data["warning_count"] >= expected_min_warnings
+        data["sample_passed"] = (
+            data["passed"] is expected_passed and data["warning_count"] >= expected_min_warnings
+        )
         rendered.append(data)
     return rendered
 
@@ -103,7 +114,12 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--path", action="append", default=[], help="Generated Python script path to validate. Can be repeated.")
+    parser.add_argument(
+        "--path",
+        action="append",
+        default=[],
+        help="Generated Python script path to validate. Can be repeated.",
+    )
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()
 

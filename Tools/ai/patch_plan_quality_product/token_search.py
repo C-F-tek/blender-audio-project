@@ -111,11 +111,7 @@ def build_search_index(
     extra_context: list[str],
 ) -> tuple[bool, int]:
     fts_enabled = ensure_fts(conn)
-    conn.execute(
-        "DELETE FROM evidence_fts"
-        if fts_enabled
-        else "DELETE FROM evidence_fts_fallback"
-    )
+    conn.execute("DELETE FROM evidence_fts" if fts_enabled else "DELETE FROM evidence_fts_fallback")
     indexed = 0
     for key, path in input_paths.items():
         content = flatten_json(loaded.get(key, {}))

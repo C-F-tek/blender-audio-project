@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate one AI pipeline schema-v6 report without executing the pipeline."""
+
 from __future__ import annotations
 
 import argparse
@@ -9,7 +10,9 @@ from pathlib import Path
 try:
     from ai_pipeline_report_contracts import validate_ai_pipeline_report_file
 except ImportError:  # Allows package-style imports during external checks.
-    from Tools.validation.ai_pipeline_report_contracts import validate_ai_pipeline_report_file  # type: ignore
+    from Tools.validation.ai_pipeline_report_contracts import (
+        validate_ai_pipeline_report_file,  # type: ignore
+    )
 
 
 def validate_report(repo_root: Path, report_path: Path, require_dry_run: bool) -> dict:
@@ -38,7 +41,11 @@ def main() -> int:
         default="output/ai_pipeline/ai_pipeline_dry_run_report.json",
         help="AI pipeline JSON report path, relative to --repo-root unless absolute.",
     )
-    parser.add_argument("--require-dry-run", action="store_true", help="Require report.dry_run=true and planned-only steps.")
+    parser.add_argument(
+        "--require-dry-run",
+        action="store_true",
+        help="Require report.dry_run=true and planned-only steps.",
+    )
     parser.add_argument("--output", help="Optional JSON validation report path.")
     args = parser.parse_args()
 

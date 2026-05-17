@@ -47,9 +47,7 @@ def recommendation_summary(recommendation: dict[str, Any]) -> dict[str, Any]:
         "source_pointers": {
             "event_log": source_pointers.get("event_log"),
             "tool_pointer_protocol": source_pointers.get("tool_pointer_protocol"),
-            "evidence_pointer_count": len(
-                source_pointers.get("evidence_pointers") or []
-            ),
+            "evidence_pointer_count": len(source_pointers.get("evidence_pointers") or []),
         },
     }
 

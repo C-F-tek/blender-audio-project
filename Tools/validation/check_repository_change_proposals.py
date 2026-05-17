@@ -5,6 +5,7 @@ Proposal reports are advisory work products. This validator checks that they
 remain manual-review-only, structurally useful for code/Markdown/JSON
 suggestions, and separate from provider execution or source mutation.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -130,7 +131,9 @@ def target_path_errors(path: str) -> list[str]:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         errors.append(f"forbidden target prefix: {normalized}")
     lower = normalized.lower()
-    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(
+        ".json"
+    ):
         errors.append(f"forbidden full-analysis JSON target: {normalized}")
     return errors
 
@@ -150,7 +153,12 @@ def validate_suggestion_output(output: Any, *, proposal_id: str, index: int) -> 
     errors: list[str] = []
     warnings: list[str] = []
     if not isinstance(output, dict):
-        return {"label": label, "ok": False, "errors": [f"{label} must be an object"], "warnings": warnings}
+        return {
+            "label": label,
+            "ok": False,
+            "errors": [f"{label} must be an object"],
+            "warnings": warnings,
+        }
 
     missing = [field for field in REQUIRED_SUGGESTION_OUTPUT_FIELDS if field not in output]
     if missing:
@@ -202,7 +210,9 @@ def validate_proposal(item: Any, index: int) -> dict[str, Any]:
         errors.append("apply_mode must be manual_review_only")
 
     target_files = item.get("target_files")
-    if not isinstance(target_files, list) or not all(isinstance(path, str) and path for path in target_files):
+    if not isinstance(target_files, list) or not all(
+        isinstance(path, str) and path for path in target_files
+    ):
         errors.append("target_files must be a non-empty list of strings")
     else:
         for path in target_files:
@@ -220,7 +230,9 @@ def validate_proposal(item: Any, index: int) -> dict[str, Any]:
 
     suggestion_outputs = item.get("suggestion_outputs")
     if suggestion_outputs is None:
-        warnings.append("suggestion_outputs missing; report predates suggestion artifact descriptors")
+        warnings.append(
+            "suggestion_outputs missing; report predates suggestion artifact descriptors"
+        )
     elif not isinstance(suggestion_outputs, list):
         errors.append("suggestion_outputs must be a list")
     else:
@@ -284,7 +296,9 @@ def validate_proposal_report(path: Path, repo_root: Path) -> dict[str, Any]:
 
     suggestion_contract = data.get("suggestion_contract")
     if suggestion_contract is None:
-        warnings.append("suggestion_contract missing; report predates suggestion artifact descriptors")
+        warnings.append(
+            "suggestion_contract missing; report predates suggestion artifact descriptors"
+        )
     elif not isinstance(suggestion_contract, dict):
         errors.append("suggestion_contract must be an object")
     elif suggestion_contract.get("provider_execution_performed") is not False:
@@ -316,15 +330,9 @@ def validate_proposal_report(path: Path, repo_root: Path) -> dict[str, Any]:
 
 def validate_repository_change_proposals(repo_root: Path, paths: list[Path]) -> dict[str, Any]:
     results = [validate_proposal_report(path, repo_root) for path in paths]
-    errors = [
-        f"{item['path']}: {error}"
-        for item in results
-        for error in item.get("errors", [])
-    ]
+    errors = [f"{item['path']}: {error}" for item in results for error in item.get("errors", [])]
     warnings = [
-        f"{item['path']}: {warning}"
-        for item in results
-        for warning in item.get("warnings", [])
+        f"{item['path']}: {warning}" for item in results for warning in item.get("warnings", [])
     ]
     return {
         "schema_version": 1,
@@ -351,7 +359,9 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    raw_paths = split_path_values(list(args.proposal or [])) or ["output/ai_pipeline/repository_change_proposals.json"]
+    raw_paths = split_path_values(list(args.proposal or [])) or [
+        "output/ai_pipeline/repository_change_proposals.json"
+    ]
     paths = [
         Path(raw).resolve() if Path(raw).is_absolute() else (repo_root / raw).resolve()
         for raw in raw_paths

@@ -75,9 +75,7 @@ def infer_target_file(plan: dict[str, Any]) -> tuple[str, list[str]]:
     if not isinstance(first, str) or not first.strip():
         return "", ["selected plan primary target file is invalid"]
     if len(target_files) > 1:
-        return first, [
-            "selected plan has multiple target_files; using first target only"
-        ]
+        return first, ["selected plan has multiple target_files; using first target only"]
     return first, []
 
 
@@ -183,12 +181,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
     lines.append(f"- Manual review required: `{report['manual_review_required']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append(f"- Selected plan: `{report['inputs'].get('selected_plan_id')}`")
     lines.append("")
@@ -200,9 +194,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     else:
         lines.append(f"- Target file: `{summary.get('target_file')}`")
         lines.append(f"- Edit kind: `{summary.get('edit_kind')}`")
-        lines.append(
-            f"- Ready for manual review: `{summary.get('ready_for_manual_review')}`"
-        )
+        lines.append(f"- Ready for manual review: `{summary.get('ready_for_manual_review')}`")
         lines.append(f"- Target line count: `{summary.get('target_line_count')}`")
         lines.append(f"- Target SHA-256: `{summary.get('target_sha256')}`")
         lines.append(f"- Rationale: {summary.get('rationale')}")
@@ -210,9 +202,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     lines.append("## Guardrail")
     lines.append("")
-    lines.append(
-        "This build creates proposal metadata only. It does not apply the proposal."
-    )
+    lines.append("This build creates proposal metadata only. It does not apply the proposal.")
     return "\n".join(lines) + "\n"
 
 
@@ -246,9 +236,7 @@ def build_code_edit_from_plan(
                 repo_root,
                 proposal_id=proposal_id_for(selected_plan),
                 target_file=target_file,
-                rationale=str(
-                    selected_plan.get("rationale") or "Generated from code patch plan."
-                ),
+                rationale=str(selected_plan.get("rationale") or "Generated from code patch plan."),
                 edit_strategy=str(
                     selected_plan.get("edit_strategy")
                     or "Review the source plan and apply a minimal manual edit."
@@ -256,9 +244,7 @@ def build_code_edit_from_plan(
                 edit_kind=edit_kind,
                 unified_diff=diff_text,
                 structured_operations=operations,
-                validation_commands=plan_list_or_none(
-                    selected_plan, "validation_commands"
-                ),
+                validation_commands=plan_list_or_none(selected_plan, "validation_commands"),
                 stop_conditions=plan_list_or_none(selected_plan, "stop_conditions"),
             )
             errors.extend(proposal_errors)

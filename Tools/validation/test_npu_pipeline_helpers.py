@@ -4,14 +4,14 @@
 These tests intentionally avoid Blender, NPU, GPU, Ollama, FFmpeg and filesystem
 writes outside a temporary directory.
 """
+
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
-
-import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -43,8 +43,8 @@ from Tools.npu.pipeline import (  # noqa: E402
     default_runtime_wiring_readiness,
     dual_ai_legacy_runtime_output_paths,
     helper_boundary_passed,
-    is_allowed_legacy_runtime_output_path,
     is_allowed_generated_artifact_path,
+    is_allowed_legacy_runtime_output_path,
     normalize_provider_preflight_report,
     planned_provider_result,
     read_json,
@@ -120,7 +120,11 @@ class NpuPipelineHelperTests(unittest.TestCase):
             text_path = root / "text.txt"
             text_path.write_text("hello", encoding="utf-8")
             self.assertTrue(compare_json_readers(json_path, read_json_object, read_json)["ok"])
-            self.assertTrue(compare_optional_json_readers(json_path, read_optional_json_object, read_optional_json)["ok"])
+            self.assertTrue(
+                compare_optional_json_readers(
+                    json_path, read_optional_json_object, read_optional_json
+                )["ok"]
+            )
             self.assertTrue(compare_text_readers(text_path, read_text, read_text)["ok"])
 
     def test_artifact_path_policy(self) -> None:
@@ -171,7 +175,9 @@ class NpuPipelineHelperTests(unittest.TestCase):
                 allowed_prefixes=DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
             )
             self.assertTrue(report["ok"])
-            written = write_planned_artifact(root, planned, allowed_prefixes=DEFAULT_ALLOWED_ARTIFACT_PREFIXES)
+            written = write_planned_artifact(
+                root, planned, allowed_prefixes=DEFAULT_ALLOWED_ARTIFACT_PREFIXES
+            )
             self.assertEqual(written.read_text(encoding="utf-8"), "print('ok')\n")
 
             with self.assertRaises(ValueError):
@@ -286,7 +292,9 @@ class NpuPipelineHelperTests(unittest.TestCase):
         self.assertFalse(result.metadata["executed"])
         self.assertEqual(result.text, "")
 
-        invalid = planned_provider_result(ProviderRequest(provider="", model="", prompt="", max_tokens=0))
+        invalid = planned_provider_result(
+            ProviderRequest(provider="", model="", prompt="", max_tokens=0)
+        )
         self.assertFalse(invalid.ok)
         self.assertIn("provider is required", invalid.error or "")
 

@@ -6,13 +6,13 @@ This runner preserves the existing CLI and runs the Python production engine by
 default. The old PowerShell implementation is available only through an
 explicit fallback flag.
 """
+
 from __future__ import annotations
 
 import argparse
 import subprocess
 import sys
 from pathlib import Path
-
 
 CURRENT = Path(__file__).resolve()
 WORKFLOW_DIR = CURRENT.parent
@@ -101,7 +101,7 @@ def build_command(args: argparse.Namespace) -> list[str]:
         value = getattr(args, name)
         if value != "":
             command.extend((f"-{name}", str(value)))
-    if getattr(args, "Stamp") == "":
+    if args.Stamp == "":
         command.extend(("-Stamp", ""))
     for name in INT_DEFAULTS:
         command.extend((f"-{name}", str(getattr(args, name))))

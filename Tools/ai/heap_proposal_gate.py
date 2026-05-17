@@ -8,7 +8,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 SOURCE_TARGET_EXTENSIONS = {".py", ".ps1", ".md", ".json", ".yml", ".yaml", ".toml"}
 FORBIDDEN_TARGET_PREFIXES = (
     "output/",
@@ -79,10 +78,7 @@ def has_forbidden_markers(text: str) -> bool:
         r"pass\s*/?\s*TODO\s*",
         r"\bFIXME\b",
     ]
-    return any(
-        re.search(pattern, text or "", re.IGNORECASE)
-        for pattern in forbidden_patterns
-    )
+    return any(re.search(pattern, text or "", re.IGNORECASE) for pattern in forbidden_patterns)
 
 
 def proposal_similarity(p1: dict[str, Any], p2: dict[str, Any]) -> float:
@@ -210,9 +206,7 @@ def build_operator_decision(
     accepted = [item for item in proposals if item.get("accepted")]
     rejected = [item for item in proposals if not item.get("accepted")]
     gate_reasons = [
-        reason
-        for proposal in proposals
-        for reason in proposal.get("operator_gate_reasons", [])
+        reason for proposal in proposals for reason in proposal.get("operator_gate_reasons", [])
     ]
     if not proposals:
         decision = "NO CONCRETE PATCHABLE PROPOSAL"

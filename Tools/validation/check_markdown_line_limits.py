@@ -11,6 +11,7 @@ A path ending in ``.md`` may therefore be either a readable file or a split
 container directory. The validator reads only real Markdown files and records
 split-container metadata in the report.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -94,8 +95,10 @@ def should_skip(path: Path, root: Path, include_evidence: bool) -> bool:
         rel_parts = path.parts
     if any(part in EXCLUDED_DIR_NAMES for part in rel_parts):
         return True
-    prefixes = EXCLUDED_PREFIXES if not include_evidence else tuple(
-        p for p in EXCLUDED_PREFIXES if p != "docs/LOCAL_VALIDATION_EVIDENCE/"
+    prefixes = (
+        EXCLUDED_PREFIXES
+        if not include_evidence
+        else tuple(p for p in EXCLUDED_PREFIXES if p != "docs/LOCAL_VALIDATION_EVIDENCE/")
     )
     path_rel = rel(path, root)
     return any(path_rel.startswith(prefix) for prefix in prefixes)
@@ -110,7 +113,11 @@ def collect_split_containers(root: Path, scopes: list[str], include_evidence: bo
             continue
         candidates = [base] if base.is_dir() and base.name.endswith(".md") else base.rglob("*.md")
         for path in candidates:
-            if path.is_dir() and path.name.endswith(".md") and not should_skip(path, root, include_evidence):
+            if (
+                path.is_dir()
+                and path.name.endswith(".md")
+                and not should_skip(path, root, include_evidence)
+            ):
                 containers[rel(path, root)] = path
     return [containers[key] for key in sorted(containers)]
 
@@ -131,7 +138,11 @@ def iter_markdown(root: Path, scopes: list[str], include_evidence: bool) -> list
         for path in candidates:
             if path.is_dir():
                 continue
-            if path.is_file() and path.suffix.lower() == ".md" and not should_skip(path, root, include_evidence):
+            if (
+                path.is_file()
+                and path.suffix.lower() == ".md"
+                and not should_skip(path, root, include_evidence)
+            ):
                 files[rel(path, root)] = path
     return [files[key] for key in sorted(files)]
 
@@ -153,7 +164,9 @@ def render_markdown(report: dict[str, object]) -> str:
     if violations:
         lines.extend(["## Violations", ""])
         for item in violations:  # type: ignore[assignment]
-            lines.append(f"- `{item['path']}` role=`{item['markdown_role']}` lines=`{item['line_count']}`")
+            lines.append(
+                f"- `{item['path']}` role=`{item['markdown_role']}` lines=`{item['line_count']}`"
+            )
         lines.append("")
     return "\n".join(lines)
 
@@ -165,7 +178,9 @@ def main() -> int:
     parser.add_argument("--scope", action="append", default=[])
     parser.add_argument("--include-evidence", action="store_true")
     parser.add_argument("--output", default="output/validation/markdown_line_limit_validation.json")
-    parser.add_argument("--markdown-output", default="output/validation/markdown_line_limit_validation.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/markdown_line_limit_validation.md"
+    )
     args = parser.parse_args()
 
     root = find_repo_root(Path(args.repo_root))
@@ -208,7 +223,9 @@ def main() -> int:
     md.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     md.write_text(render_markdown(report), encoding="utf-8")
-    print(f"[OK] Checked={len(checked)} split_containers={len(containers)} violations={len(violations)}")
+    print(
+        f"[OK] Checked={len(checked)} split_containers={len(containers)} violations={len(violations)}"
+    )
     print(f"[OK] Report: {rel(out, root)}")
     print(f"[OK] Markdown report: {rel(md, root)}")
     return 0 if not violations else 2

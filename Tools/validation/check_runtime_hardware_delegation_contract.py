@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """CLI entrypoint for hardware/delegation contract validation."""
+
 from __future__ import annotations
 
 import sys
@@ -37,7 +38,9 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     hardware_manifest = resolve_repo_path(repo_root, args.hardware_manifest)
-    delegated_reports = [resolve_repo_path(repo_root, item) for item in split_values(args.delegated_report)]
+    delegated_reports = [
+        resolve_repo_path(repo_root, item) for item in split_values(args.delegated_report)
+    ]
     report = validate_contract(repo_root, hardware_manifest, delegated_reports)
     output = resolve_output_path(repo_root, args.output) if args.output else None
     print(write_json_report(report, output), end="")

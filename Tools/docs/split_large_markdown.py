@@ -9,17 +9,17 @@ Default policy:
 - write reports under output/validation by default;
 - never commit, stage, delete git history, or touch database/runtime artifacts.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import re
-import shutil
 import subprocess
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
 
 MARKER_INDEX = "<!-- IA-CARMINE-MD-SPLIT: index -->"
 MARKER_PART = "<!-- IA-CARMINE-MD-SPLIT: part -->"
@@ -82,8 +82,7 @@ def git_status(repo_root: Path) -> list[str]:
         ["git", "status", "--short"],
         cwd=repo_root,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
     if proc.returncode != 0:
@@ -93,8 +92,10 @@ def git_status(repo_root: Path) -> list[str]:
 
 def is_under_excluded_prefix(path: Path, repo_root: Path, include_evidence: bool) -> bool:
     rel = repo_relative(path, repo_root)
-    prefixes = EXCLUDED_PREFIXES if not include_evidence else tuple(
-        p for p in EXCLUDED_PREFIXES if p != "docs/LOCAL_VALIDATION_EVIDENCE/"
+    prefixes = (
+        EXCLUDED_PREFIXES
+        if not include_evidence
+        else tuple(p for p in EXCLUDED_PREFIXES if p != "docs/LOCAL_VALIDATION_EVIDENCE/")
     )
     return any(rel.startswith(prefix) for prefix in prefixes)
 
@@ -107,7 +108,9 @@ def should_skip_path(path: Path, repo_root: Path, include_evidence: bool) -> boo
     return False
 
 
-def iter_markdown_files(repo_root: Path, scopes: Iterable[str], include_evidence: bool) -> list[MarkdownFile]:
+def iter_markdown_files(
+    repo_root: Path, scopes: Iterable[str], include_evidence: bool
+) -> list[MarkdownFile]:
     found: dict[str, MarkdownFile] = {}
     for scope in scopes:
         base = (repo_root / scope).resolve()
@@ -164,7 +167,9 @@ def split_by_headings(lines: list[str], budget: int) -> list[list[str]]:
     in_fence: str | None = None
     for line in lines:
         in_fence = fence_transition(line, in_fence)
-        starts_heading = in_fence is None and line.startswith("#") and line.lstrip("#").startswith(" ")
+        starts_heading = (
+            in_fence is None and line.startswith("#") and line.lstrip("#").startswith(" ")
+        )
         if starts_heading and current:
             sections.append(current)
             current = [line]
@@ -205,12 +210,7 @@ def rewrite_relative_links_for_child_dir(lines: list[str]) -> list[str]:
             raw_url = match.group("url")
             bracketed = raw_url.startswith("<") and raw_url.endswith(">")
             url = raw_url[1:-1] if bracketed else raw_url
-            if (
-                not url
-                or url.startswith("#")
-                or url.startswith("/")
-                or SCHEME_RE.match(url)
-            ):
+            if not url or url.startswith("#") or url.startswith("/") or SCHEME_RE.match(url):
                 return match.group(0)
             new_url = "../" + url
             if bracketed:
@@ -229,7 +229,9 @@ def choose_target_dir(path: Path) -> Path:
     return fallback
 
 
-def render_stub(original: MarkdownFile, target_dir: Path, part_names: list[str], max_lines: int) -> list[str]:
+def render_stub(
+    original: MarkdownFile, target_dir: Path, part_names: list[str], max_lines: int
+) -> list[str]:
     dir_name = target_dir.name
     lines = [
         MARKER_INDEX,
@@ -246,12 +248,14 @@ def render_stub(original: MarkdownFile, target_dir: Path, part_names: list[str],
     ]
     for name in part_names:
         lines.append(f"- [`{dir_name}/{name}`]({dir_name}/{name})")
-    lines.extend([
-        "",
-        "## Nota operativa",
-        "",
-        "Mantenere questo file come entrypoint stabile per non rompere i riferimenti esistenti.",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Nota operativa",
+            "",
+            "Mantenere questo file come entrypoint stabile per non rompere i riferimenti esistenti.",
+        ]
+    )
     return lines
 
 
@@ -268,12 +272,14 @@ def render_index(original: MarkdownFile, part_names: list[str], max_lines: int) 
     ]
     for idx, name in enumerate(part_names, 1):
         lines.append(f"{idx}. [`{name}`]({name})")
-    lines.extend([
-        "",
-        "## Regola",
-        "",
-        "Le parti sono generate per mantenere la documentazione navigabile e compatibile con agenti AI.",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Regola",
+            "",
+            "Le parti sono generate per mantenere la documentazione navigabile e compatibile con agenti AI.",
+        ]
+    )
     return lines
 
 
@@ -304,7 +310,9 @@ def write_text(path: Path, lines: list[str], apply: bool) -> int:
     return len(text.splitlines())
 
 
-def split_file(item: MarkdownFile, repo_root: Path, max_lines: int, apply: bool) -> dict[str, object]:
+def split_file(
+    item: MarkdownFile, repo_root: Path, max_lines: int, apply: bool
+) -> dict[str, object]:
     original_lines = item.path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
     if is_generated_index(original_lines):
         return {
@@ -329,7 +337,9 @@ def split_file(item: MarkdownFile, repo_root: Path, max_lines: int, apply: bool)
         body = rewrite_relative_links_for_child_dir(chunk)
         part_lines = render_part_header(item, idx, len(chunks)) + body
         if len(part_lines) > max_lines:
-            overflow_budget = max(40, max_lines - len(render_part_header(item, idx, len(chunks))) - 5)
+            overflow_budget = max(
+                40, max_lines - len(render_part_header(item, idx, len(chunks))) - 5
+            )
             forced = split_force(body, overflow_budget)
             if len(forced) > 1:
                 body = forced[0]
@@ -353,7 +363,9 @@ def split_file(item: MarkdownFile, repo_root: Path, max_lines: int, apply: bool)
         "parts": part_results,
     }
     if apply:
-        (target_dir / MARKER_MANIFEST).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        (target_dir / MARKER_MANIFEST).write_text(
+            json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+        )
 
     return {
         "path": item.rel,
@@ -382,7 +394,9 @@ def render_markdown_report(report: dict[str, object]) -> str:
         "",
     ]
     for item in report["results"]:  # type: ignore[index]
-        lines.append(f"- `{item.get('path')}` action=`{item.get('action')}` lines=`{item.get('original_lines', item.get('line_count'))}`")
+        lines.append(
+            f"- `{item.get('path')}` action=`{item.get('action')}` lines=`{item.get('original_lines', item.get('line_count'))}`"
+        )
     lines.append("")
     return "\n".join(lines)
 
@@ -395,7 +409,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--include-evidence", action="store_true")
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--output", default="output/validation/markdown_line_budget_report.json")
-    parser.add_argument("--markdown-output", default="output/validation/markdown_line_budget_report.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/markdown_line_budget_report.md"
+    )
     return parser
 
 

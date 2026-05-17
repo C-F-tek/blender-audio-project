@@ -37,7 +37,9 @@ def candidate_paths(repo_root: Path, raw: str) -> list[Path]:
     return unique
 
 
-def load_json_from_candidates(candidates: list[Path]) -> tuple[dict[str, Any] | None, Path | None, list[str]]:
+def load_json_from_candidates(
+    candidates: list[Path],
+) -> tuple[dict[str, Any] | None, Path | None, list[str]]:
     diagnostics: list[str] = []
     for path in candidates:
         if not path.exists():
@@ -122,7 +124,18 @@ def main() -> int:
         + f"- Classifications: `{classifications}`\n",
         encoding="utf-8",
     )
-    print(json.dumps({"passed": result["passed"], "classifications": classifications, "output": str(out), "selected_report": result["selected_report"]}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": result["passed"],
+                "classifications": classifications,
+                "output": str(out),
+                "selected_report": result["selected_report"],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if result["passed"] else 2
 
 

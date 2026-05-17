@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test task patch suggestion Markdown authoring and script-path imports."""
+
 from __future__ import annotations
 
 import argparse
@@ -13,11 +14,17 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def run(command: list[str], cwd: Path, timeout: int = 120) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, timeout=timeout)
+    result = subprocess.run(
+        command, cwd=cwd, capture_output=True, text=True, check=False, timeout=timeout
+    )
     return {
         "command": command,
         "returncode": result.returncode,
@@ -38,7 +45,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     for item in report.get("commands") or []:
-        lines.append(f"- `{item['name']}` rc=`{item['result']['returncode']}` ok=`{item['result']['ok']}`")
+        lines.append(
+            f"- `{item['name']}` rc=`{item['result']['returncode']}` ok=`{item['result']['ok']}`"
+        )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])
@@ -48,8 +57,13 @@ def render_markdown(report: dict[str, Any]) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/task_patch_suggestion_markdown_authoring_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/task_patch_suggestion_markdown_authoring_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/task_patch_suggestion_markdown_authoring_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/task_patch_suggestion_markdown_authoring_smoke.md",
+    )
     return parser.parse_args()
 
 
@@ -108,7 +122,9 @@ def main() -> int:
             "output/validation/task_patch_suggestion_report.md",
         ]
         report_result = run(report_cmd, source_repo)
-        commands.append({"name": "build_task_patch_suggestion_report_script_path", "result": report_result})
+        commands.append(
+            {"name": "build_task_patch_suggestion_report_script_path", "result": report_result}
+        )
 
         dry_cmd = [
             sys.executable,
@@ -124,8 +140,16 @@ def main() -> int:
         commands.append({"name": "apply_patch_suggestion_bundle_dry", "result": dry_result})
 
         task_text = (repo / task).read_text(encoding="utf-8") if (repo / task).exists() else ""
-        report_data = json.loads((repo / report_json).read_text(encoding="utf-8-sig")) if (repo / report_json).exists() else {}
-        dry_data = json.loads((repo / dry_json).read_text(encoding="utf-8-sig")) if (repo / dry_json).exists() else {}
+        report_data = (
+            json.loads((repo / report_json).read_text(encoding="utf-8-sig"))
+            if (repo / report_json).exists()
+            else {}
+        )
+        dry_data = (
+            json.loads((repo / dry_json).read_text(encoding="utf-8-sig"))
+            if (repo / dry_json).exists()
+            else {}
+        )
 
         if "```patch_suggestion" not in task_text:
             errors.append("generated task Markdown is missing patch_suggestion fence")
@@ -133,7 +157,9 @@ def main() -> int:
             errors.append("generated task Markdown did not produce one deterministic operation")
         if dry_data.get("passed") is not True or dry_data.get("changed_count") != 1:
             errors.append("dry-run did not detect one changed target")
-        result_paths = [item.get("path") for item in dry_data.get("results") or [] if isinstance(item, dict)]
+        result_paths = [
+            item.get("path") for item in dry_data.get("results") or [] if isinstance(item, dict)
+        ]
         if target not in result_paths:
             errors.append("dry-run did not target the separate generated target file")
         for item in commands:

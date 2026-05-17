@@ -5,8 +5,8 @@ import argparse
 import json
 import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def now_iso() -> str:
@@ -101,7 +101,9 @@ def main() -> int:
     if not supports_output:
         errors.append("--output did not create the selected report path")
     if missing_required_fields:
-        errors.append("startup output missing validation report fields: " + ", ".join(missing_required_fields))
+        errors.append(
+            "startup output missing validation report fields: " + ", ".join(missing_required_fields)
+        )
     if isinstance(startup_report, dict) and not isinstance(startup_report.get("passed"), bool):
         errors.append("startup output field passed must be boolean")
     if isinstance(startup_report, dict) and not isinstance(startup_report.get("errors"), list):
@@ -120,10 +122,18 @@ def main() -> int:
         "supports_repo_root": supports_repo_root,
         "supports_output": supports_output,
         "startup_report_ok": startup_report.get("ok") if isinstance(startup_report, dict) else None,
-        "startup_report_passed": startup_report.get("passed") if isinstance(startup_report, dict) else None,
-        "startup_report_kind": startup_report.get("kind") if isinstance(startup_report, dict) else None,
-        "startup_report_schema_version": startup_report.get("schema_version") if isinstance(startup_report, dict) else None,
-        "startup_warning_count": startup_report.get("warning_count") if isinstance(startup_report, dict) else None,
+        "startup_report_passed": startup_report.get("passed")
+        if isinstance(startup_report, dict)
+        else None,
+        "startup_report_kind": startup_report.get("kind")
+        if isinstance(startup_report, dict)
+        else None,
+        "startup_report_schema_version": startup_report.get("schema_version")
+        if isinstance(startup_report, dict)
+        else None,
+        "startup_warning_count": startup_report.get("warning_count")
+        if isinstance(startup_report, dict)
+        else None,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -137,13 +147,19 @@ def main() -> int:
     output.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     write_markdown(report, markdown_output)
 
-    print(json.dumps({
-        "passed": report["passed"],
-        "output": str(output),
-        "markdown_output": str(markdown_output),
-        "startup_output": str(startup_output),
-        "errors": errors,
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown_output": str(markdown_output),
+                "startup_output": str(startup_output),
+                "errors": errors,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
     return 0 if report["passed"] else 1
 

@@ -1,4 +1,5 @@
 """Constants for AI workload quality validation."""
+
 from __future__ import annotations
 
 DEFAULT_REPORT_DIR = "output/ai_packets"

@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from datetime import datetime
-from pathlib import Path
 import json
 import os
 import re
@@ -10,7 +7,9 @@ import shutil
 import subprocess
 import sys
 import time
-
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
 
 ROOT = Path.home() / "blender"
 PROJECT_DIR = ROOT / "blender-audio-project"
@@ -109,11 +108,15 @@ def build_artifacts(wav_path: Path | str | None = None) -> dict:
         "analysis_ai_context_json": str(OUTPUT_DIR / f"{track_stem}_analysis_ai_context.json"),
         "dual_ai_plan_json": str(OUTPUT_DIR / f"{track_stem}_dual_ai_scene_plan.json"),
         "ollama_music_insights_json": str(OUTPUT_DIR / f"{track_stem}_ollama_music_insights.json"),
-        "ai_implementation_draft_json": str(OUTPUT_DIR / f"{track_stem}_ai_implementation_draft.json"),
+        "ai_implementation_draft_json": str(
+            OUTPUT_DIR / f"{track_stem}_ai_implementation_draft.json"
+        ),
         "gpu_task_packet_json": str(OUTPUT_DIR / f"{track_stem}_gpu_task_packet.json"),
         "scene_brief_json": str(OUTPUT_DIR / f"{track_stem}_scene_brief.json"),
         "asset_inventory_json": str(OUTPUT_DIR / "spaziotempo_asset_inventory.json"),
-        "generated_scene_script": str(INDEX_AI_DIR / "scene_scripts" / f"{slugify(track_stem)}_scene_builder_candidate.py"),
+        "generated_scene_script": str(
+            INDEX_AI_DIR / "scene_scripts" / f"{slugify(track_stem)}_scene_builder_candidate.py"
+        ),
         "render_mp4": str(RENDERS_DIR / f"{render_stem}.mp4"),
         "render_ffmpeg_mp4": str(RENDERS_DIR / f"{render_stem}_ffmpeg.mp4"),
         "render_frames_dir": str(RENDERS_DIR / f"{render_stem}_frames"),
@@ -138,7 +141,7 @@ class WorkflowSession:
     last_result_path: str | None = None
 
     @classmethod
-    def default(cls) -> "WorkflowSession":
+    def default(cls) -> WorkflowSession:
         artifacts = build_artifacts(DEFAULT_WAV)
         return cls(
             version=1,
@@ -153,7 +156,9 @@ class WorkflowSession:
     def save(self) -> None:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         self.updated_at = now_iso()
-        SESSION_PATH.write_text(json.dumps(asdict(self), indent=2, ensure_ascii=False), encoding="utf-8")
+        SESSION_PATH.write_text(
+            json.dumps(asdict(self), indent=2, ensure_ascii=False), encoding="utf-8"
+        )
 
 
 def load_session(create: bool = True) -> WorkflowSession:
@@ -163,7 +168,9 @@ def load_session(create: bool = True) -> WorkflowSession:
             base_artifacts = build_artifacts(data.get("current_wav") or DEFAULT_WAV)
             stored_artifacts = data.get("artifacts") or {}
             artifacts = dict(base_artifacts)
-            artifacts.update({key: value for key, value in stored_artifacts.items() if value is not None})
+            artifacts.update(
+                {key: value for key, value in stored_artifacts.items() if value is not None}
+            )
             return WorkflowSession(
                 version=int(data.get("version", 1)),
                 updated_at=str(data.get("updated_at") or now_iso()),
@@ -250,7 +257,7 @@ def available_ollama_models() -> list[str]:
     if npu_path not in sys.path:
         sys.path.insert(0, npu_path)
     try:
-        from ollama_runtime import list_models, list_models_from_disk, DEFAULT_BASE_URL
+        from ollama_runtime import DEFAULT_BASE_URL, list_models, list_models_from_disk
 
         models: list[str] = []
         try:
@@ -258,7 +265,7 @@ def available_ollama_models() -> list[str]:
         except Exception:
             pass
         models.extend(list_models_from_disk())
-        return sorted(set(model for model in models if model))
+        return sorted({model for model in models if model})
     except Exception:
         return sorted({DEFAULT_CREATIVE_MODEL, DEFAULT_TECHNICAL_MODEL, DEFAULT_CHAT_MODEL})
 
@@ -437,7 +444,11 @@ def path_within(path: Path, parent: Path) -> bool:
 
 
 def is_safe_intermediate_target(path: Path) -> bool:
-    allowed = path_within(path, OUTPUT_DIR) or path_within(path, NPU_DIR) or path_within(path, INDEX_AI_DIR)
+    allowed = (
+        path_within(path, OUTPUT_DIR)
+        or path_within(path, NPU_DIR)
+        or path_within(path, INDEX_AI_DIR)
+    )
     forbidden = (
         path_within(path, AUDIO_DIR)
         or path_within(path, RENDERS_DIR)
@@ -447,7 +458,9 @@ def is_safe_intermediate_target(path: Path) -> bool:
     return allowed and not forbidden
 
 
-def cleanup_intermediate_targets(session: WorkflowSession, include_all_tracks: bool = True, include_logs: bool = True) -> dict:
+def cleanup_intermediate_targets(
+    session: WorkflowSession, include_all_tracks: bool = True, include_logs: bool = True
+) -> dict:
     file_targets: set[Path] = set()
     dir_targets: set[Path] = set()
 
@@ -526,7 +539,9 @@ def cleanup_intermediate_targets(session: WorkflowSession, include_all_tracks: b
             "*_npu_service_capsule.md",
             "*_gpu_task_packet.json",
         ]:
-            file_targets.update(path for path in INDEX_AI_DIR.glob(f"**/{pattern}") if path.is_file())
+            file_targets.update(
+                path for path in INDEX_AI_DIR.glob(f"**/{pattern}") if path.is_file()
+            )
 
     npu_dirs = [
         "npu_code_chunks",
@@ -771,12 +786,14 @@ def build_project_storage_stats(session: WorkflowSession) -> dict:
     for key, value in session.artifacts.items():
         path = Path(value) if isinstance(value, str) else None
         if path and path.suffix:
-            current_artifacts.append({
-                "key": key,
-                "path": str(path),
-                "exists": path.exists(),
-                "bytes": path.stat().st_size if path.exists() and path.is_file() else 0,
-            })
+            current_artifacts.append(
+                {
+                    "key": key,
+                    "path": str(path),
+                    "exists": path.exists(),
+                    "bytes": path.stat().st_size if path.exists() and path.is_file() else 0,
+                }
+            )
 
     return {
         "generated_at": now_iso(),
@@ -838,8 +855,12 @@ def format_project_storage_stats(stats: dict) -> str:
     return "\n".join(lines)
 
 
-def cleanup_intermediates(session: WorkflowSession, include_all_tracks: bool = True, include_logs: bool = True) -> OperationResult:
-    targets = cleanup_intermediate_targets(session, include_all_tracks=include_all_tracks, include_logs=include_logs)
+def cleanup_intermediates(
+    session: WorkflowSession, include_all_tracks: bool = True, include_logs: bool = True
+) -> OperationResult:
+    targets = cleanup_intermediate_targets(
+        session, include_all_tracks=include_all_tracks, include_logs=include_logs
+    )
     targets["preserved"] = {
         "audio_dir": str(AUDIO_DIR),
         "renders_dir": str(RENDERS_DIR),
@@ -860,21 +881,33 @@ def operation_status(session: WorkflowSession) -> dict:
     artifacts = session.artifacts
     checks = {
         "audio_path": bool(artifacts.get("audio_path")) and Path(artifacts["audio_path"]).exists(),
-        "analysis_json": bool(artifacts.get("analysis_json")) and Path(artifacts["analysis_json"]).exists(),
-        "track_summary_json": bool(artifacts.get("track_summary_json")) and Path(artifacts["track_summary_json"]).exists(),
-        "music_context_json": bool(artifacts.get("music_context_json")) and Path(artifacts["music_context_json"]).exists(),
-        "analysis_ai_context_json": bool(artifacts.get("analysis_ai_context_json")) and Path(artifacts["analysis_ai_context_json"]).exists(),
-        "blender_keyframes_json": bool(artifacts.get("blender_keyframes_json")) and Path(artifacts["blender_keyframes_json"]).exists(),
-        "dual_ai_plan_json": bool(artifacts.get("dual_ai_plan_json")) and Path(artifacts["dual_ai_plan_json"]).exists(),
-        "scene_brief_json": bool(artifacts.get("scene_brief_json")) and Path(artifacts["scene_brief_json"]).exists(),
-        "asset_inventory_json": bool(artifacts.get("asset_inventory_json")) and Path(artifacts["asset_inventory_json"]).exists(),
-        "ai_implementation_draft_json": bool(artifacts.get("ai_implementation_draft_json")) and Path(artifacts["ai_implementation_draft_json"]).exists(),
-        "generated_scene_script": bool(artifacts.get("generated_scene_script")) and Path(artifacts["generated_scene_script"]).exists(),
+        "analysis_json": bool(artifacts.get("analysis_json"))
+        and Path(artifacts["analysis_json"]).exists(),
+        "track_summary_json": bool(artifacts.get("track_summary_json"))
+        and Path(artifacts["track_summary_json"]).exists(),
+        "music_context_json": bool(artifacts.get("music_context_json"))
+        and Path(artifacts["music_context_json"]).exists(),
+        "analysis_ai_context_json": bool(artifacts.get("analysis_ai_context_json"))
+        and Path(artifacts["analysis_ai_context_json"]).exists(),
+        "blender_keyframes_json": bool(artifacts.get("blender_keyframes_json"))
+        and Path(artifacts["blender_keyframes_json"]).exists(),
+        "dual_ai_plan_json": bool(artifacts.get("dual_ai_plan_json"))
+        and Path(artifacts["dual_ai_plan_json"]).exists(),
+        "scene_brief_json": bool(artifacts.get("scene_brief_json"))
+        and Path(artifacts["scene_brief_json"]).exists(),
+        "asset_inventory_json": bool(artifacts.get("asset_inventory_json"))
+        and Path(artifacts["asset_inventory_json"]).exists(),
+        "ai_implementation_draft_json": bool(artifacts.get("ai_implementation_draft_json"))
+        and Path(artifacts["ai_implementation_draft_json"]).exists(),
+        "generated_scene_script": bool(artifacts.get("generated_scene_script"))
+        and Path(artifacts["generated_scene_script"]).exists(),
     }
     return checks
 
 
-def run_analyze_wav(session: WorkflowSession, fps: float = 30.0, skip_music_context: bool = False) -> None:
+def run_analyze_wav(
+    session: WorkflowSession, fps: float = 30.0, skip_music_context: bool = False
+) -> None:
     py = audio_python_executable()
     args = [
         str(py),
@@ -887,7 +920,9 @@ def run_analyze_wav(session: WorkflowSession, fps: float = 30.0, skip_music_cont
     ]
     if skip_music_context:
         args.append("--skip-music-context")
-    run_command(args, operation="analyze_wav", metadata={"track_stem": session.track_stem, "fps": fps})
+    run_command(
+        args, operation="analyze_wav", metadata={"track_stem": session.track_stem, "fps": fps}
+    )
     finish_session_operation(session, "analyze_wav")
 
 
@@ -909,7 +944,9 @@ def run_track_summary(session: WorkflowSession) -> None:
     finish_session_operation(session, "build_track_summary")
 
 
-def run_music_context(session: WorkflowSession, include_ollama: bool = False, ollama_model: str = "qwen2.5-coder:14b") -> None:
+def run_music_context(
+    session: WorkflowSession, include_ollama: bool = False, ollama_model: str = "qwen2.5-coder:14b"
+) -> None:
     py = python_executable()
     args = [
         str(py),
@@ -933,7 +970,9 @@ def run_music_context(session: WorkflowSession, include_ollama: bool = False, ol
 
 def run_code_context(session: WorkflowSession) -> None:
     py = python_executable()
-    run_command([str(py), str(NPU_DIR / "build_npu_code_context.py")], operation="build_code_context")
+    run_command(
+        [str(py), str(NPU_DIR / "build_npu_code_context.py")], operation="build_code_context"
+    )
     run_project_ai_index(session)
     finish_session_operation(session, "build_code_context")
 
@@ -1001,7 +1040,12 @@ def run_scene_director_brief(session: WorkflowSession) -> OperationResult:
 def run_manual_index(session: WorkflowSession, limit_files: int = 80) -> None:
     py = python_executable()
     run_command(
-        [str(py), str(NPU_DIR / "build_blender_manual_context.py"), "--limit-files", str(limit_files)],
+        [
+            str(py),
+            str(NPU_DIR / "build_blender_manual_context.py"),
+            "--limit-files",
+            str(limit_files),
+        ],
         operation="build_manual_context",
         metadata={"limit_files": limit_files},
     )
@@ -1010,7 +1054,10 @@ def run_manual_index(session: WorkflowSession, limit_files: int = 80) -> None:
 
 def ensure_manual_library(session: WorkflowSession) -> None:
     py = python_executable()
-    run_command([str(py), str(NPU_DIR / "build_blender_manual_context.py"), "--ensure-only"], operation="ensure_manual_library")
+    run_command(
+        [str(py), str(NPU_DIR / "build_blender_manual_context.py"), "--ensure-only"],
+        operation="ensure_manual_library",
+    )
     finish_session_operation(session, "ensure_manual_library")
 
 
@@ -1019,8 +1066,12 @@ def artifact_missing(session: WorkflowSession, key: str) -> bool:
     return not value or not Path(value).exists()
 
 
-def ensure_ai_prerequisites(session: WorkflowSession, phase: str, include_manual: bool = False) -> None:
-    if artifact_missing(session, "analysis_json") or artifact_missing(session, "blender_keyframes_json"):
+def ensure_ai_prerequisites(
+    session: WorkflowSession, phase: str, include_manual: bool = False
+) -> None:
+    if artifact_missing(session, "analysis_json") or artifact_missing(
+        session, "blender_keyframes_json"
+    ):
         raise RuntimeError("Manca l'analisi WAV completa: esegui prima 3 Analizza WAV.")
 
     if artifact_missing(session, "track_summary_json"):
@@ -1213,18 +1264,83 @@ def available_operations() -> list[dict]:
         {"id": "set_wav", "label": "Scegli WAV", "gui_ready": True, "heavy": False},
         {"id": "reset_wav", "label": "Ripristina WAV default", "gui_ready": True, "heavy": False},
         {"id": "analyze_wav", "label": "Analizza WAV", "gui_ready": True, "heavy": True},
-        {"id": "build_track_summary", "label": "Crea track summary", "gui_ready": True, "heavy": False},
-        {"id": "build_music_context", "label": "Crea/aggiorna music context", "gui_ready": True, "heavy": False},
-        {"id": "build_code_context", "label": "Crea/aggiorna code context + indexAI", "gui_ready": True, "heavy": False},
-        {"id": "build_project_ai_index", "label": "Rigenera indexAI progetto", "gui_ready": True, "heavy": False},
-        {"id": "full_audio_prepare", "label": "Prepara audio completo", "gui_ready": True, "heavy": True},
-        {"id": "build_manual_context", "label": "Indicizza manuali locali", "gui_ready": True, "heavy": True},
+        {
+            "id": "build_track_summary",
+            "label": "Crea track summary",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "build_music_context",
+            "label": "Crea/aggiorna music context",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "build_code_context",
+            "label": "Crea/aggiorna code context + indexAI",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "build_project_ai_index",
+            "label": "Rigenera indexAI progetto",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "full_audio_prepare",
+            "label": "Prepara audio completo",
+            "gui_ready": True,
+            "heavy": True,
+        },
+        {
+            "id": "build_manual_context",
+            "label": "Indicizza manuali locali",
+            "gui_ready": True,
+            "heavy": True,
+        },
         {"id": "dual_ai_plan", "label": "Dual AI plan", "gui_ready": True, "heavy": True},
-        {"id": "dual_ai_implementation", "label": "Dual AI scene script draft", "gui_ready": True, "heavy": True},
-        {"id": "cleanup_intermediates", "label": "Pulisci intermedi", "gui_ready": True, "heavy": False},
-        {"id": "cleanup_render_frames", "label": "Pulisci frame render", "gui_ready": True, "heavy": False},
-        {"id": "advanced_debug_check", "label": "Debug advanced check", "gui_ready": True, "heavy": False},
-        {"id": "startup_service_check", "label": "Startup service check", "gui_ready": True, "heavy": False},
-        {"id": "debug_monitor_window", "label": "Apri debug monitor", "gui_ready": True, "heavy": False},
-        {"id": "mark_interrupted", "label": "Registra operazione interrotta", "gui_ready": True, "heavy": False},
+        {
+            "id": "dual_ai_implementation",
+            "label": "Dual AI scene script draft",
+            "gui_ready": True,
+            "heavy": True,
+        },
+        {
+            "id": "cleanup_intermediates",
+            "label": "Pulisci intermedi",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "cleanup_render_frames",
+            "label": "Pulisci frame render",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "advanced_debug_check",
+            "label": "Debug advanced check",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "startup_service_check",
+            "label": "Startup service check",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "debug_monitor_window",
+            "label": "Apri debug monitor",
+            "gui_ready": True,
+            "heavy": False,
+        },
+        {
+            "id": "mark_interrupted",
+            "label": "Registra operazione interrotta",
+            "gui_ready": True,
+            "heavy": False,
+        },
     ]

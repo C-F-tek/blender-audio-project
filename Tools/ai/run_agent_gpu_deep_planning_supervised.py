@@ -160,9 +160,7 @@ def now_iso() -> str:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def run_command(
@@ -250,14 +248,10 @@ def run_runtime_tool_broker_for_round(
         }
 
     request_sources = {
-        str(item.get("source") or "provider")
-        for item in tool_requests
-        if isinstance(item, dict)
+        str(item.get("source") or "provider") for item in tool_requests if isinstance(item, dict)
     }
     request_source = (
-        "deterministic_fallback"
-        if request_sources == {"deterministic_fallback"}
-        else "provider"
+        "deterministic_fallback" if request_sources == {"deterministic_fallback"} else "provider"
     )
 
     output_root = resolve_path(repo_root, args.runtime_tool_output_dir)
@@ -326,35 +320,25 @@ def run_runtime_tool_broker_for_round(
         "broker_markdown": repo_rel(broker_markdown, repo_root),
         "broker_output_exists": broker_output_exists,
         "passed": broker_report.get("passed"),
-        "tool_request_count": broker_report.get(
-            "tool_request_count", len(tool_requests)
-        ),
+        "tool_request_count": broker_report.get("tool_request_count", len(tool_requests)),
         "tool_execution_count": broker_report.get("tool_execution_count", 0),
         "blocked_tool_count": broker_report.get("blocked_tool_count", 0),
         "failed_tool_count": broker_report.get("failed_tool_count", 0),
         "operational_sqlite_write_performed": broker_report.get(
             "operational_sqlite_write_performed", False
         ),
-        "provider_execution_performed": broker_report.get(
-            "provider_execution_performed", False
-        ),
-        "patch_application_performed": broker_report.get(
-            "patch_application_performed", False
-        ),
+        "provider_execution_performed": broker_report.get("provider_execution_performed", False),
+        "patch_application_performed": broker_report.get("patch_application_performed", False),
         "sqlite_write_performed": broker_report.get("sqlite_write_performed", False),
         "persistent_memory_write_performed": broker_report.get(
             "persistent_memory_write_performed", False
         ),
-        "tool_results": compact_tool_results_for_context(
-            broker_report.get("tool_results", [])
-        ),
+        "tool_results": compact_tool_results_for_context(broker_report.get("tool_results", [])),
         "guardrails": broker_report.get("guardrails", {}),
     }
 
 
-def runtime_tool_context_report(
-    round_index: int, broker_result: dict[str, Any]
-) -> dict[str, Any]:
+def runtime_tool_context_report(round_index: int, broker_result: dict[str, Any]) -> dict[str, Any]:
     return {
         "path": broker_result.get("broker_output"),
         "kind": "agent_runtime_tool_broker",
@@ -400,12 +384,8 @@ def runtime_tool_feedback_context_report(
             "blocked_tool_count": broker_result.get("blocked_tool_count"),
             "failed_tool_count": broker_result.get("failed_tool_count"),
             "deterministic_fallback": bool(broker_result.get("deterministic_fallback")),
-            "provider_execution_performed": broker_result.get(
-                "provider_execution_performed"
-            ),
-            "patch_application_performed": broker_result.get(
-                "patch_application_performed"
-            ),
+            "provider_execution_performed": broker_result.get("provider_execution_performed"),
+            "patch_application_performed": broker_result.get("patch_application_performed"),
             "sqlite_write_performed": broker_result.get("sqlite_write_performed"),
             "persistent_memory_write_performed": broker_result.get(
                 "persistent_memory_write_performed"
@@ -418,8 +398,7 @@ def runtime_tool_feedback_context_report(
             "runtime_tool_results_available": bool(tool_results),
             "feed_into_next_provider_round": True,
             "manual_review_required": True,
-            "do_not_treat_fallback_as_provider_emitted": source
-            == "deterministic_fallback",
+            "do_not_treat_fallback_as_provider_emitted": source == "deterministic_fallback",
         },
         "tool_results": tool_results,
         "guardrails": {
@@ -444,17 +423,14 @@ def append_runtime_tool_feedback_context(
         return False
     if not broker_result.get("executed"):
         return False
-    if broker_result.get("broker_output_exists") is False and not broker_result.get(
-        "tool_results"
-    ):
+    if broker_result.get("broker_output_exists") is False and not broker_result.get("tool_results"):
         return False
 
     feedback = runtime_tool_feedback_context_report(round_index, broker_result)
     existing = [
         item
         for item in context_reports
-        if isinstance(item, dict)
-        and item.get("kind") == "runtime_tool_feedback_context"
+        if isinstance(item, dict) and item.get("kind") == "runtime_tool_feedback_context"
     ]
 
     if len(existing) >= max_feedback_reports:
@@ -518,9 +494,7 @@ def run_schema_repair_retry_for_round(
         rounds=rounds,
         evidence_ready_for_manual_patch_count=evidence_ready_for_manual_patch_count,
     )
-    repair_max_tokens = min(
-        max(int(getattr(args, "max_new_tokens", 1600) or 1600), 900), 2200
-    )
+    repair_max_tokens = min(max(int(getattr(args, "max_new_tokens", 1600) or 1600), 900), 2200)
     try:
         repair_raw_response, repair_model_used = manager.generate(
             model,
@@ -556,22 +530,14 @@ def run_schema_repair_retry_for_round(
     accepted = bool(
         repair_diagnostics.get("schema_ok")
         and (
-            int(
-                repair_recommendation_diagnostics.get("filtered_recommendation_count")
-                or 0
-            )
-            > 0
+            int(repair_recommendation_diagnostics.get("filtered_recommendation_count") or 0) > 0
             or len(repair_tool_requests) > 0
         )
     )
     return {
         "attempted": True,
         "accepted": accepted,
-        "reason": (
-            "schema_repair_retry_accepted"
-            if accepted
-            else "schema_repair_retry_rejected"
-        ),
+        "reason": ("schema_repair_retry_accepted" if accepted else "schema_repair_retry_rejected"),
         "model_used": repair_model_used,
         "raw_response_preview": repair_raw_response[:3000],
         "raw_response": repair_raw_response,
@@ -583,9 +549,7 @@ def run_schema_repair_retry_for_round(
     }
 
 
-def run_runtime_tool_bootstrap(
-    repo_root: Path, args: argparse.Namespace
-) -> dict[str, Any]:
+def run_runtime_tool_bootstrap(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     # Run deterministic broker bootstrap before the first GPU planner prompt.
     if not args.enable_runtime_tool_broker:
         return {
@@ -621,9 +585,7 @@ def run_runtime_tool_bootstrap(
         tool_requests=[dict(item) for item in DEFAULT_RUNTIME_TOOL_BOOTSTRAP_REQUESTS],
     )
     result["bootstrap"] = True
-    result["bootstrap_tool_ids"] = [
-        item["id"] for item in DEFAULT_RUNTIME_TOOL_BOOTSTRAP_REQUESTS
-    ]
+    result["bootstrap_tool_ids"] = [item["id"] for item in DEFAULT_RUNTIME_TOOL_BOOTSTRAP_REQUESTS]
     return result
 
 
@@ -645,17 +607,12 @@ def build_report(
 ) -> dict[str, Any]:
     recommendations = merge_recommendations(rounds)
     diagnostics = aggregate_recommendation_diagnostics(rounds, evidence)
-    ready = [
-        rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"
-    ]
-    needs_context = [
-        rec for rec in recommendations if rec.get("status") == "needs_more_context"
-    ]
+    ready = [rec for rec in recommendations if rec.get("status") == "ready_for_patch_plan"]
+    needs_context = [rec for rec in recommendations if rec.get("status") == "needs_more_context"]
     unusable_npu = [
         audit
         for audit in npu_audits
-        if audit.get("classification")
-        not in {"usable_audit_text", "not_executed", "metadata_only"}
+        if audit.get("classification") not in {"usable_audit_text", "not_executed", "metadata_only"}
     ]
     npu_success_count = sum(
         1
@@ -677,30 +634,26 @@ def build_report(
         if round_item.get("runtime_tool_broker")
     ]
     provider_runtime_brokers = [
-        item
-        for item in runtime_brokers
-        if item.get("source") != "deterministic_fallback"
+        item for item in runtime_brokers if item.get("source") != "deterministic_fallback"
     ]
     deterministic_runtime_brokers = [
-        item
-        for item in runtime_brokers
-        if item.get("source") == "deterministic_fallback"
+        item for item in runtime_brokers if item.get("source") == "deterministic_fallback"
     ]
-    runtime_tool_request_count = int(
-        runtime_tool_bootstrap.get("requested_tool_count") or 0
-    ) + sum(int(item.get("requested_tool_count") or 0) for item in runtime_brokers)
+    runtime_tool_request_count = int(runtime_tool_bootstrap.get("requested_tool_count") or 0) + sum(
+        int(item.get("requested_tool_count") or 0) for item in runtime_brokers
+    )
     runtime_tool_execution_count = int(
         runtime_tool_bootstrap.get("tool_execution_count") or 0
     ) + sum(int(item.get("tool_execution_count") or 0) for item in runtime_brokers)
-    runtime_tool_failed_count = int(
-        runtime_tool_bootstrap.get("failed_tool_count") or 0
-    ) + sum(int(item.get("failed_tool_count") or 0) for item in runtime_brokers)
-    runtime_tool_blocked_count = int(
-        runtime_tool_bootstrap.get("blocked_tool_count") or 0
-    ) + sum(int(item.get("blocked_tool_count") or 0) for item in runtime_brokers)
-    runtime_tool_result_count = len(
-        runtime_tool_bootstrap.get("tool_results", [])
-    ) + sum(len(item.get("tool_results", [])) for item in runtime_brokers)
+    runtime_tool_failed_count = int(runtime_tool_bootstrap.get("failed_tool_count") or 0) + sum(
+        int(item.get("failed_tool_count") or 0) for item in runtime_brokers
+    )
+    runtime_tool_blocked_count = int(runtime_tool_bootstrap.get("blocked_tool_count") or 0) + sum(
+        int(item.get("blocked_tool_count") or 0) for item in runtime_brokers
+    )
+    runtime_tool_result_count = len(runtime_tool_bootstrap.get("tool_results", [])) + sum(
+        len(item.get("tool_results", [])) for item in runtime_brokers
+    )
     runtime_tool_provider_request_count = sum(
         int(item.get("requested_tool_count") or 0) for item in provider_runtime_brokers
     )
@@ -708,47 +661,35 @@ def build_report(
         int(item.get("tool_execution_count") or 0) for item in provider_runtime_brokers
     )
     deterministic_runtime_tool_fallback_request_count = sum(
-        int(item.get("requested_tool_count") or 0)
-        for item in deterministic_runtime_brokers
+        int(item.get("requested_tool_count") or 0) for item in deterministic_runtime_brokers
     )
     deterministic_runtime_tool_fallback_execution_count = sum(
-        int(item.get("tool_execution_count") or 0)
-        for item in deterministic_runtime_brokers
+        int(item.get("tool_execution_count") or 0) for item in deterministic_runtime_brokers
     )
     deterministic_runtime_tool_fallback_failed_count = sum(
-        int(item.get("failed_tool_count") or 0)
-        for item in deterministic_runtime_brokers
+        int(item.get("failed_tool_count") or 0) for item in deterministic_runtime_brokers
     )
     deterministic_runtime_tool_fallback_blocked_count = sum(
-        int(item.get("blocked_tool_count") or 0)
-        for item in deterministic_runtime_brokers
+        int(item.get("blocked_tool_count") or 0) for item in deterministic_runtime_brokers
     )
     provider_empty_response_count = sum(
         1 for round_item in rounds if round_item.get("provider_empty_response")
     )
-    provider_error_count = sum(
-        1 for round_item in rounds if round_item.get("provider_error")
-    )
+    provider_error_count = sum(1 for round_item in rounds if round_item.get("provider_error"))
     schema_repair_retry_attempt_count = sum(
-        1
-        for round_item in rounds
-        if round_item.get("schema_repair_retry", {}).get("attempted")
+        1 for round_item in rounds if round_item.get("schema_repair_retry", {}).get("attempted")
     )
     schema_repair_retry_accept_count = sum(
-        1
-        for round_item in rounds
-        if round_item.get("schema_repair_retry", {}).get("accepted")
+        1 for round_item in rounds if round_item.get("schema_repair_retry", {}).get("accepted")
     )
     runtime_tool_feedback_context_report_count = sum(
         1
         for item in context_reports
-        if isinstance(item, dict)
-        and item.get("kind") == "runtime_tool_feedback_context"
+        if isinstance(item, dict) and item.get("kind") == "runtime_tool_feedback_context"
     )
     report_errors = list(errors)
     runtime_tool_bootstrap_failed = bool(
-        runtime_tool_bootstrap.get("executed")
-        and runtime_tool_bootstrap.get("passed") is not True
+        runtime_tool_bootstrap.get("executed") and runtime_tool_bootstrap.get("passed") is not True
     )
     if runtime_tool_bootstrap_failed:
         detail = (
@@ -803,12 +744,8 @@ def build_report(
         "runtime_tool_bootstrap_blocked_count": int(
             runtime_tool_bootstrap.get("blocked_tool_count") or 0
         ),
-        "runtime_tool_bootstrap_result_count": len(
-            runtime_tool_bootstrap.get("tool_results", [])
-        ),
-        "runtime_tool_bootstrap_output": runtime_tool_bootstrap.get(
-            "broker_output", ""
-        ),
+        "runtime_tool_bootstrap_result_count": len(runtime_tool_bootstrap.get("tool_results", [])),
+        "runtime_tool_bootstrap_output": runtime_tool_bootstrap.get("broker_output", ""),
         "runtime_tool_bootstrap": runtime_tool_bootstrap,
         "runtime_tool_request_count": runtime_tool_request_count,
         "runtime_tool_execution_count": runtime_tool_execution_count,
@@ -821,8 +758,7 @@ def build_report(
         "live_context_refresh_enabled": bool(args.refresh_live_context_each_round),
         "live_context_report_paths": list(args.live_context_report or []),
         "live_context_refresh_count": sum(
-            int(round_item.get("live_context_report_count") or 0)
-            for round_item in rounds
+            int(round_item.get("live_context_report_count") or 0) for round_item in rounds
         ),
         "deterministic_runtime_tool_fallback_request_count": deterministic_runtime_tool_fallback_request_count,
         "deterministic_runtime_tool_fallback_execution_count": deterministic_runtime_tool_fallback_execution_count,
@@ -950,11 +886,8 @@ def run_npu_audit_for_checkpoint(
                     "dependency_missing": data.get(
                         "dependency_missing", nested.get("dependency_missing")
                     ),
-                    "classification": nested.get("classification")
-                    or data.get("classification"),
-                    "gpu_review_blocked": data.get("decision", {}).get(
-                        "gpu_review_blocked"
-                    ),
+                    "classification": nested.get("classification") or data.get("classification"),
+                    "gpu_review_blocked": data.get("decision", {}).get("gpu_review_blocked"),
                     "warnings": data.get("warnings", []),
                 }
             )
@@ -979,8 +912,7 @@ def compact_context_report(repo_root: Path, path: Path) -> dict[str, Any]:
         "passed": data.get("passed"),
         "summary": data.get("summary", {}),
         "decision": data.get("decision", {}),
-        "event_count": data.get("event_count")
-        or data.get("heap_snapshot", {}).get("event_count"),
+        "event_count": data.get("event_count") or data.get("heap_snapshot", {}).get("event_count"),
         "pending_broker_request_count": data.get("pending_broker_request_count")
         or data.get("heap_snapshot", {}).get("pending_broker_request_count"),
     }
@@ -1037,13 +969,9 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 )
             except Exception as exc:  # noqa: BLE001
                 provider_error = f"{type(exc).__name__}: {exc}"
-                context_reports.append(
-                    {"path": repo_rel(path, repo_root), "error": str(exc)}
-                )
+                context_reports.append({"path": repo_rel(path, repo_root), "error": str(exc)})
         else:
-            context_reports.append(
-                {"path": repo_rel(path, repo_root), "error": "missing"}
-            )
+            context_reports.append({"path": repo_rel(path, repo_root), "error": "missing"})
 
     if not args.use_ollama:
         return {
@@ -1073,12 +1001,9 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "provider_empty_response_count": 0,
             "runtime_tool_broker_enabled": bool(args.enable_runtime_tool_broker),
             "runtime_tool_bootstrap_enabled": bool(
-                args.enable_runtime_tool_broker
-                and not args.disable_runtime_tool_bootstrap
+                args.enable_runtime_tool_broker and not args.disable_runtime_tool_bootstrap
             ),
-            "runtime_tool_bootstrap_executed": bool(
-                runtime_tool_bootstrap.get("executed")
-            ),
+            "runtime_tool_bootstrap_executed": bool(runtime_tool_bootstrap.get("executed")),
             "runtime_tool_bootstrap_passed": runtime_tool_bootstrap.get("passed"),
             "runtime_tool_bootstrap_request_count": int(
                 runtime_tool_bootstrap.get("requested_tool_count") or 0
@@ -1095,9 +1020,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "runtime_tool_bootstrap_result_count": len(
                 runtime_tool_bootstrap.get("tool_results", [])
             ),
-            "runtime_tool_bootstrap_output": runtime_tool_bootstrap.get(
-                "broker_output", ""
-            ),
+            "runtime_tool_bootstrap_output": runtime_tool_bootstrap.get("broker_output", ""),
             "runtime_tool_bootstrap": runtime_tool_bootstrap,
             "runtime_tool_request_count": int(
                 runtime_tool_bootstrap.get("requested_tool_count") or 0
@@ -1105,15 +1028,11 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             "runtime_tool_execution_count": int(
                 runtime_tool_bootstrap.get("tool_execution_count") or 0
             ),
-            "runtime_tool_failed_count": int(
-                runtime_tool_bootstrap.get("failed_tool_count") or 0
-            ),
+            "runtime_tool_failed_count": int(runtime_tool_bootstrap.get("failed_tool_count") or 0),
             "runtime_tool_blocked_count": int(
                 runtime_tool_bootstrap.get("blocked_tool_count") or 0
             ),
-            "runtime_tool_result_count": len(
-                runtime_tool_bootstrap.get("tool_results", [])
-            ),
+            "runtime_tool_result_count": len(runtime_tool_bootstrap.get("tool_results", [])),
             "runtime_tool_provider_request_count": 0,
             "runtime_tool_provider_request_execution_count": 0,
             "deterministic_runtime_tool_fallback_request_count": 0,
@@ -1167,9 +1086,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
             if time.perf_counter() >= deadline and rounds:
                 break
             live_context_report_count = 0
-            if args.refresh_live_context_each_round or (
-                index == 1 and args.live_context_report
-            ):
+            if args.refresh_live_context_each_round or (index == 1 and args.live_context_report):
                 live_context_report_count = refresh_live_context_reports(
                     context_reports,
                     repo_root,
@@ -1245,15 +1162,10 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                         evidence_ready_for_manual_patch_count=evidence_ready_count,
                     )
                     if schema_repair_retry.get("accepted"):
-                        raw_response = str(
-                            schema_repair_retry.get("raw_response") or raw_response
-                        )
-                        parsed = dict(
-                            schema_repair_retry.get("parsed_response") or parsed
-                        )
+                        raw_response = str(schema_repair_retry.get("raw_response") or raw_response)
+                        parsed = dict(schema_repair_retry.get("parsed_response") or parsed)
                         parse_diagnostics = dict(
-                            schema_repair_retry.get("parse_diagnostics")
-                            or parse_diagnostics
+                            schema_repair_retry.get("parse_diagnostics") or parse_diagnostics
                         )
             except Exception as exc:  # noqa: BLE001
                 provider_error = f"{type(exc).__name__}: {exc}"
@@ -1278,14 +1190,10 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 parsed, parse_diagnostics, evidence_ready_count
             )
             if parse_diagnostics.get("provider_empty_response"):
-                round_diagnostics["empty_recommendations_reason"] = (
-                    "provider_empty_response"
-                )
-            valid_tool_requests, invalid_tool_request_errors = (
-                extract_valid_tool_requests(
-                    parsed,
-                    max_requests=args.runtime_tool_max_requests_per_round,
-                )
+                round_diagnostics["empty_recommendations_reason"] = "provider_empty_response"
+            valid_tool_requests, invalid_tool_request_errors = extract_valid_tool_requests(
+                parsed,
+                max_requests=args.runtime_tool_max_requests_per_round,
             )
             deterministic_fallback_used = False
             deterministic_fallback_reason = ""
@@ -1296,9 +1204,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                     f"round {index}: invalid tool requests: {invalid_tool_request_errors}"
                 )
             if not valid_tool_requests and args.enable_runtime_tool_broker:
-                fallback_reason = str(
-                    round_diagnostics.get("empty_recommendations_reason") or ""
-                )
+                fallback_reason = str(round_diagnostics.get("empty_recommendations_reason") or "")
                 if fallback_reason in {
                     "context_echo_detected",
                     "json_parse_failure",
@@ -1306,11 +1212,9 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                     "evidence_ready_but_no_tool_requests",
                     "valid_json_empty_recommendations",
                 }:
-                    deterministic_fallback_requests = (
-                        deterministic_fallback_tool_requests(
-                            fallback_reason,
-                            max_requests=args.runtime_tool_max_requests_per_round,
-                        )
+                    deterministic_fallback_requests = deterministic_fallback_tool_requests(
+                        fallback_reason,
+                        max_requests=args.runtime_tool_max_requests_per_round,
                     )
                     if deterministic_fallback_requests:
                         deterministic_fallback_used = True
@@ -1322,34 +1226,26 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 round_index=index,
                 tool_requests=broker_tool_requests,
             )
-            runtime_tool_feedback_context_appended = (
-                append_runtime_tool_feedback_context(
-                    context_reports,
-                    index,
-                    runtime_broker,
-                )
+            runtime_tool_feedback_context_appended = append_runtime_tool_feedback_context(
+                context_reports,
+                index,
+                runtime_broker,
             )
             if deterministic_fallback_used:
                 runtime_broker["source"] = "deterministic_fallback"
                 runtime_broker["provider_generated_tool_requests"] = False
-                runtime_broker["deterministic_fallback_reason"] = (
-                    deterministic_fallback_reason
-                )
+                runtime_broker["deterministic_fallback_reason"] = deterministic_fallback_reason
             elif valid_tool_requests:
                 runtime_broker["source"] = "provider_tool_requests"
                 runtime_broker["provider_generated_tool_requests"] = True
             if runtime_broker.get("error"):
-                warnings.append(
-                    f"runtime tool broker round {index}: {runtime_broker.get('error')}"
-                )
+                warnings.append(f"runtime tool broker round {index}: {runtime_broker.get('error')}")
             if runtime_broker.get("returncode") not in (None, 0):
                 warnings.append(
                     f"runtime tool broker round {index}: returncode={runtime_broker.get('returncode')}"
                 )
             if runtime_broker.get("executed"):
-                context_reports.append(
-                    runtime_tool_context_report(index, runtime_broker)
-                )
+                context_reports.append(runtime_tool_context_report(index, runtime_broker))
             round_data = {
                 "round": index,
                 "elapsed_seconds": round(time.perf_counter() - round_start, 3),
@@ -1360,12 +1256,8 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 "response_chars": len(response),
                 "raw_response_preview": response[:3000],
                 "parsed_response": parsed,
-                "schema_repair_retry": summarize_schema_repair_retry(
-                    schema_repair_retry
-                ),
-                "provider_empty_response": bool(
-                    parse_diagnostics.get("provider_empty_response")
-                ),
+                "schema_repair_retry": summarize_schema_repair_retry(schema_repair_retry),
+                "provider_empty_response": bool(parse_diagnostics.get("provider_empty_response")),
                 "tool_requests": valid_tool_requests,
                 "invalid_tool_request_errors": invalid_tool_request_errors,
                 "runtime_tool_broker": runtime_broker,
@@ -1393,9 +1285,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 started_at=started_at,
                 npu_auditor_disabled_reason=npu_auditor_disabled_reason,
             )
-            checkpoint_json, checkpoint_md, audit_json = checkpoint_paths(
-                checkpoint_dir, index
-            )
+            checkpoint_json, checkpoint_md, audit_json = checkpoint_paths(checkpoint_dir, index)
             write_json(checkpoint_json, interim_report)
             checkpoint_md.write_text(build_markdown(interim_report), encoding="utf-8")
             should_audit = (
@@ -1404,9 +1294,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                 and index % max(1, args.npu_auditor_every_rounds) == 0
             )
             if should_audit:
-                audit = run_npu_audit_for_checkpoint(
-                    repo_root, checkpoint_json, audit_json, args
-                )
+                audit = run_npu_audit_for_checkpoint(repo_root, checkpoint_json, audit_json, args)
                 npu_audits.append(audit)
                 if audit.get("error"):
                     warnings.append(f"NPU audit round {index}: {audit.get('error')}")
@@ -1416,9 +1304,7 @@ def run_supervised(args: argparse.Namespace) -> dict[str, Any]:
                     "metadata_only",
                     "not_executed",
                 }:
-                    warnings.append(
-                        f"NPU audit round {index}: classification={classification}"
-                    )
+                    warnings.append(f"NPU audit round {index}: classification={classification}")
                 if classification in TERMINAL_NPU_AUDIT_CLASSIFICATIONS:
                     npu_auditor_disabled_reason = classification
                     warnings.append(
@@ -1507,31 +1393,19 @@ def main() -> int:
                 "round_count": report["round_count"],
                 "npu_audit_count": report["npu_audit_count"],
                 "npu_audit_success_count": report.get("npu_audit_success_count", 0),
-                "npu_auditor_disabled_reason": report.get(
-                    "npu_auditor_disabled_reason", ""
-                ),
+                "npu_auditor_disabled_reason": report.get("npu_auditor_disabled_reason", ""),
                 "recommendation_count": report["recommendation_count"],
                 "raw_recommendation_candidate_count": report.get(
                     "raw_recommendation_candidate_count"
                 ),
-                "filtered_recommendation_count": report.get(
-                    "filtered_recommendation_count"
-                ),
+                "filtered_recommendation_count": report.get("filtered_recommendation_count"),
                 "tool_request_count": report.get("tool_request_count"),
                 "valid_tool_request_count": report.get("valid_tool_request_count"),
                 "invalid_tool_request_count": report.get("invalid_tool_request_count"),
-                "empty_recommendations_reason": report.get(
-                    "empty_recommendations_reason"
-                ),
-                "runtime_tool_broker_enabled": report.get(
-                    "runtime_tool_broker_enabled"
-                ),
-                "runtime_tool_bootstrap_executed": report.get(
-                    "runtime_tool_bootstrap_executed"
-                ),
-                "runtime_tool_bootstrap_passed": report.get(
-                    "runtime_tool_bootstrap_passed"
-                ),
+                "empty_recommendations_reason": report.get("empty_recommendations_reason"),
+                "runtime_tool_broker_enabled": report.get("runtime_tool_broker_enabled"),
+                "runtime_tool_bootstrap_executed": report.get("runtime_tool_bootstrap_executed"),
+                "runtime_tool_bootstrap_passed": report.get("runtime_tool_bootstrap_passed"),
                 "runtime_tool_bootstrap_request_count": report.get(
                     "runtime_tool_bootstrap_request_count"
                 ),
@@ -1545,22 +1419,16 @@ def main() -> int:
                     "runtime_tool_bootstrap_blocked_count"
                 ),
                 "runtime_tool_request_count": report.get("runtime_tool_request_count"),
-                "runtime_tool_execution_count": report.get(
-                    "runtime_tool_execution_count"
-                ),
+                "runtime_tool_execution_count": report.get("runtime_tool_execution_count"),
                 "runtime_tool_failed_count": report.get("runtime_tool_failed_count"),
                 "runtime_tool_blocked_count": report.get("runtime_tool_blocked_count"),
                 "runtime_tool_result_count": report.get("runtime_tool_result_count"),
-                "provider_empty_response_count": report.get(
-                    "provider_empty_response_count"
-                ),
+                "provider_empty_response_count": report.get("provider_empty_response_count"),
                 "evidence_ready_for_manual_patch_count": report.get(
                     "evidence_ready_for_manual_patch_count"
                 ),
                 "ready_for_patch_plan": report["decision"].get("ready_for_patch_plan"),
-                "recommended_next_layer": report["decision"].get(
-                    "recommended_next_layer"
-                ),
+                "recommended_next_layer": report["decision"].get("recommended_next_layer"),
             },
             indent=2,
             ensure_ascii=False,

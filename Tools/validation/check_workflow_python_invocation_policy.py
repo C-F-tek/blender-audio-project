@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Validate workflow PowerShell scripts do not invoke bare/system Python.
 
 The IA-Carmine workflow Python policy requires official/provider-capable lanes
@@ -6,14 +6,15 @@ to use the repository-owned interpreter resolved by Tools/workflow/python_env.ps
 System PATH Python, WindowsApps Python and permissive fallback to bare `python`
 are forbidden in workflow lanes.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import re
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable
 
 BARE_PYTHON_PATTERNS = (
     re.compile(r"^\s*(?:&\s*)?python(?:\.exe)?(?:\s|$)", re.IGNORECASE),
@@ -179,7 +180,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--root", action="append", default=None)
-    parser.add_argument("--output", default="output/validation/workflow_python_invocation_policy.json")
+    parser.add_argument(
+        "--output", default="output/validation/workflow_python_invocation_policy.json"
+    )
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
@@ -190,10 +193,18 @@ def main() -> int:
     output.write_text(json.dumps(report, indent=2), encoding="utf-8")
     if args.markdown_output:
         write_markdown(report, repo_root / args.markdown_output)
-    print(json.dumps({"passed": report["passed"], "output": str(output), "violation_count": report["violation_count"]}, indent=2))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "violation_count": report["violation_count"],
+            },
+            indent=2,
+        )
+    )
     return 0 if report["passed"] else 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

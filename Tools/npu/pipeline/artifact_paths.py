@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 from .config import DEFAULT_ALLOWED_ARTIFACT_PREFIXES
 
@@ -109,10 +108,7 @@ def validate_legacy_runtime_output_paths(
 ) -> dict[str, object]:
     """Validate exact legacy runtime outputs without allowing broad source prefixes."""
 
-    normalized = [
-        repo_relative_path(path, repo_root=repo_root)
-        for path in paths
-    ]
+    normalized = [repo_relative_path(path, repo_root=repo_root) for path in paths]
     allowed = tuple(
         normalize_repo_relative_path(path)
         for path in dual_ai_legacy_runtime_output_paths(track_stem)

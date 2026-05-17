@@ -130,9 +130,7 @@ def run_ollama_probe(
 
     text = ""
     prompt_attempts: list[dict[str, Any]] = []
-    with OllamaSession(
-        model=selected_model, shutdown_server=False, unload_model=True
-    ) as session:
+    with OllamaSession(model=selected_model, shutdown_server=False, unload_model=True) as session:
         for index, prompt in enumerate(prompts, start=1):
             candidate = session.generate(
                 prompt,
@@ -200,13 +198,9 @@ devices = core.available_devices
 result = {"ok": "NPU" in devices, "lane": "npu", "devices": devices}
 print(json.dumps(result))
 """
-    python_exe = (
-        Path(npu_python_exe).expanduser() if npu_python_exe else DEFAULT_NPU_PYTHON
-    )
+    python_exe = Path(npu_python_exe).expanduser() if npu_python_exe else DEFAULT_NPU_PYTHON
     ok, text, exit_code = _run_python(python_exe, code, timeout=timeout)
-    parsed_payload = (
-        _parse_last_json_line(text) if ok else {"error": text, "exit_code": exit_code}
-    )
+    parsed_payload = _parse_last_json_line(text) if ok else {"error": text, "exit_code": exit_code}
     parsed = parse_provider_result(
         {"text": json.dumps(parsed_payload)},
         provider="openvino_npu",
@@ -217,9 +211,7 @@ print(json.dumps(result))
     return {
         "lane": "npu",
         "passed": (
-            ok and bool(parsed_payload.get("ok"))
-            if isinstance(parsed_payload, dict)
-            else False
+            ok and bool(parsed_payload.get("ok")) if isinstance(parsed_payload, dict) else False
         ),
         "provider_execution_performed": True,
         "elapsed_sec": round(time.perf_counter() - started, 4),
@@ -282,9 +274,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
             )
     if args.run_npu:
         try:
-            lane_reports.append(
-                run_npu_probe(repo_root, args.timeout, args.npu_python_exe)
-            )
+            lane_reports.append(run_npu_probe(repo_root, args.timeout, args.npu_python_exe))
         except Exception as exc:  # noqa: BLE001 - report-only tool.
             lane_reports.append(
                 {
@@ -297,11 +287,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
 
     parsed_results = [
         parse_provider_result(
-            {
-                "text": json.dumps(
-                    {"lane": item.get("lane"), "passed": item.get("passed")}
-                )
-            },
+            {"text": json.dumps({"lane": item.get("lane"), "passed": item.get("passed")})},
             provider=str(item.get("lane") or "unknown"),
             model=str(item.get("selected_model") or "probe"),
             executed=bool(item.get("provider_execution_performed")),
@@ -340,9 +326,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--output", default="output/validation/local_provider_probe.json"
-    )
+    parser.add_argument("--output", default="output/validation/local_provider_probe.json")
     parser.add_argument("--model", help="Preferred Ollama model.")
     parser.add_argument(
         "--prompt",
@@ -369,9 +353,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if not args.run_ollama and not args.run_npu:
-        parser.error(
-            "At least one explicit probe flag is required: --run-ollama or --run-npu"
-        )
+        parser.error("At least one explicit probe flag is required: --run-ollama or --run-npu")
 
     repo_root = Path(args.repo_root).resolve()
     report = build_report(repo_root, args)
@@ -379,9 +361,7 @@ def main() -> int:
     if not output.is_absolute():
         output = repo_root / output
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(
         json.dumps(
             {

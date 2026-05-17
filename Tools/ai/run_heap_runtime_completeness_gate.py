@@ -103,12 +103,8 @@ DEFAULT_EVENTS = "output/heap_runtime_completeness_gate/{stamp}/events.jsonl"
 DEFAULT_SNAPSHOT = "output/heap_runtime_completeness_gate/{stamp}/state.json"
 DEFAULT_HEAP_MD = "output/heap_runtime_completeness_gate/{stamp}/state.md"
 DEFAULT_BRIDGE_DIR = "output/heap_runtime_completeness_gate/{stamp}/broker_bridge"
-DEFAULT_BRIDGE_JSON = (
-    "output/validation/heap_runtime_completeness_gate_broker_bridge_{stamp}.json"
-)
-DEFAULT_BRIDGE_MD = (
-    "output/validation/heap_runtime_completeness_gate_broker_bridge_{stamp}.md"
-)
+DEFAULT_BRIDGE_JSON = "output/validation/heap_runtime_completeness_gate_broker_bridge_{stamp}.json"
+DEFAULT_BRIDGE_MD = "output/validation/heap_runtime_completeness_gate_broker_bridge_{stamp}.md"
 
 REQUIREMENT_ORDER = (
     "tool_catalog",
@@ -214,9 +210,7 @@ PLACEHOLDER_CODE_LABELS = (
 # repo_rel moved to universo_utils
 
 
-def append_unique(
-    bucket: list[dict[str, Any]], item: dict[str, Any], key: str = "id"
-) -> bool:
+def append_unique(bucket: list[dict[str, Any]], item: dict[str, Any], key: str = "id") -> bool:
     value = item.get(key)
     if value and any(existing.get(key) == value for existing in bucket):
         return False
@@ -224,9 +218,7 @@ def append_unique(
     return True
 
 
-def event_payloads_by_type(
-    events: list[dict[str, Any]], event_type: str
-) -> list[dict[str, Any]]:
+def event_payloads_by_type(events: list[dict[str, Any]], event_type: str) -> list[dict[str, Any]]:
     payloads: list[dict[str, Any]] = []
     for event in events:
         if event.get("event_type") != event_type:
@@ -260,9 +252,7 @@ def provider_heap_lane(value: str) -> str:
     return PROVIDER_ROLE_TO_HEAP_LANE.get(lane, lane)
 
 
-def runtime_state_lane_gate(
-    lane_status: dict[str, Any], max_degraded_lanes: int
-) -> dict[str, Any]:
+def runtime_state_lane_gate(lane_status: dict[str, Any], max_degraded_lanes: int) -> dict[str, Any]:
     degraded = sorted(
         lane
         for lane, status in lane_status.items()
@@ -319,9 +309,7 @@ class HeapRuntimeCompletenessGate:
             allow_provider_generation=args.allow_provider_generation,
             operator_intent=args.operator_intent,
         )
-        self.max_iterations = clamp_loop_iterations(
-            self.budget_config, args.max_iterations
-        )
+        self.max_iterations = clamp_loop_iterations(self.budget_config, args.max_iterations)
         self.state = make_state(args.objective, getattr(args, "request", ""))
         self.state["budget_governor"] = self.budget_governor
         self.state["invocation_contract"] = self.invocation_contract
@@ -379,10 +367,7 @@ class HeapRuntimeCompletenessGate:
             path = self.output_dir / "team_context"
         else:
             path = (
-                self.repo_root
-                / "output"
-                / "validation"
-                / f"heap_runtime_team_context_{self.stamp}"
+                self.repo_root / "output" / "validation" / f"heap_runtime_team_context_{self.stamp}"
             )
         path.mkdir(parents=True, exist_ok=True)
         return path
@@ -401,15 +386,9 @@ class HeapRuntimeCompletenessGate:
             return False
         lowered = request.lower()
         word_count = len(
-            [
-                part
-                for part in lowered.replace("?", " ").replace("!", " ").split()
-                if part
-            ]
+            [part for part in lowered.replace("?", " ").replace("!", " ").split() if part]
         )
-        if word_count <= 3 and not any(
-            hint in lowered for hint in COMPLEX_REQUEST_HINTS
-        ):
+        if word_count <= 3 and not any(hint in lowered for hint in COMPLEX_REQUEST_HINTS):
             return False
         return word_count >= 6 or any(hint in lowered for hint in COMPLEX_REQUEST_HINTS)
 
@@ -475,9 +454,7 @@ class HeapRuntimeCompletenessGate:
         startup_context = self.startup_task_file_context(max_preview_chars=20000)
         if startup_context.get("loaded"):
             texts.append(str(startup_context.get("preview") or ""))
-        return source_anchors.request_source_file_candidates(
-            self.repo_root, texts, limit=limit
-        )
+        return source_anchors.request_source_file_candidates(self.repo_root, texts, limit=limit)
 
     def real_source_file_candidates(
         self, events: list[dict[str, Any]] | None = None, limit: int = 24
@@ -496,9 +473,7 @@ class HeapRuntimeCompletenessGate:
         )
 
     def source_ref_alias_matches(self, rel_path: str, limit: int = 20) -> list[str]:
-        return source_anchors.source_ref_alias_matches(
-            self.repo_root, rel_path, limit=limit
-        )
+        return source_anchors.source_ref_alias_matches(self.repo_root, rel_path, limit=limit)
 
     def resolve_source_ref_alias(self, rel_path: str) -> str:
         return source_anchors.resolve_source_ref_alias(self.repo_root, rel_path)
@@ -539,9 +514,7 @@ class HeapRuntimeCompletenessGate:
             task_file_path = self.repo_root / task_file_path
         return task_file_path.resolve(strict=False)
 
-    def startup_task_file_context(
-        self, max_preview_chars: int = 12000
-    ) -> dict[str, Any]:
+    def startup_task_file_context(self, max_preview_chars: int = 12000) -> dict[str, Any]:
         """Read the startup task file as active heap input.
 
         The task file is not a diagnostic pointer: prepare_heap_context_memory_reload.py
@@ -564,20 +537,14 @@ class HeapRuntimeCompletenessGate:
                 "reason": "task file missing",
             }
         try:
-            task_file_text = task_file_path.read_text(
-                encoding="utf-8-sig", errors="replace"
-            )
-        except (
-            Exception
-        ) as exc:  # noqa: BLE001 - context ingestion must not crash the gate.
+            task_file_text = task_file_path.read_text(encoding="utf-8-sig", errors="replace")
+        except Exception as exc:  # noqa: BLE001 - context ingestion must not crash the gate.
             return {
                 "loaded": False,
                 "task_file": rel_path,
                 "reason": f"task file unreadable: {type(exc).__name__}: {exc}",
             }
-        digest = hashlib.sha256(
-            task_file_text.encode("utf-8", errors="replace")
-        ).hexdigest()
+        digest = hashlib.sha256(task_file_text.encode("utf-8", errors="replace")).hexdigest()
         preview = task_file_text[: max(0, int(max_preview_chars))]
         return {
             "loaded": True,
@@ -593,9 +560,7 @@ class HeapRuntimeCompletenessGate:
         context = self.startup_task_file_context()
         if not context.get("loaded"):
             if context.get("task_file"):
-                self.warnings.append(
-                    str(context.get("reason") or "startup task file not loaded")
-                )
+                self.warnings.append(str(context.get("reason") or "startup task file not loaded"))
             return
         fact = {
             "id": "startup_task_file_context_loaded",
@@ -666,9 +631,7 @@ class HeapRuntimeCompletenessGate:
             return manifest_path, {}
         return manifest_path, payload
 
-    def startup_execution_artifact_outputs(
-        self, execution: dict[str, Any]
-    ) -> dict[str, Any]:
+    def startup_execution_artifact_outputs(self, execution: dict[str, Any]) -> dict[str, Any]:
         refs: list[str] = []
         for key in (
             "useful_artifact_paths",
@@ -703,11 +666,7 @@ class HeapRuntimeCompletenessGate:
                 continue
             if safe_int(execution.get("returncode"), default=1) != 0:
                 continue
-            errors = (
-                execution.get("errors")
-                if isinstance(execution.get("errors"), list)
-                else []
-            )
+            errors = execution.get("errors") if isinstance(execution.get("errors"), list) else []
             if errors:
                 continue
             completed.append(execution)
@@ -726,16 +685,8 @@ class HeapRuntimeCompletenessGate:
         present and the startup contract marks them loaded, they are valid heap
         context inputs and should not block provider teamwork.
         """
-        artifacts = (
-            manifest.get("artifacts")
-            if isinstance(manifest.get("artifacts"), dict)
-            else {}
-        )
-        contract = (
-            manifest.get("contract")
-            if isinstance(manifest.get("contract"), dict)
-            else {}
-        )
+        artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
+        contract = manifest.get("contract") if isinstance(manifest.get("contract"), dict) else {}
 
         artifact_requirements = {
             "semantic_code_chunks": (
@@ -779,9 +730,7 @@ class HeapRuntimeCompletenessGate:
                         "passed": True,
                         "source": "startup_context_memory_reload_manifest_artifacts",
                         "startup_manifest": (
-                            repo_rel(self.repo_root, manifest_path)
-                            if manifest_path
-                            else ""
+                            repo_rel(self.repo_root, manifest_path) if manifest_path else ""
                         ),
                     },
                     "provider_execution_performed": False,
@@ -920,9 +869,7 @@ class HeapRuntimeCompletenessGate:
         npu_piece = deterministic_reviews.get("npu_micro_task_piece")
         provider_report_lanes: list[str] = []
         for report in self.provider_reports:
-            lane = str(
-                report.get("lane") or report.get("role") or report.get("kind") or ""
-            )
+            lane = str(report.get("lane") or report.get("role") or report.get("kind") or "")
             if lane and lane not in provider_report_lanes:
                 provider_report_lanes.append(lane)
 
@@ -1031,14 +978,10 @@ class HeapRuntimeCompletenessGate:
             else []
         )
         impl_errors = (
-            implementation_quality.get("errors")
-            if isinstance(implementation_quality, dict)
-            else []
+            implementation_quality.get("errors") if isinstance(implementation_quality, dict) else []
         )
         progress_errors = (
-            proposal_progress.get("errors")
-            if isinstance(proposal_progress, dict)
-            else []
+            proposal_progress.get("errors") if isinstance(proposal_progress, dict) else []
         )
 
         combined_gpu0 = "\n".join(str(item) for item in (gpu0_review or []))
@@ -1046,17 +989,13 @@ class HeapRuntimeCompletenessGate:
         combined_response = str(response_text or "")
 
         if placeholder_hits:
-            reasons.append(
-                f"implementation_quality.placeholder_hits={placeholder_hits}"
-            )
+            reasons.append(f"implementation_quality.placeholder_hits={placeholder_hits}")
         if impl_errors:
             reasons.append(f"implementation_quality.errors={impl_errors}")
         if progress_errors:
             reasons.append(f"proposal_progress.errors={progress_errors}")
         if parallel_cycle.get("passed") is not True:
-            reasons.append(
-                f"parallel_cycle_missing_lanes={parallel_cycle.get('missing_lanes')}"
-            )
+            reasons.append(f"parallel_cycle_missing_lanes={parallel_cycle.get('missing_lanes')}")
         if re.search(
             r"placeholder|stub|todo_or_placeholder|\bTODO\b|\bFIXME\b",
             combined_gpu0,
@@ -1090,15 +1029,11 @@ class HeapRuntimeCompletenessGate:
         if npu_audit and npu_audit.get("requested") and not npu_audit.get("performed"):
             reasons.append("NPU workload requested but not performed")
 
-        reasons = list(
-            dict.fromkeys(str(item) for item in reasons if str(item).strip())
-        )
+        reasons = list(dict.fromkeys(str(item) for item in reasons if str(item).strip()))
         vetoed = bool(reasons)
         refinement_prompt = ""
         if vetoed:
-            source_candidates = self.real_source_file_candidates(
-                self.read_events(), limit=24
-            )
+            source_candidates = self.real_source_file_candidates(self.read_events(), limit=24)
             refinement_lines = [
                 "HEAP REFINEMENT TASK FROM SAME-HEAP CROSS-LANE VETO",
                 f"Rejected revision: {revision}",
@@ -1202,21 +1137,15 @@ class HeapRuntimeCompletenessGate:
         basename = f"heap_proposal_revision_{revision:03d}"
         json_path = out_dir / f"{basename}.json"
         md_path = out_dir / f"{basename}.md"
-        previous = self.latest_proposal_iteration_block(
-            max_chars=PROPOSAL_ITERATION_SUMMARY_CHARS
-        )
+        previous = self.latest_proposal_iteration_block(max_chars=PROPOSAL_ITERATION_SUMMARY_CHARS)
         anchored_sources = self.real_source_file_candidates(events, limit=20)
-        deterministic_reviews = self.deterministic_lane_reviews(
-            response_text, quality, events
-        )
+        deterministic_reviews = self.deterministic_lane_reviews(response_text, quality, events)
         implementation_quality = (
             deterministic_reviews.get("implementation_quality")
             if isinstance(deterministic_reviews.get("implementation_quality"), dict)
             else {}
         )
-        proposal_progress = self.proposal_revision_progress_report(
-            response_text, quality
-        )
+        proposal_progress = self.proposal_revision_progress_report(response_text, quality)
         npu_audit = self.npu_workload_audit_report()
         parallel_cycle = self.heap_parallel_cycle_assessment(
             revision=revision,
@@ -1235,9 +1164,7 @@ class HeapRuntimeCompletenessGate:
             revision=revision,
         )
         if cross_lane_veto.get("vetoed"):
-            self.provider_revision_feedback = str(
-                cross_lane_veto.get("refinement_prompt") or ""
-            )
+            self.provider_revision_feedback = str(cross_lane_veto.get("refinement_prompt") or "")
             self.write_heap_refinement_task_artifact(revision, cross_lane_veto)
         quality_passed = bool(
             quality.get("passed")
@@ -1284,10 +1211,7 @@ class HeapRuntimeCompletenessGate:
             "",
             "### NPU micro-task piece",
             "",
-            *[
-                f"- {item}"
-                for item in deterministic_reviews.get("npu_micro_task_piece", [])
-            ],
+            *[f"- {item}" for item in deterministic_reviews.get("npu_micro_task_piece", [])],
             "",
             "### Implementation quality",
             "",
@@ -1383,9 +1307,7 @@ class HeapRuntimeCompletenessGate:
 
     def latest_quality_proposal_iteration_block(self, max_chars: int = 4000) -> str:
         out_dir = self.proposal_iteration_dir()
-        for json_path in reversed(
-            sorted(out_dir.glob("heap_proposal_revision_*.json"))
-        ):
+        for json_path in reversed(sorted(out_dir.glob("heap_proposal_revision_*.json"))):
             report = read_json(json_path)
             if report.get("quality_passed") is not True:
                 continue
@@ -1428,30 +1350,26 @@ class HeapRuntimeCompletenessGate:
             if isinstance(previous.get("response_file_reference_quality"), dict)
             else {}
         )
-        previous_unverified = set(
+        previous_unverified = {
             str(item)
             for item in previous_quality.get("unverified_source_file_refs")
             or previous_quality.get("unverified_file_refs")
             or []
-        )
-        current_unverified = set(
+        }
+        current_unverified = {
             str(item)
             for item in quality.get("unverified_source_file_refs")
             or quality.get("unverified_file_refs")
             or []
-        )
-        repeated_unverified = sorted(
-            previous_unverified.intersection(current_unverified)
-        )
+        }
+        repeated_unverified = sorted(previous_unverified.intersection(current_unverified))
         errors: list[str] = []
         if similarity >= 0.94:
             errors.append(
                 f"proposal revision too similar to previous iteration: similarity={similarity:.3f}"
             )
         if repeated_unverified:
-            errors.append(
-                f"proposal repeated unresolved source refs: {repeated_unverified}"
-            )
+            errors.append(f"proposal repeated unresolved source refs: {repeated_unverified}")
         return {
             "required": True,
             "passed": not errors,
@@ -1483,9 +1401,7 @@ class HeapRuntimeCompletenessGate:
                     "seconds": workload.get("seconds"),
                     "python_exe": workload.get("python_exe"),
                     "errors": (
-                        workload.get("errors")
-                        if isinstance(workload.get("errors"), list)
-                        else []
+                        workload.get("errors") if isinstance(workload.get("errors"), list) else []
                     ),
                     "warnings": (
                         workload.get("warnings")
@@ -1515,9 +1431,7 @@ class HeapRuntimeCompletenessGate:
             "warnings": ["NPU provider report unavailable"],
         }
 
-    def proposal_iteration_digest(
-        self, max_blocks: int = 4, max_chars: int = 12000
-    ) -> str:
+    def proposal_iteration_digest(self, max_blocks: int = 4, max_chars: int = 12000) -> str:
         out_dir = self.proposal_iteration_dir()
         candidates = sorted(out_dir.glob("heap_proposal_revision_*.md"))[-max_blocks:]
         if not candidates:
@@ -1567,9 +1481,7 @@ class HeapRuntimeCompletenessGate:
         file_quality = self.response_file_reference_quality(text)
         lowered = (text or "").lower()
         existing_sources = (
-            file_quality.get("existing_source_file_refs")
-            if isinstance(file_quality, dict)
-            else []
+            file_quality.get("existing_source_file_refs") if isinstance(file_quality, dict) else []
         )
         source_count = len(existing_sources or [])
         code_block_count = len(re.findall(r"```", text or "")) / 2
@@ -1590,9 +1502,7 @@ class HeapRuntimeCompletenessGate:
             "validazione",
             "validation",
         ]
-        concrete_operation_markers = [
-            marker for marker in operation_markers if marker in lowered
-        ]
+        concrete_operation_markers = [marker for marker in operation_markers if marker in lowered]
         generic_markers = [
             "potresti",
             "si potrebbe",
@@ -1604,14 +1514,10 @@ class HeapRuntimeCompletenessGate:
             "aggiungere ulteriori test",
             "migliorare la sincronizzazione",
         ]
-        generic_marker_hits = [
-            marker for marker in generic_markers if marker in lowered
-        ]
+        generic_marker_hits = [marker for marker in generic_markers if marker in lowered]
         placeholder_hits = [
             label
-            for label, pattern in zip(
-                PLACEHOLDER_CODE_LABELS, PLACEHOLDER_CODE_PATTERNS
-            )
+            for label, pattern in zip(PLACEHOLDER_CODE_LABELS, PLACEHOLDER_CODE_PATTERNS)
             if re.search(pattern, text or "")
         ]
         has_actionable_structure = bool(code_block_count or concrete_operation_markers)
@@ -1619,14 +1525,10 @@ class HeapRuntimeCompletenessGate:
         errors: list[str] = []
         if required and source_count <= 0:
             errors.append("no verified source file references")
-        invented_source_path_refs = list(
-            file_quality.get("unverified_source_file_refs") or []
-        )
+        invented_source_path_refs = list(file_quality.get("unverified_source_file_refs") or [])
         if required and invented_source_path_refs:
             errors.append(f"unverified source file refs: {invented_source_path_refs}")
-            errors.append(
-                f"invented/non-allowlisted source path refs: {invented_source_path_refs}"
-            )
+            errors.append(f"invented/non-allowlisted source path refs: {invented_source_path_refs}")
         if required and file_quality.get("ambiguous_source_file_refs"):
             errors.append(
                 f"ambiguous source file refs: {sorted(file_quality.get('ambiguous_source_file_refs', {}).keys())}"
@@ -1643,12 +1545,8 @@ class HeapRuntimeCompletenessGate:
             and (not code_block_count or placeholder_hits)
             and len(concrete_operation_markers) < 3
         ):
-            errors.append(
-                "generic advisory wording without enough implementation detail"
-            )
-        passed = (not required) or (
-            source_count > 0 and has_actionable_structure and not errors
-        )
+            errors.append("generic advisory wording without enough implementation detail")
+        passed = (not required) or (source_count > 0 and has_actionable_structure and not errors)
         return {
             "required": required,
             "passed": passed,
@@ -1664,14 +1562,10 @@ class HeapRuntimeCompletenessGate:
     def deterministic_lane_reviews(
         self, response_text: str, quality: dict[str, Any], events: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        implementation_quality = self.implementation_quality_report(
-            response_text, events
-        )
+        implementation_quality = self.implementation_quality_report(response_text, events)
         file_quality = self.response_file_reference_quality(response_text)
         gpu0_notes: list[str] = []
-        if not implementation_quality.get("passed") and implementation_quality.get(
-            "required"
-        ):
+        if not implementation_quality.get("passed") and implementation_quality.get("required"):
             gpu0_notes.append(
                 "GPU0 deterministic review: proposta non soddisfacente; manca implementazione concreta/codice/operazioni validabili."
             )
@@ -1822,9 +1716,7 @@ class HeapRuntimeCompletenessGate:
             "request": self.request_text(),
             "runtime_state": repo_rel(self.repo_root, paths["runtime_state"]),
             "lanes": lanes,
-            "available_lane_count": len(
-                [item for item in lanes if item.get("available")]
-            ),
+            "available_lane_count": len([item for item in lanes if item.get("available")]),
             "knowledge_surface": {
                 "source_of_knowledge": "heap_exchange",
                 "knowledge_surface": "shared_runtime_heap_blackboard",
@@ -1890,9 +1782,7 @@ class HeapRuntimeCompletenessGate:
             "provider_contributions": self.provider_response_texts(),
             "context_artifact_refs": self.broker_output_refs(events),
             "bridge_reports": self.bridge_report_refs(events),
-            "quality_output_signals": self.quality_output_signals(
-                response_text, events
-            ),
+            "quality_output_signals": self.quality_output_signals(response_text, events),
             "response_file_reference_quality": file_quality,
             "completed_requirements": sorted(self.completed_requirements(events)),
             "missing_requirements": self.missing_requirements(events),
@@ -1956,9 +1846,7 @@ class HeapRuntimeCompletenessGate:
         )
         return product
 
-    def build_heap_exchange_exit_product(
-        self, require_concrete_product: bool
-    ) -> dict[str, Any]:
+    def build_heap_exchange_exit_product(self, require_concrete_product: bool) -> dict[str, Any]:
         """Reuse the existing deterministic heap/exchange exit boundary tool."""
         paths = self.heap_exchange_paths()
         command = [
@@ -2038,9 +1926,7 @@ class HeapRuntimeCompletenessGate:
             "heap/universo",
             "universo",
         )
-        return self.implementation_output_required() or any(
-            hint in text for hint in hints
-        )
+        return self.implementation_output_required() or any(hint in text for hint in hints)
 
     def code_execution_matrix_targets(self) -> list[str]:
         candidates = [
@@ -2127,9 +2013,7 @@ class HeapRuntimeCompletenessGate:
                         "Tools/validation/run_heap_virtual_dev_environment_smoke.py",
                         "Tools/validation/run_heap_final_readable_product_smoke.py",
                     ],
-                    "timeout_seconds": min(
-                        max(int(self.args.timeout_seconds), 120), 600
-                    ),
+                    "timeout_seconds": min(max(int(self.args.timeout_seconds), 120), 600),
                     "tail_chars": 5000,
                     "max_diff_chars": 80000,
                 },
@@ -2190,9 +2074,7 @@ class HeapRuntimeCompletenessGate:
             repo_rel(self.repo_root, markdown_path),
         )
 
-    def runtime_debug_lab_plan_items(
-        self, context_dir: Path, request: str
-    ) -> list[dict[str, Any]]:
+    def runtime_debug_lab_plan_items(self, context_dir: Path, request: str) -> list[dict[str, Any]]:
         if not self.runtime_debug_lab_required():
             return []
         request_file, output, markdown_output = self.write_runtime_debug_lab_request()
@@ -2206,9 +2088,7 @@ class HeapRuntimeCompletenessGate:
                     "request_file": request_file,
                     "output": output,
                     "markdown_output": markdown_output,
-                    "timeout_seconds": min(
-                        max(int(self.args.timeout_seconds), 60), 600
-                    ),
+                    "timeout_seconds": min(max(int(self.args.timeout_seconds), 60), 600),
                     "tail_chars": 4000,
                 },
                 "reason": "execute the reusable report-only Python debug lab before claiming an MVP/lab product",
@@ -2217,20 +2097,11 @@ class HeapRuntimeCompletenessGate:
 
     def required_requirements_order(self) -> list[str]:
         order = list(REQUIREMENT_ORDER)
-        if (
-            self.virtual_dev_environment_required()
-            and "virtual_dev_environment" not in order
-        ):
+        if self.virtual_dev_environment_required() and "virtual_dev_environment" not in order:
             order.append("virtual_dev_environment")
-        if (
-            self.code_execution_matrix_required()
-            and "code_execution_matrix" not in order
-        ):
+        if self.code_execution_matrix_required() and "code_execution_matrix" not in order:
             order.append("code_execution_matrix")
-        if (
-            self.runtime_debug_lab_required()
-            and "runtime_debug_lab_execution" not in order
-        ):
+        if self.runtime_debug_lab_required() and "runtime_debug_lab_execution" not in order:
             order.append("runtime_debug_lab_execution")
         return order
 
@@ -2243,11 +2114,7 @@ class HeapRuntimeCompletenessGate:
             )
             if requirement != "virtual_dev_environment":
                 continue
-            outputs = (
-                payload.get("outputs")
-                if isinstance(payload.get("outputs"), dict)
-                else {}
-            )
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
             for key in ("json_report", "markdown_report"):
                 value = str(outputs.get(key) or "").strip()
                 if value and value not in refs:
@@ -2264,16 +2131,9 @@ class HeapRuntimeCompletenessGate:
             )
             if requirement != "virtual_dev_environment":
                 continue
-            if (
-                payload.get("blocked")
-                or safe_int(payload.get("returncode"), default=1) != 0
-            ):
+            if payload.get("blocked") or safe_int(payload.get("returncode"), default=1) != 0:
                 continue
-            summary = (
-                payload.get("summary")
-                if isinstance(payload.get("summary"), dict)
-                else {}
-            )
+            summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
             if summary.get("passed") is False:
                 continue
             return True
@@ -2288,11 +2148,7 @@ class HeapRuntimeCompletenessGate:
             )
             if requirement != "code_execution_matrix":
                 continue
-            outputs = (
-                payload.get("outputs")
-                if isinstance(payload.get("outputs"), dict)
-                else {}
-            )
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
             for key in (
                 "json_report",
                 "markdown_report",
@@ -2315,16 +2171,9 @@ class HeapRuntimeCompletenessGate:
             )
             if requirement != "code_execution_matrix":
                 continue
-            if (
-                payload.get("blocked")
-                or safe_int(payload.get("returncode"), default=1) != 0
-            ):
+            if payload.get("blocked") or safe_int(payload.get("returncode"), default=1) != 0:
                 continue
-            summary = (
-                payload.get("summary")
-                if isinstance(payload.get("summary"), dict)
-                else {}
-            )
+            summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
             if summary.get("passed") is False:
                 continue
             return True
@@ -2339,11 +2188,7 @@ class HeapRuntimeCompletenessGate:
             )
             if requirement != "runtime_debug_lab_execution":
                 continue
-            outputs = (
-                payload.get("outputs")
-                if isinstance(payload.get("outputs"), dict)
-                else {}
-            )
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
             for key in ("json_report", "markdown_report", "request_file"):
                 value = str(outputs.get(key) or "").strip()
                 if value and value not in refs:
@@ -2360,16 +2205,9 @@ class HeapRuntimeCompletenessGate:
             )
             if requirement != "runtime_debug_lab_execution":
                 continue
-            if (
-                payload.get("blocked")
-                or safe_int(payload.get("returncode"), default=1) != 0
-            ):
+            if payload.get("blocked") or safe_int(payload.get("returncode"), default=1) != 0:
                 continue
-            summary = (
-                payload.get("summary")
-                if isinstance(payload.get("summary"), dict)
-                else {}
-            )
+            summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
             if summary.get("passed") is False:
                 continue
             return True
@@ -2379,9 +2217,7 @@ class HeapRuntimeCompletenessGate:
         context_dir = self.runtime_context_dir()
         request = self.request_text()
         query = request or self.args.objective
-        memory_content = (
-            f"request={request}; objective={self.args.objective}; stamp={self.stamp}"
-        )
+        memory_content = f"request={request}; objective={self.args.objective}; stamp={self.stamp}"
         return [
             {
                 "stage": 1,
@@ -2469,9 +2305,7 @@ class HeapRuntimeCompletenessGate:
                         self.repo_root, context_dir / "selected_semantic_code_chunks.md"
                     ),
                     "max_chunks": 12,
-                    "max_total_chars": min(
-                        int(self.args.max_context_files) * 500, 24000
-                    ),
+                    "max_total_chars": min(int(self.args.max_context_files) * 500, 24000),
                     "max_excerpt_chars": min(int(self.args.max_chars_per_file), 3000),
                     "path_boost": ["tools/ai", "tools/npu", "tools/workflow"],
                 },
@@ -2485,16 +2319,13 @@ class HeapRuntimeCompletenessGate:
                 "args": {
                     "profile": "core_ai_backend",
                     "basename": f"heap_runtime_context_pack_{self.stamp}",
-                    "output_dir": repo_rel(
-                        self.repo_root, context_dir / "ai_context_pack"
-                    ),
+                    "output_dir": repo_rel(self.repo_root, context_dir / "ai_context_pack"),
                     "evidence_dir": repo_rel(
                         self.repo_root, context_dir / "ai_context_pack_evidence"
                     ),
                     "evidence_basename": f"heap_runtime_context_pack_evidence_{self.stamp}",
                     "max_total_chars": min(
-                        int(self.args.max_context_files)
-                        * int(self.args.max_chars_per_file),
+                        int(self.args.max_context_files) * int(self.args.max_chars_per_file),
                         96000,
                     ),
                     "max_file_chars": int(self.args.max_chars_per_file),
@@ -2576,14 +2407,10 @@ class HeapRuntimeCompletenessGate:
         return refs
 
     def effective_tool_request_count(self, events: list[dict[str, Any]]) -> int:
-        return max(
-            self.tool_request_count, self.broker_request_count_from_events(events)
-        )
+        return max(self.tool_request_count, self.broker_request_count_from_events(events))
 
     def effective_tool_execution_count(self, events: list[dict[str, Any]]) -> int:
-        return max(
-            self.tool_execution_count, self.broker_execution_count_from_events(events)
-        )
+        return max(self.tool_execution_count, self.broker_execution_count_from_events(events))
 
     def requirement_for_tool(self, tool_name: str) -> str:
         for item in self.tool_plan():
@@ -2599,14 +2426,10 @@ class HeapRuntimeCompletenessGate:
                 continue
             if safe_int(payload.get("returncode"), default=1) != 0:
                 continue
-            errors = (
-                payload.get("errors") if isinstance(payload.get("errors"), list) else []
-            )
+            errors = payload.get("errors") if isinstance(payload.get("errors"), list) else []
             if errors:
                 continue
-            requirement = str(
-                payload.get("requirement") or self.requirement_for_tool(tool)
-            )
+            requirement = str(payload.get("requirement") or self.requirement_for_tool(tool))
             if requirement != "unknown":
                 completed.add(requirement)
         for provider_report in self.provider_reports:
@@ -2634,18 +2457,12 @@ class HeapRuntimeCompletenessGate:
 
     def missing_requirements(self, events: list[dict[str, Any]]) -> list[str]:
         completed = self.completed_requirements(events)
-        return [
-            item for item in self.required_requirements_order() if item not in completed
-        ]
+        return [item for item in self.required_requirements_order() if item not in completed]
 
     def broker_output_refs(self, events: list[dict[str, Any]]) -> list[str]:
         refs: list[str] = []
         for payload in self.broker_results(events):
-            outputs = (
-                payload.get("outputs")
-                if isinstance(payload.get("outputs"), dict)
-                else {}
-            )
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
             for key in (
                 "json_report",
                 "markdown_report",
@@ -2675,11 +2492,7 @@ class HeapRuntimeCompletenessGate:
                 "operational_memory_search",
             }:
                 continue
-            outputs = (
-                payload.get("outputs")
-                if isinstance(payload.get("outputs"), dict)
-                else {}
-            )
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
             for key in (
                 "json_report",
                 "markdown_report",
@@ -2712,26 +2525,18 @@ class HeapRuntimeCompletenessGate:
                     ),
                     "chunk_output_dir": repo_rel(
                         self.repo_root,
-                        self.runtime_context_dir()
-                        / "semantic_evidence_chunks"
-                        / "chunks",
+                        self.runtime_context_dir() / "semantic_evidence_chunks" / "chunks",
                     ),
-                    "chunk_max_chars": min(
-                        max(int(self.args.max_chars_per_file), 4000), 12000
-                    ),
+                    "chunk_max_chars": min(max(int(self.args.max_chars_per_file), 4000), 12000),
                     "chunk_overlap_lines": 12,
                 }
             )
         item["args"] = args
         return item
 
-    def next_unattempted_plan_items(
-        self, events: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    def next_unattempted_plan_items(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         attempted = self.attempted_requirements(events)
-        pending = [
-            item for item in self.tool_plan() if item["requirement"] not in attempted
-        ]
+        pending = [item for item in self.tool_plan() if item["requirement"] not in attempted]
         if not pending:
             return []
         if self.max_iterations < 4:
@@ -2743,15 +2548,11 @@ class HeapRuntimeCompletenessGate:
             if int(item.get("stage") or 1) == stage
         ]
 
-    def next_unattempted_plan_item(
-        self, events: list[dict[str, Any]]
-    ) -> dict[str, Any] | None:
+    def next_unattempted_plan_item(self, events: list[dict[str, Any]]) -> dict[str, Any] | None:
         items = self.next_unattempted_plan_items(events)
         return items[0] if items else None
 
-    def publish_shared_evidence_facts(
-        self, round_id: int, events: list[dict[str, Any]]
-    ) -> None:
+    def publish_shared_evidence_facts(self, round_id: int, events: list[dict[str, Any]]) -> None:
         existing = {item.get("requirement") for item in self.state["shared_evidence"]}
         completed = self.completed_requirements(events)
         for requirement in REQUIREMENT_ORDER:
@@ -2810,17 +2611,13 @@ class HeapRuntimeCompletenessGate:
             "kind": "provider_budget",
             "value": self.budget_governor.get("decision"),
             "loop_budget": self.budget_governor.get("loop_budget"),
-            "provider_lanes": sorted(
-                (self.budget_governor.get("provider_lanes") or {}).keys()
-            ),
+            "provider_lanes": sorted((self.budget_governor.get("provider_lanes") or {}).keys()),
         }
         contract_fact = {
             "id": "provider_invocation_contract_loaded",
             "source": "heap_provider_invocation_contract",
             "kind": "provider_invocation_contract",
-            "value": safe_dict(self.invocation_contract.get("real_run_gate")).get(
-                "decision"
-            ),
+            "value": safe_dict(self.invocation_contract.get("real_run_gate")).get("decision"),
             "required_events": safe_dict(
                 self.invocation_contract.get("expected_telemetry_contract")
             ).get("events_required", []),
@@ -2913,9 +2710,7 @@ class HeapRuntimeCompletenessGate:
     def run_bridge(self) -> dict[str, Any]:
         bridge_json = resolve_output_path(
             self.repo_root,
-            self.path_arg(self.args.bridge_output, DEFAULT_BRIDGE_JSON).format(
-                stamp=self.stamp
-            ),
+            self.path_arg(self.args.bridge_output, DEFAULT_BRIDGE_JSON).format(stamp=self.stamp),
         )
         bridge_md = resolve_output_path(
             self.repo_root,
@@ -2987,9 +2782,7 @@ class HeapRuntimeCompletenessGate:
             "id": f"heap_completeness_progress_round_{round_id}",
             "from": "critic",
             "claim": (
-                "heap evidence complete"
-                if not missing
-                else "heap evidence still incomplete"
+                "heap evidence complete" if not missing else "heap evidence still incomplete"
             ),
             "confidence": 0.95 if not missing else 0.78,
             "completed_requirements": completed,
@@ -3051,9 +2844,7 @@ class HeapRuntimeCompletenessGate:
         decision = {
             "id": "heap_completeness_gate_decision",
             "from": "arbiter",
-            "decision": (
-                "product_ready_heap_complete" if ready else "blocked_with_reason"
-            ),
+            "decision": ("product_ready_heap_complete" if ready else "blocked_with_reason"),
             "evidence_refs": [
                 "heap:task_state",
                 "heap:broker_result",
@@ -3068,9 +2859,7 @@ class HeapRuntimeCompletenessGate:
             "invocation_gate_decision": safe_dict(
                 self.invocation_contract.get("real_run_gate")
             ).get("decision"),
-            "provider_generation_permit_allowed": self.budget_governor.get(
-                "permit_allowed"
-            ),
+            "provider_generation_permit_allowed": self.budget_governor.get("permit_allowed"),
         }
         append_unique(self.state["decisions"], decision)
         self.decision_count += 1
@@ -3116,12 +2905,8 @@ class HeapRuntimeCompletenessGate:
             "provider_response_texts": self.provider_response_texts(),
             "context_artifact_refs": self.broker_output_refs(events),
             "bridge_reports": bridge_refs,
-            "quality_output_signals": self.quality_output_signals(
-                final_response_text, events
-            ),
-            "quality_output_passed": self.quality_output_passed(
-                final_response_text, events
-            ),
+            "quality_output_signals": self.quality_output_signals(final_response_text, events),
+            "quality_output_passed": self.quality_output_passed(final_response_text, events),
             "historical_tool_context_refs": self.historical_tool_context_files(),
             "response_file_reference_quality": self.response_file_reference_quality(
                 self.response_text()
@@ -3205,16 +2990,8 @@ class HeapRuntimeCompletenessGate:
                 payload.get("requirement")
                 or self.requirement_for_tool(str(payload.get("tool") or ""))
             )
-            outputs = (
-                payload.get("outputs")
-                if isinstance(payload.get("outputs"), dict)
-                else {}
-            )
-            summary = (
-                payload.get("summary")
-                if isinstance(payload.get("summary"), dict)
-                else {}
-            )
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
             line = {
                 "requirement": requirement,
                 "tool": payload.get("tool"),
@@ -3238,11 +3015,7 @@ class HeapRuntimeCompletenessGate:
                 payload.get("requirement")
                 or self.requirement_for_tool(str(payload.get("tool") or ""))
             )
-            outputs = (
-                payload.get("outputs")
-                if isinstance(payload.get("outputs"), dict)
-                else {}
-            )
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
             refs: list[str] = []
             for key in (
                 "json_report",
@@ -3267,29 +3040,21 @@ class HeapRuntimeCompletenessGate:
             )
         return items[:max_items]
 
-    def tool_evidence_lines(
-        self, events: list[dict[str, Any]], max_items: int = 12
-    ) -> list[str]:
+    def tool_evidence_lines(self, events: list[dict[str, Any]], max_items: int = 12) -> list[str]:
         lines: list[str] = []
         for item in self.tool_evidence_summary(events, max_items=max_items):
             refs = item.get("refs") if isinstance(item.get("refs"), list) else []
             ref_text = (
-                "; ".join(str(ref) for ref in refs[:3])
-                if refs
-                else "nessun output dichiarato"
+                "; ".join(str(ref) for ref in refs[:3]) if refs else "nessun output dichiarato"
             )
             lines.append(
                 f"- {item.get('tool')} -> {item.get('requirement')} (rc={item.get('returncode')}): {ref_text}"
             )
         return lines
 
-    def quality_output_signals(
-        self, text: str, events: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def quality_output_signals(self, text: str, events: list[dict[str, Any]]) -> dict[str, Any]:
         lowered = text.lower()
-        tool_names = [
-            str(item.get("tool") or "") for item in self.tool_evidence_summary(events)
-        ]
+        tool_names = [str(item.get("tool") or "") for item in self.tool_evidence_summary(events)]
         return {
             "detailed_output_expected": self.detailed_output_expected(),
             "mentions_tool_evidence": "tool" in lowered
@@ -3303,9 +3068,7 @@ class HeapRuntimeCompletenessGate:
             or "validazione" in lowered
             or "verificabile" in lowered,
             "tool_names_available": tool_names,
-            "response_file_reference_quality": self.response_file_reference_quality(
-                text
-            ),
+            "response_file_reference_quality": self.response_file_reference_quality(text),
             "implementation_quality": self.implementation_quality_report(text, events),
             "proposal_iteration_artifacts": self.proposal_iteration_artifacts(),
             "virtual_dev_environment_required": self.virtual_dev_environment_required(),
@@ -3318,18 +3081,13 @@ class HeapRuntimeCompletenessGate:
 
     def quality_output_passed(self, text: str, events: list[dict[str, Any]]) -> bool:
         signals = self.quality_output_signals(text, events)
-        if (
-            self.virtual_dev_environment_required()
-            and not self.virtual_dev_environment_passed(events)
-        ):
-            return False
-        if self.code_execution_matrix_required() and not self.code_execution_matrix_passed(
+        if self.virtual_dev_environment_required() and not self.virtual_dev_environment_passed(
             events
         ):
             return False
-        if self.runtime_debug_lab_required() and not self.runtime_debug_lab_passed(
-            events
-        ):
+        if self.code_execution_matrix_required() and not self.code_execution_matrix_passed(events):
+            return False
+        if self.runtime_debug_lab_required() and not self.runtime_debug_lab_passed(events):
             return False
         if not signals.get("detailed_output_expected"):
             return True
@@ -3345,9 +3103,7 @@ class HeapRuntimeCompletenessGate:
             if isinstance(signals.get("implementation_quality"), dict)
             else {}
         )
-        if implementation_quality.get("required") and not implementation_quality.get(
-            "passed"
-        ):
+        if implementation_quality.get("required") and not implementation_quality.get("passed"):
             return False
         # Proposal artifacts are the heap blackboard contract. Once GPU1 has
         # emitted a proposal chunk, final quality must follow the same-heap
@@ -3355,10 +3111,7 @@ class HeapRuntimeCompletenessGate:
         # check only applied after provider_revision_count > 0, so the initial
         # GPU1 response could look textually acceptable and exit before the
         # cross-lane veto had a chance to drive an in-heap refinement cycle.
-        if (
-            self.proposal_iteration_artifacts()
-            and not self.latest_proposal_quality_passed()
-        ):
+        if self.proposal_iteration_artifacts() and not self.latest_proposal_quality_passed():
             return False
         return bool(
             signals.get("mentions_tool_evidence")
@@ -3375,8 +3128,7 @@ class HeapRuntimeCompletenessGate:
         historical_refs = self.historical_tool_context_files()
         tool_lines = self.tool_evidence_lines(events)
         gpu0_text = (
-            self.provider_response_text("gpu0_peer")
-            or "GPU0 non ha prodotto una risposta utile."
+            self.provider_response_text("gpu0_peer") or "GPU0 non ha prodotto una risposta utile."
         )
         npu_text = (
             self.provider_response_text("npu_micro_task_auditor")
@@ -3392,13 +3144,9 @@ class HeapRuntimeCompletenessGate:
             "### Tool/evidence storiche e runtime consumate",
         ]
         if historical_refs:
-            lines.extend(
-                f"- mappa storica/canonica: {ref}" for ref in historical_refs[:10]
-            )
+            lines.extend(f"- mappa storica/canonica: {ref}" for ref in historical_refs[:10])
         else:
-            lines.append(
-                "- nessuna mappa storica/canonica trovata nel workspace corrente"
-            )
+            lines.append("- nessuna mappa storica/canonica trovata nel workspace corrente")
         if tool_lines:
             lines.extend(tool_lines)
         else:
@@ -3451,15 +3199,11 @@ class HeapRuntimeCompletenessGate:
             if text:
                 peer_lines.append(f"{lane}: {text}")
         peer_context = (
-            "\n".join(peer_lines)
-            if peer_lines
-            else "nessun contributo peer ancora disponibile"
+            "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         )
         team_context = self.team_context_summary()
         source_candidates = (
-            "\n".join(
-                f"- {item}" for item in self.real_source_file_candidates(limit=32)
-            )
+            "\n".join(f"- {item}" for item in self.real_source_file_candidates(limit=32))
             or "- nessun candidato sorgente verificato disponibile"
         )
         source_allowlist_contract = self.render_source_allowlist_contract(limit=32)
@@ -3551,9 +3295,7 @@ class HeapRuntimeCompletenessGate:
                 refs.append(output)
         return refs
 
-    def provider_command_specs(
-        self, work_dir: Path, revision: int = 0
-    ) -> list[dict[str, Any]]:
+    def provider_command_specs(self, work_dir: Path, revision: int = 0) -> list[dict[str, Any]]:
         suffix = f"_revision{revision}" if revision else ""
         gpu1_json = work_dir / f"gpu1_ollama_provider_probe{suffix}.json"
         gpu0_json = work_dir / f"gpu0_openvino_peer_workload{suffix}.json"
@@ -3663,24 +3405,15 @@ class HeapRuntimeCompletenessGate:
         )
         if provider_execution:
             self.provider_execution_performed = True
-        errors = (
-            report_data.get("errors")
-            if isinstance(report_data.get("errors"), list)
-            else []
-        )
+        errors = report_data.get("errors") if isinstance(report_data.get("errors"), list) else []
         warnings = (
-            report_data.get("warnings")
-            if isinstance(report_data.get("warnings"), list)
-            else []
+            report_data.get("warnings") if isinstance(report_data.get("warnings"), list) else []
         )
         response_text = str(report_data.get("response_text") or "").strip()
         lane_reports = report_data.get("lane_reports")
         if isinstance(lane_reports, list):
             for lane_report in lane_reports:
-                if (
-                    isinstance(lane_report, dict)
-                    and lane_report.get("lane") == "ollama"
-                ):
+                if isinstance(lane_report, dict) and lane_report.get("lane") == "ollama":
                     response_text = str(
                         lane_report.get("response_text")
                         or lane_report.get("text_preview")
@@ -3700,24 +3433,16 @@ class HeapRuntimeCompletenessGate:
             "response_text": response_text,
             "role_decision": report_data.get("role_decision"),
             "npu_device_workload": report_data.get("npu_device_workload"),
-            "npu_device_workload_requested": report_data.get(
-                "npu_device_workload_requested"
-            ),
-            "npu_device_workload_performed": report_data.get(
-                "npu_device_workload_performed"
-            ),
-            "npu_provider_execution_performed": report_data.get(
-                "npu_provider_execution_performed"
-            ),
+            "npu_device_workload_requested": report_data.get("npu_device_workload_requested"),
+            "npu_device_workload_performed": report_data.get("npu_device_workload_performed"),
+            "npu_provider_execution_performed": report_data.get("npu_provider_execution_performed"),
             "errors": errors,
             "warnings": warnings,
             "stdout_tail": (completed.stdout or "")[-1000:],
             "stderr_tail": (completed.stderr or "")[-1000:],
         }
 
-    def build_quality_failure_feedback(
-        self, text: str, events: list[dict[str, Any]]
-    ) -> str:
+    def build_quality_failure_feedback(self, text: str, events: list[dict[str, Any]]) -> str:
         file_quality = self.response_file_reference_quality(text)
         implementation_quality = self.implementation_quality_report(text, events)
         candidates = self.real_source_file_candidates(events, limit=32)
@@ -3734,9 +3459,7 @@ class HeapRuntimeCompletenessGate:
         iteration_feedback = self.proposal_iteration_feedback(events, file_quality)
         concrete_delta_feedback = self.force_concrete_delta_feedback(events)
         return "\n".join(
-            part
-            for part in (base_feedback, iteration_feedback, concrete_delta_feedback)
-            if part
+            part for part in (base_feedback, iteration_feedback, concrete_delta_feedback) if part
         )
 
     def force_concrete_delta_feedback(self, events: list[dict[str, Any]]) -> str:
@@ -3767,9 +3490,7 @@ class HeapRuntimeCompletenessGate:
             else {}
         )
         veto = (
-            report.get("cross_lane_veto")
-            if isinstance(report.get("cross_lane_veto"), dict)
-            else {}
+            report.get("cross_lane_veto") if isinstance(report.get("cross_lane_veto"), dict) else {}
         )
 
         def listify(value: Any) -> list[str]:
@@ -3791,8 +3512,7 @@ class HeapRuntimeCompletenessGate:
         implementation_errors = listify(implementation.get("errors"))
         progress_errors = listify(progress.get("errors"))
         unverified_refs = listify(
-            quality.get("unverified_source_file_refs")
-            or quality.get("unverified_file_refs")
+            quality.get("unverified_source_file_refs") or quality.get("unverified_file_refs")
         )
         veto_reasons = listify(veto.get("reasons"))
         similarity = parse_similarity(progress.get("similarity"))
@@ -3833,27 +3553,20 @@ class HeapRuntimeCompletenessGate:
             "- GPU0 and NPU vetoes are authoritative quality signals inside this heap loop.",
         ]
         if placeholder_hits:
-            lines.append(
-                "- Placeholder hits to eliminate: " + ", ".join(placeholder_hits[:12])
-            )
+            lines.append("- Placeholder hits to eliminate: " + ", ".join(placeholder_hits[:12]))
         if implementation_errors:
             lines.append(
-                "- Implementation errors to resolve: "
-                + " | ".join(implementation_errors[:8])
+                "- Implementation errors to resolve: " + " | ".join(implementation_errors[:8])
             )
         if progress_errors:
-            lines.append(
-                "- Progress errors to resolve: " + " | ".join(progress_errors[:8])
-            )
+            lines.append("- Progress errors to resolve: " + " | ".join(progress_errors[:8]))
         if unverified_refs:
             lines.append(
                 "- Rejected/non-allowlisted source refs blacklist: "
                 + ", ".join(unverified_refs[:12])
             )
         if veto_reasons:
-            lines.append(
-                "- Cross-lane veto reasons to resolve: " + " | ".join(veto_reasons[:8])
-            )
+            lines.append("- Cross-lane veto reasons to resolve: " + " | ".join(veto_reasons[:8]))
         if candidates:
             lines.append("Allowed concrete source targets:")
             lines.extend(f"- {item}" for item in candidates[:18])
@@ -3905,9 +3618,7 @@ class HeapRuntimeCompletenessGate:
             str(item) for item in (progress.get("errors") or []) if str(item).strip()
         ]
         implementation_errors = [
-            str(item)
-            for item in (implementation.get("errors") or [])
-            if str(item).strip()
+            str(item) for item in (implementation.get("errors") or []) if str(item).strip()
         ]
         placeholder_hits = [
             str(item)
@@ -3935,10 +3646,7 @@ class HeapRuntimeCompletenessGate:
             for marker in ("placeholder", "todo", "stub")
         )
         repeated_unverified_loop = bool(repeated_unverified) and repeated
-        if not (
-            (fake_path_detected and (repeated or placeholder))
-            or repeated_unverified_loop
-        ):
+        if not ((fake_path_detected and (repeated or placeholder)) or repeated_unverified_loop):
             return {}
 
         reason = (
@@ -3948,8 +3656,7 @@ class HeapRuntimeCompletenessGate:
         feedback = "\n".join(
             [
                 "EXIT_DECISION=NO_PATCHABLE_TARGET",
-                "BLOCKED_NO_VERIFIED_TARGET_REASON="
-                + reason,
+                "BLOCKED_NO_VERIFIED_TARGET_REASON=" + reason,
                 "Do not request another GPU1 rewrite for this same unresolved candidate.",
                 "Preserve the rejected chunk as diagnostic evidence and return to deterministic operator review.",
             ]
@@ -3966,9 +3673,7 @@ class HeapRuntimeCompletenessGate:
             "feedback": feedback,
         }
 
-    def proposal_cycle_requires_refinement(
-        self, text: str, events: list[dict[str, Any]]
-    ) -> bool:
+    def proposal_cycle_requires_refinement(self, text: str, events: list[dict[str, Any]]) -> bool:
         """Return True when the current heap proposal block still needs another GPU1 pass."""
         if not self.detailed_output_expected():
             return False
@@ -3979,10 +3684,7 @@ class HeapRuntimeCompletenessGate:
         # GPU0 review, NPU audit, progress checks and the parallel-cycle verdict.
         if not self.quality_output_passed(text, events):
             return True
-        if (
-            self.proposal_iteration_artifacts()
-            and not self.latest_proposal_quality_passed()
-        ):
+        if self.proposal_iteration_artifacts() and not self.latest_proposal_quality_passed():
             return True
         return False
 
@@ -4012,8 +3714,7 @@ class HeapRuntimeCompletenessGate:
     ) -> list[dict[str, Any]]:
         while (
             self.detailed_output_expected()
-            and self.provider_revision_count
-            < int(getattr(self.args, "max_provider_revisions", 0))
+            and self.provider_revision_count < int(getattr(self.args, "max_provider_revisions", 0))
             and self.proposal_cycle_requires_refinement(self.response_text(), events)
         ):
             terminal = self.terminal_no_patchable_provider_loop()
@@ -4042,9 +3743,7 @@ class HeapRuntimeCompletenessGate:
                 break
             self.provider_revision_count += 1
             previous_veto_feedback = self.provider_revision_feedback.strip()
-            quality_feedback = self.build_quality_failure_feedback(
-                self.response_text(), events
-            )
+            quality_feedback = self.build_quality_failure_feedback(self.response_text(), events)
             self.provider_revision_feedback = "\n\n".join(
                 part for part in (previous_veto_feedback, quality_feedback) if part
             )
@@ -4055,9 +3754,7 @@ class HeapRuntimeCompletenessGate:
                     "id": f"{self.stamp}:product_quality_failure:{self.provider_revision_count}",
                     "revision": self.provider_revision_count,
                     "feedback": self.provider_revision_feedback,
-                    "file_quality": self.response_file_reference_quality(
-                        self.response_text()
-                    ),
+                    "file_quality": self.response_file_reference_quality(self.response_text()),
                 },
                 target="gpu1",
                 correlation_id=f"{self.stamp}:quality-revision:{self.provider_revision_count}",
@@ -4099,11 +3796,7 @@ class HeapRuntimeCompletenessGate:
         if not manifest:
             return ""
 
-        artifacts = (
-            manifest.get("artifacts")
-            if isinstance(manifest.get("artifacts"), dict)
-            else {}
-        )
+        artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
         preferred_keys = (
             "heap_task_file",
             "shared_context_markdown",
@@ -4129,12 +3822,8 @@ class HeapRuntimeCompletenessGate:
                 continue
             try:
                 content = path.read_text(encoding="utf-8-sig")
-            except (
-                Exception
-            ) as exc:  # noqa: BLE001 - context digest must not crash heap.
-                sections.append(
-                    f"## {key}\n- unreadable: {value}: {type(exc).__name__}: {exc}\n"
-                )
+            except Exception as exc:  # noqa: BLE001 - context digest must not crash heap.
+                sections.append(f"## {key}\n- unreadable: {value}: {type(exc).__name__}: {exc}\n")
                 continue
 
             header = f"## {key}\nsource: {value}\n\n"
@@ -4240,9 +3929,7 @@ class HeapRuntimeCompletenessGate:
 
         wrapper_dir = self.runtime_context_dir() / "provider_invocations"
         wrapper_dir.mkdir(parents=True, exist_ok=True)
-        wrapper_path = (
-            wrapper_dir / f"provider_teamwork_invocation_revision_{revision:03d}.py"
-        )
+        wrapper_path = wrapper_dir / f"provider_teamwork_invocation_revision_{revision:03d}.py"
 
         child_argv = normalized_command[1:]
         wrapper_text = (
@@ -4262,29 +3949,19 @@ class HeapRuntimeCompletenessGate:
             "runpy.run_path(str(script), run_name='__main__')\n"
         )
         wrapper_path.write_text(wrapper_text, encoding="utf-8")
-        return [normalized_command[0], str(wrapper_path)], repo_rel(
-            self.repo_root, wrapper_path
-        )
+        return [normalized_command[0], str(wrapper_path)], repo_rel(self.repo_root, wrapper_path)
 
     def extract_text_from_provider_json(self, payload: dict[str, Any]) -> str:
         """Extract provider response text from heterogeneous provider reports."""
         if not isinstance(payload, dict):
             return ""
-        direct = (
-            payload.get("response_text")
-            or payload.get("text")
-            or payload.get("stdout_tail")
-        )
+        direct = payload.get("response_text") or payload.get("text") or payload.get("stdout_tail")
         if isinstance(direct, str) and direct.strip():
             return direct.strip()
         for item in payload.get("lane_reports") or []:
             if not isinstance(item, dict):
                 continue
-            value = (
-                item.get("response_text")
-                or item.get("text_preview")
-                or item.get("raw_preview")
-            )
+            value = item.get("response_text") or item.get("text_preview") or item.get("raw_preview")
             if isinstance(value, str) and value.strip():
                 return value.strip()
         return ""
@@ -4428,9 +4105,7 @@ class HeapRuntimeCompletenessGate:
         pointer_action_match = re.search(
             r"(?im)^\\s*POINTER_ACTION\\s*=\\s*([^\\n\\r]+)", delta_text or ""
         )
-        pointer_action = (
-            pointer_action_match.group(1).strip() if pointer_action_match else ""
-        )
+        pointer_action = pointer_action_match.group(1).strip() if pointer_action_match else ""
 
         if lane == "gpu0_peer":
             review_lines = [
@@ -4499,8 +4174,7 @@ class HeapRuntimeCompletenessGate:
                 "pointer_action": pointer_action,
                 "placeholder_hits": placeholder_hits,
                 "forbidden_runtime_claims": forbidden_claims,
-                "validation_commands_present": "VALIDATION_COMMANDS"
-                in (delta_text or ""),
+                "validation_commands_present": "VALIDATION_COMMANDS" in (delta_text or ""),
                 "decision": (
                     "accept_guardrails"
                     if not placeholder_hits
@@ -4552,11 +4226,7 @@ class HeapRuntimeCompletenessGate:
             )
 
             command = [
-                (
-                    self.gpu1_provider_prompt()
-                    if item == "__GPU1_CUMULATIVE_PROMPT__"
-                    else item
-                )
+                (self.gpu1_provider_prompt() if item == "__GPU1_CUMULATIVE_PROMPT__" else item)
                 for item in spec["command"]
             ]
             try:
@@ -4595,9 +4265,7 @@ class HeapRuntimeCompletenessGate:
                         "completed": None,
                     }
                 )
-            except (
-                Exception
-            ) as exc:  # noqa: BLE001 - provider lane failure becomes report evidence.
+            except Exception as exc:  # noqa: BLE001 - provider lane failure becomes report evidence.
                 prepared.append(
                     {
                         "spec": spec,
@@ -4652,12 +4320,8 @@ class HeapRuntimeCompletenessGate:
                 )
 
             report_data = read_json(Path(spec["output"]))
-            provider_report = self.summarize_provider_report(
-                spec, completed, report_data
-            )
-            provider_report["status"] = (
-                "ready" if provider_report.get("passed") else "degraded"
-            )
+            provider_report = self.summarize_provider_report(spec, completed, report_data)
+            provider_report["status"] = "ready" if provider_report.get("passed") else "degraded"
             events = self.read_events()
             provider_report = self.enrich_provider_report_with_operational_peer_review(
                 provider_report,
@@ -4670,9 +4334,7 @@ class HeapRuntimeCompletenessGate:
             provider_report["revision"] = revision
 
             self.provider_reports.append(provider_report)
-            append_unique(
-                self.state["provider_results"], provider_report, key="requirement"
-            )
+            append_unique(self.state["provider_results"], provider_report, key="requirement")
             self.publish(
                 provider_heap_lane(lane),
                 "telemetry_signal",
@@ -4708,12 +4370,9 @@ class HeapRuntimeCompletenessGate:
                 "confidence": 0.88 if provider_report.get("passed") else 0.35,
                 "requirement": requirement,
                 "evidence_ref": provider_report.get("output"),
-                "provider_execution_performed": provider_report.get(
-                    "provider_execution_performed"
-                ),
+                "provider_execution_performed": provider_report.get("provider_execution_performed"),
                 "observed_request": self.request_text(),
-                "observed_response": provider_report.get("response_text")
-                or self.response_text(),
+                "observed_response": provider_report.get("response_text") or self.response_text(),
                 "execution_mode": "concurrent_provider_teamwork",
             }
             append_unique(self.state["claims"], claim)
@@ -4751,10 +4410,10 @@ class HeapRuntimeCompletenessGate:
                 events = self.maybe_run_provider_quality_revisions(round_id, events)
             self.critic_step(round_id, events)
             self.arbiter_step(round_id, events)
-            if (
-                self.state["product"].get("status") in {"ready", "blocked_with_reason"}
-                and self.minimum_runtime_depth_satisfied(round_id)
-            ):
+            if self.state["product"].get("status") in {
+                "ready",
+                "blocked_with_reason",
+            } and self.minimum_runtime_depth_satisfied(round_id):
                 break
         if self.state["product"].get("status") == "not_ready":
             events = self.read_events()
@@ -4793,9 +4452,7 @@ class HeapRuntimeCompletenessGate:
         final_tool_request_count = self.effective_tool_request_count(final_events)
         final_tool_execution_count = self.effective_tool_execution_count(final_events)
         final_response_text = self.build_final_response_text(final_events)
-        final_quality_signals = self.quality_output_signals(
-            final_response_text, final_events
-        )
+        final_quality_signals = self.quality_output_signals(final_response_text, final_events)
         metrics = {
             "heap_read_count": self.heap_read_count,
             "heap_write_count": self.heap_write_count,
@@ -4816,24 +4473,14 @@ class HeapRuntimeCompletenessGate:
             "response_source": self.response_source(),
             "response_text_present": bool(final_response_text),
             "detailed_output_expected": self.detailed_output_expected(),
-            "quality_output_passed": self.quality_output_passed(
-                final_response_text, final_events
-            ),
+            "quality_output_passed": self.quality_output_passed(final_response_text, final_events),
             "quality_output_signals": final_quality_signals,
             "virtual_dev_environment_required": self.virtual_dev_environment_required(),
-            "virtual_dev_environment_passed": self.virtual_dev_environment_passed(
-                final_events
-            ),
-            "virtual_dev_environment_reports": self.virtual_dev_environment_reports(
-                final_events
-            ),
+            "virtual_dev_environment_passed": self.virtual_dev_environment_passed(final_events),
+            "virtual_dev_environment_reports": self.virtual_dev_environment_reports(final_events),
             "code_execution_matrix_required": self.code_execution_matrix_required(),
-            "code_execution_matrix_passed": self.code_execution_matrix_passed(
-                final_events
-            ),
-            "code_execution_matrix_reports": self.code_execution_matrix_reports(
-                final_events
-            ),
+            "code_execution_matrix_passed": self.code_execution_matrix_passed(final_events),
+            "code_execution_matrix_reports": self.code_execution_matrix_reports(final_events),
             "runtime_debug_lab_required": self.runtime_debug_lab_required(),
             "runtime_debug_lab_passed": self.runtime_debug_lab_passed(final_events),
             "runtime_debug_lab_reports": self.runtime_debug_lab_reports(final_events),
@@ -4850,43 +4497,23 @@ class HeapRuntimeCompletenessGate:
             "shared_context_chunk_evidence_count": (
                 1 if "shared_context_chunks" in completed else 0
             ),
-            "semantic_code_chunk_evidence_count": (
-                1 if "semantic_code_chunks" in completed else 0
-            ),
-            "ai_context_pack_evidence_count": (
-                1 if "ai_context_pack" in completed else 0
-            ),
-            "semantic_evidence_chunk_count": (
-                1 if "semantic_evidence_chunks" in completed else 0
-            ),
-            "operational_memory_write_count": (
-                1 if "operational_memory_write" in completed else 0
-            ),
+            "semantic_code_chunk_evidence_count": (1 if "semantic_code_chunks" in completed else 0),
+            "ai_context_pack_evidence_count": (1 if "ai_context_pack" in completed else 0),
+            "semantic_evidence_chunk_count": (1 if "semantic_evidence_chunks" in completed else 0),
+            "operational_memory_write_count": (1 if "operational_memory_write" in completed else 0),
             "operational_memory_search_count": (
                 1 if "operational_memory_search" in completed else 0
             ),
             "tool_catalog_evidence_count": 1 if "tool_catalog" in completed else 0,
             "validation_evidence_count": 1 if "validation_evidence" in completed else 0,
-            "virtual_dev_environment_count": (
-                1 if "virtual_dev_environment" in completed else 0
-            ),
-            "code_execution_matrix_count": (
-                1 if "code_execution_matrix" in completed else 0
-            ),
-            "gpu1_provider_evidence_count": (
-                1 if "gpu1_provider_planner" in completed else 0
-            ),
-            "gpu0_provider_evidence_count": (
-                1 if "gpu0_provider_peer" in completed else 0
-            ),
-            "npu_micro_task_evidence_count": (
-                1 if "npu_micro_task_auditor" in completed else 0
-            ),
+            "virtual_dev_environment_count": (1 if "virtual_dev_environment" in completed else 0),
+            "code_execution_matrix_count": (1 if "code_execution_matrix" in completed else 0),
+            "gpu1_provider_evidence_count": (1 if "gpu1_provider_planner" in completed else 0),
+            "gpu0_provider_evidence_count": (1 if "gpu0_provider_peer" in completed else 0),
+            "npu_micro_task_evidence_count": (1 if "npu_micro_task_auditor" in completed else 0),
             "provider_result_count": len(self.provider_reports),
             "provider_revision_count": self.provider_revision_count,
-            "provider_lane_count": len(
-                {item.get("lane") for item in self.provider_reports}
-            ),
+            "provider_lane_count": len({item.get("lane") for item in self.provider_reports}),
             "provider_execution_performed": self.provider_execution_performed,
             "provider_teamwork_required": True,
             "budget_exhausted": bool(missing and (last_round >= self.max_iterations)),
@@ -4938,35 +4565,20 @@ class HeapRuntimeCompletenessGate:
                 + ",".join(lane_gate["degraded_lanes"])
             )
         if metrics["product_status"] == "ready" and missing:
-            metric_errors.append(
-                "ready product_status is forbidden while requirements are missing"
-            )
+            metric_errors.append("ready product_status is forbidden while requirements are missing")
         if (
             metrics["product_status"] == "ready"
             and safe_int(metrics.get("provider_lane_count")) < 3
         ):
-            metric_errors.append(
-                "ready product_status requires all three provider lanes"
-            )
-        if (
-            metrics["product_status"] == "ready"
-            and not self.provider_execution_performed
-        ):
-            metric_errors.append(
-                "ready product_status requires observable provider execution"
-            )
+            metric_errors.append("ready product_status requires all three provider lanes")
+        if metrics["product_status"] == "ready" and not self.provider_execution_performed:
+            metric_errors.append("ready product_status requires observable provider execution")
         if metrics["product_status"] == "ready" and not final_bridge_reports:
             metric_errors.append("ready product_status requires broker bridge reports")
-        if metrics["product_status"] == "ready" and not metrics.get(
-            "context_artifact_refs"
-        ):
-            metric_errors.append(
-                "ready product_status requires memory/chunk/context artifacts"
-            )
+        if metrics["product_status"] == "ready" and not metrics.get("context_artifact_refs"):
+            metric_errors.append("ready product_status requires memory/chunk/context artifacts")
         if metrics["product_status"] == "ready" and not self.response_text_complete():
-            metric_errors.append(
-                "ready product_status requires a complete provider response_text"
-            )
+            metric_errors.append("ready product_status requires a complete provider response_text")
         if (
             metrics["product_status"] == "ready"
             and self.detailed_output_expected()
@@ -5014,9 +4626,7 @@ class HeapRuntimeCompletenessGate:
                 "event_count": snapshot.get("event_count"),
                 "event_log": snapshot.get("event_log"),
                 "runtime_state": snapshot.get("runtime_state"),
-                "pending_broker_request_count": snapshot.get(
-                    "pending_broker_request_count"
-                ),
+                "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
             },
             "bridge_reports": final_bridge_reports,
             "provider_reports": self.provider_reports,
@@ -5041,9 +4651,7 @@ class HeapRuntimeCompletenessGate:
                 "heap_event_log": snapshot.get("event_log"),
                 "heap_snapshot": snapshot.get("snapshot"),
                 "bridge_reports": final_bridge_reports,
-                "provider_report_outputs": [
-                    item.get("output") for item in self.provider_reports
-                ],
+                "provider_report_outputs": [item.get("output") for item in self.provider_reports],
                 "request_input": self.request_text(),
                 "response_text": final_response_text,
                 "provider_raw_response_text": self.response_text(),
@@ -5052,30 +4660,16 @@ class HeapRuntimeCompletenessGate:
                 "response_file_reference_quality": self.response_file_reference_quality(
                     self.response_text()
                 ),
-                "virtual_dev_environment_required": metrics.get(
-                    "virtual_dev_environment_required"
-                ),
-                "virtual_dev_environment_passed": metrics.get(
-                    "virtual_dev_environment_passed"
-                ),
-                "virtual_dev_environment_reports": metrics.get(
-                    "virtual_dev_environment_reports"
-                ),
+                "virtual_dev_environment_required": metrics.get("virtual_dev_environment_required"),
+                "virtual_dev_environment_passed": metrics.get("virtual_dev_environment_passed"),
+                "virtual_dev_environment_reports": metrics.get("virtual_dev_environment_reports"),
                 "runtime_debug_lab_required": metrics.get("runtime_debug_lab_required"),
                 "runtime_debug_lab_passed": metrics.get("runtime_debug_lab_passed"),
                 "runtime_debug_lab_reports": metrics.get("runtime_debug_lab_reports"),
-                "code_execution_matrix_required": metrics.get(
-                    "code_execution_matrix_required"
-                ),
-                "code_execution_matrix_passed": metrics.get(
-                    "code_execution_matrix_passed"
-                ),
-                "code_execution_matrix_reports": metrics.get(
-                    "code_execution_matrix_reports"
-                ),
-                "proposal_iteration_artifacts": metrics.get(
-                    "proposal_iteration_artifacts"
-                ),
+                "code_execution_matrix_required": metrics.get("code_execution_matrix_required"),
+                "code_execution_matrix_passed": metrics.get("code_execution_matrix_passed"),
+                "code_execution_matrix_reports": metrics.get("code_execution_matrix_reports"),
+                "proposal_iteration_artifacts": metrics.get("proposal_iteration_artifacts"),
                 "heap_runtime_exit_output": repo_rel(
                     self.repo_root, self.heap_exchange_paths()["exit_output"]
                 ),
@@ -5110,11 +4704,7 @@ class HeapRuntimeCompletenessGate:
         min_rounds = max(1, int(getattr(self.args, "min_runtime_rounds", 1)))
         min_proposals = max(0, int(getattr(self.args, "min_proposal_iterations", 0)))
         proposal_json_count = len(
-            [
-                path
-                for path in self.proposal_iteration_artifacts()
-                if str(path).endswith(".json")
-            ]
+            [path for path in self.proposal_iteration_artifacts() if str(path).endswith(".json")]
         )
         return round_id >= min_rounds and proposal_json_count >= min_proposals
 

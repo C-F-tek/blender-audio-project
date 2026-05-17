@@ -1,4 +1,5 @@
 """Report selection for AI workload quality validation."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -43,7 +44,9 @@ def collect_report_specs(
                 key = str(candidate.resolve(strict=False)).lower()
                 if key in selected_paths:
                     continue
-                lane = candidate.stem.replace("_real_workload_report", "").replace("_workload_report", "")
+                lane = candidate.stem.replace("_real_workload_report", "").replace(
+                    "_workload_report", ""
+                )
                 selected_paths.add(key)
                 selected.append((lane.replace("-", "_") or "unknown", str(candidate)))
 

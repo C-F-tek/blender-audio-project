@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
 import contextlib
 import json
 import queue
 import sys
 import threading
-import traceback
 import tkinter as tk
+import traceback
+from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
-
 
 THIS_DIR = Path(__file__).resolve().parent
 WORKFLOW_DIR = THIS_DIR.parent
@@ -18,7 +17,12 @@ if str(WORKFLOW_DIR) not in sys.path:
 
 import workflow_state as wf  # noqa: E402
 from components.artifact_browser import ArtifactBrowserWindow  # noqa: E402
-from scene_brief import append_scene_message, clear_scene_chat_history, generate_scene_chat_reply, load_or_create_scene_brief  # noqa: E402
+from scene_brief import (  # noqa: E402
+    append_scene_message,
+    clear_scene_chat_history,
+    generate_scene_chat_reply,
+    load_or_create_scene_brief,
+)
 
 
 class QueueWriter:
@@ -107,8 +111,12 @@ class AdvancedDebugWindow(tk.Toplevel):
         toolbar = ttk.Frame(self)
         toolbar.pack(fill="x", padx=8, pady=6)
         ttk.Button(toolbar, text="Check", command=self.refresh).pack(side="left")
-        ttk.Checkbutton(toolbar, text="Auto refresh", variable=self.auto_refresh).pack(side="left", padx=(8, 0))
-        ttk.Button(toolbar, text="Open shell monitor", command=self.open_shell_monitor).pack(side="left", padx=(8, 0))
+        ttk.Checkbutton(toolbar, text="Auto refresh", variable=self.auto_refresh).pack(
+            side="left", padx=(8, 0)
+        )
+        ttk.Button(toolbar, text="Open shell monitor", command=self.open_shell_monitor).pack(
+            side="left", padx=(8, 0)
+        )
         ttk.Button(toolbar, text="Hide", command=self.hide).pack(side="left", padx=(8, 0))
 
         self.text = tk.Text(self, wrap="none")
@@ -163,7 +171,9 @@ class ProjectStatsWindow(tk.Toplevel):
         toolbar = ttk.Frame(self)
         toolbar.pack(fill="x", padx=8, pady=6)
         ttk.Button(toolbar, text="Refresh", command=self.refresh).pack(side="left")
-        ttk.Checkbutton(toolbar, text="Auto refresh", variable=self.auto_refresh).pack(side="left", padx=(8, 0))
+        ttk.Checkbutton(toolbar, text="Auto refresh", variable=self.auto_refresh).pack(
+            side="left", padx=(8, 0)
+        )
         ttk.Button(toolbar, text="Hide", command=self.hide).pack(side="left", padx=(8, 0))
 
         self.text = tk.Text(self, wrap="none")
@@ -211,8 +221,12 @@ class SceneDirectorChatWindow(tk.Toplevel):
         toolbar = ttk.Frame(self)
         toolbar.pack(fill="x", padx=8, pady=6)
         ttk.Button(toolbar, text="Refresh", command=self.refresh).pack(side="left")
-        ttk.Button(toolbar, text="Save message", command=self.send_message).pack(side="left", padx=(6, 0))
-        ttk.Button(toolbar, text="Clear chat", command=self.clear_chat).pack(side="left", padx=(6, 0))
+        ttk.Button(toolbar, text="Save message", command=self.send_message).pack(
+            side="left", padx=(6, 0)
+        )
+        ttk.Button(toolbar, text="Clear chat", command=self.clear_chat).pack(
+            side="left", padx=(6, 0)
+        )
         ttk.Button(toolbar, text="Hide", command=self.hide).pack(side="left", padx=(6, 0))
 
         self.transcript = tk.Text(self, wrap="word", height=26)
@@ -255,10 +269,20 @@ class SceneDirectorChatWindow(tk.Toplevel):
             f"Brief: {session.artifacts['scene_brief_json']}",
             "",
         ]
-        memory = brief.get("conversation_memory") if isinstance(brief.get("conversation_memory"), dict) else {}
+        memory = (
+            brief.get("conversation_memory")
+            if isinstance(brief.get("conversation_memory"), dict)
+            else {}
+        )
         if memory:
-            lines.append(f"Memory: {memory.get('message_count', 0)} messaggi, aggiornata {memory.get('updated_at', '-')}")
-            constraints = memory.get("durable_constraints") if isinstance(memory.get("durable_constraints"), list) else []
+            lines.append(
+                f"Memory: {memory.get('message_count', 0)} messaggi, aggiornata {memory.get('updated_at', '-')}"
+            )
+            constraints = (
+                memory.get("durable_constraints")
+                if isinstance(memory.get("durable_constraints"), list)
+                else []
+            )
             for item in constraints[-4:]:
                 lines.append(f"- {item}")
             lines.append("")
@@ -332,9 +356,14 @@ class SceneDirectorChatWindow(tk.Toplevel):
 
     def clear_chat(self) -> None:
         if self.worker and self.worker.is_alive():
-            messagebox.showwarning("Busy", "Aspetta la risposta del modello prima di pulire la chat.")
+            messagebox.showwarning(
+                "Busy", "Aspetta la risposta del modello prima di pulire la chat."
+            )
             return
-        if not messagebox.askyesno("Clear chat", "Pulire la cronologia chat del direttore AI? Le preferenze del brief restano salvate."):
+        if not messagebox.askyesno(
+            "Clear chat",
+            "Pulire la cronologia chat del direttore AI? Le preferenze del brief restano salvate.",
+        ):
             return
         session = wf.load_session(create=True)
         clear_scene_chat_history(
@@ -408,20 +437,36 @@ class WorkflowGui(tk.Tk):
 
         options = ttk.LabelFrame(left, text="AI Options")
         options.pack(fill="x", pady=(0, 8))
-        ttk.Checkbutton(options, text="Include manual", variable=self.include_manual).pack(anchor="w", padx=8, pady=(6, 0))
-        ttk.Checkbutton(options, text="Skip NPU heavy pass", variable=self.skip_npu).pack(anchor="w", padx=8)
-        ttk.Checkbutton(options, text="Skip Ollama", variable=self.skip_ollama).pack(anchor="w", padx=8)
+        ttk.Checkbutton(options, text="Include manual", variable=self.include_manual).pack(
+            anchor="w", padx=8, pady=(6, 0)
+        )
+        ttk.Checkbutton(options, text="Skip NPU heavy pass", variable=self.skip_npu).pack(
+            anchor="w", padx=8
+        )
+        ttk.Checkbutton(options, text="Skip Ollama", variable=self.skip_ollama).pack(
+            anchor="w", padx=8
+        )
         ttk.Label(options, text="Creative model").pack(anchor="w", padx=8, pady=(6, 0))
-        ttk.Combobox(options, textvariable=self.creative_model, values=self.available_models, width=28).pack(fill="x", padx=8)
+        ttk.Combobox(
+            options, textvariable=self.creative_model, values=self.available_models, width=28
+        ).pack(fill="x", padx=8)
         ttk.Label(options, text="Technical/script model").pack(anchor="w", padx=8, pady=(6, 0))
-        ttk.Combobox(options, textvariable=self.technical_model, values=self.available_models, width=28).pack(fill="x", padx=8)
+        ttk.Combobox(
+            options, textvariable=self.technical_model, values=self.available_models, width=28
+        ).pack(fill="x", padx=8)
         ttk.Label(options, text="Chat model").pack(anchor="w", padx=8, pady=(6, 0))
-        ttk.Combobox(options, textvariable=self.chat_model, values=self.available_models, width=28).pack(fill="x", padx=8)
+        ttk.Combobox(
+            options, textvariable=self.chat_model, values=self.available_models, width=28
+        ).pack(fill="x", padx=8)
         token_row = ttk.Frame(options)
         token_row.pack(fill="x", padx=8, pady=(6, 0))
         ttk.Label(token_row, text="Script tokens").pack(side="left")
-        ttk.Entry(token_row, textvariable=self.script_tokens, width=8).pack(side="left", padx=(6, 0))
-        ttk.Button(options, text="Save AI models", command=self.save_ai_models).pack(fill="x", padx=8, pady=(6, 0))
+        ttk.Entry(token_row, textvariable=self.script_tokens, width=8).pack(
+            side="left", padx=(6, 0)
+        )
+        ttk.Button(options, text="Save AI models", command=self.save_ai_models).pack(
+            fill="x", padx=8, pady=(6, 0)
+        )
         limit_row = ttk.Frame(options)
         limit_row.pack(fill="x", padx=8, pady=6)
         ttk.Label(limit_row, text="Manual limit").pack(side="left")
@@ -435,12 +480,44 @@ class WorkflowGui(tk.Tk):
         specs = [
             ("Choose WAV", self.choose_wav, False),
             ("Reset default WAV", self.reset_wav, False),
-            ("Analyze WAV", lambda: self.run_task("Analyze WAV", lambda: wf.run_analyze_wav(self.session, skip_music_context=True)), False),
-            ("Track summary", lambda: self.run_task("Track summary", lambda: wf.run_track_summary(self.session)), False),
-            ("Music context", lambda: self.run_task("Music context", lambda: wf.run_music_context(self.session)), False),
-            ("Code context + indexAI", lambda: self.run_task("Code context + indexAI", lambda: wf.run_code_context(self.session)), False),
-            ("Rebuild indexAI", lambda: self.run_task("Rebuild indexAI", lambda: wf.run_project_ai_index(self.session, force=True)), False),
-            ("Full audio prepare", lambda: self.run_task("Full audio prepare", lambda: wf.run_full_audio_prepare(self.session)), False),
+            (
+                "Analyze WAV",
+                lambda: self.run_task(
+                    "Analyze WAV", lambda: wf.run_analyze_wav(self.session, skip_music_context=True)
+                ),
+                False,
+            ),
+            (
+                "Track summary",
+                lambda: self.run_task("Track summary", lambda: wf.run_track_summary(self.session)),
+                False,
+            ),
+            (
+                "Music context",
+                lambda: self.run_task("Music context", lambda: wf.run_music_context(self.session)),
+                False,
+            ),
+            (
+                "Code context + indexAI",
+                lambda: self.run_task(
+                    "Code context + indexAI", lambda: wf.run_code_context(self.session)
+                ),
+                False,
+            ),
+            (
+                "Rebuild indexAI",
+                lambda: self.run_task(
+                    "Rebuild indexAI", lambda: wf.run_project_ai_index(self.session, force=True)
+                ),
+                False,
+            ),
+            (
+                "Full audio prepare",
+                lambda: self.run_task(
+                    "Full audio prepare", lambda: wf.run_full_audio_prepare(self.session)
+                ),
+                False,
+            ),
             ("Index manuals", self.index_manuals, False),
             ("Dual AI plan", self.dual_ai_plan, False),
             ("Scene director chat", self.scene_director_chat, False),
@@ -662,9 +739,16 @@ class WorkflowGui(tk.Tk):
         return messagebox.askyesno(title, "\n".join(preview))
 
     def cleanup_intermediates(self) -> None:
-        targets = wf.cleanup_intermediate_targets(self.session, include_all_tracks=True, include_logs=True)
+        targets = wf.cleanup_intermediate_targets(
+            self.session, include_all_tracks=True, include_logs=True
+        )
         if self.confirm_targets("Cleanup intermediates", targets):
-            self.run_task("Cleanup intermediates", lambda: wf.cleanup_intermediates(self.session, include_all_tracks=True, include_logs=True))
+            self.run_task(
+                "Cleanup intermediates",
+                lambda: wf.cleanup_intermediates(
+                    self.session, include_all_tracks=True, include_logs=True
+                ),
+            )
 
     def cleanup_render_frames(self) -> None:
         targets = wf.cleanup_render_frame_targets(self.session)
@@ -723,7 +807,9 @@ class WorkflowGui(tk.Tk):
     def mark_interrupted(self) -> None:
         try:
             result = wf.mark_active_operation_interrupted("manual interrupt from GUI")
-            self.append_output(f"\nMarked interrupted: {result.operation}, elapsed={result.elapsed_sec}s\n")
+            self.append_output(
+                f"\nMarked interrupted: {result.operation}, elapsed={result.elapsed_sec}s\n"
+            )
             self.refresh_session()
         except Exception:
             self.append_output("\n" + traceback.format_exc())

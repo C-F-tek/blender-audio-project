@@ -4,6 +4,7 @@
 The smoke does not contact Ollama. It validates import/compile and basic path
 policy guardrails for the gateway module.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -149,7 +150,11 @@ def main() -> int:
     markdown.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown": str(markdown)}, indent=2))
+    print(
+        json.dumps(
+            {"passed": report["passed"], "output": str(output), "markdown": str(markdown)}, indent=2
+        )
+    )
     return 0 if report["passed"] else 2
 
 

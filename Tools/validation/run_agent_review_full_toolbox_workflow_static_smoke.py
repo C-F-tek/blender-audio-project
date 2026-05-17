@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Static smoke-test for the full toolbox decision-loop workflow script."""
+
 from __future__ import annotations
 
 import argparse
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -11,7 +11,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 DEFAULT_WORKFLOW = "Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1"
 DEFAULT_OUTPUT = "output/validation/agent_review_full_toolbox_workflow_static_smoke.json"
@@ -135,10 +139,17 @@ def run_smoke(repo_root: Path, workflow_value: str) -> dict[str, Any]:
             errors.append(f"forbidden token present {name}: {token}")
 
     if "--run-npu-auditor-provider" in text and "if ($RunLegacyNpuAuditorProvider)" not in text:
-        errors.append("legacy NPU provider auditor flag must stay gated by -RunLegacyNpuAuditorProvider")
+        errors.append(
+            "legacy NPU provider auditor flag must stay gated by -RunLegacyNpuAuditorProvider"
+        )
 
-    if "provider_execution_performed = [bool]$RunGpuNpuProvider" not in text and '"provider_execution_performed": bool(ctx.args.RunGpuNpuProvider)' not in text:
-        errors.append("workflow report must expose provider_execution_performed from explicit flag state")
+    if (
+        "provider_execution_performed = [bool]$RunGpuNpuProvider" not in text
+        and '"provider_execution_performed": bool(ctx.args.RunGpuNpuProvider)' not in text
+    ):
+        errors.append(
+            "workflow report must expose provider_execution_performed from explicit flag state"
+        )
 
     if "evidence_to_commit" not in text:
         errors.append("workflow must publish evidence_to_commit so users do not stage output/**")

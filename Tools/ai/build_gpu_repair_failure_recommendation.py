@@ -34,11 +34,7 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 def repo_rel(repo_root: Path, path: Path) -> str:
     """Return a repository-relative path when possible."""
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -86,9 +82,7 @@ def nested_dict(data: dict[str, Any], name: str) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
-def gpu_summary(
-    orchestrator: dict[str, Any], gpu_report: dict[str, Any]
-) -> dict[str, Any]:
+def gpu_summary(orchestrator: dict[str, Any], gpu_report: dict[str, Any]) -> dict[str, Any]:
     """Collect GPU failure metadata from orchestrator and GPU report shapes."""
     decision = nested_dict(orchestrator, "decision")
     gpu_decision = nested_dict(gpu_report, "decision")
@@ -101,14 +95,10 @@ def gpu_summary(
         "raw_recommendation_candidate_count": int_field(
             gpu_report, "raw_recommendation_candidate_count"
         ),
-        "filtered_recommendation_count": int_field(
-            gpu_report, "filtered_recommendation_count"
-        ),
+        "filtered_recommendation_count": int_field(gpu_report, "filtered_recommendation_count"),
         "json_parse_error_count": int_field(gpu_report, "json_parse_error_count"),
         "repair_attempt_count": int_field(gpu_report, "repair_attempt_count"),
-        "empty_recommendations_reason": str_field(
-            gpu_report, "empty_recommendations_reason"
-        )
+        "empty_recommendations_reason": str_field(gpu_report, "empty_recommendations_reason")
         or str_field(gpu_summary_data, "empty_recommendations_reason")
         or str_field(orchestrator, "gpu_empty_recommendations_reason")
         or str_field(decision, "gpu_empty_recommendations_reason"),
@@ -129,8 +119,7 @@ def gpu_summary(
             or gpu_report.get("patch_application_performed")
         ),
         "source_writes_performed": bool(
-            orchestrator.get("source_writes_performed")
-            or gpu_report.get("source_writes_performed")
+            orchestrator.get("source_writes_performed") or gpu_report.get("source_writes_performed")
         ),
     }
 
@@ -184,18 +173,14 @@ def build_recommendation(summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_report(
-    repo_root: Path, orchestrator_path: Path, gpu_report_path: Path
-) -> dict[str, Any]:
+def build_report(repo_root: Path, orchestrator_path: Path, gpu_report_path: Path) -> dict[str, Any]:
     """Build the report-only diagnostic recommendation artifact."""
     orchestrator, orchestrator_errors = read_json_object(orchestrator_path)
     gpu_report, gpu_errors = read_json_object(gpu_report_path)
     errors = [*orchestrator_errors, *gpu_errors]
     summary = gpu_summary(orchestrator, gpu_report) if not errors else {}
     recommendations = (
-        [build_recommendation(summary)]
-        if summary and should_emit_recommendation(summary)
-        else []
+        [build_recommendation(summary)] if summary and should_emit_recommendation(summary) else []
     )
     warnings: list[str] = []
     if summary and summary.get("empty_recommendations_reason") != REPAIR_FAILURE_REASON:
@@ -231,7 +216,9 @@ def build_report(
             "recommended_next_layer": (
                 "build_agent_review_patch_plan.py"
                 if recommendations
-                else summary.get("recommended_next_layer", "") if summary else ""
+                else summary.get("recommended_next_layer", "")
+                if summary
+                else ""
             ),
             "manual_review_required": True,
         },
@@ -253,12 +240,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Recommendation count: `{report['recommendation_count']}`")
     lines.append(f"- Manual review required: `{report['manual_review_required']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append("")
     lines.append("## GPU failure summary")
@@ -278,9 +261,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- Target files: `{', '.join(rec['target_files'])}`")
         lines.append(f"- Rationale: {rec['rationale']}")
         lines.append(f"- Strategy: {rec['proposed_strategy']}")
-        lines.append(
-            f"- Static/provider agreement: `{rec['static_provider_agreement']}`"
-        )
+        lines.append(f"- Static/provider agreement: `{rec['static_provider_agreement']}`")
         lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -304,9 +285,7 @@ def main() -> int:
     markdown_output = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output.write_text(render_markdown(report), encoding="utf-8")
     print(
         json.dumps(

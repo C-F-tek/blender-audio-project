@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test schema-repair provider context."""
+
 from __future__ import annotations
 
 import argparse
@@ -67,7 +68,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/schema_repair_context_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/schema_repair_context_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/schema_repair_context_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -112,7 +115,11 @@ def main() -> int:
         evidence_ready_for_manual_patch_count=12,
         provider="gpu_ollama",
     )
-    repair_reports = [item for item in stack if isinstance(item, dict) and item.get("kind") == SCHEMA_REPAIR_CONTEXT_KIND]
+    repair_reports = [
+        item
+        for item in stack
+        if isinstance(item, dict) and item.get("kind") == SCHEMA_REPAIR_CONTEXT_KIND
+    ]
     errors: list[str] = []
     if len(repair_reports) != 1:
         errors.append(f"expected exactly one schema repair report, got {len(repair_reports)}")
@@ -160,7 +167,13 @@ def main() -> int:
     write_json(output, report)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown": str(markdown)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"passed": report["passed"], "output": str(output), "markdown": str(markdown)},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

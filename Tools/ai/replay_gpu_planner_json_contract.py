@@ -44,11 +44,7 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -62,9 +58,7 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def safe_int(value: Any, default: int = 0) -> int:
@@ -99,11 +93,7 @@ def round_raw_response(round_item: dict[str, Any]) -> str:
 
 def collect_rounds(gpu_report: dict[str, Any]) -> list[dict[str, Any]]:
     rounds = gpu_report.get("rounds")
-    return (
-        [item for item in rounds if isinstance(item, dict)]
-        if isinstance(rounds, list)
-        else []
-    )
+    return [item for item in rounds if isinstance(item, dict)] if isinstance(rounds, list) else []
 
 
 def classify_aggregate(replayed_rounds: list[dict[str, Any]]) -> dict[str, Any]:
@@ -125,9 +115,7 @@ def build_report(repo_root: Path, gpu_report_path: Path) -> dict[str, Any]:
     for item in rounds:
         raw = round_raw_response(item)
         if not raw:
-            warnings.append(
-                f"round {item.get('round')}: no raw response text available"
-            )
+            warnings.append(f"round {item.get('round')}: no raw response text available")
             continue
         result = validate_model_response_contract(
             raw, evidence_ready_for_manual_patch_count=ready_count
@@ -135,9 +123,7 @@ def build_report(repo_root: Path, gpu_report_path: Path) -> dict[str, Any]:
         replayed.append(
             {
                 "round": item.get("round"),
-                "original_empty_recommendations_reason": item.get(
-                    "empty_recommendations_reason"
-                ),
+                "original_empty_recommendations_reason": item.get("empty_recommendations_reason"),
                 "original_json_ok": item.get("json_ok"),
                 "original_parse_error": item.get("parse_error"),
                 "original_response_chars": item.get("response_chars"),
@@ -167,21 +153,15 @@ def build_report(repo_root: Path, gpu_report_path: Path) -> dict[str, Any]:
             "recommendation_count": gpu_report.get("recommendation_count"),
             "json_parse_error_count": gpu_report.get("json_parse_error_count"),
             "repair_attempt_count": gpu_report.get("repair_attempt_count"),
-            "empty_recommendations_reason": gpu_report.get(
-                "empty_recommendations_reason"
-            ),
+            "empty_recommendations_reason": gpu_report.get("empty_recommendations_reason"),
             "evidence_ready_for_manual_patch_count": ready_count,
         },
         "replayed_round_count": len(replayed),
         "contract_reason_counts": aggregate,
         "context_echo_detected_count": aggregate.get("context_echo_detected", 0),
         "json_parse_failure_count": aggregate.get("json_parse_failure", 0),
-        "model_output_schema_mismatch_count": aggregate.get(
-            "model_output_schema_mismatch", 0
-        ),
-        "valid_recommendation_output_count": aggregate.get(
-            "valid_recommendation_output", 0
-        ),
+        "model_output_schema_mismatch_count": aggregate.get("model_output_schema_mismatch", 0),
+        "valid_recommendation_output_count": aggregate.get("valid_recommendation_output", 0),
         "rounds": replayed,
         "decision": {
             "contract_helper_replay_available": True,
@@ -206,15 +186,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Replayed rounds: `{report['replayed_round_count']}`")
     lines.append(f"- Context echo detected: `{report['context_echo_detected_count']}`")
     lines.append(f"- JSON parse failures: `{report['json_parse_failure_count']}`")
-    lines.append(
-        f"- Schema mismatches: `{report['model_output_schema_mismatch_count']}`"
-    )
-    lines.append(
-        f"- Valid recommendation outputs: `{report['valid_recommendation_output_count']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Schema mismatches: `{report['model_output_schema_mismatch_count']}`")
+    lines.append(f"- Valid recommendation outputs: `{report['valid_recommendation_output_count']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append("")
     lines.append("## Contract reason counts")

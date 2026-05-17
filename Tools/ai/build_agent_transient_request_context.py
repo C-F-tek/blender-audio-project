@@ -65,11 +65,7 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -215,8 +211,7 @@ def build_context(args: argparse.Namespace) -> dict[str, Any]:
         max_chars_per_file=args.max_chars_per_file,
     )
     report_refs = [
-        build_report_reference(repo_root, value)
-        for value in split_values(args.report_file or [])
+        build_report_reference(repo_root, value) for value in split_values(args.report_file or [])
     ]
     warnings: list[str] = []
     for item in raw_files:
@@ -226,9 +221,7 @@ def build_context(args: argparse.Namespace) -> dict[str, Any]:
         if item.get("error"):
             warnings.append(f"report: {item.get('path')}: {item.get('error')}")
 
-    total_raw_chars = sum(
-        int(item.get("chars") or 0) for item in raw_files if item.get("exists")
-    )
+    total_raw_chars = sum(int(item.get("chars") or 0) for item in raw_files if item.get("exists"))
     return {
         "schema_version": 1,
         "kind": "agent_transient_request_context",
@@ -252,7 +245,7 @@ def build_context(args: argparse.Namespace) -> dict[str, Any]:
         },
         "memory_notes": [
             {
-                "id": f"note-{index+1:03d}",
+                "id": f"note-{index + 1:03d}",
                 "chars": len(note),
                 "sha256": sha256_text(note),
                 "content": note,
@@ -294,12 +287,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Agent Transient Request Context", ""]
     lines.append(f"- Scope: `{report['scope']}`")
     lines.append(f"- Passed: `{report['passed']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(
         f"- Persistent memory write: `{report['persistence']['persistent_memory_write_performed']}`"
     )

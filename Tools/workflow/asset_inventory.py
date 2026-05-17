@@ -1,10 +1,20 @@
 from __future__ import annotations
 
-from pathlib import Path
 import json
+from pathlib import Path
 
-
-SUPPORTED_ASSET_EXTENSIONS = {".fbx", ".glb", ".gltf", ".obj", ".blend", ".stl", ".abc", ".usd", ".usdz", ".dae"}
+SUPPORTED_ASSET_EXTENSIONS = {
+    ".fbx",
+    ".glb",
+    ".gltf",
+    ".obj",
+    ".blend",
+    ".stl",
+    ".abc",
+    ".usd",
+    ".usdz",
+    ".dae",
+}
 
 
 def classify_asset(path: Path) -> str:
@@ -20,7 +30,9 @@ def classify_asset(path: Path) -> str:
     return "scene_asset"
 
 
-def build_asset_inventory(root: Path, project_dir: Path, output_json: Path, output_md: Path | None = None) -> dict:
+def build_asset_inventory(
+    root: Path, project_dir: Path, output_json: Path, output_md: Path | None = None
+) -> dict:
     search_roots = [
         root / "assets",
         root,

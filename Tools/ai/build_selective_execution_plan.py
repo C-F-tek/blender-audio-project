@@ -23,10 +23,10 @@ DEFAULT_CONTEXT_EVIDENCE = (
 DEFAULT_CONTEXT_EVIDENCE_MD = (
     "docs/LOCAL_VALIDATION_EVIDENCE/project_self_improvement_context_pack_evidence.md"
 )
-DEFAULT_DRY_RUN_EVIDENCE = (
-    "docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.json"
+DEFAULT_DRY_RUN_EVIDENCE = "docs/LOCAL_VALIDATION_EVIDENCE/ai_pipeline_dry_run_matrix_evidence.json"
+DEFAULT_PROVIDER_EVIDENCE = (
+    "docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json"
 )
-DEFAULT_PROVIDER_EVIDENCE = "docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json"
 DEFAULT_VALIDATION_CONTRACT = "output/validation/validation_report_contract.json"
 DEFAULT_TECH_DEBT = "docs/TECH_DEBT_TRACKER.md"
 DEFAULT_EXECUTION_PLAN_DIR = "docs/EXECUTION_PLANS/active"
@@ -64,9 +64,7 @@ def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return data, None
 
 
-def read_text_file(
-    path: Path, max_chars: int = 12000
-) -> tuple[str | None, str | None, bool]:
+def read_text_file(path: Path, max_chars: int = 12000) -> tuple[str | None, str | None, bool]:
     """Read a bounded text file."""
     try:
         text = path.read_text(encoding="utf-8-sig")
@@ -78,15 +76,11 @@ def read_text_file(
     return text[:max_chars], None, truncated
 
 
-def summarize_context_evidence(
-    json_path: Path, md_path: Path, repo_root: Path
-) -> dict[str, Any]:
+def summarize_context_evidence(json_path: Path, md_path: Path, repo_root: Path) -> dict[str, Any]:
     """Summarize context-pack evidence from JSON when present, else Markdown."""
     data, error = read_json_object(json_path)
     if data is not None:
-        decision = (
-            data.get("decision") if isinstance(data.get("decision"), dict) else {}
-        )
+        decision = data.get("decision") if isinstance(data.get("decision"), dict) else {}
         return {
             "path": repo_relative(json_path, repo_root),
             "exists": True,
@@ -99,12 +93,8 @@ def summarize_context_evidence(
             "forbidden_path_count": data.get("forbidden_path_count"),
             "source_writes_performed": decision.get("source_writes_performed"),
             "provider_execution_seen": decision.get("provider_execution_seen"),
-            "errors": (
-                data.get("errors") if isinstance(data.get("errors"), list) else []
-            ),
-            "warnings": (
-                data.get("warnings") if isinstance(data.get("warnings"), list) else []
-            ),
+            "errors": (data.get("errors") if isinstance(data.get("errors"), list) else []),
+            "warnings": (data.get("warnings") if isinstance(data.get("warnings"), list) else []),
         }
 
     text, text_error, truncated = read_text_file(md_path)
@@ -156,9 +146,7 @@ def summarize_dry_run_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
         }
 
     matrix = data.get("matrix") if isinstance(data.get("matrix"), dict) else {}
-    summary = (
-        data.get("case_summary") if isinstance(data.get("case_summary"), dict) else {}
-    )
+    summary = data.get("case_summary") if isinstance(data.get("case_summary"), dict) else {}
     decision = data.get("decision") if isinstance(data.get("decision"), dict) else {}
     return {
         "path": repo_relative(path, repo_root),
@@ -174,9 +162,7 @@ def summarize_dry_run_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
         "all_steps_planned_only": decision.get("all_steps_planned_only"),
         "gpu_npu_workloads_executed": decision.get("gpu_npu_workloads_executed"),
         "errors": data.get("errors") if isinstance(data.get("errors"), list) else [],
-        "warnings": (
-            data.get("warnings") if isinstance(data.get("warnings"), list) else []
-        ),
+        "warnings": (data.get("warnings") if isinstance(data.get("warnings"), list) else []),
     }
 
 
@@ -199,9 +185,7 @@ def summarize_provider_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
     decision = data.get("decision") if isinstance(data.get("decision"), dict) else {}
     reports = data.get("reports") if isinstance(data.get("reports"), list) else []
     report_kinds = [
-        str(item.get("kind"))
-        for item in reports
-        if isinstance(item, dict) and item.get("kind")
+        str(item.get("kind")) for item in reports if isinstance(item, dict) and item.get("kind")
     ]
     report_pass_count = sum(
         1 for item in reports if isinstance(item, dict) and item.get("passed") is True
@@ -243,9 +227,7 @@ def summarize_validation_contract(path: Path, repo_root: Path) -> dict[str, Any]
         "kind": data.get("kind"),
         "passed": data.get("passed"),
         "errors": data.get("errors") if isinstance(data.get("errors"), list) else [],
-        "warnings": (
-            data.get("warnings") if isinstance(data.get("warnings"), list) else []
-        ),
+        "warnings": (data.get("warnings") if isinstance(data.get("warnings"), list) else []),
     }
 
 
@@ -263,8 +245,7 @@ def summarize_execution_plans(plan_dir: Path, repo_root: Path) -> dict[str, Any]
                     "truncated": truncated,
                     "mentions_selective_planner": "selective planner" in lowered
                     or "selective_planner" in lowered,
-                    "mentions_patch_spec": "patch spec" in lowered
-                    or "patch-spec" in lowered,
+                    "mentions_patch_spec": "patch spec" in lowered or "patch-spec" in lowered,
                     "mentions_context_pack": "context pack" in lowered,
                     "error": error,
                 }
@@ -274,9 +255,7 @@ def summarize_execution_plans(plan_dir: Path, repo_root: Path) -> dict[str, Any]
         "exists": plan_dir.exists(),
         "active_plan_count": len(plans),
         "related_plan_count": sum(
-            1
-            for item in plans
-            if item["mentions_selective_planner"] or item["mentions_patch_spec"]
+            1 for item in plans if item["mentions_selective_planner"] or item["mentions_patch_spec"]
         ),
         "plans": plans,
     }
@@ -287,8 +266,7 @@ def summarize_tech_debt(path: Path, repo_root: Path) -> dict[str, Any]:
     text, error, truncated = read_text_file(path, max_chars=16000)
     lowered = text.lower() if text else ""
     keywords = {
-        "selective_planner": "selective planner" in lowered
-        or "selective_planner" in lowered,
+        "selective_planner": "selective planner" in lowered or "selective_planner" in lowered,
         "patch_spec": "patch spec" in lowered or "patch-spec" in lowered,
         "context_pack": "context pack" in lowered,
         "provider_quality_gate": "quality gate" in lowered
@@ -304,9 +282,7 @@ def summarize_tech_debt(path: Path, repo_root: Path) -> dict[str, Any]:
     }
 
 
-def validator_item(
-    name: str, reason: str, command: str, required: bool = True
-) -> dict[str, Any]:
+def validator_item(name: str, reason: str, command: str, required: bool = True) -> dict[str, Any]:
     """Build a validator recommendation item."""
     return {
         "name": name,
@@ -413,24 +389,17 @@ def build_recommendations(
         risks.append(
             "Planner may fall back to Markdown context evidence when JSON evidence is unavailable."
         )
-    if (
-        dry_run.get("passed") is not True
-        or dry_run.get("all_steps_planned_only") is not True
-    ):
+    if dry_run.get("passed") is not True or dry_run.get("all_steps_planned_only") is not True:
         blocked.append(
             "dry-run matrix evidence is not clean; do not recommend provider promotion or patch-spec generation"
         )
     if provider.get("provider_execution_seen") is not True:
-        blocked.append(
-            "real provider evidence is missing; do not promote advisory provider state"
-        )
+        blocked.append("real provider evidence is missing; do not promote advisory provider state")
         local_only.append(
             "Generate new real GPU/NPU evidence with the explicit PowerShell command set."
         )
     if provider.get("ollama_gpu_primary_advisory") is not True:
-        blocked.append(
-            "Ollama/GPU is not quality-gated as primary advisory in current evidence"
-        )
+        blocked.append("Ollama/GPU is not quality-gated as primary advisory in current evidence")
     if provider.get("npu_excluded_when_unusable") is not True:
         risks.append(
             "NPU advisory exclusion decision is absent or false; keep NPU limited to probe/guardrail/decode diagnostic."
@@ -474,8 +443,7 @@ def build_recommendations(
                 "Tools/ai/build_patch_specs_from_proposals.py",
                 "Tools/validation/check_patch_spec_drafts.py",
             ],
-            blocked=context.get("passed") is not True
-            or dry_run.get("passed") is not True,
+            blocked=context.get("passed") is not True or dry_run.get("passed") is not True,
         )
     )
 
@@ -494,13 +462,9 @@ def build_recommendations(
     )
 
     if plans.get("related_plan_count", 0) == 0:
-        risks.append(
-            "No active execution plan currently appears tied to selective planner work."
-        )
+        risks.append("No active execution plan currently appears tied to selective planner work.")
     if not any(tech_debt.get("keywords", {}).values()):
-        risks.append(
-            "Tech debt tracker does not yet expose strong selective-planner markers."
-        )
+        risks.append("Tech debt tracker does not yet expose strong selective-planner markers.")
 
     return validators, patch_specs, blocked, local_only, github_only, risks
 
@@ -556,15 +520,13 @@ def build_plan(args: argparse.Namespace) -> dict[str, Any]:
     plans = summarize_execution_plans(plan_dir, repo_root)
     tech_debt = summarize_tech_debt(tech_debt_path, repo_root)
 
-    validators, patch_specs, blocked, local_only, github_only, risks = (
-        build_recommendations(
-            context=context,
-            dry_run=dry_run,
-            provider=provider,
-            validation=validation,
-            plans=plans,
-            tech_debt=tech_debt,
-        )
+    validators, patch_specs, blocked, local_only, github_only, risks = build_recommendations(
+        context=context,
+        dry_run=dry_run,
+        provider=provider,
+        validation=validation,
+        plans=plans,
+        tech_debt=tech_debt,
     )
 
     warnings: list[str] = []
@@ -692,19 +654,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--context-pack-evidence", default=DEFAULT_CONTEXT_EVIDENCE)
-    parser.add_argument(
-        "--context-pack-evidence-md", default=DEFAULT_CONTEXT_EVIDENCE_MD
-    )
+    parser.add_argument("--context-pack-evidence-md", default=DEFAULT_CONTEXT_EVIDENCE_MD)
     parser.add_argument("--dry-run-evidence", default=DEFAULT_DRY_RUN_EVIDENCE)
     parser.add_argument("--provider-evidence", default=DEFAULT_PROVIDER_EVIDENCE)
-    parser.add_argument(
-        "--validation-report-contract", default=DEFAULT_VALIDATION_CONTRACT
-    )
+    parser.add_argument("--validation-report-contract", default=DEFAULT_VALIDATION_CONTRACT)
     parser.add_argument("--execution-plan-dir", default=DEFAULT_EXECUTION_PLAN_DIR)
     parser.add_argument("--tech-debt", default=DEFAULT_TECH_DEBT)
-    parser.add_argument(
-        "--output", default="output/ai_pipeline/selective_execution_plan.json"
-    )
+    parser.add_argument("--output", default="output/ai_pipeline/selective_execution_plan.json")
     parser.add_argument(
         "--markdown-output", default="output/ai_pipeline/selective_execution_plan.md"
     )
@@ -715,9 +671,7 @@ def main() -> int:
 
     output = resolve_repo_path(repo_root, args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     markdown_output = resolve_repo_path(repo_root, args.markdown_output)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)

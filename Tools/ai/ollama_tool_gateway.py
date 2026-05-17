@@ -95,11 +95,7 @@ def now_stamp() -> str:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -203,11 +199,7 @@ def iter_candidate_files(config: GatewayConfig, roots: list[str]) -> list[Path]:
         root = resolve_repo_path(config.repo_root, root_rel)
         if not is_under(root, config.repo_root) or not root.exists():
             continue
-        candidates = (
-            [root]
-            if root.is_file()
-            else sorted(p for p in root.rglob("*") if p.is_file())
-        )
+        candidates = [root] if root.is_file() else sorted(p for p in root.rglob("*") if p.is_file())
         for path in candidates:
             rel = repo_rel(path, config.repo_root)
             if path in seen:
@@ -261,17 +253,13 @@ def file_search(config: GatewayConfig, query: str, roots: list[str]) -> dict[str
     }
 
 
-def run_repo_tool(
-    config: GatewayConfig, args: list[str], output_name: str
-) -> dict[str, Any]:
+def run_repo_tool(config: GatewayConfig, args: list[str], output_name: str) -> dict[str, Any]:
     output_json = config.output_dir / f"{output_name}.json"
     output_md = config.output_dir / f"{output_name}.md"
     cmd = [sys.executable, *args, "--repo-root", ".", "--output", str(output_json)]
     if "--markdown-output" not in args:
         cmd.extend(["--markdown-output", str(output_md)])
-    proc = subprocess.run(
-        cmd, cwd=config.repo_root, text=True, capture_output=True, timeout=120
-    )
+    proc = subprocess.run(cmd, cwd=config.repo_root, text=True, capture_output=True, timeout=120)
     result: dict[str, Any] = {
         "passed": proc.returncode == 0,
         "returncode": proc.returncode,
@@ -282,21 +270,16 @@ def run_repo_tool(
     }
     if output_json.exists():
         try:
-            data = json.loads(
-                output_json.read_text(encoding="utf-8-sig", errors="replace")
-            )
+            data = json.loads(output_json.read_text(encoding="utf-8-sig", errors="replace"))
             result["report_summary"] = {
-                key: data.get(key)
-                for key in ("kind", "passed", "errors", "warnings", "result")
+                key: data.get(key) for key in ("kind", "passed", "errors", "warnings", "result")
             }
         except json.JSONDecodeError as exc:
             result["json_error"] = str(exc)
     return result
 
 
-def memory_search(
-    config: GatewayConfig, query: str, scope: str, limit: int
-) -> dict[str, Any]:
+def memory_search(config: GatewayConfig, query: str, scope: str, limit: int) -> dict[str, Any]:
     scope = scope if scope in {"operational", "persistent"} else "operational"
     return run_repo_tool(
         config,
@@ -359,17 +342,13 @@ def build_context_pack(config: GatewayConfig, profile: str) -> dict[str, Any]:
 
 def execute_tool(config: GatewayConfig, request: dict[str, Any]) -> dict[str, Any]:
     tool = str(request.get("tool") or "").strip()
-    args = (
-        request.get("arguments") if isinstance(request.get("arguments"), dict) else {}
-    )
+    args = request.get("arguments") if isinstance(request.get("arguments"), dict) else {}
     try:
         if tool == "file_read":
             return read_text_file(config, str(args.get("path") or ""))
         if tool == "file_search":
             roots = args.get("roots") if isinstance(args.get("roots"), list) else []
-            return file_search(
-                config, str(args.get("query") or ""), [str(item) for item in roots]
-            )
+            return file_search(config, str(args.get("query") or ""), [str(item) for item in roots])
         if tool == "memory_search":
             return memory_search(
                 config,
@@ -386,9 +365,7 @@ def execute_tool(config: GatewayConfig, request: dict[str, Any]) -> dict[str, An
                 [str(item) for item in tags],
             )
         if tool == "build_context_pack":
-            return build_context_pack(
-                config, str(args.get("profile") or "core_ai_backend")
-            )
+            return build_context_pack(config, str(args.get("profile") or "core_ai_backend"))
         return {"passed": False, "error": f"tool not allowlisted: {tool}"}
     except Exception as exc:  # noqa: BLE001 - report result for model loop.
         return {"passed": False, "error": f"{type(exc).__name__}: {exc}"}
@@ -431,16 +408,12 @@ def ollama_chat(config: GatewayConfig, messages: list[dict[str, str]]) -> str:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(
-            req, timeout=240
-        ) as response:  # noqa: S310 - local/operator configured endpoint.
+        with urllib.request.urlopen(req, timeout=240) as response:  # noqa: S310 - local/operator configured endpoint.
             raw = response.read().decode("utf-8", errors="replace")
     except urllib.error.URLError as exc:
         raise RuntimeError(f"Ollama request failed: {exc}") from exc
     parsed = json.loads(raw)
-    return str(
-        (parsed.get("message") or {}).get("content") or parsed.get("response") or ""
-    )
+    return str((parsed.get("message") or {}).get("content") or parsed.get("response") or "")
 
 
 def system_prompt() -> str:
@@ -482,14 +455,11 @@ def run_loop(config: GatewayConfig, task: str) -> dict[str, Any]:
             break
         tool_result = execute_tool(config, data)
         events[-1]["tool_result"] = tool_result
-        messages.append(
-            {"role": "assistant", "content": json.dumps(data, ensure_ascii=False)}
-        )
+        messages.append({"role": "assistant", "content": json.dumps(data, ensure_ascii=False)})
         messages.append(
             {
                 "role": "user",
-                "content": "TOOL_RESULT:\n"
-                + json.dumps(tool_result, ensure_ascii=False),
+                "content": "TOOL_RESULT:\n" + json.dumps(tool_result, ensure_ascii=False),
             }
         )
     else:
@@ -510,9 +480,7 @@ def write_outputs(config: GatewayConfig, report: dict[str, Any]) -> dict[str, st
     stamp = now_stamp()
     json_path = config.output_dir / f"ollama_tool_gateway_{stamp}.json"
     md_path = config.output_dir / f"ollama_tool_gateway_{stamp}.md"
-    json_path.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     md_path.write_text(
         "# Ollama Tool Gateway\n\n" + report.get("final_answer", "") + "\n",
         encoding="utf-8",

@@ -56,12 +56,8 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Do not include current non-stamped repository suggestion/proposal reports.",
     )
-    parser.add_argument(
-        "--output", default="output/validation/patch_suggestion_bundle_apply.json"
-    )
-    parser.add_argument(
-        "--apply", action="store_true", help="Actually write source/doc files."
-    )
+    parser.add_argument("--output", default="output/validation/patch_suggestion_bundle_apply.json")
+    parser.add_argument("--apply", action="store_true", help="Actually write source/doc files.")
     parser.add_argument(
         "--allow-dirty",
         action="store_true",
@@ -145,9 +141,7 @@ def main() -> int:
     errors.extend(branch_prepare.get("errors") or [])
     warnings.extend(branch_prepare.get("warnings") or [])
 
-    if args.apply and not any(
-        branch.startswith(prefix) for prefix in args.allowed_branch_prefix
-    ):
+    if args.apply and not any(branch.startswith(prefix) for prefix in args.allowed_branch_prefix):
         errors.append(f"refusing --apply on branch {branch!r}; expected allowed prefix")
     if args.apply and status_before and not args.allow_dirty:
         errors.append(
@@ -175,9 +169,7 @@ def main() -> int:
     )
     report_paths = ReportPathNormalizer(repo_root).unique(
         unique_in_order(
-            split_values(args.suggestion_report)
-            + discovered_reports
-            + current_suggestion_reports
+            split_values(args.suggestion_report) + discovered_reports + current_suggestion_reports
         )
     )
 
@@ -259,15 +251,9 @@ def main() -> int:
         "manual_review_items": manual_review[:200],
         "manual_review_product": product,
         "patch_product_status": product["patch_product_status"],
-        "ready_for_patch_suggestion_review": product[
-            "ready_for_patch_suggestion_review"
-        ],
-        "essential_patch_suggestion_items": product[
-            "product_facing_manual_review_items"
-        ],
-        "supplemental_telemetry_debug_items": product[
-            "supplemental_manual_review_items"
-        ],
+        "ready_for_patch_suggestion_review": product["ready_for_patch_suggestion_review"],
+        "essential_patch_suggestion_items": product["product_facing_manual_review_items"],
+        "supplemental_telemetry_debug_items": product["supplemental_manual_review_items"],
         "results": results,
         "git_status_before": status_before,
         "git_status_after": git_status_short(repo_root),

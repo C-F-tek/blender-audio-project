@@ -1,8 +1,7 @@
 import bpy
-
-from .common import ANALYSIS_JSON_PATH, cfg_value, load_analysis
 from spaziotempo.core.registry import LAYER_ORDER, LAYER_SPECS, PROJECT_ROOT_COLLECTION
 
+from .common import ANALYSIS_JSON_PATH, cfg_value, load_analysis
 
 STRUCTURAL_OBJECTS = [
     "HeroRoot",
@@ -97,17 +96,23 @@ def analyze_rebuild_need():
             blocking.append(f"Missing structural object `{name}`: run `main_v61b.py`.")
 
     if count_objects("PhysicsAccent_") == 0:
-        warnings.append("No `PhysicsAccent_*` objects found: Physics hotpatch has nothing to update.")
+        warnings.append(
+            "No `PhysicsAccent_*` objects found: Physics hotpatch has nothing to update."
+        )
     else:
         ok.append(f"OK PhysicsAccent objects: {count_objects('PhysicsAccent_')}")
 
     if not modifier_exists("HeroAudioMeshDisplace"):
-        warnings.append("Hero mesh deform modifier missing: run full rebuild if you expect mesh deformation.")
+        warnings.append(
+            "Hero mesh deform modifier missing: run full rebuild if you expect mesh deformation."
+        )
     else:
         ok.append("OK hero mesh deform modifier")
 
     if not material_node_exists("HeroMatEmissionValue"):
-        warnings.append("Hero audio material nodes missing: use Hot Update Materials or full rebuild.")
+        warnings.append(
+            "Hero audio material nodes missing: use Hot Update Materials or full rebuild."
+        )
     else:
         ok.append("OK hero material nodes")
 
@@ -123,18 +128,24 @@ def analyze_rebuild_need():
     if not has_object("HeroGravityField") and has_object("PulseForceField"):
         warnings.append("Old `PulseForceField` found: Hot Update Physics can rename/update it.")
     elif not has_object("HeroGravityField"):
-        warnings.append("No `HeroGravityField`: Hot Update Physics can create it, full rebuild creates it cleanly.")
+        warnings.append(
+            "No `HeroGravityField`: Hot Update Physics can create it, full rebuild creates it cleanly."
+        )
     else:
         ok.append("OK HeroGravityField")
 
     if collection_exists(PROJECT_ROOT_COLLECTION):
         ok.append(f"OK layer root collection: {PROJECT_ROOT_COLLECTION}")
     else:
-        warnings.append("Layer collections missing: use Hot Update All or rebuild with updated `main_v61b.py`.")
+        warnings.append(
+            "Layer collections missing: use Hot Update All or rebuild with updated `main_v61b.py`."
+        )
 
     restart = []
     if not hasattr(bpy.types.Scene, "spaziotempo_tuning"):
-        restart.append("Panel properties not registered: run `scene_tuning_panel.py` or rebuild with updated `main_v61b.py`.")
+        restart.append(
+            "Panel properties not registered: run `scene_tuning_panel.py` or rebuild with updated `main_v61b.py`."
+        )
 
     lines = [
         "SPAZIOTEMPO REBUILD / RESTART CHECK",
@@ -175,7 +186,7 @@ def analyze_optimizer():
     particle_systems = []
     for obj in bpy.data.objects:
         for mod in obj.modifiers:
-            if mod.type == 'PARTICLE_SYSTEM':
+            if mod.type == "PARTICLE_SYSTEM":
                 ps = getattr(mod, "particle_system", None)
                 if ps is not None:
                     particle_systems.append((obj, ps, mod))
@@ -198,16 +209,21 @@ def analyze_optimizer():
 
     rb_world = getattr(scene, "rigidbody_world", None)
     active_rigid = [
-        obj for obj in bpy.data.objects
+        obj
+        for obj in bpy.data.objects
         if getattr(obj, "rigid_body", None) is not None
-        and obj.rigid_body.type == 'ACTIVE'
+        and obj.rigid_body.type == "ACTIVE"
         and not getattr(obj.rigid_body, "kinematic", False)
     ]
     if active_rigid:
         state = point_cache_state(getattr(rb_world, "point_cache", None) if rb_world else None)
         if state != "baked":
-            warnings.append(f"{len(active_rigid)} active rigid bodies are dynamic and rigid body cache is {state}.")
-            suggestions.append("Bake rigid body cache before final render or make those bodies kinematic/keyframed.")
+            warnings.append(
+                f"{len(active_rigid)} active rigid bodies are dynamic and rigid body cache is {state}."
+            )
+            suggestions.append(
+                "Bake rigid body cache before final render or make those bodies kinematic/keyframed."
+            )
         else:
             ok.append("Rigid body cache baked")
     else:
@@ -231,7 +247,9 @@ def analyze_optimizer():
         suggestions.append("For long final renders, IMAGE_SEQUENCE is safer than direct MP4.")
 
     if bool(cfg_value("FOG_VOLUME_ENABLED", False)):
-        suggestions.append("Volumetric fog is enabled: use fog filaments for faster renders and fewer square artifacts.")
+        suggestions.append(
+            "Volumetric fog is enabled: use fog filaments for faster renders and fewer square artifacts."
+        )
     else:
         ok.append("Volumetric fog disabled: fog filaments should avoid Eevee grid artifacts")
 
@@ -241,17 +259,19 @@ def analyze_optimizer():
     counts = layer_collection_counts()
     if any(counts.values()):
         visible_counts = [
-            f"{LAYER_SPECS[key].collection}={count}"
-            for key, count in counts.items()
-            if count
+            f"{LAYER_SPECS[key].collection}={count}" for key, count in counts.items() if count
         ]
         ok.append("Layer classification: " + ", ".join(visible_counts))
     else:
-        suggestions.append("Run Hot Update All once to populate ST_* layer collections and object metadata.")
+        suggestions.append(
+            "Run Hot Update All once to populate ST_* layer collections and object metadata."
+        )
 
     render = scene.render
     if getattr(render, "use_motion_blur", False):
-        suggestions.append("Motion blur is on: highest visual cost after volumetrics. Use YT Fast profiles for tests.")
+        suggestions.append(
+            "Motion blur is on: highest visual cost after volumetrics. Use YT Fast profiles for tests."
+        )
 
     eevee = getattr(scene, "eevee", None)
     if eevee is not None and hasattr(eevee, "volumetric_samples"):

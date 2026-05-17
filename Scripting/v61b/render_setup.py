@@ -1,38 +1,38 @@
-import bpy
 from pathlib import Path
 
+import bpy
+
 from config import (
-    RENDER_RESOLUTION_X,
-    RENDER_RESOLUTION_Y,
-    USE_4K,
-    RENDER_PERCENT,
-    USE_MOTION_BLUR,
-    EEVEE_TAA_RENDER_SAMPLES,
-    USE_BLOOM,
-    BLOOM_THRESHOLD,
-    BLOOM_INTENSITY,
-    VIEW_EXPOSURE,
-    VIEW_GAMMA,
-    VIDEO_BITRATE,
-    VIDEO_MAXRATE,
-    VIDEO_MINRATE,
-    VIDEO_BUFFERSIZE,
     AUDIO_BITRATE,
-    RENDER_OUTPUT_MODE,
-    OUTPUT_IMAGE_SEQUENCE_DIR,
-    OUTPUT_IMAGE_SEQUENCE_PREFIX,
-    IMAGE_SEQUENCE_FORMAT,
-    IMAGE_SEQUENCE_COLOR_DEPTH,
-    IMAGE_SEQUENCE_COMPRESSION,
-    VOLUMETRIC_SAMPLES,
-    VOLUMETRIC_TILE_SIZE,
-    FOG_VOLUME_ENABLED,
-    USE_COMPOSITING,
-    COMPOSITOR_GLARE_THRESHOLD_MAX,
+    BLOOM_INTENSITY,
+    BLOOM_THRESHOLD,
     COMPOSITOR_GLARE_MIX,
     COMPOSITOR_GLARE_SIZE,
-    COMPOSITOR_LENS_DISTORT_MIN,
+    COMPOSITOR_GLARE_THRESHOLD_MAX,
     COMPOSITOR_LENS_DISPERSION_MIN,
+    COMPOSITOR_LENS_DISTORT_MIN,
+    EEVEE_TAA_RENDER_SAMPLES,
+    FOG_VOLUME_ENABLED,
+    IMAGE_SEQUENCE_COLOR_DEPTH,
+    IMAGE_SEQUENCE_COMPRESSION,
+    IMAGE_SEQUENCE_FORMAT,
+    OUTPUT_IMAGE_SEQUENCE_DIR,
+    OUTPUT_IMAGE_SEQUENCE_PREFIX,
+    RENDER_OUTPUT_MODE,
+    RENDER_PERCENT,
+    RENDER_RESOLUTION_X,
+    RENDER_RESOLUTION_Y,
+    USE_BLOOM,
+    USE_COMPOSITING,
+    USE_MOTION_BLUR,
+    VIDEO_BITRATE,
+    VIDEO_BUFFERSIZE,
+    VIDEO_MAXRATE,
+    VIDEO_MINRATE,
+    VIEW_EXPOSURE,
+    VIEW_GAMMA,
+    VOLUMETRIC_SAMPLES,
+    VOLUMETRIC_TILE_SIZE,
 )
 
 
@@ -78,7 +78,9 @@ def configure_compositor(scene):
 
     tree = get_scene_compositor_tree(scene)
     if tree is None:
-        print("[WARN] Compositor saltato: questa build non espone un node tree compositor compatibile.")
+        print(
+            "[WARN] Compositor saltato: questa build non espone un node tree compositor compatibile."
+        )
         return
 
     nodes = tree.nodes
@@ -95,11 +97,11 @@ def configure_compositor(scene):
     glare.label = "Audio Soft Glare"
     glare.location = (-520, 0)
     try:
-        glare.glare_type = 'FOG_GLOW'
+        glare.glare_type = "FOG_GLOW"
     except Exception:
         pass
     try:
-        glare.quality = 'MEDIUM'
+        glare.quality = "MEDIUM"
     except Exception:
         pass
     try:
@@ -157,7 +159,7 @@ def configure_compositor(scene):
 def configure_render(scene, output_mp4, fps):
     scene.render.fps = int(round(fps))
     scene.render.use_file_extension = True
-    scene.render.engine = 'BLENDER_EEVEE'
+    scene.render.engine = "BLENDER_EEVEE"
 
     scene.render.resolution_x = RENDER_RESOLUTION_X
     scene.render.resolution_y = RENDER_RESOLUTION_Y
@@ -177,12 +179,12 @@ def configure_render(scene, output_mp4, fps):
         scene.render.use_sequencer = False
 
         try:
-            scene.render.image_settings.media_type = 'IMAGE'
+            scene.render.image_settings.media_type = "IMAGE"
         except Exception:
             pass
         try:
             scene.render.image_settings.file_format = IMAGE_SEQUENCE_FORMAT
-            scene.render.image_settings.color_mode = 'RGB'
+            scene.render.image_settings.color_mode = "RGB"
             scene.render.image_settings.color_depth = IMAGE_SEQUENCE_COLOR_DEPTH
             scene.render.image_settings.compression = IMAGE_SEQUENCE_COMPRESSION
         except Exception:
@@ -194,22 +196,22 @@ def configure_render(scene, output_mp4, fps):
         scene.render.use_sequencer = True
 
         try:
-            scene.render.image_settings.media_type = 'VIDEO'
+            scene.render.image_settings.media_type = "VIDEO"
         except Exception:
             pass
 
         try:
-            scene.render.image_settings.file_format = 'FFMPEG'
-            scene.render.image_settings.color_mode = 'RGB'
+            scene.render.image_settings.file_format = "FFMPEG"
+            scene.render.image_settings.color_mode = "RGB"
         except Exception:
             pass
 
-        scene.render.ffmpeg.format = 'MPEG4'
-        scene.render.ffmpeg.codec = 'H264'
-        scene.render.ffmpeg.audio_codec = 'AAC'
+        scene.render.ffmpeg.format = "MPEG4"
+        scene.render.ffmpeg.codec = "H264"
+        scene.render.ffmpeg.audio_codec = "AAC"
         scene.render.ffmpeg.audio_bitrate = AUDIO_BITRATE
 
-        for crf in ('PERC_LOSSLESS', 'HIGH'):
+        for crf in ("PERC_LOSSLESS", "HIGH"):
             try:
                 scene.render.ffmpeg.constant_rate_factor = crf
                 break
@@ -217,7 +219,7 @@ def configure_render(scene, output_mp4, fps):
                 pass
 
         try:
-            scene.render.ffmpeg.ffmpeg_preset = 'GOOD'
+            scene.render.ffmpeg.ffmpeg_preset = "GOOD"
         except Exception:
             pass
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
 
 DEFAULT_MAX_LINES = 400
 DEFAULT_INCLUDE_SUFFIXES = (
@@ -97,7 +97,9 @@ def is_excluded(path: Path, repo_root: Path, excluded_dirs: set[str]) -> bool:
     return False
 
 
-def iter_candidate_files(repo_root: Path, suffixes: tuple[str, ...], excluded_dirs: set[str]) -> Iterable[Path]:
+def iter_candidate_files(
+    repo_root: Path, suffixes: tuple[str, ...], excluded_dirs: set[str]
+) -> Iterable[Path]:
     """Yield only readable files; directory-form *.md containers are traversed."""
     for path in repo_root.rglob("*"):
         if path.is_dir():
@@ -244,7 +246,9 @@ def write_markdown(path: Path, data: dict[str, object]) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Report files that exceed the IA-Carmine 400-line policy.")
+    parser = argparse.ArgumentParser(
+        description="Report files that exceed the IA-Carmine 400-line policy."
+    )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--max-lines", type=int, default=DEFAULT_MAX_LINES)
     parser.add_argument("--include-suffix", action="append", default=[])

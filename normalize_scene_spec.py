@@ -1,7 +1,7 @@
-from pathlib import Path
 import json
 import re
 import sys
+from pathlib import Path
 
 ROOT = Path.home() / "blender"
 PROJECT_DIR = ROOT / "blender-audio-project"
@@ -19,29 +19,20 @@ PALETTE_MAP = {
     "soft_white": "#F2F0E8",
     "warm_amber": "#C27A3A",
     "dark_teal": "#1E5A63",
-    "midnight_black": "#0B0D12"
+    "midnight_black": "#0B0D12",
 }
 
 CAMERA_PRESETS = {
-    "frontal": {
-        "location": [0.0, -8.8, 2.4],
-        "rotation": [74.0, 0.0, 0.0]
-    },
-    "slightly_top": {
-        "location": [0.0, -9.2, 3.4],
-        "rotation": [72.0, 0.0, 0.0]
-    },
-    "angled_front": {
-        "location": [1.2, -8.9, 2.9],
-        "rotation": [73.0, 0.0, 7.0]
-    }
+    "frontal": {"location": [0.0, -8.8, 2.4], "rotation": [74.0, 0.0, 0.0]},
+    "slightly_top": {"location": [0.0, -9.2, 3.4], "rotation": [72.0, 0.0, 0.0]},
+    "angled_front": {"location": [1.2, -8.9, 2.9], "rotation": [73.0, 0.0, 7.0]},
 }
 
 
 def load_json(path: Path) -> dict:
     if not path.exists():
         raise FileNotFoundError(f"Scene brief non trovato: {path}")
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -98,7 +89,7 @@ def normalize_camera_style(camera_style: dict):
         "lens": lens,
         "angle_bias": angle_bias,
         "location": preset["location"],
-        "rotation_degrees": preset["rotation"]
+        "rotation_degrees": preset["rotation"],
     }
 
 
@@ -114,9 +105,9 @@ def build_object_specs(brief: dict):
                 "location": [0.0, 0.0, 1.15],
                 "rotation": [0.0, 0.0, 0.0],
                 "scale": [1.15, 1.15, 1.15],
-                "subdivisions": 2
+                "subdivisions": 2,
             },
-            "material": "hero_core_material"
+            "material": "hero_core_material",
         },
         {
             "type": "light_architecture",
@@ -126,9 +117,9 @@ def build_object_specs(brief: dict):
                 "primitive": "instanced_columns_ring",
                 "count": 12,
                 "radius": 4.4,
-                "height": 2.6
+                "height": 2.6,
             },
-            "material": "light_arch_material"
+            "material": "light_arch_material",
         },
         {
             "type": "reflective_floor",
@@ -138,19 +129,16 @@ def build_object_specs(brief: dict):
                 "primitive": "plane",
                 "location": [0.0, 0.0, 0.0],
                 "rotation": [0.0, 0.0, 0.0],
-                "scale": [14.0, 14.0, 1.0]
+                "scale": [14.0, 14.0, 1.0],
             },
-            "material": "floor_material"
+            "material": "floor_material",
         },
         {
             "type": "floating_lights",
             "name": "floating_lights",
             "role": "harmonic accents",
-            "geometry": {
-                "primitive": "floating_orbs",
-                "count": 4
-            },
-            "material": "floating_light_material"
+            "geometry": {"primitive": "floating_orbs", "count": 4},
+            "material": "floating_light_material",
         },
         {
             "type": "volumetric_shell",
@@ -160,10 +148,10 @@ def build_object_specs(brief: dict):
                 "primitive": "cube_volume",
                 "location": [0.0, 0.0, 3.0],
                 "rotation": [0.0, 0.0, 0.0],
-                "scale": [9.0, 9.0, 4.5]
+                "scale": [9.0, 9.0, 4.5],
             },
-            "material": "volume_material"
-        }
+            "material": "volume_material",
+        },
     ]
 
     if hero_object == "luminous_pillar":
@@ -193,8 +181,8 @@ def build_materials(brief: dict):
                 "emission_strength": 2.2,
                 "noise_scale": 3.0,
                 "fresnel": 0.65,
-                "mix_factor": 0.55
-            }
+                "mix_factor": 0.55,
+            },
         },
         {
             "name": "light_arch_material",
@@ -202,11 +190,7 @@ def build_materials(brief: dict):
             "shader_type": "gradient_emission",
             "node_features": ["gradient", "color_ramp", "mapping", "emission"],
             "purpose": "rhythmic luminous architecture",
-            "defaults": {
-                "emission_strength": 1.6,
-                "gradient_shift": 0.0,
-                "color_mix": 0.5
-            }
+            "defaults": {"emission_strength": 1.6, "gradient_shift": 0.0, "color_mix": 0.5},
         },
         {
             "name": "floor_material",
@@ -214,11 +198,7 @@ def build_materials(brief: dict):
             "shader_type": "reflective_principled",
             "node_features": ["noise", "bump", "roughness_variation", "fresnel"],
             "purpose": "depth, reflection and grounding",
-            "defaults": {
-                "roughness": 0.24,
-                "bump_strength": 0.08,
-                "metallic": 0.18
-            }
+            "defaults": {"roughness": 0.24, "bump_strength": 0.08, "metallic": 0.18},
         },
         {
             "name": "floating_light_material",
@@ -226,10 +206,7 @@ def build_materials(brief: dict):
             "shader_type": "soft_emission",
             "node_features": ["emission", "noise", "color_variation"],
             "purpose": "harmonic floating accents",
-            "defaults": {
-                "emission_strength": 1.5,
-                "noise_scale": 4.0
-            }
+            "defaults": {"emission_strength": 1.5, "noise_scale": 4.0},
         },
         {
             "name": "volume_material",
@@ -237,11 +214,8 @@ def build_materials(brief: dict):
             "shader_type": "principled_volume",
             "node_features": ["volume_density", "anisotropy"],
             "purpose": "cinematic atmosphere",
-            "defaults": {
-                "density": 0.015,
-                "anisotropy": 0.20
-            }
-        }
+            "defaults": {"density": 0.015, "anisotropy": 0.20},
+        },
     ]
 
     if lighting_style == "reflective_low_key_lighting":
@@ -261,50 +235,50 @@ def build_node_animation(brief: dict):
             "parameter": "emission_strength",
             "band": "beat",
             "intent": "main musical pulse",
-            "strength": 1.0
+            "strength": 1.0,
         },
         {
             "target": "hero_core_material",
             "parameter": "noise_scale",
             "band": "low",
             "intent": "body deformation illusion",
-            "strength": 0.65
+            "strength": 0.65,
         },
         {
             "target": "hero_core_material",
             "parameter": "mix_factor",
             "band": "mid",
             "intent": "surface shimmer and motion",
-            "strength": 0.45
+            "strength": 0.45,
         },
         {
             "target": "light_arch_material",
             "parameter": "emission_strength",
             "band": "high",
             "intent": "harmonic brightness",
-            "strength": 0.80
+            "strength": 0.80,
         },
         {
             "target": "light_arch_material",
             "parameter": "gradient_shift",
             "band": "mid",
             "intent": "circulating light flow",
-            "strength": 0.50
+            "strength": 0.50,
         },
         {
             "target": "floor_material",
             "parameter": "roughness",
             "band": "low",
             "intent": "subtle reflective breathing",
-            "strength": 0.30
+            "strength": 0.30,
         },
         {
             "target": "volume_material",
             "parameter": "density",
             "band": "beat",
             "intent": "volumetric pulse",
-            "strength": 0.18
-        }
+            "strength": 0.18,
+        },
     ]
 
 
@@ -315,43 +289,43 @@ def build_audio_mapping(brief: dict):
             "property": "scale",
             "band": "low",
             "intent": "central body pulse",
-            "strength": 0.55
+            "strength": 0.55,
         },
         {
             "target": "hero_core",
             "property": "rotation",
             "band": "mid",
             "intent": "gentle musical sway",
-            "strength": 0.25
+            "strength": 0.25,
         },
         {
             "target": "light_architecture",
             "property": "rotation",
             "band": "mid",
             "intent": "architectural motion",
-            "strength": 0.40
+            "strength": 0.40,
         },
         {
             "target": "light_architecture",
             "property": "emission",
             "band": "high",
             "intent": "harmonic brightness accents",
-            "strength": 0.72
+            "strength": 0.72,
         },
         {
             "target": "floating_lights",
             "property": "intensity",
             "band": "high",
             "intent": "sparkle accents",
-            "strength": 0.70
+            "strength": 0.70,
         },
         {
             "target": "camera",
             "property": "pulse",
             "band": "beat",
             "intent": "subtle rhythmic camera bump",
-            "strength": 0.28
-        }
+            "strength": 0.28,
+        },
     ]
 
 
@@ -367,8 +341,8 @@ def build_optimization():
             "use instanced ring architecture",
             "prefer procedural shading",
             "use one volumetric shell only",
-            "avoid subdivision-heavy meshes"
-        ]
+            "avoid subdivision-heavy meshes",
+        ],
     }
 
 
@@ -376,17 +350,22 @@ def build_render_strategy():
     return {
         "engine": "BLENDER_EEVEE",
         "priority": "fast iteration with rich shading",
-        "notes": "use emission, procedural shaders and moderate volumetrics"
+        "notes": "use emission, procedural shaders and moderate volumetrics",
     }
 
 
 def normalize_brief(brief: dict):
     scene_name = safe_scene_name(brief.get("scene_name"))
-    style_mode = str(brief.get("style_mode", "stylized_cinematic_abstract")).strip() or "stylized_cinematic_abstract"
+    style_mode = (
+        str(brief.get("style_mode", "stylized_cinematic_abstract")).strip()
+        or "stylized_cinematic_abstract"
+    )
     visual_concept = safe_visual_concept(brief.get("visual_concept"))
     hero_object = str(brief.get("hero_object", "central_core")).strip() or "central_core"
     environment = str(brief.get("environment", "abstract_stage")).strip() or "abstract_stage"
-    lighting_style = str(brief.get("lighting_style", "soft_volumetric_glow")).strip() or "soft_volumetric_glow"
+    lighting_style = (
+        str(brief.get("lighting_style", "soft_volumetric_glow")).strip() or "soft_volumetric_glow"
+    )
 
     palette = normalize_palette(brief.get("palette", []))
     camera_style = normalize_camera_style(brief.get("camera_style", {}))
@@ -411,7 +390,7 @@ def normalize_brief(brief: dict):
         "node_animation": node_animation,
         "audio_mapping": audio_mapping,
         "optimization": optimization,
-        "render_strategy": render_strategy
+        "render_strategy": render_strategy,
     }
 
 

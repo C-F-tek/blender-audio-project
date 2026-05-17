@@ -6,6 +6,7 @@ catch known incompatible or dangerous patterns before a generated script is run
 inside Blender, while keeping the underlying rule engine reusable for other
 file/application contexts.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -93,7 +94,10 @@ def sample_results() -> list[dict[str, Any]]:
         "warning_python_eval_exec": "import bpy\nvalue = eval('1 + 1')\n",
         "missing_bpy_import": "print('not a Blender script')\n",
     }
-    return [evaluate_python_text(name, text, BLENDER_GENERATED_SCRIPT_RULES).to_dict() for name, text in samples.items()]
+    return [
+        evaluate_python_text(name, text, BLENDER_GENERATED_SCRIPT_RULES).to_dict()
+        for name, text in samples.items()
+    ]
 
 
 def _repo_path(repo_root: Path, value: str) -> Path:
@@ -107,7 +111,9 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
     """Evaluate generated Blender script policy."""
     explicit_paths = [_repo_path(repo_root, item) for item in paths]
     target_paths = explicit_paths or default_candidate_paths(repo_root)
-    path_results = evaluate_python_paths(target_paths, BLENDER_GENERATED_SCRIPT_RULES) if target_paths else []
+    path_results = (
+        evaluate_python_paths(target_paths, BLENDER_GENERATED_SCRIPT_RULES) if target_paths else []
+    )
     samples = sample_results()
 
     sample_expectations = {
@@ -122,7 +128,9 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
     for item in samples:
         expected = sample_expectations[item["label"]]
         if item["passed"] is not expected:
-            sample_errors.append(f"sample {item['label']} expected passed={expected}, got {item['passed']}")
+            sample_errors.append(
+                f"sample {item['label']} expected passed={expected}, got {item['passed']}"
+            )
 
     path_errors = [item.to_dict() for item in path_results if not item.passed]
     errors = sample_errors + [f"path policy failed: {item['label']}" for item in path_errors]
@@ -154,7 +162,12 @@ def check_policy(repo_root: Path, paths: list[str]) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--path", action="append", default=[], help="Generated Blender Python script path to validate. Can be repeated.")
+    parser.add_argument(
+        "--path",
+        action="append",
+        default=[],
+        help="Generated Blender Python script path to validate. Can be repeated.",
+    )
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()
 

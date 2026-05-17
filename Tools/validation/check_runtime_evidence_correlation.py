@@ -11,7 +11,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 SURFACE_ORDER = [
@@ -189,9 +193,7 @@ def discover_surface(repo_root: Path, surface: str, stamp: str) -> Path | None:
     for raw_pattern in patterns:
         pattern = str(repo_root / raw_pattern.format(stamp=stamp))
         matches = [
-            Path(item)
-            for item in glob.glob(pattern, recursive=True)
-            if Path(item).is_file()
+            Path(item) for item in glob.glob(pattern, recursive=True) if Path(item).is_file()
         ]
         if matches:
             matches.sort(key=lambda item: item.stat().st_mtime, reverse=True)
@@ -199,7 +201,9 @@ def discover_surface(repo_root: Path, surface: str, stamp: str) -> Path | None:
     return None
 
 
-def build_surface(repo_root: Path, stamp: str, surface: str, explicit_path: Path | None, require_stamp: bool) -> dict[str, Any]:
+def build_surface(
+    repo_root: Path, stamp: str, surface: str, explicit_path: Path | None, require_stamp: bool
+) -> dict[str, Any]:
     path = explicit_path if explicit_path else discover_surface(repo_root, surface, stamp)
     report, error = load_json(path)
     exists = bool(path and path.exists())
@@ -288,11 +292,15 @@ def main() -> int:
         elif not item["json_ok"]:
             errors.append(f"invalid runtime evidence JSON: {item['surface']} ({item['error']})")
         elif not item["stamp_ok"]:
-            errors.append(f"runtime evidence surface is not correlated with stamp {stamp}: {item['surface']}")
+            errors.append(
+                f"runtime evidence surface is not correlated with stamp {stamp}: {item['surface']}"
+            )
         elif item["passed_value"] is False:
             errors.append(f"runtime evidence surface explicitly failed: {item['surface']}")
         elif not item["hints_ok"]:
-            errors.append(f"runtime evidence surface lacks required semantic hints: {item['surface']}")
+            errors.append(
+                f"runtime evidence surface lacks required semantic hints: {item['surface']}"
+            )
         else:
             errors.append(f"runtime evidence surface failed: {item['surface']}")
 

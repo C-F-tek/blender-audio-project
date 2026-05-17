@@ -50,10 +50,10 @@ cfg = importlib.reload(cfg)
 
 AUDIO_PATH = cfg.AUDIO_PATH
 ANALYSIS_JSON_PATH = getattr(cfg, "ANALYSIS_JSON_PATH", None)
-OUTPUT_IMAGE_SEQUENCE_DIR = getattr(cfg, "OUTPUT_IMAGE_SEQUENCE_DIR")
+OUTPUT_IMAGE_SEQUENCE_DIR = cfg.OUTPUT_IMAGE_SEQUENCE_DIR
 OUTPUT_IMAGE_SEQUENCE_PREFIX = getattr(cfg, "OUTPUT_IMAGE_SEQUENCE_PREFIX", "spaziotempo_v61b_")
 IMAGE_SEQUENCE_FORMAT = getattr(cfg, "IMAGE_SEQUENCE_FORMAT", "PNG")
-OUTPUT_MP4 = getattr(cfg, "FFMPEG_OUTPUT_MP4", getattr(cfg, "OUTPUT_MP4"))
+OUTPUT_MP4 = getattr(cfg, "FFMPEG_OUTPUT_MP4", cfg.OUTPUT_MP4)
 FFMPEG_EXE_PATH = getattr(cfg, "FFMPEG_EXE_PATH", "")
 FFMPEG_CRF = int(getattr(cfg, "FFMPEG_CRF", 17))
 FFMPEG_PRESET = str(getattr(cfg, "FFMPEG_PRESET", "slow"))
@@ -82,7 +82,11 @@ LAUNCH_VISIBLE_SHELL = bool(
 
 def extract_frame_number(path):
     stem = path.stem
-    tail = stem[len(OUTPUT_IMAGE_SEQUENCE_PREFIX):] if stem.startswith(OUTPUT_IMAGE_SEQUENCE_PREFIX) else stem
+    tail = (
+        stem[len(OUTPUT_IMAGE_SEQUENCE_PREFIX) :]
+        if stem.startswith(OUTPUT_IMAGE_SEQUENCE_PREFIX)
+        else stem
+    )
     match = re.search(r"(\d+)$", tail)
     return int(match.group(1)) if match else None
 
@@ -246,83 +250,93 @@ def build_command(ffmpeg, pattern, first_frame, frame_count, fps, audio_offset):
     if FFMPEG_VIDEO_FILTER:
         command.extend(["-vf", FFMPEG_VIDEO_FILTER])
 
-    command.extend([
-        "-frames:v",
-        str(frame_count),
-        "-map",
-        "0:v:0",
-        "-map",
-        "1:a:0",
-    ])
+    command.extend(
+        [
+            "-frames:v",
+            str(frame_count),
+            "-map",
+            "0:v:0",
+            "-map",
+            "1:a:0",
+        ]
+    )
 
     if FFMPEG_PROFILE in {"GPU_AV1_YOUTUBE_SAFE", "GPU_AV1_NVENC", "AV1_NVENC"}:
-        command.extend([
-            "-c:v",
-            "av1_nvenc",
-            "-gpu",
-            str(FFMPEG_GPU_INDEX),
-            "-preset",
-            FFMPEG_NVENC_PRESET,
-            "-tune",
-            FFMPEG_NVENC_TUNE,
-            "-rc:v",
-            "vbr",
-            "-cq:v",
-            str(FFMPEG_NVENC_CQ),
-            "-b:v",
-            "0",
-        ])
+        command.extend(
+            [
+                "-c:v",
+                "av1_nvenc",
+                "-gpu",
+                str(FFMPEG_GPU_INDEX),
+                "-preset",
+                FFMPEG_NVENC_PRESET,
+                "-tune",
+                FFMPEG_NVENC_TUNE,
+                "-rc:v",
+                "vbr",
+                "-cq:v",
+                str(FFMPEG_NVENC_CQ),
+                "-b:v",
+                "0",
+            ]
+        )
     elif FFMPEG_PROFILE in {"CPU_SVTAV1_YOUTUBE", "CPU_SVTAV1", "SVTAV1"}:
-        command.extend([
-            "-threads",
-            str(FFMPEG_THREADS),
-            "-c:v",
-            "libsvtav1",
-            "-preset",
-            str(FFMPEG_SVTAV1_PRESET),
-            "-crf",
-            str(FFMPEG_SVTAV1_CRF),
-            "-svtav1-params",
-            f"lp={FFMPEG_THREADS}",
-        ])
+        command.extend(
+            [
+                "-threads",
+                str(FFMPEG_THREADS),
+                "-c:v",
+                "libsvtav1",
+                "-preset",
+                str(FFMPEG_SVTAV1_PRESET),
+                "-crf",
+                str(FFMPEG_SVTAV1_CRF),
+                "-svtav1-params",
+                f"lp={FFMPEG_THREADS}",
+            ]
+        )
     else:
-        command.extend([
-            "-threads",
-            str(FFMPEG_THREADS),
-            "-c:v",
-            "libx264",
-            "-preset",
-            FFMPEG_PRESET,
-            "-tune",
-            FFMPEG_TUNE,
-            "-crf",
-            str(FFMPEG_CRF),
-            "-profile:v",
-            "high",
-        ])
+        command.extend(
+            [
+                "-threads",
+                str(FFMPEG_THREADS),
+                "-c:v",
+                "libx264",
+                "-preset",
+                FFMPEG_PRESET,
+                "-tune",
+                FFMPEG_TUNE,
+                "-crf",
+                str(FFMPEG_CRF),
+                "-profile:v",
+                "high",
+            ]
+        )
 
-    command.extend([
-        "-pix_fmt",
-        "yuv420p",
-        "-colorspace",
-        "bt709",
-        "-color_primaries",
-        "bt709",
-        "-color_trc",
-        "bt709",
-        "-r",
-        f"{fps:.6f}",
-        "-c:a",
-        "aac",
-        "-ar",
-        str(FFMPEG_AUDIO_SAMPLE_RATE),
-        "-b:a",
-        FFMPEG_AUDIO_BITRATE,
-        "-shortest",
-        "-movflags",
-        "+faststart",
-        str(output),
-    ])
+    command.extend(
+        [
+            "-pix_fmt",
+            "yuv420p",
+            "-colorspace",
+            "bt709",
+            "-color_primaries",
+            "bt709",
+            "-color_trc",
+            "bt709",
+            "-r",
+            f"{fps:.6f}",
+            "-c:a",
+            "aac",
+            "-ar",
+            str(FFMPEG_AUDIO_SAMPLE_RATE),
+            "-b:a",
+            FFMPEG_AUDIO_BITRATE,
+            "-shortest",
+            "-movflags",
+            "+faststart",
+            str(output),
+        ]
+    )
     return command
 
 
@@ -354,7 +368,9 @@ def write_visible_shell_launcher(command, output, first_frame, frame_count, fps,
 
 
 def launch_visible_shell(command, output, first_frame, frame_count, fps, audio_offset):
-    launcher = write_visible_shell_launcher(command, output, first_frame, frame_count, fps, audio_offset)
+    launcher = write_visible_shell_launcher(
+        command, output, first_frame, frame_count, fps, audio_offset
+    )
     creationflags = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
     subprocess.Popen(["cmd.exe", "/k", str(launcher)], creationflags=creationflags)
     return launcher
@@ -387,7 +403,9 @@ def main():
     print(f"[INFO] output: {OUTPUT_MP4}")
 
     if LAUNCH_VISIBLE_SHELL:
-        launcher = launch_visible_shell(command, OUTPUT_MP4, first_frame, len(frame_files), fps, audio_offset)
+        launcher = launch_visible_shell(
+            command, OUTPUT_MP4, first_frame, len(frame_files), fps, audio_offset
+        )
         print(f"[INFO] FFmpeg launched in visible shell: {launcher}")
         return
 

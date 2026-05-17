@@ -60,9 +60,7 @@ def functions(tree: ast.AST | None) -> list[dict[str, Any]]:
                 {
                     "name": node.name,
                     "line_start": int(getattr(node, "lineno", 0)),
-                    "line_end": int(
-                        getattr(node, "end_lineno", getattr(node, "lineno", 0))
-                    ),
+                    "line_end": int(getattr(node, "end_lineno", getattr(node, "lineno", 0))),
                     "has_docstring": bool(ast.get_docstring(node)),
                 }
             )
@@ -86,9 +84,7 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
             "attention_flags": ["entrypoint_missing"],
             "notes": [],
             "future_guardrail_hints": [],
-            "suggested_actions": [
-                "Restore or locate the expected WAV-analysis entrypoint."
-            ],
+            "suggested_actions": ["Restore or locate the expected WAV-analysis entrypoint."],
         }
 
     text = read_text(path)
@@ -103,9 +99,7 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
 
     if syntax_error:
         attention.append("syntax_error")
-        suggested.append(
-            "Fix Python syntax before using this script in the artifact pipeline."
-        )
+        suggested.append("Fix Python syntax before using this script in the artifact pipeline.")
     else:
         positives.append("python_ast_parse_ok")
 
@@ -121,9 +115,7 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
         positives.append("json_output_present")
     else:
         attention.append("json_output_not_detected")
-        suggested.append(
-            "Confirm that the script emits machine-readable JSON artifacts."
-        )
+        suggested.append("Confirm that the script emits machine-readable JSON artifacts.")
 
     if "schema_version" not in text:
         attention.append("schema_version_not_written")
@@ -209,11 +201,7 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
     score = max(0.0, min(1.0, round(score, 4)))
 
     return {
-        "path": (
-            path.relative_to(repo).as_posix()
-            if path.is_relative_to(repo)
-            else str(path)
-        ),
+        "path": (path.relative_to(repo).as_posix() if path.is_relative_to(repo) else str(path)),
         "exists": True,
         "sha256": sha256_text(text),
         "line_count": len(text.splitlines()),
@@ -230,12 +218,8 @@ def review_file(path: Path, repo: Path) -> dict[str, Any]:
 
 def aggregate(reviews: list[dict[str, Any]]) -> dict[str, Any]:
     flags = [flag for item in reviews for flag in item.get("attention_flags", [])]
-    hints = [
-        hint for item in reviews for hint in item.get("future_guardrail_hints", [])
-    ]
-    suggested = [
-        action for item in reviews for action in item.get("suggested_actions", [])
-    ]
+    hints = [hint for item in reviews for hint in item.get("future_guardrail_hints", [])]
+    suggested = [action for item in reviews for action in item.get("suggested_actions", [])]
     avg = (
         round(sum(float(item.get("score", 0.0)) for item in reviews) / len(reviews), 4)
         if reviews
@@ -275,9 +259,7 @@ def main() -> int:
         action="append",
         help="Relative path to a WAV entrypoint script. Can be repeated.",
     )
-    parser.add_argument(
-        "--output", default="output/ai_pipeline/wave_entrypoint_review.json"
-    )
+    parser.add_argument("--output", default="output/ai_pipeline/wave_entrypoint_review.json")
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
@@ -294,9 +276,7 @@ def main() -> int:
 
     out = Path(args.output).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["summary"]["average_score"] >= 0.5 else 2
 

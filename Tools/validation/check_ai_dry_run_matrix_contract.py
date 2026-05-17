@@ -8,6 +8,7 @@ This validator reads the report produced by:
 It checks only the machine-readable report shape and minimal stable fields.
 It does not run Blender, FFmpeg, NPU/GPU workloads or the dry-run matrix itself.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,7 +19,9 @@ from typing import Any
 try:
     from ai_pipeline_report_contracts import validate_ai_pipeline_report_file
 except ImportError:  # Allows package-style imports during external checks.
-    from Tools.validation.ai_pipeline_report_contracts import validate_ai_pipeline_report_file  # type: ignore
+    from Tools.validation.ai_pipeline_report_contracts import (
+        validate_ai_pipeline_report_file,  # type: ignore
+    )
 
 
 def is_non_empty_string(value: Any) -> bool:
@@ -36,7 +39,9 @@ def add_error(errors: list[str], path: str, message: str) -> None:
     errors.append(f"{path}: {message}")
 
 
-def validate_agent_state_packet(packet: Any, path: str, errors: list[str], warnings: list[str]) -> None:
+def validate_agent_state_packet(
+    packet: Any, path: str, errors: list[str], warnings: list[str]
+) -> None:
     """Validate the optional agent_state_packet metadata sub-contract."""
     if not isinstance(packet, dict):
         add_error(errors, path, "must be an object when present")
@@ -59,8 +64,12 @@ def validate_agent_state_packet(packet: Any, path: str, errors: list[str], warni
             add_error(errors, f"{path}.source", 'must be "cli" when enabled=true')
         if not is_non_empty_string(packet_path):
             add_error(errors, f"{path}.path", "must be a non-empty string when enabled=true")
-        if "repo_relative_path" in packet and not is_non_empty_string(packet.get("repo_relative_path")):
-            add_error(errors, f"{path}.repo_relative_path", "must be a non-empty string when present")
+        if "repo_relative_path" in packet and not is_non_empty_string(
+            packet.get("repo_relative_path")
+        ):
+            add_error(
+                errors, f"{path}.repo_relative_path", "must be a non-empty string when present"
+            )
     elif enabled is False:
         if exists is not False:
             add_error(errors, f"{path}.exists", "must be false when enabled=false")
@@ -69,7 +78,18 @@ def validate_agent_state_packet(packet: Any, path: str, errors: list[str], warni
         if packet_path is not None and not is_non_empty_string(packet_path):
             add_error(errors, f"{path}.path", "must be null/absent or a non-empty string")
 
-    extra_fields = sorted(set(packet) - {"enabled", "path", "exists", "source", "repo_relative_path", "size_bytes", "modified_time"})
+    extra_fields = sorted(
+        set(packet)
+        - {
+            "enabled",
+            "path",
+            "exists",
+            "source",
+            "repo_relative_path",
+            "size_bytes",
+            "modified_time",
+        }
+    )
     if extra_fields:
         warnings.append(f"{path}: accepted extra fields: {', '.join(extra_fields)}")
 
@@ -101,7 +121,11 @@ def validate_result(result: Any, index: int, errors: list[str], warnings: list[s
         add_error(errors, f"{path}.duration_sec", "must be int or float >= 0")
 
     for optional_tail in ("stdout_tail", "stderr_tail"):
-        if optional_tail in result and result.get(optional_tail) is not None and not isinstance(result.get(optional_tail), str):
+        if (
+            optional_tail in result
+            and result.get(optional_tail) is not None
+            and not isinstance(result.get(optional_tail), str)
+        ):
             add_error(errors, f"{path}.{optional_tail}", "must be string when present")
 
     report_exists = result.get("report_exists")
@@ -129,7 +153,9 @@ def validate_result(result: Any, index: int, errors: list[str], warnings: list[s
             add_error(errors, f"{path}.{object_or_null}", "must be object or null")
 
     if "agent_state_packet" in result and result.get("agent_state_packet") is not None:
-        validate_agent_state_packet(result.get("agent_state_packet"), f"{path}.agent_state_packet", errors, warnings)
+        validate_agent_state_packet(
+            result.get("agent_state_packet"), f"{path}.agent_state_packet", errors, warnings
+        )
 
     return str(name) if is_non_empty_string(name) else None
 
@@ -207,7 +233,9 @@ def validate_matrix_report(repo_root: Path, matrix_report: Path) -> dict[str, An
     if payload is not None:
         if "schema_version" not in payload:
             add_error(errors, "schema_version", "is missing")
-        elif not isinstance(payload.get("schema_version"), int) or isinstance(payload.get("schema_version"), bool):
+        elif not isinstance(payload.get("schema_version"), int) or isinstance(
+            payload.get("schema_version"), bool
+        ):
             add_error(errors, "schema_version", "must be int")
 
         if not is_non_empty_string(payload.get("repo_root")):
@@ -232,32 +260,56 @@ def validate_matrix_report(repo_root: Path, matrix_report: Path) -> dict[str, An
                 if name is not None:
                     names.append(name)
                 if isinstance(result, dict):
-                    case_report_contracts.append(validate_case_report_contract(repo_root, result, index, errors, warnings))
+                    case_report_contracts.append(
+                        validate_case_report_contract(repo_root, result, index, errors, warnings)
+                    )
 
         case_count = payload.get("case_count")
         if not isinstance(case_count, int) or isinstance(case_count, bool):
             add_error(errors, "case_count", "must be int")
         elif isinstance(results, list) and case_count != len(results):
-            add_error(errors, "case_count", f"must equal len(results), got {case_count} != {len(results)}")
+            add_error(
+                errors, "case_count", f"must equal len(results), got {case_count} != {len(results)}"
+            )
 
         planned_case_count = payload.get("planned_case_count")
-        if not isinstance(planned_case_count, int) or isinstance(planned_case_count, bool) or planned_case_count < 0:
+        if (
+            not isinstance(planned_case_count, int)
+            or isinstance(planned_case_count, bool)
+            or planned_case_count < 0
+        ):
             add_error(errors, "planned_case_count", "must be int >= 0")
         elif isinstance(results, list) and planned_case_count < len(results):
             add_error(errors, "planned_case_count", "must be >= len(results)")
 
         base_case_count = payload.get("base_case_count")
         repeat_cases = payload.get("repeat_cases")
-        if not isinstance(base_case_count, int) or isinstance(base_case_count, bool) or base_case_count <= 0:
+        if (
+            not isinstance(base_case_count, int)
+            or isinstance(base_case_count, bool)
+            or base_case_count <= 0
+        ):
             add_error(errors, "base_case_count", "must be int > 0")
         if not isinstance(repeat_cases, int) or isinstance(repeat_cases, bool) or repeat_cases <= 0:
             add_error(errors, "repeat_cases", "must be int > 0")
-        if isinstance(base_case_count, int) and isinstance(repeat_cases, int) and isinstance(planned_case_count, int):
-            if not isinstance(base_case_count, bool) and not isinstance(repeat_cases, bool) and planned_case_count != base_case_count * repeat_cases:
+        if (
+            isinstance(base_case_count, int)
+            and isinstance(repeat_cases, int)
+            and isinstance(planned_case_count, int)
+        ):
+            if (
+                not isinstance(base_case_count, bool)
+                and not isinstance(repeat_cases, bool)
+                and planned_case_count != base_case_count * repeat_cases
+            ):
                 add_error(errors, "planned_case_count", "must equal base_case_count * repeat_cases")
 
         matrix_workers = payload.get("matrix_workers")
-        if not isinstance(matrix_workers, int) or isinstance(matrix_workers, bool) or matrix_workers <= 0:
+        if (
+            not isinstance(matrix_workers, int)
+            or isinstance(matrix_workers, bool)
+            or matrix_workers <= 0
+        ):
             add_error(errors, "matrix_workers", "must be int > 0")
 
         markdown_output = payload.get("markdown_output")
@@ -272,10 +324,15 @@ def validate_matrix_report(repo_root: Path, matrix_report: Path) -> dict[str, An
             failed_results = [
                 str(item.get("name") or f"results[{index}]")
                 for index, item in enumerate(results)
-                if isinstance(item, dict) and (item.get("returncode") != 0 or item.get("report_passed") is not True)
+                if isinstance(item, dict)
+                and (item.get("returncode") != 0 or item.get("report_passed") is not True)
             ]
             if failed_results:
-                add_error(errors, "passed", f"true but failed case results exist: {', '.join(failed_results)}")
+                add_error(
+                    errors,
+                    "passed",
+                    f"true but failed case results exist: {', '.join(failed_results)}",
+                )
     else:
         result_count = 0
         case_count = None

@@ -18,9 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-DEFAULT_MODEL_DIR = (
-    Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov"
-)
+DEFAULT_MODEL_DIR = Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov"
 DEFAULT_PROMPT = (
     "Return exactly this Markdown sentence and nothing else:\n"
     "## NPU Decode Smoke\n"
@@ -170,21 +168,14 @@ except Exception as exc:
     if result.returncode != 0:
         return (
             "",
-            str(
-                parsed.get("error")
-                or stderr
-                or stdout
-                or f"exit code {result.returncode}"
-            ),
+            str(parsed.get("error") or stderr or stdout or f"exit code {result.returncode}"),
             result.returncode,
         )
     if parsed.get("ok") is True:
         return str(parsed.get("text") or ""), None, result.returncode
     return (
         "",
-        str(
-            parsed.get("error") or stderr or stdout or "unknown NPU decode smoke error"
-        ),
+        str(parsed.get("error") or stderr or stdout or "unknown NPU decode smoke error"),
         result.returncode,
     )
 
@@ -216,9 +207,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     model_dir = Path(args.model_dir).expanduser()
     prompt = args.prompt if args.prompt is not None else DEFAULT_PROMPT
     python_exe = (
-        Path(args.python_exe).expanduser()
-        if args.python_exe
-        else _default_npu_python(repo_root)
+        Path(args.python_exe).expanduser() if args.python_exe else _default_npu_python(repo_root)
     )
 
     provider_execution_performed = False
@@ -254,9 +243,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         classification, quality_errors, quality_warnings, metrics = (
             "planned_only",
             [],
-            [
-                "NPU execution was not requested; run with --run-npu for a real decode smoke."
-            ],
+            ["NPU execution was not requested; run with --run-npu for a real decode smoke."],
             text_metrics(text),
         )
     errors = list(quality_errors)
@@ -305,9 +292,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "prompt_chars": len(prompt),
             "output_chars": len(text),
             "provider_envelope": provider_envelope,
-            "raw_text_output_path": (
-                str(Path(args.text_output)) if args.text_output else None
-            ),
+            "raw_text_output_path": (str(Path(args.text_output)) if args.text_output else None),
             "raw_text_preview": text[:500],
             "promotion_gate": "classification == usable_text and provider_execution_performed == true",
         },
@@ -335,12 +320,8 @@ def main() -> int:
     parser.add_argument("--max-prompt-len", type=int, default=1024)
     parser.add_argument("--min-response-len", type=int, default=16)
     parser.add_argument("--timeout", type=float, default=90.0)
-    parser.add_argument(
-        "--output", default="output/validation/npu_decode_smoke_diagnostic.json"
-    )
-    parser.add_argument(
-        "--text-output", default="output/ai_packets/npu_decode_smoke_output.md"
-    )
+    parser.add_argument("--output", default="output/validation/npu_decode_smoke_diagnostic.json")
+    parser.add_argument("--text-output", default="output/ai_packets/npu_decode_smoke_output.md")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -355,9 +336,7 @@ def main() -> int:
     if args.text_output and report["provider_execution_performed"]:
         text_output = resolve_output_path(repo_root, args.text_output)
         text_output.parent.mkdir(parents=True, exist_ok=True)
-        text_output.write_text(
-            str(report.get("raw_text") or "") + "\n", encoding="utf-8"
-        )
+        text_output.write_text(str(report.get("raw_text") or "") + "\n", encoding="utf-8")
     rendered = write_json_report(report, output)
     print(rendered, end="")
     return 0 if report["passed"] else 2

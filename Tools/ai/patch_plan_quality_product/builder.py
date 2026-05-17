@@ -64,9 +64,7 @@ def build_quality_notes(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     findings, fallback = [], []
     if not plan_scores:
-        findings.append(
-            {"severity": "high", "reason": "patch_plan_contains_no_plan_items"}
-        )
+        findings.append({"severity": "high", "reason": "patch_plan_contains_no_plan_items"})
     for item in plan_scores:
         if item["score"] < args.min_plan_score:
             findings.append(
@@ -132,13 +130,9 @@ def build_report(args: Any) -> dict[str, Any]:
             args.request + " " + flatten_json(plans, limit=120_000), max_terms=16
         )[:8]:
             hits = search_docs(conn, fts_enabled, term, args.search_limit)
-            query_results.append(
-                {"query": term, "hit_count": len(hits), "hits": hits[:3]}
-            )
+            query_results.append({"query": term, "hit_count": len(hits), "hits": hits[:3]})
     total_hits = sum(item["hit_count"] for item in query_results)
-    findings, fallback = build_quality_notes(
-        plan_scores, avg_score, total_hits, args, status
-    )
+    findings, fallback = build_quality_notes(plan_scores, avg_score, total_hits, args, status)
     quality_gate_passed = (
         bool(plan_scores) and avg_score >= args.min_average_score and total_hits > 0
     )
@@ -151,9 +145,7 @@ def build_report(args: Any) -> dict[str, Any]:
         "repo_root": str(repo_root),
         "passed": not fatal_errors,
         "quality_gate_passed": quality_gate_passed,
-        "classification": classify(
-            fatal_errors, quality_gate_passed, avg_score, total_hits
-        ),
+        "classification": classify(fatal_errors, quality_gate_passed, avg_score, total_hits),
         "non_blocking": not args.strict_quality_gate,
         "errors": fatal_errors,
         "warnings": warnings,
@@ -185,12 +177,8 @@ def build_report(args: Any) -> dict[str, Any]:
         },
         "tool_utility_proof": {
             "runtime_tool_telemetry_used": bool(loaded.get("runtime_usage", {})),
-            "runtime_capability_manifest_used": bool(
-                loaded.get("runtime_capability", {})
-            ),
-            "repository_consistency_used": bool(
-                loaded.get("repository_consistency", {})
-            ),
+            "runtime_capability_manifest_used": bool(loaded.get("runtime_capability", {})),
+            "repository_consistency_used": bool(loaded.get("repository_consistency", {})),
             "memory_bundle_used": bool(loaded.get("memory_bundle", {})),
             "sqlite_fts_or_fallback_used": True,
             "concrete_effects": [
@@ -203,9 +191,7 @@ def build_report(args: Any) -> dict[str, Any]:
         "guardrails": {
             "report_only": True,
             "manual_review_required": True,
-            "operational_sqlite_under_output": repo_rel(db_path, repo_root).startswith(
-                "output/"
-            ),
+            "operational_sqlite_under_output": repo_rel(db_path, repo_root).startswith("output/"),
             "persistent_memory_write_performed": False,
             "patch_application_performed": False,
             "generated_output_commit_allowed": False,

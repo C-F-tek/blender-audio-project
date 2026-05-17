@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.provider_runtime_state import RuntimeState, degraded_lanes, normalize_status
+    from tools.ai.provider_runtime_state import RuntimeState, normalize_status
     from tools.validation.report_utils import (
         resolve_output_path,
         write_json_report,
@@ -38,7 +38,6 @@ except ImportError:
         sys.path.insert(0, str(repo_root_for_import))
     from tools.ai.provider_runtime_state import (  # type: ignore
         RuntimeState,
-        degraded_lanes,
         normalize_status,
     )
     from tools.validation.report_utils import (  # type: ignore
@@ -110,11 +109,7 @@ def safe_int(value: Any, default: int = 0) -> int:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -218,12 +213,8 @@ class ProviderRuntimeHeap:
         markdown_template = markdown_path or DEFAULT_MARKDOWN
         paths = RuntimeHeapPaths(
             events=resolve_output_path(repo_root, event_template.format(stamp=stamp)),
-            snapshot=resolve_output_path(
-                repo_root, snapshot_template.format(stamp=stamp)
-            ),
-            markdown=resolve_output_path(
-                repo_root, markdown_template.format(stamp=stamp)
-            ),
+            snapshot=resolve_output_path(repo_root, snapshot_template.format(stamp=stamp)),
+            markdown=resolve_output_path(repo_root, markdown_template.format(stamp=stamp)),
         )
         # Initialise shared runtime state for lane diagnostics and evidence collection
         runtime_state = RuntimeState()
@@ -375,11 +366,7 @@ class ProviderRuntimeHeap:
             "stamp": self.stamp,
             "event_log": repo_rel(self.repo_root, self.paths.events),
             "event_count": len(
-                [
-                    item
-                    for item in events
-                    if item.get("kind") == "provider_runtime_event"
-                ]
+                [item for item in events if item.get("kind") == "provider_runtime_event"]
             ),
             "parse_error_count": len(
                 [
@@ -456,9 +443,7 @@ def render_markdown(snapshot: dict[str, Any]) -> str:
     lines.append(f"- Stamp: `{snapshot.get('stamp')}`")
     lines.append(f"- Event count: `{snapshot.get('event_count')}`")
     lines.append(f"- Parse error count: `{snapshot.get('parse_error_count')}`")
-    lines.append(
-        f"- Pending broker requests: `{snapshot.get('pending_broker_request_count')}`"
-    )
+    lines.append(f"- Pending broker requests: `{snapshot.get('pending_broker_request_count')}`")
     lines.append(f"- Event log: `{snapshot.get('event_log')}`")
     lines.append("")
     runtime_state = safe_dict(snapshot.get("runtime_state"))

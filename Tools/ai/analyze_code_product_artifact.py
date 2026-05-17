@@ -37,6 +37,7 @@ INTEGRATED_STATUSES = (
     "already_integrated_truncated_dump",
 )
 
+
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
@@ -55,6 +56,7 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
+
 def repo_rel(repo_root: Path, value: str | Path) -> str:
     path = Path(value)
     if not path.is_absolute():
@@ -63,6 +65,7 @@ def repo_rel(repo_root: Path, value: str | Path) -> str:
         return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(value).replace("\\", "/")
+
 
 def normalize_target(raw: str) -> str:
     return str(raw or "").strip().strip("`").replace("\\", "/")
@@ -84,6 +87,7 @@ def target_error(target: str) -> str:
     if not any(normalized.startswith(prefix) for prefix in SAFE_PREFIXES):
         return "target prefix is not allowlisted"
     return ""
+
 
 def split_sections(text: str) -> list[dict[str, str]]:
     sections: list[dict[str, str]] = []
@@ -142,10 +146,7 @@ def document_metadata_int(text: str, name: str) -> int | None:
 def declared_empty_code_product(text: str) -> bool:
     if document_metadata_int(text, "Effective code product count") == 0:
         return True
-    return (
-        "# CODE_PRODUCT_FULL_PATCH" in text
-        and "Nessun diff/code effettivo" in text
-    )
+    return "# CODE_PRODUCT_FULL_PATCH" in text and "Nessun diff/code effettivo" in text
 
 
 def code_block(body: str) -> str:
@@ -251,7 +252,9 @@ def analyze_section(repo_root: Path, output_dir: Path, item: dict[str, str]) -> 
             ratio = added_line_ratio(payload, read_text(target_path) if exists else "")
             if exists and ratio >= 0.80:
                 result["status"] = "already_integrated_with_context_drift"
-                result["warnings"].append(f"truncated diff appears integrated; added-line ratio={ratio:.2f}")
+                result["warnings"].append(
+                    f"truncated diff appears integrated; added-line ratio={ratio:.2f}"
+                )
             else:
                 result["status"] = "truncated_payload"
                 result["errors"].append("payload is truncated")
@@ -269,7 +272,9 @@ def analyze_section(repo_root: Path, output_dir: Path, item: dict[str, str]) -> 
             ratio = added_line_ratio(payload, read_text(target_path) if exists else "")
             if exists and ratio >= 0.80:
                 result["status"] = "already_integrated_with_context_drift"
-                result["warnings"].append(f"diff appears integrated despite context drift; added-line ratio={ratio:.2f}")
+                result["warnings"].append(
+                    f"diff appears integrated despite context drift; added-line ratio={ratio:.2f}"
+                )
             else:
                 result["status"] = "needs_manual_review"
                 result["warnings"].append("neither forward nor reverse git apply check passed")
@@ -308,7 +313,9 @@ def analyze_section(repo_root: Path, output_dir: Path, item: dict[str, str]) -> 
     return result
 
 
-def summarize_sections(sections: list[dict[str, Any]]) -> tuple[dict[str, int], list[str], list[str]]:
+def summarize_sections(
+    sections: list[dict[str, Any]],
+) -> tuple[dict[str, int], list[str], list[str]]:
     counts: dict[str, int] = {}
     errors: list[str] = []
     warnings: list[str] = []
@@ -348,17 +355,17 @@ def analyze(args: argparse.Namespace) -> dict[str, Any]:
         "applied_count": 0,
     }
     if args.apply_safe and not initial_errors:
-        safe_apply_report.update(
-            safe_apply_sections(repo_root, output_dir, raw_sections, sections)
-        )
+        safe_apply_report.update(safe_apply_sections(repo_root, output_dir, raw_sections, sections))
         sections = [analyze_section(repo_root, output_dir, item) for item in raw_sections]
     status_counts, section_errors, section_warnings = summarize_sections(sections)
     errors.extend(section_errors)
     warnings.extend(section_warnings)
     errors.extend(str(item) for item in safe_apply_report.get("errors", []))
     warnings.extend(str(item) for item in safe_apply_report.get("warnings", []))
-    all_integrated = (not sections and empty_code_product) or bool(sections) and all(
-        section.get("status") in INTEGRATED_STATUSES for section in sections
+    all_integrated = (
+        (not sections and empty_code_product)
+        or bool(sections)
+        and all(section.get("status") in INTEGRATED_STATUSES for section in sections)
     )
     forward_applicable = sum(
         1
@@ -389,7 +396,9 @@ def analyze(args: argparse.Namespace) -> dict[str, Any]:
         "empty_code_product": bool(not sections and empty_code_product),
         "status_counts": status_counts,
         "initial_status_counts": initial_status_counts,
-        "already_integrated_count": sum(status_counts.get(status, 0) for status in INTEGRATED_STATUSES),
+        "already_integrated_count": sum(
+            status_counts.get(status, 0) for status in INTEGRATED_STATUSES
+        ),
         "forward_applicable_count": forward_applicable,
         "needs_review_count": needs_review,
         "all_integrated": all_integrated,

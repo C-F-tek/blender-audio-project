@@ -74,9 +74,7 @@ def read_json_if_exists(path: Path) -> dict[str, Any] | None:
         return None
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (
-        Exception
-    ):  # noqa: BLE001 - caller turns missing/unreadable into disabled routing.
+    except Exception:  # noqa: BLE001 - caller turns missing/unreadable into disabled routing.
         return None
     return data if isinstance(data, dict) else None
 
@@ -187,9 +185,7 @@ def classify_context_path(
     by_lane = results_by_lane(report)
     item = by_lane.get(lane, {})
     classification = str(item.get("classification") or "")
-    advisory_use = (
-        item.get("advisory_use") if isinstance(item.get("advisory_use"), dict) else {}
-    )
+    advisory_use = item.get("advisory_use") if isinstance(item.get("advisory_use"), dict) else {}
     if (
         lane in usable_lanes(report)
         and item.get("usable") is True
@@ -206,9 +202,7 @@ def classify_context_path(
         path=normalized,
         lane=lane,
         trusted=False,
-        reason=classification
-        or advisory_use.get("reason")
-        or "unusable_workload_report",
+        reason=classification or advisory_use.get("reason") or "unusable_workload_report",
         classification=classification,
     )
 
@@ -236,9 +230,7 @@ def trusted_context_file_paths(
 ) -> list[str]:
     return [
         item["path"]
-        for item in route_context_files_by_quality(context_files, report)[
-            "trusted_context_files"
-        ]
+        for item in route_context_files_by_quality(context_files, report)["trusted_context_files"]
     ]
 
 

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
-
 
 DEFAULT_TRACK_STEM = "Feel The Light-Luca Vera_Master"
 
@@ -92,7 +91,7 @@ class NpuPipelineConfig:
         allowed_artifact_prefixes: Iterable[str] = DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
         preferred_reference_files: Iterable[str] = DEFAULT_PREFERRED_REFERENCE_FILES,
         include_manual_index: bool = False,
-    ) -> "NpuPipelineConfig":
+    ) -> NpuPipelineConfig:
         analysis_path = Path(analysis_ai_context) if analysis_ai_context else None
         paths = DualPipelinePaths(
             repo_root=Path(repo_root),

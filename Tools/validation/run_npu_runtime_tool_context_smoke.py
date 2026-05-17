@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test read-only runtime toolbox context injection into the NPU auditor."""
+
 from __future__ import annotations
 
 import argparse
@@ -60,7 +61,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/npu_runtime_tool_context_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/npu_runtime_tool_context_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/npu_runtime_tool_context_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -82,7 +85,13 @@ def main() -> int:
             "round_count": 1,
             "recommendation_count": 0,
             "rounds": [
-                {"round": 1, "elapsed_seconds": 0.1, "file_count": 0, "files": [], "parsed_response": {}}
+                {
+                    "round": 1,
+                    "elapsed_seconds": 0.1,
+                    "file_count": 0,
+                    "files": [],
+                    "parsed_response": {},
+                }
             ],
             "decision": {"recommended_next_layer": "inspect_provider_empty_response"},
             "guardrails": {},
@@ -103,8 +112,22 @@ def main() -> int:
             "sqlite_write_performed": False,
             "persistent_memory_write_performed": False,
             "tool_results": [
-                {"id": "tool_inventory", "tool": "build_agent_agnostic_tool_inventory", "executed": True, "blocked": False, "returncode": 0, "outputs": {}},
-                {"id": "python_syntax", "tool": "check_python_syntax", "executed": True, "blocked": False, "returncode": 0, "outputs": {}},
+                {
+                    "id": "tool_inventory",
+                    "tool": "build_agent_agnostic_tool_inventory",
+                    "executed": True,
+                    "blocked": False,
+                    "returncode": 0,
+                    "outputs": {},
+                },
+                {
+                    "id": "python_syntax",
+                    "tool": "check_python_syntax",
+                    "executed": True,
+                    "blocked": False,
+                    "returncode": 0,
+                    "outputs": {},
+                },
             ],
             "guardrails": {"allowlist_enforced": True},
         },
@@ -156,7 +179,9 @@ def main() -> int:
         "sqlite_write_performed": False,
         "persistent_memory_write_performed": False,
         "npu_tool_context_seen": bool(audit.get("runtime_tool_context_seen")),
-        "runtime_tool_context_report_count": int(audit.get("runtime_tool_context_report_count") or 0),
+        "runtime_tool_context_report_count": int(
+            audit.get("runtime_tool_context_report_count") or 0
+        ),
         "auditor_returncode": returncode,
         "auditor_stdout_tail": stdout,
         "auditor_stderr_tail": stderr,
@@ -168,17 +193,23 @@ def main() -> int:
     write_json(output, report)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({
-        "passed": report["passed"],
-        "output": str(output),
-        "markdown": str(markdown),
-        "provider_execution_performed": report["provider_execution_performed"],
-        "patch_application_performed": report["patch_application_performed"],
-        "npu_tool_context_seen": report["npu_tool_context_seen"],
-        "runtime_tool_context_report_count": report["runtime_tool_context_report_count"],
-        "sqlite_write_performed": report["sqlite_write_performed"],
-        "persistent_memory_write_performed": report["persistent_memory_write_performed"],
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown": str(markdown),
+                "provider_execution_performed": report["provider_execution_performed"],
+                "patch_application_performed": report["patch_application_performed"],
+                "npu_tool_context_seen": report["npu_tool_context_seen"],
+                "runtime_tool_context_report_count": report["runtime_tool_context_report_count"],
+                "sqlite_write_performed": report["sqlite_write_performed"],
+                "persistent_memory_write_performed": report["persistent_memory_write_performed"],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

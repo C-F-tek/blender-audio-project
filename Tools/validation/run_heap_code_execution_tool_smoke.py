@@ -100,12 +100,26 @@ def render_markdown(report: dict[str, Any]) -> str:
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     run_stamp = stamp()
-    direct_output = repo_root / f"output/validation/heap_code_execution_tool_smoke_direct_{run_stamp}.json"
-    direct_md = repo_root / f"output/validation/heap_code_execution_tool_smoke_direct_{run_stamp}.md"
-    direct_request = repo_root / f"output/validation/heap_code_execution_tool_smoke_direct_request_{run_stamp}.json"
-    broker_request = repo_root / f"output/validation/heap_code_execution_tool_smoke_broker_request_{run_stamp}.json"
-    broker_output = repo_root / f"output/validation/heap_code_execution_tool_smoke_broker_{run_stamp}.json"
-    broker_md = repo_root / f"output/validation/heap_code_execution_tool_smoke_broker_{run_stamp}.md"
+    direct_output = (
+        repo_root / f"output/validation/heap_code_execution_tool_smoke_direct_{run_stamp}.json"
+    )
+    direct_md = (
+        repo_root / f"output/validation/heap_code_execution_tool_smoke_direct_{run_stamp}.md"
+    )
+    direct_request = (
+        repo_root
+        / f"output/validation/heap_code_execution_tool_smoke_direct_request_{run_stamp}.json"
+    )
+    broker_request = (
+        repo_root
+        / f"output/validation/heap_code_execution_tool_smoke_broker_request_{run_stamp}.json"
+    )
+    broker_output = (
+        repo_root / f"output/validation/heap_code_execution_tool_smoke_broker_{run_stamp}.json"
+    )
+    broker_md = (
+        repo_root / f"output/validation/heap_code_execution_tool_smoke_broker_{run_stamp}.md"
+    )
     write_broker_request(broker_request)
 
     direct = run(
@@ -209,7 +223,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/heap_code_execution_tool_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_code_execution_tool_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/heap_code_execution_tool_smoke.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=420)
     return parser.parse_args()
 
@@ -219,7 +235,11 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     report = build_report(args)
     output = repo_root / args.output if not Path(args.output).is_absolute() else Path(args.output)
-    markdown = repo_root / args.markdown_output if not Path(args.markdown_output).is_absolute() else Path(args.markdown_output)
+    markdown = (
+        repo_root / args.markdown_output
+        if not Path(args.markdown_output).is_absolute()
+        else Path(args.markdown_output)
+    )
     print(write_json_report(report, output), end="")
     write_text_report(render_markdown(report), markdown)
     return 0 if report["passed"] else 2

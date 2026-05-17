@@ -23,11 +23,7 @@ def normalize_task_path(repo_root: Path, raw: str) -> tuple[str, str | None]:
     path = Path(raw)
     full = path if path.is_absolute() else repo_root / path
     try:
-        rel = (
-            full.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        rel = full.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return raw, "task file must stay inside the repository"
     if not rel.startswith(TASK_PREFIX) or not rel.endswith(".md"):
@@ -41,9 +37,7 @@ def load_content(args: argparse.Namespace) -> str:
     return args.content
 
 
-def build_payload(
-    args: argparse.Namespace, target_path: str, content: str
-) -> dict[str, Any]:
+def build_payload(args: argparse.Namespace, target_path: str, content: str) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "kind": "task_patch_suggestion",

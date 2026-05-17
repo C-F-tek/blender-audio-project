@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
-from html.parser import HTMLParser
 import argparse
 import hashlib
 import json
 import re
 from datetime import datetime
-
+from html.parser import HTMLParser
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 MANUAL_ROOT = Path.home() / "blender" / "manual"
@@ -117,13 +116,15 @@ def extract_text(path: Path) -> str:
 
 
 def score_text(path: Path, text: str) -> int:
-    haystack = (str(path).lower() + "\n" + text[:20000].lower())
+    haystack = str(path).lower() + "\n" + text[:20000].lower()
     return sum(haystack.count(keyword) for keyword in KEYWORDS)
 
 
 def score_path(path: Path) -> int:
     haystack = str(path).lower().replace("\\", "/")
-    score = sum(4 for keyword in KEYWORDS if keyword.replace(" ", "_") in haystack or keyword in haystack)
+    score = sum(
+        4 for keyword in KEYWORDS if keyword.replace(" ", "_") in haystack or keyword in haystack
+    )
     extra_terms = [
         "python",
         "api",

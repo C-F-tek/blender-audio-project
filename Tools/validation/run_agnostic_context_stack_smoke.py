@@ -12,6 +12,7 @@ This validator exercises the layered IA-Carmine context artifacts in sequence:
 
 Default execution is CPU-only/report-only and does not execute providers.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -62,7 +63,9 @@ def value_at(data: dict[str, Any], dotted: str) -> Any:
     return current
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -82,7 +85,14 @@ def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tu
 
 def check_json_output(repo_root: Path, output: str, expected: dict[str, Any]) -> dict[str, Any]:
     path = repo_path(repo_root, output)
-    result: dict[str, Any] = {"path": rel(path, repo_root), "exists": path.exists(), "ok": True, "errors": [], "kind": None, "passed": None}
+    result: dict[str, Any] = {
+        "path": rel(path, repo_root),
+        "exists": path.exists(),
+        "ok": True,
+        "errors": [],
+        "kind": None,
+        "passed": None,
+    }
     if not path.exists():
         result["ok"] = False
         result["errors"].append("missing output")
@@ -102,12 +112,30 @@ def check_json_output(repo_root: Path, output: str, expected: dict[str, Any]) ->
         actual = value_at(data, key)
         if actual != expected_value:
             result["ok"] = False
-            result["errors"].append(f"unexpected {key}: expected {expected_value!r}, got {actual!r}")
+            result["errors"].append(
+                f"unexpected {key}: expected {expected_value!r}, got {actual!r}"
+            )
     return result
 
 
-def run_step(repo_root: Path, name: str, command: list[str], outputs: dict[str, dict[str, Any]], timeout_seconds: int, dry_run: bool) -> dict[str, Any]:
-    step: dict[str, Any] = {"name": name, "command": command, "returncode": None, "ok": True, "errors": [], "stdout_tail": "", "stderr_tail": "", "outputs": []}
+def run_step(
+    repo_root: Path,
+    name: str,
+    command: list[str],
+    outputs: dict[str, dict[str, Any]],
+    timeout_seconds: int,
+    dry_run: bool,
+) -> dict[str, Any]:
+    step: dict[str, Any] = {
+        "name": name,
+        "command": command,
+        "returncode": None,
+        "ok": True,
+        "errors": [],
+        "stdout_tail": "",
+        "stderr_tail": "",
+        "outputs": [],
+    }
     if dry_run:
         step["warnings"] = ["dry-run: command not executed"]
         return step
@@ -120,7 +148,16 @@ def run_step(repo_root: Path, name: str, command: list[str], outputs: dict[str, 
     if returncode != 0:
         step["errors"].append(f"command returned {returncode}")
     for output, expected in outputs.items():
-        validation = check_json_output(repo_root, output, expected) if output.endswith(".json") else {"path": output, "exists": repo_path(repo_root, output).exists(), "ok": repo_path(repo_root, output).exists(), "errors": []}
+        validation = (
+            check_json_output(repo_root, output, expected)
+            if output.endswith(".json")
+            else {
+                "path": output,
+                "exists": repo_path(repo_root, output).exists(),
+                "ok": repo_path(repo_root, output).exists(),
+                "errors": [],
+            }
+        )
         step["outputs"].append(validation)
         if not validation["ok"]:
             step["errors"].extend(f"{validation['path']}: {err}" for err in validation["errors"])
@@ -150,7 +187,9 @@ def render_markdown(report: dict[str, Any]) -> str:
             lines.append("")
             lines.append("Outputs:")
             for item in step["outputs"]:
-                lines.append(f"- `{item.get('path')}` ok=`{item.get('ok')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}`")
+                lines.append(
+                    f"- `{item.get('path')}` ok=`{item.get('ok')}` kind=`{item.get('kind')}` passed=`{item.get('passed')}`"
+                )
         lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -160,7 +199,10 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--work-dir", default=DEFAULT_WORK_DIR)
     parser.add_argument("--memory-db", default="indexAI/agent_memory/agent_memory.sqlite")
-    parser.add_argument("--objective", default="Smoke-test the request-scoped agnostic context stack for megalithic review.")
+    parser.add_argument(
+        "--objective",
+        default="Smoke-test the request-scoped agnostic context stack for megalithic review.",
+    )
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
@@ -188,37 +230,174 @@ def main() -> int:
     step_specs = [
         (
             "agent_memory_inventory",
-            [py, "Tools/ai/build_agent_memory_inventory.py", "--repo-root", ".", "--memory-db", args.memory_db, "--objective", args.objective, "--output", memory_json, "--markdown-output", memory_md],
-            {memory_json: {"provider_execution_performed": False, "patch_application_performed": False, "guardrails.sqlite_read_only": True}},
+            [
+                py,
+                "Tools/ai/build_agent_memory_inventory.py",
+                "--repo-root",
+                ".",
+                "--memory-db",
+                args.memory_db,
+                "--objective",
+                args.objective,
+                "--output",
+                memory_json,
+                "--markdown-output",
+                memory_md,
+            ],
+            {
+                memory_json: {
+                    "provider_execution_performed": False,
+                    "patch_application_performed": False,
+                    "guardrails.sqlite_read_only": True,
+                }
+            },
         ),
         (
             "agent_agnostic_tool_inventory",
-            [py, "Tools/ai/build_agent_agnostic_tool_inventory.py", "--repo-root", ".", "--output", tool_json, "--markdown-output", tool_md],
-            {tool_json: {"provider_execution_performed": False, "patch_application_performed": False, "guardrails.report_only": True}},
+            [
+                py,
+                "Tools/ai/build_agent_agnostic_tool_inventory.py",
+                "--repo-root",
+                ".",
+                "--output",
+                tool_json,
+                "--markdown-output",
+                tool_md,
+            ],
+            {
+                tool_json: {
+                    "provider_execution_performed": False,
+                    "patch_application_performed": False,
+                    "guardrails.report_only": True,
+                }
+            },
         ),
         (
             "agent_transient_request_context",
-            [py, "Tools/ai/build_agent_transient_request_context.py", "--repo-root", ".", "--objective", args.objective, "--memory-note", args.objective, "--report-file", memory_json, "--report-file", tool_json, "--output", transient_json, "--markdown-output", transient_md],
-            {transient_json: {"provider_execution_performed": False, "patch_application_performed": False, "guardrails.request_scoped": True, "persistence.sqlite_write_performed": False}},
+            [
+                py,
+                "Tools/ai/build_agent_transient_request_context.py",
+                "--repo-root",
+                ".",
+                "--objective",
+                args.objective,
+                "--memory-note",
+                args.objective,
+                "--report-file",
+                memory_json,
+                "--report-file",
+                tool_json,
+                "--output",
+                transient_json,
+                "--markdown-output",
+                transient_md,
+            ],
+            {
+                transient_json: {
+                    "provider_execution_performed": False,
+                    "patch_application_performed": False,
+                    "guardrails.request_scoped": True,
+                    "persistence.sqlite_write_performed": False,
+                }
+            },
         ),
         (
             "megalithic_repo_review_with_agnostic_context",
-            [py, "Tools/ai/run_megalithic_repo_review.py", "--repo-root", ".", "--include-all-docs", "--include-all-code", "--include-raw", "--include-output", "--include-index", "--include-sqlite-memory", "--report-file", memory_json, "--report-file", tool_json, "--report-file", transient_json, "--output", review_json, "--markdown-output", review_md, "--proposal-output", review_props],
-            {review_json: {"provider_execution_performed": False, "patch_application_performed": False, "guardrails.sqlite_memory_read_only": True}, review_props: {"patch_application_performed": False, "apply_mode": "manual_review_only"}},
+            [
+                py,
+                "Tools/ai/run_megalithic_repo_review.py",
+                "--repo-root",
+                ".",
+                "--include-all-docs",
+                "--include-all-code",
+                "--include-raw",
+                "--include-output",
+                "--include-index",
+                "--include-sqlite-memory",
+                "--report-file",
+                memory_json,
+                "--report-file",
+                tool_json,
+                "--report-file",
+                transient_json,
+                "--output",
+                review_json,
+                "--markdown-output",
+                review_md,
+                "--proposal-output",
+                review_props,
+            ],
+            {
+                review_json: {
+                    "provider_execution_performed": False,
+                    "patch_application_performed": False,
+                    "guardrails.sqlite_memory_read_only": True,
+                },
+                review_props: {
+                    "patch_application_performed": False,
+                    "apply_mode": "manual_review_only",
+                },
+            },
         ),
         (
             "megalithic_signal_refinement",
-            [py, "Tools/ai/refine_megalithic_review_signals.py", "--review", review_json, "--proposals", review_props, "--output", refined_json, "--proposal-output", refined_props, "--markdown-output", refined_md],
-            {refined_json: {"patch_application_performed": False, "guardrails.real_github_pr_created": False}, refined_props: {"patch_application_performed": False, "apply_mode": "manual_review_only"}},
+            [
+                py,
+                "Tools/ai/refine_megalithic_review_signals.py",
+                "--review",
+                review_json,
+                "--proposals",
+                review_props,
+                "--output",
+                refined_json,
+                "--proposal-output",
+                refined_props,
+                "--markdown-output",
+                refined_md,
+            ],
+            {
+                refined_json: {
+                    "patch_application_performed": False,
+                    "guardrails.real_github_pr_created": False,
+                },
+                refined_props: {
+                    "patch_application_performed": False,
+                    "apply_mode": "manual_review_only",
+                },
+            },
         ),
         (
             "megalithic_pr_draft",
-            [py, "Tools/ai/build_megalithic_review_pr_draft.py", "--review", refined_json, "--proposals", refined_props, "--output", pr_draft_json, "--markdown-output", pr_draft_md, "--base-branch", "master", "--title-prefix", "review"],
-            {pr_draft_json: {"patch_application_performed": False, "guardrails.real_github_pr_created": False, "guardrails.manual_review_required": True}},
+            [
+                py,
+                "Tools/ai/build_megalithic_review_pr_draft.py",
+                "--review",
+                refined_json,
+                "--proposals",
+                refined_props,
+                "--output",
+                pr_draft_json,
+                "--markdown-output",
+                pr_draft_md,
+                "--base-branch",
+                "master",
+                "--title-prefix",
+                "review",
+            ],
+            {
+                pr_draft_json: {
+                    "patch_application_performed": False,
+                    "guardrails.real_github_pr_created": False,
+                    "guardrails.manual_review_required": True,
+                }
+            },
         ),
     ]
 
-    steps = [run_step(repo_root, name, command, outputs, args.timeout_seconds, args.dry_run) for name, command, outputs in step_specs]
+    steps = [
+        run_step(repo_root, name, command, outputs, args.timeout_seconds, args.dry_run)
+        for name, command, outputs in step_specs
+    ]
     errors = [f"{step['name']}: {error}" for step in steps for error in step.get("errors", [])]
     report = {
         "schema_version": 1,

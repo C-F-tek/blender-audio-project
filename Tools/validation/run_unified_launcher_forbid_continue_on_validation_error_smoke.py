@@ -1,5 +1,6 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Smoke-test that unified launcher forbids ContinueOnValidationError."""
+
 from __future__ import annotations
 
 import argparse
@@ -10,11 +11,17 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def run(command: list[str], cwd: Path) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, timeout=120)
+    result = subprocess.run(
+        command, cwd=cwd, capture_output=True, text=True, check=False, timeout=120
+    )
     return {
         "command": command,
         "returncode": result.returncode,
@@ -41,8 +48,14 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/unified_launcher_forbid_continue_on_validation_error_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/unified_launcher_forbid_continue_on_validation_error_smoke.md")
+    parser.add_argument(
+        "--output",
+        default="output/validation/unified_launcher_forbid_continue_on_validation_error_smoke.json",
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/unified_launcher_forbid_continue_on_validation_error_smoke.md",
+    )
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()

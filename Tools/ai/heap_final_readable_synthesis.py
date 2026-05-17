@@ -63,20 +63,59 @@ def target_group(target: str) -> str:
 def change_purpose(target: str) -> str:
     normalized = target.replace("\\", "/")
     mapping = [
-        ("heap_proposal_gate.py", "blocca target inventati, placeholder e proposte ripetute prima che diventino prodotto"),
-        ("compose_heap_final_proposals.py", "trasforma i chunk provider in una decisione operatore con accepted/rejected e motivi"),
-        ("run_heap_runtime_context_closure.py", "fa partire preflight, startup reload, heap, composer, postrun e assembler come unico percorso"),
-        ("run_heap_runtime_completeness_gate.py", "rende obbligatori ambiente virtuale, code matrix, profondita minima e metriche di uscita"),
-        ("run_heap_code_execution_tool.py", "espone al broker una matrice report-only per compile, smoke, diff e criteri di accettazione"),
-        ("heap_code_execution_tool_core.py", "contiene la logica riusabile della matrice codice/debug senza source write"),
-        ("run_heap_virtual_dev_environment.py", "carica, importa, prova --help e valida script allowlisted come ambiente di sviluppo controllato"),
-        ("agent_runtime_tool_broker.py", "registra i nuovi tool eseguibili dal runtime con argomenti allowlisted"),
-        ("assemble_heap_final_readable_product.py", "scrive FINAL_READABLE_PRODUCT.* e zip dalla run, non da ricomposizione manuale"),
-        ("heap_final_readable_synthesis.py", "produce la sintesi decisionale deduplicata e applicabile del prodotto finale"),
+        (
+            "heap_proposal_gate.py",
+            "blocca target inventati, placeholder e proposte ripetute prima che diventino prodotto",
+        ),
+        (
+            "compose_heap_final_proposals.py",
+            "trasforma i chunk provider in una decisione operatore con accepted/rejected e motivi",
+        ),
+        (
+            "run_heap_runtime_context_closure.py",
+            "fa partire preflight, startup reload, heap, composer, postrun e assembler come unico percorso",
+        ),
+        (
+            "run_heap_runtime_completeness_gate.py",
+            "rende obbligatori ambiente virtuale, code matrix, profondita minima e metriche di uscita",
+        ),
+        (
+            "run_heap_code_execution_tool.py",
+            "espone al broker una matrice report-only per compile, smoke, diff e criteri di accettazione",
+        ),
+        (
+            "heap_code_execution_tool_core.py",
+            "contiene la logica riusabile della matrice codice/debug senza source write",
+        ),
+        (
+            "run_heap_virtual_dev_environment.py",
+            "carica, importa, prova --help e valida script allowlisted come ambiente di sviluppo controllato",
+        ),
+        (
+            "agent_runtime_tool_broker.py",
+            "registra i nuovi tool eseguibili dal runtime con argomenti allowlisted",
+        ),
+        (
+            "assemble_heap_final_readable_product.py",
+            "scrive FINAL_READABLE_PRODUCT.* e zip dalla run, non da ricomposizione manuale",
+        ),
+        (
+            "heap_final_readable_synthesis.py",
+            "produce la sintesi decisionale deduplicata e applicabile del prodotto finale",
+        ),
         ("test_proposal_gate.py", "verifica il gate contro fake path, placeholder e ripetizioni"),
-        ("run_heap_code_execution_tool_smoke.py", "verifica il tool di matrice codice sia diretto sia via broker"),
-        ("run_heap_virtual_dev_environment_smoke.py", "verifica il virtual dev environment sia diretto sia via broker"),
-        ("run_heap_final_readable_product_smoke.py", "verifica che il prodotto finale contenga decisione, piano e pacchetto zip"),
+        (
+            "run_heap_code_execution_tool_smoke.py",
+            "verifica il tool di matrice codice sia diretto sia via broker",
+        ),
+        (
+            "run_heap_virtual_dev_environment_smoke.py",
+            "verifica il virtual dev environment sia diretto sia via broker",
+        ),
+        (
+            "run_heap_final_readable_product_smoke.py",
+            "verifica che il prodotto finale contenga decisione, piano e pacchetto zip",
+        ),
     ]
     for suffix, purpose in mapping:
         if normalized.endswith(suffix):
@@ -162,7 +201,9 @@ def implementation_plan(target: str) -> list[str]:
     }
     return plans.get(
         normalized,
-        ["verificare diff corrente, mantenere se supporta il percorso run-owned e passa i validator"],
+        [
+            "verificare diff corrente, mantenere se supporta il percorso run-owned e passa i validator"
+        ],
     )
 
 
@@ -209,9 +250,7 @@ def pointer_summary(run_dir: Path, revision: dict[str, Any]) -> list[str]:
     ]
 
 
-def provider_rejection_summary(
-    decision: dict[str, Any], revision: dict[str, Any]
-) -> list[str]:
+def provider_rejection_summary(decision: dict[str, Any], revision: dict[str, Any]) -> list[str]:
     reasons = [str(reason) for reason in as_list(decision.get("gate_reasons"))]
     targets = [
         str(target)
@@ -223,7 +262,9 @@ def provider_rejection_summary(
         "GPU1 ha continuato a proporre target non verificati o placeholder; GPU0/NPU li hanno respinti.",
     ]
     if targets:
-        lines.append("Target inventati catturati: " + ", ".join(f"`{target}`" for target in targets))
+        lines.append(
+            "Target inventati catturati: " + ", ".join(f"`{target}`" for target in targets)
+        )
     for reason in uniq(reasons)[:8]:
         lines.append(f"Gate reason: `{reason}`.")
     if revision.get("terminal_no_patchable_target"):
@@ -265,7 +306,9 @@ def render_markdown(
     metrics = as_dict(gate.get("metrics"))
     decision = as_dict(composer.get("operator_decision"))
     accepted = int(decision.get("accepted_count") or 0)
-    rejected = int(decision.get("rejected_count") or len(as_list(decision.get("rejected_proposals"))))
+    rejected = int(
+        decision.get("rejected_count") or len(as_list(decision.get("rejected_proposals")))
+    )
     groups = grouped_matrix_items(matrix)
     commands = command_catalog(matrix)
     concrete_code_proposal_count = int(
@@ -295,9 +338,7 @@ def render_markdown(
     else:
         final_document_status = "NO_APPLICABLE_CODE_PRODUCT"
         final_apply_outcome = "NO_APPLICABLE_CODE_PRODUCT"
-        practical_decision = (
-            "non applicare patch; manca un prodotto codice concreto verificato."
-        )
+        practical_decision = "non applicare patch; manca un prodotto codice concreto verificato."
     lines = [
         "# IA-Carmine Final Readable Product",
         "",
@@ -359,9 +400,7 @@ def render_markdown(
         ]
     )
     lines.extend(
-        render_lab_section(
-            run_dir=run_dir, gate=gate, matrix=matrix, matrix_path=matrix_path
-        )
+        render_lab_section(run_dir=run_dir, gate=gate, matrix=matrix, matrix_path=matrix_path)
     )
     lines.extend(render_code_product_section(matrix))
     lines.extend(
@@ -376,7 +415,12 @@ def render_markdown(
             "",
             "## Validazione",
             "",
-            *[f"- {line}" for line in validation_summary(run_dir=run_dir, gate=gate, matrix=matrix, matrix_path=matrix_path)],
+            *[
+                f"- {line}"
+                for line in validation_summary(
+                    run_dir=run_dir, gate=gate, matrix=matrix, matrix_path=matrix_path
+                )
+            ],
             "",
             "## Comandi da rieseguire prima dell'applicazione",
             "",

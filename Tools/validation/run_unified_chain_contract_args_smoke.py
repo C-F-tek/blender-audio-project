@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test unified chain contract argv construction."""
+
 from __future__ import annotations
 
 import argparse
@@ -89,7 +90,9 @@ def require(condition: bool, errors: list[str], message: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/unified_chain_contract_args_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/unified_chain_contract_args_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -118,19 +121,47 @@ def main() -> int:
     full_argv = full.get("argv") or []
     require(cases[0]["returncode"] == 0, errors, "full case helper failed")
     require("--apply-report" in full_argv, errors, "full case missing --apply-report")
-    require("--product-separation-report" in full_argv, errors, "full case missing --product-separation-report")
+    require(
+        "--product-separation-report" in full_argv,
+        errors,
+        "full case missing --product-separation-report",
+    )
     require("--review-pr-report" in full_argv, errors, "full case missing --review-pr-report")
     require("--require-ai-exchange" in full_argv, errors, "full case missing --require-ai-exchange")
-    require("--require-concrete-patch-specs" in full_argv, errors, "full case missing --require-concrete-patch-specs")
-    require("--require-review-pr-product" in full_argv, errors, "full case missing --require-review-pr-product")
+    require(
+        "--require-concrete-patch-specs" in full_argv,
+        errors,
+        "full case missing --require-concrete-patch-specs",
+    )
+    require(
+        "--require-review-pr-product" in full_argv,
+        errors,
+        "full case missing --require-review-pr-product",
+    )
 
     minimal = cases[1]["report"]
     minimal_argv = minimal.get("argv") or []
     require(cases[1]["returncode"] == 0, errors, "minimal case helper failed")
-    require("--apply-report" not in minimal_argv, errors, "minimal case should omit missing --apply-report")
-    require("--require-ai-exchange" not in minimal_argv, errors, "minimal case should not require AI exchange")
-    require("--require-concrete-patch-specs" not in minimal_argv, errors, "minimal case should not require concrete patch specs")
-    require("--require-review-pr-product" not in minimal_argv, errors, "minimal case should not require review PR product")
+    require(
+        "--apply-report" not in minimal_argv,
+        errors,
+        "minimal case should omit missing --apply-report",
+    )
+    require(
+        "--require-ai-exchange" not in minimal_argv,
+        errors,
+        "minimal case should not require AI exchange",
+    )
+    require(
+        "--require-concrete-patch-specs" not in minimal_argv,
+        errors,
+        "minimal case should not require concrete patch specs",
+    )
+    require(
+        "--require-review-pr-product" not in minimal_argv,
+        errors,
+        "minimal case should not require review PR product",
+    )
 
     report = {
         "schema_version": 1,

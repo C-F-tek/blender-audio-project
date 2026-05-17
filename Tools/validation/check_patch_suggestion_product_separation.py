@@ -5,6 +5,7 @@ The validator is report-only. It accepts either the direct
 patch_suggestion_bundle_apply JSON report or the wrapper
 patch_suggestion_bundle_apply_smoke report used by the local smoke test.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -54,7 +55,9 @@ def targets_from_item(item: dict[str, Any]) -> list[str]:
 
 def has_safe_source_target(item: dict[str, Any]) -> bool:
     """Return true when the item has at least one non-generated source/doc target."""
-    target_quality = item.get("target_quality") if isinstance(item.get("target_quality"), dict) else {}
+    target_quality = (
+        item.get("target_quality") if isinstance(item.get("target_quality"), dict) else {}
+    )
     explicit = target_quality.get("has_safe_source_target")
     if isinstance(explicit, bool):
         return explicit
@@ -62,14 +65,21 @@ def has_safe_source_target(item: dict[str, Any]) -> bool:
     targets = targets_from_item(item)
     if not targets:
         return False
-    denied_prefixes = ("output/", "renders/", "indexAI/code_chunks/", "indexAI/project_code_chunks/")
+    denied_prefixes = (
+        "output/",
+        "renders/",
+        "indexAI/code_chunks/",
+        "indexAI/project_code_chunks/",
+    )
     denied_suffixes = (".db", ".sqlite", ".sqlite3", ".sqlite-wal", ".sqlite-shm")
     safe = [
         target
         for target in targets
         if not target.startswith(denied_prefixes) and not target.lower().endswith(denied_suffixes)
     ]
-    generated_like = [target for target in safe if target.startswith("docs/LOCAL_VALIDATION_EVIDENCE/")]
+    generated_like = [
+        target for target in safe if target.startswith("docs/LOCAL_VALIDATION_EVIDENCE/")
+    ]
     return bool(safe and len(generated_like) < len(safe))
 
 
@@ -103,12 +113,18 @@ def validate_supplemental_item(item: dict[str, Any], index: int) -> list[str]:
     return errors
 
 
-def validate_apply_report(data: dict[str, Any], *, require_product: bool, require_supplemental: bool) -> tuple[list[str], list[str], dict[str, Any]]:
+def validate_apply_report(
+    data: dict[str, Any], *, require_product: bool, require_supplemental: bool
+) -> tuple[list[str], list[str], dict[str, Any]]:
     """Validate the product/supplemental split exposed by an apply report."""
     errors: list[str] = []
     warnings: list[str] = []
 
-    product = data.get("manual_review_product") if isinstance(data.get("manual_review_product"), dict) else {}
+    product = (
+        data.get("manual_review_product")
+        if isinstance(data.get("manual_review_product"), dict)
+        else {}
+    )
     essential = data.get("essential_patch_suggestion_items")
     supplemental = data.get("supplemental_telemetry_debug_items")
     if not isinstance(essential, list):
@@ -143,19 +159,33 @@ def validate_apply_report(data: dict[str, Any], *, require_product: bool, requir
             f"total={expected_supplemental_total}"
         )
 
-    deterministic_count = int(product.get("deterministic_operation_count") or data.get("operation_count") or 0)
+    deterministic_count = int(
+        product.get("deterministic_operation_count") or data.get("operation_count") or 0
+    )
     deterministic_apply_ready = product.get("deterministic_apply_ready")
     failed_count = int(data.get("failed_count") or 0)
-    deterministic_product_ready = deterministic_count > 0 and deterministic_apply_ready is True and failed_count == 0
+    deterministic_product_ready = (
+        deterministic_count > 0 and deterministic_apply_ready is True and failed_count == 0
+    )
     if require_product and not essential and not deterministic_product_ready:
-        errors.append("required product-facing patch suggestions or deterministic operations are absent")
+        errors.append(
+            "required product-facing patch suggestions or deterministic operations are absent"
+        )
     if require_supplemental and not supplemental:
         errors.append("required supplemental telemetry/debug items are absent")
 
     for index, item in enumerate(essential):
-        errors.extend(validate_product_item(item, index) if isinstance(item, dict) else [f"essential[{index}]: item is not an object"])
+        errors.extend(
+            validate_product_item(item, index)
+            if isinstance(item, dict)
+            else [f"essential[{index}]: item is not an object"]
+        )
     for index, item in enumerate(supplemental):
-        errors.extend(validate_supplemental_item(item, index) if isinstance(item, dict) else [f"supplemental[{index}]: item is not an object"])
+        errors.extend(
+            validate_supplemental_item(item, index)
+            if isinstance(item, dict)
+            else [f"supplemental[{index}]: item is not an object"]
+        )
 
     if deterministic_count > 0 and deterministic_apply_ready is not True:
         errors.append("deterministic operations exist but deterministic_apply_ready is not true")
@@ -172,7 +202,9 @@ def validate_apply_report(data: dict[str, Any], *, require_product: bool, requir
             errors.append(f"validator input unexpectedly reports {label}")
 
     if not essential and not supplemental and deterministic_count == 0:
-        warnings.append("report contains no deterministic operations, essential suggestions or supplemental items")
+        warnings.append(
+            "report contains no deterministic operations, essential suggestions or supplemental items"
+        )
 
     metrics = {
         "validated_input_kind": "patch_suggestion_bundle_apply",
@@ -183,13 +215,16 @@ def validate_apply_report(data: dict[str, Any], *, require_product: bool, requir
         "essential_patch_suggestion_total_count": expected_product_total,
         "supplemental_telemetry_debug_count": len(supplemental),
         "supplemental_telemetry_debug_total_count": expected_supplemental_total,
-        "patch_product_status": data.get("patch_product_status") or product.get("patch_product_status"),
+        "patch_product_status": data.get("patch_product_status")
+        or product.get("patch_product_status"),
         "ready_for_patch_suggestion_review": data.get("ready_for_patch_suggestion_review"),
     }
     return errors, warnings, metrics
 
 
-def validate_smoke_report(data: dict[str, Any], *, require_product: bool, require_supplemental: bool) -> tuple[list[str], list[str], dict[str, Any]]:
+def validate_smoke_report(
+    data: dict[str, Any], *, require_product: bool, require_supplemental: bool
+) -> tuple[list[str], list[str], dict[str, Any]]:
     """Validate the smoke wrapper that already asserts product separation internally."""
     errors: list[str] = []
     warnings: list[str] = []
@@ -204,17 +239,28 @@ def validate_smoke_report(data: dict[str, Any], *, require_product: bool, requir
     if data.get("source_writes_performed") is True:
         errors.append("smoke wrapper unexpectedly reports repository source writes")
 
-    discovered = data.get("discovered_reports") if isinstance(data.get("discovered_reports"), list) else []
-    current = data.get("current_suggestion_reports") if isinstance(data.get("current_suggestion_reports"), list) else []
+    discovered = (
+        data.get("discovered_reports") if isinstance(data.get("discovered_reports"), list) else []
+    )
+    current = (
+        data.get("current_suggestion_reports")
+        if isinstance(data.get("current_suggestion_reports"), list)
+        else []
+    )
     if require_product and "output/ai_pipeline/repository_change_proposals.json" not in current:
         errors.append("smoke did not include current product-facing proposal report")
-    if require_supplemental and "output/ai_pipeline/repository_update_suggestions.json" not in current:
+    if (
+        require_supplemental
+        and "output/ai_pipeline/repository_update_suggestions.json" not in current
+    ):
         errors.append("smoke did not include current supplemental update suggestion report")
     if not discovered:
         errors.append("smoke did not discover stamped deterministic suggestion report")
 
     commands = data.get("commands") if isinstance(data.get("commands"), list) else []
-    failed_commands = [cmd for cmd in commands if isinstance(cmd, dict) and cmd.get("returncode") != 0]
+    failed_commands = [
+        cmd for cmd in commands if isinstance(cmd, dict) and cmd.get("returncode") != 0
+    ]
     if failed_commands:
         errors.append(f"smoke has failed nested commands: {len(failed_commands)}")
     if not commands:
@@ -230,13 +276,19 @@ def validate_smoke_report(data: dict[str, Any], *, require_product: bool, requir
     return errors, warnings, metrics
 
 
-def validate_report(data: dict[str, Any], *, require_product: bool, require_supplemental: bool) -> tuple[list[str], list[str], dict[str, Any]]:
+def validate_report(
+    data: dict[str, Any], *, require_product: bool, require_supplemental: bool
+) -> tuple[list[str], list[str], dict[str, Any]]:
     """Dispatch validation based on the input report kind."""
     kind = data.get("kind")
     if kind == "patch_suggestion_bundle_apply":
-        return validate_apply_report(data, require_product=require_product, require_supplemental=require_supplemental)
+        return validate_apply_report(
+            data, require_product=require_product, require_supplemental=require_supplemental
+        )
     if kind == "patch_suggestion_bundle_apply_smoke":
-        return validate_smoke_report(data, require_product=require_product, require_supplemental=require_supplemental)
+        return validate_smoke_report(
+            data, require_product=require_product, require_supplemental=require_supplemental
+        )
     return [f"unexpected report kind: {kind!r}"], [], {"validated_input_kind": kind}
 
 
@@ -244,8 +296,12 @@ def main() -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--report", required=True, help="patch_suggestion_bundle_apply or smoke JSON report")
-    parser.add_argument("--output", default="output/validation/patch_suggestion_product_separation.json")
+    parser.add_argument(
+        "--report", required=True, help="patch_suggestion_bundle_apply or smoke JSON report"
+    )
+    parser.add_argument(
+        "--output", default="output/validation/patch_suggestion_product_separation.json"
+    )
     parser.add_argument("--require-product", action="store_true")
     parser.add_argument("--require-supplemental", action="store_true")
     args = parser.parse_args()

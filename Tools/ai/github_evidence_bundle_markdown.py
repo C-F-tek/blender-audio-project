@@ -63,9 +63,7 @@ def append_report_summary_fields(lines: list[str], summary: dict[str, Any]) -> N
             lines.append(f"- {label}: `{summary.get(field)}`")
 
 
-def append_patch_plan_summary_fields(
-    lines: list[str], patch_plan_summary: dict[str, Any]
-) -> None:
+def append_patch_plan_summary_fields(lines: list[str], patch_plan_summary: dict[str, Any]) -> None:
     """Append scalar patch-plan summary fields."""
     for field, label in PATCH_PLAN_SUMMARY_FIELDS:
         lines.append(f"- {label}: `{patch_plan_summary.get(field)}`")
@@ -95,9 +93,7 @@ def render_report_entry(lines: list[str], item: dict[str, Any]) -> None:
     append_report_summary_fields(lines, summary)
     patch_plan_summary = summary.get("patch_plan_summary") or {}
     if patch_plan_summary:
-        lines.append(
-            f"- Patch plan summary count: `{patch_plan_summary.get('patch_plan_count')}`"
-        )
+        lines.append(f"- Patch plan summary count: `{patch_plan_summary.get('patch_plan_count')}`")
         lines.append(f"- Fallback used: `{patch_plan_summary.get('fallback_used')}`")
         lines.append(
             f"- Manual review required: `{patch_plan_summary.get('manual_review_required')}`"
@@ -111,9 +107,7 @@ def patch_plan_summary_entries(
     """Return report entries that contain patch-plan summaries."""
     entries: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for item in bundle.get("reports", []):
-        summary = (
-            item.get("summary", {}) if isinstance(item.get("summary"), dict) else {}
-        )
+        summary = item.get("summary", {}) if isinstance(item.get("summary"), dict) else {}
         patch_plan_summary = (
             summary.get("patch_plan_summary")
             if isinstance(summary.get("patch_plan_summary"), dict)
@@ -219,9 +213,7 @@ def render_git_push_helper(lines: list[str]) -> None:
     lines.append("")
     lines.append("```powershell")
     lines.append("git status --short")
-    lines.append(
-        "# Replace <bundle_basename> with the generated evidence bundle basename."
-    )
+    lines.append("# Replace <bundle_basename> with the generated evidence bundle basename.")
     lines.append("git add -- `")
     lines.append("  .\\docs\\LOCAL_VALIDATION_EVIDENCE\\<bundle_basename>.json `")
     lines.append("  .\\docs\\LOCAL_VALIDATION_EVIDENCE\\<bundle_basename>.md")

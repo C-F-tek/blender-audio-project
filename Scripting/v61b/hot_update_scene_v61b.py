@@ -46,7 +46,9 @@ def drop_hotpatch_cache():
     }
 
     for mod_name in list(sys.modules):
-        if mod_name in reload_names or any(mod_name == prefix or mod_name.startswith(prefix + ".") for prefix in reload_prefixes):
+        if mod_name in reload_names or any(
+            mod_name == prefix or mod_name.startswith(prefix + ".") for prefix in reload_prefixes
+        ):
             sys.modules.pop(mod_name, None)
 
 

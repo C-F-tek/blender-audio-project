@@ -13,10 +13,10 @@ import ast
 import csv
 import json
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
-
+from typing import Any
 
 SCRIPT_SUFFIXES = {".py", ".ps1", ".sh", ".bat", ".cmd"}
 IGNORED_DIR_NAMES = {
@@ -199,7 +199,9 @@ def parse_python(path: Path, rel_path: str, text: str, lines: int) -> ScriptInve
             has_click=has_click,
             has_provider_terms=contains_any(text, ("ollama", "openvino", "npu", "gpu", "provider")),
             has_blender_terms=contains_any(text, ("bpy", "blender")),
-            has_write_terms=contains_any(text, ("write_text", "write_bytes", "export-csv", "set-content")),
+            has_write_terms=contains_any(
+                text, ("write_text", "write_bytes", "export-csv", "set-content")
+            ),
             warnings=warnings,
         )
 
@@ -212,7 +214,9 @@ def parse_python(path: Path, rel_path: str, text: str, lines: int) -> ScriptInve
         elif isinstance(node, ast.ClassDef) and public_name(node.name):
             classes.append(node.name)
             for child in node.body:
-                if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and public_name(child.name):
+                if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and public_name(
+                    child.name
+                ):
                     methods.append(f"{node.name}.{child.name}")
 
     return ScriptInventoryItem(
@@ -230,7 +234,9 @@ def parse_python(path: Path, rel_path: str, text: str, lines: int) -> ScriptInve
         has_click=has_click,
         has_provider_terms=contains_any(text, ("ollama", "openvino", "npu", "gpu", "provider")),
         has_blender_terms=contains_any(text, ("bpy", "blender")),
-        has_write_terms=contains_any(text, ("write_text", "write_bytes", "export-csv", "set-content")),
+        has_write_terms=contains_any(
+            text, ("write_text", "write_bytes", "export-csv", "set-content")
+        ),
         warnings=warnings,
     )
 
@@ -403,18 +409,24 @@ def render_markdown(report: dict[str, Any], max_rows: int) -> str:
         )
     if len(report["items"]) > max_rows:
         lines.append("")
-        lines.append(f"_Rows truncated in Markdown view: {max_rows}/{len(report['items'])}. Use CSV/JSON for full inventory._")
+        lines.append(
+            f"_Rows truncated in Markdown view: {max_rows}/{len(report['items'])}. Use CSV/JSON for full inventory._"
+        )
     lines.append("")
     return "\n".join(lines)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build a report-only inventory of repository scripts and tools.")
+    parser = argparse.ArgumentParser(
+        description="Build a report-only inventory of repository scripts and tools."
+    )
     parser.add_argument("--repo-root", default=".", help="Repository root.")
     parser.add_argument("--output", default=DEFAULT_OUTPUT, help="JSON output path.")
     parser.add_argument("--csv-output", default=DEFAULT_CSV_OUTPUT, help="CSV output path.")
     parser.add_argument("--markdown-output", default=None, help="Optional Markdown output path.")
-    parser.add_argument("--markdown-max-rows", type=int, default=120, help="Maximum Markdown rows to render.")
+    parser.add_argument(
+        "--markdown-max-rows", type=int, default=120, help="Maximum Markdown rows to render."
+    )
     return parser.parse_args()
 
 

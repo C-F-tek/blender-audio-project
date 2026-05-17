@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run NPU pipeline helper unit tests and emit a validation report."""
+
 from __future__ import annotations
 
 import argparse

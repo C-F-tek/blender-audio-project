@@ -85,12 +85,8 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
         repo_root, context.get("product_separation_report")
     )
     review_pr_report = existing_or_blank(repo_root, context.get("review_pr_report"))
-    tool_capability_manifest = existing_or_blank(
-        repo_root, context.get("tool_capability_manifest")
-    )
-    tool_usage_telemetry = existing_or_blank(
-        repo_root, context.get("tool_usage_telemetry")
-    )
+    tool_capability_manifest = existing_or_blank(repo_root, context.get("tool_capability_manifest"))
+    tool_usage_telemetry = existing_or_blank(repo_root, context.get("tool_usage_telemetry"))
     if not tool_capability_manifest:
         tool_capability_manifest = discover_first(
             repo_root,
@@ -122,9 +118,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
                 f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
             ],
         )
-    shared_memory_evidence = existing_or_blank(
-        repo_root, context.get("shared_memory_evidence")
-    )
+    shared_memory_evidence = existing_or_blank(repo_root, context.get("shared_memory_evidence"))
     if not shared_memory_evidence:
         shared_memory_evidence = discover_first(
             repo_root,
@@ -136,9 +130,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
                 f"output/**/heap_exchange*{stamp}*.json",
             ],
         )
-    closure_audit_report = existing_or_blank(
-        repo_root, context.get("closure_audit_report")
-    )
+    closure_audit_report = existing_or_blank(repo_root, context.get("closure_audit_report"))
     if not closure_audit_report:
         closure_audit_report = discover_first(
             repo_root,
@@ -149,21 +141,15 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
         )
 
     requested_apply_report = str(context.get("apply_report") or "").strip()
-    requested_product_report = str(
-        context.get("product_separation_report") or ""
-    ).strip()
+    requested_product_report = str(context.get("product_separation_report") or "").strip()
     requested_review_report = str(context.get("review_pr_report") or "").strip()
 
     if requested_apply_report and not apply_report:
         warnings.append(f"apply_report not found, omitted: {requested_apply_report}")
     if requested_product_report and not product_separation_report:
-        warnings.append(
-            f"product_separation_report not found, omitted: {requested_product_report}"
-        )
+        warnings.append(f"product_separation_report not found, omitted: {requested_product_report}")
     if requested_review_report and not review_pr_report:
-        warnings.append(
-            f"review_pr_report not found, omitted: {requested_review_report}"
-        )
+        warnings.append(f"review_pr_report not found, omitted: {requested_review_report}")
 
     require_ai_exchange = any(
         as_bool(context.get(key))
@@ -187,9 +173,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     require_heap_closure_audit = (
         as_bool(context.get("require_heap_closure_audit")) or require_ai_exchange
     )
-    require_concrete_patch_specs = as_bool(
-        context.get("review_pr_from_generated_patch_specs")
-    )
+    require_concrete_patch_specs = as_bool(context.get("review_pr_from_generated_patch_specs"))
     require_review_pr_product = as_bool(context.get("prepare_review_pr")) and (
         as_bool(context.get("review_pr_from_generated_patch_specs"))
         or as_bool(context.get("review_pr_apply_deterministic_suggestions"))

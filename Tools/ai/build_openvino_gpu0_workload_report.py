@@ -74,10 +74,7 @@ def classify_request(text: str) -> str:
         for token in ("errore", "traceback", "bug", "crash", "fallisce", "non funziona")
     ):
         return "debug_request"
-    if any(
-        token in normalized
-        for token in ("patch", "modifica", "codice", "script", "repo")
-    ):
+    if any(token in normalized for token in ("patch", "modifica", "codice", "script", "repo")):
         return "repo_work_request"
     return "general_request"
 
@@ -94,9 +91,7 @@ def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
     infer_s = float(report.get("inference_seconds") or 0.0)
     preview = str(report.get("output_preview") or "").strip()
     errors = report.get("errors") if isinstance(report.get("errors"), list) else []
-    warnings = (
-        report.get("warnings") if isinstance(report.get("warnings"), list) else []
-    )
+    warnings = report.get("warnings") if isinstance(report.get("warnings"), list) else []
 
     if not workload_ok:
         decision = "blocked_peer_evidence"
@@ -135,12 +130,8 @@ def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--output", default="output/validation/openvino_gpu0_workload.json"
-    )
-    parser.add_argument(
-        "--markdown-output", default="output/validation/openvino_gpu0_workload.md"
-    )
+    parser.add_argument("--output", default="output/validation/openvino_gpu0_workload.json")
+    parser.add_argument("--markdown-output", default="output/validation/openvino_gpu0_workload.md")
     parser.add_argument("--iterations", type=int, default=180)
     parser.add_argument("--min-seconds", type=float, default=6.0)
     parser.add_argument("--role", default="observable_secondary_accelerator")
@@ -165,16 +156,13 @@ def main() -> int:
     report["min_seconds"] = float(args.min_seconds)
     report["requested_role"] = str(args.role)
     report["request_input"] = str(args.request or "").strip()
-    report["openvino_gpu0_observable_workload_required"] = not bool(
-        args.allow_non_observable
-    )
+    report["openvino_gpu0_observable_workload_required"] = not bool(args.allow_non_observable)
     report["openvino_gpu0_observable_workload_passed"] = bool(
         report.get("openvino_gpu0_workload_performed")
         and report.get("openvino_gpu0_sustained_workload_performed")
         and int(report.get("openvino_gpu0_sustained_iterations_performed") or 0)
         >= int(args.iterations)
-        and float(report.get("inference_seconds") or 0.0)
-        >= min(0.05, float(args.min_seconds))
+        and float(report.get("inference_seconds") or 0.0) >= min(0.05, float(args.min_seconds))
     )
     if args.production_support:
         report["openvino_gpu0_role"] = str(args.role)
@@ -194,9 +182,7 @@ def main() -> int:
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown.write_text(render_markdown(report), encoding="utf-8")
     print(
         json.dumps(

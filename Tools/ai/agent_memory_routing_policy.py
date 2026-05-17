@@ -34,9 +34,7 @@ except ImportError:
 
 DEFAULT_OUTPUT = "output/validation/agent_memory_routing_policy.json"
 DEFAULT_MARKDOWN = "output/validation/agent_memory_routing_policy.md"
-DEFAULT_BROKER_REQUEST = (
-    "output/ai_runtime_tools/agent_memory_routing_policy_tool_requests.json"
-)
+DEFAULT_BROKER_REQUEST = "output/ai_runtime_tools/agent_memory_routing_policy_tool_requests.json"
 SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_.-]+")
 
 
@@ -53,11 +51,7 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -85,10 +79,7 @@ def default_persistent_queries(objective: str) -> list[dict[str, str]]:
             "reason": "Need durable project constraints before planning tool use.",
         }
     ]
-    if any(
-        token in objective_lower
-        for token in ("refactor", "codice", "code", "tool", "broker")
-    ):
+    if any(token in objective_lower for token in ("refactor", "codice", "code", "tool", "broker")):
         queries.append(
             {
                 "query": "IA-Carmine refactor workflow tool broker memory guardrails",
@@ -233,9 +224,7 @@ def build_discovery_tool_requests(args: argparse.Namespace) -> list[dict[str, An
             request_id="agnostic_tool_inventory",
             tool="build_agent_agnostic_tool_inventory",
             reason="Discover existing reusable tools/helpers before proposing new code or refactors.",
-            args={
-                "root": ["tools/ai", "tools/validation", "tools/workflow", "tools/npu"]
-            },
+            args={"root": ["tools/ai", "tools/validation", "tools/workflow", "tools/npu"]},
         ),
         tool_request(
             request_id="transient_request_context",
@@ -465,9 +454,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("## Tool requests")
     lines.append("")
     for item in plan.get("tool_requests", []):
-        lines.append(
-            f"- `{item.get('id')}` -> `{item.get('tool')}`: {item.get('reason')}"
-        )
+        lines.append(f"- `{item.get('id')}` -> `{item.get('tool')}`: {item.get('reason')}")
     lines.append("")
     lines.append("## Guardrails")
     lines.append("")
@@ -510,18 +497,14 @@ def main() -> int:
                 "markdown": str(markdown),
                 "broker_request": report["broker_request_written"],
                 "tool_request_count": report["memory_plan"]["tool_request_count"],
-                "persistent_query_count": report["memory_plan"][
-                    "persistent_query_count"
-                ],
+                "persistent_query_count": report["memory_plan"]["persistent_query_count"],
                 "operational_query_or_write_count": report["memory_plan"][
                     "operational_query_or_write_count"
                 ],
                 "provider_execution_performed": report["provider_execution_performed"],
                 "patch_application_performed": report["patch_application_performed"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
-                "persistent_memory_write_performed": report[
-                    "persistent_memory_write_performed"
-                ],
+                "persistent_memory_write_performed": report["persistent_memory_write_performed"],
             },
             indent=2,
             ensure_ascii=False,

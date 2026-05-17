@@ -33,12 +33,8 @@ except ImportError:
         write_text_report,
     )
 
-DEFAULT_OUTPUT = (
-    "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.json"
-)
-DEFAULT_MARKDOWN = (
-    "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.md"
-)
+DEFAULT_OUTPUT = "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.json"
+DEFAULT_MARKDOWN = "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.md"
 
 
 def now_iso() -> str:
@@ -47,11 +43,7 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -91,7 +83,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
     gpu0_tool_requests = read_json(args.gpu0_tool_requests)
     gpu0_broker = read_json(args.gpu0_broker_report)
     npu = read_json(args.npu_report)
-    npu_broker = read_json(args.npu_broker_report)
+    read_json(args.npu_broker_report)
     peer_contract = read_json(args.peer_contract_report)
     peer_exchange = read_json(args.peer_exchange_report)
 
@@ -110,18 +102,12 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                 "reports": {
                     "gpu1": existing_report(repo_root, args.gpu1_report),
                     "gpu0": existing_report(repo_root, args.gpu0_report),
-                    "gpu0_tool_requests": existing_report(
-                        repo_root, args.gpu0_tool_requests
-                    ),
+                    "gpu0_tool_requests": existing_report(repo_root, args.gpu0_tool_requests),
                     "gpu0_broker": existing_report(repo_root, args.gpu0_broker_report),
                     "npu": existing_report(repo_root, args.npu_report),
                     "npu_broker": existing_report(repo_root, args.npu_broker_report),
-                    "peer_exchange": existing_report(
-                        repo_root, args.peer_exchange_report
-                    ),
-                    "peer_contract": existing_report(
-                        repo_root, args.peer_contract_report
-                    ),
+                    "peer_exchange": existing_report(repo_root, args.peer_exchange_report),
+                    "peer_contract": existing_report(repo_root, args.peer_contract_report),
                 },
                 "direct_execution": False,
                 "broker_required": True,
@@ -141,9 +127,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                     "objective": "GPU1 primary planner requests coworker evidence from GPU0 through shared runtime heap.",
                     "gpu1_report": existing_report(repo_root, args.gpu1_report),
                     "gpu1_passed": gpu1.get("passed"),
-                    "gpu1_provider_execution_performed": gpu1.get(
-                        "provider_execution_performed"
-                    ),
+                    "gpu1_provider_execution_performed": gpu1.get("provider_execution_performed"),
                     "recommendation_count": first_present(
                         gpu1.get("recommendation_count"),
                         (
@@ -168,9 +152,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                     "summary": "GPU0 coworker response is available as provider peer evidence.",
                     "gpu0_report": existing_report(repo_root, args.gpu0_report),
                     "gpu0_passed": gpu0.get("passed"),
-                    "gpu0_provider_execution_performed": gpu0.get(
-                        "provider_execution_performed"
-                    ),
+                    "gpu0_provider_execution_performed": gpu0.get("provider_execution_performed"),
                     "tool_request_count": first_present(
                         gpu0.get("tool_request_count"),
                         (
@@ -188,9 +170,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
             )
         )
     else:
-        warnings.append(
-            "gpu1/gpu0 reports missing; GPU peer evidence exchange not emitted"
-        )
+        warnings.append("gpu1/gpu0 reports missing; GPU peer evidence exchange not emitted")
 
     tool_requests = gpu0_tool_requests.get("tool_requests", [])
     if isinstance(tool_requests, list):
@@ -198,9 +178,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
             if not isinstance(request, dict):
                 continue
             request_id = str(
-                request.get("id")
-                or request.get("request_id")
-                or f"gpu0-tool-request-{index:03d}"
+                request.get("id") or request.get("request_id") or f"gpu0-tool-request-{index:03d}"
             )
             events.append(
                 heap.append_event(
@@ -214,9 +192,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                         "tool": request.get("tool"),
                         "args": safe_dict(request.get("args")),
                         "reason": request.get("reason"),
-                        "source_report": existing_report(
-                            repo_root, args.gpu0_tool_requests
-                        ),
+                        "source_report": existing_report(repo_root, args.gpu0_tool_requests),
                         "direct_execution": False,
                         "broker_required": True,
                     },
@@ -229,9 +205,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
             if not isinstance(result, dict):
                 continue
             result_id = str(
-                result.get("id")
-                or result.get("request_id")
-                or f"gpu0-broker-result-{index:03d}"
+                result.get("id") or result.get("request_id") or f"gpu0-broker-result-{index:03d}"
             )
             events.append(
                 heap.append_event(
@@ -249,9 +223,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                         "outputs": result.get("outputs"),
                         "errors": result.get("errors", []),
                         "warnings": result.get("warnings", []),
-                        "broker_report": existing_report(
-                            repo_root, args.gpu0_broker_report
-                        ),
+                        "broker_report": existing_report(repo_root, args.gpu0_broker_report),
                     },
                 )
             )
@@ -264,9 +236,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                 round_id=1,
                 correlation_id=f"{args.stamp}:gpu0-broker-summary",
                 payload={
-                    "broker_report": existing_report(
-                        repo_root, args.gpu0_broker_report
-                    ),
+                    "broker_report": existing_report(repo_root, args.gpu0_broker_report),
                     "passed": gpu0_broker.get("passed"),
                     "tool_request_count": gpu0_broker.get("tool_request_count"),
                     "tool_execution_count": gpu0_broker.get("tool_execution_count"),
@@ -288,12 +258,8 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                     "summary": "NPU microtask support report is available to GPU1 as non-blocking context.",
                     "npu_report": existing_report(repo_root, args.npu_report),
                     "npu_passed": npu.get("passed"),
-                    "provider_execution_requested": npu.get(
-                        "provider_execution_requested"
-                    ),
-                    "provider_execution_performed": npu.get(
-                        "provider_execution_performed"
-                    ),
+                    "provider_execution_requested": npu.get("provider_execution_requested"),
+                    "provider_execution_performed": npu.get("provider_execution_performed"),
                     "non_blocking": first_present(npu.get("non_blocking"), True),
                     "tool_request_count": npu.get("tool_request_count"),
                     "product_pass_blocker": npu.get("product_pass_blocker"),
@@ -313,16 +279,10 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                 round_id=1,
                 correlation_id=f"{args.stamp}:ai-peer-contract",
                 payload={
-                    "peer_contract_report": existing_report(
-                        repo_root, args.peer_contract_report
-                    ),
-                    "peer_exchange_report": existing_report(
-                        repo_root, args.peer_exchange_report
-                    ),
+                    "peer_contract_report": existing_report(repo_root, args.peer_contract_report),
+                    "peer_exchange_report": existing_report(repo_root, args.peer_exchange_report),
                     "passed": peer_contract.get("passed"),
-                    "provider_broker_loop": safe_dict(
-                        peer_contract.get("provider_broker_loop")
-                    ),
+                    "provider_broker_loop": safe_dict(peer_contract.get("provider_broker_loop")),
                     "errors": peer_contract.get("errors", []),
                     "warnings": peer_contract.get("warnings", []),
                 },
@@ -345,9 +305,7 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
         "event_count": len(events),
         "heap_snapshot": {
             "event_count": snapshot.get("event_count"),
-            "pending_broker_request_count": snapshot.get(
-                "pending_broker_request_count"
-            ),
+            "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
             "event_log": snapshot.get("event_log"),
         },
         "reports": {
@@ -377,9 +335,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- {key}: `{report.get(key)}`")
     heap = safe_dict(report.get("heap_snapshot"))
     lines.append(f"- heap_event_count: `{heap.get('event_count')}`")
-    lines.append(
-        f"- pending_broker_request_count: `{heap.get('pending_broker_request_count')}`"
-    )
+    lines.append(f"- pending_broker_request_count: `{heap.get('pending_broker_request_count')}`")
     lines.append(f"- event_log: `{heap.get('event_log')}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
@@ -415,9 +371,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     report = append_from_reports(args)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
-    markdown = resolve_output_path(
-        repo_root, args.markdown_output.format(stamp=args.stamp)
-    )
+    markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
     print(json.dumps(report, indent=2, ensure_ascii=False))

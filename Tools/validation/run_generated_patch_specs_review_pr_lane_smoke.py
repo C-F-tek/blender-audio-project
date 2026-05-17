@@ -1,6 +1,6 @@
-
 #!/usr/bin/env python3
 """Smoke-test generated patch specs -> apply report -> prepare_review_pr chain."""
+
 from __future__ import annotations
 
 import argparse
@@ -15,7 +15,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 STAMP = "generated_patch_specs_review_pr_lane_smoke_20990101-010203"
 TARGET = "docs/LOCAL_AI_TASKS/generated-spec-target.md"
@@ -24,7 +28,9 @@ MARKER = "generated_patch_specs_review_pr_lane_marker"
 
 def run(command: list[str], cwd: Path, env: dict[str, str], timeout: int) -> dict[str, Any]:
     try:
-        result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, check=False, timeout=timeout)
+        result = subprocess.run(
+            command, cwd=cwd, env=env, capture_output=True, text=True, check=False, timeout=timeout
+        )
         return {
             "command": command,
             "returncode": result.returncode,
@@ -46,15 +52,25 @@ def run(command: list[str], cwd: Path, env: dict[str, str], timeout: int) -> dic
 def seed_repo(root: Path) -> Path:
     repo = root / "repo"
     repo.mkdir()
-    subprocess.run(["git", "init", "-b", "master"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "init", "-b", "master"], cwd=repo, check=True, capture_output=True, text=True
+    )
     subprocess.run(["git", "config", "user.email", "smoke@example.invalid"], cwd=repo, check=True)
-    subprocess.run(["git", "config", "user.name", "Generated Patch Specs Smoke"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "config", "user.name", "Generated Patch Specs Smoke"], cwd=repo, check=True
+    )
 
     target = repo / TARGET
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("# Generated Spec Target\n\nSeed content.\n", encoding="utf-8")
     subprocess.run(["git", "add", TARGET], cwd=repo, check=True, capture_output=True, text=True)
-    subprocess.run(["git", "commit", "-m", "seed generated spec target"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "commit", "-m", "seed generated spec target"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
     spec_dir = repo / "output/patch_specs/generated_spec_smoke"
     spec_dir.mkdir(parents=True, exist_ok=True)
@@ -115,8 +131,13 @@ def render_markdown(report: dict[str, Any]) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/generated_patch_specs_review_pr_lane_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/generated_patch_specs_review_pr_lane_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/generated_patch_specs_review_pr_lane_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/generated_patch_specs_review_pr_lane_smoke.md",
+    )
     parser.add_argument("--timeout-seconds", type=int, default=90)
     return parser.parse_args()
 
@@ -152,7 +173,11 @@ def main() -> int:
             "--require-all-validators",
         ]
         apply_result = run(apply_command, repo, env, args.timeout_seconds)
-        apply_report = json.loads(apply_report_path.read_text(encoding="utf-8-sig")) if apply_report_path.exists() else {}
+        apply_report = (
+            json.loads(apply_report_path.read_text(encoding="utf-8-sig"))
+            if apply_report_path.exists()
+            else {}
+        )
 
         if not apply_result["ok"]:
             errors.append(f"generated patch spec bridge failed rc={apply_result['returncode']}")
@@ -161,10 +186,16 @@ def main() -> int:
         if apply_report.get("patch_application_performed") is not True:
             errors.append("generated patch spec bridge did not apply the concrete operation")
         if apply_report.get("git_unsafe_status_before"):
-            errors.append(f"safe output-only dirtiness should not be treated as unsafe: {apply_report.get('git_unsafe_status_before')}")
-        branch_prepare = apply_report.get("git_review_branch_prepare") if isinstance(apply_report, dict) else {}
+            errors.append(
+                f"safe output-only dirtiness should not be treated as unsafe: {apply_report.get('git_unsafe_status_before')}"
+            )
+        branch_prepare = (
+            apply_report.get("git_review_branch_prepare") if isinstance(apply_report, dict) else {}
+        )
         if isinstance(branch_prepare, dict) and branch_prepare.get("unsafe_status_before"):
-            errors.append(f"branch preparation should ignore output-only dirtiness: {branch_prepare.get('unsafe_status_before')}")
+            errors.append(
+                f"branch preparation should ignore output-only dirtiness: {branch_prepare.get('unsafe_status_before')}"
+            )
         if MARKER not in (repo / TARGET).read_text(encoding="utf-8"):
             errors.append("target marker was not written")
 
@@ -193,14 +224,20 @@ def main() -> int:
             "--allow-dirty-branch",
         ]
         prepare_result = run(prepare_command, repo, env, args.timeout_seconds)
-        review_report = json.loads(review_report_path.read_text(encoding="utf-8-sig")) if review_report_path.exists() else {}
+        review_report = (
+            json.loads(review_report_path.read_text(encoding="utf-8-sig"))
+            if review_report_path.exists()
+            else {}
+        )
 
         if not prepare_result["ok"]:
             errors.append(f"prepare_review_pr.py failed rc={prepare_result['returncode']}")
         if review_report.get("passed") is not True:
             errors.append("review PR prepare report did not pass")
         if review_report.get("auto_include_paths") != [TARGET]:
-            errors.append(f"unexpected auto include paths: {review_report.get('auto_include_paths')}")
+            errors.append(
+                f"unexpected auto include paths: {review_report.get('auto_include_paths')}"
+            )
         if review_report.get("git_commit_performed") is not True:
             errors.append("review PR product commit was not performed")
         if review_report.get("github_pr_created") or review_report.get("git_push_performed"):

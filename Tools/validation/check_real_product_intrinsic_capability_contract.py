@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Validate the real product profile intrinsic heap/exchange capability contract."""
+
 from __future__ import annotations
 
 import argparse
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -11,7 +11,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def read_text(path: Path) -> str:
@@ -102,12 +106,21 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "shared_memory_evidence": check_token(wrapper_text, "-SaveInputsToMemoryDb")
         and check_token(wrapper_text, "-BuildEvidence")
         and check_token(launcher_text, "shared_memory_evidence"),
-        "static_deterministic_script_lane": check_token(wrapper_text, "-BuildTaskPatchSuggestionReport")
+        "static_deterministic_script_lane": check_token(
+            wrapper_text, "-BuildTaskPatchSuggestionReport"
+        )
         and check_token(wrapper_text, "-GeneratePatchSpecs")
-        and (check_token(wrapper_text, "-ReviewPrApplyDeterministicSuggestions") or check_token(wrapper_text, "-ReviewPrFromGeneratedPatchSpecs"))
+        and (
+            check_token(wrapper_text, "-ReviewPrApplyDeterministicSuggestions")
+            or check_token(wrapper_text, "-ReviewPrFromGeneratedPatchSpecs")
+        )
         and check_token(args_builder_text, "require_product_input"),
-        "heap_exchange_close": check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-BEGIN")
-        and check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN")
+        "heap_exchange_close": check_token(
+            launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-BEGIN"
+        )
+        and check_token(
+            launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN"
+        )
         and check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-END"),
         "product_readiness": check_token(launcher_text, "review_pr_product_readiness")
         and check_token(readiness_text, "prepare_review_pr_ready")
@@ -138,7 +151,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "PR finale testabile",
     ]
 
-    errors = [f"missing intrinsic capability: {name}" for name, passed in checks.items() if not passed]
+    errors = [
+        f"missing intrinsic capability: {name}" for name, passed in checks.items() if not passed
+    ]
 
     return {
         "schema_version": 1,
@@ -164,7 +179,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/real_product_intrinsic_capability_contract.json")
+    parser.add_argument(
+        "--output", default="output/validation/real_product_intrinsic_capability_contract.json"
+    )
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
 

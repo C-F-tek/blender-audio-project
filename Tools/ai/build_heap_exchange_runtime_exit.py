@@ -260,9 +260,7 @@ def main() -> int:
 
     changed_count = int(apply_report.get("changed_count") or 0) if apply_report else 0
     operation_count = (
-        int(apply_report.get("operation_count") or 0)
-        if apply_report
-        else len(concrete_operations)
+        int(apply_report.get("operation_count") or 0) if apply_report else len(concrete_operations)
     )
     errors: list[str] = []
     warnings: list[str] = []
@@ -273,9 +271,7 @@ def main() -> int:
     if apply_error:
         warnings.append(f"apply report unavailable at exit: {apply_error}")
     if args.require_concrete_product and not concrete_operations:
-        errors.append(
-            "heap/exchange exit has no concrete deterministic operation candidate"
-        )
+        errors.append("heap/exchange exit has no concrete deterministic operation candidate")
     if args.require_concrete_product and operation_count <= 0:
         errors.append("heap/exchange exit has operation_count=0")
 

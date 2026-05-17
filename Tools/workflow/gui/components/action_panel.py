@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable
 import tkinter as tk
+from collections.abc import Callable
+from dataclasses import dataclass
 from tkinter import ttk
 
 
@@ -31,7 +31,9 @@ class ActionGroup:
 class Tooltip:
     """Small delayed tooltip for Tk/ttk widgets."""
 
-    def __init__(self, widget: tk.Widget, text: str, *, delay_ms: int = 650, wraplength: int = 360) -> None:
+    def __init__(
+        self, widget: tk.Widget, text: str, *, delay_ms: int = 650, wraplength: int = 360
+    ) -> None:
         self.widget = widget
         self.text = text.strip()
         self.delay_ms = delay_ms

@@ -8,6 +8,7 @@ lane, workload quality gate, docs drift tooling and macro-patch workflow.
 It does not execute providers, apply patches, run Blender, read ignored runtime
 outputs, modify source files or inspect SQLite memory databases.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -75,7 +76,10 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
             "openvino_npu",
             "gpu_cuda",
         ),
-        recommended_terms=("npu_excluded_from_primary_advisory", "ollama_gpu_primary_advisory_allowed"),
+        recommended_terms=(
+            "npu_excluded_from_primary_advisory",
+            "ollama_gpu_primary_advisory_allowed",
+        ),
         safe_patch_hint="Restore explicit decision metadata and lane role mapping before this validator is used by packet/proposal builders.",
     ),
     CodeContractSpec(
@@ -108,7 +112,10 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
             "provider_execution_performed",
             "excluded_context_files",
         ),
-        recommended_terms=("Use only quality-approved AI workload context files", "advisory_context_routing"),
+        recommended_terms=(
+            "Use only quality-approved AI workload context files",
+            "advisory_context_routing",
+        ),
         safe_patch_hint="Keep workload report content filtered by quality routing before it is read into packets.",
     ),
     CodeContractSpec(
@@ -124,7 +131,10 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
             "provider_execution_performed",
             "suggestion_outputs",
         ),
-        recommended_terms=("npu_excluded_from_primary_advisory", "ollama_gpu_primary_advisory_allowed"),
+        recommended_terms=(
+            "npu_excluded_from_primary_advisory",
+            "ollama_gpu_primary_advisory_allowed",
+        ),
         safe_patch_hint="Keep proposal evidence tied to the workload quality report decision and keep proposals manual-review-only.",
     ),
     CodeContractSpec(
@@ -157,7 +167,10 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
             "safe_actions",
             "openvino_gpu_primary_lane",
         ),
-        recommended_terms=("AI_WORKLOAD_REPORT_QUALITY_GATE.md", "quality_report_required_before_advisory_use"),
+        recommended_terms=(
+            "AI_WORKLOAD_REPORT_QUALITY_GATE.md",
+            "quality_report_required_before_advisory_use",
+        ),
         allowed_global_forbidden_terms=(
             "OpenVINO GPU primary lane",
             "provider execution by default",
@@ -216,9 +229,7 @@ def check_contract(repo_root: Path, spec: CodeContractSpec) -> dict[str, Any]:
         if term in text and term not in spec.allowed_global_forbidden_terms
     ]
     allowed_global_forbidden_present = [
-        term
-        for term in spec.allowed_global_forbidden_terms
-        if term in text
+        term for term in spec.allowed_global_forbidden_terms if term in text
     ]
 
     errors: list[str] = []
@@ -308,27 +319,19 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Guardrails")
     lines.append("")
-    lines.append("This validator is report-only. Code changes remain manual-review-only and must be promoted through normal PRs.")
+    lines.append(
+        "This validator is report-only. Code changes remain manual-review-only and must be promoted through normal PRs."
+    )
     return "\n".join(lines) + "\n"
 
 
 def validate_code_contract_drift(repo_root: Path) -> dict[str, Any]:
     checks = [check_contract(repo_root, spec) for spec in CODE_CONTRACTS]
-    errors = [
-        f"{check['path']}: {error}"
-        for check in checks
-        for error in check.get("errors", [])
-    ]
+    errors = [f"{check['path']}: {error}" for check in checks for error in check.get("errors", [])]
     warnings = [
-        f"{check['path']}: {warning}"
-        for check in checks
-        for warning in check.get("warnings", [])
+        f"{check['path']}: {warning}" for check in checks for warning in check.get("warnings", [])
     ]
-    safe_actions = [
-        action
-        for check in checks
-        for action in check.get("safe_actions", [])
-    ]
+    safe_actions = [action for check in checks for action in check.get("safe_actions", [])]
     drift_count = sum(
         1
         for check in checks

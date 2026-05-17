@@ -45,9 +45,7 @@ SOURCE_ANCHOR_SEARCH_ROOTS = (
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return path.resolve(strict=False).relative_to(
-            repo_root.resolve(strict=False)
-        ).as_posix()
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -162,9 +160,7 @@ def response_file_reference_quality(
     for ref in source_refs:
         normalized = normalize_ref_path(ref)
         direct_exists = repo_source_file_exists(repo_root, normalized)
-        resolved = (
-            normalized if direct_exists else resolve_source_ref_alias(repo_root, normalized)
-        )
+        resolved = normalized if direct_exists else resolve_source_ref_alias(repo_root, normalized)
         if resolved:
             if resolved not in existing_source:
                 existing_source.append(resolved)
@@ -230,9 +226,7 @@ def read_json_file(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def request_source_file_candidates(
-    repo_root: Path, texts: list[str], limit: int = 24
-) -> list[str]:
+def request_source_file_candidates(repo_root: Path, texts: list[str], limit: int = 24) -> list[str]:
     candidates: list[str] = []
     for text in texts:
         for ref in extracted_file_refs(text):
@@ -311,9 +305,7 @@ def render_source_allowlist_contract(candidates: list[str]) -> str:
     return "\n".join(lines)
 
 
-def source_anchor_feedback(
-    candidates: list[str], requested: list[Any] | None = None
-) -> str:
+def source_anchor_feedback(candidates: list[str], requested: list[Any] | None = None) -> str:
     if not candidates:
         return ""
     lines = [

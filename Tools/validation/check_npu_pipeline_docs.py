@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate NPU pipeline helper documentation/module alignment."""
+
 from __future__ import annotations
 
 import argparse

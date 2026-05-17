@@ -5,8 +5,8 @@ import argparse
 import json
 import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def now_iso() -> str:
@@ -34,7 +34,9 @@ def write_markdown(report: dict, path: Path) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Smoke global DataStamp ai_packets workload quality contract.")
+    parser = argparse.ArgumentParser(
+        description="Smoke global DataStamp ai_packets workload quality contract."
+    )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", required=True)
     parser.add_argument("--markdown-output", required=True)
@@ -79,7 +81,9 @@ def main() -> int:
         "--output",
         str(quality_output),
     ]
-    result = subprocess.run(cmd, cwd=repo_root, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+    result = subprocess.run(
+        cmd, cwd=repo_root, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False
+    )
 
     errors: list[str] = []
     quality = {}
@@ -97,15 +101,22 @@ def main() -> int:
         errors.append(f"quality report did not pass: {quality.get('errors')}")
     if not str(quality.get("report_dir", "")).replace("\\", "/").endswith("_ai_packets"):
         errors.append("quality report_dir is not the selected AI packets root")
-    selected_paths = [str(item.get("path", "")).replace("\\", "/") for item in quality.get("selected_reports", [])]
-    if not any(data_stamp in item and item.endswith("npu_real_workload_report.md") for item in selected_paths):
+    selected_paths = [
+        str(item.get("path", "")).replace("\\", "/") for item in quality.get("selected_reports", [])
+    ]
+    if not any(
+        data_stamp in item and item.endswith("npu_real_workload_report.md")
+        for item in selected_paths
+    ):
         errors.append("stamp-scoped npu fixture was not selected from a child packet directory")
     if not any(item.endswith("legacy_workload_report.md") for item in selected_paths):
         errors.append("root-level workload report fixture was not selected")
     if "npu" not in quality.get("usable_lanes", []):
         errors.append("npu fixture was not selected as usable")
     if "ollama" in quality.get("unusable_lanes", []):
-        errors.append("missing ollama should not be selected into unusable_lanes in default output-folder mode")
+        errors.append(
+            "missing ollama should not be selected into unusable_lanes in default output-folder mode"
+        )
     if not quality.get("unselected_known_reports"):
         errors.append("missing known reports should be serialized as unselected_known_reports")
 

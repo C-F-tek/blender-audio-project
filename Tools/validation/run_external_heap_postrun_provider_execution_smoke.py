@@ -8,6 +8,7 @@ the final external_heap_postrun_package.json reports
 and executes the existing post-run orchestrator end-to-end. It does not execute
 providers, Blender, patch application or source writes.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,12 +23,18 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def env_for(repo_root: Path) -> dict[str, str]:
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(repo_root) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env["PYTHONPATH"] = str(repo_root) + (
+        os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
+    )
     return env
 
 
@@ -64,7 +71,12 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 def write_fixture_run(repo_root: Path) -> Path:
-    run_dir = repo_root / "output" / "validation" / "heap_context_closure_postrun_provider_execution_smoke"
+    run_dir = (
+        repo_root
+        / "output"
+        / "validation"
+        / "heap_context_closure_postrun_provider_execution_smoke"
+    )
     shutil.rmtree(run_dir, ignore_errors=True)
     provider_dir = run_dir / "provider_teamwork"
     provider_dir.mkdir(parents=True, exist_ok=True)
@@ -142,8 +154,13 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/external_heap_postrun_provider_execution_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/external_heap_postrun_provider_execution_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/external_heap_postrun_provider_execution_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/external_heap_postrun_provider_execution_smoke.md",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -169,12 +186,30 @@ def main() -> int:
     checks = [
         {"name": "postrun_returncode_zero", "passed": command_result.get("passed") is True},
         {"name": "postrun_package_passed", "passed": postrun.get("passed") is True},
-        {"name": "postrun_provider_execution_true", "passed": postrun.get("provider_execution_performed") is True},
-        {"name": "pointer_provider_execution_true", "passed": pointer.get("provider_execution_performed") is True},
-        {"name": "causality_provider_execution_true", "passed": causality.get("provider_execution_performed") is True},
-        {"name": "long_response_provider_execution_true", "passed": long_response.get("provider_execution_performed") is True},
-        {"name": "revision_provider_execution_true", "passed": revision.get("provider_execution_performed") is True},
-        {"name": "no_patch_application", "passed": postrun.get("patch_application_performed") is False},
+        {
+            "name": "postrun_provider_execution_true",
+            "passed": postrun.get("provider_execution_performed") is True,
+        },
+        {
+            "name": "pointer_provider_execution_true",
+            "passed": pointer.get("provider_execution_performed") is True,
+        },
+        {
+            "name": "causality_provider_execution_true",
+            "passed": causality.get("provider_execution_performed") is True,
+        },
+        {
+            "name": "long_response_provider_execution_true",
+            "passed": long_response.get("provider_execution_performed") is True,
+        },
+        {
+            "name": "revision_provider_execution_true",
+            "passed": revision.get("provider_execution_performed") is True,
+        },
+        {
+            "name": "no_patch_application",
+            "passed": postrun.get("patch_application_performed") is False,
+        },
         {"name": "no_source_writes", "passed": postrun.get("source_writes_performed") is False},
     ]
     errors = [str(check["name"]) for check in checks if check.get("passed") is not True]

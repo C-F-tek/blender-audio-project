@@ -4,6 +4,7 @@
 This validator checks the entry/exit envelope only. It intentionally does not
 assert a fixed internal order for GPU/provider/NPU/runtime lanes.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,7 +16,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def repo_path(repo_root: Path, raw: str) -> Path | None:
@@ -36,7 +41,11 @@ def rel(repo_root: Path, path: Path | None) -> str:
 
 def discover_first(repo_root: Path, patterns: list[str]) -> Path | None:
     for pattern in patterns:
-        matches = sorted(repo_root.glob(pattern), key=lambda item: item.stat().st_mtime if item.exists() else 0, reverse=True)
+        matches = sorted(
+            repo_root.glob(pattern),
+            key=lambda item: item.stat().st_mtime if item.exists() else 0,
+            reverse=True,
+        )
         if matches:
             return matches[0]
     return None
@@ -63,7 +72,9 @@ def load_jsonl(path: Path | None) -> tuple[list[dict[str, Any]], str | None]:
         return [], "missing"
     events: list[dict[str, Any]] = []
     errors: list[str] = []
-    for index, line in enumerate(path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1):
+    for index, line in enumerate(
+        path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1
+    ):
         stripped = line.strip()
         if not stripped:
             continue
@@ -81,8 +92,26 @@ def event_kind(event: dict[str, Any]) -> str:
     return str(event.get("kind") or event.get("event_type") or "").strip().lower()
 
 
-def add_check(checks: list[dict[str, Any]], *, name: str, passed: bool, expected: str, actual: str, action: str, artifacts: list[str] | None = None) -> None:
-    checks.append({"name": name, "passed": bool(passed), "expected": expected, "actual": actual, "action": action, "artifacts": artifacts or []})
+def add_check(
+    checks: list[dict[str, Any]],
+    *,
+    name: str,
+    passed: bool,
+    expected: str,
+    actual: str,
+    action: str,
+    artifacts: list[str] | None = None,
+) -> None:
+    checks.append(
+        {
+            "name": name,
+            "passed": bool(passed),
+            "expected": expected,
+            "actual": actual,
+            "action": action,
+            "artifacts": artifacts or [],
+        }
+    )
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -99,7 +128,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "|---|---:|---|---|",
     ]
     for check in report.get("checks") or []:
-        lines.append(f"| `{check.get('name')}` | `{check.get('passed')}` | {str(check.get('actual')).replace('|', '/')} | {str(check.get('action')).replace('|', '/')} |")
+        lines.append(
+            f"| `{check.get('name')}` | `{check.get('passed')}` | {str(check.get('actual')).replace('|', '/')} | {str(check.get('action')).replace('|', '/')} |"
+        )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])
@@ -118,7 +149,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--require-concrete-exit", action="store_true")
     parser.add_argument("--require-knowledge-surface", action="store_true")
     parser.add_argument("--min-available-lanes", type=int, default=2)
-    parser.add_argument("--output", default="output/validation/heap_exchange_runtime_lifecycle.json")
+    parser.add_argument(
+        "--output", default="output/validation/heap_exchange_runtime_lifecycle.json"
+    )
     parser.add_argument("--markdown-output", default="")
     return parser.parse_args()
 
@@ -129,10 +162,18 @@ def main() -> int:
     stamp = args.stamp
     packets_dir = repo_root / "output" / "ai_packets" / stamp
 
-    entry_path = repo_path(repo_root, args.runtime_entry) or (packets_dir / "heap_exchange_runtime_entry.json")
-    state_path = repo_path(repo_root, args.runtime_state) or (packets_dir / "heap_exchange_runtime_state.jsonl")
-    exit_path = repo_path(repo_root, args.runtime_exit) or (packets_dir / "heap_exchange_runtime_exit_product.json")
-    observer_dir = repo_path(repo_root, args.observer_dir) or discover_first(repo_root, [f"output/local_ai_runs/*{stamp}*_observer"])
+    entry_path = repo_path(repo_root, args.runtime_entry) or (
+        packets_dir / "heap_exchange_runtime_entry.json"
+    )
+    state_path = repo_path(repo_root, args.runtime_state) or (
+        packets_dir / "heap_exchange_runtime_state.jsonl"
+    )
+    exit_path = repo_path(repo_root, args.runtime_exit) or (
+        packets_dir / "heap_exchange_runtime_exit_product.json"
+    )
+    observer_dir = repo_path(repo_root, args.observer_dir) or discover_first(
+        repo_root, [f"output/local_ai_runs/*{stamp}*_observer"]
+    )
     public_path = observer_dir / "ai_public_events.jsonl" if observer_dir else None
 
     entry, entry_error = load_json(entry_path)
@@ -154,7 +195,9 @@ def main() -> int:
     )
 
     knowledge = entry.get("knowledge_surface") if entry else None
-    knowledge_events = [event for event in runtime_events if event_kind(event) == "knowledge_surface_registered"]
+    knowledge_events = [
+        event for event in runtime_events if event_kind(event) == "knowledge_surface_registered"
+    ]
     knowledge_ok = True
     if args.require_knowledge_surface:
         knowledge_ok = bool(
@@ -169,7 +212,9 @@ def main() -> int:
         checks,
         name="knowledge_surface_dynamic_not_static_chain",
         passed=knowledge_ok,
-        expected="entry records heap_exchange knowledge surface and runtime state records knowledge_surface_registered" if args.require_knowledge_surface else "not required",
+        expected="entry records heap_exchange knowledge surface and runtime state records knowledge_surface_registered"
+        if args.require_knowledge_surface
+        else "not required",
         actual=f"source_of_knowledge={(entry or {}).get('source_of_knowledge')} routing_model={(knowledge or {}).get('routing_model') if isinstance(knowledge, dict) else None} static_chain={(knowledge or {}).get('static_chain_invocation_performed') if isinstance(knowledge, dict) else None} knowledge_events={len(knowledge_events)}",
         action="Build entry with heap_exchange knowledge_surface and append knowledge_surface_registered event.",
         artifacts=[rel(repo_root, entry_path), rel(repo_root, state_path)],
@@ -205,7 +250,9 @@ def main() -> int:
         checks,
         name="public_exchange_events",
         passed=public_ok,
-        expected="ai_public_events.jsonl has observable heap/exchange events" if args.require_public_events else "not required",
+        expected="ai_public_events.jsonl has observable heap/exchange events"
+        if args.require_public_events
+        else "not required",
         actual=public_actual,
         action="Use Write-UnifiedRunAiPublicEvent or equivalent event emission in entry/runtime/exit.",
         artifacts=[rel(repo_root, public_path)],
@@ -217,7 +264,9 @@ def main() -> int:
         checks,
         name="exit_product_concrete",
         passed=concrete_ok,
-        expected="heap exit product exists and has concrete_operation_count > 0" if args.require_concrete_exit else "heap exit product exists and passed",
+        expected="heap exit product exists and has concrete_operation_count > 0"
+        if args.require_concrete_exit
+        else "heap exit product exists and passed",
         actual=f"exit_error={exit_error} passed={exit_passed} concrete_operation_count={concrete_count}",
         action="Build heap exchange exit product after generated patch spec bridge and before PR product creation.",
         artifacts=[rel(repo_root, exit_path)],
@@ -240,7 +289,9 @@ def main() -> int:
     output = resolve_output_path(repo_root, args.output)
     print(write_json_report(report, output), end="")
     if args.markdown_output:
-        write_text_report(render_markdown(report), resolve_output_path(repo_root, args.markdown_output))
+        write_text_report(
+            render_markdown(report), resolve_output_path(repo_root, args.markdown_output)
+        )
     return 0 if report["passed"] else 2
 
 

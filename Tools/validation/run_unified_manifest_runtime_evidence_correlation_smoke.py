@@ -72,7 +72,10 @@ def require(condition: bool, errors: list[str], message: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/unified_manifest_runtime_evidence_correlation_smoke.json")
+    parser.add_argument(
+        "--output",
+        default="output/validation/unified_manifest_runtime_evidence_correlation_smoke.json",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -81,9 +84,15 @@ def main() -> int:
 
     good_manifest = base_manifest(stamp)
     good_manifest["runtime_evidence_correlation_requested"] = True
-    good_manifest["phase_reports"]["runtime_evidence_correlation"] = f"output/validation/runtime_evidence_correlation_all_{stamp}.json"
-    good_manifest["report_files"].append(f"output/validation/runtime_evidence_correlation_all_{stamp}.json")
-    good_manifest["context_files"].append(f"output/validation/runtime_evidence_correlation_all_{stamp}.md")
+    good_manifest["phase_reports"]["runtime_evidence_correlation"] = (
+        f"output/validation/runtime_evidence_correlation_all_{stamp}.json"
+    )
+    good_manifest["report_files"].append(
+        f"output/validation/runtime_evidence_correlation_all_{stamp}.json"
+    )
+    good_manifest["context_files"].append(
+        f"output/validation/runtime_evidence_correlation_all_{stamp}.md"
+    )
 
     missing_manifest = base_manifest(stamp)
     missing_manifest["runtime_evidence_correlation_requested"] = True
@@ -107,24 +116,43 @@ def main() -> int:
     errors: list[str] = []
     by_name = {case["name"]: case for case in cases}
 
-    require(by_name["good_requested"]["returncode"] == 0, errors, "good requested manifest should pass")
-    require(by_name["good_requested"]["report"].get("passed") is True, errors, "good requested report should pass")
+    require(
+        by_name["good_requested"]["returncode"] == 0, errors, "good requested manifest should pass"
+    )
+    require(
+        by_name["good_requested"]["report"].get("passed") is True,
+        errors,
+        "good requested report should pass",
+    )
 
     missing_errors = by_name["missing_requested"]["report"].get("errors") or []
-    require(by_name["missing_requested"]["returncode"] == 2, errors, "missing requested manifest should fail")
+    require(
+        by_name["missing_requested"]["returncode"] == 2,
+        errors,
+        "missing requested manifest should fail",
+    )
     require(
         any("phase_reports.runtime_evidence_correlation" in item for item in missing_errors),
         errors,
         "missing requested manifest should report missing phase_reports.runtime_evidence_correlation",
     )
     require(
-        any("report_files" in item and "runtime_evidence_correlation" in item for item in missing_errors),
+        any(
+            "report_files" in item and "runtime_evidence_correlation" in item
+            for item in missing_errors
+        ),
         errors,
         "missing requested manifest should report missing runtime correlation report_files entry",
     )
 
-    require(by_name["not_requested"]["returncode"] == 0, errors, "not requested manifest should pass")
-    require(by_name["not_requested"]["report"].get("passed") is True, errors, "not requested report should pass")
+    require(
+        by_name["not_requested"]["returncode"] == 0, errors, "not requested manifest should pass"
+    )
+    require(
+        by_name["not_requested"]["report"].get("passed") is True,
+        errors,
+        "not requested report should pass",
+    )
 
     report = {
         "schema_version": 1,

@@ -22,7 +22,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/generated_patch_specs_empty_product_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/generated_patch_specs_empty_product_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -33,10 +35,14 @@ def main() -> int:
         (repo / "Tools/example.py").parent.mkdir(parents=True)
         (repo / "Tools/example.py").write_text("VALUE = 1\n", encoding="utf-8")
         subprocess.run(["git", "init"], cwd=repo, capture_output=True, text=True, check=False)
-        subprocess.run(["git", "config", "user.email", "smoke@example.invalid"], cwd=repo, check=False)
+        subprocess.run(
+            ["git", "config", "user.email", "smoke@example.invalid"], cwd=repo, check=False
+        )
         subprocess.run(["git", "config", "user.name", "Smoke"], cwd=repo, check=False)
         subprocess.run(["git", "add", "."], cwd=repo, check=False)
-        subprocess.run(["git", "commit", "-m", "init"], cwd=repo, capture_output=True, text=True, check=False)
+        subprocess.run(
+            ["git", "commit", "-m", "init"], cwd=repo, capture_output=True, text=True, check=False
+        )
         spec = repo / "output/patch_specs/spec.json"
         manifest = repo / "output/patch_specs/spec_manifest.json"
         write_json(

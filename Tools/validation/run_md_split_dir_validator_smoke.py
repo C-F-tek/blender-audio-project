@@ -5,6 +5,7 @@ This test is report-only. It creates a temporary miniature repository tree and
 verifies that the Markdown validators/inventory treat ``name.md`` directories as
 containers, not as readable Markdown files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,9 +20,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from Tools.validation import build_markdown_inventory
-from Tools.validation import check_file_line_limits
-from Tools.validation import check_markdown_line_limits
+from Tools.validation import (
+    build_markdown_inventory,
+    check_file_line_limits,
+    check_markdown_line_limits,
+)
 
 
 def write(path: Path, text: str) -> None:
@@ -104,7 +107,9 @@ def run_smoke() -> dict[str, Any]:
         build_fixture(root)
 
         md_files = check_markdown_line_limits.iter_markdown(root, ["docs"], include_evidence=False)
-        md_containers = check_markdown_line_limits.collect_split_containers(root, ["docs"], include_evidence=False)
+        md_containers = check_markdown_line_limits.collect_split_containers(
+            root, ["docs"], include_evidence=False
+        )
         md_roles = {check_markdown_line_limits.markdown_role(path, root) for path in md_files}
         md_paths = {check_markdown_line_limits.rel(path, root) for path in md_files}
 
@@ -124,19 +129,61 @@ def run_smoke() -> dict[str, Any]:
             item for item in inventory_split_items if item.get("prune_candidate")
         ]
 
-        require(len(md_containers) == 1, errors, "markdown line limit did not discover exactly one split container")
-        require("docs/example.md/README.md" in md_paths, errors, "split README was not read as a Markdown file")
-        require("docs/example.md/part-001.md" in md_paths, errors, "split part was not read as a Markdown file")
-        require("docs/example.md" not in md_paths, errors, "split container directory was treated as a Markdown file")
-        require({"split_index", "split_part"}.issubset(md_roles), errors, "markdown roles did not include split_index and split_part")
+        require(
+            len(md_containers) == 1,
+            errors,
+            "markdown line limit did not discover exactly one split container",
+        )
+        require(
+            "docs/example.md/README.md" in md_paths,
+            errors,
+            "split README was not read as a Markdown file",
+        )
+        require(
+            "docs/example.md/part-001.md" in md_paths,
+            errors,
+            "split part was not read as a Markdown file",
+        )
+        require(
+            "docs/example.md" not in md_paths,
+            errors,
+            "split container directory was treated as a Markdown file",
+        )
+        require(
+            {"split_index", "split_part"}.issubset(md_roles),
+            errors,
+            "markdown roles did not include split_index and split_part",
+        )
 
-        require(file_report["split_container_count"] == 1, errors, "file line limit did not report one split container")
-        require("split_markdown_index" in file_kinds, errors, "file line limit did not classify split index")
-        require("split_markdown_part" in file_kinds, errors, "file line limit did not classify split part")
+        require(
+            file_report["split_container_count"] == 1,
+            errors,
+            "file line limit did not report one split container",
+        )
+        require(
+            "split_markdown_index" in file_kinds,
+            errors,
+            "file line limit did not classify split index",
+        )
+        require(
+            "split_markdown_part" in file_kinds,
+            errors,
+            "file line limit did not classify split part",
+        )
 
-        require(inventory_report["split_container_count"] == 1, errors, "inventory did not report one split container")
-        require(inventory_report["split_markdown_file_count"] >= 3, errors, "inventory split Markdown file count is too low")
-        require(not inventory_prune_split_items, errors, "split members were marked as prune candidates")
+        require(
+            inventory_report["split_container_count"] == 1,
+            errors,
+            "inventory did not report one split container",
+        )
+        require(
+            inventory_report["split_markdown_file_count"] >= 3,
+            errors,
+            "inventory split Markdown file count is too low",
+        )
+        require(
+            not inventory_prune_split_items, errors, "split members were marked as prune candidates"
+        )
 
         return {
             "schema_version": 1,
@@ -146,7 +193,9 @@ def run_smoke() -> dict[str, Any]:
             "errors": errors,
             "fixture_files_seen_by_markdown_limit": sorted(md_paths),
             "markdown_limit_roles": sorted(md_roles),
-            "markdown_limit_split_containers": [check_markdown_line_limits.rel(path, root) for path in md_containers],
+            "markdown_limit_split_containers": [
+                check_markdown_line_limits.rel(path, root) for path in md_containers
+            ],
             "file_line_limit_split_container_count": file_report["split_container_count"],
             "file_line_limit_checked_items": file_items,
             "inventory_split_container_count": inventory_report["split_container_count"],
@@ -178,9 +227,13 @@ def render_markdown(report: dict[str, Any]) -> str:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Smoke-test Markdown split directory validator support.")
+    parser = argparse.ArgumentParser(
+        description="Smoke-test Markdown split directory validator support."
+    )
     parser.add_argument("--output", default="output/validation/md_split_dir_validator_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/md_split_dir_validator_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/md_split_dir_validator_smoke.md"
+    )
     return parser.parse_args()
 
 

@@ -264,9 +264,7 @@ def evaluate_memory_records(
     reviews = [review_record(record, active_now, policy) for record in records]
     duplicates: dict[str, list[str]] = {}
     for record in records:
-        key = sha256_text(
-            f"{record.kind}:{record.scope}:{record.source}:{record.content}"
-        )[:20]
+        key = sha256_text(f"{record.kind}:{record.scope}:{record.source}:{record.content}")[:20]
         duplicates.setdefault(key, []).append(record.record_id)
     duplicate_groups = [ids for ids in duplicates.values() if len(set(ids)) > 1]
     action_counts: dict[str, int] = {}
@@ -279,9 +277,7 @@ def evaluate_memory_records(
         "generated_at": utc_now_iso(),
         "passed": risk_count == 0,
         "record_count": len(reviews),
-        "promotion_candidate_count": sum(
-            1 for review in reviews if review.promotion_candidate
-        ),
+        "promotion_candidate_count": sum(1 for review in reviews if review.promotion_candidate),
         "review_count": sum(
             1
             for review in reviews
@@ -299,7 +295,7 @@ def evaluate_memory_records(
         "notes": [
             "This report is non-destructive and never deletes or promotes records by itself.",
             "Promotion means a human or app workflow may distill a record into stable docs "
-    "or a reviewed JSONL store.",
+            "or a reviewed JSONL store.",
             "Quarantine means a record should not be selected into agent context \
     until manually inspected.",
         ],
@@ -342,17 +338,13 @@ def write_memory_policy_markdown(report: dict[str, Any], path: Path) -> None:
             ]
         )
     lines.extend(["", "## Risks", ""])
-    risks = [
-        item for item in report.get("reviews", []) if item.get("action") == "quarantine"
-    ]
+    risks = [item for item in report.get("reviews", []) if item.get("action") == "quarantine"]
     if not risks:
         lines.append("None.")
     for item in risks:
         lines.append(
-            (
-                f"- `{item.get('record_id')}` from `{item.get('source')}`: "
-                f"{', '.join(item.get('issues') or [])}"
-            )
+            f"- `{item.get('record_id')}` from `{item.get('source')}`: "
+            f"{', '.join(item.get('issues') or [])}"
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -34,9 +34,7 @@ def build_telemetry_quality(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]
     required = {
         "runtime_usage_seen": bool(runtime_usage),
         "runtime_capability_seen": bool(capability),
-        "tool_call_entries_seen": bool(
-            tool_calls or usage_summary.get("tool_call_entry_count")
-        ),
+        "tool_call_entries_seen": bool(tool_calls or usage_summary.get("tool_call_entry_count")),
         "provider_execution_observed": bool(
             provider_evidence.get("provider_execution_performed")
             or runtime_usage.get("provider_execution_performed")
@@ -48,9 +46,7 @@ def build_telemetry_quality(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]
         ),
         "gpu0_companion_observed": bool(
             provider_evidence.get("gpu0_peer_support_provider_execution_performed")
-            or _bool_at(
-                run_summary, "guardrails", "gpu0_peer_provider_execution_performed"
-            )
+            or _bool_at(run_summary, "guardrails", "gpu0_peer_provider_execution_performed")
         ),
         "npu_micro_or_tool_observed": bool(
             provider_evidence.get("npu_provider_execution_performed")
@@ -69,8 +65,7 @@ def build_telemetry_quality(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]
         "score": score,
         "required_signals": required,
         "missing_signals": missing,
-        "tool_call_entry_count": usage_summary.get("tool_call_entry_count")
-        or len(tool_calls),
+        "tool_call_entry_count": usage_summary.get("tool_call_entry_count") or len(tool_calls),
         "executed_count": usage_summary.get("executed_count"),
         "failed_count": usage_summary.get("failed_count"),
         "blocked_count": usage_summary.get("blocked_count"),
@@ -155,21 +150,15 @@ def build_fallback_cases(
 ) -> list[dict[str, Any]]:
     cases: list[dict[str, Any]] = []
     runtime_usage = safe_dict(loaded.get("runtime_usage"))
-    provider = safe_dict(
-        safe_dict(report.get("telemetry_quality")).get("provider_evidence")
-    )
-    npu_final_review = safe_dict(
-        safe_dict(report.get("telemetry_quality")).get("npu_final_review")
-    )
+    provider = safe_dict(safe_dict(report.get("telemetry_quality")).get("provider_evidence"))
+    npu_final_review = safe_dict(safe_dict(report.get("telemetry_quality")).get("npu_final_review"))
     evidence_paths = (
         safe_dict(report.get("inputs")).get("paths")
         if isinstance(report.get("inputs"), dict)
         else {}
     )
 
-    if report.get("quality_score", 0) < min_quality_score or not report.get(
-        "quality_gate_passed"
-    ):
+    if report.get("quality_score", 0) < min_quality_score or not report.get("quality_gate_passed"):
         cases.append(
             {
                 "fallback_type": "patch_notes_quality_gate_fallback",

@@ -46,16 +46,12 @@ def _objective_hint(text: str) -> str:
     lines = text.splitlines()
     for index, raw in enumerate(lines):
         if any(key in raw.lower() for key in lower_keys):
-            window = " ".join(
-                item.strip() for item in lines[index : index + 6] if item.strip()
-            )
+            window = " ".join(item.strip() for item in lines[index : index + 6] if item.strip())
             return window[:700]
     return " ".join(_compact_lines(text, limit=5))[:700]
 
 
-def load_task_markdown(
-    repo_root: Path, task_markdown: str
-) -> tuple[dict[str, Any], list[str]]:
+def load_task_markdown(repo_root: Path, task_markdown: str) -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
     path = resolve(repo_root, task_markdown) if task_markdown else Path("")
     text = read_text(path) if task_markdown else ""

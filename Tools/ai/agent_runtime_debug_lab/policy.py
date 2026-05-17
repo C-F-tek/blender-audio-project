@@ -86,9 +86,7 @@ def normalize_repo_path(repo_root: Path, raw_path: Any) -> tuple[str, str | None
     path = Path(raw)
     candidate = path if path.is_absolute() else repo_root / path
     try:
-        relative = (
-            candidate.resolve(strict=False).relative_to(repo_root.resolve()).as_posix()
-        )
+        relative = candidate.resolve(strict=False).relative_to(repo_root.resolve()).as_posix()
     except ValueError:
         return raw, "path escapes repository root"
     if not relative:

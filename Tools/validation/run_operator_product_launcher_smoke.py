@@ -108,8 +108,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--work-dir", default="output/validation/operator_product_launcher_smoke")
-    parser.add_argument("--output", default="output/validation/operator_product_launcher_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/operator_product_launcher_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/operator_product_launcher_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/operator_product_launcher_smoke.md"
+    )
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     work_dir = (repo_root / args.work_dir).resolve()
@@ -142,18 +146,48 @@ def main() -> int:
         require_all_integrated=True,
     )
     checks = [
-        {"name": "targets_heap_closure", "passed": any("run_heap_runtime_context_closure.py" in item for item in command)},
-        {"name": "uses_request_file", "passed": "--request-file" in command and str(request_file) in command},
+        {
+            "name": "targets_heap_closure",
+            "passed": any("run_heap_runtime_context_closure.py" in item for item in command),
+        },
+        {
+            "name": "uses_request_file",
+            "passed": "--request-file" in command and str(request_file) in command,
+        },
         {"name": "uses_output_dir", "passed": "--output-dir" in command},
         {"name": "uses_documents_root", "passed": "--documents-root" in command},
-        {"name": "uses_context_file_override", "passed": "--startup-max-context-files" in command and "2080" in command},
-        {"name": "uses_scan_file_override", "passed": "--startup-scan-context-files" in command and "2080" in command},
-        {"name": "uses_chars_per_file_override", "passed": "--startup-max-chars-per-file" in command and "20000" in command},
-        {"name": "dry_profile_no_provider_generation", "passed": "--allow-provider-generation" not in command},
+        {
+            "name": "uses_context_file_override",
+            "passed": "--startup-max-context-files" in command and "2080" in command,
+        },
+        {
+            "name": "uses_scan_file_override",
+            "passed": "--startup-scan-context-files" in command and "2080" in command,
+        },
+        {
+            "name": "uses_chars_per_file_override",
+            "passed": "--startup-max-chars-per-file" in command and "20000" in command,
+        },
+        {
+            "name": "dry_profile_no_provider_generation",
+            "passed": "--allow-provider-generation" not in command,
+        },
         {"name": "safe_apply_passed", "passed": apply_report.get("passed") is True},
-        {"name": "safe_apply_wrote_two", "passed": apply_report.get("safe_apply", {}).get("applied_count") == 2},
-        {"name": "fixture_modified", "passed": (fixture_repo / "Tools" / "operator_target.py").read_text(encoding="utf-8").strip() == "VALUE = 2"},
-        {"name": "fixture_new_file", "passed": (fixture_repo / "Tools" / "operator_new.py").exists()},
+        {
+            "name": "safe_apply_wrote_two",
+            "passed": apply_report.get("safe_apply", {}).get("applied_count") == 2,
+        },
+        {
+            "name": "fixture_modified",
+            "passed": (fixture_repo / "Tools" / "operator_target.py")
+            .read_text(encoding="utf-8")
+            .strip()
+            == "VALUE = 2",
+        },
+        {
+            "name": "fixture_new_file",
+            "passed": (fixture_repo / "Tools" / "operator_new.py").exists(),
+        },
     ]
     errors = [str(item["name"]) for item in checks if not item.get("passed")]
     report = {

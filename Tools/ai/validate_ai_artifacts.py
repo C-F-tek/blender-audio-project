@@ -45,12 +45,8 @@ def load_patterns(capsules: Path) -> tuple[list[dict[str, Any]], list[dict[str, 
                 data = load_json(path)
             except Exception:
                 continue
-            blocked += (
-                data.get("blocked_patterns", []) if isinstance(data, dict) else []
-            )
-            warnings += (
-                data.get("warning_patterns", []) if isinstance(data, dict) else []
-            )
+            blocked += data.get("blocked_patterns", []) if isinstance(data, dict) else []
+            warnings += data.get("warning_patterns", []) if isinstance(data, dict) else []
     return blocked, warnings
 
 
@@ -84,25 +80,17 @@ def scan(path: Path, blocked, warn_patterns, errors, warnings, positives) -> Non
         if not pattern or pattern not in text:
             continue
         if is_guardrail_reference(path, text, pattern):
-            positives.append(
-                f"{path.name}: guardrail reference for `{pattern}` present."
-            )
+            positives.append(f"{path.name}: guardrail reference for `{pattern}` present.")
             continue
-        errors.append(
-            f"{path}: blocked pattern `{pattern}`: {item.get('reason', 'blocked')}"
-        )
+        errors.append(f"{path}: blocked pattern `{pattern}`: {item.get('reason', 'blocked')}")
     for item in warn_patterns:
         pattern = item.get("pattern")
         if not pattern or pattern not in text:
             continue
         if pattern.startswith("C:") and should_ignore_local_path_warning(path):
-            positives.append(
-                f"{path.name}: local path metadata accepted as pipeline context."
-            )
+            positives.append(f"{path.name}: local path metadata accepted as pipeline context.")
             continue
-        warnings.append(
-            f"{path}: warning pattern `{pattern}`: {item.get('reason', 'warning')}"
-        )
+        warnings.append(f"{path}: warning pattern `{pattern}`: {item.get('reason', 'warning')}")
 
 
 def validate_semantics(
@@ -122,9 +110,7 @@ def validate_semantics(
         else:
             warnings.append("track_summary missing ai_readiness score.")
         if not data.get("primary_series"):
-            warnings.append(
-                "track_summary has no primary_series; peak mapping may be weak."
-            )
+            warnings.append("track_summary has no primary_series; peak mapping may be weak.")
     elif path.name == "music_segments.json":
         segments = data.get("segments") or []
         if not segments:
@@ -147,9 +133,7 @@ def validate_semantics(
             warnings.append("ai_scene_brief missing recommended_visual_progression.")
         constraints = data.get("constraints") or []
         if any("ShaderNodeTexMusgrave" in str(item) for item in constraints):
-            positives.append(
-                "ai_scene_brief includes Blender 5.x ShaderNodeTexMusgrave guardrail."
-            )
+            positives.append("ai_scene_brief includes Blender 5.x ShaderNodeTexMusgrave guardrail.")
         else:
             warnings.append(
                 "ai_scene_brief does not mention Blender 5.x ShaderNodeTexMusgrave guardrail."
@@ -238,9 +222,7 @@ def main() -> int:
     }
     out = Path(args.output).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] or args.allow_errors else 2
 

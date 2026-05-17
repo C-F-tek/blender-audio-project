@@ -4,6 +4,7 @@
 Report-only smoke. It checks that deterministic recommendations and optional
 patch plans are substantive, evidence-backed and not cosmetic-only.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -12,14 +13,32 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.code_patch_plan_common import normalize_repo_path, now_iso, read_json_object, repo_rel
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from Tools.ai.code_patch_plan_common import (
+        normalize_repo_path,
+        now_iso,
+        read_json_object,
+        repo_rel,
+    )
+    from Tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.code_patch_plan_common import normalize_repo_path, now_iso, read_json_object, repo_rel  # type: ignore
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.ai.code_patch_plan_common import (  # type: ignore
+        normalize_repo_path,
+        now_iso,
+        read_json_object,
+        repo_rel,
+    )
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 DEFAULT_OUTPUT = "output/validation/substantive_planning_smoke.json"
 DEFAULT_MARKDOWN = "output/validation/substantive_planning_smoke.md"
@@ -86,14 +105,20 @@ def recommendation_has_consistency_evidence(item: dict[str, Any]) -> bool:
     if isinstance(item.get("repository_consistency_finding"), dict):
         return True
     evidence = item.get("source_evidence")
-    return isinstance(evidence, dict) and isinstance(evidence.get("repository_consistency_finding"), dict)
+    return isinstance(evidence, dict) and isinstance(
+        evidence.get("repository_consistency_finding"), dict
+    )
 
 
-def validate_recommendations(report: dict[str, Any], min_recommendations: int, min_substantive: int) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+def validate_recommendations(
+    report: dict[str, Any], min_recommendations: int, min_substantive: int
+) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     results: list[dict[str, Any]] = []
     errors: list[str] = []
     warnings: list[str] = []
-    recommendations = report.get("recommendations") if isinstance(report.get("recommendations"), list) else []
+    recommendations = (
+        report.get("recommendations") if isinstance(report.get("recommendations"), list) else []
+    )
     substantive_count = 0
     consistency_count = 0
     cosmetic_count = 0
@@ -101,16 +126,22 @@ def validate_recommendations(report: dict[str, Any], min_recommendations: int, m
     if report.get("passed") is not True:
         errors.append("recommendation report did not pass")
     if len(recommendations) < min_recommendations:
-        errors.append(f"recommendation_count {len(recommendations)} below minimum {min_recommendations}")
+        errors.append(
+            f"recommendation_count {len(recommendations)} below minimum {min_recommendations}"
+        )
 
     decision = report.get("decision") if isinstance(report.get("decision"), dict) else {}
     declared_consistency = int(decision.get("substantive_consistency_recommendation_count") or 0)
     if declared_consistency < min_substantive:
-        errors.append(f"substantive_consistency_recommendation_count {declared_consistency} below minimum {min_substantive}")
+        errors.append(
+            f"substantive_consistency_recommendation_count {declared_consistency} below minimum {min_substantive}"
+        )
 
     for index, item in enumerate(recommendations, start=1):
         if not isinstance(item, dict):
-            results.append({"index": index, "ok": False, "error": "recommendation is not an object"})
+            results.append(
+                {"index": index, "ok": False, "error": "recommendation is not an object"}
+            )
             continue
         item_errors = target_errors(item.get("target_files"))
         area = str(item.get("area") or "")
@@ -141,9 +172,13 @@ def validate_recommendations(report: dict[str, Any], min_recommendations: int, m
         errors.extend(f"recommendations[{index}] {error}" for error in item_errors)
 
     if substantive_count < min_recommendations:
-        errors.append(f"substantive recommendation count {substantive_count} below minimum {min_recommendations}")
+        errors.append(
+            f"substantive recommendation count {substantive_count} below minimum {min_recommendations}"
+        )
     if consistency_count < min_substantive:
-        errors.append(f"repository consistency backed count {consistency_count} below minimum {min_substantive}")
+        errors.append(
+            f"repository consistency backed count {consistency_count} below minimum {min_substantive}"
+        )
     if cosmetic_count:
         errors.append(f"cosmetic recommendation count without evidence: {cosmetic_count}")
     if not errors and not recommendations:
@@ -151,7 +186,9 @@ def validate_recommendations(report: dict[str, Any], min_recommendations: int, m
     return results, errors, warnings
 
 
-def validate_patch_plan(report: dict[str, Any], min_patch_plans: int) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+def validate_patch_plan(
+    report: dict[str, Any], min_patch_plans: int
+) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     results: list[dict[str, Any]] = []
     errors: list[str] = []
     warnings: list[str] = []
@@ -168,10 +205,14 @@ def validate_patch_plan(report: dict[str, Any], min_patch_plans: int) -> tuple[l
             continue
         item_errors = target_errors(item.get("target_files"))
         guardrails = item.get("guardrails") if isinstance(item.get("guardrails"), dict) else {}
-        source_evidence = item.get("source_evidence") if isinstance(item.get("source_evidence"), dict) else {}
+        source_evidence = (
+            item.get("source_evidence") if isinstance(item.get("source_evidence"), dict) else {}
+        )
         if guardrails.get("cosmetic_patch_allowed") is not False:
             item_errors.append("guardrails.cosmetic_patch_allowed must be false")
-        if is_cosmetic(item) and not isinstance(source_evidence.get("repository_consistency_finding"), dict):
+        if is_cosmetic(item) and not isinstance(
+            source_evidence.get("repository_consistency_finding"), dict
+        ):
             item_errors.append("cosmetic patch plan lacks repository consistency evidence")
         results.append(
             {
@@ -238,7 +279,9 @@ def main() -> int:
         args.min_recommendations,
         args.min_substantive,
     )
-    patch_results, patch_validation_errors, patch_warnings = validate_patch_plan(patch_plan, args.min_patch_plans)
+    patch_results, patch_validation_errors, patch_warnings = validate_patch_plan(
+        patch_plan, args.min_patch_plans
+    )
     errors = rec_errors + patch_errors + rec_validation_errors + patch_validation_errors
     warnings = rec_warnings + patch_warnings
     report = {

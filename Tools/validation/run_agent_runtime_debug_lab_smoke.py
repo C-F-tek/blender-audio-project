@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the report-only agent runtime debug lab."""
+
 from __future__ import annotations
 
 import argparse
@@ -13,11 +14,17 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def run(command: list[str], cwd: Path, timeout: int) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, timeout=timeout)
+    result = subprocess.run(
+        command, cwd=cwd, capture_output=True, text=True, check=False, timeout=timeout
+    )
     return {
         "command": command,
         "returncode": result.returncode,
@@ -48,7 +55,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     for item in report.get("commands") or []:
-        lines.append(f"- `{item['name']}` rc=`{item['result'].get('returncode')}` ok=`{item['result'].get('ok')}`")
+        lines.append(
+            f"- `{item['name']}` rc=`{item['result'].get('returncode')}` ok=`{item['result'].get('ok')}`"
+        )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report["errors"])
@@ -59,7 +68,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/agent_runtime_debug_lab_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/agent_runtime_debug_lab_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/agent_runtime_debug_lab_smoke.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=120)
     return parser.parse_args()
 
@@ -79,8 +90,16 @@ def main() -> int:
     write_request(
         valid_request,
         [
-            {"id": "compile_report_utils", "type": "python_compile", "paths": ["Tools/validation/report_utils.py"]},
-            {"id": "parse_launcher", "type": "powershell_parse", "paths": ["Tools/workflow/run_unified_local_ai_refactor.ps1"]},
+            {
+                "id": "compile_report_utils",
+                "type": "python_compile",
+                "paths": ["Tools/validation/report_utils.py"],
+            },
+            {
+                "id": "parse_launcher",
+                "type": "powershell_parse",
+                "paths": ["Tools/workflow/run_unified_local_ai_refactor.ps1"],
+            },
             {"id": "diff_check", "type": "git_diff_check"},
             {"id": "status_short", "type": "git_status_short"},
         ],
@@ -89,7 +108,11 @@ def main() -> int:
         invalid_request,
         [
             {"id": "forbid_shell", "type": "free_shell", "command": "echo unsafe"},
-            {"id": "forbid_output_source", "type": "python_compile", "paths": ["output/validation/generated.py"]},
+            {
+                "id": "forbid_output_source",
+                "type": "python_compile",
+                "paths": ["output/validation/generated.py"],
+            },
         ],
     )
 
@@ -119,12 +142,34 @@ def main() -> int:
         "--markdown-output",
         str(invalid_md),
     ]
-    valid_result = subprocess.run(valid_cmd, cwd=repo_root, env=env, capture_output=True, text=True, check=False, timeout=args.timeout_seconds)
-    invalid_result = subprocess.run(invalid_cmd, cwd=repo_root, env=env, capture_output=True, text=True, check=False, timeout=args.timeout_seconds)
+    valid_result = subprocess.run(
+        valid_cmd,
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=args.timeout_seconds,
+    )
+    invalid_result = subprocess.run(
+        invalid_cmd,
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=args.timeout_seconds,
+    )
 
     errors: list[str] = []
-    valid_data = json.loads(valid_report.read_text(encoding="utf-8-sig")) if valid_report.exists() else {}
-    invalid_data = json.loads(invalid_report.read_text(encoding="utf-8-sig")) if invalid_report.exists() else {}
+    valid_data = (
+        json.loads(valid_report.read_text(encoding="utf-8-sig")) if valid_report.exists() else {}
+    )
+    invalid_data = (
+        json.loads(invalid_report.read_text(encoding="utf-8-sig"))
+        if invalid_report.exists()
+        else {}
+    )
 
     if valid_result.returncode != 0 or valid_data.get("passed") is not True:
         errors.append("valid debug lab request did not pass")
@@ -157,8 +202,20 @@ def main() -> int:
         "source_writes_performed": False,
         "git_write_performed": False,
         "commands": [
-            {"name": "valid_request", "result": {"returncode": valid_result.returncode, "ok": valid_result.returncode == 0}},
-            {"name": "invalid_request", "result": {"returncode": invalid_result.returncode, "ok": invalid_result.returncode != 0}},
+            {
+                "name": "valid_request",
+                "result": {
+                    "returncode": valid_result.returncode,
+                    "ok": valid_result.returncode == 0,
+                },
+            },
+            {
+                "name": "invalid_request",
+                "result": {
+                    "returncode": invalid_result.returncode,
+                    "ok": invalid_result.returncode != 0,
+                },
+            },
         ],
         "valid_report": valid_data,
         "invalid_report": invalid_data,

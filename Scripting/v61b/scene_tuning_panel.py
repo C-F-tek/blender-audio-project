@@ -385,7 +385,7 @@ def apply_runtime_profile(context, profile):
         if hasattr(eevee, "volumetric_samples"):
             eevee.volumetric_samples = volumetric_samples
         if hasattr(eevee, "volumetric_tile_size"):
-            eevee.volumetric_tile_size = '8'
+            eevee.volumetric_tile_size = "8"
         if hasattr(eevee, "use_volumetric_lights"):
             eevee.use_volumetric_lights = False
         if hasattr(eevee, "use_volumetric_shadows"):
@@ -401,7 +401,7 @@ def apply_runtime_profile(context, profile):
         render.ffmpeg.minrate = 0
         render.ffmpeg.buffersize = 1792
         render.ffmpeg.audio_bitrate = 320
-        for crf in ('PERC_LOSSLESS', 'HIGH'):
+        for crf in ("PERC_LOSSLESS", "HIGH"):
             try:
                 render.ffmpeg.constant_rate_factor = crf
                 break
@@ -443,7 +443,7 @@ def all_particle_settings():
     settings = []
     for emitter in particle_emitters():
         for mod in emitter.modifiers:
-            if mod.type != 'PARTICLE_SYSTEM':
+            if mod.type != "PARTICLE_SYSTEM":
                 continue
             ps = getattr(mod, "particle_system", None)
             if ps is not None and ps.settings is not None:
@@ -465,18 +465,24 @@ def apply_tuning(context, insert_keyframes=False):
     for obj in bpy.data.objects:
         for mod in obj.modifiers:
             if mod.name == "HeroAudioMeshDisplace":
-                base = store_base_float(obj, f"_st_base_{mod.name}_strength", getattr(mod, "strength", 0.0))
+                base = store_base_float(
+                    obj, f"_st_base_{mod.name}_strength", getattr(mod, "strength", 0.0)
+                )
                 mod.strength = base * tune.hero_deform
                 if insert_keyframes:
                     keyframe_if_possible(mod, "strength", frame)
             elif mod.name == "HeroAudioFineDisplace":
-                base = store_base_float(obj, f"_st_base_{mod.name}_strength", getattr(mod, "strength", 0.0))
+                base = store_base_float(
+                    obj, f"_st_base_{mod.name}_strength", getattr(mod, "strength", 0.0)
+                )
                 mod.strength = base * tune.hero_fine_deform
                 if insert_keyframes:
                     keyframe_if_possible(mod, "strength", frame)
             elif mod.name == "HeroAudioSurfaceWave":
                 try:
-                    base = store_base_float(obj, f"_st_base_{mod.name}_height", getattr(mod, "height", 0.0))
+                    base = store_base_float(
+                        obj, f"_st_base_{mod.name}_height", getattr(mod, "height", 0.0)
+                    )
                     mod.height = base * tune.hero_wave
                     if insert_keyframes:
                         keyframe_if_possible(mod, "height", frame)
@@ -484,14 +490,18 @@ def apply_tuning(context, insert_keyframes=False):
                     pass
             elif mod.name == "HeroAudioTwistDeform":
                 try:
-                    base = store_base_float(obj, f"_st_base_{mod.name}_angle", getattr(mod, "angle", 0.0))
+                    base = store_base_float(
+                        obj, f"_st_base_{mod.name}_angle", getattr(mod, "angle", 0.0)
+                    )
                     mod.angle = base * tune.hero_twist
                     if insert_keyframes:
                         keyframe_if_possible(mod, "angle", frame)
                 except Exception:
                     pass
             elif mod.name in {"AuraAudioBreathDisplace", "AuraAudioTransientDetail"}:
-                base = store_base_float(obj, f"_st_base_{mod.name}_strength", getattr(mod, "strength", 0.0))
+                base = store_base_float(
+                    obj, f"_st_base_{mod.name}_strength", getattr(mod, "strength", 0.0)
+                )
                 mod.strength = base * tune.aura_deform
                 if insert_keyframes:
                     keyframe_if_possible(mod, "strength", frame)
@@ -502,10 +512,28 @@ def apply_tuning(context, insert_keyframes=False):
 
         nodes = mat.node_tree.nodes
         for node_name, factor, key, min_value, max_value in [
-            ("HeroMatEmissionValue", tune.hero_mat_emission, "_st_base_hero_mat_emission", 0.0, 3.0),
-            ("HeroMatSelfLightValue", tune.hero_mat_emission, "_st_base_hero_mat_self_light", 0.0, 1.0),
+            (
+                "HeroMatEmissionValue",
+                tune.hero_mat_emission,
+                "_st_base_hero_mat_emission",
+                0.0,
+                3.0,
+            ),
+            (
+                "HeroMatSelfLightValue",
+                tune.hero_mat_emission,
+                "_st_base_hero_mat_self_light",
+                0.0,
+                1.0,
+            ),
             ("HeroMatBumpStrength", tune.hero_mat_bump, "_st_base_hero_mat_bump", 0.0, 0.25),
-            ("HeroMatRoughnessValue", tune.hero_mat_roughness, "_st_base_hero_mat_roughness", 0.02, 1.0),
+            (
+                "HeroMatRoughnessValue",
+                tune.hero_mat_roughness,
+                "_st_base_hero_mat_roughness",
+                0.02,
+                1.0,
+            ),
         ]:
             node = nodes.get(node_name)
             if node is None:
@@ -517,8 +545,12 @@ def apply_tuning(context, insert_keyframes=False):
 
         noise = nodes.get("HeroMatAudioNoise")
         if noise is not None and "Scale" in noise.inputs:
-            base = store_base_float(noise, "_st_base_hero_mat_noise", noise.inputs["Scale"].default_value)
-            noise.inputs["Scale"].default_value = clamp_value(base * tune.hero_mat_noise, 0.10, 80.0)
+            base = store_base_float(
+                noise, "_st_base_hero_mat_noise", noise.inputs["Scale"].default_value
+            )
+            noise.inputs["Scale"].default_value = clamp_value(
+                base * tune.hero_mat_noise, 0.10, 80.0
+            )
             if insert_keyframes:
                 keyframe_socket(noise.inputs["Scale"], frame)
 
@@ -547,7 +579,9 @@ def apply_tuning(context, insert_keyframes=False):
 
     fog_density = set_value_node("AtmosphereVolumeMaterial", "FogDensityValue", tune.fog_density)
     fog_emission = set_value_node("AtmosphereVolumeMaterial", "FogEmissionValue", tune.fog_emission)
-    fog_noise = set_input_node("AtmosphereVolumeMaterial", "Noise Texture", "Scale", tune.fog_noise_scale)
+    fog_noise = set_input_node(
+        "AtmosphereVolumeMaterial", "Noise Texture", "Scale", tune.fog_noise_scale
+    )
     if insert_keyframes:
         keyframe_socket(fog_density, frame)
         keyframe_socket(fog_emission, frame)
@@ -601,7 +635,9 @@ def apply_tuning(context, insert_keyframes=False):
             node = mat.node_tree.nodes.get("VariantEmission")
             if node is not None and "Strength" in node.inputs:
                 socket = node.inputs["Strength"]
-                base_emit = store_base_float(node, "_st_base_physics_accent_emit", socket.default_value)
+                base_emit = store_base_float(
+                    node, "_st_base_physics_accent_emit", socket.default_value
+                )
                 socket.default_value = max(0.0, base_emit * tune.rhythm_light_power)
                 if insert_keyframes:
                     keyframe_socket(socket, frame)
@@ -609,7 +645,9 @@ def apply_tuning(context, insert_keyframes=False):
             mix_node = mat.node_tree.nodes.get("VariantEmissionMix")
             if mix_node is not None:
                 socket = mix_node.outputs[0]
-                base_mix = store_base_float(mix_node, "_st_base_physics_accent_mix", socket.default_value)
+                base_mix = store_base_float(
+                    mix_node, "_st_base_physics_accent_mix", socket.default_value
+                )
                 socket.default_value = max(0.0, min(1.0, base_mix * tune.rhythm_light_power))
                 if insert_keyframes:
                     keyframe_socket(socket, frame)
@@ -644,7 +682,9 @@ def apply_tuning(context, insert_keyframes=False):
         source.hide_viewport = not tune.show_particle_sources
 
     for ps_settings in all_particle_settings():
-        base_size = store_base_float(ps_settings, "_st_base_particle_size", ps_settings.particle_size)
+        base_size = store_base_float(
+            ps_settings, "_st_base_particle_size", ps_settings.particle_size
+        )
         ps_settings.particle_size = base_size * tune.particle_size
 
         for attr in ["normal_factor", "tangent_factor", "brownian_factor"]:
@@ -773,10 +813,18 @@ class ST_TuningSettings(bpy.types.PropertyGroup):
     hero_fine_deform: FloatProperty(name="Hero fine", default=1.0, min=0.0, max=4.0, precision=3)
     hero_wave: FloatProperty(name="Hero wave", default=1.0, min=0.0, max=4.0, precision=3)
     hero_twist: FloatProperty(name="Hero twist", default=1.0, min=0.0, max=4.0, precision=3)
-    hero_mat_emission: FloatProperty(name="Hero material light", default=1.0, min=0.0, max=4.0, precision=3)
-    hero_mat_bump: FloatProperty(name="Hero material bump", default=1.0, min=0.0, max=4.0, precision=3)
-    hero_mat_roughness: FloatProperty(name="Hero material rough", default=1.0, min=0.10, max=2.0, precision=3)
-    hero_mat_noise: FloatProperty(name="Hero material noise", default=1.0, min=0.10, max=4.0, precision=3)
+    hero_mat_emission: FloatProperty(
+        name="Hero material light", default=1.0, min=0.0, max=4.0, precision=3
+    )
+    hero_mat_bump: FloatProperty(
+        name="Hero material bump", default=1.0, min=0.0, max=4.0, precision=3
+    )
+    hero_mat_roughness: FloatProperty(
+        name="Hero material rough", default=1.0, min=0.10, max=2.0, precision=3
+    )
+    hero_mat_noise: FloatProperty(
+        name="Hero material noise", default=1.0, min=0.10, max=4.0, precision=3
+    )
 
     aura_deform: FloatProperty(name="Aura deform", default=0.45, min=0.0, max=1.0, precision=3)
     aura_detail: FloatProperty(name="Aura detail", default=0.35, min=0.0, max=1.0, precision=3)
@@ -788,24 +836,44 @@ class ST_TuningSettings(bpy.types.PropertyGroup):
     fog_scale_xy: FloatProperty(name="Fog XY", default=1.0, min=0.20, max=2.20, precision=3)
     fog_scale_z: FloatProperty(name="Fog Z", default=1.0, min=0.20, max=2.40, precision=3)
 
-    backdrop_emission: FloatProperty(name="Backdrop light", default=0.175, min=0.0, max=0.80, precision=4)
-    backdrop_noise_scale: FloatProperty(name="Backdrop noise", default=2.4, min=0.10, max=12.0, precision=3)
-    backdrop_scale: FloatProperty(name="Backdrop scale", default=1.0, min=0.20, max=2.40, precision=3)
+    backdrop_emission: FloatProperty(
+        name="Backdrop light", default=0.175, min=0.0, max=0.80, precision=4
+    )
+    backdrop_noise_scale: FloatProperty(
+        name="Backdrop noise", default=2.4, min=0.10, max=12.0, precision=3
+    )
+    backdrop_scale: FloatProperty(
+        name="Backdrop scale", default=1.0, min=0.20, max=2.40, precision=3
+    )
     floor_scale: FloatProperty(name="Floor scale", default=1.0, min=0.20, max=3.0, precision=3)
 
     camera_fstop: FloatProperty(name="Camera f-stop", default=6.5, min=1.0, max=16.0, precision=2)
-    rhythm_light_power: FloatProperty(name="Accent emission", default=1.0, min=0.0, max=4.0, precision=3)
-    compositor_glow: FloatProperty(name="Compositor glow", default=1.0, min=0.10, max=4.0, precision=3)
-    compositor_lens: FloatProperty(name="Compositor lens", default=1.0, min=0.0, max=4.0, precision=3)
+    rhythm_light_power: FloatProperty(
+        name="Accent emission", default=1.0, min=0.0, max=4.0, precision=3
+    )
+    compositor_glow: FloatProperty(
+        name="Compositor glow", default=1.0, min=0.10, max=4.0, precision=3
+    )
+    compositor_lens: FloatProperty(
+        name="Compositor lens", default=1.0, min=0.0, max=4.0, precision=3
+    )
 
     particle_size: FloatProperty(name="Particle size", default=1.0, min=0.05, max=5.0, precision=3)
     particle_force: FloatProperty(name="Particle force", default=1.0, min=0.0, max=5.0, precision=3)
-    letter_source_scale: FloatProperty(name="Letter source scale", default=1.0, min=0.10, max=3.0, precision=3)
+    letter_source_scale: FloatProperty(
+        name="Letter source scale", default=1.0, min=0.10, max=3.0, precision=3
+    )
 
-    anim_hero_deform_factor: FloatProperty(name="Anim hero deform", default=1.0, min=0.0, max=4.0, precision=3)
+    anim_hero_deform_factor: FloatProperty(
+        name="Anim hero deform", default=1.0, min=0.0, max=4.0, precision=3
+    )
     anim_aura_factor: FloatProperty(name="Anim aura", default=1.0, min=0.0, max=4.0, precision=3)
-    anim_particle_size_factor: FloatProperty(name="Anim particle size", default=1.0, min=0.05, max=5.0, precision=3)
-    anim_particle_force_factor: FloatProperty(name="Anim particle force", default=1.0, min=0.0, max=5.0, precision=3)
+    anim_particle_size_factor: FloatProperty(
+        name="Anim particle size", default=1.0, min=0.05, max=5.0, precision=3
+    )
+    anim_particle_force_factor: FloatProperty(
+        name="Anim particle force", default=1.0, min=0.0, max=5.0, precision=3
+    )
 
     show_fog_cube: BoolProperty(name="Show fog cube", default=False)
     show_backdrop: BoolProperty(name="Show backdrop", default=True)
@@ -822,40 +890,42 @@ class ST_TuningSettings(bpy.types.PropertyGroup):
 class ST_OT_apply_tuning(bpy.types.Operator):
     bl_idname = "spaziotempo.apply_tuning"
     bl_label = "Apply Live Values"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         apply_tuning(context, insert_keyframes=False)
-        self.report({'INFO'}, "Spaziotempo tuning applied to current scene.")
-        return {'FINISHED'}
+        self.report({"INFO"}, "Spaziotempo tuning applied to current scene.")
+        return {"FINISHED"}
 
 
 class ST_OT_keyframe_tuning(bpy.types.Operator):
     bl_idname = "spaziotempo.keyframe_tuning"
     bl_label = "Apply + Keyframe"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         apply_tuning(context, insert_keyframes=True)
-        self.report({'INFO'}, f"Spaziotempo values keyframed at frame {context.scene.frame_current}.")
-        return {'FINISHED'}
+        self.report(
+            {"INFO"}, f"Spaziotempo values keyframed at frame {context.scene.frame_current}."
+        )
+        return {"FINISHED"}
 
 
 class ST_OT_scale_animation(bpy.types.Operator):
     bl_idname = "spaziotempo.scale_animation"
     bl_label = "Scale Existing FCurves"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         changed = scale_full_animation(context)
-        self.report({'INFO'}, f"Scaled {changed} keyframe values.")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"Scaled {changed} keyframe values.")
+        return {"FINISHED"}
 
 
 class ST_OT_apply_runtime_profile(bpy.types.Operator):
     bl_idname = "spaziotempo.apply_runtime_profile"
     bl_label = "Apply Runtime Profile"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     final_for_youtube: bpy.props.BoolProperty(default=False)
     profile: bpy.props.StringProperty(default="")
@@ -864,38 +934,47 @@ class ST_OT_apply_runtime_profile(bpy.types.Operator):
         profile = self.profile or ("YOUTUBE_4K" if self.final_for_youtube else "PREVIEW")
         apply_runtime_profile(context, profile)
         label = runtime_profile_label(profile)
-        self.report({'INFO'}, f"{label} profile applied to current scene.")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"{label} profile applied to current scene.")
+        return {"FINISHED"}
 
 
 class ST_OT_hot_update_scene(bpy.types.Operator):
     bl_idname = "spaziotempo.hot_update_scene"
     bl_label = "Hot Update Scene"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     mode: bpy.props.StringProperty(default="ALL")
 
     def execute(self, context):
         if not HOT_UPDATE_PATH.exists():
-            self.report({'WARNING'}, f"Hot update script not found: {HOT_UPDATE_PATH}")
-            return {'CANCELLED'}
+            self.report({"WARNING"}, f"Hot update script not found: {HOT_UPDATE_PATH}")
+            return {"CANCELLED"}
 
         try:
-            code = compile(HOT_UPDATE_PATH.read_text(encoding="utf-8"), str(HOT_UPDATE_PATH), "exec")
-            exec(code, {"__file__": str(HOT_UPDATE_PATH), "__name__": "__main__", "HOTPATCH_MODE": self.mode})
+            code = compile(
+                HOT_UPDATE_PATH.read_text(encoding="utf-8"), str(HOT_UPDATE_PATH), "exec"
+            )
+            exec(
+                code,
+                {
+                    "__file__": str(HOT_UPDATE_PATH),
+                    "__name__": "__main__",
+                    "HOTPATCH_MODE": self.mode,
+                },
+            )
         except Exception as exc:
             traceback.print_exc()
-            self.report({'ERROR'}, f"Hot update failed: {exc}")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, f"Hot update failed: {exc}")
+            return {"CANCELLED"}
 
-        self.report({'INFO'}, f"Hot update {self.mode} complete.")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"Hot update {self.mode} complete.")
+        return {"FINISHED"}
 
 
 class ST_OT_rebuild_restart_check(bpy.types.Operator):
     bl_idname = "spaziotempo.rebuild_restart_check"
     bl_label = "Rebuild / Restart Check"
-    bl_options = {'REGISTER'}
+    bl_options = {"REGISTER"}
 
     def execute(self, context):
         try:
@@ -905,22 +984,22 @@ class ST_OT_rebuild_restart_check(bpy.types.Operator):
             result = analyze_rebuild_need()
         except Exception as exc:
             traceback.print_exc()
-            self.report({'ERROR'}, f"Check failed: {exc}")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, f"Check failed: {exc}")
+            return {"CANCELLED"}
 
         if result["blocking"]:
-            self.report({'WARNING'}, "Full rebuild needed. See SPAZIOTEMPO_REBUILD_CHECK.")
+            self.report({"WARNING"}, "Full rebuild needed. See SPAZIOTEMPO_REBUILD_CHECK.")
         elif result["restart"]:
-            self.report({'WARNING'}, "Registration issue found. See SPAZIOTEMPO_REBUILD_CHECK.")
+            self.report({"WARNING"}, "Registration issue found. See SPAZIOTEMPO_REBUILD_CHECK.")
         else:
-            self.report({'INFO'}, "Hotpatch should be enough. See SPAZIOTEMPO_REBUILD_CHECK.")
-        return {'FINISHED'}
+            self.report({"INFO"}, "Hotpatch should be enough. See SPAZIOTEMPO_REBUILD_CHECK.")
+        return {"FINISHED"}
 
 
 class ST_OT_optimizer_check(bpy.types.Operator):
     bl_idname = "spaziotempo.optimizer_check"
     bl_label = "Optimizer Check"
-    bl_options = {'REGISTER'}
+    bl_options = {"REGISTER"}
 
     def execute(self, context):
         try:
@@ -930,72 +1009,80 @@ class ST_OT_optimizer_check(bpy.types.Operator):
             result = analyze_optimizer()
         except Exception as exc:
             traceback.print_exc()
-            self.report({'ERROR'}, f"Optimizer check failed: {exc}")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, f"Optimizer check failed: {exc}")
+            return {"CANCELLED"}
 
         if result["warnings"]:
-            self.report({'WARNING'}, "Cache/bake suggestions found. See SPAZIOTEMPO_OPTIMIZER_REPORT.")
+            self.report(
+                {"WARNING"}, "Cache/bake suggestions found. See SPAZIOTEMPO_OPTIMIZER_REPORT."
+            )
         else:
-            self.report({'INFO'}, "No required bake found. See SPAZIOTEMPO_OPTIMIZER_REPORT.")
-        return {'FINISHED'}
+            self.report({"INFO"}, "No required bake found. See SPAZIOTEMPO_OPTIMIZER_REPORT.")
+        return {"FINISHED"}
 
 
 class ST_OT_load_image_sequence(bpy.types.Operator):
     bl_idname = "spaziotempo.load_image_sequence"
     bl_label = "Load Image Sequence"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         if not ENCODE_SEQUENCE_PATH.exists():
-            self.report({'WARNING'}, f"Image sequence script not found: {ENCODE_SEQUENCE_PATH}")
-            return {'CANCELLED'}
+            self.report({"WARNING"}, f"Image sequence script not found: {ENCODE_SEQUENCE_PATH}")
+            return {"CANCELLED"}
 
         try:
-            code = compile(ENCODE_SEQUENCE_PATH.read_text(encoding="utf-8"), str(ENCODE_SEQUENCE_PATH), "exec")
+            code = compile(
+                ENCODE_SEQUENCE_PATH.read_text(encoding="utf-8"), str(ENCODE_SEQUENCE_PATH), "exec"
+            )
             exec(code, {"__file__": str(ENCODE_SEQUENCE_PATH), "__name__": "__main__"})
         except Exception as exc:
             traceback.print_exc()
-            self.report({'ERROR'}, f"Image sequence load failed: {exc}")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, f"Image sequence load failed: {exc}")
+            return {"CANCELLED"}
 
-        self.report({'INFO'}, "Image sequence + audio loaded in Video Sequencer.")
-        return {'FINISHED'}
+        self.report({"INFO"}, "Image sequence + audio loaded in Video Sequencer.")
+        return {"FINISHED"}
 
 
 class ST_OT_encode_ffmpeg(bpy.types.Operator):
     bl_idname = "spaziotempo.encode_ffmpeg"
     bl_label = "Encode MP4 FFmpeg"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         if not ENCODE_FFMPEG_PATH.exists():
-            self.report({'WARNING'}, f"FFmpeg encode script not found: {ENCODE_FFMPEG_PATH}")
-            return {'CANCELLED'}
+            self.report({"WARNING"}, f"FFmpeg encode script not found: {ENCODE_FFMPEG_PATH}")
+            return {"CANCELLED"}
 
         try:
-            code = compile(ENCODE_FFMPEG_PATH.read_text(encoding="utf-8"), str(ENCODE_FFMPEG_PATH), "exec")
+            code = compile(
+                ENCODE_FFMPEG_PATH.read_text(encoding="utf-8"), str(ENCODE_FFMPEG_PATH), "exec"
+            )
             exec(code, {"__file__": str(ENCODE_FFMPEG_PATH), "__name__": "__main__"})
         except Exception as exc:
             traceback.print_exc()
-            self.report({'ERROR'}, f"FFmpeg encode failed: {exc}")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, f"FFmpeg encode failed: {exc}")
+            return {"CANCELLED"}
 
-        self.report({'INFO'}, "FFmpeg MP4 encoded from image sequence.")
-        return {'FINISHED'}
+        self.report({"INFO"}, "FFmpeg MP4 encoded from image sequence.")
+        return {"FINISHED"}
 
 
 class ST_OT_encode_ffmpeg_shell(bpy.types.Operator):
     bl_idname = "spaziotempo.encode_ffmpeg_shell"
     bl_label = "Encode MP4 FFmpeg Shell"
-    bl_options = {'REGISTER'}
+    bl_options = {"REGISTER"}
 
     def execute(self, context):
         if not ENCODE_FFMPEG_PATH.exists():
-            self.report({'WARNING'}, f"FFmpeg encode script not found: {ENCODE_FFMPEG_PATH}")
-            return {'CANCELLED'}
+            self.report({"WARNING"}, f"FFmpeg encode script not found: {ENCODE_FFMPEG_PATH}")
+            return {"CANCELLED"}
 
         try:
-            code = compile(ENCODE_FFMPEG_PATH.read_text(encoding="utf-8"), str(ENCODE_FFMPEG_PATH), "exec")
+            code = compile(
+                ENCODE_FFMPEG_PATH.read_text(encoding="utf-8"), str(ENCODE_FFMPEG_PATH), "exec"
+            )
             exec(
                 code,
                 {
@@ -1006,11 +1093,11 @@ class ST_OT_encode_ffmpeg_shell(bpy.types.Operator):
             )
         except Exception as exc:
             traceback.print_exc()
-            self.report({'ERROR'}, f"FFmpeg shell encode failed: {exc}")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, f"FFmpeg shell encode failed: {exc}")
+            return {"CANCELLED"}
 
-        self.report({'INFO'}, "FFmpeg encode launched in external shell.")
-        return {'FINISHED'}
+        self.report({"INFO"}, "FFmpeg encode launched in external shell.")
+        return {"FINISHED"}
 
 
 class ST_OT_save_preset(bpy.types.Operator):
@@ -1020,8 +1107,8 @@ class ST_OT_save_preset(bpy.types.Operator):
     def execute(self, context):
         data = preset_data(context.scene.spaziotempo_tuning)
         PRESET_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        self.report({'INFO'}, f"Preset saved: {PRESET_PATH}")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"Preset saved: {PRESET_PATH}")
+        return {"FINISHED"}
 
 
 class ST_OT_load_preset(bpy.types.Operator):
@@ -1030,14 +1117,14 @@ class ST_OT_load_preset(bpy.types.Operator):
 
     def execute(self, context):
         if not PRESET_PATH.exists():
-            self.report({'WARNING'}, f"Preset not found: {PRESET_PATH}")
-            return {'CANCELLED'}
+            self.report({"WARNING"}, f"Preset not found: {PRESET_PATH}")
+            return {"CANCELLED"}
 
         data = json.loads(PRESET_PATH.read_text(encoding="utf-8"))
         load_preset_data(context.scene.spaziotempo_tuning, data)
         apply_tuning(context, insert_keyframes=False)
-        self.report({'INFO'}, "Preset loaded and applied.")
-        return {'FINISHED'}
+        self.report({"INFO"}, "Preset loaded and applied.")
+        return {"FINISHED"}
 
 
 class ST_OT_open_guide_text(bpy.types.Operator):
@@ -1055,8 +1142,8 @@ class ST_OT_open_guide_text(bpy.types.Operator):
 
         guide.clear()
         guide.write(body)
-        self.report({'INFO'}, f"Guide opened as Blender text block: {text_name}")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"Guide opened as Blender text block: {text_name}")
+        return {"FINISHED"}
 
 
 class ST_OT_select_group(bpy.types.Operator):
@@ -1066,7 +1153,7 @@ class ST_OT_select_group(bpy.types.Operator):
     group: bpy.props.StringProperty(default="hero")
 
     def execute(self, context):
-        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.object.select_all(action="DESELECT")
 
         names = []
         if self.group == "hero":
@@ -1074,7 +1161,13 @@ class ST_OT_select_group(bpy.types.Operator):
         elif self.group == "particles":
             names = [obj.name for obj in particle_emitters()]
         elif self.group == "fog":
-            names = ["AtmosphereCube", "FogPulseController", "FogFilamentsRoot", "SoftRhythmBackdrop", "BackdropPulseController"]
+            names = [
+                "AtmosphereCube",
+                "FogPulseController",
+                "FogFilamentsRoot",
+                "SoftRhythmBackdrop",
+                "BackdropPulseController",
+            ]
             names.extend(obj.name for obj in objects_with_prefix("FogFilament_"))
         elif self.group == "letters":
             names = ["AlbumLetterParticleSources"]
@@ -1091,15 +1184,15 @@ class ST_OT_select_group(bpy.types.Operator):
 
         if selected:
             context.view_layer.objects.active = selected[0]
-        self.report({'INFO'}, f"Selected {len(selected)} objects.")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"Selected {len(selected)} objects.")
+        return {"FINISHED"}
 
 
 class ST_PT_tuning_panel(bpy.types.Panel):
     bl_label = "Scene Tuner"
     bl_idname = "ST_PT_tuning_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
     bl_category = "Spaziotempo"
 
     def draw(self, context):
@@ -1107,33 +1200,35 @@ class ST_PT_tuning_panel(bpy.types.Panel):
         tune = context.scene.spaziotempo_tuning
 
         row = layout.row(align=True)
-        row.operator("spaziotempo.apply_tuning", icon='CHECKMARK')
-        row.operator("spaziotempo.keyframe_tuning", icon='KEY_HLT')
+        row.operator("spaziotempo.apply_tuning", icon="CHECKMARK")
+        row.operator("spaziotempo.keyframe_tuning", icon="KEY_HLT")
 
         box = layout.box()
         box.label(text="Hot Update")
         row = box.row(align=True)
-        op = row.operator("spaziotempo.hot_update_scene", text="Render Only", icon='OUTPUT')
+        op = row.operator("spaziotempo.hot_update_scene", text="Render Only", icon="OUTPUT")
         op.mode = "RENDER"
-        op = row.operator("spaziotempo.hot_update_scene", text="Materials", icon='MATERIAL')
+        op = row.operator("spaziotempo.hot_update_scene", text="Materials", icon="MATERIAL")
         op.mode = "MATERIALS"
         row = box.row(align=True)
-        op = row.operator("spaziotempo.hot_update_scene", text="Fog", icon='MOD_FLUIDSIM')
+        op = row.operator("spaziotempo.hot_update_scene", text="Fog", icon="MOD_FLUIDSIM")
         op.mode = "FOG"
-        op = row.operator("spaziotempo.hot_update_scene", text="Physics", icon='PHYSICS')
+        op = row.operator("spaziotempo.hot_update_scene", text="Physics", icon="PHYSICS")
         op.mode = "PHYSICS"
-        op = box.operator("spaziotempo.hot_update_scene", text="Hot Update All", icon='FILE_REFRESH')
+        op = box.operator(
+            "spaziotempo.hot_update_scene", text="Hot Update All", icon="FILE_REFRESH"
+        )
         op.mode = "ALL"
 
         row = box.row(align=True)
-        row.operator("spaziotempo.rebuild_restart_check", icon='VIEWZOOM')
-        row.operator("spaziotempo.optimizer_check", icon='SETTINGS')
+        row.operator("spaziotempo.rebuild_restart_check", icon="VIEWZOOM")
+        row.operator("spaziotempo.optimizer_check", icon="SETTINGS")
 
         row = layout.row(align=True)
-        row.operator("spaziotempo.save_tuning_preset", icon='FILE_TICK')
-        row.operator("spaziotempo.load_tuning_preset", icon='FILE_REFRESH')
+        row.operator("spaziotempo.save_tuning_preset", icon="FILE_TICK")
+        row.operator("spaziotempo.load_tuning_preset", icon="FILE_REFRESH")
 
-        layout.operator("spaziotempo.open_tuning_guide", icon='TEXT')
+        layout.operator("spaziotempo.open_tuning_guide", icon="TEXT")
 
         box = layout.box()
         box.label(text="Hero / Aura")
@@ -1197,15 +1292,17 @@ class ST_PT_tuning_panel(bpy.types.Panel):
         box.prop(tune, "rhythm_light_power")
         box.prop(tune, "compositor_glow")
         box.prop(tune, "compositor_lens")
-        box.operator("spaziotempo.load_image_sequence", text="Load Frames + Audio", icon='FILE_MOVIE')
-        box.operator("spaziotempo.encode_ffmpeg", text="Encode MP4 FFmpeg", icon='FILE_MOVIE')
-        box.operator("spaziotempo.encode_ffmpeg_shell", text="Encode FFmpeg Shell", icon='CONSOLE')
+        box.operator(
+            "spaziotempo.load_image_sequence", text="Load Frames + Audio", icon="FILE_MOVIE"
+        )
+        box.operator("spaziotempo.encode_ffmpeg", text="Encode MP4 FFmpeg", icon="FILE_MOVIE")
+        box.operator("spaziotempo.encode_ffmpeg_shell", text="Encode FFmpeg Shell", icon="CONSOLE")
 
         box = layout.box()
         box.label(text="Scale Existing Animation")
         box.prop(tune, "anim_hero_deform_factor")
         box.prop(tune, "anim_aura_factor")
-        box.operator("spaziotempo.scale_animation", icon='GRAPH')
+        box.operator("spaziotempo.scale_animation", icon="GRAPH")
 
         box = layout.box()
         box.label(text="Select")

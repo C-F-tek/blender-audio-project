@@ -1,7 +1,6 @@
 import math
 
 import bpy
-
 from materials import build_variant_material
 
 from .common import (
@@ -14,7 +13,6 @@ from .common import (
     socket_by_name,
     store_base_vector,
 )
-
 
 PHYSICS_ACCENT_EMISSION_MIN = cfg_value("PHYSICS_ACCENT_EMISSION_MIN", 0.06)
 PHYSICS_ACCENT_EMISSION_MAX = cfg_value("PHYSICS_ACCENT_EMISSION_MAX", 0.72)
@@ -119,9 +117,9 @@ def find_or_create_force_object(name, effector_type, location):
 
 
 def update_central_fields(frames, center):
-    gravity = find_or_create_force_object("HeroGravityField", 'FORCE', center)
-    turbulence = find_or_create_force_object("AtmosphereTurbulence", 'TURBULENCE', center)
-    vortex = find_or_create_force_object("OrbitVortex", 'VORTEX', center)
+    gravity = find_or_create_force_object("HeroGravityField", "FORCE", center)
+    turbulence = find_or_create_force_object("AtmosphereTurbulence", "TURBULENCE", center)
+    vortex = find_or_create_force_object("OrbitVortex", "VORTEX", center)
 
     for obj in [gravity, turbulence, vortex]:
         clear_animation(obj)
@@ -148,15 +146,19 @@ def update_central_fields(frames, center):
             gravity.location.x = center.x
             gravity.location.y = center.y
             gravity.location.z = center.z + 0.34 + math.sin(frame * 0.010) * 0.05
-            keyframe_if_possible(gravity, 'field.strength', frame)
+            keyframe_if_possible(gravity, "field.strength", frame)
             gravity.keyframe_insert(data_path="location", frame=frame)
 
         if turbulence is not None and getattr(turbulence, "field", None) is not None:
-            turbulence.field.strength = TURB_STRENGTH_MIN + high * (TURB_STRENGTH_MAX - TURB_STRENGTH_MIN) * 0.64 + pulse * 0.42
+            turbulence.field.strength = (
+                TURB_STRENGTH_MIN
+                + high * (TURB_STRENGTH_MAX - TURB_STRENGTH_MIN) * 0.64
+                + pulse * 0.42
+            )
             turbulence.location.x = center.x
             turbulence.location.y = center.y
             turbulence.location.z = center.z + 0.74 + math.sin(frame * 0.012) * 0.08
-            keyframe_if_possible(turbulence, 'field.strength', frame)
+            keyframe_if_possible(turbulence, "field.strength", frame)
             turbulence.keyframe_insert(data_path="location", frame=frame)
 
         if vortex is not None and getattr(vortex, "field", None) is not None:
@@ -167,7 +169,7 @@ def update_central_fields(frames, center):
             vortex.location.y = center.y
             vortex.location.z = center.z + 0.18
             vortex.rotation_euler.z = frame * (0.004 + mid * 0.003 + beat * 0.002)
-            keyframe_if_possible(vortex, 'field.strength', frame)
+            keyframe_if_possible(vortex, "field.strength", frame)
             vortex.keyframe_insert(data_path="location", frame=frame)
             vortex.keyframe_insert(data_path="rotation_euler", frame=frame)
 
@@ -201,34 +203,45 @@ def update_physics_accents(frames):
         dy = float(obj.location.y - center.y)
         radius_span = max(0.01, PHYSICS_ORBIT_RADIUS_MAX - PHYSICS_ORBIT_RADIUS_MIN)
         fallback_radius = PHYSICS_ORBIT_RADIUS_MIN + radius_span * ((idx % 6) / 5.0)
-        orbit_radius = get_or_store_float(obj, "_hot_orbit_radius", max(0.20, math.sqrt(dx * dx + dy * dy) or fallback_radius))
-        orbit_angle = get_or_store_float(obj, "_hot_orbit_angle", math.atan2(dy, dx) if dx or dy else idx * 0.55)
-        orbit_z_offset = get_or_store_float(obj, "_hot_orbit_z_offset", float(obj.location.z - center.z))
+        orbit_radius = get_or_store_float(
+            obj, "_hot_orbit_radius", max(0.20, math.sqrt(dx * dx + dy * dy) or fallback_radius)
+        )
+        orbit_angle = get_or_store_float(
+            obj, "_hot_orbit_angle", math.atan2(dy, dx) if dx or dy else idx * 0.55
+        )
+        orbit_z_offset = get_or_store_float(
+            obj, "_hot_orbit_z_offset", float(obj.location.z - center.z)
+        )
         orbit_speed = get_or_store_float(
             obj,
             "_hot_orbit_speed",
-            PHYSICS_ATOM_ORBIT_SPEED_MIN + (idx % 7) / 6.0 * (PHYSICS_ATOM_ORBIT_SPEED_MAX - PHYSICS_ATOM_ORBIT_SPEED_MIN),
+            PHYSICS_ATOM_ORBIT_SPEED_MIN
+            + (idx % 7) / 6.0 * (PHYSICS_ATOM_ORBIT_SPEED_MAX - PHYSICS_ATOM_ORBIT_SPEED_MIN),
         )
         orbit_tilt = get_or_store_float(obj, "_hot_orbit_tilt", -0.35 + (idx % 5) * 0.175)
-        micro_radius = get_or_store_float(obj, "_hot_micro_radius", PHYSICS_ATOM_MICRO_WOBBLE * (0.55 + (idx % 4) * 0.18))
+        micro_radius = get_or_store_float(
+            obj, "_hot_micro_radius", PHYSICS_ATOM_MICRO_WOBBLE * (0.55 + (idx % 4) * 0.18)
+        )
 
-        controls.append({
-            "object": obj,
-            "anchor": anchor,
-            "material": mat,
-            "emission_socket": emit_socket,
-            "mix_socket": mix_socket,
-            "band": obj["hot_band"],
-            "response": obj["hot_response"],
-            "phase": obj["hot_phase"],
-            "base_rotation": obj["_hot_base_rotation"],
-            "orbit_radius": orbit_radius,
-            "orbit_angle": orbit_angle,
-            "orbit_z_offset": orbit_z_offset,
-            "orbit_speed": orbit_speed,
-            "orbit_tilt": orbit_tilt,
-            "micro_radius": micro_radius,
-        })
+        controls.append(
+            {
+                "object": obj,
+                "anchor": anchor,
+                "material": mat,
+                "emission_socket": emit_socket,
+                "mix_socket": mix_socket,
+                "band": obj["hot_band"],
+                "response": obj["hot_response"],
+                "phase": obj["hot_phase"],
+                "base_rotation": obj["_hot_base_rotation"],
+                "orbit_radius": orbit_radius,
+                "orbit_angle": orbit_angle,
+                "orbit_z_offset": orbit_z_offset,
+                "orbit_speed": orbit_speed,
+                "orbit_tilt": orbit_tilt,
+                "micro_radius": micro_radius,
+            }
+        )
 
     if not controls:
         return 0
@@ -250,10 +263,7 @@ def update_physics_accents(frames):
             speed = item["orbit_speed"] + drive * PHYSICS_ATOM_ORBIT_AUDIO_SPEED + beat * 0.004
             angle = item["orbit_angle"] + frame * speed + math.sin(frame * 0.012 + phase) * 0.055
             radius = item["orbit_radius"] * (
-                1.0
-                + drive * PHYSICS_ATOM_ORBIT_RADIUS_PULSE
-                + low * 0.035
-                - high * 0.012
+                1.0 + drive * PHYSICS_ATOM_ORBIT_RADIUS_PULSE + low * 0.035 - high * 0.012
             )
             y_radius = radius * (0.82 + math.cos(item["orbit_tilt"]) * 0.10)
 
@@ -262,7 +272,9 @@ def update_physics_accents(frames):
             anchor_z = (
                 center.z
                 + item["orbit_z_offset"]
-                + math.sin(angle * 1.31 + item["orbit_tilt"]) * PHYSICS_ATOM_ORBIT_HEIGHT_SWAY * (0.35 + drive)
+                + math.sin(angle * 1.31 + item["orbit_tilt"])
+                * PHYSICS_ATOM_ORBIT_HEIGHT_SWAY
+                * (0.35 + drive)
                 + low * 0.10
                 + beat * 0.045
             )
@@ -283,7 +295,12 @@ def update_physics_accents(frames):
             rot = item["base_rotation"]
             obj.rotation_euler.x = rot[0] + math.sin(frame * 0.017 + phase) * 0.10 * (0.35 + drive)
             obj.rotation_euler.y = rot[1] + math.cos(frame * 0.015 + phase) * 0.08 * (0.35 + drive)
-            obj.rotation_euler.z = rot[2] + angle + frame * (0.006 + drive * 0.006) + math.sin(frame * 0.011 + phase) * 0.04
+            obj.rotation_euler.z = (
+                rot[2]
+                + angle
+                + frame * (0.006 + drive * 0.006)
+                + math.sin(frame * 0.011 + phase) * 0.04
+            )
             obj.keyframe_insert(data_path="rotation_euler", frame=frame)
 
             if item["emission_socket"] is not None:

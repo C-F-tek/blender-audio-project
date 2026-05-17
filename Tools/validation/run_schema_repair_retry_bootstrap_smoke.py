@@ -1,10 +1,11 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Smoke-test schema-repair retry bootstrap safety.
 
 This validator checks that schema-repair retry aggregate counters are not
 referenced inside run_runtime_tool_broker_for_round(), where they would be
 undefined during runtime-tool bootstrap.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -93,21 +94,31 @@ def main() -> int:
     )
     for token in forbidden_in_broker:
         if token in broker_body:
-            errors.append(f"forbidden aggregate retry counter leaked into broker bootstrap function: {token}")
+            errors.append(
+                f"forbidden aggregate retry counter leaked into broker bootstrap function: {token}"
+            )
 
     if source and "def run_schema_repair_retry_for_round(" not in source:
         errors.append("schema repair retry helper missing from supervised runner")
 
     if source and "schema_repair_retry_attempt_count = sum(" not in source:
-        errors.append("aggregate retry attempt counter missing from build_report/report aggregation")
+        errors.append(
+            "aggregate retry attempt counter missing from build_report/report aggregation"
+        )
 
     if source and "schema_repair_retry_accept_count = sum(" not in source:
         errors.append("aggregate retry accept counter missing from build_report/report aggregation")
 
-    if source and '"schema_repair_retry_attempt_count": schema_repair_retry_attempt_count' not in source:
+    if (
+        source
+        and '"schema_repair_retry_attempt_count": schema_repair_retry_attempt_count' not in source
+    ):
         errors.append("top-level schema_repair_retry_attempt_count report field missing")
 
-    if source and '"schema_repair_retry_accept_count": schema_repair_retry_accept_count' not in source:
+    if (
+        source
+        and '"schema_repair_retry_accept_count": schema_repair_retry_accept_count' not in source
+    ):
         errors.append("top-level schema_repair_retry_accept_count report field missing")
 
     report = {
@@ -148,7 +159,13 @@ def main() -> int:
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(render_markdown(report), encoding="utf-8")
 
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown": str(markdown)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"passed": report["passed"], "output": str(output), "markdown": str(markdown)},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

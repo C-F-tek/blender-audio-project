@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test memory routing policy and broker execution."""
+
 from __future__ import annotations
 
 import argparse
@@ -46,15 +47,28 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
     requests = plan.get("tool_requests", [])
     if not isinstance(requests, list) or len(requests) < 8:
         errors.append("expected at least 8 tool requests")
-    if not any(item.get("tool") == "runtime_sqlite_memory" and item.get("args", {}).get("scope") == "persistent" for item in requests):
+    if not any(
+        item.get("tool") == "runtime_sqlite_memory"
+        and item.get("args", {}).get("scope") == "persistent"
+        for item in requests
+    ):
         errors.append("missing persistent runtime_sqlite_memory request")
-    if not any(item.get("tool") == "runtime_sqlite_memory" and item.get("args", {}).get("scope") == "operational" for item in requests):
+    if not any(
+        item.get("tool") == "runtime_sqlite_memory"
+        and item.get("args", {}).get("scope") == "operational"
+        for item in requests
+    ):
         errors.append("missing operational runtime_sqlite_memory request")
     if not any(item.get("tool") == "build_agent_transient_request_context" for item in requests):
         errors.append("missing transient request context request")
     if any(item.get("tool") == "shell" for item in requests):
         errors.append("policy must not request shell")
-    for key in ("provider_execution_performed", "patch_application_performed", "sqlite_write_performed", "persistent_memory_write_performed"):
+    for key in (
+        "provider_execution_performed",
+        "patch_application_performed",
+        "sqlite_write_performed",
+        "persistent_memory_write_performed",
+    ):
         if policy.get(key) is not False:
             errors.append(f"{key} must be false")
     if policy.get("guardrails", {}).get("automatic_persistent_promotion_allowed") is not False:
@@ -81,7 +95,9 @@ def validate_broker(broker: dict[str, Any]) -> list[str]:
     if broker.get("persistent_memory_write_performed") is not False:
         errors.append("persistent memory writes must be false")
     if broker.get("operational_sqlite_write_performed") is not True:
-        errors.append("operational sqlite write should be true because policy writes one scratch note")
+        errors.append(
+            "operational sqlite write should be true because policy writes one scratch note"
+        )
     return errors
 
 
@@ -94,13 +110,32 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     run_stamp = stamp()
-    policy_output = resolve_path(repo_root, f"output/validation/agent_memory_routing_policy_smoke_{run_stamp}.json")
-    policy_md = resolve_path(repo_root, f"output/validation/agent_memory_routing_policy_smoke_{run_stamp}.md")
-    broker_request = resolve_path(repo_root, f"output/ai_runtime_tools/agent_memory_routing_policy_smoke_{run_stamp}_tool_requests.json")
-    broker_output = resolve_path(repo_root, f"output/validation/agent_memory_routing_policy_broker_smoke_{run_stamp}.json")
-    broker_md = resolve_path(repo_root, f"output/validation/agent_memory_routing_policy_broker_smoke_{run_stamp}.md")
-    final_output = resolve_path(repo_root, args.output or f"output/validation/agent_memory_routing_policy_smoke_result_{run_stamp}.json")
-    final_md = resolve_path(repo_root, args.markdown_output or f"output/validation/agent_memory_routing_policy_smoke_result_{run_stamp}.md")
+    policy_output = resolve_path(
+        repo_root, f"output/validation/agent_memory_routing_policy_smoke_{run_stamp}.json"
+    )
+    policy_md = resolve_path(
+        repo_root, f"output/validation/agent_memory_routing_policy_smoke_{run_stamp}.md"
+    )
+    broker_request = resolve_path(
+        repo_root,
+        f"output/ai_runtime_tools/agent_memory_routing_policy_smoke_{run_stamp}_tool_requests.json",
+    )
+    broker_output = resolve_path(
+        repo_root, f"output/validation/agent_memory_routing_policy_broker_smoke_{run_stamp}.json"
+    )
+    broker_md = resolve_path(
+        repo_root, f"output/validation/agent_memory_routing_policy_broker_smoke_{run_stamp}.md"
+    )
+    final_output = resolve_path(
+        repo_root,
+        args.output
+        or f"output/validation/agent_memory_routing_policy_smoke_result_{run_stamp}.json",
+    )
+    final_md = resolve_path(
+        repo_root,
+        args.markdown_output
+        or f"output/validation/agent_memory_routing_policy_smoke_result_{run_stamp}.md",
+    )
 
     policy_cmd = [
         sys.executable,
@@ -176,14 +211,20 @@ def main() -> int:
         "broker_stderr_tail": broker_stderr,
         "policy_summary": {
             "tool_request_count": policy_report.get("memory_plan", {}).get("tool_request_count"),
-            "persistent_query_count": policy_report.get("memory_plan", {}).get("persistent_query_count"),
-            "operational_query_or_write_count": policy_report.get("memory_plan", {}).get("operational_query_or_write_count"),
+            "persistent_query_count": policy_report.get("memory_plan", {}).get(
+                "persistent_query_count"
+            ),
+            "operational_query_or_write_count": policy_report.get("memory_plan", {}).get(
+                "operational_query_or_write_count"
+            ),
         },
         "broker_summary": {
             "tool_request_count": broker_report.get("tool_request_count"),
             "tool_execution_count": broker_report.get("tool_execution_count"),
             "blocked_tool_count": broker_report.get("blocked_tool_count"),
-            "operational_sqlite_write_performed": broker_report.get("operational_sqlite_write_performed"),
+            "operational_sqlite_write_performed": broker_report.get(
+                "operational_sqlite_write_performed"
+            ),
         },
     }
     write_json(final_output, report)
@@ -217,7 +258,9 @@ def main() -> int:
                 "policy_tool_request_count": report["policy_summary"]["tool_request_count"],
                 "broker_tool_execution_count": report["broker_summary"]["tool_execution_count"],
                 "broker_blocked_tool_count": report["broker_summary"]["blocked_tool_count"],
-                "operational_sqlite_write_performed": report["broker_summary"]["operational_sqlite_write_performed"],
+                "operational_sqlite_write_performed": report["broker_summary"][
+                    "operational_sqlite_write_performed"
+                ],
                 "provider_execution_performed": False,
                 "patch_application_performed": False,
                 "persistent_memory_write_performed": False,
@@ -231,4 +274,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

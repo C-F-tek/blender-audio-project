@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate inert proposal-derived patch spec drafts."""
+
 from __future__ import annotations
 
 import argparse
@@ -139,7 +140,9 @@ def target_path_errors(path: str, repo_root: Path) -> list[str]:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         errors.append(f"forbidden target prefix: {normalized}")
     lower = normalized.lower()
-    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(
+        ".json"
+    ):
         errors.append(f"forbidden full-analysis JSON target: {normalized}")
     if "*" in normalized or normalized.endswith("/"):
         errors.append("target must be a concrete file, not a glob or directory")
@@ -165,7 +168,12 @@ def validate_operation(op: Any, index: int, repo_root: Path) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     if not isinstance(op, dict):
-        return {"label": label, "ok": False, "errors": [f"{label} must be an object"], "warnings": warnings}
+        return {
+            "label": label,
+            "ok": False,
+            "errors": [f"{label} must be an object"],
+            "warnings": warnings,
+        }
 
     path = normalize_repo_path(op.get("path"))
     errors.extend(target_path_errors(path, repo_root))
@@ -233,7 +241,9 @@ def validate_spec(path: Path, repo_root: Path) -> dict[str, Any]:
         errors.append("operations must be a non-empty list")
         operation_checks: list[dict[str, Any]] = []
     else:
-        operation_checks = [validate_operation(op, index, repo_root) for index, op in enumerate(operations)]
+        operation_checks = [
+            validate_operation(op, index, repo_root) for index, op in enumerate(operations)
+        ]
         for check in operation_checks:
             for error in check.get("errors", []):
                 errors.append(f"{check.get('label')}: {error}")
@@ -308,7 +318,9 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
             if spec_path.startswith("patch_specs/inbox/"):
                 errors.append(f"manifest points to queued inbox spec: {spec_path}")
             spec_paths.append(spec_path)
-    if isinstance(data.get("patch_spec_count"), int) and len(spec_paths) != data.get("patch_spec_count"):
+    if isinstance(data.get("patch_spec_count"), int) and len(spec_paths) != data.get(
+        "patch_spec_count"
+    ):
         errors.append("patch_spec_count does not match specs length")
 
     return {
@@ -323,7 +335,9 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
     }
 
 
-def validate_patch_spec_drafts(repo_root: Path, manifest_paths: list[Path], spec_paths: list[Path]) -> dict[str, Any]:
+def validate_patch_spec_drafts(
+    repo_root: Path, manifest_paths: list[Path], spec_paths: list[Path]
+) -> dict[str, Any]:
     manifest_checks = [validate_manifest(path, repo_root) for path in manifest_paths]
     paths_from_manifests = [
         resolve_repo_path(repo_root, spec_path)
@@ -380,12 +394,10 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     manifest_paths = [
-        resolve_repo_path(repo_root, raw)
-        for raw in split_path_values(list(args.manifest or []))
+        resolve_repo_path(repo_root, raw) for raw in split_path_values(list(args.manifest or []))
     ]
     spec_paths = [
-        resolve_repo_path(repo_root, raw)
-        for raw in split_path_values(list(args.spec or []))
+        resolve_repo_path(repo_root, raw) for raw in split_path_values(list(args.spec or []))
     ]
     if not manifest_paths and not spec_paths:
         manifest_paths = [repo_root / "output/patch_specs/proposal_patch_specs_manifest.json"]

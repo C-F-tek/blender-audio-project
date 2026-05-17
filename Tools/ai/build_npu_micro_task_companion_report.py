@@ -44,10 +44,7 @@ def classify_request(text: str) -> str:
         for token in ("errore", "traceback", "bug", "crash", "fallisce", "non funziona")
     ):
         return "debug_request"
-    if any(
-        token in normalized
-        for token in ("patch", "modifica", "codice", "script", "repo")
-    ):
+    if any(token in normalized for token in ("patch", "modifica", "codice", "script", "repo")):
         return "repo_work_request"
     return "general_request"
 
@@ -67,9 +64,7 @@ def run_npu_micro_task(
             "warnings": [],
             "micro_task_performed": False,
         }
-    project_python = resolve_project_python(
-        Path(repo_root or Path.cwd()).resolve(), python_exe
-    )
+    project_python = resolve_project_python(Path(repo_root or Path.cwd()).resolve(), python_exe)
     report = npu_preflight(python_exe=project_python, timeout=float(timeout_seconds))
     summary = guardrail_runtime_summary(report) if guardrail_runtime_summary else {}
     return {
@@ -109,9 +104,7 @@ def run_npu_device_workload(
             "warnings": [],
         }
 
-    runner = (
-        Path(python_exe).resolve() if python_exe else Path(sys.executable).resolve()
-    )
+    runner = Path(python_exe).resolve() if python_exe else Path(sys.executable).resolve()
     if not runner.is_file():
         return {
             "requested": True,
@@ -178,12 +171,8 @@ def run_npu_device_workload(
             "python_exe": str(runner),
             "errors": [f"NPU workload timed out after {timeout_seconds}s"],
             "warnings": [],
-            "stdout_tail": (
-                (exc.stdout or "")[-1000:] if isinstance(exc.stdout, str) else ""
-            ),
-            "stderr_tail": (
-                (exc.stderr or "")[-1000:] if isinstance(exc.stderr, str) else ""
-            ),
+            "stdout_tail": ((exc.stdout or "")[-1000:] if isinstance(exc.stdout, str) else ""),
+            "stderr_tail": ((exc.stderr or "")[-1000:] if isinstance(exc.stderr, str) else ""),
         }
 
     stdout = completed.stdout or ""
@@ -215,15 +204,11 @@ def run_npu_device_workload(
         parsed["performed"] = False
         parsed["mode"] = parsed.get("mode") or "npu_workload_failed"
         parsed.setdefault("errors", [])
-        parsed["errors"].append(
-            (stderr or stdout or f"returncode={completed.returncode}")[-2000:]
-        )
+        parsed["errors"].append((stderr or stdout or f"returncode={completed.returncode}")[-2000:])
     return parsed
 
 
-def build_npu_role_response(
-    request_input: str, micro: dict[str, Any]
-) -> dict[str, Any]:
+def build_npu_role_response(request_input: str, micro: dict[str, Any]) -> dict[str, Any]:
     classification = classify_request(request_input)
     performed = bool(micro.get("micro_task_performed"))
     devices = micro.get("openvino_available_devices") or []

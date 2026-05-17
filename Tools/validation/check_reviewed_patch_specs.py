@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate reviewed patch specs with mandatory dry-run."""
+
 from __future__ import annotations
 
 import argparse
@@ -146,7 +147,9 @@ def target_path_errors(path: str, repo_root: Path) -> list[str]:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         errors.append(f"forbidden target prefix: {normalized}")
     lower = normalized.lower()
-    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(
+        ".json"
+    ):
         errors.append(f"forbidden full-analysis JSON target: {normalized}")
     if "*" in normalized or normalized.endswith("/"):
         errors.append("target must be a concrete file, not a glob or directory")
@@ -185,7 +188,9 @@ def replacement_errors(replacement: Any) -> list[str]:
     if kind == "regex" and not isinstance(replacement.get("pattern"), str):
         errors.append("regex replacement requires pattern string")
     if kind in {"insert_after", "insert_before"}:
-        if not isinstance(replacement.get("anchor"), str) or not isinstance(replacement.get("insert"), str):
+        if not isinstance(replacement.get("anchor"), str) or not isinstance(
+            replacement.get("insert"), str
+        ):
             errors.append(f"{kind} replacement requires anchor and insert strings")
     return errors
 
@@ -196,17 +201,21 @@ def dry_run_spec(repo_root: Path, spec: dict[str, Any]) -> tuple[bool, list[dict
         reports = apply_spec(repo_root, copy.deepcopy(spec), write=False, no_backup=True)
     except patch_error as exc:
         return False, [], str(exc)
-    return True, [
-        {
-            "path": repo_relative(report.path, repo_root),
-            "changed": report.changed,
-            "before_lines": report.before_lines,
-            "after_lines": report.after_lines,
-            "replacements_applied": report.replacements_applied,
-            "bom_removed": report.bom_removed,
-        }
-        for report in reports
-    ], ""
+    return (
+        True,
+        [
+            {
+                "path": repo_relative(report.path, repo_root),
+                "changed": report.changed,
+                "before_lines": report.before_lines,
+                "after_lines": report.after_lines,
+                "replacements_applied": report.replacements_applied,
+                "bom_removed": report.bom_removed,
+            }
+            for report in reports
+        ],
+        "",
+    )
 
 
 def validate_operation(operation: Any, index: int, repo_root: Path) -> dict[str, Any]:
@@ -214,7 +223,12 @@ def validate_operation(operation: Any, index: int, repo_root: Path) -> dict[str,
     errors: list[str] = []
     warnings: list[str] = []
     if not isinstance(operation, dict):
-        return {"label": label, "ok": False, "errors": [f"{label} must be an object"], "warnings": warnings}
+        return {
+            "label": label,
+            "ok": False,
+            "errors": [f"{label} must be an object"],
+            "warnings": warnings,
+        }
 
     path = normalize_repo_path(operation.get("path"))
     errors.extend(target_path_errors(path, repo_root))
@@ -256,7 +270,11 @@ def validate_spec(path: Path, repo_root: Path) -> dict[str, Any]:
             "warnings": warnings,
             "operation_count": 0,
             "operation_checks": [],
-            "dry_run": {"passed": False, "error": parse_error or "unknown JSON parse error", "reports": []},
+            "dry_run": {
+                "passed": False,
+                "error": parse_error or "unknown JSON parse error",
+                "reports": [],
+            },
         }
 
     missing = [field for field in REQUIRED_SPEC_FIELDS if field not in data]
@@ -278,7 +296,10 @@ def validate_spec(path: Path, repo_root: Path) -> dict[str, Any]:
         errors.append("operations must be a non-empty list")
         operation_checks: list[dict[str, Any]] = []
     else:
-        operation_checks = [validate_operation(operation, index, repo_root) for index, operation in enumerate(operations)]
+        operation_checks = [
+            validate_operation(operation, index, repo_root)
+            for index, operation in enumerate(operations)
+        ]
         for check in operation_checks:
             for error in check.get("errors", []):
                 errors.append(f"{check.get('label')}: {error}")
@@ -364,7 +385,9 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
             if spec_path.startswith("patch_specs/inbox/"):
                 errors.append(f"manifest points to queued inbox spec: {spec_path}")
             spec_paths.append(spec_path)
-    if isinstance(data.get("reviewed_spec_count"), int) and len(spec_paths) != data.get("reviewed_spec_count"):
+    if isinstance(data.get("reviewed_spec_count"), int) and len(spec_paths) != data.get(
+        "reviewed_spec_count"
+    ):
         errors.append("reviewed_spec_count does not match specs length")
 
     return {
@@ -379,7 +402,9 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
     }
 
 
-def validate_reviewed_patch_specs(repo_root: Path, manifest_paths: list[Path], spec_paths: list[Path]) -> dict[str, Any]:
+def validate_reviewed_patch_specs(
+    repo_root: Path, manifest_paths: list[Path], spec_paths: list[Path]
+) -> dict[str, Any]:
     manifest_checks = [validate_manifest(path, repo_root) for path in manifest_paths]
     paths_from_manifests = [
         resolve_repo_path(repo_root, spec_path)
@@ -426,12 +451,10 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     manifest_paths = [
-        resolve_repo_path(repo_root, raw)
-        for raw in split_path_values(list(args.manifest or []))
+        resolve_repo_path(repo_root, raw) for raw in split_path_values(list(args.manifest or []))
     ]
     spec_paths = [
-        resolve_repo_path(repo_root, raw)
-        for raw in split_path_values(list(args.spec or []))
+        resolve_repo_path(repo_root, raw) for raw in split_path_values(list(args.spec or []))
     ]
     if not manifest_paths and not spec_paths:
         manifest_paths = [repo_root / "output/patch_specs/reviewed_patch_spec_manifest.json"]

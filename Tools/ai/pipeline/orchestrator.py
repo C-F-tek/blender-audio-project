@@ -22,17 +22,13 @@ def run_serial_steps(
     return results
 
 
-def run_parallel_steps(
-    steps: list[PipelineStep], repo: Path, dry_run: bool
-) -> list[dict]:
+def run_parallel_steps(steps: list[PipelineStep], repo: Path, dry_run: bool) -> list[dict]:
     """Run independent pipeline steps concurrently."""
     if not steps:
         return []
     results: list[dict] = []
     with ThreadPoolExecutor(max_workers=len(steps)) as pool:
-        futures = {
-            pool.submit(run_pipeline_step, step, repo, dry_run): step for step in steps
-        }
+        futures = {pool.submit(run_pipeline_step, step, repo, dry_run): step for step in steps}
         for future in as_completed(futures):
             results.append(future.result())
     return results

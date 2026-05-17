@@ -135,9 +135,7 @@ def discover_latest_manifest(
         root = (repo_root / raw_root).resolve()
         if not root.exists():
             continue
-        candidates.extend(
-            path for path in root.rglob("*_manifest.json") if path.is_file()
-        )
+        candidates.extend(path for path in root.rglob("*_manifest.json") if path.is_file())
     candidates = sorted(candidates, key=lambda item: item.stat().st_mtime, reverse=True)
     for path in candidates[:max_files]:
         relative = repo_relative(path, repo_root)
@@ -247,9 +245,7 @@ def operations_from_spec(
             )
             continue
 
-        source_id = str(
-            raw.get("proposal_id") or raw.get("id") or f"{spec_path}#{index}"
-        )
+        source_id = str(raw.get("proposal_id") or raw.get("id") or f"{spec_path}#{index}")
         raw_operation = (
             str(raw.get("operation") or raw.get("op") or raw.get("action") or "")
             .strip()
@@ -328,9 +324,7 @@ def touched_python_files(repo_root: Path, results: list[dict[str, Any]]) -> list
     ]
 
 
-def touched_powershell_files(
-    repo_root: Path, results: list[dict[str, Any]]
-) -> list[str]:
+def touched_powershell_files(repo_root: Path, results: list[dict[str, Any]]) -> list[str]:
     return [
         item["path"]
         for item in results
@@ -365,19 +359,13 @@ def run_validators(
                     "if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_.Message }; exit 1}"
                 )
                 result = run([powershell, "-NoProfile", "-Command", command], repo_root)
-                validator_results.append(
-                    {"name": "powershell_parser", "path": path, **result}
-                )
+                validator_results.append({"name": "powershell_parser", "path": path, **result})
                 if not result["ok"]:
                     errors.append(f"PowerShell parser failed for {path}")
         elif require_all:
-            errors.append(
-                "PowerShell parser requested but powershell.exe/pwsh was not found"
-            )
+            errors.append("PowerShell parser requested but powershell.exe/pwsh was not found")
         else:
-            warnings.append(
-                "PowerShell parser skipped because powershell.exe/pwsh was not found"
-            )
+            warnings.append("PowerShell parser skipped because powershell.exe/pwsh was not found")
 
     diff_check = run(["git", "diff", "--check"], repo_root)
     validator_results.append({"name": "git_diff_check", **diff_check})
@@ -426,9 +414,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--manifest", default="")
     parser.add_argument("--patch-spec", action="append", default=[])
-    parser.add_argument(
-        "--discover-root", action="append", default=["output/patch_specs"]
-    )
+    parser.add_argument("--discover-root", action="append", default=["output/patch_specs"])
     parser.add_argument("--discover-max-files", type=int, default=50)
     parser.add_argument("--manifest-stamp", default="")
     parser.add_argument(
@@ -480,12 +466,8 @@ def main() -> int:
         errors.append(
             "refusing --apply with source/doc dirty working tree; use --allow-dirty only for reviewed incremental fixes"
         )
-    if args.apply and not any(
-        branch.startswith(prefix) for prefix in args.allowed_branch_prefix
-    ):
-        errors.append(
-            f"refusing --apply on branch {branch!r}; expected allowed branch prefix"
-        )
+    if args.apply and not any(branch.startswith(prefix) for prefix in args.allowed_branch_prefix):
+        errors.append(f"refusing --apply on branch {branch!r}; expected allowed branch prefix")
 
     manifest_path = args.manifest.strip()
     discovered_manifest = ""
@@ -552,17 +534,14 @@ def main() -> int:
 
     operations = operations[: max(0, int(args.max_applied_patches))]
     if args.apply and not errors and not operations:
-        reasons = sorted(
-            {str(item.get("reason") or "unknown") for item in manual_review_items}
-        )
+        reasons = sorted({str(item.get("reason") or "unknown") for item in manual_review_items})
         reason_text = (
             "; ".join(reasons)
             if reasons
             else "no generated patch specs contained allowlisted concrete deterministic operations"
         )
         errors.append(
-            "generated patch specs did not produce a concrete review product: "
-            f"{reason_text}"
+            f"generated patch specs did not produce a concrete review product: {reason_text}"
         )
     results: list[dict[str, Any]] = []
     if not errors:

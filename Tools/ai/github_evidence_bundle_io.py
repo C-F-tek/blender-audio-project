@@ -124,16 +124,11 @@ def line_count(text: str) -> int:
 def compact_value(value: Any, *, max_string: int = 500) -> Any:
     """Bound nested values for compact evidence summaries."""
     if isinstance(value, str):
-        return (
-            value if len(value) <= max_string else value[:max_string] + "...[truncated]"
-        )
+        return value if len(value) <= max_string else value[:max_string] + "...[truncated]"
     if isinstance(value, list):
         return [compact_value(item, max_string=max_string) for item in value[:20]]
     if isinstance(value, dict):
-        return {
-            str(key): compact_value(item, max_string=max_string)
-            for key, item in value.items()
-        }
+        return {str(key): compact_value(item, max_string=max_string) for key, item in value.items()}
     return value
 
 

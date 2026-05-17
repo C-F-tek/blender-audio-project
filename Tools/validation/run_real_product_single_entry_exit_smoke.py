@@ -22,7 +22,9 @@ def require(condition: bool, errors: list[str], message: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/real_product_single_entry_exit_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/real_product_single_entry_exit_smoke.json"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -37,11 +39,15 @@ def main() -> int:
         "process_gate_task_under_output": "output/local_ai_task_inputs" in wrapper,
         "single_wrapper_launches_unified_launcher": "run_unified_local_ai_refactor.ps1" in wrapper,
         "final_product_validation_switch": "[switch]$ValidateFinalReviewPrProduct" in wrapper,
-        "create_pr_implies_final_validation": "if ($CreatePr) { $ValidateFinalReviewPrProduct = $true }" in wrapper,
+        "create_pr_implies_final_validation": "if ($CreatePr) { $ValidateFinalReviewPrProduct = $true }"
+        in wrapper,
         "final_product_contract_invoked": "check_review_pr_final_product_contract.py" in wrapper,
-        "remote_pr_contract_required_when_create_pr": "--require-remote-pr" in wrapper and "if ($CreatePr)" in wrapper,
-        "single_exit_after_contract": "Review PR final product contract passed" in wrapper and "exit 0" in wrapper,
-        "preflight_validates_single_entry_exit": "run_real_product_single_entry_exit_smoke.py" in preflight,
+        "remote_pr_contract_required_when_create_pr": "--require-remote-pr" in wrapper
+        and "if ($CreatePr)" in wrapper,
+        "single_exit_after_contract": "Review PR final product contract passed" in wrapper
+        and "exit 0" in wrapper,
+        "preflight_validates_single_entry_exit": "run_real_product_single_entry_exit_smoke.py"
+        in preflight,
         "readme_documents_single_entry_exit": "REAL-PRODUCT-SINGLE-ENTRY-EXIT" in readme,
     }
 
@@ -52,7 +58,11 @@ def main() -> int:
     launcher_pos = wrapper.find("& powershell.exe @script:LauncherArgs")
     contract_pos = wrapper.find("check_review_pr_final_product_contract.py")
     require(launcher_pos >= 0, errors, "launcher invocation missing")
-    require(contract_pos > launcher_pos, errors, "final product contract must run after unified launcher")
+    require(
+        contract_pos > launcher_pos,
+        errors,
+        "final product contract must run after unified launcher",
+    )
 
     report = {
         "schema_version": 1,

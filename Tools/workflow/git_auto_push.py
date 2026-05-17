@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from pathlib import Path
 import subprocess
 import sys
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime
-
+from pathlib import Path
 
 ROOT = Path.home() / "blender"
 PROJECT_DIR = ROOT / "blender-audio-project"
@@ -117,7 +116,7 @@ def run_auto_push_generated_data(
         message=message,
     )
 
-    print("\n$ " + " ".join(f'\"{part}\"' if " " in part else part for part in command))
+    print("\n$ " + " ".join(f'"{part}"' if " " in part else part for part in command))
     completed = subprocess.run(
         command,
         cwd=str(PROJECT_DIR),
@@ -140,7 +139,9 @@ def run_auto_push_generated_data(
         cwd=str(PROJECT_DIR),
         returncode=completed.returncode,
         stdout_tail=output[-8000:],
-        error=None if completed.returncode == 0 else f"auto-push fallito con exit code {completed.returncode}",
+        error=None
+        if completed.returncode == 0
+        else f"auto-push fallito con exit code {completed.returncode}",
     )
 
     if check and not result.ok:

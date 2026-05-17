@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke test NPU runtime tool request execution through orchestrator broker."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,12 +12,16 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.run_agent_gpu_npu_parallel_orchestrator import run_npu_runtime_tool_broker_for_audit
+    from Tools.ai.run_agent_gpu_npu_parallel_orchestrator import (
+        run_npu_runtime_tool_broker_for_audit,
+    )
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.run_agent_gpu_npu_parallel_orchestrator import run_npu_runtime_tool_broker_for_audit  # type: ignore
+    from Tools.ai.run_agent_gpu_npu_parallel_orchestrator import (
+        run_npu_runtime_tool_broker_for_audit,  # type: ignore
+    )
 
 
 def now_iso() -> str:
@@ -120,7 +125,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "provider_execution_performed": bool(broker.get("provider_execution_performed")),
             "patch_application_performed": bool(broker.get("patch_application_performed")),
             "sqlite_write_performed": bool(broker.get("sqlite_write_performed")),
-            "persistent_memory_write_performed": bool(broker.get("persistent_memory_write_performed")),
+            "persistent_memory_write_performed": bool(
+                broker.get("persistent_memory_write_performed")
+            ),
         },
     }
 
@@ -128,10 +135,16 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--tool-output-dir", default="output/validation/npu_runtime_tool_execution_smoke_tools")
+    parser.add_argument(
+        "--tool-output-dir", default="output/validation/npu_runtime_tool_execution_smoke_tools"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=180)
-    parser.add_argument("--output", default="output/validation/npu_runtime_tool_execution_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/npu_runtime_tool_execution_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/npu_runtime_tool_execution_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/npu_runtime_tool_execution_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -141,19 +154,25 @@ def main() -> int:
     write_json(output, report)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps({
-        "passed": report["passed"],
-        "output": str(output),
-        "markdown": str(markdown),
-        "provider_execution_performed": report["provider_execution_performed"],
-        "patch_application_performed": report["patch_application_performed"],
-        "sqlite_write_performed": report["sqlite_write_performed"],
-        "persistent_memory_write_performed": report["persistent_memory_write_performed"],
-        "npu_runtime_tool_request_count": report["npu_runtime_tool_request_count"],
-        "npu_runtime_tool_execution_count": report["npu_runtime_tool_execution_count"],
-        "npu_runtime_tool_failed_count": report["npu_runtime_tool_failed_count"],
-        "npu_runtime_tool_blocked_count": report["npu_runtime_tool_blocked_count"],
-    }, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown": str(markdown),
+                "provider_execution_performed": report["provider_execution_performed"],
+                "patch_application_performed": report["patch_application_performed"],
+                "sqlite_write_performed": report["sqlite_write_performed"],
+                "persistent_memory_write_performed": report["persistent_memory_write_performed"],
+                "npu_runtime_tool_request_count": report["npu_runtime_tool_request_count"],
+                "npu_runtime_tool_execution_count": report["npu_runtime_tool_execution_count"],
+                "npu_runtime_tool_failed_count": report["npu_runtime_tool_failed_count"],
+                "npu_runtime_tool_blocked_count": report["npu_runtime_tool_blocked_count"],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

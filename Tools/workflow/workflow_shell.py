@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from artifact_consult import collect_artifacts, format_artifact_table, open_artifact
 from git_auto_push import run_auto_push_generated_data
@@ -10,20 +10,20 @@ from workflow_state import (
     EVENT_LOG_PATH,
     LAST_RESULT_PATH,
     SESSION_PATH,
-    build_project_storage_stats,
-    format_project_storage_stats,
-    load_session,
     available_ollama_models,
-    mark_active_operation_interrupted,
-    open_debug_monitor_window,
-    operation_status,
-    reset_to_default_wav,
+    build_project_storage_stats,
     cleanup_intermediate_targets,
     cleanup_intermediates,
     cleanup_render_frame_targets,
     cleanup_render_frames,
-    run_analyze_wav,
+    format_project_storage_stats,
+    load_session,
+    mark_active_operation_interrupted,
+    open_debug_monitor_window,
+    operation_status,
+    reset_to_default_wav,
     run_advanced_debug_check,
+    run_analyze_wav,
     run_code_context,
     run_dual_ai,
     run_full_audio_prepare,
@@ -33,8 +33,8 @@ from workflow_state import (
     run_scene_director_brief,
     run_startup_service_check,
     run_track_summary,
-    set_current_wav,
     set_ai_models,
+    set_current_wav,
     set_debug_enabled,
 )
 
@@ -49,7 +49,9 @@ def print_header(session) -> None:
     print(f"Track:    {session.track_stem}")
     print(f"Default:  {'no, sessione attiva' if session.use_session_track else 'si'}")
     print(f"Debug:    {'ON' if session.debug_enabled else 'OFF'}")
-    print(f"AI:       creative={session.creative_model} | technical={session.technical_model} | chat={session.chat_model} | tokens={session.script_max_tokens}")
+    print(
+        f"AI:       creative={session.creative_model} | technical={session.technical_model} | chat={session.chat_model} | tokens={session.script_max_tokens}"
+    )
     print(f"Ultima:   {session.last_operation or '-'}")
     print(f"Log:      {EVENT_LOG_PATH}")
     print(f"Result:   {LAST_RESULT_PATH}")
@@ -207,7 +209,9 @@ def main() -> None:
             elif choice == "9":
                 include_manual = ask_bool("Includere manuali?", default=False)
                 skip_ollama = ask_bool("Saltare Ollama?", default=False)
-                skip_npu = ask_bool("Saltare NPU heavy pass? La capsule service viene comunque creata", default=True)
+                skip_npu = ask_bool(
+                    "Saltare NPU heavy pass? La capsule service viene comunque creata", default=True
+                )
                 run_dual_ai(
                     session,
                     phase="plan",
@@ -219,8 +223,15 @@ def main() -> None:
 
             elif choice == "10":
                 include_manual = ask_bool("Includere manuali?", default=True)
-                skip_npu = ask_bool("Saltare NPU heavy pass? La capsule service viene comunque creata", default=True)
-                run_dual_ai(session, phase="implementation", include_manual=include_manual, skip_npu=skip_npu)
+                skip_npu = ask_bool(
+                    "Saltare NPU heavy pass? La capsule service viene comunque creata", default=True
+                )
+                run_dual_ai(
+                    session,
+                    phase="implementation",
+                    include_manual=include_manual,
+                    skip_npu=skip_npu,
+                )
                 session = load_session()
 
             elif choice == "11":
@@ -243,17 +254,25 @@ def main() -> None:
                 print(f"Debug dettagliato: {'ON' if session.debug_enabled else 'OFF'}")
 
             elif choice == "14":
-                targets = cleanup_intermediate_targets(session, include_all_tracks=True, include_logs=True)
+                targets = cleanup_intermediate_targets(
+                    session, include_all_tracks=True, include_logs=True
+                )
                 if confirm_cleanup("Pulizia intermedi progetto", targets):
-                    result = cleanup_intermediates(session, include_all_tracks=True, include_logs=True)
-                    print(f"Eliminati: {result.metadata.get('deleted_count', 0) if result.metadata else 0}")
+                    result = cleanup_intermediates(
+                        session, include_all_tracks=True, include_logs=True
+                    )
+                    print(
+                        f"Eliminati: {result.metadata.get('deleted_count', 0) if result.metadata else 0}"
+                    )
                     session = load_session()
 
             elif choice == "15":
                 targets = cleanup_render_frame_targets(session)
                 if confirm_cleanup("Pulizia frame render", targets):
                     result = cleanup_render_frames(session)
-                    print(f"Eliminati: {result.metadata.get('deleted_count', 0) if result.metadata else 0}")
+                    print(
+                        f"Eliminati: {result.metadata.get('deleted_count', 0) if result.metadata else 0}"
+                    )
                     session = load_session()
 
             elif choice == "16":
@@ -283,7 +302,9 @@ def main() -> None:
             elif choice == "22":
                 records = collect_artifacts(session)
                 print(format_artifact_table(records))
-                raw_index = input("\nIndice da aprire, F<indice> per cartella, Invio per tornare: " ).strip()
+                raw_index = input(
+                    "\nIndice da aprire, F<indice> per cartella, Invio per tornare: "
+                ).strip()
                 if raw_index:
                     open_folder = raw_index.lower().startswith("f")
                     number_text = raw_index[1:] if open_folder else raw_index
@@ -292,7 +313,9 @@ def main() -> None:
 
             elif choice == "23":
                 creative = choose_model("Creative model per piano/visione", session.creative_model)
-                technical = choose_model("Technical model per script Python Blender", session.technical_model)
+                technical = choose_model(
+                    "Technical model per script Python Blender", session.technical_model
+                )
                 chat = choose_model("Chat model per direttore AI", session.chat_model)
                 raw_tokens = input(f"Max token script [{session.script_max_tokens}]: ").strip()
                 tokens = int(raw_tokens) if raw_tokens else session.script_max_tokens

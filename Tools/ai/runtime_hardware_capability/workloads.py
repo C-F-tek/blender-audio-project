@@ -58,13 +58,9 @@ def run_openvino_gpu0_tensor_test(
     report = _base_report()
     report["openvino_gpu0_role"] = role
     report["openvino_gpu0_support_lane"] = bool(production_support)
-    report["openvino_gpu0_sustained_workload_requested"] = (
-        iterations > 1 or min_seconds > 0
-    )
+    report["openvino_gpu0_sustained_workload_requested"] = iterations > 1 or min_seconds > 0
     report["openvino_gpu0_sustained_iterations_requested"] = max(1, int(iterations))
-    report["openvino_gpu0_sustained_min_seconds_requested"] = max(
-        0.0, float(min_seconds)
-    )
+    report["openvino_gpu0_sustained_min_seconds_requested"] = max(0.0, float(min_seconds))
     started = time.perf_counter()
     try:
         import numpy as np
@@ -151,9 +147,7 @@ def run_openvino_gpu0_tensor_test(
         if not passed:
             report["errors"].append(f"unexpected GPU.0 tensor output: {values}")
     except Exception as exc:
-        report["errors"].append(
-            f"OpenVINO GPU.0 workload failed: {type(exc).__name__}: {exc}"
-        )
+        report["errors"].append(f"OpenVINO GPU.0 workload failed: {type(exc).__name__}: {exc}")
     finally:
         report["elapsed_seconds"] = round(time.perf_counter() - started, 6)
     return report

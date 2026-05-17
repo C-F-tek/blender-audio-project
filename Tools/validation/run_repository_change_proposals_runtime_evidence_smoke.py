@@ -36,8 +36,12 @@ def seed_repo(repo: Path) -> None:
     (repo / "Tools/validation").mkdir(parents=True)
     (repo / "Tools/ai").mkdir(parents=True)
     (repo / "Tools/validation/README.md").write_text("# Validation\n", encoding="utf-8")
-    (repo / "Tools/ai/build_repository_change_proposals.py").write_text("# placeholder\n", encoding="utf-8")
-    (repo / "Tools/ai/build_patch_specs_from_proposals.py").write_text("# placeholder\n", encoding="utf-8")
+    (repo / "Tools/ai/build_repository_change_proposals.py").write_text(
+        "# placeholder\n", encoding="utf-8"
+    )
+    (repo / "Tools/ai/build_patch_specs_from_proposals.py").write_text(
+        "# placeholder\n", encoding="utf-8"
+    )
     run(["git", "init"], repo)
     run(["git", "config", "user.email", "smoke@example.invalid"], repo)
     run(["git", "config", "user.name", "Smoke"], repo)
@@ -149,7 +153,10 @@ def seed_runtime_reports(repo: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/repository_change_proposals_runtime_evidence_smoke.json")
+    parser.add_argument(
+        "--output",
+        default="output/validation/repository_change_proposals_runtime_evidence_smoke.json",
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -219,7 +226,9 @@ def main() -> int:
         )
         apply_report = json.loads(apply_report_path.read_text(encoding="utf-8"))
 
-    proposal_ids = [item.get("id") for item in proposal_report.get("proposals", []) if isinstance(item, dict)]
+    proposal_ids = [
+        item.get("id") for item in proposal_report.get("proposals", []) if isinstance(item, dict)
+    ]
     if proposals["returncode"] != 0:
         errors.append("repository change proposal builder failed")
     if "P-RUNTIME-PEER-EVIDENCE-FEED" not in proposal_ids:
@@ -231,10 +240,18 @@ def main() -> int:
     if manifest_report.get("concrete_spec_count", 0) < 1:
         errors.append("patch spec manifest did not contain concrete operations")
     if applied["returncode"] != 0:
-        errors.append("generated patch spec apply should succeed with concrete runtime-evidence proposal")
-    runtime_summary = ((proposal_report.get("proposals") or [{}])[0].get("evidence_summary") or {}).get("runtime_peer_evidence") or {}
-    if not runtime_summary.get("latest_apply_report_path", "").endswith("generated_patch_specs_review_pr_apply.json"):
-        errors.append("proposal builder did not discover nested-stamp generated patch-spec apply report")
+        errors.append(
+            "generated patch spec apply should succeed with concrete runtime-evidence proposal"
+        )
+    runtime_summary = (
+        (proposal_report.get("proposals") or [{}])[0].get("evidence_summary") or {}
+    ).get("runtime_peer_evidence") or {}
+    if not runtime_summary.get("latest_apply_report_path", "").endswith(
+        "generated_patch_specs_review_pr_apply.json"
+    ):
+        errors.append(
+            "proposal builder did not discover nested-stamp generated patch-spec apply report"
+        )
     if not runtime_summary.get("heap_exit_product_present"):
         errors.append("proposal builder did not discover heap exchange exit product")
     if not runtime_summary.get("heap_lifecycle_present"):
@@ -246,11 +263,12 @@ def main() -> int:
     metadata_manual_items = [
         item
         for item in apply_report.get("manual_review_items") or []
-        if isinstance(item, dict)
-        and "metadata-only" in str(item.get("reason") or "")
+        if isinstance(item, dict) and "metadata-only" in str(item.get("reason") or "")
     ]
     if metadata_manual_items:
-        errors.append("concrete runtime-evidence specs should not retain metadata-only companion operations")
+        errors.append(
+            "concrete runtime-evidence specs should not retain metadata-only companion operations"
+        )
 
     report: dict[str, Any] = {
         "schema_version": 1,

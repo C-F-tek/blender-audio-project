@@ -21,9 +21,7 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
     return path.resolve()
 
 
-def gpu0_peer_support_output_path(
-    args: argparse.Namespace, repo_root: Path, round_id: int
-) -> Path:
+def gpu0_peer_support_output_path(args: argparse.Namespace, repo_root: Path, round_id: int) -> Path:
     support_dir = resolve_path(repo_root, args.gpu0_peer_support_dir)
     support_dir.mkdir(parents=True, exist_ok=True)
     return support_dir / f"round_{round_id:03d}_gpu0_peer_support.json"

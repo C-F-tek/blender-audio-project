@@ -33,17 +33,11 @@ except ImportError:
         write_text_report,
     )
 
-DEFAULT_OUTPUT = (
-    "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary.json"
-)
-DEFAULT_MARKDOWN = (
-    "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary.md"
-)
+DEFAULT_OUTPUT = "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary.json"
+DEFAULT_MARKDOWN = "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary.md"
 
 
-def read_optional_json(
-    repo_root: Path, value: str
-) -> tuple[dict[str, Any], list[str], str]:
+def read_optional_json(repo_root: Path, value: str) -> tuple[dict[str, Any], list[str], str]:
     if not value:
         return {}, [], ""
     path = resolve_output_path(repo_root, value)
@@ -80,32 +74,23 @@ def provider_evidence_summary(
     gpu_provider_performed = bool(
         gpu_report.get("provider_execution_performed")
         and gpu_round_count > 0
-        and str(gpu_report.get("classification") or "")
-        != "required_provider_artifact_missing"
+        and str(gpu_report.get("classification") or "") != "required_provider_artifact_missing"
         and not bool(gpu_report.get("provider_empty_response"))
     )
     npu_audit_count = safe_int(orchestrator.get("npu_audit_count"))
     npu_success_count = safe_int(orchestrator.get("npu_audit_success_count"))
     gpu0_peer_support_count = safe_int(orchestrator.get("gpu0_peer_support_count"))
-    gpu0_peer_support_success_count = safe_int(
-        orchestrator.get("gpu0_peer_support_success_count")
-    )
-    gpu0_peer_support_overlap_count = safe_int(
-        orchestrator.get("gpu0_peer_support_overlap_count")
-    )
+    gpu0_peer_support_success_count = safe_int(orchestrator.get("gpu0_peer_support_success_count"))
+    gpu0_peer_support_overlap_count = safe_int(orchestrator.get("gpu0_peer_support_overlap_count"))
     npu_micro_support_count = safe_int(orchestrator.get("npu_micro_support_count"))
-    npu_micro_support_success_count = safe_int(
-        orchestrator.get("npu_micro_support_success_count")
-    )
+    npu_micro_support_success_count = safe_int(orchestrator.get("npu_micro_support_success_count"))
     npu_micro_support_provider_success_count = safe_int(
         orchestrator.get("npu_micro_support_provider_success_count")
     )
     npu_micro_support_tool_success_count = safe_int(
         orchestrator.get("npu_micro_support_tool_success_count")
     )
-    npu_micro_support_overlap_count = safe_int(
-        orchestrator.get("npu_micro_support_overlap_count")
-    )
+    npu_micro_support_overlap_count = safe_int(orchestrator.get("npu_micro_support_overlap_count"))
     npu_micro_support_tool_request_count = safe_int(
         orchestrator.get("npu_micro_support_tool_request_count")
     )
@@ -131,14 +116,10 @@ def provider_evidence_summary(
         or npu_micro_support_tool_request_count > 0
     )
     legacy_npu_provider_performed = npu_success_count > 0
-    npu_provider_performed = bool(
-        legacy_npu_provider_performed or npu_micro_provider_performed
-    )
+    npu_provider_performed = bool(legacy_npu_provider_performed or npu_micro_provider_performed)
     degraded_reasons = []
     if isinstance(orchestrator.get("provider_degraded_reasons"), list):
-        degraded_reasons.extend(
-            str(item) for item in orchestrator.get("provider_degraded_reasons")
-        )
+        degraded_reasons.extend(str(item) for item in orchestrator.get("provider_degraded_reasons"))
     if not gpu_provider_performed and (orchestrator or gpu_report):
         degraded_reasons.append(
             "gpu_not_confirmed:"
@@ -149,8 +130,7 @@ def provider_evidence_summary(
         )
     if (
         legacy_npu_requested
-        and orchestrator.get("npu_lane_mode")
-        in {"skipped", "metadata_only", "degraded"}
+        and orchestrator.get("npu_lane_mode") in {"skipped", "metadata_only", "degraded"}
         and npu_success_count == 0
     ):
         degraded_reasons.append(
@@ -164,9 +144,7 @@ def provider_evidence_summary(
             or gpu_report.get("provider_execution_requested")
         ),
         "provider_execution_performed": bool(
-            gpu_provider_performed
-            or gpu0_peer_support_performed
-            or npu_provider_performed
+            gpu_provider_performed or gpu0_peer_support_performed or npu_provider_performed
         ),
         "gpu_provider_execution_performed": gpu_provider_performed,
         "gpu0_peer_support_provider_execution_performed": gpu0_peer_support_performed,
@@ -229,22 +207,16 @@ def peer_exchange_summary(
         "gpu0_peer_tool_request_count": safe_int(response.get("tool_request_count")),
         "gpu0_peer_tool_execution_count": safe_int(broker.get("tool_execution_count")),
         "npu_micro_non_blocking": bool(npu.get("non_blocking")),
-        "npu_micro_provider_execution_performed": bool(
-            npu.get("provider_execution_performed")
-        ),
+        "npu_micro_provider_execution_performed": bool(npu.get("provider_execution_performed")),
         "npu_micro_tool_request_count": safe_int(npu.get("tool_request_count")),
-        "npu_micro_tool_execution_count": safe_int(
-            npu_broker.get("tool_execution_count")
-        ),
+        "npu_micro_tool_execution_count": safe_int(npu_broker.get("tool_execution_count")),
         "classifications": peer_exchange.get("classifications")
         or peer_contract.get("classifications")
         or [],
     }
 
 
-def npu_final_review_summary(
-    provider: dict[str, Any], peer: dict[str, Any]
-) -> dict[str, Any]:
+def npu_final_review_summary(provider: dict[str, Any], peer: dict[str, Any]) -> dict[str, Any]:
     gpu1_review = bool(provider.get("gpu_provider_execution_performed"))
     gpu0_review = bool(
         provider.get("gpu0_peer_support_provider_execution_performed")
@@ -274,8 +246,7 @@ def npu_final_review_summary(
         "npu_support_seen": npu_support_seen,
         "npu_self_check_only": False,
         "npu_final_provider_close_path_required": False,
-        "final_review_on_performant_lane": classification
-        != "npu_final_review_missing_gpu_peer",
+        "final_review_on_performant_lane": classification != "npu_final_review_missing_gpu_peer",
         "reviewers": reviewers,
         "deterministic_validator_acceptance_required": True,
         "product_blocker": not npu_support_seen,
@@ -296,18 +267,14 @@ def runtime_heap_summary(
                 "passed": report.get("passed"),
                 "event_count": safe_int(report.get("event_count")),
                 "heap_event_count": safe_int(heap.get("event_count")),
-                "pending_broker_request_count": safe_int(
-                    heap.get("pending_broker_request_count")
-                ),
+                "pending_broker_request_count": safe_int(heap.get("pending_broker_request_count")),
             }
         )
     return {
         "telemetry_seen": bool(telemetry),
         "snapshot_seen": bool(snapshot),
         "live_signal_count": len(live_signal_rows),
-        "event_count": safe_int(
-            telemetry.get("event_count") or snapshot.get("event_count")
-        ),
+        "event_count": safe_int(telemetry.get("event_count") or snapshot.get("event_count")),
         "parse_error_count": safe_int(
             telemetry.get("parse_error_count") or snapshot.get("parse_error_count")
         ),
@@ -341,9 +308,7 @@ def runtime_heap_summary(
     }
 
 
-def line_count_csv_summary(
-    repo_root: Path, value: str
-) -> tuple[dict[str, Any], list[str]]:
+def line_count_csv_summary(repo_root: Path, value: str) -> tuple[dict[str, Any], list[str]]:
     if not value:
         return {
             "seen": False,
@@ -379,9 +344,7 @@ def line_count_csv_summary(
         lines = safe_int(row.get("Lines") or row.get("lines"))
         if file_value:
             normalized.append({"file": file_value, "lines": lines})
-    normalized.sort(
-        key=lambda item: (-safe_int(item.get("lines")), str(item.get("file")).lower())
-    )
+    normalized.sort(key=lambda item: (-safe_int(item.get("lines")), str(item.get("file")).lower()))
     return {
         "seen": True,
         "path": path_rel,
@@ -424,9 +387,7 @@ def compact_patch_plan(item: dict[str, Any]) -> dict[str, Any]:
         "area": item.get("area"),
         "target_files": compact_paths(item.get("target_files"), limit=6),
         "manual_review_required": item.get("manual_review_required"),
-        "cosmetic_patch_allowed": safe_dict(item.get("guardrails")).get(
-            "cosmetic_patch_allowed"
-        ),
+        "cosmetic_patch_allowed": safe_dict(item.get("guardrails")).get("cosmetic_patch_allowed"),
         "repository_consistency_kind": consistency.get("kind"),
         "repository_consistency_severity": consistency.get("severity"),
     }
@@ -448,25 +409,19 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     recommendations, recommendation_errors, recommendations_path = read_optional_json(
         repo_root, args.recommendations
     )
-    patch_plan, patch_plan_errors, patch_plan_path = read_optional_json(
-        repo_root, args.patch_plan
-    )
+    patch_plan, patch_plan_errors, patch_plan_path = read_optional_json(repo_root, args.patch_plan)
     repository_map, repository_errors, repository_path = read_optional_json(
         repo_root, args.repository_consistency
     )
-    repository_smoke, repository_smoke_errors, repository_smoke_path = (
-        read_optional_json(repo_root, args.repository_consistency_smoke)
+    repository_smoke, repository_smoke_errors, repository_smoke_path = read_optional_json(
+        repo_root, args.repository_consistency_smoke
     )
-    gpu_npu_sync, gpu_npu_errors, gpu_npu_path = read_optional_json(
-        repo_root, args.gpu_npu_sync
-    )
+    gpu_npu_sync, gpu_npu_errors, gpu_npu_path = read_optional_json(repo_root, args.gpu_npu_sync)
     orchestrator, orchestrator_errors, orchestrator_path = read_optional_json(
         repo_root, args.orchestrator
     )
     gpu_report, gpu_errors, gpu_path = read_optional_json(repo_root, args.gpu_report)
-    peer_exchange, peer_errors, peer_path = read_optional_json(
-        repo_root, args.peer_exchange
-    )
+    peer_exchange, peer_errors, peer_path = read_optional_json(repo_root, args.peer_exchange)
     peer_contract, peer_contract_errors, peer_contract_path = read_optional_json(
         repo_root, args.peer_contract
     )
@@ -479,17 +434,13 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     heap_live_reports: list[dict[str, Any]] = []
     heap_live_paths: list[str] = []
     for raw_path in safe_list(args.provider_runtime_heap_live_signal):
-        live_report, live_errors, live_path = read_optional_json(
-            repo_root, str(raw_path)
-        )
+        live_report, live_errors, live_path = read_optional_json(repo_root, str(raw_path))
         warnings.extend(live_errors)
         if live_path:
             heap_live_paths.append(live_path)
         if live_report:
             heap_live_reports.append(live_report)
-    line_count_csv, line_count_csv_warnings = line_count_csv_summary(
-        repo_root, args.line_count_csv
-    )
+    line_count_csv, line_count_csv_warnings = line_count_csv_summary(repo_root, args.line_count_csv)
 
     hard_inputs = {
         "decision_loop": decision_loop,
@@ -515,14 +466,10 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             errors.append(f"required telemetry input unavailable: {name}")
 
     recommendation_items = [
-        item
-        for item in safe_list(recommendations.get("recommendations"))
-        if isinstance(item, dict)
+        item for item in safe_list(recommendations.get("recommendations")) if isinstance(item, dict)
     ]
     patch_plan_items = [
-        item
-        for item in safe_list(patch_plan.get("patch_plans"))
-        if isinstance(item, dict)
+        item for item in safe_list(patch_plan.get("patch_plans")) if isinstance(item, dict)
     ]
     workflow_like = {
         "passed": decision_loop.get("passed"),
@@ -532,9 +479,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "patch_plan_count": decision_loop.get("patch_plan_count")
         or patch_plan.get("patch_plan_count")
         or len(patch_plan_items),
-        "deterministic_synthesizer_used": decision_loop.get(
-            "deterministic_synthesizer_used"
-        ),
+        "deterministic_synthesizer_used": decision_loop.get("deterministic_synthesizer_used"),
         "patch_plan_fallback_used": decision_loop.get("patch_plan_fallback_used")
         or patch_plan.get("fallback_used"),
         "bundle_validation_passed": args.bundle_validation_passed,
@@ -543,9 +488,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
 
     provider_evidence = provider_evidence_summary(orchestrator, gpu_report)
     peer_evidence = peer_exchange_summary(peer_exchange, peer_contract)
-    heap_evidence = runtime_heap_summary(
-        heap_telemetry, heap_snapshot, heap_live_reports
-    )
+    heap_evidence = runtime_heap_summary(heap_telemetry, heap_snapshot, heap_live_reports)
     npu_final_review = npu_final_review_summary(provider_evidence, peer_evidence)
     provider_evidence["npu_final_review"] = npu_final_review
     provider_execution = bool(provider_evidence["provider_execution_performed"])
@@ -595,9 +538,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "recommendations_first20": [
             compact_recommendation(item) for item in recommendation_items[:20]
         ],
-        "patch_plans_first20": [
-            compact_patch_plan(item) for item in patch_plan_items[:20]
-        ],
+        "patch_plans_first20": [compact_patch_plan(item) for item in patch_plan_items[:20]],
         "repository_consistency": {
             "finding_count": repository_map.get("finding_count"),
             "severity_counts": repository_map.get("severity_counts"),
@@ -671,12 +612,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(
         f"- Deterministic synthesizer used: `{workflow.get('deterministic_synthesizer_used')}`"
     )
-    lines.append(
-        f"- Patch plan fallback used: `{workflow.get('patch_plan_fallback_used')}`"
-    )
-    lines.append(
-        f"- Provider execution performed: `{report.get('provider_execution_performed')}`"
-    )
+    lines.append(f"- Patch plan fallback used: `{workflow.get('patch_plan_fallback_used')}`")
+    lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
     provider_evidence = safe_dict(report.get("provider_evidence"))
     lines.append(
         f"- GPU provider execution performed: `{provider_evidence.get('gpu_provider_execution_performed')}`"
@@ -694,9 +631,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(
         f"- Legacy NPU auditor execution performed: `{provider_evidence.get('legacy_npu_provider_execution_performed')}`"
     )
-    lines.append(
-        f"- NPU audit success count: `{provider_evidence.get('npu_audit_success_count')}`"
-    )
+    lines.append(f"- NPU audit success count: `{provider_evidence.get('npu_audit_success_count')}`")
     lines.append(
         f"- NPU orchestrator micro execution performed: `{provider_evidence.get('npu_micro_provider_execution_performed')}`"
     )
@@ -714,30 +649,22 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"- Provider degraded reasons: `{provider_evidence.get('provider_degraded_reasons')}`"
         )
     peer_evidence = safe_dict(safe_dict(report.get("gpu_npu")).get("peer_exchange"))
-    lines.append(
-        f"- AI peer exchange passed: `{peer_evidence.get('peer_exchange_passed')}`"
-    )
+    lines.append(f"- AI peer exchange passed: `{peer_evidence.get('peer_exchange_passed')}`")
     lines.append(
         f"- GPU0 peer provider execution performed: `{peer_evidence.get('gpu0_peer_provider_execution_performed')}`"
     )
     lines.append(
         f"- GPU0 peer broker tool executions: `{peer_evidence.get('gpu0_peer_tool_execution_count')}`"
     )
-    lines.append(
-        f"- NPU micro non-blocking: `{peer_evidence.get('npu_micro_non_blocking')}`"
-    )
+    lines.append(f"- NPU micro non-blocking: `{peer_evidence.get('npu_micro_non_blocking')}`")
     lines.append(
         f"- NPU micro provider execution performed: `{peer_evidence.get('npu_micro_provider_execution_performed')}`"
     )
     lines.append(
         f"- NPU micro broker tool executions: `{peer_evidence.get('npu_micro_tool_execution_count')}`"
     )
-    npu_final_review = safe_dict(
-        safe_dict(report.get("gpu_npu")).get("npu_final_review")
-    )
-    lines.append(
-        f"- NPU final review classification: `{npu_final_review.get('classification')}`"
-    )
+    npu_final_review = safe_dict(safe_dict(report.get("gpu_npu")).get("npu_final_review"))
+    lines.append(f"- NPU final review classification: `{npu_final_review.get('classification')}`")
     lines.append(
         f"- NPU final review on performant lane: `{npu_final_review.get('final_review_on_performant_lane')}`"
     )
@@ -746,9 +673,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     )
     heap_evidence = safe_dict(report.get("provider_runtime_heap"))
     lines.append(f"- Runtime heap events: `{heap_evidence.get('event_count')}`")
-    lines.append(
-        f"- Runtime heap live signals: `{heap_evidence.get('live_signal_count')}`"
-    )
+    lines.append(f"- Runtime heap live signals: `{heap_evidence.get('live_signal_count')}`")
     lines.append(
         f"- Runtime heap direct execution violations: `{heap_evidence.get('direct_execution_violation_count')}`"
     )
@@ -778,9 +703,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     lines.append("## Repository consistency performance")
     lines.append("")
-    performance = safe_dict(
-        safe_dict(report.get("repository_consistency")).get("performance")
-    )
+    performance = safe_dict(safe_dict(report.get("repository_consistency")).get("performance"))
     for key in (
         "total_build_report_seconds",
         "markdown_scan_seconds",
@@ -841,9 +764,7 @@ def main() -> int:
     parser.add_argument("--peer-contract", default="")
     parser.add_argument("--provider-runtime-heap-telemetry", default="")
     parser.add_argument("--provider-runtime-heap-snapshot", default="")
-    parser.add_argument(
-        "--provider-runtime-heap-live-signal", action="append", default=[]
-    )
+    parser.add_argument("--provider-runtime-heap-live-signal", action="append", default=[])
     parser.add_argument("--line-count-csv", default="")
     parser.add_argument("--evidence-to-commit", action="append", default=[])
     parser.add_argument("--bundle-validation-passed", action="store_true")

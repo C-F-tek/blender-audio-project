@@ -5,6 +5,7 @@ This validator is intentionally lightweight. It verifies that the machine-readab
 status marker and the primary Markdown documents agree on the current pipeline
 state and point to the same core files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -94,7 +95,9 @@ def check_status(repo_root: Path) -> dict[str, Any]:
     if status.get("status") != EXPECTED_STATUS:
         errors.append(f"status mismatch: expected {EXPECTED_STATUS}, got {status.get('status')}")
     if status.get("entrypoint") != EXPECTED_ENTRYPOINT:
-        errors.append(f"entrypoint mismatch: expected {EXPECTED_ENTRYPOINT}, got {status.get('entrypoint')}")
+        errors.append(
+            f"entrypoint mismatch: expected {EXPECTED_ENTRYPOINT}, got {status.get('entrypoint')}"
+        )
     if status.get("schema_version") != 6:
         errors.append(f"schema_version mismatch: expected 6, got {status.get('schema_version')}")
 

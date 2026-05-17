@@ -24,14 +24,10 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--memory-db", default="indexAI/agent_memory/agent_memory.sqlite"
-    )
+    parser.add_argument("--memory-db", default="indexAI/agent_memory/agent_memory.sqlite")
     parser.add_argument("--memory-jsonl", action="append", default=[])
     parser.add_argument("--memory-db-limit", type=int, default=1000)
-    parser.add_argument(
-        "--output", default="output/ai_memory/agent_memory_policy_report.json"
-    )
+    parser.add_argument("--output", default="output/ai_memory/agent_memory_policy_report.json")
     parser.add_argument(
         "--markdown-output", default="output/ai_memory/agent_memory_policy_report.md"
     )
@@ -56,9 +52,7 @@ def main() -> int:
 
     output = resolve_path(repo_root, args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output = resolve_path(repo_root, args.markdown_output)
     write_memory_policy_markdown(report, markdown_output)
 

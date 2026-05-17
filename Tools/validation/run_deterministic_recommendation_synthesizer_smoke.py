@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test deterministic recommendation synthesis from evidence."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,14 +12,20 @@ from types import SimpleNamespace
 from typing import Any
 
 try:
-    from Tools.ai.build_deterministic_recommendations import build_recommendation_report, render_markdown
+    from Tools.ai.build_deterministic_recommendations import (
+        build_recommendation_report,
+        render_markdown,
+    )
     from Tools.ai.gpu_planner_json_contract import validate_recommendation_object
     from Tools.validation.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.build_deterministic_recommendations import build_recommendation_report, render_markdown  # type: ignore
+    from Tools.ai.build_deterministic_recommendations import (  # type: ignore
+        build_recommendation_report,
+        render_markdown,
+    )
     from Tools.ai.gpu_planner_json_contract import validate_recommendation_object  # type: ignore
     from Tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
 
@@ -113,7 +120,9 @@ def build_fixture_reports(repo_root: Path, work_dir: Path) -> tuple[Path, Path, 
 
 
 def run_smoke(repo_root: Path) -> dict[str, Any]:
-    work_dir = repo_root / "output" / "validation" / "deterministic_recommendation_synthesizer_smoke"
+    work_dir = (
+        repo_root / "output" / "validation" / "deterministic_recommendation_synthesizer_smoke"
+    )
     evidence_path, orchestrator_path, gpu_path = build_fixture_reports(repo_root, work_dir)
     args = SimpleNamespace(
         repo_root=str(repo_root),
@@ -144,7 +153,9 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
         "passed": expected_passed,
-        "errors": schema_errors if schema_errors else ([] if expected_passed else ["deterministic synthesizer smoke assertions failed"]),
+        "errors": schema_errors
+        if schema_errors
+        else ([] if expected_passed else ["deterministic synthesizer smoke assertions failed"]),
         "warnings": synthesized.get("warnings", []),
         "provider_execution_performed": False,
         "patch_application_performed": False,
@@ -153,7 +164,9 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "sqlite_write_performed": False,
         "manual_review_required": True,
         "recommendation_count": synthesized.get("recommendation_count"),
-        "deterministic_synthesizer_used": synthesized.get("decision", {}).get("deterministic_synthesizer_used"),
+        "deterministic_synthesizer_used": synthesized.get("decision", {}).get(
+            "deterministic_synthesizer_used"
+        ),
         "next_best_action": synthesized.get("next_best_action"),
         "synthesized_report": synthesized,
     }
@@ -163,7 +176,9 @@ def render_smoke_markdown(report: dict[str, Any]) -> str:
     lines = ["# Deterministic Recommendation Synthesizer Smoke", ""]
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Recommendation count: `{report.get('recommendation_count')}`")
-    lines.append(f"- Deterministic synthesizer used: `{report.get('deterministic_synthesizer_used')}`")
+    lines.append(
+        f"- Deterministic synthesizer used: `{report.get('deterministic_synthesizer_used')}`"
+    )
     lines.append(f"- Next best action: `{report.get('next_best_action')}`")
     lines.append(f"- Patch application performed: `{report.get('patch_application_performed')}`")
     lines.append("")
@@ -176,8 +191,13 @@ def render_smoke_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/deterministic_recommendation_synthesizer_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/deterministic_recommendation_synthesizer_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/deterministic_recommendation_synthesizer_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/deterministic_recommendation_synthesizer_smoke.md",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()

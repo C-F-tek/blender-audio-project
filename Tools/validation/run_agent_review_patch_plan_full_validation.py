@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Run the standard full validation loop for agent review patch plans.
 
 The loop validates the patch-plan builder output, runs the smallest relevant
@@ -8,6 +8,7 @@ repository validators, emits a compact Git-trackable evidence bundle under
 It is intentionally provider-free and patch-free. It does not run Blender,
 Ollama, OpenVINO, GPU/NPU providers, patch runners or GitHub PR actions.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -35,7 +36,9 @@ DEFAULT_PYTHON_SYNTAX = "output/validation/python_syntax.json"
 DEFAULT_REPORT_CONTRACT = "output/validation/validation_report_contract.json"
 DEFAULT_BUNDLE_BASENAME = "agent_review_doc_patch_plan_evidence"
 DEFAULT_EVIDENCE_DIR = "docs/LOCAL_VALIDATION_EVIDENCE"
-DEFAULT_BUNDLE_VALIDATION = "output/validation/agent_review_doc_patch_plan_evidence_bundle_validation.json"
+DEFAULT_BUNDLE_VALIDATION = (
+    "output/validation/agent_review_doc_patch_plan_evidence_bundle_validation.json"
+)
 DEFAULT_OUTPUT = "output/validation/agent_review_patch_plan_full_validation.json"
 DEFAULT_MARKDOWN = "output/validation/agent_review_patch_plan_full_validation.md"
 
@@ -191,13 +194,17 @@ def validate_expected_outputs(
         },
     }
 
-    patch_plan, patch_error = load_json(patch_plan_path) if patch_plan_path.exists() else (None, "missing")
+    patch_plan, patch_error = (
+        load_json(patch_plan_path) if patch_plan_path.exists() else (None, "missing")
+    )
     if patch_error or patch_plan is None:
         errors.append(f"patch plan unreadable: {patch_error}")
     else:
         count = patch_plan.get("patch_plan_count")
         if not isinstance(count, int) or count < min_patch_plans:
-            errors.append(f"patch_plan_count below minimum: expected >= {min_patch_plans}, got {count!r}")
+            errors.append(
+                f"patch_plan_count below minimum: expected >= {min_patch_plans}, got {count!r}"
+            )
         fallback = value_at(patch_plan, "decision.fallback_used")
         if expect_fallback and fallback is not True:
             errors.append(f"expected patch plan fallback_used=true, got {fallback!r}")
@@ -263,7 +270,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def build_commands(args: argparse.Namespace, repo_root: Path) -> tuple[list[tuple[str, list[str], int]], Path, Path]:
+def build_commands(
+    args: argparse.Namespace, repo_root: Path
+) -> tuple[list[tuple[str, list[str], int]], Path, Path]:
     bundle_json, bundle_md = bundle_paths(repo_root, args.evidence_output_dir, args.bundle_basename)
     commands: list[tuple[str, list[str], int]] = [
         (
@@ -393,7 +402,9 @@ def run_full_validation(args: argparse.Namespace) -> dict[str, Any]:
         result["name"] = name
         steps.append(result)
         if not result["ok"] and name != "git_status_short":
-            errors.append(f"{name} returned {result['returncode']}: {result.get('error') or result.get('stderr_tail') or result.get('stdout_tail')}")
+            errors.append(
+                f"{name} returned {result['returncode']}: {result.get('error') or result.get('stderr_tail') or result.get('stdout_tail')}"
+            )
 
     artifact_errors, artifact_warnings, artifacts = validate_expected_outputs(
         repo_root=repo_root,
@@ -484,4 +495,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

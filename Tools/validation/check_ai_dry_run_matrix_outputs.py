@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Validate consistency between the dry-run matrix report and per-case reports."""
+
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
 from typing import Any
-
 
 REQUIRED_MATRIX_FIELDS = {
     "schema_version",
@@ -88,18 +88,24 @@ def validate_outputs(repo_root: Path, matrix_report: Path) -> dict[str, Any]:
 
     declared_case_count = matrix.get("case_count")
     if declared_case_count != len(results):
-        errors.append(f"case_count mismatch: declared={declared_case_count!r} actual={len(results)}")
+        errors.append(
+            f"case_count mismatch: declared={declared_case_count!r} actual={len(results)}"
+        )
 
     planned_case_count = matrix.get("planned_case_count")
     if isinstance(planned_case_count, int) and planned_case_count < len(results):
-        errors.append(f"planned_case_count {planned_case_count} is below actual result count {len(results)}")
+        errors.append(
+            f"planned_case_count {planned_case_count} is below actual result count {len(results)}"
+        )
 
     names = [str(item.get("name")) for item in results if isinstance(item, dict)]
     duplicates = sorted({name for name in names if names.count(name) > 1})
     if duplicates:
         errors.append(f"duplicate result names: {', '.join(duplicates)}")
 
-    matrix_output_dir = _as_path(repo_root, str(matrix.get("output_dir"))) if matrix.get("output_dir") else None
+    matrix_output_dir = (
+        _as_path(repo_root, str(matrix.get("output_dir"))) if matrix.get("output_dir") else None
+    )
     if matrix_output_dir and not matrix_output_dir.exists():
         warnings.append(f"matrix output_dir does not exist: {matrix_output_dir}")
 
@@ -153,7 +159,11 @@ def validate_outputs(repo_root: Path, matrix_report: Path) -> dict[str, Any]:
 
             steps = case_report.get("steps")
             if isinstance(steps, list):
-                planned_only_count = sum(1 for step in steps if isinstance(step, dict) and step.get("planned_only") is True)
+                planned_only_count = sum(
+                    1
+                    for step in steps
+                    if isinstance(step, dict) and step.get("planned_only") is True
+                )
                 if planned_only_count != len(steps):
                     case_errors.append("not all case report steps are planned_only")
             else:
@@ -175,9 +185,15 @@ def validate_outputs(repo_root: Path, matrix_report: Path) -> dict[str, Any]:
         )
 
     if matrix.get("passed") is True:
-        failed_cases = [case for case in case_summaries if case["errors"] or case["returncode"] != 0 or case["report_passed"] is not True]
+        failed_cases = [
+            case
+            for case in case_summaries
+            if case["errors"] or case["returncode"] != 0 or case["report_passed"] is not True
+        ]
         if failed_cases:
-            errors.append("matrix passed=true but at least one case has errors, non-zero returncode or report_passed!=true")
+            errors.append(
+                "matrix passed=true but at least one case has errors, non-zero returncode or report_passed!=true"
+            )
 
     return {
         "schema_version": 1,

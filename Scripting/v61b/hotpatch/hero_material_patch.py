@@ -4,7 +4,6 @@ import bpy
 
 from .common import cfg_value, clear_animation, keyframe_if_possible
 
-
 HERO_MATERIAL_EMISSION_MIN = cfg_value("HERO_MATERIAL_EMISSION_MIN", 0.18)
 HERO_MATERIAL_EMISSION_MAX = cfg_value("HERO_MATERIAL_EMISSION_MAX", 0.92)
 HERO_MATERIAL_SELF_LIGHT_MIN = cfg_value("HERO_MATERIAL_SELF_LIGHT_MIN", 0.018)
@@ -129,7 +128,7 @@ def ensure_surface_light_layer(material, principled):
         "HeroMatSelfLightEdgeMultiply",
         (125, 445),
     )
-    edge_mul.operation = 'MULTIPLY'
+    edge_mul.operation = "MULTIPLY"
 
     emission = get_or_create_node(
         nodes,
@@ -147,10 +146,16 @@ def ensure_surface_light_layer(material, principled):
     )
 
     link_node_sockets(links, self_light.outputs[0], edge_mul.inputs[0], replace_existing=True)
-    link_node_sockets(links, layer.outputs.get("Fresnel"), edge_ramp.inputs["Fac"], replace_existing=True)
+    link_node_sockets(
+        links, layer.outputs.get("Fresnel"), edge_ramp.inputs["Fac"], replace_existing=True
+    )
     link_node_sockets(links, edge_ramp.outputs["Color"], edge_mul.inputs[1], replace_existing=True)
-    link_node_sockets(links, edge_mul.outputs[0], emission.inputs["Strength"], replace_existing=True)
-    link_node_sockets(links, emission.outputs["Emission"], add_shader.inputs[1], replace_existing=True)
+    link_node_sockets(
+        links, edge_mul.outputs[0], emission.inputs["Strength"], replace_existing=True
+    )
+    link_node_sockets(
+        links, emission.outputs["Emission"], add_shader.inputs[1], replace_existing=True
+    )
 
     surface_input = output.inputs["Surface"]
     if surface_input.is_linked and surface_input.links[0].from_node == add_shader:
@@ -174,8 +179,8 @@ def hero_meshes():
     if root is None:
         return []
 
-    meshes = [obj for obj in root.children_recursive if obj.type == 'MESH']
-    if root.type == 'MESH':
+    meshes = [obj for obj in root.children_recursive if obj.type == "MESH"]
+    if root.type == "MESH":
         meshes.append(root)
     return meshes
 
@@ -279,7 +284,9 @@ def ensure_hero_controls(material):
     link_node_sockets(links, texcoord.outputs.get("Generated"), mapping.inputs.get("Vector"))
     link_node_sockets(links, mapping.outputs.get("Vector"), noise.inputs.get("Vector"))
     link_node_sockets(links, noise.outputs.get("Fac"), bump.inputs.get("Height"))
-    link_node_sockets(links, bump_value.outputs[0], bump.inputs.get("Strength"), replace_existing=True)
+    link_node_sockets(
+        links, bump_value.outputs[0], bump.inputs.get("Strength"), replace_existing=True
+    )
     link_node_sockets(links, bump.outputs.get("Normal"), normal_input)
 
     self_light_socket = ensure_surface_light_layer(material, principled)
@@ -341,14 +348,16 @@ def patch_hero_materials(frames):
 
             emission_socket = control.get("emission_socket")
             if emission_socket is not None:
-                emission_socket.default_value = HERO_MATERIAL_EMISSION_MIN + min(1.0, material_drive + shimmer) * (
-                    HERO_MATERIAL_EMISSION_MAX - HERO_MATERIAL_EMISSION_MIN
-                )
+                emission_socket.default_value = HERO_MATERIAL_EMISSION_MIN + min(
+                    1.0, material_drive + shimmer
+                ) * (HERO_MATERIAL_EMISSION_MAX - HERO_MATERIAL_EMISSION_MIN)
                 keyframe_if_possible(emission_socket, "default_value", frame)
 
             self_light_socket = control.get("self_light_socket")
             if self_light_socket is not None:
-                edge_drive = min(1.0, material_drive * 0.74 + surface_drive * 0.18 + pulse * 0.16 + shimmer)
+                edge_drive = min(
+                    1.0, material_drive * 0.74 + surface_drive * 0.18 + pulse * 0.16 + shimmer
+                )
                 self_light_socket.default_value = HERO_MATERIAL_SELF_LIGHT_MIN + edge_drive * (
                     HERO_MATERIAL_SELF_LIGHT_MAX - HERO_MATERIAL_SELF_LIGHT_MIN
                 )

@@ -5,6 +5,7 @@ Outside Blender this validator verifies import safety and reports the Blender
 runtime portion as skipped. Inside Blender it creates a disposable material,
 frame range and silent audio strip without rendering or touching package code.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,6 @@ import sys
 import wave
 from pathlib import Path
 from typing import Any
-
 
 REQUIRED_FUNCTIONS = (
     "require_bpy",
@@ -92,7 +92,9 @@ def run_smoke(repo_root: Path, require_blender: bool, output_dir: Path) -> dict[
     removed_before = compat.clear_sequence_editor(scene)
     audio_path = output_dir / "blender_shared_compat_smoke.wav"
     write_silent_wav(audio_path)
-    strip = compat.create_sound_strip(audio_path, scene=scene, name="Agent Compat Smoke", channel=1, frame_start=1)
+    strip = compat.create_sound_strip(
+        audio_path, scene=scene, name="Agent Compat Smoke", channel=1, frame_start=1
+    )
     checks["strip_created"] = strip is not None
     checks["strip_name"] = getattr(strip, "name", None)
     removed_after = compat.clear_sequence_editor(scene)
@@ -126,7 +128,7 @@ def main() -> int:
     parser.add_argument("--output", help="Optional JSON report path.")
     parser.add_argument("--output-dir", default="output/validation")
     parser.add_argument("--require-blender", action="store_true")
-    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else None
+    argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else None
     args = parser.parse_args(argv)
 
     repo_root = Path(args.repo_root).resolve()

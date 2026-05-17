@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
-import json
-
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / "output"
@@ -21,7 +20,9 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 def compact_asset_inventory(asset_inventory: dict[str, Any]) -> dict[str, Any]:
-    assets = asset_inventory.get("assets") if isinstance(asset_inventory.get("assets"), list) else []
+    assets = (
+        asset_inventory.get("assets") if isinstance(asset_inventory.get("assets"), list) else []
+    )
     primary = [
         {
             "role": asset.get("role"),
@@ -31,12 +32,15 @@ def compact_asset_inventory(asset_inventory: dict[str, Any]) -> dict[str, Any]:
         }
         for asset in assets
         if isinstance(asset, dict)
-        and asset.get("role") in {"primary_ball_asset", "animated_effect_asset", "blend_scene_reference"}
+        and asset.get("role")
+        in {"primary_ball_asset", "animated_effect_asset", "blend_scene_reference"}
     ][:24]
     return {
         "asset_count": asset_inventory.get("asset_count", len(assets)),
         "primary_assets": primary,
-        "notes": asset_inventory.get("notes", [])[:12] if isinstance(asset_inventory.get("notes"), list) else [],
+        "notes": asset_inventory.get("notes", [])[:12]
+        if isinstance(asset_inventory.get("notes"), list)
+        else [],
     }
 
 
@@ -46,7 +50,9 @@ def slugify(value: str) -> str:
 
 
 def compact_project_awareness(track_stem: str) -> dict[str, Any]:
-    awareness = read_json(INDEX_AI_DIR / "patch_library" / f"{slugify(track_stem)}_project_awareness.json")
+    awareness = read_json(
+        INDEX_AI_DIR / "patch_library" / f"{slugify(track_stem)}_project_awareness.json"
+    )
     if not awareness:
         return {}
     verified_answers = awareness.get("verified_answers", [])
@@ -86,7 +92,11 @@ def build_ai_memory_context(
 
     scene_brief = read_json(scene_brief_path)
     asset_inventory = read_json(asset_inventory_path)
-    memory = scene_brief.get("conversation_memory") if isinstance(scene_brief.get("conversation_memory"), dict) else {}
+    memory = (
+        scene_brief.get("conversation_memory")
+        if isinstance(scene_brief.get("conversation_memory"), dict)
+        else {}
+    )
 
     return {
         "format": "SPAZIOTEMPO_AI_MEMORY_CONTEXT_V1",

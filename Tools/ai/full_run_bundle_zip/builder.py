@@ -118,9 +118,7 @@ def build_full_run_bundle(
         if status_error:
             warnings.append(f"git status unavailable: {status_error}")
         git_status_path.write_text(git_status, encoding="utf-8")
-        member_paths.append(
-            (git_status_path, repo_relative(git_status_path, repo_root))
-        )
+        member_paths.append((git_status_path, repo_relative(git_status_path, repo_root)))
 
     deduped_members: dict[str, Path] = {}
     for path, rel in member_paths:
@@ -163,9 +161,7 @@ def build_full_run_bundle(
         "passed": not errors,
     }
 
-    report["bundle_completeness_report_json"] = repo_relative(
-        completeness_json, repo_root
-    )
+    report["bundle_completeness_report_json"] = repo_relative(completeness_json, repo_root)
     report["bundle_completeness_report_md"] = repo_relative(completeness_md, repo_root)
     write_json(completeness_json, report)
     completeness_md.write_text(render_markdown_report(report), encoding="utf-8")

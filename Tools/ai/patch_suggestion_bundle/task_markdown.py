@@ -37,9 +37,7 @@ def extract_patch_suggestion_blocks(markdown: str) -> list[dict[str, Any]]:
                         payload.setdefault("_task_fence_line", fence_line)
                         blocks.append(payload)
                     elif isinstance(payload, list):
-                        blocks.append(
-                            {"_task_fence_line": fence_line, "suggestions": payload}
-                        )
+                        blocks.append({"_task_fence_line": fence_line, "suggestions": payload})
                 except json.JSONDecodeError as exc:
                     blocks.append(
                         {
@@ -78,9 +76,7 @@ def suggestion_items_from_blocks(blocks: list[dict[str, Any]]) -> list[dict[str,
         raw_items = block.get("suggestions")
         if isinstance(raw_items, list):
             suggestions.extend(item for item in raw_items if isinstance(item, dict))
-        elif any(
-            key in block for key in ("operation", "target_file", "path", "target")
-        ):
+        elif any(key in block for key in ("operation", "target_file", "path", "target")):
             suggestions.append(
                 {key: value for key, value in block.items() if not key.startswith("_")}
             )
@@ -107,9 +103,7 @@ def build_task_patch_suggestion_report(
     suggestions = suggestion_items_from_blocks(blocks)
     for block in blocks:
         if block.get("_task_fence_error"):
-            errors.append(
-                f"line {block.get('_task_fence_line')}: {block.get('_task_fence_error')}"
-            )
+            errors.append(f"line {block.get('_task_fence_line')}: {block.get('_task_fence_error')}")
     if not blocks:
         warnings.append("no patch_suggestion_json fenced block found in task Markdown")
     operations, manual_review = discover_operations({"suggestions": suggestions})

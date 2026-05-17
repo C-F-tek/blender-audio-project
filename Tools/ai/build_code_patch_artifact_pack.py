@@ -65,9 +65,7 @@ def validate_count_matches(
 ) -> None:
     """Append an error when a reported count does not match the list length."""
     if data.get(count_field) != len(items):
-        errors.append(
-            f"{label} {count_field} must match len({items_label_for_count(count_field)})"
-        )
+        errors.append(f"{label} {count_field} must match len({items_label_for_count(count_field)})")
 
 
 def items_label_for_count(count_field: str) -> str:
@@ -88,9 +86,7 @@ def summarize_code_plan(plan: dict[str, Any]) -> dict[str, Any]:
         "target_files": compact_list(plan.get("target_files"), text_limit=250),
         "rationale": compact_text(plan.get("rationale")),
         "edit_strategy": compact_text(plan.get("edit_strategy")),
-        "validation_commands": compact_list(
-            plan.get("validation_commands"), text_limit=500
-        ),
+        "validation_commands": compact_list(plan.get("validation_commands"), text_limit=500),
         "stop_conditions": compact_list(plan.get("stop_conditions"), text_limit=500),
         "manual_review_required": plan.get("manual_review_required"),
         "source_evidence": {
@@ -109,14 +105,10 @@ def summarize_docs_followup(item: dict[str, Any]) -> dict[str, Any]:
         "risk": item.get("risk"),
         "status": item.get("status"),
         "target_files": compact_list(item.get("target_files"), text_limit=250),
-        "missing_candidate_docs": compact_list(
-            item.get("missing_candidate_docs"), text_limit=250
-        ),
+        "missing_candidate_docs": compact_list(item.get("missing_candidate_docs"), text_limit=250),
         "rationale": compact_text(item.get("rationale")),
         "edit_strategy": compact_text(item.get("edit_strategy")),
-        "validation_commands": compact_list(
-            item.get("validation_commands"), text_limit=500
-        ),
+        "validation_commands": compact_list(item.get("validation_commands"), text_limit=500),
         "stop_conditions": compact_list(item.get("stop_conditions"), text_limit=500),
         "manual_review_required": item.get("manual_review_required"),
     }
@@ -129,14 +121,10 @@ def summarize_code_plan_report(
     if code_plan.get("kind") != "agent_review_code_patch_plan":
         errors.append("code patch plan kind must be agent_review_code_patch_plan")
     errors.extend(report_guardrail_errors(code_plan, "code patch plan"))
-    raw_plans = list_field_or_error(
-        code_plan, "code_patch_plans", "code patch plan", errors
-    )
+    raw_plans = list_field_or_error(code_plan, "code_patch_plans", "code patch plan", errors)
     if not raw_plans:
         return []
-    validate_count_matches(
-        code_plan, "patch_plan_count", raw_plans, "code patch plan", errors
-    )
+    validate_count_matches(code_plan, "patch_plan_count", raw_plans, "code patch plan", errors)
     return [summarize_code_plan(plan) for plan in raw_plans if isinstance(plan, dict)]
 
 
@@ -155,11 +143,7 @@ def summarize_docs_followup_report(
     validate_count_matches(
         docs_followup, "docs_followup_count", raw_suggestions, "docs follow-up", errors
     )
-    return [
-        summarize_docs_followup(item)
-        for item in raw_suggestions
-        if isinstance(item, dict)
-    ]
+    return [summarize_docs_followup(item) for item in raw_suggestions if isinstance(item, dict)]
 
 
 def warn_unlinked_docs_followups(
@@ -172,9 +156,7 @@ def warn_unlinked_docs_followups(
         return []
     code_ids = {str(item.get("id")) for item in code_items if isinstance(item, dict)}
     docs_source_ids = {
-        str(item.get("source_code_patch_plan_id"))
-        for item in docs_items
-        if isinstance(item, dict)
+        str(item.get("source_code_patch_plan_id")) for item in docs_items if isinstance(item, dict)
     }
     missing_docs = sorted(code_ids - docs_source_ids)
     if not missing_docs:
@@ -182,9 +164,7 @@ def warn_unlinked_docs_followups(
     return ["code plans without docs follow-up suggestions: " + ", ".join(missing_docs)]
 
 
-def build_pack(
-    repo_root: Path, code_plan_path: Path, docs_followup_path: Path
-) -> dict[str, Any]:
+def build_pack(repo_root: Path, code_plan_path: Path, docs_followup_path: Path) -> dict[str, Any]:
     """Build the compact artifact pack report."""
     errors: list[str] = []
     warnings: list[str] = []
@@ -248,24 +228,14 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Apply mode: `{report['apply_mode']}`")
     lines.append(f"- Manual review required: `{report['manual_review_required']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
-    lines.append(
-        f"- Code patch plan count: `{report['summary']['code_patch_plan_count']}`"
-    )
-    lines.append(
-        f"- Docs follow-up count: `{report['summary']['docs_followup_count']}`"
-    )
+    lines.append(f"- Code patch plan count: `{report['summary']['code_patch_plan_count']}`")
+    lines.append(f"- Docs follow-up count: `{report['summary']['docs_followup_count']}`")
     lines.append("")
     lines.extend(
-        render_item_section(
-            "Code patch plans", report.get("code_patch_plans", []), "target_files"
-        )
+        render_item_section("Code patch plans", report.get("code_patch_plans", []), "target_files")
     )
     lines.extend(
         render_item_section(
@@ -288,9 +258,7 @@ def render_item_section(title: str, items: Any, target_key: str) -> list[str]:
     for item in items:
         lines.append(f"### `{item.get('id')}`")
         if item.get("source_code_patch_plan_id"):
-            lines.append(
-                f"- Source code plan: `{item.get('source_code_patch_plan_id')}`"
-            )
+            lines.append(f"- Source code plan: `{item.get('source_code_patch_plan_id')}`")
         if item.get("area"):
             lines.append(f"- Area: `{item.get('area')}`")
         if item.get("risk"):

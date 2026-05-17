@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-from datetime import datetime
 import json
 import os
 import shutil
@@ -10,14 +8,24 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime
+from pathlib import Path
 
 try:
-    from Tools.ai.model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence
+    from Tools.ai.model_json import (
+        ModelJsonParseError,
+        parse_model_json_object,
+        strip_markdown_json_fence,
+    )
 except ImportError:  # Allows direct script-style imports from Tools/npu during diagnostics.
     repo_root = Path(__file__).resolve().parents[2]
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.ai.model_json import ModelJsonParseError, parse_model_json_object, strip_markdown_json_fence  # type: ignore
+    from Tools.ai.model_json import (  # type: ignore
+        ModelJsonParseError,
+        parse_model_json_object,
+        strip_markdown_json_fence,
+    )
 
 
 def normalize_base_url(value: str | None) -> str:
@@ -27,7 +35,9 @@ def normalize_base_url(value: str | None) -> str:
     return base_url.rstrip("/")
 
 
-DEFAULT_BASE_URL = normalize_base_url(os.environ.get("OLLAMA_API_BASE") or os.environ.get("OLLAMA_HOST"))
+DEFAULT_BASE_URL = normalize_base_url(
+    os.environ.get("OLLAMA_API_BASE") or os.environ.get("OLLAMA_HOST")
+)
 DEFAULT_MODELS = ("qwen2.5-coder:14b", "autumnzsd/qwen2.5-coder-tools:latest")
 DEFAULT_OLLAMA_THREAD_FRACTION = 0.85
 
@@ -86,7 +96,9 @@ def ollama_home() -> Path:
 
 
 def manifest_root() -> Path:
-    models_dir = Path(os.environ.get("OLLAMA_MODELS", str(Path.home() / ".ollama" / "models"))).expanduser()
+    models_dir = Path(
+        os.environ.get("OLLAMA_MODELS", str(Path.home() / ".ollama" / "models"))
+    ).expanduser()
     return models_dir / "manifests"
 
 
@@ -115,7 +127,9 @@ def find_ollama_exe() -> Path | None:
     if program_files:
         candidates.append(Path(program_files) / "Ollama" / "ollama.exe")
     if user_profile:
-        candidates.append(Path(user_profile) / "AppData" / "Local" / "Programs" / "Ollama" / "ollama.exe")
+        candidates.append(
+            Path(user_profile) / "AppData" / "Local" / "Programs" / "Ollama" / "ollama.exe"
+        )
 
     for candidate in candidates:
         try:
@@ -128,7 +142,9 @@ def find_ollama_exe() -> Path | None:
     return None
 
 
-def _json_request(base_url: str, path: str, payload: dict | None = None, timeout: float = 10.0) -> dict:
+def _json_request(
+    base_url: str, path: str, payload: dict | None = None, timeout: float = 10.0
+) -> dict:
     url = base_url.rstrip("/") + path
     data = None
     headers = {}
@@ -193,7 +209,9 @@ def list_models_from_disk() -> list[str]:
     return sorted(set(names))
 
 
-def start_server(ollama_exe: Path, base_url: str = DEFAULT_BASE_URL, startup_timeout: float = 20.0) -> subprocess.Popen:
+def start_server(
+    ollama_exe: Path, base_url: str = DEFAULT_BASE_URL, startup_timeout: float = 20.0
+) -> subprocess.Popen:
     creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     process = subprocess.Popen(
         [str(ollama_exe), "serve"],
@@ -260,7 +278,9 @@ class OllamaModelManager:
         self.keep_alive = keep_alive
         self.shutdown_server = shutdown_server
         self.startup_timeout = startup_timeout
-        self.num_thread = num_thread if num_thread and num_thread > 0 else default_ollama_num_thread()
+        self.num_thread = (
+            num_thread if num_thread and num_thread > 0 else default_ollama_num_thread()
+        )
         self.session: OllamaSession | None = None
         self.current_model: str | None = None
 
@@ -306,7 +326,7 @@ class OllamaModelManager:
             self.session = None
         self.current_model = None
 
-    def __enter__(self) -> "OllamaModelManager":
+    def __enter__(self) -> OllamaModelManager:
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
@@ -331,17 +351,22 @@ class OllamaSession:
         self.shutdown_server = shutdown_server
         self.unload_model_on_close = unload_model
         self.startup_timeout = startup_timeout
-        self.num_thread = num_thread if num_thread and num_thread > 0 else default_ollama_num_thread()
+        self.num_thread = (
+            num_thread if num_thread and num_thread > 0 else default_ollama_num_thread()
+        )
         self.ollama_exe = find_ollama_exe()
         self.process: subprocess.Popen | None = None
         self.started_server = False
         self.model: str | None = None
 
-    def start(self) -> "OllamaSession":
+    def start(self) -> OllamaSession:
         start = time.perf_counter()
         if not is_server_ready(self.base_url):
             if not self.ollama_exe:
-                append_ollama_runtime_event("server_not_ready", {"base_url": self.base_url, "preferred_model": self.preferred_model})
+                append_ollama_runtime_event(
+                    "server_not_ready",
+                    {"base_url": self.base_url, "preferred_model": self.preferred_model},
+                )
                 raise FileNotFoundError(
                     "Ollama server is not reachable and ollama.exe was not found. "
                     "Set OLLAMA_EXE or restart the shell after installing Ollama."
@@ -353,7 +378,17 @@ class OllamaSession:
         if not available:
             available = list_models_from_disk()
         self.model = choose_model(self.preferred_model, available)
-        append_ollama_runtime_event("session_start", {"preferred_model": self.preferred_model, "selected_model": self.model, "available_model_count": len(available), "started_server": self.started_server, "num_thread": self.num_thread, "elapsed_sec": round(time.perf_counter() - start, 4)})
+        append_ollama_runtime_event(
+            "session_start",
+            {
+                "preferred_model": self.preferred_model,
+                "selected_model": self.model,
+                "available_model_count": len(available),
+                "started_server": self.started_server,
+                "num_thread": self.num_thread,
+                "elapsed_sec": round(time.perf_counter() - start, 4),
+            },
+        )
         return self
 
     def generate(
@@ -385,10 +420,41 @@ class OllamaSession:
         try:
             data = _json_request(self.base_url, "/api/generate", payload=payload, timeout=600.0)
         except Exception as exc:
-            append_ollama_runtime_event("generate_error", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "num_thread": effective_num_thread, "response_format": response_format, "elapsed_sec": round(time.perf_counter() - start, 4), "error_type": type(exc).__name__, "error": str(exc)})
+            append_ollama_runtime_event(
+                "generate_error",
+                {
+                    "model": self.model,
+                    "prompt_chars": len(prompt),
+                    "max_new_tokens": max_new_tokens,
+                    "temperature": temperature,
+                    "num_thread": effective_num_thread,
+                    "response_format": response_format,
+                    "elapsed_sec": round(time.perf_counter() - start, 4),
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                },
+            )
             raise
         response = str(data.get("response", "")).strip()
-        append_ollama_runtime_event("generate_result", {"model": self.model, "prompt_chars": len(prompt), "max_new_tokens": max_new_tokens, "temperature": temperature, "num_thread": effective_num_thread, "response_format": response_format, "elapsed_sec": round(time.perf_counter() - start, 4), "response_chars": len(response), "empty_response": not bool(response), "done": data.get("done"), "done_reason": data.get("done_reason"), "prompt_eval_count": data.get("prompt_eval_count"), "eval_count": data.get("eval_count"), "response_preview": response[:300]})
+        append_ollama_runtime_event(
+            "generate_result",
+            {
+                "model": self.model,
+                "prompt_chars": len(prompt),
+                "max_new_tokens": max_new_tokens,
+                "temperature": temperature,
+                "num_thread": effective_num_thread,
+                "response_format": response_format,
+                "elapsed_sec": round(time.perf_counter() - start, 4),
+                "response_chars": len(response),
+                "empty_response": not bool(response),
+                "done": data.get("done"),
+                "done_reason": data.get("done_reason"),
+                "prompt_eval_count": data.get("prompt_eval_count"),
+                "eval_count": data.get("eval_count"),
+                "response_preview": response[:300],
+            },
+        )
         return response
 
     def unload_model(self) -> None:
@@ -429,9 +495,17 @@ class OllamaSession:
                 self.process.wait(timeout=8.0)
             except subprocess.TimeoutExpired:
                 self.process.kill()
-        append_ollama_runtime_event("session_close", {"model": self.model, "started_server": self.started_server, "unload_model": self.unload_model_on_close, "num_thread": self.num_thread})
+        append_ollama_runtime_event(
+            "session_close",
+            {
+                "model": self.model,
+                "started_server": self.started_server,
+                "unload_model": self.unload_model_on_close,
+                "num_thread": self.num_thread,
+            },
+        )
 
-    def __enter__(self) -> "OllamaSession":
+    def __enter__(self) -> OllamaSession:
         return self.start()
 
     def __exit__(self, exc_type, exc, tb) -> None:

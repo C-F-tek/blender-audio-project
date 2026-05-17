@@ -55,20 +55,12 @@ CANONICAL_COMPONENTS = {
 
 
 def now_iso() -> str:
-    return (
-        datetime.now(timezone.utc)
-        .isoformat(timespec="milliseconds")
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -113,9 +105,7 @@ def read_json(path: Path) -> tuple[dict[str, Any], str]:
         return {}, "missing"
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 - evidence summary should capture parse failures.
+    except Exception as exc:  # noqa: BLE001 - evidence summary should capture parse failures.
         return {}, f"{type(exc).__name__}: {exc}"
     if not isinstance(data, dict):
         return {}, "json root is not an object"
@@ -125,19 +115,11 @@ def read_json(path: Path) -> tuple[dict[str, Any], str]:
 def component_from_report(path: str, data: dict[str, Any]) -> str:
     lower_path = path.lower().replace("\\", "/")
     kind = str(data.get("kind") or "").lower()
-    if (
-        "runtime_heap" in kind
-        or "ai_runtime_heap" in lower_path
-        or "heap" in lower_path
-    ):
+    if "runtime_heap" in kind or "ai_runtime_heap" in lower_path or "heap" in lower_path:
         return "heap"
     if "orchestrator" in kind or "orchestrator" in lower_path:
         return "orchestrator"
-    if (
-        "parallel_gpu" in lower_path
-        or "gpu_deep" in lower_path
-        or "gpu_planner" in lower_path
-    ):
+    if "parallel_gpu" in lower_path or "gpu_deep" in lower_path or "gpu_planner" in lower_path:
         return "gpu_planner"
     if "gpu0" in lower_path or "openvino_gpu0" in kind:
         return "gpu0_peer"
@@ -147,11 +129,7 @@ def component_from_report(path: str, data: dict[str, Any]) -> str:
         return "broker"
     if "decision" in kind or "decision_loop" in lower_path:
         return "decision_loop"
-    if (
-        "patch_plan" in kind
-        or "patch_plan" in lower_path
-        or "patch_specs" in lower_path
-    ):
+    if "patch_plan" in kind or "patch_plan" in lower_path or "patch_specs" in lower_path:
         return "patch_plan"
     if (
         "recommend" in kind
@@ -174,12 +152,8 @@ def add_node(
     label: str,
     **extra: Any,
 ) -> None:
-    item = nodes.setdefault(
-        "node:" + node_id, {"id": node_id, "type": node_type, "label": label}
-    )
-    item.update(
-        {key: value for key, value in extra.items() if value not in (None, "", [])}
-    )
+    item = nodes.setdefault("node:" + node_id, {"id": node_id, "type": node_type, "label": label})
+    item.update({key: value for key, value in extra.items() if value not in (None, "", [])})
 
 
 def add_edge(
@@ -191,9 +165,7 @@ def add_edge(
     **extra: Any,
 ) -> None:
     key = (source, target, kind)
-    item = edges.setdefault(
-        key, {"from": source, "to": target, "kind": kind, "count": 0}
-    )
+    item = edges.setdefault(key, {"from": source, "to": target, "kind": kind, "count": 0})
     item["count"] = safe_int(item.get("count")) + max(1, count)
     for extra_key, value in extra.items():
         if value not in (None, "", []):
@@ -219,15 +191,11 @@ def append_event(
     }
     if duration_ms is not None:
         event["duration_ms"] = duration_ms
-    event.update(
-        {key: value for key, value in extra.items() if value not in (None, "", [])}
-    )
+    event.update({key: value for key, value in extra.items() if value not in (None, "", [])})
     events.append(event)
 
 
-def compact_report_summary(
-    path: str, data: dict[str, Any], parse_error: str
-) -> dict[str, Any]:
+def compact_report_summary(path: str, data: dict[str, Any], parse_error: str) -> dict[str, Any]:
     return {
         "path": path,
         "exists": parse_error != "missing",
@@ -278,9 +246,7 @@ def process_report(
         counters["failed_report_count"] += 1
 
     round_count = safe_int(
-        data.get("round_count")
-        or data.get("gpu_round_count")
-        or len(as_list(data.get("rounds")))
+        data.get("round_count") or data.get("gpu_round_count") or len(as_list(data.get("rounds")))
     )
     if round_count:
         counters["round_count"] = max(counters["round_count"], round_count)
@@ -347,9 +313,7 @@ def process_report(
 
     if data.get("provider_execution_performed") is True:
         counters["provider_call_count"] += 1
-        append_event(
-            events, component=component, action="provider_call", status="ok", span=rel
-        )
+        append_event(events, component=component, action="provider_call", status="ok", span=rel)
 
     heap_event_count = safe_int(data.get("event_count"))
     by_lane = as_dict(data.get("by_lane"))
@@ -383,9 +347,7 @@ def process_report(
         span = f"round_{round_id:03d}" if round_id >= 0 else rel
         json_ok = round_item.get("json_ok")
         status = "ok" if json_ok is True or json_ok is None else "error"
-        append_event(
-            events, component=component, action="round", status=status, span=span
-        )
+        append_event(events, component=component, action="round", status=status, span=span)
 
     return compact_report_summary(rel, data, parse_error)
 
@@ -514,9 +476,7 @@ def build_flow(args: argparse.Namespace) -> dict[str, Any]:
         "heap_event_count": counters["heap_event_count"],
         "heap_read_count": counters["heap_read_count"],
         "heap_write_count": counters["heap_write_count"],
-        "decision_count": sum(
-            1 for event in events if event.get("action") == "decision"
-        ),
+        "decision_count": sum(1 for event in events if event.get("action") == "decision"),
         "recommendation_count": counters["recommendation_count"],
         "patch_plan_count": counters["patch_plan_count"],
     }

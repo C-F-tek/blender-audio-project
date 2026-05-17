@@ -1,10 +1,11 @@
 """Image-sequence discovery helpers for Blender/FFmpeg workflows."""
+
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 try:
     from .path_utils import ensure_existing_dir, resolve_path
@@ -43,14 +44,16 @@ def extract_frame_number(path: str | Path, prefix: str = "") -> int | None:
     item = Path(path)
     stem = item.stem
     if prefix and stem.startswith(prefix):
-        stem = stem[len(prefix):]
+        stem = stem[len(prefix) :]
     match = re.search(r"(\d+)$", stem)
     return int(match.group(1)) if match else None
 
 
 def sort_frame_paths(paths: Iterable[Path], prefix: str = "") -> list[FrameFile]:
     """Sort frame paths by detected frame number, then filename."""
-    frames = [FrameFile(path=path, frame_number=extract_frame_number(path, prefix)) for path in paths]
+    frames = [
+        FrameFile(path=path, frame_number=extract_frame_number(path, prefix)) for path in paths
+    ]
     return sorted(
         frames,
         key=lambda item: (
@@ -128,8 +131,12 @@ def scan_image_sequence(
     first_frame = contiguous[0].frame_number if contiguous else None
     frame_count = len(contiguous)
     has_gaps = len(contiguous) != len(files)
-    pattern = build_ffmpeg_pattern(contiguous[0].path) if contiguous and first_frame is not None else None
-    detected_ext = contiguous[0].path.suffix.lower() if contiguous else (extension if extension else "")
+    pattern = (
+        build_ffmpeg_pattern(contiguous[0].path) if contiguous and first_frame is not None else None
+    )
+    detected_ext = (
+        contiguous[0].path.suffix.lower() if contiguous else (extension if extension else "")
+    )
 
     return ImageSequenceInfo(
         directory=resolve_path(root),

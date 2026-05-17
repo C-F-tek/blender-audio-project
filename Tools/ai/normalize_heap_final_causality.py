@@ -32,9 +32,7 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def normalize_bool(value: Any) -> bool:
@@ -105,9 +103,7 @@ def artifact_count(composer: dict[str, Any]) -> int:
         if isinstance(composer.get("startup_manifest"), dict)
         else {}
     )
-    artifacts = (
-        startup.get("artifacts") if isinstance(startup.get("artifacts"), dict) else {}
-    )
+    artifacts = startup.get("artifacts") if isinstance(startup.get("artifacts"), dict) else {}
     reconciliation = (
         composer.get("startup_reconciliation")
         if isinstance(composer.get("startup_reconciliation"), dict)
@@ -124,9 +120,7 @@ def artifact_count(composer: dict[str, Any]) -> int:
 
 
 def provider_execution_performed(composer: dict[str, Any]) -> bool:
-    metrics = (
-        composer.get("metrics") if isinstance(composer.get("metrics"), dict) else {}
-    )
+    metrics = composer.get("metrics") if isinstance(composer.get("metrics"), dict) else {}
     output_contract = (
         composer.get("real_run_output_contract")
         if isinstance(composer.get("real_run_output_contract"), dict)
@@ -186,27 +180,18 @@ def compute_causal_chain(composer: dict[str, Any]) -> dict[str, Any]:
         if isinstance(composer.get("startup_manifest"), dict)
         else {}
     )
-    startup_contract = (
-        startup.get("contract") if isinstance(startup.get("contract"), dict) else {}
-    )
+    startup_contract = startup.get("contract") if isinstance(startup.get("contract"), dict) else {}
     reconciliation = (
         composer.get("startup_reconciliation")
         if isinstance(composer.get("startup_reconciliation"), dict)
         else {}
     )
     provider_count = int(
-        composer.get("provider_report_count")
-        or list_len(composer.get("provider_reports"))
+        composer.get("provider_report_count") or list_len(composer.get("provider_reports"))
     )
-    proposal_count = int(
-        composer.get("proposal_count") or list_len(composer.get("proposals"))
-    )
-    gpu0_count = int(
-        composer.get("gpu0_review_count") or list_len(composer.get("gpu0_reviews"))
-    )
-    npu_count = int(
-        composer.get("npu_audit_count") or list_len(composer.get("npu_audits"))
-    )
+    proposal_count = int(composer.get("proposal_count") or list_len(composer.get("proposals")))
+    gpu0_count = int(composer.get("gpu0_review_count") or list_len(composer.get("gpu0_reviews")))
+    npu_count = int(composer.get("npu_audit_count") or list_len(composer.get("npu_audits")))
     refs = artifact_count(composer)
 
     if not (
@@ -247,9 +232,7 @@ def compute_product_acceptance(composer: dict[str, Any]) -> dict[str, Any]:
     accepted_count = int(composer.get("accepted_proposal_count") or 0)
     rejected_count = int(composer.get("rejected_proposal_count") or 0)
     blockers = (
-        composer.get("blocking_issues")
-        if isinstance(composer.get("blocking_issues"), list)
-        else []
+        composer.get("blocking_issues") if isinstance(composer.get("blocking_issues"), list) else []
     )
 
     if product_status != "ready":
@@ -357,9 +340,7 @@ def main() -> int:
         else composer_path.with_name("heap_final_causality_normalized.json")
     )
     markdown_output = (
-        Path(args.markdown_output).resolve()
-        if args.markdown_output
-        else output.with_suffix(".md")
+        Path(args.markdown_output).resolve() if args.markdown_output else output.with_suffix(".md")
     )
     report = build_report(composer, composer_path)
     write_json(output, report)

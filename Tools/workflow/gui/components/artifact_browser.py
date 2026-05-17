@@ -12,7 +12,6 @@ from typing import Any
 
 from components.st_theme import text_widget_colors
 
-
 TEXT_EXTENSIONS = {".json", ".md", ".txt", ".py", ".log", ".jsonl", ".csv"}
 IMAGE_EXTENSIONS = {".png", ".gif", ".ppm", ".pgm"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi", ".webm"}
@@ -70,7 +69,9 @@ def open_external(path: Path) -> None:
         subprocess.Popen(["xdg-open", str(path)])
 
 
-def collect_session_artifacts(session: Any, extra_roots: list[Path] | None = None) -> list[ArtifactItem]:
+def collect_session_artifacts(
+    session: Any, extra_roots: list[Path] | None = None
+) -> list[ArtifactItem]:
     items: list[ArtifactItem] = []
     seen: set[str] = set()
 
@@ -140,8 +141,12 @@ class ArtifactBrowserWindow(tk.Toplevel):
         toolbar.pack(fill="x", pady=(0, 6))
         ttk.Button(toolbar, text="Refresh", command=self.refresh).pack(side="left")
         ttk.Button(toolbar, text="Open", command=self.open_selected).pack(side="left", padx=(6, 0))
-        ttk.Button(toolbar, text="Open folder", command=self.open_selected_folder).pack(side="left", padx=(6, 0))
-        ttk.Button(toolbar, text="Sort reset", command=self.reset_sort).pack(side="left", padx=(6, 0))
+        ttk.Button(toolbar, text="Open folder", command=self.open_selected_folder).pack(
+            side="left", padx=(6, 0)
+        )
+        ttk.Button(toolbar, text="Sort reset", command=self.reset_sort).pack(
+            side="left", padx=(6, 0)
+        )
         ttk.Button(toolbar, text="Hide", command=self.hide).pack(side="right")
 
         ttk.Label(toolbar, text="Filter").pack(side="left", padx=(14, 4))
@@ -193,7 +198,9 @@ class ArtifactBrowserWindow(tk.Toplevel):
         self.preview = tk.Text(right, wrap="none", **text_widget_colors(self))
         self.preview.pack(fill="both", expand=True)
 
-        self.preview_scroll = ttk.Scrollbar(self.preview, orient="vertical", command=self.preview.yview)
+        self.preview_scroll = ttk.Scrollbar(
+            self.preview, orient="vertical", command=self.preview.yview
+        )
         self.preview.configure(yscrollcommand=self.preview_scroll.set)
         self.preview_scroll.pack(side="right", fill="y")
 
@@ -287,7 +294,9 @@ class ArtifactBrowserWindow(tk.Toplevel):
                     str(item.path),
                 ),
             )
-        self.write_preview(f"{len(self.filtered_items)} artefatti visualizzati su {len(self.items)} totali. Clicca sulle intestazioni per ordinare.")
+        self.write_preview(
+            f"{len(self.filtered_items)} artefatti visualizzati su {len(self.items)} totali. Clicca sulle intestazioni per ordinare."
+        )
 
     def selected_item(self) -> ArtifactItem | None:
         selected = self.tree.selection()
@@ -311,9 +320,15 @@ class ArtifactBrowserWindow(tk.Toplevel):
         elif item.category == "image":
             self.preview_image_file(item.path)
         elif item.category == "video":
-            self.write_preview("Video disponibile. Usa Open per aprirlo nel player di sistema.\n\n" f"File: {item.path}\nSize: {human_bytes(item.size)}")
+            self.write_preview(
+                "Video disponibile. Usa Open per aprirlo nel player di sistema.\n\n"
+                f"File: {item.path}\nSize: {human_bytes(item.size)}"
+            )
         elif item.category == "audio":
-            self.write_preview("Audio disponibile. Usa Open per aprirlo nel player/editor di sistema.\n\n" f"File: {item.path}\nSize: {human_bytes(item.size)}")
+            self.write_preview(
+                "Audio disponibile. Usa Open per aprirlo nel player/editor di sistema.\n\n"
+                f"File: {item.path}\nSize: {human_bytes(item.size)}"
+            )
         elif item.category == "folder":
             self.write_preview_folder(item.path)
         else:
@@ -347,7 +362,10 @@ class ArtifactBrowserWindow(tk.Toplevel):
             self.preview.configure(state="normal")
             self.preview.delete("1.0", "end")
             self.preview.image_create("1.0", image=image)
-            self.preview.insert("end", f"\n\n{path}\n{image.width()}x{image.height()} px | {human_bytes(path.stat().st_size)}")
+            self.preview.insert(
+                "end",
+                f"\n\n{path}\n{image.width()}x{image.height()} px | {human_bytes(path.stat().st_size)}",
+            )
         except Exception as exc:
             self.write_preview(
                 "Preview immagine non disponibile in Tk per questo file. Usa Open per aprirlo esternamente.\n\n"
@@ -356,7 +374,9 @@ class ArtifactBrowserWindow(tk.Toplevel):
 
     def write_preview_folder(self, path: Path, max_items: int = 120) -> None:
         try:
-            entries = sorted(path.iterdir(), key=lambda item: (not item.is_dir(), item.name.lower()))
+            entries = sorted(
+                path.iterdir(), key=lambda item: (not item.is_dir(), item.name.lower())
+            )
             lines = [f"Cartella: {path}", f"Elementi: {len(entries)}", ""]
             for entry in entries[:max_items]:
                 kind = "DIR " if entry.is_dir() else "FILE"

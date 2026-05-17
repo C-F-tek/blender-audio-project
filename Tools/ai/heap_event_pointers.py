@@ -90,14 +90,10 @@ def load_event_pointers(
     return list(reversed(pointers))
 
 
-def source_pointer_bundle(
-    repo_root: Path | None, snapshot: dict[str, Any]
-) -> dict[str, Any]:
+def source_pointer_bundle(repo_root: Path | None, snapshot: dict[str, Any]) -> dict[str, Any]:
     return {
         "event_log": snapshot.get("event_log"),
         "snapshot_kind": snapshot.get("kind"),
         "tool_pointer_protocol": POINTER_PROTOCOL,
-        "evidence_pointers": load_event_pointers(repo_root, snapshot)
-        if repo_root
-        else [],
+        "evidence_pointers": load_event_pointers(repo_root, snapshot) if repo_root else [],
     }

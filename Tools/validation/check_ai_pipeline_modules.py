@@ -5,6 +5,7 @@ This validator imports the modular AI artifact pipeline, builds representative
 steps and reports, and verifies that the thin entrypoint can be imported.
 It does not execute NPU, GPU, Blender, FFmpeg or long-running artifact jobs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -28,9 +29,13 @@ def import_pipeline_modules(repo_root: Path) -> dict[str, Any]:
     from Tools.ai.pipeline.models import PipelineLane, PipelineStep
     from Tools.ai.pipeline.orchestrator import run_parallel_steps, run_serial_steps
     from Tools.ai.pipeline.preflight import preflight
-    from Tools.ai.pipeline.remediation import remediation_plan_from_requests, remedial_steps
+    from Tools.ai.pipeline.remediation import remedial_steps, remediation_plan_from_requests
     from Tools.ai.pipeline.schema_report import build_report, empty_failed_report
-    from Tools.ai.pipeline.steps import build_parallel_steps, build_serial_steps, build_step_commands
+    from Tools.ai.pipeline.steps import (
+        build_parallel_steps,
+        build_serial_steps,
+        build_step_commands,
+    )
     from Tools.ai.run_parallel_artifact_pipeline import main as entrypoint_main
     from Tools.validation.ai_pipeline_report_contracts import validate_ai_pipeline_report_payload
 
@@ -117,7 +122,9 @@ def check_agent_state_packet_contract(report: dict[str, Any], *, enabled: bool) 
             errors.append(f"report.agent_state_packet.{field} is missing")
 
     if packet.get("enabled") is not enabled:
-        errors.append(f"report.agent_state_packet.enabled expected {enabled!r}, got {packet.get('enabled')!r}")
+        errors.append(
+            f"report.agent_state_packet.enabled expected {enabled!r}, got {packet.get('enabled')!r}"
+        )
 
     if enabled:
         if packet.get("exists") is not True:
@@ -144,7 +151,13 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
     parser = modules["build_parser"]()
     parsed = parser.parse_args(["--repo-root", str(repo_root), "--dry-run"])
     parsed_with_packet = parser.parse_args(
-        ["--repo-root", str(repo_root), "--dry-run", "--agent-state-packet", "output/ai_pipeline_smoke/agent_state_packet_smoke.json"]
+        [
+            "--repo-root",
+            str(repo_root),
+            "--dry-run",
+            "--agent-state-packet",
+            "output/ai_pipeline_smoke/agent_state_packet_smoke.json",
+        ]
     )
 
     step = modules["pipeline_step"](
@@ -188,7 +201,9 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         {"enabled": False, "reason": "smoke", "passes": []},
         smoke_schedule,
     )
-    failed_report = modules["empty_failed_report"](repo_root, out, True, {"passed": False, "errors": ["smoke"], "warnings": []})
+    failed_report = modules["empty_failed_report"](
+        repo_root, out, True, {"passed": False, "errors": ["smoke"], "warnings": []}
+    )
     planned = modules["planned_outputs"](repo_root, out, args)
 
     smoke_packet = write_smoke_agent_state_packet(out)
@@ -205,8 +220,12 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         smoke_schedule,
     )
     report_contract = modules["validate_ai_pipeline_report_payload"](report, require_dry_run=True)
-    packet_report_contract = modules["validate_ai_pipeline_report_payload"](packet_report, require_dry_run=True)
-    failed_report_contract = modules["validate_ai_pipeline_report_payload"](failed_report, require_dry_run=True)
+    packet_report_contract = modules["validate_ai_pipeline_report_payload"](
+        packet_report, require_dry_run=True
+    )
+    failed_report_contract = modules["validate_ai_pipeline_report_payload"](
+        failed_report, require_dry_run=True
+    )
 
     checks = {
         "parser_type": type(parser).__name__,
@@ -252,9 +271,17 @@ def check_modules(repo_root: Path) -> dict[str, Any]:
         errors.append("preflight failed for smoke agent_state_packet")
     errors.extend(check_agent_state_packet_contract(report, enabled=False))
     errors.extend(check_agent_state_packet_contract(packet_report, enabled=True))
-    errors.extend(f"schema-v6 smoke report contract failed: {error}" for error in report_contract["errors"])
-    errors.extend(f"schema-v6 packet report contract failed: {error}" for error in packet_report_contract["errors"])
-    errors.extend(f"schema-v6 failed report contract failed: {error}" for error in failed_report_contract["errors"])
+    errors.extend(
+        f"schema-v6 smoke report contract failed: {error}" for error in report_contract["errors"]
+    )
+    errors.extend(
+        f"schema-v6 packet report contract failed: {error}"
+        for error in packet_report_contract["errors"]
+    )
+    errors.extend(
+        f"schema-v6 failed report contract failed: {error}"
+        for error in failed_report_contract["errors"]
+    )
     if not checks["entrypoint_imported"]:
         errors.append("artifact pipeline entrypoint was not importable")
 

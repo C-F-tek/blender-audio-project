@@ -15,14 +15,22 @@ TARGETS = [
     "Tools/ai/build_runtime_tool_capability_manifest.py",
 ]
 
+
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/full_toolbox_deterministic_chunks_telemetry_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/full_toolbox_deterministic_chunks_telemetry_smoke.md")
+    parser.add_argument(
+        "--output",
+        default="output/validation/full_toolbox_deterministic_chunks_telemetry_smoke.json",
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/full_toolbox_deterministic_chunks_telemetry_smoke.md",
+    )
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     errors: list[str] = []
@@ -36,7 +44,9 @@ def main() -> int:
     if '"--no-ollama"' not in workflow:
         errors.append("workflow does not pass --no-ollama to build_semantic_evidence_chunks.py")
     if '$EvidenceChunkBase = "full_toolbox_${Stamp}_cloud_semantic"' in workflow:
-        errors.append("workflow still contains non-deterministic cloud_semantic basename assignment")
+        errors.append(
+            "workflow still contains non-deterministic cloud_semantic basename assignment"
+        )
     if "is_generated_evidence_chunk_path" not in repo_map:
         errors.append("repository consistency map lacks generated evidence chunk exclusion helper")
     if "generated_evidence_chunk_dirs_excluded" not in repo_map:
@@ -63,7 +73,9 @@ def main() -> int:
         try:
             py_compile.compile(str(target), doraise=True)
         except py_compile.PyCompileError as exc:
-            errors.append(f"py_compile failed for {target.relative_to(repo_root).as_posix()}: {exc.msg}")
+            errors.append(
+                f"py_compile failed for {target.relative_to(repo_root).as_posix()}: {exc.msg}"
+            )
     report = {
         "schema_version": 1,
         "kind": "full_toolbox_deterministic_chunks_telemetry_smoke",
@@ -93,11 +105,33 @@ def main() -> int:
     output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     md = (repo_root / args.markdown_output).resolve()
     md.parent.mkdir(parents=True, exist_ok=True)
-    md_lines = ["# Full Toolbox Deterministic Chunks / Telemetry Smoke", "", f"- Passed: `{report['passed']}`", "- Provider execution performed: `False`", "- Patch application performed: `False`", "- SQLite write performed: `False`", "", "## Errors", ""]
+    md_lines = [
+        "# Full Toolbox Deterministic Chunks / Telemetry Smoke",
+        "",
+        f"- Passed: `{report['passed']}`",
+        "- Provider execution performed: `False`",
+        "- Patch application performed: `False`",
+        "- SQLite write performed: `False`",
+        "",
+        "## Errors",
+        "",
+    ]
     md_lines.extend([f"- {error}" for error in errors] or ["- none"])
     md.write_text("\n".join(md_lines) + "\n", encoding="utf-8")
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown_output": str(md), "errors": errors}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "passed": report["passed"],
+                "output": str(output),
+                "markdown_output": str(md),
+                "errors": errors,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -56,9 +56,7 @@ def build_bundle(
     """Build and write the JSON/Markdown evidence bundle."""
     resolved_reports = [resolve_repo_path(repo_root, raw) for raw in report_paths]
     reports = [summarize_report(path, repo_root) for path in resolved_reports]
-    artifact_manifest = [
-        summarize_artifact(path, repo_root) for path in resolved_reports
-    ]
+    artifact_manifest = [summarize_artifact(path, repo_root) for path in resolved_reports]
     selected_paths = discover_selected_chunks_evidence(repo_root, selected_chunks_paths)
     selected_chunks_evidence = [
         summarize_selected_chunks_evidence(path, repo_root) for path in selected_paths
@@ -81,9 +79,7 @@ def build_bundle(
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": str(repo_root),
         "source_reports": [item["path"] for item in reports],
-        "source_selected_chunks_evidence": [
-            item["path"] for item in selected_chunks_evidence
-        ],
+        "source_selected_chunks_evidence": [item["path"] for item in selected_chunks_evidence],
         "source_included_artifacts": [item["path"] for item in included_artifacts],
         "reports": reports,
         "selected_chunks_evidence": selected_chunks_evidence,
@@ -105,9 +101,7 @@ def build_bundle(
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / f"{basename}.json"
     md_path = output_dir / f"{basename}.md"
-    json_path.write_text(
-        json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    json_path.write_text(json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     md_path.write_text(render_markdown(bundle), encoding="utf-8")
     return bundle, f"{json_path}\n{md_path}"
 

@@ -44,9 +44,7 @@ def write_text_preserved(loaded: LoadedText, text_lf: str) -> None:
     loaded.path.write_bytes(payload)
 
 
-def backup_file(
-    repo_root: Path, target: Path, *, namespace: str = "patchkit_backups"
-) -> Path:
+def backup_file(repo_root: Path, target: Path, *, namespace: str = "patchkit_backups") -> Path:
     backup_dir = repo_root / "output" / "validation" / namespace
     backup_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")

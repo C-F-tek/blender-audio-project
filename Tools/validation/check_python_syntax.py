@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate Python syntax without importing project modules."""
+
 from __future__ import annotations
 
 import argparse
@@ -10,7 +11,11 @@ from typing import Any
 try:
     from report_utils import failed_result_errors, resolve_output_path, write_json_report
 except ImportError:  # Allows package-style imports during external checks.
-    from Tools.validation.report_utils import failed_result_errors, resolve_output_path, write_json_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        failed_result_errors,
+        resolve_output_path,
+        write_json_report,
+    )
 
 
 DEFAULT_EXCLUDES = {

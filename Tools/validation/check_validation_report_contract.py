@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate common contracts for generated validation reports."""
+
 from __future__ import annotations
 
 import argparse
@@ -112,7 +113,9 @@ def validate_report_file(path: Path, repo_root: Path, require_recommended: bool)
 
     expected_kind = EXPECTED_REPORT_KINDS.get(path.name)
     if expected_kind and data.get("kind") and data.get("kind") != expected_kind:
-        warnings.append(f"kind differs from expected mapping: expected={expected_kind!r} actual={data.get('kind')!r}")
+        warnings.append(
+            f"kind differs from expected mapping: expected={expected_kind!r} actual={data.get('kind')!r}"
+        )
 
     if data.get("passed") is False and not data.get("errors"):
         warnings.append("passed=false but root errors is empty or missing")
@@ -135,10 +138,7 @@ def validate_reports(
     report_files: list[Path] | None = None,
 ) -> dict[str, Any]:
     if report_files:
-        files = [
-            path if path.is_absolute() else repo_root / path
-            for path in report_files
-        ]
+        files = [path if path.is_absolute() else repo_root / path for path in report_files]
         ignored_files: list[Path] = []
     else:
         files, ignored_files = collect_report_files(report_dir)
@@ -152,7 +152,9 @@ def validate_reports(
             warnings.append(f"{item['path']}: {warning}")
 
     if not files:
-        errors.append(f"no validation report JSON files found in {relative_or_absolute(report_dir, repo_root)}")
+        errors.append(
+            f"no validation report JSON files found in {relative_or_absolute(report_dir, repo_root)}"
+        )
 
     return {
         "schema_version": 1,
@@ -177,7 +179,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--report-dir", default=DEFAULT_REPORT_DIR)
-    parser.add_argument("--report-file", action="append", default=[], help="Validate only these report JSON files instead of scanning report-dir.")
+    parser.add_argument(
+        "--report-file",
+        action="append",
+        default=[],
+        help="Validate only these report JSON files instead of scanning report-dir.",
+    )
     parser.add_argument("--output", help="Optional JSON report path.")
     parser.add_argument(
         "--require-recommended",
@@ -191,7 +198,9 @@ def main() -> int:
     if not report_dir.is_absolute():
         report_dir = repo_root / report_dir
     report_files = [Path(item) for item in args.report_file]
-    report = validate_reports(repo_root, report_dir.resolve(), args.require_recommended, report_files)
+    report = validate_reports(
+        repo_root, report_dir.resolve(), args.require_recommended, report_files
+    )
     output = resolve_output_path(repo_root, args.output) if args.output else None
     print(write_json_report(report, output), end="")
     return 0 if report["passed"] else 2

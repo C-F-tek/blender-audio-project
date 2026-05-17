@@ -42,7 +42,9 @@ def normalize_repo_path(repo_root: Path, raw: str) -> tuple[str, str]:
     if not candidate.is_absolute():
         candidate = repo_root / candidate
     try:
-        rel = candidate.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        rel = (
+            candidate.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
+        )
     except ValueError:
         return text, "path escapes repository root"
     lower = rel.lower()
@@ -69,7 +71,9 @@ def split_values(values: list[str]) -> list[str]:
 def run_command(command: list[str], cwd: Path, timeout: int, tail_chars: int) -> dict[str, Any]:
     started = time.monotonic()
     try:
-        completed = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False, timeout=timeout)
+        completed = subprocess.run(
+            command, cwd=cwd, text=True, capture_output=True, check=False, timeout=timeout
+        )
         return {
             "command": command,
             "returncode": completed.returncode,
@@ -150,7 +154,10 @@ def import_probe(repo_root: Path, rel: str) -> dict[str, Any]:
 def help_probe(repo_root: Path, rel: str, timeout: int, tail_chars: int) -> dict[str, Any]:
     if not rel.endswith(".py"):
         return {"executed": False, "ok": True, "reason": "not Python"}
-    return {"executed": True, **run_command([sys.executable, rel, "--help"], repo_root, timeout, tail_chars)}
+    return {
+        "executed": True,
+        **run_command([sys.executable, rel, "--help"], repo_root, timeout, tail_chars),
+    }
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -190,7 +197,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     for rel in targets:
         ast_result = ast_probe(repo_root, rel)
         import_result = import_probe(repo_root, rel) if args.dynamic_import else {}
-        help_result = help_probe(repo_root, rel, args.timeout_seconds, args.tail_chars) if args.help_probe else {}
+        help_result = (
+            help_probe(repo_root, rel, args.timeout_seconds, args.tail_chars)
+            if args.help_probe
+            else {}
+        )
         target_reports.append(
             {
                 "target_file": rel,
@@ -204,7 +215,12 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         )
     py_targets = [target for target in targets if target.endswith(".py")]
     compile_result = (
-        run_command([sys.executable, "-m", "py_compile", *py_targets], repo_root, args.timeout_seconds, args.tail_chars)
+        run_command(
+            [sys.executable, "-m", "py_compile", *py_targets],
+            repo_root,
+            args.timeout_seconds,
+            args.tail_chars,
+        )
         if py_targets
         else {}
     )
@@ -214,7 +230,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         if error:
             validations.append({"script": raw, "ok": False, "errors": [error]})
         else:
-            validations.append({"script": rel, **run_command([sys.executable, rel], repo_root, args.timeout_seconds, args.tail_chars)})
+            validations.append(
+                {
+                    "script": rel,
+                    **run_command(
+                        [sys.executable, rel], repo_root, args.timeout_seconds, args.tail_chars
+                    ),
+                }
+            )
     errors.extend(
         f"{item['target_file']}: {key} failed"
         for item in target_reports
@@ -260,7 +283,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-file", action="append", default=[])
     parser.add_argument("--validation-script", action="append", default=[])
     parser.add_argument("--output", default="output/validation/heap_virtual_dev_environment.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_virtual_dev_environment.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/heap_virtual_dev_environment.md"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=120)
     parser.add_argument("--tail-chars", type=int, default=4000)
     parser.add_argument("--dynamic-import", action="store_true")

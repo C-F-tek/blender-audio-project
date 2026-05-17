@@ -94,9 +94,7 @@ def build_search_quality(
         )
         for term in terms[:8]:
             hits = search_docs(conn, fts_enabled, term, 6)
-            query_results.append(
-                {"query": term, "hit_count": len(hits), "hits": hits[:3]}
-            )
+            query_results.append({"query": term, "hit_count": len(hits), "hits": hits[:3]})
     return {
         "sqlite_fts5_enabled": fts_enabled,
         "sqlite_fts_db": repo_rel(db_path, repo_root),
@@ -176,9 +174,7 @@ def build_report(args: Any) -> dict[str, Any]:
         "operational_sqlite_fts_write_performed": True,
         "manual_review_required": True,
         "inputs": {
-            "paths": {
-                key: repo_rel(path, repo_root) for key, path in input_paths.items()
-            },
+            "paths": {key: repo_rel(path, repo_root) for key, path in input_paths.items()},
             "status": status,
         },
         "guardrails": {
@@ -225,9 +221,7 @@ def build_report(args: Any) -> dict[str, Any]:
         report["fallback_path_notes"].append(
             {
                 "reason": "patch_notes_not_fully_applicable",
-                "invalid_note_count": report["patch_notes_applicability"].get(
-                    "invalid_note_count"
-                ),
+                "invalid_note_count": report["patch_notes_applicability"].get("invalid_note_count"),
                 "recommended_followup": "fix patch notes so every item has targets, summary, edit strategy, validations, stop conditions and manual review flag",
             }
         )
@@ -235,9 +229,7 @@ def build_report(args: Any) -> dict[str, Any]:
         report["fallback_path_notes"].append(
             {
                 "reason": "patch_notes_product_insufficient",
-                "insufficiency_reasons": report["product_sufficiency"].get(
-                    "insufficiency_reasons"
-                ),
+                "insufficiency_reasons": report["product_sufficiency"].get("insufficiency_reasons"),
                 "missing_available_areas": report["product_sufficiency"].get(
                     "missing_available_areas"
                 ),
@@ -266,7 +258,5 @@ def build_report(args: Any) -> dict[str, Any]:
     if report["product_sufficiency"].get("sufficient") is False and not errors:
         report["classification"] = "completed_with_insufficient_all_all_patch_notes"
     report["success_cases"] = build_success_cases(report, loaded)
-    report["fallback_cases"] = build_fallback_cases(
-        report, loaded, args.min_quality_score
-    )
+    report["fallback_cases"] = build_fallback_cases(report, loaded, args.min_quality_score)
     return report

@@ -29,12 +29,8 @@ except ImportError:
         write_text_report,
     )
 
-DEFAULT_OUTPUT = (
-    "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.json"
-)
-DEFAULT_MARKDOWN = (
-    "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.md"
-)
+DEFAULT_OUTPUT = "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.json"
+DEFAULT_MARKDOWN = "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.md"
 
 
 def now_iso() -> str:
@@ -61,9 +57,7 @@ def count_by(events: list[dict[str, Any]], key: str) -> dict[str, int]:
     return dict(sorted(counter.items()))
 
 
-def correlated_complete(
-    events: list[dict[str, Any]], request_type: str, response_type: str
-) -> int:
+def correlated_complete(events: list[dict[str, Any]], request_type: str, response_type: str) -> int:
     requests = {
         str(event.get("correlation_id") or "")
         for event in events
@@ -79,14 +73,10 @@ def correlated_complete(
 
 def gpu_peer_exchange_metrics(events: list[dict[str, Any]]) -> dict[str, Any]:
     gpu1_to_gpu0 = [
-        event
-        for event in events
-        if event.get("source") == "gpu1" and event.get("target") == "gpu0"
+        event for event in events if event.get("source") == "gpu1" and event.get("target") == "gpu0"
     ]
     gpu0_to_gpu1 = [
-        event
-        for event in events
-        if event.get("source") == "gpu0" and event.get("target") == "gpu1"
+        event for event in events if event.get("source") == "gpu0" and event.get("target") == "gpu1"
     ]
     request_ids = {
         str(event.get("correlation_id") or "")
@@ -142,9 +132,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     )
     snapshot = heap.write_snapshot()
     events = heap.read_events()
-    runtime_events = [
-        event for event in events if event.get("kind") == "provider_runtime_event"
-    ]
+    runtime_events = [event for event in events if event.get("kind") == "provider_runtime_event"]
     violations = direct_execution_violations(runtime_events)
     broker_request_count = sum(
         1 for event in runtime_events if event.get("event_type") == "broker_request"
@@ -179,20 +167,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "gpu1_gpu0_correlated_exchange_count": gpu_peer_metrics[
             "gpu1_gpu0_correlated_exchange_count"
         ],
-        "gpu1_gpu0_request_event_types": gpu_peer_metrics[
-            "gpu1_gpu0_request_event_types"
-        ],
-        "gpu1_gpu0_response_event_types": gpu_peer_metrics[
-            "gpu1_gpu0_response_event_types"
-        ],
+        "gpu1_gpu0_request_event_types": gpu_peer_metrics["gpu1_gpu0_request_event_types"],
+        "gpu1_gpu0_response_event_types": gpu_peer_metrics["gpu1_gpu0_response_event_types"],
         "broker_request_count": broker_request_count,
         "broker_result_count": broker_result_count,
         "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
         "validation_signal_count": validation_signal_count,
         "direct_execution_violation_count": len(violations),
-        "tool_catalog_tool_count": safe_dict(snapshot.get("tool_catalog")).get(
-            "tool_count"
-        ),
+        "tool_catalog_tool_count": safe_dict(snapshot.get("tool_catalog")).get("tool_count"),
         "architecture": snapshot.get("architecture"),
         "guardrails": {
             "report_only": True,
@@ -254,9 +236,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     report = build_report(args)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
-    markdown = resolve_output_path(
-        repo_root, args.markdown_output.format(stamp=args.stamp)
-    )
+    markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
     print(json.dumps(report, indent=2, ensure_ascii=False))

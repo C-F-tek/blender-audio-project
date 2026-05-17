@@ -12,6 +12,7 @@ report. Its purpose is to distinguish these two states:
 A failing report is useful: it identifies exactly which wiring contract is not
 proved yet.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,9 +23,17 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+    from Tools.validation.report_utils import (
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 except ImportError:  # pragma: no cover
-    from report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 SOURCE_FILES = {
@@ -63,11 +72,10 @@ def def_body_call_count(source: str, name: str) -> int:
     return count
 
 
-
-
 def first_position(source: str, needle: str) -> int:
     position = source.find(needle)
     return position if position >= 0 else 10**12
+
 
 def bool_check(
     checks: list[dict[str, Any]],
@@ -194,7 +202,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     bool_check(
         checks,
         check_id="startup_artifact_refs_named_in_gate",
-        passed="artifact_refs" in gate or "context_artifact_refs" in gate or "startup_manifest" in gate,
+        passed="artifact_refs" in gate
+        or "context_artifact_refs" in gate
+        or "startup_manifest" in gate,
         severity="critical",
         evidence="provider lanes need startup artifact refs available from heap state",
         recommendation="Propagate startup manifest/task-file/artifact refs into heap events and provider context.",
@@ -206,7 +216,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         first_position(gate, "self.publish_startup_manifest_evidence()"),
     ]
     first_snapshot_position = first_position(gate, "self.heap.write_snapshot()")
-    startup_before_snapshot = all(position < first_snapshot_position for position in startup_publish_positions)
+    startup_before_snapshot = all(
+        position < first_snapshot_position for position in startup_publish_positions
+    )
     bool_check(
         checks,
         check_id="startup_context_published_before_initial_snapshot",
@@ -219,13 +231,19 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     bool_check(
         checks,
         check_id="reconciler_allows_degraded_startup_policy",
-        passed=("allow-degraded" in reconciler or "allow_degraded" in reconciler) and "refusing to reconcile" not in reconciler,
+        passed=("allow-degraded" in reconciler or "allow_degraded" in reconciler)
+        and "refusing to reconcile" not in reconciler,
         severity="warning",
         evidence="degradable startup policy requires using useful artifacts while preserving degraded warnings",
         recommendation="Add --allow-degraded-startup or equivalent artifact-useful policy to reconciler.",
     )
 
-    shape_terms = ("useful_artifact_paths", "existing_artifact_paths", "artifact_summaries", "artifact_paths")
+    shape_terms = (
+        "useful_artifact_paths",
+        "existing_artifact_paths",
+        "artifact_summaries",
+        "artifact_paths",
+    )
     covered_terms = [term for term in shape_terms if term in reconciler]
     bool_check(
         checks,
@@ -253,14 +271,19 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     bool_check(
         checks,
         check_id="composer_exposes_product_causality_flag",
-        passed="product_causality_passed" in composer or "startup_context_seen_before_first_provider" in composer,
+        passed="product_causality_passed" in composer
+        or "startup_context_seen_before_first_provider" in composer,
         severity="warning",
         evidence="composer packages reports after the fact; it should expose whether startup context was causally seen before provider output",
         recommendation="Add product_causality_passed plus startup/provider ordering flags to compose_heap_final_proposals.py.",
     )
 
-    critical_failures = [item for item in checks if item["severity"] == "critical" and not item["passed"]]
-    warning_failures = [item for item in checks if item["severity"] == "warning" and not item["passed"]]
+    critical_failures = [
+        item for item in checks if item["severity"] == "critical" and not item["passed"]
+    ]
+    warning_failures = [
+        item for item in checks if item["severity"] == "warning" and not item["passed"]
+    ]
     passed = not errors and not critical_failures
     if warning_failures:
         warnings.append(f"warning checks failed: {len(warning_failures)}")
@@ -273,7 +296,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "passed": passed,
         "critical_failure_count": len(critical_failures),
         "warning_failure_count": len(warning_failures),
-        "checked_sources": {key: repo_rel(repo_root, repo_root / value) for key, value in SOURCE_FILES.items()},
+        "checked_sources": {
+            key: repo_rel(repo_root, repo_root / value) for key, value in SOURCE_FILES.items()
+        },
         "checks": checks,
         "provider_execution_performed": False,
         "patch_application_performed": False,
@@ -288,7 +313,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_startup_context_ingestion_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/heap_startup_context_ingestion_smoke.json"
+    )
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
 
@@ -301,7 +328,17 @@ def main() -> int:
     )
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown_output)
-    print(json.dumps({**report, "output": repo_rel(repo_root, output), "markdown_output": repo_rel(repo_root, markdown_output)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                **report,
+                "output": repo_rel(repo_root, output),
+                "markdown_output": repo_rel(repo_root, markdown_output),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

@@ -42,9 +42,7 @@ def _default_context_files(report: dict[str, Any] | None) -> list[str]:
     if not isinstance(results, list):
         return []
     return [
-        str(item.get("path"))
-        for item in results
-        if isinstance(item, dict) and item.get("path")
+        str(item.get("path")) for item in results if isinstance(item, dict) and item.get("path")
     ]
 
 
@@ -75,13 +73,9 @@ def _render_markdown(report: dict[str, Any]) -> str:
     provider = report.get("primary_advisory_provider", {})
     lines = ["# AI Workload Quality Lane Routing", ""]
     lines.append(f"- Mode: `{report['mode']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
     lines.append(f"- Quality report present: `{routing['quality_report_present']}`")
-    lines.append(
-        f"- Advisory lanes: `{', '.join(routing['advisory_lanes']) or 'none'}`"
-    )
+    lines.append(f"- Advisory lanes: `{', '.join(routing['advisory_lanes']) or 'none'}`")
     lines.append(
         f"- Excluded advisory lanes: `{', '.join(routing['excluded_advisory_lanes']) or 'none'}`"
     )
@@ -94,9 +88,7 @@ def _render_markdown(report: dict[str, Any]) -> str:
     if trusted:
         for item in trusted:
             lane = item.get("lane") or "untracked"
-            lines.append(
-                f"- `{item['path']}` — lane `{lane}`, reason `{item['reason']}`"
-            )
+            lines.append(f"- `{item['path']}` — lane `{lane}`, reason `{item['reason']}`")
     else:
         lines.append("- none")
     lines.append("")
@@ -106,9 +98,7 @@ def _render_markdown(report: dict[str, Any]) -> str:
     if excluded:
         for item in excluded:
             lane = item.get("lane") or "unknown"
-            lines.append(
-                f"- `{item['path']}` — lane `{lane}`, reason `{item['reason']}`"
-            )
+            lines.append(f"- `{item['path']}` — lane `{lane}`, reason `{item['reason']}`")
     else:
         lines.append("- none")
     lines.append("")
@@ -132,18 +122,14 @@ def build_lane_routing_report(
     candidates = context_files or _default_context_files(quality_report)
     routing = route_context_files_by_quality(candidates, quality_report)
     summary = build_quality_routing_summary(quality_report)
-    primary_provider = _primary_advisory_provider(
-        list(summary.get("advisory_lanes") or [])
-    )
+    primary_provider = _primary_advisory_provider(list(summary.get("advisory_lanes") or []))
     routing["primary_advisory_provider"] = primary_provider
     summary["primary_advisory_provider"] = primary_provider
 
     errors: list[str] = []
     warnings: list[str] = []
     if not summary["quality_report_present"]:
-        warnings.append(
-            "quality report is missing; no workload-specific context was excluded"
-        )
+        warnings.append("quality report is missing; no workload-specific context was excluded")
     if not summary["advisory_lanes"]:
         warnings.append("no usable workload lanes are available for advisory context")
 

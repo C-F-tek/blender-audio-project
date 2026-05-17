@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Conservative non-destructive patcher for unified launcher error policy.
 
 Scope:
@@ -43,9 +43,7 @@ def normalize_lf(text: str) -> str:
 
 
 def write_preserved(path: Path, text_lf: str, newline: str) -> None:
-    path.write_text(
-        text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig"
-    )
+    path.write_text(text_lf.rstrip("\n").replace("\n", newline) + newline, encoding="utf-8-sig")
 
 
 def run_parser(path: Path) -> tuple[bool, str]:
@@ -78,9 +76,7 @@ def find_global_trap(text_lf: str) -> str:
     next_marker = "\n\n$ContextFiles = @()"
     end_marker_index = text_lf.find(next_marker, start)
     if end_marker_index == -1:
-        raise RuntimeError(
-            "could not locate global trap end before $ContextFiles section"
-        )
+        raise RuntimeError("could not locate global trap end before $ContextFiles section")
 
     return text_lf[start:end_marker_index]
 
@@ -116,13 +112,8 @@ def validate_policy(text_lf: str) -> list[str]:
         errors.append("global trap does not call Write-UnifiedLauncherStructuredError")
     if "exit 2" not in trap:
         errors.append("global trap does not exit 2")
-    if (
-        '[Console]::Error.WriteLine("[UNIFIED-LAUNCHER-ERROR] $($_.Exception.Message)")'
-        in trap
-    ):
-        errors.append(
-            "legacy duplicate exception message output remains in global trap"
-        )
+    if '[Console]::Error.WriteLine("[UNIFIED-LAUNCHER-ERROR] $($_.Exception.Message)")' in trap:
+        errors.append("legacy duplicate exception message output remains in global trap")
     if (
         '[Console]::Error.WriteLine("[UNIFIED-LAUNCHER-ERROR] $Script:UnifiedLauncherFailureMessage")'
         in trap
@@ -153,9 +144,7 @@ def patch(text_lf: str) -> tuple[str, list[str]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1"
-    )
+    parser.add_argument("--target", default="Tools/workflow/run_unified_local_ai_refactor.ps1")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -188,9 +177,7 @@ def main() -> int:
         print(f"line_count={len(original_lf.splitlines())}")
         return 0
 
-    backup = (
-        backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
-    )
+    backup = backup_dir / f"{target.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.bak"
     shutil.copy2(target, backup)
 
     if args.dry_run:

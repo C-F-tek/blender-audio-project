@@ -6,6 +6,7 @@ This smoke does not execute GPU/Ollama or NPU providers. It validates that:
 - supervised GPU runner contains explicit provider_empty_response handling;
 - supervised GPU report code exposes bootstrap broker diagnostics.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -54,7 +55,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         metadata_only=False,
     )
     if classification != "provider_empty_response":
-        errors.append(f"NPU empty output classified as {classification!r}, expected provider_empty_response")
+        errors.append(
+            f"NPU empty output classified as {classification!r}, expected provider_empty_response"
+        )
     if not any("empty response" in item.lower() for item in npu_warnings):
         errors.append("NPU empty output did not emit an empty-response warning")
 
@@ -73,8 +76,13 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     ):
         marker_check(supervised_text, marker, errors)
 
-    if '"empty_recommendations_reason": "provider_empty_response"' not in supervised_text and "provider_empty_response" not in supervised_text:
-        errors.append("supervised runner does not expose provider_empty_response as an empty recommendation reason")
+    if (
+        '"empty_recommendations_reason": "provider_empty_response"' not in supervised_text
+        and "provider_empty_response" not in supervised_text
+    ):
+        errors.append(
+            "supervised runner does not expose provider_empty_response as an empty recommendation reason"
+        )
 
     return {
         "schema_version": 1,
@@ -124,8 +132,13 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/provider_empty_response_diagnostics_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/provider_empty_response_diagnostics_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/provider_empty_response_diagnostics_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output",
+        default="output/validation/provider_empty_response_diagnostics_smoke.md",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()

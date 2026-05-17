@@ -45,9 +45,7 @@ def evidence_items(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
     return items
 
 
-def build_recommendation(
-    snapshot: dict[str, Any], repo_root: Path | None = None
-) -> dict[str, Any]:
+def build_recommendation(snapshot: dict[str, Any], repo_root: Path | None = None) -> dict[str, Any]:
     lanes = degraded_lanes(snapshot)
     evidence = evidence_items(snapshot)
     source_pointers = source_pointer_bundle(repo_root, snapshot)

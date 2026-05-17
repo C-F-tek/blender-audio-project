@@ -52,11 +52,7 @@ def now_iso() -> str:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -97,8 +93,7 @@ def build_request_packet(
     repo_root: Path, stamp: str, pending: list[dict[str, Any]], request_file: Path
 ) -> dict[str, Any]:
     tool_requests = [
-        event_to_tool_request(event, index)
-        for index, event in enumerate(pending, start=1)
+        event_to_tool_request(event, index) for index, event in enumerate(pending, start=1)
     ]
     packet = {
         "schema_version": 1,
@@ -273,9 +268,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     if args.max_requests > 0:
         pending = pending[: args.max_requests]
 
-    bridge_dir = resolve_output_path(
-        repo_root, args.bridge_dir.format(stamp=args.stamp)
-    )
+    bridge_dir = resolve_output_path(repo_root, args.bridge_dir.format(stamp=args.stamp))
     request_file = bridge_dir / "broker_requests_from_heap.json"
     broker_output = bridge_dir / "agent_runtime_tool_broker.json"
     broker_markdown = bridge_dir / "agent_runtime_tool_broker.md"
@@ -342,9 +335,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "failed_tool_count": broker_report.get("failed_tool_count", 0),
         "heap_snapshot": {
             "event_count": snapshot.get("event_count"),
-            "pending_broker_request_count": snapshot.get(
-                "pending_broker_request_count"
-            ),
+            "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
             "event_log": snapshot.get("event_log"),
         },
         "guardrails": {
@@ -390,9 +381,7 @@ def main() -> int:
     parser.add_argument("--events", default="")
     parser.add_argument("--snapshot", default="")
     parser.add_argument("--heap-markdown", default="")
-    parser.add_argument(
-        "--bridge-dir", default="output/ai_runtime_heap/{stamp}/broker_bridge"
-    )
+    parser.add_argument("--bridge-dir", default="output/ai_runtime_heap/{stamp}/broker_bridge")
     parser.add_argument("--timeout-seconds", type=int, default=240)
     parser.add_argument("--max-requests", type=int, default=0)
     parser.add_argument("--dry-run", action="store_true")
@@ -403,9 +392,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     report = build_report(args)
     output = resolve_output_path(repo_root, args.output.format(stamp=args.stamp))
-    markdown = resolve_output_path(
-        repo_root, args.markdown_output.format(stamp=args.stamp)
-    )
+    markdown = resolve_output_path(repo_root, args.markdown_output.format(stamp=args.stamp))
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
     print(json.dumps(report, indent=2, ensure_ascii=False))

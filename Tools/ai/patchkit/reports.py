@@ -13,9 +13,7 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(data)
     payload.setdefault("generated_at", datetime.now().isoformat(timespec="seconds"))
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def render_markdown(report: dict[str, Any]) -> str:

@@ -8,6 +8,7 @@ and bounded: it validates the source-level contract that the peer-review helper
 accepts the event list and that the provider teamwork caller passes current heap
 events before enriching GPU0/NPU operational reviews.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,7 +21,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 TARGET = Path("Tools/ai/run_heap_runtime_completeness_gate.py")
@@ -108,7 +113,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         errors.append(f"cannot parse {TARGET}: {type(exc).__name__}: {exc}")
 
     try:
-        launcher_tree = ast.parse(launcher_path.read_text(encoding="utf-8"), filename=str(launcher_path))
+        launcher_tree = ast.parse(
+            launcher_path.read_text(encoding="utf-8"), filename=str(launcher_path)
+        )
     except Exception as exc:  # noqa: BLE001 - report syntax failure.
         launcher_tree = ast.Module(body=[], type_ignores=[])
         errors.append(f"cannot parse {LAUNCHER}: {type(exc).__name__}: {exc}")
@@ -119,11 +126,41 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     provider_fn = finder.functions.get("run_provider_teamwork")
     enrich_args = function_arg_names(enrich_fn)
 
-    checks.append({"name": "peer_review_helper_accepts_events", "passed": "events" in enrich_args, "evidence": enrich_args})
-    checks.append({"name": "provider_teamwork_reads_current_heap_events", "passed": has_read_events_assignment(provider_fn), "evidence": "run_provider_teamwork assigns events = self.read_events() before peer enrichment"})
-    checks.append({"name": "provider_teamwork_passes_events_to_peer_review", "passed": enrich_call_passes_events(provider_fn), "evidence": "enrich_provider_report_with_operational_peer_review(..., events)"})
-    for field_name in ("preflight_command", "startup_command", "heap_command", "composer_command", "external_postrun_command"):
-        checks.append({"name": f"launcher_summary_exposes_{field_name}", "passed": launcher_summary_exposes_command(launcher_tree, field_name), "evidence": field_name})
+    checks.append(
+        {
+            "name": "peer_review_helper_accepts_events",
+            "passed": "events" in enrich_args,
+            "evidence": enrich_args,
+        }
+    )
+    checks.append(
+        {
+            "name": "provider_teamwork_reads_current_heap_events",
+            "passed": has_read_events_assignment(provider_fn),
+            "evidence": "run_provider_teamwork assigns events = self.read_events() before peer enrichment",
+        }
+    )
+    checks.append(
+        {
+            "name": "provider_teamwork_passes_events_to_peer_review",
+            "passed": enrich_call_passes_events(provider_fn),
+            "evidence": "enrich_provider_report_with_operational_peer_review(..., events)",
+        }
+    )
+    for field_name in (
+        "preflight_command",
+        "startup_command",
+        "heap_command",
+        "composer_command",
+        "external_postrun_command",
+    ):
+        checks.append(
+            {
+                "name": f"launcher_summary_exposes_{field_name}",
+                "passed": launcher_summary_exposes_command(launcher_tree, field_name),
+                "evidence": field_name,
+            }
+        )
 
     failed = [check["name"] for check in checks if not check.get("passed")]
     return {
@@ -143,7 +180,14 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
 
 def render_markdown(report: dict[str, Any]) -> str:
-    lines = ["# Heap Provider Peer Review Events Scope Smoke", "", f"- Passed: `{report.get('passed')}`", "", "## Checks", ""]
+    lines = [
+        "# Heap Provider Peer Review Events Scope Smoke",
+        "",
+        f"- Passed: `{report.get('passed')}`",
+        "",
+        "## Checks",
+        "",
+    ]
     for check in report.get("checks") or []:
         lines.append(f"- `{check.get('name')}`: `{check.get('passed')}`")
     if report.get("errors"):
@@ -155,17 +199,31 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_provider_peer_review_events_scope_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/heap_provider_peer_review_events_scope_smoke.json"
+    )
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     report = build_report(repo_root)
     output = resolve_output_path(repo_root, args.output)
-    markdown_output = resolve_output_path(repo_root, args.markdown_output or str(Path(args.output).with_suffix(".md")))
+    markdown_output = resolve_output_path(
+        repo_root, args.markdown_output or str(Path(args.output).with_suffix(".md"))
+    )
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown_output)
-    print(json.dumps({**report, "output": repo_rel(repo_root, output), "markdown_output": repo_rel(repo_root, markdown_output)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                **report,
+                "output": repo_rel(repo_root, output),
+                "markdown_output": repo_rel(repo_root, markdown_output),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

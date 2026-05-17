@@ -70,7 +70,10 @@ def truncate_code(text: str, limit: int = 1800) -> str:
     body = str(text or "").strip()
     if len(body) <= limit:
         return body
-    return body[:limit].rstrip() + "\n...[code product excerpt truncated; full file/diff in workspace and matrix report]"
+    return (
+        body[:limit].rstrip()
+        + "\n...[code product excerpt truncated; full file/diff in workspace and matrix report]"
+    )
 
 
 def item_has_code_product(item: dict[str, Any]) -> bool:
@@ -176,7 +179,9 @@ def validation_commands_for_target(target: str) -> list[str]:
     return list(dict.fromkeys(commands))
 
 
-def worktree_product_items(matrix: dict[str, Any], existing_targets: set[str]) -> list[dict[str, Any]]:
+def worktree_product_items(
+    matrix: dict[str, Any], existing_targets: set[str]
+) -> list[dict[str, Any]]:
     repo_root = matrix_repo_root(matrix)
     items: list[dict[str, Any]] = []
     for status, target in git_status_lines(repo_root):

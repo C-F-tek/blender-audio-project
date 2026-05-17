@@ -86,11 +86,7 @@ def target_metadata(repo_root: Path, path_value: str) -> dict[str, Any]:
 
 def validate_edit_kind(edit_kind: str) -> list[str]:
     """Validate edit kind."""
-    return (
-        []
-        if edit_kind in ALLOWED_EDIT_KINDS
-        else [f"unsupported edit kind: {edit_kind}"]
-    )
+    return [] if edit_kind in ALLOWED_EDIT_KINDS else [f"unsupported edit kind: {edit_kind}"]
 
 
 def forbidden_diff_fragment_errors(diff_text: str) -> list[str]:
@@ -118,9 +114,7 @@ def validate_unified_diff_text(diff_text: str, target_file: str) -> list[str]:
         if marker not in diff_text:
             errors.append(f"unified diff missing marker: {marker.strip()}")
     errors.extend(forbidden_diff_fragment_errors(diff_text))
-    if normalized_target and normalized_target not in diff_text.lower().replace(
-        "\\", "/"
-    ):
+    if normalized_target and normalized_target not in diff_text.lower().replace("\\", "/"):
         errors.append("unified diff does not reference the normalized target file")
     return errors
 
@@ -182,18 +176,14 @@ def build_code_edit_proposal(
     errors.extend(validate_edit_kind(edit_kind))
     warnings: list[str] = []
 
-    operations, operation_errors = normalize_structured_operations(
-        structured_operations
-    )
+    operations, operation_errors = normalize_structured_operations(structured_operations)
     errors.extend(operation_errors)
     if edit_kind == EDIT_KIND_UNIFIED_DIFF:
         errors.extend(validate_unified_diff_text(unified_diff, normalized_target))
     if edit_kind == EDIT_KIND_STRUCTURED and not operations:
         errors.append("structured edit kind requires at least one operation")
     if edit_kind == EDIT_KIND_NOOP and (unified_diff.strip() or operations):
-        warnings.append(
-            "no_op proposal contains edit content that will remain advisory only"
-        )
+        warnings.append("no_op proposal contains edit content that will remain advisory only")
 
     commands = validation_commands or default_validation_commands_for(normalized_target)
     stops = stop_conditions or list(DEFAULT_CODE_STOP_CONDITIONS)
@@ -222,9 +212,7 @@ def build_code_edit_proposal(
 def proposal_summary(proposal: dict[str, Any]) -> dict[str, Any]:
     """Return compact summary for evidence bundles."""
     metadata = (
-        proposal.get("target_metadata")
-        if isinstance(proposal.get("target_metadata"), dict)
-        else {}
+        proposal.get("target_metadata") if isinstance(proposal.get("target_metadata"), dict) else {}
     )
     return {
         "id": proposal.get("id"),

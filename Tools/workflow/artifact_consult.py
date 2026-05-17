@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-
 TEXT_EXTENSIONS = {".json", ".md", ".txt", ".py", ".log", ".jsonl", ".csv"}
 IMAGE_EXTENSIONS = {".png", ".gif", ".jpg", ".jpeg", ".webp"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi", ".webm"}
@@ -100,7 +99,9 @@ def collect_artifacts(session: Any, *, include_existing_only: bool = False) -> l
             for path in render_dir.glob(pattern):
                 add_item(f"render:{path.name}", path)
 
-    sorted_records = sorted(records, key=lambda item: (not item.exists, item.category, item.key.lower()))
+    sorted_records = sorted(
+        records, key=lambda item: (not item.exists, item.category, item.key.lower())
+    )
     return [
         ArtifactRecord(
             index=index,
@@ -133,7 +134,9 @@ def format_artifact_table(records: list[ArtifactRecord]) -> str:
     return "\n".join(lines)
 
 
-def open_artifact(records: list[ArtifactRecord], index: int, *, folder: bool = False) -> ArtifactRecord:
+def open_artifact(
+    records: list[ArtifactRecord], index: int, *, folder: bool = False
+) -> ArtifactRecord:
     for item in records:
         if item.index == index:
             target = item.path if folder or item.path.is_dir() else item.path

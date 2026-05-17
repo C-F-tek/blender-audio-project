@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the PatchKit bundle contract validator."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,18 +15,38 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def env_for(source_repo: Path) -> dict[str, str]:
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(source_repo) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env["PYTHONPATH"] = str(source_repo) + (
+        os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
+    )
     return env
 
 
 def run(command: list[str], cwd: Path, source_repo: Path) -> dict[str, Any]:
-    result = subprocess.run(command, cwd=cwd, env=env_for(source_repo), capture_output=True, text=True, check=False, timeout=120)
-    return {"command": command, "returncode": result.returncode, "stdout_tail": result.stdout[-4000:], "stderr_tail": result.stderr[-4000:], "ok": result.returncode == 0}
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        env=env_for(source_repo),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+    )
+    return {
+        "command": command,
+        "returncode": result.returncode,
+        "stdout_tail": result.stdout[-4000:],
+        "stderr_tail": result.stderr[-4000:],
+        "ok": result.returncode == 0,
+    }
 
 
 def write(path: Path, content: str) -> None:
@@ -66,7 +87,11 @@ def smoke_valid_bundle(source_repo: Path, validator: Path) -> dict[str, Any]:
                             "marker": "DEMO-MARKER",
                             "content_file": "fragment.ps1",
                         },
-                        {"operation": "assert_marker", "target": "target.ps1", "required_marker": "Invoke-Checked"},
+                        {
+                            "operation": "assert_marker",
+                            "target": "target.ps1",
+                            "required_marker": "Invoke-Checked",
+                        },
                     ],
                     "validators": ["powershell_parser", "git_diff_check"],
                 },
@@ -74,8 +99,16 @@ def smoke_valid_bundle(source_repo: Path, validator: Path) -> dict[str, Any]:
             )
             + "\n",
         )
-        result = run([sys.executable, str(validator), "--repo-root", str(repo), "--bundle", str(bundle)], repo, source_repo)
-        return {"name": "valid_patchkit_bundle_contract", "passed": result["returncode"] == 0, "result": result}
+        result = run(
+            [sys.executable, str(validator), "--repo-root", str(repo), "--bundle", str(bundle)],
+            repo,
+            source_repo,
+        )
+        return {
+            "name": "valid_patchkit_bundle_contract",
+            "passed": result["returncode"] == 0,
+            "result": result,
+        }
 
 
 def smoke_invalid_delete_bundle(source_repo: Path, validator: Path) -> dict[str, Any]:
@@ -90,15 +123,25 @@ def smoke_invalid_delete_bundle(source_repo: Path, validator: Path) -> dict[str,
                     "schema_version": 1,
                     "kind": "codemod_patch_bundle",
                     "operations": [
-                        {"operation": "delete_file", "target": "output/bad.md", "allow_delete": False}
+                        {
+                            "operation": "delete_file",
+                            "target": "output/bad.md",
+                            "allow_delete": False,
+                        }
                     ],
                 },
                 indent=2,
             )
             + "\n",
         )
-        result = run([sys.executable, str(validator), "--repo-root", str(repo), "--bundle", str(bundle)], repo, source_repo)
-        ok = result["returncode"] != 0 and "delete_file requires allow_delete=true" in (result["stdout_tail"] + result["stderr_tail"])
+        result = run(
+            [sys.executable, str(validator), "--repo-root", str(repo), "--bundle", str(bundle)],
+            repo,
+            source_repo,
+        )
+        ok = result["returncode"] != 0 and "delete_file requires allow_delete=true" in (
+            result["stdout_tail"] + result["stderr_tail"]
+        )
         return {"name": "invalid_delete_bundle_blocked", "passed": ok, "result": result}
 
 
@@ -106,12 +149,17 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/patchkit_bundle_contract_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/patchkit_bundle_contract_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/patchkit_bundle_contract_smoke.md"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
     validator = source_repo / "Tools/validation/check_patchkit_bundle_contract.py"
-    cases = [smoke_valid_bundle(source_repo, validator), smoke_invalid_delete_bundle(source_repo, validator)]
+    cases = [
+        smoke_valid_bundle(source_repo, validator),
+        smoke_invalid_delete_bundle(source_repo, validator),
+    ]
     errors = [f"{case['name']} failed" for case in cases if not case.get("passed")]
     report = {
         "schema_version": 1,
@@ -126,7 +174,9 @@ def main() -> int:
         "warnings": [],
     }
     print(write_json_report(report, resolve_output_path(source_repo, args.output)), end="")
-    write_text_report(render_markdown(report), resolve_output_path(source_repo, args.markdown_output))
+    write_text_report(
+        render_markdown(report), resolve_output_path(source_repo, args.markdown_output)
+    )
     return 0 if report["passed"] else 2
 
 

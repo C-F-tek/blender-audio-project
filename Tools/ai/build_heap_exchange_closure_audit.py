@@ -104,9 +104,7 @@ def peer_ids(peer_manifest: dict[str, Any] | None) -> set[str]:
     return peers
 
 
-def has_audit_lane(
-    peer_manifest: dict[str, Any] | None, events: list[dict[str, Any]]
-) -> bool:
+def has_audit_lane(peer_manifest: dict[str, Any] | None, events: list[dict[str, Any]]) -> bool:
     manifest_text = json.dumps(peer_manifest or {}, ensure_ascii=False).lower()
     events_text = json.dumps(events, ensure_ascii=False).lower()
     text = manifest_text + "\n" + events_text
@@ -157,17 +155,11 @@ def main() -> int:
     observer_dir = repo_path(repo_root, args.observer_dir)
     output = (
         repo_path(repo_root, args.output)
-        or repo_root
-        / "output/ai_packets"
-        / args.stamp
-        / "heap_exchange_closure_audit.json"
+        or repo_root / "output/ai_packets" / args.stamp / "heap_exchange_closure_audit.json"
     )
     markdown_output = (
         repo_path(repo_root, args.markdown_output)
-        or repo_root
-        / "output/ai_packets"
-        / args.stamp
-        / "heap_exchange_closure_audit.md"
+        or repo_root / "output/ai_packets" / args.stamp / "heap_exchange_closure_audit.md"
     )
 
     peer_manifest, peer_error = load_json(peer_path)
@@ -187,9 +179,7 @@ def main() -> int:
     if missing_peers:
         errors.append(f"missing dynamic peers before closure: {missing_peers}")
     if not audit_available:
-        errors.append(
-            "deterministic/script audit lane not available before heap/exchange closure"
-        )
+        errors.append("deterministic/script audit lane not available before heap/exchange closure")
 
     report = {
         "schema_version": 1,

@@ -1,4 +1,3 @@
-﻿# -*- coding: utf-8 -*-
 r"""
 Ready To Jazz - Luca Vera | Dual Gravity Audio-Reactive Scene
 Standalone Blender Python script.
@@ -26,12 +25,11 @@ from __future__ import annotations
 import json
 import math
 import random
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import bpy
 from mathutils import Vector
-
 
 # =============================================================================
 # CONFIGURAZIONE PRINCIPALE
@@ -41,7 +39,9 @@ TRACK_STEM = "Ready To Jazz-Luca Vera_Master"
 KEYFRAME_JSON_NAME = f"{TRACK_STEM}_analysis_blender_keyframes.json"
 ASSET_INVENTORY_JSON_NAME = "spaziotempo_asset_inventory.json"
 AUDIO_FILE_NAME = f"{TRACK_STEM}.wav"
-AUDIO_PATH_OVERRIDE: str | None = None  # es.: r"C:\Users\carmi\blender\audio\Ready To Jazz-Luca Vera_Master.wav"
+AUDIO_PATH_OVERRIDE: str | None = (
+    None  # es.: r"C:\Users\carmi\blender\audio\Ready To Jazz-Luca Vera_Master.wav"
+)
 
 # Sistema dei due core centrali: piu compatti, piu vicini e con dinamica elastica.
 CORE_BASE_HALF_DISTANCE = 1.15
@@ -113,58 +113,130 @@ OUTPUT_FRAME_PREFIX = "ready_to_jazz_wow_"
 
 YOUTUBE_RENDER_PROFILES = {
     "HD_PREVIEW": {
-        "width": 1920, "height": 1080, "percentage": 50,
-        "output_mode": "IMAGE_SEQUENCE", "motion_blur": False,
-        "eevee_samples": 32, "viewport_samples": 16, "volumetric_samples": 16, "volumetric_tile_size": "8",
-        "bloom_intensity": 0.012, "bloom_threshold": 1.28,
-        "exposure": -0.08, "gamma": 1.0, "look": "Base Contrast",
-        "image_depth": "8", "png_compression": 30,
-        "video_bitrate": 12000, "video_maxrate": 16000, "audio_bitrate": 320,
+        "width": 1920,
+        "height": 1080,
+        "percentage": 50,
+        "output_mode": "IMAGE_SEQUENCE",
+        "motion_blur": False,
+        "eevee_samples": 32,
+        "viewport_samples": 16,
+        "volumetric_samples": 16,
+        "volumetric_tile_size": "8",
+        "bloom_intensity": 0.012,
+        "bloom_threshold": 1.28,
+        "exposure": -0.08,
+        "gamma": 1.0,
+        "look": "Base Contrast",
+        "image_depth": "8",
+        "png_compression": 30,
+        "video_bitrate": 12000,
+        "video_maxrate": 16000,
+        "audio_bitrate": 320,
     },
     "HD_INTERMEDIATE": {
-        "width": 1920, "height": 1080, "percentage": 100,
-        "output_mode": "IMAGE_SEQUENCE", "motion_blur": False,
-        "eevee_samples": 48, "viewport_samples": 24, "volumetric_samples": 24, "volumetric_tile_size": "8",
-        "bloom_intensity": 0.016, "bloom_threshold": 1.22,
-        "exposure": -0.07, "gamma": 1.0, "look": "Medium High Contrast",
-        "image_depth": "16", "png_compression": 20,
-        "video_bitrate": 18000, "video_maxrate": 22000, "audio_bitrate": 320,
+        "width": 1920,
+        "height": 1080,
+        "percentage": 100,
+        "output_mode": "IMAGE_SEQUENCE",
+        "motion_blur": False,
+        "eevee_samples": 48,
+        "viewport_samples": 24,
+        "volumetric_samples": 24,
+        "volumetric_tile_size": "8",
+        "bloom_intensity": 0.016,
+        "bloom_threshold": 1.22,
+        "exposure": -0.07,
+        "gamma": 1.0,
+        "look": "Medium High Contrast",
+        "image_depth": "16",
+        "png_compression": 20,
+        "video_bitrate": 18000,
+        "video_maxrate": 22000,
+        "audio_bitrate": 320,
     },
     "HD_FINAL": {
-        "width": 1920, "height": 1080, "percentage": 100,
-        "output_mode": "IMAGE_SEQUENCE", "motion_blur": True,
-        "eevee_samples": 80, "viewport_samples": 32, "volumetric_samples": 48, "volumetric_tile_size": "4",
-        "bloom_intensity": 0.020, "bloom_threshold": 1.18,
-        "exposure": -0.06, "gamma": 1.0, "look": "Medium High Contrast",
-        "image_depth": "16", "png_compression": 15,
-        "video_bitrate": 20000, "video_maxrate": 24000, "audio_bitrate": 320,
+        "width": 1920,
+        "height": 1080,
+        "percentage": 100,
+        "output_mode": "IMAGE_SEQUENCE",
+        "motion_blur": True,
+        "eevee_samples": 80,
+        "viewport_samples": 32,
+        "volumetric_samples": 48,
+        "volumetric_tile_size": "4",
+        "bloom_intensity": 0.020,
+        "bloom_threshold": 1.18,
+        "exposure": -0.06,
+        "gamma": 1.0,
+        "look": "Medium High Contrast",
+        "image_depth": "16",
+        "png_compression": 15,
+        "video_bitrate": 20000,
+        "video_maxrate": 24000,
+        "audio_bitrate": 320,
     },
     "2K_PREVIEW": {
-        "width": 2560, "height": 1440, "percentage": 50,
-        "output_mode": "IMAGE_SEQUENCE", "motion_blur": False,
-        "eevee_samples": 36, "viewport_samples": 16, "volumetric_samples": 16, "volumetric_tile_size": "8",
-        "bloom_intensity": 0.012, "bloom_threshold": 1.28,
-        "exposure": -0.08, "gamma": 1.0, "look": "Base Contrast",
-        "image_depth": "8", "png_compression": 30,
-        "video_bitrate": 16000, "video_maxrate": 20000, "audio_bitrate": 320,
+        "width": 2560,
+        "height": 1440,
+        "percentage": 50,
+        "output_mode": "IMAGE_SEQUENCE",
+        "motion_blur": False,
+        "eevee_samples": 36,
+        "viewport_samples": 16,
+        "volumetric_samples": 16,
+        "volumetric_tile_size": "8",
+        "bloom_intensity": 0.012,
+        "bloom_threshold": 1.28,
+        "exposure": -0.08,
+        "gamma": 1.0,
+        "look": "Base Contrast",
+        "image_depth": "8",
+        "png_compression": 30,
+        "video_bitrate": 16000,
+        "video_maxrate": 20000,
+        "audio_bitrate": 320,
     },
     "2K_INTERMEDIATE": {
-        "width": 2560, "height": 1440, "percentage": 100,
-        "output_mode": "IMAGE_SEQUENCE", "motion_blur": False,
-        "eevee_samples": 56, "viewport_samples": 24, "volumetric_samples": 32, "volumetric_tile_size": "8",
-        "bloom_intensity": 0.017, "bloom_threshold": 1.22,
-        "exposure": -0.07, "gamma": 1.0, "look": "Medium High Contrast",
-        "image_depth": "16", "png_compression": 18,
-        "video_bitrate": 24000, "video_maxrate": 30000, "audio_bitrate": 320,
+        "width": 2560,
+        "height": 1440,
+        "percentage": 100,
+        "output_mode": "IMAGE_SEQUENCE",
+        "motion_blur": False,
+        "eevee_samples": 56,
+        "viewport_samples": 24,
+        "volumetric_samples": 32,
+        "volumetric_tile_size": "8",
+        "bloom_intensity": 0.017,
+        "bloom_threshold": 1.22,
+        "exposure": -0.07,
+        "gamma": 1.0,
+        "look": "Medium High Contrast",
+        "image_depth": "16",
+        "png_compression": 18,
+        "video_bitrate": 24000,
+        "video_maxrate": 30000,
+        "audio_bitrate": 320,
     },
     "2K_FINAL": {
-        "width": 2560, "height": 1440, "percentage": 100,
-        "output_mode": "IMAGE_SEQUENCE", "motion_blur": True,
-        "eevee_samples": 96, "viewport_samples": 40, "volumetric_samples": 64, "volumetric_tile_size": "4",
-        "bloom_intensity": 0.022, "bloom_threshold": 1.16,
-        "exposure": -0.055, "gamma": 1.0, "look": "Medium High Contrast",
-        "image_depth": "16", "png_compression": 12,
-        "video_bitrate": 28000, "video_maxrate": 34000, "audio_bitrate": 384,
+        "width": 2560,
+        "height": 1440,
+        "percentage": 100,
+        "output_mode": "IMAGE_SEQUENCE",
+        "motion_blur": True,
+        "eevee_samples": 96,
+        "viewport_samples": 40,
+        "volumetric_samples": 64,
+        "volumetric_tile_size": "4",
+        "bloom_intensity": 0.022,
+        "bloom_threshold": 1.16,
+        "exposure": -0.055,
+        "gamma": 1.0,
+        "look": "Medium High Contrast",
+        "image_depth": "16",
+        "png_compression": 12,
+        "video_bitrate": 28000,
+        "video_maxrate": 34000,
+        "audio_bitrate": 384,
     },
 }
 
@@ -172,6 +244,7 @@ YOUTUBE_RENDER_PROFILES = {
 # =============================================================================
 # UTILITY
 # =============================================================================
+
 
 def clamp(value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
     return max(minimum, min(maximum, float(value)))
@@ -248,11 +321,13 @@ def resolve_audio_path(meta: dict | None = None) -> Path | None:
             candidates.append(Path(str(raw)))
 
     for base in candidate_project_dirs():
-        candidates.extend([
-            base / AUDIO_FILE_NAME,
-            base / "audio" / AUDIO_FILE_NAME,
-            base / "output" / AUDIO_FILE_NAME,
-        ])
+        candidates.extend(
+            [
+                base / AUDIO_FILE_NAME,
+                base / "audio" / AUDIO_FILE_NAME,
+                base / "output" / AUDIO_FILE_NAME,
+            ]
+        )
 
     # Fallback poco costoso: cerca solo nelle directory candidate, non su tutto il disco.
     for base in candidate_project_dirs():
@@ -300,9 +375,13 @@ def remove_existing_audio_strips(scene: bpy.types.Scene) -> None:
             pass
 
 
-def attach_audio_to_scene(audio_path: Path | None, collection: bpy.types.Collection | None = None) -> bool:
+def attach_audio_to_scene(
+    audio_path: Path | None, collection: bpy.types.Collection | None = None
+) -> bool:
     if audio_path is None:
-        print(f"[WARN] Audio non trovato: {AUDIO_FILE_NAME}. La scena resta generata, ma senza traccia in timeline.")
+        print(
+            f"[WARN] Audio non trovato: {AUDIO_FILE_NAME}. La scena resta generata, ma senza traccia in timeline."
+        )
         return False
 
     scene = bpy.context.scene
@@ -431,13 +510,16 @@ def link_to_collection(obj: bpy.types.Object, collection: bpy.types.Collection) 
 # MATERIALI
 # =============================================================================
 
+
 def _rgba(color: tuple[float, ...]) -> tuple[float, float, float, float]:
     if len(color) >= 4:
         return (float(color[0]), float(color[1]), float(color[2]), float(color[3]))
     return (float(color[0]), float(color[1]), float(color[2]), 1.0)
 
 
-def _fresh_material(name: str, blend_method: str = "OPAQUE") -> tuple[bpy.types.Material, bpy.types.Nodes, bpy.types.NodeLinks]:
+def _fresh_material(
+    name: str, blend_method: str = "OPAQUE"
+) -> tuple[bpy.types.Material, bpy.types.Nodes, bpy.types.NodeLinks]:
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     mat.blend_method = blend_method
@@ -456,7 +538,9 @@ def _fresh_material(name: str, blend_method: str = "OPAQUE") -> tuple[bpy.types.
     return mat, nt.nodes, nt.links
 
 
-def _value_node(nodes: bpy.types.Nodes, name: str, value: float, location: tuple[float, float]) -> bpy.types.Node:
+def _value_node(
+    nodes: bpy.types.Nodes, name: str, value: float, location: tuple[float, float]
+) -> bpy.types.Node:
     node = nodes.new("ShaderNodeValue")
     node.name = name
     node.label = name
@@ -650,7 +734,9 @@ def make_dome_mat(name: str) -> bpy.types.Material:
     emission = nodes.new("ShaderNodeEmission")
     emission.location = (50, 200)
     emission.inputs[0].default_value = (0.02, 0.18, 0.20, 1.0)
-    emission_value = _value_node(nodes, "ST_EmissionStrength", 0.06 * ATMOS_EMISSION_SOFTNESS, (-150, 300))
+    emission_value = _value_node(
+        nodes, "ST_EmissionStrength", 0.06 * ATMOS_EMISSION_SOFTNESS, (-150, 300)
+    )
     add_shader = nodes.new("ShaderNodeAddShader")
     add_shader.location = (310, 80)
     links.new(tex.outputs["Generated"], mapping.inputs["Vector"])
@@ -664,7 +750,9 @@ def make_dome_mat(name: str) -> bpy.types.Material:
     return mat
 
 
-def make_volume_fog_mat(name: str, color: tuple[float, float, float, float], density: float, anisotropy: float = 0.15) -> bpy.types.Material:
+def make_volume_fog_mat(
+    name: str, color: tuple[float, float, float, float], density: float, anisotropy: float = 0.15
+) -> bpy.types.Material:
     mat, nodes, links = _fresh_material(name, blend_method="BLEND")
     out = nodes.new("ShaderNodeOutputMaterial")
     out.location = (470, 0)
@@ -711,16 +799,27 @@ def make_principled_emission_mat(
     roughness: float = 0.35,
     alpha: float = 1.0,
 ) -> bpy.types.Material:
-    return make_layered_surface_mat(name, base_color, base_color, emission_color, strength, metallic=metallic, roughness=roughness, alpha=alpha)
+    return make_layered_surface_mat(
+        name,
+        base_color,
+        base_color,
+        emission_color,
+        strength,
+        metallic=metallic,
+        roughness=roughness,
+        alpha=alpha,
+    )
 
 
-def _set_named_value_node(mat: bpy.types.Material, node_name: str, value: float, frame: int) -> bool:
+def _set_named_value_node(
+    mat: bpy.types.Material, node_name: str, value: float, frame: int
+) -> bool:
     if not mat or not mat.use_nodes or not mat.node_tree:
         return False
     node = mat.node_tree.nodes.get(node_name)
-    if node and getattr(node, 'type', '') == 'VALUE':
+    if node and getattr(node, "type", "") == "VALUE":
         node.outputs[0].default_value = float(value)
-        node.outputs[0].keyframe_insert('default_value', frame=frame)
+        node.outputs[0].keyframe_insert("default_value", frame=frame)
         return True
     return False
 
@@ -761,6 +860,7 @@ def set_material_volume_density(mat: bpy.types.Material, density: float, frame: 
 # GEOMETRIA / ASSET
 # =============================================================================
 
+
 def add_empty(name: str, location=(0, 0, 0), empty_display_size: float = 0.5) -> bpy.types.Object:
     bpy.ops.object.empty_add(type="PLAIN_AXES", location=location)
     obj = bpy.context.object
@@ -777,7 +877,9 @@ def add_uv_sphere(
     segments: int = 64,
     rings: int = 32,
 ) -> bpy.types.Object:
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=segments, ring_count=rings, radius=radius, location=location)
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        segments=segments, ring_count=rings, radius=radius, location=location
+    )
     obj = bpy.context.object
     obj.name = name
     if mat:
@@ -897,11 +999,15 @@ def create_central_focus(
             link_to_collection(obj, collection)
         visual = imported[0]
     else:
-        visual = add_uv_sphere(f"{name}_core_mesh", CORE_PROCEDURAL_RADIUS, (0, 0, 0), material, segments=96, rings=48)
+        visual = add_uv_sphere(
+            f"{name}_core_mesh", CORE_PROCEDURAL_RADIUS, (0, 0, 0), material, segments=96, rings=48
+        )
         visual.parent = root
         link_to_collection(visual, collection)
 
-    aura = add_uv_sphere(f"{name}_audio_aura", CORE_AURA_RADIUS, (0, 0, 0), aura_material, segments=96, rings=48)
+    aura = add_uv_sphere(
+        f"{name}_audio_aura", CORE_AURA_RADIUS, (0, 0, 0), aura_material, segments=96, rings=48
+    )
     aura.parent = root
     link_to_collection(aura, collection)
 
@@ -914,7 +1020,12 @@ def create_central_focus(
     return {"root": root, "visual": visual, "aura": aura}
 
 
-def add_force_field(name: str, field_type: str, location: tuple[float, float, float], collection: bpy.types.Collection) -> bpy.types.Object:
+def add_force_field(
+    name: str,
+    field_type: str,
+    location: tuple[float, float, float],
+    collection: bpy.types.Collection,
+) -> bpy.types.Object:
     bpy.ops.object.effector_add(type=field_type, location=location)
     obj = bpy.context.object
     obj.name = name
@@ -925,6 +1036,7 @@ def add_force_field(name: str, field_type: str, location: tuple[float, float, fl
 # =============================================================================
 # YOUTUBE / SOCIAL RENDER PROFILE
 # =============================================================================
+
 
 def normalize_youtube_profile(profile_name: str) -> str:
     profile = str(profile_name or "2K_INTERMEDIATE").upper().replace("-", "_").replace(" ", "_")
@@ -978,7 +1090,16 @@ def configure_color_management(scene: bpy.types.Scene, profile: dict) -> None:
     if view is None:
         return
     set_first_available(view, "view_transform", ["AgX", "Filmic", "Standard"])
-    set_first_available(view, "look", [str(profile.get("look", "Medium High Contrast")), "Medium High Contrast", "Base Contrast", "None"])
+    set_first_available(
+        view,
+        "look",
+        [
+            str(profile.get("look", "Medium High Contrast")),
+            "Medium High Contrast",
+            "Base Contrast",
+            "None",
+        ],
+    )
     try:
         view.exposure = float(profile.get("exposure", -0.07))
     except Exception:
@@ -1120,7 +1241,9 @@ def apply_youtube_render_profile(scene: bpy.types.Scene, fps: float) -> dict[str
     scene["st_output_frames_dir"] = str(paths["frames"])
     scene["st_output_mp4"] = str(paths["mp4"])
     print(f"[OK] YouTube/social profile: {profile_key}")
-    print(f"[OK] Resolution: {profile['width']}x{profile['height']} @ {profile['percentage']}% | fps={int(round(fps))}")
+    print(
+        f"[OK] Resolution: {profile['width']}x{profile['height']} @ {profile['percentage']}% | fps={int(round(fps))}"
+    )
     print(f"[OK] Output frames: {paths['frames']}")
     print(f"[OK] Output mp4:    {paths['mp4']}")
     return paths
@@ -1129,6 +1252,7 @@ def apply_youtube_render_profile(scene: bpy.types.Scene, fps: float) -> dict[str
 # =============================================================================
 # SCENA
 # =============================================================================
+
 
 def setup_scene(meta: dict) -> None:
     scene = bpy.context.scene
@@ -1143,7 +1267,9 @@ def setup_scene(meta: dict) -> None:
     world.color = (0.018, 0.055, 0.075)
 
 
-def make_environment(materials: dict[str, bpy.types.Material], collection: bpy.types.Collection) -> None:
+def make_environment(
+    materials: dict[str, bpy.types.Material], collection: bpy.types.Collection
+) -> None:
     floor_mat = materials["floor"]
     bpy.ops.mesh.primitive_plane_add(size=32, location=(0, 0, -0.08))
     floor = bpy.context.object
@@ -1153,7 +1279,9 @@ def make_environment(materials: dict[str, bpy.types.Material], collection: bpy.t
 
     # cupola morbida, non nera piatta
     dome_mat = materials["dome"]
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=96, ring_count=48, radius=18, location=(0, 0, 2.0))
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        segments=96, ring_count=48, radius=18, location=(0, 0, 2.0)
+    )
     dome = bpy.context.object
     dome.name = "blue_green_soft_space_dome"
     dome.data.materials.append(dome_mat)
@@ -1285,8 +1413,12 @@ def make_materials() -> dict[str, bpy.types.Material]:
         ),
         "floor": make_floor_mat("MAT_deep_reflective_floor"),
         "dome": make_dome_mat("MAT_soft_blue_green_dome"),
-        "fog_main": make_volume_fog_mat("MAT_main_scene_fog", (0.36, 0.58, 0.62, 1.0), FOG_MAIN_DENSITY, anisotropy=0.18),
-        "fog_layer": make_volume_fog_mat("MAT_low_mist_fog", (0.24, 0.40, 0.44, 1.0), FOG_LAYER_DENSITY, anisotropy=0.08),
+        "fog_main": make_volume_fog_mat(
+            "MAT_main_scene_fog", (0.36, 0.58, 0.62, 1.0), FOG_MAIN_DENSITY, anisotropy=0.18
+        ),
+        "fog_layer": make_volume_fog_mat(
+            "MAT_low_mist_fog", (0.24, 0.40, 0.44, 1.0), FOG_LAYER_DENSITY, anisotropy=0.08
+        ),
     }
 
 
@@ -1302,7 +1434,9 @@ def make_satellites(
 
     ring_a = add_torus("gravity_A_orbit_ring", 1.18, 0.007, orbit_a.location, materials["orbit"])
     ring_b = add_torus("gravity_B_orbit_ring", 1.18, 0.007, orbit_b.location, materials["orbit"])
-    ring_shared = add_torus("binary_outer_orbit_ring", 3.10, 0.009, orbit_shared.location, materials["orbit"])
+    ring_shared = add_torus(
+        "binary_outer_orbit_ring", 3.10, 0.009, orbit_shared.location, materials["orbit"]
+    )
     ring_a.parent = orbit_a
     ring_b.parent = orbit_b
     ring_shared.parent = orbit_shared
@@ -1321,22 +1455,52 @@ def make_satellites(
         size = INNER_SATELLITE_BASE_SIZE + INNER_SATELLITE_SIZE_STEP * (i % 4)
         z = 0.18 * math.sin(angle * 2.0)
 
-        obj_a = add_uv_sphere(f"A_gravity_body_{i+1:02d}", size, (radius * math.cos(angle), radius * math.sin(angle), z), mats[i % 3], 32, 16)
+        obj_a = add_uv_sphere(
+            f"A_gravity_body_{i + 1:02d}",
+            size,
+            (radius * math.cos(angle), radius * math.sin(angle), z),
+            mats[i % 3],
+            32,
+            16,
+        )
         obj_a.parent = orbit_a
         link_to_collection(obj_a, collection)
-        satellites_a.append({"obj": obj_a, "phase": angle, "base_radius": radius, "size": size, "speed": 1.15 + 0.17 * i})
+        satellites_a.append(
+            {
+                "obj": obj_a,
+                "phase": angle,
+                "base_radius": radius,
+                "size": size,
+                "speed": 1.15 + 0.17 * i,
+            }
+        )
 
-        obj_b = add_uv_sphere(f"B_gravity_body_{i+1:02d}", size, (radius * math.cos(-angle), radius * math.sin(-angle), -z), mats[(i + 1) % 3], 32, 16)
+        obj_b = add_uv_sphere(
+            f"B_gravity_body_{i + 1:02d}",
+            size,
+            (radius * math.cos(-angle), radius * math.sin(-angle), -z),
+            mats[(i + 1) % 3],
+            32,
+            16,
+        )
         obj_b.parent = orbit_b
         link_to_collection(obj_b, collection)
-        satellites_b.append({"obj": obj_b, "phase": -angle + 0.7, "base_radius": radius, "size": size, "speed": -(1.05 + 0.14 * i)})
+        satellites_b.append(
+            {
+                "obj": obj_b,
+                "phase": -angle + 0.7,
+                "base_radius": radius,
+                "size": size,
+                "speed": -(1.05 + 0.14 * i),
+            }
+        )
 
     for i in range(OUTER_SHARED_BODIES):
         angle = (math.tau * i) / OUTER_SHARED_BODIES
         radius = 2.64 + 0.18 * (i % 4)
         size = OUTER_SATELLITE_BASE_SIZE + OUTER_SATELLITE_SIZE_STEP * (i % 5)
         obj = add_uv_sphere(
-            f"binary_gravity_outer_body_{i+1:02d}",
+            f"binary_gravity_outer_body_{i + 1:02d}",
             size,
             (radius * math.cos(angle), radius * math.sin(angle), 0.25 * math.sin(angle * 3.0)),
             mats[(i + 2) % 3],
@@ -1345,7 +1509,15 @@ def make_satellites(
         )
         obj.parent = orbit_shared
         link_to_collection(obj, collection)
-        satellites_shared.append({"obj": obj, "phase": angle, "base_radius": radius, "size": size, "speed": 0.42 + 0.05 * i})
+        satellites_shared.append(
+            {
+                "obj": obj,
+                "phase": angle,
+                "base_radius": radius,
+                "size": size,
+                "speed": 0.42 + 0.05 * i,
+            }
+        )
 
     return {
         "rigs": [{"obj": orbit_a}, {"obj": orbit_b}, {"obj": orbit_shared}],
@@ -1356,10 +1528,10 @@ def make_satellites(
     }
 
 
-
 # =============================================================================
 # EFFETTI AVANZATI WOW
 # =============================================================================
+
 
 def make_transparent_emission_mat(
     name: str,
@@ -1368,7 +1540,9 @@ def make_transparent_emission_mat(
     strength: float,
     alpha: float,
 ) -> bpy.types.Material:
-    mat = make_principled_emission_mat(name, base_color, emission_color, strength, metallic=0.0, roughness=0.18, alpha=alpha)
+    mat = make_principled_emission_mat(
+        name, base_color, emission_color, strength, metallic=0.0, roughness=0.18, alpha=alpha
+    )
     mat.blend_method = "BLEND"
     mat.show_transparent_back = True
     return mat
@@ -1388,7 +1562,9 @@ def add_ico_sphere(
     mat: bpy.types.Material | None = None,
     subdivisions: int = 1,
 ) -> bpy.types.Object:
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=subdivisions, radius=radius, location=location)
+    bpy.ops.mesh.primitive_ico_sphere_add(
+        subdivisions=subdivisions, radius=radius, location=location
+    )
     obj = bpy.context.object
     obj.name = name
     if mat:
@@ -1443,7 +1619,7 @@ def make_wow_materials() -> dict:
     for i in range(WOW_SHOCKWAVE_COUNT):
         shock_mats.append(
             make_transparent_emission_mat(
-                f"MAT_wow_beat_shockwave_{i+1:02d}",
+                f"MAT_wow_beat_shockwave_{i + 1:02d}",
                 (0.18, 0.50, 0.62, 0.08),
                 (0.40, 0.78, 0.86, 1.0),
                 0.10,
@@ -1466,8 +1642,12 @@ def make_wow_effects(
         return wow
 
     if ENABLE_WOW_GRAVITY_LENS:
-        lens_a = add_uv_sphere("WOW_gravity_lens_shell_A", 1.50, (0, 0, 0), mats["lens_a"], segments=96, rings=48)
-        lens_b = add_uv_sphere("WOW_gravity_lens_shell_B", 1.50, (0, 0, 0), mats["lens_b"], segments=96, rings=48)
+        lens_a = add_uv_sphere(
+            "WOW_gravity_lens_shell_A", 1.50, (0, 0, 0), mats["lens_a"], segments=96, rings=48
+        )
+        lens_b = add_uv_sphere(
+            "WOW_gravity_lens_shell_B", 1.50, (0, 0, 0), mats["lens_b"], segments=96, rings=48
+        )
         lens_a.parent = focus_a["root"]
         lens_b.parent = focus_b["root"]
         link_to_collection(lens_a, collection)
@@ -1487,14 +1667,18 @@ def make_wow_effects(
         rings: list[bpy.types.Object] = []
         for i in range(WOW_SHOCKWAVE_COUNT):
             ring = add_torus(
-                f"WOW_beat_shockwave_ring_{i+1:02d}",
+                f"WOW_beat_shockwave_ring_{i + 1:02d}",
                 0.90 + 0.10 * i,
                 0.006 + 0.001 * (i % 3),
                 (0, 0, 0),
                 mats["shock"][i],
             )
             ring.parent = shock_rig
-            ring.rotation_euler = (math.radians(90 if i % 2 else 0), math.radians(18 * (i % 5)), math.radians(36 * i))
+            ring.rotation_euler = (
+                math.radians(90 if i % 2 else 0),
+                math.radians(18 * (i % 5)),
+                math.radians(36 * i),
+            )
             ring.scale = (0.01, 0.01, 0.01)
             link_to_collection(ring, collection)
             rings.append(ring)
@@ -1513,7 +1697,13 @@ def make_wow_effects(
                 y = 0.28 * math.sin(phase + t * math.tau * 1.7) * bow
                 z = 0.92 + 0.74 * bow + 0.12 * math.cos(phase + t * math.tau)
                 points.append((x, y, z))
-            arc = add_poly_curve(f"WOW_binary_plasma_arc_{i+1:02d}", points, mats["arc"], bevel_depth=0.012, bevel_resolution=3)
+            arc = add_poly_curve(
+                f"WOW_binary_plasma_arc_{i + 1:02d}",
+                points,
+                mats["arc"],
+                bevel_depth=0.012,
+                bevel_resolution=3,
+            )
             link_to_collection(arc, collection)
             arcs.append(arc)
         wow["plasma_arcs"] = arcs
@@ -1548,7 +1738,7 @@ def make_wow_effects(
             y_flatten = rng.uniform(0.55, 0.95)
             size = rng.uniform(0.010, 0.043)
             obj = add_ico_sphere(
-                f"WOW_parallax_dust_{i+1:03d}",
+                f"WOW_parallax_dust_{i + 1:03d}",
                 size,
                 (radius * math.cos(theta), y_flatten * radius * math.sin(theta), z),
                 mats["dust"],
@@ -1601,7 +1791,10 @@ def animate_wow_effects(
 
     for index, sample in enumerate(audio_frames):
         if WOW_KEYFRAME_STRIDE > 1 and index % WOW_KEYFRAME_STRIDE != 0:
-            if float(sample.get("beat", 0.0)) < 0.5 and float(sample.get("onset", 0.0)) < ONSET_KEY_THRESHOLD:
+            if (
+                float(sample.get("beat", 0.0)) < 0.5
+                and float(sample.get("onset", 0.0)) < ONSET_KEY_THRESHOLD
+            ):
                 continue
 
         low = clamp(sample.get("low", 0.0))
@@ -1637,7 +1830,11 @@ def animate_wow_effects(
 
         if shock_rig:
             shock_rig.location = barycenter + Vector((0.0, 0.0, 0.02))
-            shock_rig.rotation_euler = (0.06 * math.sin(t * 0.15), 0.08 * math.cos(t * 0.11), 0.23 * t)
+            shock_rig.rotation_euler = (
+                0.06 * math.sin(t * 0.15),
+                0.08 * math.cos(t * 0.11),
+                0.23 * t,
+            )
             shock_rig.scale = (1.0 + 0.035 * energy, 1.0 + 0.035 * energy, 1.0)
             shock_rig.keyframe_insert("location", frame=frame)
             shock_rig.keyframe_insert("rotation_euler", frame=frame)
@@ -1655,55 +1852,96 @@ def animate_wow_effects(
                 ring.keyframe_insert("scale", frame=frame)
                 ring.keyframe_insert("rotation_euler", frame=frame)
                 if "shock" in mats and i < len(mats["shock"]):
-                    set_material_alpha(mats["shock"][i], clamp(0.02 + 0.14 * fade * burst, 0.01, 0.22), frame)
-                    set_material_emission_strength(mats["shock"][i], FLASH_REDUCTION_FACTOR * (0.05 + 0.45 * fade * burst + 0.10 * high), frame)
+                    set_material_alpha(
+                        mats["shock"][i], clamp(0.02 + 0.14 * fade * burst, 0.01, 0.22), frame
+                    )
+                    set_material_emission_strength(
+                        mats["shock"][i],
+                        FLASH_REDUCTION_FACTOR * (0.05 + 0.45 * fade * burst + 0.10 * high),
+                        frame,
+                    )
 
         if plasma_arcs:
             for i, arc in enumerate(plasma_arcs):
                 phase = i / max(1, len(plasma_arcs) - 1)
-                arc.rotation_euler = (0.05 * math.sin(t * 0.31 + phase), 0.10 * math.cos(t * 0.23 + phase), 0.18 * math.sin(t * 0.19 + phase))
+                arc.rotation_euler = (
+                    0.05 * math.sin(t * 0.31 + phase),
+                    0.10 * math.cos(t * 0.23 + phase),
+                    0.18 * math.sin(t * 0.19 + phase),
+                )
                 arc.scale = (1.0 + 0.05 * pulse, 1.0 + 0.28 * high + 0.12 * onset, 1.0 + 0.10 * mid)
                 arc.keyframe_insert("rotation_euler", frame=frame)
                 arc.keyframe_insert("scale", frame=frame)
                 set_curve_bevel(arc, 0.003 + 0.012 * onset + 0.004 * mid, frame)
             if "arc" in mats:
-                set_material_alpha(mats["arc"], clamp(0.06 + 0.14 * onset + 0.06 * beat, 0.04, 0.20), frame)
-                set_material_emission_strength(mats["arc"], FLASH_REDUCTION_FACTOR * (0.10 + 0.55 * onset + 0.16 * mid), frame)
+                set_material_alpha(
+                    mats["arc"], clamp(0.06 + 0.14 * onset + 0.06 * beat, 0.04, 0.20), frame
+                )
+                set_material_emission_strength(
+                    mats["arc"], FLASH_REDUCTION_FACTOR * (0.10 + 0.55 * onset + 0.16 * mid), frame
+                )
 
         if beams:
-            targets = [focus_a["root"].location, focus_b["root"].location, barycenter + Vector((0.0, 0.0, 0.08 + 0.25 * energy))]
+            targets = [
+                focus_a["root"].location,
+                focus_b["root"].location,
+                barycenter + Vector((0.0, 0.0, 0.08 + 0.25 * energy)),
+            ]
             for i, beam in enumerate(beams):
                 target = targets[min(i, len(targets) - 1)]
                 direction = target - beam.location
                 beam.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
-                beam.data.energy = 30 + 140 * pulse + 60 * energy + (35 * low if i == 0 else 35 * high if i == 1 else 45 * mid)
+                beam.data.energy = (
+                    30
+                    + 140 * pulse
+                    + 60 * energy
+                    + (35 * low if i == 0 else 35 * high if i == 1 else 45 * mid)
+                )
                 beam.data.spot_size = math.radians(16 + 10 * energy + 6 * pulse)
                 beam.keyframe_insert("rotation_euler", frame=frame)
                 beam.data.keyframe_insert("energy", frame=frame)
                 beam.data.keyframe_insert("spot_size", frame=frame)
 
         if dust_rig:
-            dust_rig.rotation_euler = (0.05 * math.sin(t * 0.05), 0.04 * math.cos(t * 0.04), 0.055 * t * (1.0 + 0.35 * mid))
+            dust_rig.rotation_euler = (
+                0.05 * math.sin(t * 0.05),
+                0.04 * math.cos(t * 0.04),
+                0.055 * t * (1.0 + 0.35 * mid),
+            )
             ds = 1.0 + 0.020 * energy + 0.026 * pulse
             dust_rig.scale = (ds, ds, ds)
             dust_rig.keyframe_insert("rotation_euler", frame=frame)
             dust_rig.keyframe_insert("scale", frame=frame)
             if "dust" in mats:
-                set_material_emission_strength(mats["dust"], FLASH_REDUCTION_FACTOR * (0.03 + 0.12 * high + 0.08 * pulse), frame)
+                set_material_emission_strength(
+                    mats["dust"],
+                    FLASH_REDUCTION_FACTOR * (0.03 + 0.12 * high + 0.08 * pulse),
+                    frame,
+                )
 
         if ribbons:
             for idx, ribbon in enumerate(ribbons):
                 direction = 1.0 if idx == 0 else -1.0
                 ribbon.location = barycenter
-                ribbon.rotation_euler = (0.08 * math.sin(t * 0.09), 0.04 * math.cos(t * 0.12), direction * 0.36 * t * (1.0 + 0.30 * mid))
+                ribbon.rotation_euler = (
+                    0.08 * math.sin(t * 0.09),
+                    0.04 * math.cos(t * 0.12),
+                    direction * 0.36 * t * (1.0 + 0.30 * mid),
+                )
                 ribbon.scale = (1.0 + 0.05 * mid, 1.0 + 0.05 * mid, 1.0 + 0.18 * pulse)
                 ribbon.keyframe_insert("location", frame=frame)
                 ribbon.keyframe_insert("rotation_euler", frame=frame)
                 ribbon.keyframe_insert("scale", frame=frame)
                 set_curve_bevel(ribbon, 0.003 + 0.008 * energy + 0.004 * pulse, frame)
             if "vortex" in mats:
-                set_material_alpha(mats["vortex"], clamp(0.05 + 0.10 * energy + 0.05 * pulse, 0.04, 0.18), frame)
-                set_material_emission_strength(mats["vortex"], FLASH_REDUCTION_FACTOR * (0.05 + 0.20 * mid + 0.12 * pulse), frame)
+                set_material_alpha(
+                    mats["vortex"], clamp(0.05 + 0.10 * energy + 0.05 * pulse, 0.04, 0.18), frame
+                )
+                set_material_emission_strength(
+                    mats["vortex"],
+                    FLASH_REDUCTION_FACTOR * (0.05 + 0.20 * mid + 0.12 * pulse),
+                    frame,
+                )
 
         # DOF dinamica: sui beat apre leggermente il fuoco e simula pressione cinematica senza scatti.
         if camera and camera.data and camera.data.dof:
@@ -1828,9 +2066,11 @@ def setup_wow_compositor() -> bool:
         print(f"[WARN] Setup compositor saltato per incompatibilita API Blender 5.1: {exc}")
         return False
 
+
 # =============================================================================
 # ANIMAZIONE AUDIO-REACTIVE
 # =============================================================================
+
 
 def event_frame(audio_frame: dict, fps: float) -> int:
     # I frame audio partono da t=0; Blender da 1.
@@ -1840,13 +2080,19 @@ def event_frame(audio_frame: dict, fps: float) -> int:
 def is_main_key(audio_frame: dict, index: int) -> bool:
     if MAIN_KEYFRAME_STRIDE <= 1 or index % MAIN_KEYFRAME_STRIDE == 0:
         return True
-    return float(audio_frame.get("beat", 0.0)) >= 0.5 or float(audio_frame.get("onset", 0.0)) >= ONSET_KEY_THRESHOLD
+    return (
+        float(audio_frame.get("beat", 0.0)) >= 0.5
+        or float(audio_frame.get("onset", 0.0)) >= ONSET_KEY_THRESHOLD
+    )
 
 
 def is_satellite_key(audio_frame: dict, index: int) -> bool:
     if SATELLITE_KEYFRAME_STRIDE <= 1 or index % SATELLITE_KEYFRAME_STRIDE == 0:
         return True
-    return float(audio_frame.get("beat", 0.0)) >= 0.5 or float(audio_frame.get("onset", 0.0)) >= ONSET_KEY_THRESHOLD
+    return (
+        float(audio_frame.get("beat", 0.0)) >= 0.5
+        or float(audio_frame.get("onset", 0.0)) >= ONSET_KEY_THRESHOLD
+    )
 
 
 def animate_scene(
@@ -1867,8 +2113,12 @@ def animate_scene(
     visual_b = focus_b.get("visual")
     aura_a = focus_a["aura"]
     aura_b = focus_b["aura"]
-    disp_a = aura_a.modifiers.get("GravityCore_A_audio_displace") or next((m for m in aura_a.modifiers if m.type == "DISPLACE"), None)
-    disp_b = aura_b.modifiers.get("GravityCore_B_audio_displace") or next((m for m in aura_b.modifiers if m.type == "DISPLACE"), None)
+    disp_a = aura_a.modifiers.get("GravityCore_A_audio_displace") or next(
+        (m for m in aura_a.modifiers if m.type == "DISPLACE"), None
+    )
+    disp_b = aura_b.modifiers.get("GravityCore_B_audio_displace") or next(
+        (m for m in aura_b.modifiers if m.type == "DISPLACE"), None
+    )
 
     orbit_a = satellite_data["rigs"][0]["obj"]
     orbit_b = satellite_data["rigs"][1]["obj"]
@@ -1901,21 +2151,37 @@ def animate_scene(
             contact_mix = clamp(0.74 * contact_drive + 0.26 * contact_drive * elastic_cycle)
 
             base_scale_a = max(0.78, 0.86 + 0.08 * smoothstep(low) + 0.05 * pulse)
-            base_scale_b = max(0.78, 0.86 + 0.08 * smoothstep(high) + 0.04 * smoothstep(mid) + 0.05 * pulse)
+            base_scale_b = max(
+                0.78, 0.86 + 0.08 * smoothstep(high) + 0.04 * smoothstep(mid) + 0.05 * pulse
+            )
             radius_a = CORE_PROCEDURAL_RADIUS * base_scale_a
             radius_b = CORE_PROCEDURAL_RADIUS * base_scale_b
             touch_distance = radius_a + radius_b + CORE_CONTACT_GAP
-            extra_distance = 0.05 + 1.05 * (1.0 - contact_mix) + CORE_AUDIO_EXPAND_DISTANCE * smoothstep(high)
+            extra_distance = (
+                0.05 + 1.05 * (1.0 - contact_mix) + CORE_AUDIO_EXPAND_DISTANCE * smoothstep(high)
+            )
             center_distance = max(touch_distance, touch_distance + extra_distance)
             separation = center_distance * 0.5
 
             base_center = Vector((0.0, 0.0, CORE_VERTICAL_BASE + 0.03 * math.sin(t * 0.21)))
             lateral_sway = 0.14 * math.sin(t * 0.33) * (1.0 - 0.35 * contact_mix)
             vertical_a = 0.08 * smoothstep(low) + 0.025 * math.sin(t * 0.31) + 0.020 * elastic_cycle
-            vertical_b = 0.08 * smoothstep(high) + 0.025 * math.cos(t * 0.27) - 0.020 * elastic_cycle
+            vertical_b = (
+                0.08 * smoothstep(high) + 0.025 * math.cos(t * 0.27) - 0.020 * elastic_cycle
+            )
 
-            root_a.location = base_center - axis * separation - perp * lateral_sway + Vector((0.0, 0.0, vertical_a))
-            root_b.location = base_center + axis * separation + perp * lateral_sway + Vector((0.0, 0.0, vertical_b))
+            root_a.location = (
+                base_center
+                - axis * separation
+                - perp * lateral_sway
+                + Vector((0.0, 0.0, vertical_a))
+            )
+            root_b.location = (
+                base_center
+                + axis * separation
+                + perp * lateral_sway
+                + Vector((0.0, 0.0, vertical_b))
+            )
             barycenter = (root_a.location + root_b.location) * 0.5
 
             contact_amount = clamp(1.0 - (center_distance - touch_distance) / 0.42)
@@ -1925,11 +2191,23 @@ def animate_scene(
             squeeze_b = base_scale_b * (1.0 - squash_b * contact_mix)
             bulge_a = base_scale_a * (1.0 + CORE_ELASTIC_BULGE_FACTOR * squash_a * contact_mix)
             bulge_b = base_scale_b * (1.0 + CORE_ELASTIC_BULGE_FACTOR * squash_b * contact_mix)
-            root_a.scale = (squeeze_a, bulge_a, base_scale_a * (1.0 + 0.45 * squash_a * contact_mix + 0.04 * pulse))
-            root_b.scale = (squeeze_b, bulge_b, base_scale_b * (1.0 + 0.45 * squash_b * contact_mix + 0.04 * pulse))
+            root_a.scale = (
+                squeeze_a,
+                bulge_a,
+                base_scale_a * (1.0 + 0.45 * squash_a * contact_mix + 0.04 * pulse),
+            )
+            root_b.scale = (
+                squeeze_b,
+                bulge_b,
+                base_scale_b * (1.0 + 0.45 * squash_b * contact_mix + 0.04 * pulse),
+            )
 
             root_a.rotation_euler = (0.05 * high, 0.12 * mid, binary_angle + 0.10 * onset)
-            root_b.rotation_euler = (-0.05 * low, -0.12 * mid, binary_angle + math.pi - 0.10 * onset)
+            root_b.rotation_euler = (
+                -0.05 * low,
+                -0.12 * mid,
+                binary_angle + math.pi - 0.10 * onset,
+            )
 
             aura_local_a = 1.0 + 0.12 * energy + 0.16 * contact_mix
             aura_local_b = 1.0 + 0.12 * energy + 0.16 * contact_mix
@@ -1964,13 +2242,27 @@ def animate_scene(
 
             orbit_a.location = root_a.location
             orbit_b.location = root_b.location
-            orbit_shared.location = barycenter + Vector((0.0, 0.0, 0.06 + 0.08 * math.sin(t * 0.13)))
+            orbit_shared.location = barycenter + Vector(
+                (0.0, 0.0, 0.06 + 0.08 * math.sin(t * 0.13))
+            )
             orbit_a.scale = (pull_a, pull_a, pull_a)
             orbit_b.scale = (pull_b, pull_b, pull_b)
             orbit_shared.scale = (pull_shared, pull_shared, pull_shared)
-            orbit_a.rotation_euler = (0.20 * mid, 0.15 * high, 1.45 * t * (1.0 + 0.45 * mid) + 0.4 * beat)
-            orbit_b.rotation_euler = (-0.14 * low, 0.18 * mid, -1.32 * t * (1.0 + 0.38 * mid) - 0.35 * beat)
-            orbit_shared.rotation_euler = (0.18 * math.sin(t * 0.11), 0.12 * math.cos(t * 0.09), 0.42 * t * (1.0 + 0.55 * mid))
+            orbit_a.rotation_euler = (
+                0.20 * mid,
+                0.15 * high,
+                1.45 * t * (1.0 + 0.45 * mid) + 0.4 * beat,
+            )
+            orbit_b.rotation_euler = (
+                -0.14 * low,
+                0.18 * mid,
+                -1.32 * t * (1.0 + 0.38 * mid) - 0.35 * beat,
+            )
+            orbit_shared.rotation_euler = (
+                0.18 * math.sin(t * 0.11),
+                0.12 * math.cos(t * 0.09),
+                0.42 * t * (1.0 + 0.55 * mid),
+            )
 
             for rig in (orbit_a, orbit_b, orbit_shared):
                 rig.keyframe_insert("location", frame=frame)
@@ -1983,18 +2275,63 @@ def animate_scene(
             for ring in (ring_a, ring_b, ring_shared):
                 ring.keyframe_insert("scale", frame=frame)
 
-            set_material_emission_strength(materials["core_a"], FLASH_REDUCTION_FACTOR * (0.50 + 1.40 * low + 0.60 * pulse), frame)
-            set_material_emission_strength(materials["core_b"], FLASH_REDUCTION_FACTOR * (0.48 + 1.35 * high + 0.45 * mid + 0.52 * pulse), frame)
-            set_material_emission_strength(materials["aura_a"], FLASH_REDUCTION_FACTOR * (0.08 + 0.42 * low + 0.24 * onset), frame)
-            set_material_emission_strength(materials["aura_b"], FLASH_REDUCTION_FACTOR * (0.08 + 0.40 * high + 0.22 * onset), frame)
-            set_material_alpha(materials["aura_a"], clamp(0.08 + 0.08 * energy + 0.06 * onset, 0.07, 0.22), frame)
-            set_material_alpha(materials["aura_b"], clamp(0.08 + 0.08 * high + 0.06 * onset, 0.07, 0.22), frame)
-            set_material_emission_strength(materials["orbit"], FLASH_REDUCTION_FACTOR * (0.05 + 0.20 * mid + 0.10 * pulse), frame)
-            set_material_emission_strength(materials["sat_low"], FLASH_REDUCTION_FACTOR * (0.06 + 0.34 * low + 0.16 * beat), frame)
-            set_material_emission_strength(materials["sat_mid"], FLASH_REDUCTION_FACTOR * (0.06 + 0.30 * mid + 0.14 * beat), frame)
-            set_material_emission_strength(materials["sat_high"], FLASH_REDUCTION_FACTOR * (0.06 + 0.36 * high + 0.18 * onset), frame)
-            set_material_volume_density(materials["fog_main"], FOG_MAIN_DENSITY + FOG_PULSE_AMOUNT * (0.35 * energy + 0.65 * pulse), frame)
-            set_material_volume_density(materials["fog_layer"], FOG_LAYER_DENSITY + (FOG_PULSE_AMOUNT * 1.35) * (0.45 * low + 0.35 * energy + 0.20 * pulse), frame)
+            set_material_emission_strength(
+                materials["core_a"],
+                FLASH_REDUCTION_FACTOR * (0.50 + 1.40 * low + 0.60 * pulse),
+                frame,
+            )
+            set_material_emission_strength(
+                materials["core_b"],
+                FLASH_REDUCTION_FACTOR * (0.48 + 1.35 * high + 0.45 * mid + 0.52 * pulse),
+                frame,
+            )
+            set_material_emission_strength(
+                materials["aura_a"],
+                FLASH_REDUCTION_FACTOR * (0.08 + 0.42 * low + 0.24 * onset),
+                frame,
+            )
+            set_material_emission_strength(
+                materials["aura_b"],
+                FLASH_REDUCTION_FACTOR * (0.08 + 0.40 * high + 0.22 * onset),
+                frame,
+            )
+            set_material_alpha(
+                materials["aura_a"], clamp(0.08 + 0.08 * energy + 0.06 * onset, 0.07, 0.22), frame
+            )
+            set_material_alpha(
+                materials["aura_b"], clamp(0.08 + 0.08 * high + 0.06 * onset, 0.07, 0.22), frame
+            )
+            set_material_emission_strength(
+                materials["orbit"],
+                FLASH_REDUCTION_FACTOR * (0.05 + 0.20 * mid + 0.10 * pulse),
+                frame,
+            )
+            set_material_emission_strength(
+                materials["sat_low"],
+                FLASH_REDUCTION_FACTOR * (0.06 + 0.34 * low + 0.16 * beat),
+                frame,
+            )
+            set_material_emission_strength(
+                materials["sat_mid"],
+                FLASH_REDUCTION_FACTOR * (0.06 + 0.30 * mid + 0.14 * beat),
+                frame,
+            )
+            set_material_emission_strength(
+                materials["sat_high"],
+                FLASH_REDUCTION_FACTOR * (0.06 + 0.36 * high + 0.18 * onset),
+                frame,
+            )
+            set_material_volume_density(
+                materials["fog_main"],
+                FOG_MAIN_DENSITY + FOG_PULSE_AMOUNT * (0.35 * energy + 0.65 * pulse),
+                frame,
+            )
+            set_material_volume_density(
+                materials["fog_layer"],
+                FOG_LAYER_DENSITY
+                + (FOG_PULSE_AMOUNT * 1.35) * (0.45 * low + 0.35 * energy + 0.20 * pulse),
+                frame,
+            )
 
             lights["key"].data.energy = 320 + 520 * energy + 260 * pulse
             lights["A"].location = root_a.location + Vector((-0.6, -1.2, 1.4))
@@ -2099,6 +2436,7 @@ def animate_scene(
 # MAIN
 # =============================================================================
 
+
 def main() -> None:
     keyframe_path = find_file(KEYFRAME_JSON_NAME)
     try:
@@ -2147,20 +2485,28 @@ def main() -> None:
     wow_effects = make_wow_effects(root_collection, focus_a, focus_b)
 
     force_fields = {
-        "A_force": add_force_field("GravityCore_A_negative_force_well", "FORCE", focus_a["root"].location, root_collection),
-        "B_force": add_force_field("GravityCore_B_negative_force_well", "FORCE", focus_b["root"].location, root_collection),
-        "A_vortex": add_force_field("GravityCore_A_vortex_field", "VORTEX", focus_a["root"].location, root_collection),
-        "B_vortex": add_force_field("GravityCore_B_vortex_field", "VORTEX", focus_b["root"].location, root_collection),
+        "A_force": add_force_field(
+            "GravityCore_A_negative_force_well", "FORCE", focus_a["root"].location, root_collection
+        ),
+        "B_force": add_force_field(
+            "GravityCore_B_negative_force_well", "FORCE", focus_b["root"].location, root_collection
+        ),
+        "A_vortex": add_force_field(
+            "GravityCore_A_vortex_field", "VORTEX", focus_a["root"].location, root_collection
+        ),
+        "B_vortex": add_force_field(
+            "GravityCore_B_vortex_field", "VORTEX", focus_b["root"].location, root_collection
+        ),
     }
 
-    animate_scene(audio_frames, meta, focus_a, focus_b, satellites, materials, lights, camera, force_fields)
+    animate_scene(
+        audio_frames, meta, focus_a, focus_b, satellites, materials, lights, camera, force_fields
+    )
     animate_wow_effects(audio_frames, meta, wow_effects, focus_a, focus_b, camera)
 
     # Etichetta tecnica in scena, utile quando si riapre il file.
     font_curve = bpy.data.curves.new("scene_generation_note_curve", type="FONT")
-    font_curve.body = (
-        "Ready To Jazz - Luca Vera | dual gravity scene | keyframes from analysis_blender_keyframes JSON"
-    )
+    font_curve.body = "Ready To Jazz - Luca Vera | dual gravity scene | keyframes from analysis_blender_keyframes JSON"
     font_curve.align_x = "CENTER"
     font_curve.size = 0.12
     font_obj = bpy.data.objects.new("scene_generation_note", font_curve)
@@ -2172,18 +2518,30 @@ def main() -> None:
     print("=" * 80)
     print("Ready To Jazz dual gravity scene generata.")
     print(f"JSON keyframe: {keyframe_path}")
-    print(f"Frame usati: {len(audio_frames)} | timeline: {bpy.context.scene.frame_start}-{bpy.context.scene.frame_end}")
+    print(
+        f"Frame usati: {len(audio_frames)} | timeline: {bpy.context.scene.frame_start}-{bpy.context.scene.frame_end}"
+    )
     print(f"Primary ball asset: {ball_asset if ball_asset else 'fallback procedurale'}")
     print(f"Audio in scena/VSE: {'caricato' if audio_loaded else 'non trovato/non caricato'}")
     print(f"Distanza core half-base: {CORE_BASE_HALF_DISTANCE} Blender units")
-    print(f"Core target size: {CORE_IMPORTED_TARGET_SIZE} | core procedural radius: {CORE_PROCEDURAL_RADIUS} | aura radius: {CORE_AURA_RADIUS}")
-    print(f"Elastic touch: gap={CORE_CONTACT_GAP} | squash_max={CORE_ELASTIC_SQUASH_MAX} | bulge_factor={CORE_ELASTIC_BULGE_FACTOR}")
-    print(f"Satellite size tuning: inner={INNER_SATELLITE_BASE_SIZE}+{INNER_SATELLITE_SIZE_STEP} step | outer={OUTER_SATELLITE_BASE_SIZE}+{OUTER_SATELLITE_SIZE_STEP} step")
+    print(
+        f"Core target size: {CORE_IMPORTED_TARGET_SIZE} | core procedural radius: {CORE_PROCEDURAL_RADIUS} | aura radius: {CORE_AURA_RADIUS}"
+    )
+    print(
+        f"Elastic touch: gap={CORE_CONTACT_GAP} | squash_max={CORE_ELASTIC_SQUASH_MAX} | bulge_factor={CORE_ELASTIC_BULGE_FACTOR}"
+    )
+    print(
+        f"Satellite size tuning: inner={INNER_SATELLITE_BASE_SIZE}+{INNER_SATELLITE_SIZE_STEP} step | outer={OUTER_SATELLITE_BASE_SIZE}+{OUTER_SATELLITE_SIZE_STEP} step"
+    )
     print(f"WOW advanced effects: {ENABLE_WOW_ADVANCED_EFFECTS}")
     print(f"Primary ball asset enabled: {USE_PRIMARY_BALL_ASSET}")
-    print(f"Fog densities: main={FOG_MAIN_DENSITY} | layer={FOG_LAYER_DENSITY} | pulse={FOG_PULSE_AMOUNT}")
+    print(
+        f"Fog densities: main={FOG_MAIN_DENSITY} | layer={FOG_LAYER_DENSITY} | pulse={FOG_PULSE_AMOUNT}"
+    )
     print(f"WOW compositor: {'abilitato' if compositor_enabled else 'saltato/non disponibile'}")
-    print(f"WOW shockwaves/arcs/lens/beams/dust: {ENABLE_WOW_SHOCKWAVES}/{ENABLE_WOW_PLASMA_ARCS}/{ENABLE_WOW_GRAVITY_LENS}/{ENABLE_WOW_LIGHT_BEAMS}/{ENABLE_WOW_STAR_DUST}")
+    print(
+        f"WOW shockwaves/arcs/lens/beams/dust: {ENABLE_WOW_SHOCKWAVES}/{ENABLE_WOW_PLASMA_ARCS}/{ENABLE_WOW_GRAVITY_LENS}/{ENABLE_WOW_LIGHT_BEAMS}/{ENABLE_WOW_STAR_DUST}"
+    )
     profile_key = normalize_youtube_profile(FINAL_YOUTUBE)
     profile_paths = output_paths_for_profile(profile_key)
     print(f"Final YouTube profile: {profile_key}")

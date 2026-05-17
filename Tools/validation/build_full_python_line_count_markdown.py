@@ -5,6 +5,7 @@ Report-only utility used by IA-Carmine startup/refactor workflows. It does not
 scan source files itself; the authoritative source remains
 Tools/validation/build_python_line_count_csv.py.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -14,12 +15,20 @@ from datetime import datetime
 from pathlib import Path
 
 try:
-    from Tools.validation.report_utils import resolve_output_path, write_full_python_line_count_markdown, write_json_report
+    from Tools.validation.report_utils import (
+        resolve_output_path,
+        write_full_python_line_count_markdown,
+        write_json_report,
+    )
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation.report_utils import resolve_output_path, write_full_python_line_count_markdown, write_json_report
+    from Tools.validation.report_utils import (
+        resolve_output_path,
+        write_full_python_line_count_markdown,
+        write_json_report,
+    )
 
 
 def now_stamp() -> str:
@@ -49,7 +58,9 @@ def main() -> int:
         "repo_root": str(repo_root),
         "stamp": stamp,
         "passed": csv_path.exists() and output.exists(),
-        "errors": [] if csv_path.exists() and output.exists() else [f"missing csv or output: {csv_path} -> {output}"],
+        "errors": []
+        if csv_path.exists() and output.exists()
+        else [f"missing csv or output: {csv_path} -> {output}"],
         "warnings": [],
         "provider_execution_performed": False,
         "patch_application_performed": False,

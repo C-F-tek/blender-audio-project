@@ -5,21 +5,33 @@ knows about Python syntax and common generated-code hazards, but it does not
 know whether a script targets Blender, another DCC application, an automation
 runtime or a future app-specific adapter.
 """
+
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 try:
-    from Tools.validation.generated_file_policy import PolicyFinding, PolicyResult, PolicyRule, evaluate_text
+    from Tools.validation.generated_file_policy import (
+        PolicyFinding,
+        PolicyResult,
+        PolicyRule,
+        evaluate_text,
+    )
 except ImportError:  # Allows direct execution from Tools/validation.
     import sys
 
     repo_root = Path(__file__).resolve().parents[2]
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.validation.generated_file_policy import PolicyFinding, PolicyResult, PolicyRule, evaluate_text  # type: ignore
+    from Tools.validation.generated_file_policy import (  # type: ignore
+        PolicyFinding,
+        PolicyResult,
+        PolicyRule,
+        evaluate_text,
+    )
 
 
 GENERIC_GENERATED_PYTHON_RULES: tuple[dict[str, str], ...] = (
@@ -134,7 +146,9 @@ def _ast_findings(tree: ast.AST) -> list[PolicyFinding]:
                         PolicyFinding(
                             rule_id="warn_subprocess_shell_true",
                             severity="warning",
-                            message=_line_message(f"Generated Python calls {call_name}(..., shell=True)", node),
+                            message=_line_message(
+                                f"Generated Python calls {call_name}(..., shell=True)", node
+                            ),
                         )
                     )
                     break
@@ -157,7 +171,9 @@ def evaluate_python_text(
         message = f"Generated Python syntax error: {exc.msg}"
         if exc.lineno is not None:
             message = f"{message} on line {exc.lineno}"
-        findings.append(PolicyFinding(rule_id="python_syntax_error", severity="error", message=message))
+        findings.append(
+            PolicyFinding(rule_id="python_syntax_error", severity="error", message=message)
+        )
         return PolicyResult(label=label, passed=False, findings=findings)
 
     findings.extend(_ast_findings(tree))

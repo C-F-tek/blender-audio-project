@@ -55,7 +55,13 @@ def validate_capability_entry(entry: Any, index: int) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     if not isinstance(entry, dict):
-        return {"index": index, "resource": None, "ok": False, "errors": [f"{label} must be an object"], "warnings": warnings}
+        return {
+            "index": index,
+            "resource": None,
+            "ok": False,
+            "errors": [f"{label} must be an object"],
+            "warnings": warnings,
+        }
 
     resource = str(entry.get("resource") or "")
     name = str(entry.get("name") or "")
@@ -123,12 +129,24 @@ def validate_hardware_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
         errors.append("capabilities must be a list")
         capability_checks: list[dict[str, Any]] = []
     else:
-        capability_checks = [validate_capability_entry(item, index) for index, item in enumerate(raw_capabilities)]
+        capability_checks = [
+            validate_capability_entry(item, index) for index, item in enumerate(raw_capabilities)
+        ]
         for check in capability_checks:
-            errors.extend(f"{check.get('name') or check.get('index')}: {error}" for error in check.get("errors", []))
-            warnings.extend(f"{check.get('name') or check.get('index')}: {warning}" for warning in check.get("warnings", []))
+            errors.extend(
+                f"{check.get('name') or check.get('index')}: {error}"
+                for error in check.get("errors", [])
+            )
+            warnings.extend(
+                f"{check.get('name') or check.get('index')}: {warning}"
+                for warning in check.get("warnings", [])
+            )
 
-    visible_resources = {str(item.get("resource")) for item in raw_capabilities if isinstance(item, dict)} if isinstance(raw_capabilities, list) else set()
+    visible_resources = (
+        {str(item.get("resource")) for item in raw_capabilities if isinstance(item, dict)}
+        if isinstance(raw_capabilities, list)
+        else set()
+    )
     for resource in REQUIRED_RESOURCES:
         if resource not in visible_resources:
             errors.append(f"required resource not visible in manifest: {resource}")
@@ -180,7 +198,9 @@ def validate_delegated_report(path: Path, repo_root: Path) -> dict[str, Any]:
     }
 
 
-def validate_contract(repo_root: Path, hardware_manifest: Path, delegated_reports: list[Path]) -> dict[str, Any]:
+def validate_contract(
+    repo_root: Path, hardware_manifest: Path, delegated_reports: list[Path]
+) -> dict[str, Any]:
     hardware = validate_hardware_manifest(hardware_manifest, repo_root)
     delegated = [validate_delegated_report(path, repo_root) for path in delegated_reports]
     errors = list(hardware.get("errors") or [])

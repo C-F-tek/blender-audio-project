@@ -72,7 +72,5 @@ def command_env(repo_root: Path) -> dict[str, str]:
 
     python_path = Path(child_python)
     if python_path.is_file():
-        env["PATH"] = (
-            str(python_path.resolve().parent) + os.pathsep + env.get("PATH", "")
-        )
+        env["PATH"] = str(python_path.resolve().parent) + os.pathsep + env.get("PATH", "")
     return env

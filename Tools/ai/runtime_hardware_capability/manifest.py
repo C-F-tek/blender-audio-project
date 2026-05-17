@@ -67,9 +67,7 @@ def build_manifest(repo_root: Path) -> dict[str, Any]:
             name="cuda_gpu_primary_ollama_exclusive",
             resource="GPU 1 / NVIDIA RTX 5080",
             role="primary_advisory_provider",
-            status=(
-                "available" if policy["cuda_gpu_primary"]["visible"] else "unavailable"
-            ),
+            status=("available" if policy["cuda_gpu_primary"]["visible"] else "unavailable"),
             provider="ollama_or_cuda_runtime",
             diagnostics={"nvidia_smi": nvidia, "policy": policy["cuda_gpu_primary"]},
             workload_allowed=True,
@@ -99,11 +97,7 @@ def build_manifest(repo_root: Path) -> dict[str, Any]:
             name="openvino_gpu1_reserved_for_cuda_ollama",
             resource="GPU.1",
             role="reserved_for_cuda_ollama",
-            status=(
-                "reserved"
-                if policy["openvino_gpu1_reserved"]["visible"]
-                else "unavailable"
-            ),
+            status=("reserved" if policy["openvino_gpu1_reserved"]["visible"] else "unavailable"),
             provider="openvino_visibility_only",
             diagnostics={
                 "openvino": openvino,
@@ -144,9 +138,7 @@ def build_manifest(repo_root: Path) -> dict[str, Any]:
             "CUDA_GPU_PRIMARY": bool(policy["cuda_gpu_primary"]["visible"]),
             "GPU.0": bool(policy["openvino_gpu0"]["visible"]),
             "NPU": bool(policy["openvino_npu"]["visible"]),
-            "GPU.1_OPENVINO_VISIBLE_RESERVED": bool(
-                policy["openvino_gpu1_reserved"]["visible"]
-            ),
+            "GPU.1_OPENVINO_VISIBLE_RESERVED": bool(policy["openvino_gpu1_reserved"]["visible"]),
         },
         "errors": [],
         "warnings": warnings,

@@ -5,6 +5,7 @@ The check is intentionally report-only: it reads compact evidence bundles under
 docs/LOCAL_VALIDATION_EVIDENCE, writes an optional validation report, and never
 executes local AI providers or rewrites source evidence artifacts.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,9 +35,7 @@ REQUIRED_DECISION_FIELDS = (
     "provider_execution_seen",
 )
 
-OPTIONAL_PROVIDER_DECISION_FIELDS = (
-    "npu_decode_smoke_passed",
-)
+OPTIONAL_PROVIDER_DECISION_FIELDS = ("npu_decode_smoke_passed",)
 
 OPTIONAL_CONTEXT_DECISION_FIELDS = (
     "selected_chunks_evidence_seen",
@@ -50,9 +49,7 @@ OPTIONAL_ARTIFACT_DECISION_FIELDS = (
     "patch_plan_summary_seen",
 )
 
-OPTIONAL_COUNT_DECISION_FIELDS = (
-    "included_artifact_count",
-)
+OPTIONAL_COUNT_DECISION_FIELDS = ("included_artifact_count",)
 
 REQUIRED_REPORT_FIELDS = (
     "path",
@@ -170,14 +167,26 @@ def validate_decision(decision: Any) -> tuple[dict[str, bool], list[str], list[s
         elif not isinstance(decision[field], bool):
             warnings.append(f"decision.{field} should be a boolean")
 
-    checks.update(validate_optional_boolean_decision_fields(decision, OPTIONAL_CONTEXT_DECISION_FIELDS, warnings))
-    checks.update(validate_optional_boolean_decision_fields(decision, OPTIONAL_ARTIFACT_DECISION_FIELDS, warnings))
-    checks.update(validate_optional_count_decision_fields(decision, OPTIONAL_COUNT_DECISION_FIELDS, warnings))
+    checks.update(
+        validate_optional_boolean_decision_fields(
+            decision, OPTIONAL_CONTEXT_DECISION_FIELDS, warnings
+        )
+    )
+    checks.update(
+        validate_optional_boolean_decision_fields(
+            decision, OPTIONAL_ARTIFACT_DECISION_FIELDS, warnings
+        )
+    )
+    checks.update(
+        validate_optional_count_decision_fields(decision, OPTIONAL_COUNT_DECISION_FIELDS, warnings)
+    )
 
     return checks, errors, warnings
 
 
-def validate_report_entry(entry: Any, index: int, *, label_prefix: str = "reports") -> dict[str, Any]:
+def validate_report_entry(
+    entry: Any, index: int, *, label_prefix: str = "reports"
+) -> dict[str, Any]:
     label = f"{label_prefix}[{index}]"
     errors: list[str] = []
     warnings: list[str] = []
@@ -216,7 +225,11 @@ def validate_report_entry(entry: Any, index: int, *, label_prefix: str = "report
         errors.append("exists must be a boolean")
     if "json_ok" in entry and not isinstance(entry.get("json_ok"), bool):
         errors.append("json_ok must be a boolean")
-    if "passed" in entry and entry.get("passed") is not None and not isinstance(entry.get("passed"), bool):
+    if (
+        "passed" in entry
+        and entry.get("passed") is not None
+        and not isinstance(entry.get("passed"), bool)
+    ):
         errors.append("passed must be a boolean or null")
 
     return {
@@ -230,7 +243,9 @@ def validate_report_entry(entry: Any, index: int, *, label_prefix: str = "report
     }
 
 
-def validate_report_list(raw_entries: Any, label_prefix: str, *, required: bool) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+def validate_report_list(
+    raw_entries: Any, label_prefix: str, *, required: bool
+) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
 
@@ -314,7 +329,9 @@ def validate_bundle(path: Path, repo_root: Path) -> dict[str, Any]:
     errors.extend(decision_errors)
     warnings.extend(decision_warnings)
 
-    report_checks, report_errors, report_warnings = validate_report_list(data.get("reports"), "reports", required=True)
+    report_checks, report_errors, report_warnings = validate_report_list(
+        data.get("reports"), "reports", required=True
+    )
     errors.extend(report_errors)
     warnings.extend(report_warnings)
 
@@ -337,7 +354,9 @@ def validate_bundle(path: Path, repo_root: Path) -> dict[str, Any]:
         "kind": kind,
         "schema_version": schema_version,
         "report_count": len(raw_reports) if isinstance(raw_reports, list) else 0,
-        "selected_chunks_evidence_count": len(raw_selected) if isinstance(raw_selected, list) else 0,
+        "selected_chunks_evidence_count": len(raw_selected)
+        if isinstance(raw_selected, list)
+        else 0,
         "decision_checks": decision_checks,
         "report_checks": report_checks,
         "selected_chunks_evidence_checks": selected_checks,
@@ -348,15 +367,9 @@ def validate_bundle(path: Path, repo_root: Path) -> dict[str, Any]:
 
 def validate_github_evidence_bundles(repo_root: Path, paths: list[Path]) -> dict[str, Any]:
     results = [validate_bundle(path, repo_root) for path in paths]
-    errors = [
-        f"{item['path']}: {error}"
-        for item in results
-        for error in item.get("errors", [])
-    ]
+    errors = [f"{item['path']}: {error}" for item in results for error in item.get("errors", [])]
     warnings = [
-        f"{item['path']}: {warning}"
-        for item in results
-        for warning in item.get("warnings", [])
+        f"{item['path']}: {warning}" for item in results for warning in item.get("warnings", [])
     ]
     if not results:
         errors.append("no evidence bundle JSON files found")
@@ -376,7 +389,12 @@ def validate_github_evidence_bundles(repo_root: Path, paths: list[Path]) -> dict
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--bundle", action="append", default=[], help="Bundle JSON path. Repeatable or comma-separated.")
+    parser.add_argument(
+        "--bundle",
+        action="append",
+        default=[],
+        help="Bundle JSON path. Repeatable or comma-separated.",
+    )
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()
 

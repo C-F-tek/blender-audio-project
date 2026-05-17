@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
 import argparse
 import json
 import os
 import shutil
 import subprocess
 import time
+from datetime import datetime
+from pathlib import Path
 
 import workflow_state as wf
 
@@ -68,7 +68,14 @@ def read_events(max_events: int = 600) -> list[dict]:
         try:
             events.append(json.loads(line))
         except json.JSONDecodeError:
-            events.append({"time": "", "operation": "log_parse", "event": "bad_json", "payload": {"raw": line[:500]}})
+            events.append(
+                {
+                    "time": "",
+                    "operation": "log_parse",
+                    "event": "bad_json",
+                    "payload": {"raw": line[:500]},
+                }
+            )
     return events
 
 
@@ -250,9 +257,21 @@ def expected_paths_for_operation(session: wf.WorkflowSession, operation: str) ->
             ("build_blender_manual_context.py", npu("build_blender_manual_context.py"), "file"),
         ]
         operation_outputs = [
-            ("Manual generated index (manual-focused only)", npu("npu_blender_manual_index.md"), "file"),
-            ("Manual generated manifest (manual-focused only)", npu("npu_blender_manual_manifest.json"), "file"),
-            ("Manual generated chunks (manual-focused only)", npu("npu_blender_manual_chunks"), "dir"),
+            (
+                "Manual generated index (manual-focused only)",
+                npu("npu_blender_manual_index.md"),
+                "file",
+            ),
+            (
+                "Manual generated manifest (manual-focused only)",
+                npu("npu_blender_manual_manifest.json"),
+                "file",
+            ),
+            (
+                "Manual generated chunks (manual-focused only)",
+                npu("npu_blender_manual_chunks"),
+                "dir",
+            ),
         ]
     elif operation == "dual_ai_plan":
         operation_inputs = [
@@ -394,10 +413,22 @@ def build_debug_report(probe_write: bool = True) -> dict:
     operation = active["operation"] or session.last_operation or "-"
     expected = expected_paths_for_operation(session, operation)
 
-    common_checks = [path_check(label, path, required=True, expect=expect) for label, path, expect in expected["common_inputs"]]
-    input_checks = [path_check(label, path, required=True, expect=expect) for label, path, expect in expected["operation_inputs"]]
-    output_checks = [path_check(label, path, required=False, expect=expect) for label, path, expect in expected["operation_outputs"]]
-    progress_checks = [path_check(label, path, required=False, expect=expect) for label, path, expect in expected["progress_files"]]
+    common_checks = [
+        path_check(label, path, required=True, expect=expect)
+        for label, path, expect in expected["common_inputs"]
+    ]
+    input_checks = [
+        path_check(label, path, required=True, expect=expect)
+        for label, path, expect in expected["operation_inputs"]
+    ]
+    output_checks = [
+        path_check(label, path, required=False, expect=expect)
+        for label, path, expect in expected["operation_outputs"]
+    ]
+    progress_checks = [
+        path_check(label, path, required=False, expect=expect)
+        for label, path, expect in expected["progress_files"]
+    ]
 
     start_dt = _iso_to_dt(active.get("started_at"))
     watched = output_checks + progress_checks
@@ -418,20 +449,34 @@ def build_debug_report(probe_write: bool = True) -> dict:
             idle = (datetime.now() - latest_dt).total_seconds()
             if idle > 600:
                 warnings.append(f"No watched output/progress file changed for {_format_age(idle)}.")
-    if active["active"] and not latest_write and active.get("elapsed_sec") and active["elapsed_sec"] > 300:
+    if (
+        active["active"]
+        and not latest_write
+        and active.get("elapsed_sec")
+        and active["elapsed_sec"] > 300
+    ):
         warnings.append("Active operation has no watched output/progress files yet after 5m.")
 
     if any(item["status"] in {"MISSING", "WARN"} for item in input_checks):
-        warnings.append("Some required input paths for the active operation are missing or suspicious.")
+        warnings.append(
+            "Some required input paths for the active operation are missing or suspicious."
+        )
 
     progress_previews = []
     for label, path, _expect in expected["progress_files"]:
-        progress_previews.append({"label": label, "path": str(path), "tail": _tail_non_empty(Path(path))})
+        progress_previews.append(
+            {"label": label, "path": str(path), "tail": _tail_non_empty(Path(path))}
+        )
 
     processes = collect_processes()
     compute_processes = active_compute_processes(processes, operation)
     active_status = "active" if active.get("active") else "none"
-    if active.get("active") and active.get("elapsed_sec") and active["elapsed_sec"] > 120 and not compute_processes:
+    if (
+        active.get("active")
+        and active.get("elapsed_sec")
+        and active["elapsed_sec"] > 120
+        and not compute_processes
+    ):
         active_status = "stale_or_interrupted"
         warnings.append(
             "Log has a start event without a result, but no heavy Python/Ollama/Blender/FFmpeg process is running."
@@ -506,7 +551,9 @@ def format_debug_report(report: dict) -> str:
                 f"elapsed {_format_age(active.get('elapsed_sec'))}"
             )
     else:
-        lines.append(f"Active:    no running operation detected, checks based on {report['operation_for_checks']}")
+        lines.append(
+            f"Active:    no running operation detected, checks based on {report['operation_for_checks']}"
+        )
 
     last = report.get("last_result") or {}
     if isinstance(last, dict) and last:
@@ -579,8 +626,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Spaziotempo workflow advanced debug checker.")
     parser.add_argument("--json", action="store_true", help="Print raw JSON report.")
     parser.add_argument("--watch", action="store_true", help="Refresh the report in this window.")
-    parser.add_argument("--interval", type=float, default=3.0, help="Watch refresh interval in seconds.")
-    parser.add_argument("--no-write-probe", action="store_true", help="Use access checks only, no temporary write probes.")
+    parser.add_argument(
+        "--interval", type=float, default=3.0, help="Watch refresh interval in seconds."
+    )
+    parser.add_argument(
+        "--no-write-probe",
+        action="store_true",
+        help="Use access checks only, no temporary write probes.",
+    )
     args = parser.parse_args()
 
     probe_write = not args.no_write_probe

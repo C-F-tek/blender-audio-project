@@ -10,7 +10,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def load_json(path: Path) -> tuple[dict[str, Any] | None, str]:
@@ -59,7 +63,9 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
     return write_text_report("\n".join(lines) + "\n", output)
 
 
-def build_report(repo_root: Path, review_pr_report: Path, require_remote_pr: bool) -> dict[str, Any]:
+def build_report(
+    repo_root: Path, review_pr_report: Path, require_remote_pr: bool
+) -> dict[str, Any]:
     data, error = load_json(review_pr_report)
     errors: list[str] = []
     warnings: list[str] = []
@@ -77,10 +83,14 @@ def build_report(repo_root: Path, review_pr_report: Path, require_remote_pr: boo
     product_commit = data.get("product_commit") if isinstance(data, dict) else ""
     github_pr_url = data.get("github_pr_url") if isinstance(data, dict) else ""
     report_passed = truthy(data.get("passed")) if isinstance(data, dict) else False
-    git_commit_performed = truthy(data.get("git_commit_performed")) if isinstance(data, dict) else False
+    git_commit_performed = (
+        truthy(data.get("git_commit_performed")) if isinstance(data, dict) else False
+    )
     git_push_performed = truthy(data.get("git_push_performed")) if isinstance(data, dict) else False
     github_pr_created = truthy(data.get("github_pr_created")) if isinstance(data, dict) else False
-    draft_requested = truthy(data.get("github_pr_draft_requested")) if isinstance(data, dict) else False
+    draft_requested = (
+        truthy(data.get("github_pr_draft_requested")) if isinstance(data, dict) else False
+    )
 
     checks = {
         "review_pr_report_passed": report_passed,
@@ -89,10 +99,20 @@ def build_report(repo_root: Path, review_pr_report: Path, require_remote_pr: boo
         "include_paths_present": isinstance(include_paths, list) and len(include_paths) > 0,
         "product_commit_performed": git_commit_performed,
         "product_commit_present": nonempty_string(product_commit),
-        "no_provider_execution": data.get("provider_execution_performed") is False if isinstance(data, dict) else False,
-        "no_patch_application_in_prepare_step": data.get("patch_application_performed") is False if isinstance(data, dict) else False,
-        "no_source_writes_in_prepare_step": data.get("source_writes_performed") is False if isinstance(data, dict) else False,
-        "no_force_push_command": not any("--force" in " ".join(str(part) for part in (cmd.get("command") or [])) for cmd in commands if isinstance(cmd, dict)),
+        "no_provider_execution": data.get("provider_execution_performed") is False
+        if isinstance(data, dict)
+        else False,
+        "no_patch_application_in_prepare_step": data.get("patch_application_performed") is False
+        if isinstance(data, dict)
+        else False,
+        "no_source_writes_in_prepare_step": data.get("source_writes_performed") is False
+        if isinstance(data, dict)
+        else False,
+        "no_force_push_command": not any(
+            "--force" in " ".join(str(part) for part in (cmd.get("command") or []))
+            for cmd in commands
+            if isinstance(cmd, dict)
+        ),
     }
 
     if require_remote_pr:
@@ -100,7 +120,8 @@ def build_report(repo_root: Path, review_pr_report: Path, require_remote_pr: boo
             {
                 "remote_push_performed": git_push_performed,
                 "github_pr_created": github_pr_created,
-                "github_pr_url_present": nonempty_string(github_pr_url) and "github.com/" in github_pr_url,
+                "github_pr_url_present": nonempty_string(github_pr_url)
+                and "github.com/" in github_pr_url,
             }
         )
     else:
@@ -123,7 +144,9 @@ def build_report(repo_root: Path, review_pr_report: Path, require_remote_pr: boo
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
         "review_pr_report": review_pr_report.as_posix(),
-        "contract_mode": "remote_pr_required" if require_remote_pr else "local_review_branch_required",
+        "contract_mode": "remote_pr_required"
+        if require_remote_pr
+        else "local_review_branch_required",
         "branch": branch,
         "base_branch": base_branch,
         "include_paths": include_paths if isinstance(include_paths, list) else [],
@@ -147,7 +170,9 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--review-pr-report", required=True)
     parser.add_argument("--require-remote-pr", action="store_true")
-    parser.add_argument("--output", default="output/validation/review_pr_final_product_contract.json")
+    parser.add_argument(
+        "--output", default="output/validation/review_pr_final_product_contract.json"
+    )
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
 

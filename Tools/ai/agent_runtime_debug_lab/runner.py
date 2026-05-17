@@ -27,9 +27,7 @@ def tail(text: str, limit: int) -> str:
     return text[-limit:] if len(text) > limit else text
 
 
-def run_command(
-    command: list[str], cwd: Path, timeout: int, tail_chars: int
-) -> dict[str, Any]:
+def run_command(command: list[str], cwd: Path, timeout: int, tail_chars: int) -> dict[str, Any]:
     started = time.monotonic()
     try:
         result = subprocess.run(
@@ -66,9 +64,7 @@ def run_command(
         }
 
 
-def base_operation_result(
-    operation: dict[str, Any], error: str | None = None
-) -> dict[str, Any]:
+def base_operation_result(operation: dict[str, Any], error: str | None = None) -> dict[str, Any]:
     result = {
         "id": str(operation.get("id") or ""),
         "type": str(operation.get("type") or ""),
@@ -95,9 +91,7 @@ def run_python_compile(
         else:
             paths.append(path)
     if errors or not paths:
-        result = base_operation_result(
-            operation, "; ".join(errors) or "no python paths supplied"
-        )
+        result = base_operation_result(operation, "; ".join(errors) or "no python paths supplied")
         result["paths"] = paths
         return result
     command = [sys.executable, "-m", "py_compile", *paths]
@@ -106,9 +100,7 @@ def run_python_compile(
         **run_command(command, repo_root, timeout, tail_chars),
     }
     result["paths"] = paths
-    result["errors"] = (
-        [] if result["ok"] else [result.get("stderr_tail") or "py_compile failed"]
-    )
+    result["errors"] = [] if result["ok"] else [result.get("stderr_tail") or "py_compile failed"]
     return result
 
 
@@ -128,9 +120,7 @@ def run_python_script(
     }
     result["script"] = script
     result["args"] = args
-    result["errors"] = (
-        [] if result["ok"] else [result.get("stderr_tail") or "python_script failed"]
-    )
+    result["errors"] = [] if result["ok"] else [result.get("stderr_tail") or "python_script failed"]
     result["outputs"] = discover_output_args(repo_root, args)
     return result
 
@@ -177,9 +167,7 @@ def run_powershell_parse(repo_root: Path, operation: dict[str, Any]) -> dict[str
             f"$null=[System.Management.Automation.Language.Parser]::ParseFile({literal},[ref]$tokens,[ref]$parseErrors);"
             "if($parseErrors.Count -gt 0){$parseErrors|ForEach-Object{$_.Message};exit 1}"
         )
-        result = run_command(
-            [powershell, "-NoProfile", "-Command", command], repo_root, 60, 2000
-        )
+        result = run_command([powershell, "-NoProfile", "-Command", command], repo_root, 60, 2000)
         parse_results.append(
             {
                 "path": path,
@@ -198,9 +186,7 @@ def run_powershell_parse(repo_root: Path, operation: dict[str, Any]) -> dict[str
                 ),
             }
         )
-    errors = [
-        f"{item['path']}: {error}" for item in parse_results for error in item["errors"]
-    ]
+    errors = [f"{item['path']}: {error}" for item in parse_results for error in item["errors"]]
     return {
         **base_operation_result(operation),
         "executed": True,
@@ -221,11 +207,7 @@ def run_git_diff_check(
     result["errors"] = (
         []
         if result["ok"]
-        else [
-            result.get("stdout_tail")
-            or result.get("stderr_tail")
-            or "git diff --check failed"
-        ]
+        else [result.get("stdout_tail") or result.get("stderr_tail") or "git diff --check failed"]
     )
     return result
 
@@ -238,9 +220,7 @@ def run_git_status_short(
         **run_command(["git", "status", "--short"], repo_root, timeout, tail_chars),
     }
     result["errors"] = (
-        []
-        if result["ok"]
-        else [result.get("stderr_tail") or "git status --short failed"]
+        [] if result["ok"] else [result.get("stderr_tail") or "git status --short failed"]
     )
     return result
 
@@ -277,11 +257,7 @@ def run_validation_report_contract(
     result["errors"] = (
         []
         if result["ok"]
-        else [
-            result.get("stdout_tail")
-            or result.get("stderr_tail")
-            or "report contract failed"
-        ]
+        else [result.get("stdout_tail") or result.get("stderr_tail") or "report contract failed"]
     )
     return result
 
@@ -317,9 +293,7 @@ def run_operation(
     operation_type = str(operation.get("type") or "")
     timeout = operation_timeout(operation.get("timeout_seconds"), default_timeout)
     if operation_type in FORBIDDEN_OPERATION_TYPES:
-        return base_operation_result(
-            operation, f"operation type is forbidden: {operation_type}"
-        )
+        return base_operation_result(operation, f"operation type is forbidden: {operation_type}")
     if operation_type not in ALLOWED_OPERATION_TYPES:
         return base_operation_result(
             operation, f"operation type is not allowlisted: {operation_type}"
@@ -338,9 +312,7 @@ def run_operation(
         return run_validation_report_contract(repo_root, operation, timeout, tail_chars)
     if operation_type == "json_report_probe":
         return run_json_report_probe(repo_root, operation)
-    return base_operation_result(
-        operation, f"unhandled operation type: {operation_type}"
-    )
+    return base_operation_result(operation, f"unhandled operation type: {operation_type}")
 
 
 def run_request(
@@ -357,9 +329,7 @@ def run_request(
             if isinstance(operation, dict)
         ]
     )
-    non_dict_count = sum(
-        1 for operation in operations if not isinstance(operation, dict)
-    )
+    non_dict_count = sum(1 for operation in operations if not isinstance(operation, dict))
     errors = list(request_errors)
     if non_dict_count:
         errors.append(f"operations contains {non_dict_count} non-object item(s)")

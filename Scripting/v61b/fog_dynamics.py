@@ -1,47 +1,47 @@
 import math
 
 from config import (
-    FOG_DENSITY_MIN,
-    FOG_DENSITY_MAX,
-    FOG_EMISSION_MIN,
-    FOG_EMISSION_MAX,
-    FOG_NOISE_SCALE_MIN,
-    FOG_NOISE_SCALE_MAX,
-    FOG_CLUMP_SCALE_MIN,
-    FOG_CLUMP_SCALE_MAX,
-    FOG_CLUMP_RAMP_LOW_BASE,
     FOG_CLUMP_RAMP_HIGH_BASE,
-    FOG_CLUMP_WEIGHT_MIN,
+    FOG_CLUMP_RAMP_LOW_BASE,
+    FOG_CLUMP_SCALE_MAX,
+    FOG_CLUMP_SCALE_MIN,
     FOG_CLUMP_WEIGHT_MAX,
-    FOG_RAMP_LOW_BASE,
-    FOG_RAMP_HIGH_BASE,
+    FOG_CLUMP_WEIGHT_MIN,
     FOG_COMPACT_XY,
-    FOG_EXPAND_Z,
     FOG_CONTROLLER_DRIFT,
+    FOG_DENSITY_MAX,
+    FOG_DENSITY_MIN,
     FOG_DRIFT_SPEED_X,
     FOG_DRIFT_SPEED_Y,
     FOG_DRIFT_SPEED_Z,
-    FOG_WAVE_SCALE_MIN,
-    FOG_WAVE_SCALE_MAX,
-    FOG_WAVE_DISTORTION_MIN,
-    FOG_WAVE_DISTORTION_MAX,
-    FOG_WAVE_WEIGHT_MIN,
-    FOG_WAVE_WEIGHT_MAX,
-    FOG_WIND_SHEAR_X,
-    FOG_WIND_SHEAR_Y,
+    FOG_EMISSION_MAX,
+    FOG_EMISSION_MIN,
+    FOG_EXPAND_Z,
+    FOG_FILAMENT_ALPHA_MAX,
+    FOG_FILAMENT_ALPHA_MIN,
+    FOG_FILAMENT_COMPACT_SCALE,
+    FOG_FILAMENT_EMISSION_MAX,
+    FOG_FILAMENT_EMISSION_MIN,
+    FOG_FILAMENT_KEYFRAME_STEP,
+    FOG_FILAMENT_NOISE_SCALE_MAX,
+    FOG_FILAMENT_NOISE_SCALE_MIN,
+    FOG_FILAMENT_WAVE_SCALE_MAX,
+    FOG_FILAMENT_WAVE_SCALE_MIN,
+    FOG_FILAMENT_WIND_DRIFT,
+    FOG_NOISE_SCALE_MAX,
+    FOG_NOISE_SCALE_MIN,
+    FOG_RAMP_HIGH_BASE,
+    FOG_RAMP_LOW_BASE,
     FOG_VOLUME_ENABLED,
     FOG_VOLUME_VIEWPORT_VISIBLE,
-    FOG_FILAMENT_KEYFRAME_STEP,
-    FOG_FILAMENT_ALPHA_MIN,
-    FOG_FILAMENT_ALPHA_MAX,
-    FOG_FILAMENT_EMISSION_MIN,
-    FOG_FILAMENT_EMISSION_MAX,
-    FOG_FILAMENT_WIND_DRIFT,
-    FOG_FILAMENT_COMPACT_SCALE,
-    FOG_FILAMENT_NOISE_SCALE_MIN,
-    FOG_FILAMENT_NOISE_SCALE_MAX,
-    FOG_FILAMENT_WAVE_SCALE_MIN,
-    FOG_FILAMENT_WAVE_SCALE_MAX,
+    FOG_WAVE_DISTORTION_MAX,
+    FOG_WAVE_DISTORTION_MIN,
+    FOG_WAVE_SCALE_MAX,
+    FOG_WAVE_SCALE_MIN,
+    FOG_WAVE_WEIGHT_MAX,
+    FOG_WAVE_WEIGHT_MIN,
+    FOG_WIND_SHEAR_X,
+    FOG_WIND_SHEAR_Y,
 )
 
 
@@ -120,7 +120,9 @@ def animate_fog_filaments(frame, low, mid, high, onset, beat, pulse, filaments):
     )
     set_socket_value(controls.get("noise_scale_socket"), noise_scale, frame)
     set_socket_value(controls.get("noise_detail_socket"), 10.0 + high * 4.0 + onset * 1.8, frame)
-    set_socket_value(controls.get("noise_roughness_socket"), clamp(0.54 + compact * 0.12, 0.48, 0.82), frame)
+    set_socket_value(
+        controls.get("noise_roughness_socket"), clamp(0.54 + compact * 0.12, 0.48, 0.82), frame
+    )
 
     wave_scale = FOG_FILAMENT_WAVE_SCALE_MIN + clamp(wind * 0.56 + disperse * 0.22, 0.0, 1.0) * (
         FOG_FILAMENT_WAVE_SCALE_MAX - FOG_FILAMENT_WAVE_SCALE_MIN
@@ -251,17 +253,25 @@ def animate_fog_frame(
     noise_drive = clamp(fog_disperse * 0.28 + high * 0.18 + wind * 0.18 + mid * 0.10, 0.0, 1.0)
     noise_scale = FOG_NOISE_SCALE_MIN + noise_drive * (FOG_NOISE_SCALE_MAX - FOG_NOISE_SCALE_MIN)
     set_socket_value(fog_controller.get("noise_scale_socket"), noise_scale, frame)
-    set_socket_value(fog_controller.get("noise_detail_socket"), 8.0 + high * 4.0 + onset * 1.2, frame)
+    set_socket_value(
+        fog_controller.get("noise_detail_socket"), 8.0 + high * 4.0 + onset * 1.2, frame
+    )
     set_socket_value(
         fog_controller.get("noise_roughness_socket"),
         clamp(0.66 + mid * 0.10 + high * 0.08 - fog_compact * 0.04, 0.52, 0.90),
         frame,
     )
 
-    clump_scale_drive = clamp(fog_disperse * 0.42 + wind * 0.22 + high * 0.18 - fog_compact * 0.12, 0.0, 1.0)
-    clump_scale = FOG_CLUMP_SCALE_MIN + clump_scale_drive * (FOG_CLUMP_SCALE_MAX - FOG_CLUMP_SCALE_MIN)
+    clump_scale_drive = clamp(
+        fog_disperse * 0.42 + wind * 0.22 + high * 0.18 - fog_compact * 0.12, 0.0, 1.0
+    )
+    clump_scale = FOG_CLUMP_SCALE_MIN + clump_scale_drive * (
+        FOG_CLUMP_SCALE_MAX - FOG_CLUMP_SCALE_MIN
+    )
     set_socket_value(fog_controller.get("clump_noise_scale_socket"), clump_scale, frame)
-    set_socket_value(fog_controller.get("clump_noise_detail_socket"), 9.0 + high * 3.5 + onset * 1.0, frame)
+    set_socket_value(
+        fog_controller.get("clump_noise_detail_socket"), 9.0 + high * 3.5 + onset * 1.0, frame
+    )
     set_socket_value(
         fog_controller.get("clump_noise_roughness_socket"),
         clamp(0.70 + fog_compact * 0.08 + wind * 0.05, 0.58, 0.92),
@@ -273,18 +283,20 @@ def animate_fog_frame(
     )
     set_socket_value(fog_controller.get("wave_scale_socket"), wave_scale, frame)
 
-    wave_distortion = FOG_WAVE_DISTORTION_MIN + clamp(wind * 0.62 + onset * 0.26 + mid * 0.12, 0.0, 1.0) * (
-        FOG_WAVE_DISTORTION_MAX - FOG_WAVE_DISTORTION_MIN
-    )
+    wave_distortion = FOG_WAVE_DISTORTION_MIN + clamp(
+        wind * 0.62 + onset * 0.26 + mid * 0.12, 0.0, 1.0
+    ) * (FOG_WAVE_DISTORTION_MAX - FOG_WAVE_DISTORTION_MIN)
     set_socket_value(fog_controller.get("wave_distortion_socket"), wave_distortion, frame)
     set_socket_value(
         fog_controller.get("wave_weight_socket"),
-        FOG_WAVE_WEIGHT_MIN + clamp(fog_compact * 0.28 + wind * 0.30 + beat * 0.12, 0.0, 1.0) * (
-            FOG_WAVE_WEIGHT_MAX - FOG_WAVE_WEIGHT_MIN
-        ),
+        FOG_WAVE_WEIGHT_MIN
+        + clamp(fog_compact * 0.28 + wind * 0.30 + beat * 0.12, 0.0, 1.0)
+        * (FOG_WAVE_WEIGHT_MAX - FOG_WAVE_WEIGHT_MIN),
         frame,
     )
-    set_socket_value(fog_controller.get("wave_phase_socket"), frame * 0.018 + smoke_push * 0.45, frame)
+    set_socket_value(
+        fog_controller.get("wave_phase_socket"), frame * 0.018 + smoke_push * 0.45, frame
+    )
 
     animate_vector_socket(
         fog_controller.get("mapping_location_socket"),
@@ -337,7 +349,9 @@ def animate_fog_frame(
 
     if "ramp_low_ctrl" in fog_controller and "ramp_high_ctrl" in fog_controller:
         ramp_low = clamp(FOG_RAMP_LOW_BASE + fog_compact * 0.090 - wind * 0.026, 0.16, 0.58)
-        ramp_high = clamp(FOG_RAMP_HIGH_BASE - fog_compact * 0.145 + low * 0.030, ramp_low + 0.070, 0.82)
+        ramp_high = clamp(
+            FOG_RAMP_HIGH_BASE - fog_compact * 0.145 + low * 0.030, ramp_low + 0.070, 0.82
+        )
         fog_controller["ramp_low_ctrl"].position = ramp_low
         fog_controller["ramp_high_ctrl"].position = ramp_high
         keyframe_if_possible(fog_controller["ramp_low_ctrl"], "position", frame)
@@ -371,15 +385,23 @@ def animate_fog_frame(
             fog_base_scale.y * (compact_xy + wind * 0.035),
             fog_base_scale.z * expand_z,
         )
-        fog_obj.location.x = fog_base_loc.x + math.sin(frame * 0.007) * FOG_CONTROLLER_DRIFT * (0.18 + wind * 0.32)
-        fog_obj.location.y = fog_base_loc.y + math.cos(frame * 0.006) * FOG_CONTROLLER_DRIFT * (0.12 + wind * 0.26)
+        fog_obj.location.x = fog_base_loc.x + math.sin(frame * 0.007) * FOG_CONTROLLER_DRIFT * (
+            0.18 + wind * 0.32
+        )
+        fog_obj.location.y = fog_base_loc.y + math.cos(frame * 0.006) * FOG_CONTROLLER_DRIFT * (
+            0.12 + wind * 0.26
+        )
         fog_obj.location.z = fog_base_loc.z + (low - high) * 0.10 + beat * 0.06
         fog_obj.keyframe_insert(data_path="scale", frame=frame)
         fog_obj.keyframe_insert(data_path="location", frame=frame)
 
     if fog_control is not None and fog_base_loc is not None:
-        fog_control.location.x = fog_base_loc.x + math.sin(frame * 0.010) * FOG_CONTROLLER_DRIFT * (0.40 + wind)
-        fog_control.location.y = fog_base_loc.y + math.cos(frame * 0.009) * FOG_CONTROLLER_DRIFT * (0.26 + mid)
+        fog_control.location.x = fog_base_loc.x + math.sin(frame * 0.010) * FOG_CONTROLLER_DRIFT * (
+            0.40 + wind
+        )
+        fog_control.location.y = fog_base_loc.y + math.cos(frame * 0.009) * FOG_CONTROLLER_DRIFT * (
+            0.26 + mid
+        )
         fog_control.location.z = fog_base_loc.z + fog_compact * 0.22 + smoke_push * 0.10
         fog_control.rotation_euler.z = frame * 0.008 + fog_compact * 0.28 + wind * 0.12
         fog_control.scale = (

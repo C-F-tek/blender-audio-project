@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the agent review decision loop wrapper."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 DEFAULT_OUTPUT = "output/validation/agent_review_decision_loop_smoke.json"
 DEFAULT_MARKDOWN = "output/validation/agent_review_decision_loop_smoke.md"
@@ -43,7 +48,9 @@ def write_fixture(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -164,7 +171,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Return code: `{report['returncode']}`")
     lines.append(f"- Recommendation count: `{report.get('recommendation_count')}`")
     lines.append(f"- Patch plan count: `{report.get('patch_plan_count')}`")
-    lines.append(f"- Deterministic synthesizer used: `{report.get('deterministic_synthesizer_used')}`")
+    lines.append(
+        f"- Deterministic synthesizer used: `{report.get('deterministic_synthesizer_used')}`"
+    )
     lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     if report.get("errors"):
         lines.append("")
@@ -248,7 +257,9 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
         if patch_plan_count != 1:
             errors.append(f"expected patch_plan_count=1, got {patch_plan_count!r}")
         if deterministic_used is not True:
-            errors.append(f"expected deterministic_synthesizer_used=true, got {deterministic_used!r}")
+            errors.append(
+                f"expected deterministic_synthesizer_used=true, got {deterministic_used!r}"
+            )
         if fallback_used is not False:
             errors.append(f"expected patch_plan_fallback_used=false, got {fallback_used!r}")
         if decision_loop_report.get("provider_execution_performed") is not False:

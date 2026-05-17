@@ -11,9 +11,7 @@ def read_jsonl(path: Path, limit: int) -> list[dict]:
     if not path.is_file():
         return []
     rows: list[dict] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[
-        -limit:
-    ]:
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines()[-limit:]:
         try:
             rows.append(json.loads(line))
         except json.JSONDecodeError:
@@ -33,19 +31,11 @@ def probe_json(path: Path) -> dict:
         "failed_count": data.get("failed_count", None),
         "warning_count": data.get(
             "warning_count",
-            (
-                len(data.get("warnings", []))
-                if isinstance(data.get("warnings"), list)
-                else None
-            ),
+            (len(data.get("warnings", [])) if isinstance(data.get("warnings"), list) else None),
         ),
         "error_count": data.get(
             "error_count",
-            (
-                len(data.get("errors", []))
-                if isinstance(data.get("errors"), list)
-                else None
-            ),
+            (len(data.get("errors", [])) if isinstance(data.get("errors"), list) else None),
         ),
         "provider_execution_performed": data.get("provider_execution_performed", None),
         "patch_application_performed": data.get("patch_application_performed", None),
@@ -115,12 +105,12 @@ def main() -> int:
     ]
     for event in progress[-20:]:
         lines.append(
-            f"- `{event.get('phase','')}` `{event.get('status','')}` {event.get('message','')}"
+            f"- `{event.get('phase', '')}` `{event.get('status', '')}` {event.get('message', '')}"
         )
     lines.extend(["", "## Latest JSON reports"])
     for item in reports[:25]:
         lines.append(
-            f"- `{item.get('kind','')}` passed=`{item.get('passed','')}` failed=`{item.get('failed_count','')}` warnings=`{item.get('warning_count','')}` `{item.get('path','')}`"
+            f"- `{item.get('kind', '')}` passed=`{item.get('passed', '')}` failed=`{item.get('failed_count', '')}` warnings=`{item.get('warning_count', '')}` `{item.get('path', '')}`"
         )
     markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(

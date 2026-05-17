@@ -6,6 +6,7 @@ outside the project tree, runs the applier in dry-run and apply modes against a
 synthetic stamped suggestion report plus current proposal reports, and verifies
 that only deterministic operations are applied.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,14 +54,18 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
     """Create a tiny git repository with the applier and validation helpers."""
     repo = tmp / "repo"
     repo.mkdir()
-    subprocess.run(["git", "init", "-b", "codex/smoke"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["git", "init", "-b", "codex/smoke"], cwd=repo, check=True, capture_output=True, text=True
+    )
 
     (repo / "Tools" / "ai").mkdir(parents=True)
     (repo / "Tools" / "validation").mkdir(parents=True)
     (repo / "docs" / "LOCAL_VALIDATION_EVIDENCE").mkdir(parents=True)
     (repo / "output" / "ai_pipeline").mkdir(parents=True)
     (repo / "Tools" / "ai" / "apply_patch_suggestion_bundle.py").write_text(
-        (source_repo / "Tools" / "ai" / "apply_patch_suggestion_bundle.py").read_text(encoding="utf-8"),
+        (source_repo / "Tools" / "ai" / "apply_patch_suggestion_bundle.py").read_text(
+            encoding="utf-8"
+        ),
         encoding="utf-8",
     )
     (repo / "Tools" / "validation" / "report_utils.py").write_text(
@@ -92,10 +97,7 @@ def build_synthetic_repo(tmp: Path, source_repo: Path) -> tuple[Path, Path]:
         ],
     }
     suggestion_path = (
-        repo
-        / "docs"
-        / "LOCAL_VALIDATION_EVIDENCE"
-        / f"patch_suggestion_smoke_{SMOKE_STAMP}.json"
+        repo / "docs" / "LOCAL_VALIDATION_EVIDENCE" / f"patch_suggestion_smoke_{SMOKE_STAMP}.json"
     )
     suggestion_path.write_text(json.dumps(suggestion, indent=2) + "\n", encoding="utf-8")
 
@@ -160,7 +162,9 @@ def main() -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/patch_suggestion_bundle_apply_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/patch_suggestion_bundle_apply_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()

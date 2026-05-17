@@ -2,7 +2,7 @@ import bpy
 
 
 def clear_scene():
-    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
 
     datablocks = [
@@ -27,7 +27,7 @@ def clear_scene():
 
 
 def deselect_all():
-    bpy.ops.object.select_all(action='DESELECT')
+    bpy.ops.object.select_all(action="DESELECT")
 
 
 def safe_active(obj):
@@ -35,8 +35,10 @@ def safe_active(obj):
     obj.select_set(True)
 
 
-def create_controller_empty(name, location=(0, 0, 0), parent=None, display_size=0.25, hide_view=True):
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=location)
+def create_controller_empty(
+    name, location=(0, 0, 0), parent=None, display_size=0.25, hide_view=True
+):
+    bpy.ops.object.empty_add(type="PLAIN_AXES", location=location)
     obj = bpy.context.active_object
     obj.name = name
     obj.empty_display_size = display_size

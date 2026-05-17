@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
 import argparse
 import hashlib
 import json
 import re
+from datetime import datetime
+from pathlib import Path
 from typing import Any
-
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / "output"
@@ -161,7 +160,9 @@ def build_ai_service_packet(
 
     meta = (ai_context.get("analysis_summary") or {}).get("meta") or {}
     overall = (ai_context.get("analysis_summary") or {}).get("overall_stats") or {}
-    ai_memory_context = music_context.get("ai_memory_context") or ai_context.get("ai_memory_context") or {}
+    ai_memory_context = (
+        music_context.get("ai_memory_context") or ai_context.get("ai_memory_context") or {}
+    )
     project_awareness = ai_memory_context.get("project_awareness") or {}
 
     capsule = {
@@ -179,7 +180,9 @@ def build_ai_service_packet(
             "stem": track_stem,
             "duration": safe_float(meta.get("duration_sec", track_summary.get("duration_sec"))),
             "fps": safe_float(meta.get("fps", track_summary.get("fps"))),
-            "bpm": safe_float(meta.get("estimated_tempo_bpm", track_summary.get("estimated_tempo_bpm"))),
+            "bpm": safe_float(
+                meta.get("estimated_tempo_bpm", track_summary.get("estimated_tempo_bpm"))
+            ),
             "frames": (ai_context.get("analysis_summary") or {}).get("frame_count"),
             "segments": len(music_context.get("segments") or []),
         },
@@ -223,7 +226,8 @@ def build_ai_service_packet(
             "known_primary_assets": [
                 asset
                 for asset in asset_inventory.get("assets", [])
-                if asset.get("role") in {"primary_ball_asset", "animated_effect_asset", "blend_scene_reference"}
+                if asset.get("role")
+                in {"primary_ball_asset", "animated_effect_asset", "blend_scene_reference"}
             ][:20],
             "notes": asset_inventory.get("notes", []),
         },
@@ -270,8 +274,15 @@ def build_ai_service_packet(
         "capsule": capsule,
         "required_output_schema": {
             "implementation_kind": "new_blender_scene_script_from_json",
-            "reference_files": [{"file": "existing project file", "reason": "style/source reference only"}],
-            "proposed_files": [{"file": f"indexAI/scene_scripts/{slug}_scene_builder_candidate.py", "kind": "standalone_blender_scene_builder"}],
+            "reference_files": [
+                {"file": "existing project file", "reason": "style/source reference only"}
+            ],
+            "proposed_files": [
+                {
+                    "file": f"indexAI/scene_scripts/{slug}_scene_builder_candidate.py",
+                    "kind": "standalone_blender_scene_builder",
+                }
+            ],
             "scene_script": "non-empty Python code",
             "notes": ["short implementation notes"],
         },
@@ -289,7 +300,9 @@ def build_ai_service_packet(
     )
     capsule_json.write_text(json.dumps(capsule, indent=2, ensure_ascii=False), encoding="utf-8")
     packet_json.write_text(json.dumps(gpu_packet, indent=2, ensure_ascii=False), encoding="utf-8")
-    output_packet_json.write_text(json.dumps(gpu_packet, indent=2, ensure_ascii=False), encoding="utf-8")
+    output_packet_json.write_text(
+        json.dumps(gpu_packet, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     capsule_md.write_text(format_capsule_md(capsule), encoding="utf-8")
 
     return {
@@ -323,7 +336,9 @@ def format_capsule_md(capsule: dict[str, Any]) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build compact NPU service capsule and GPU task packet.")
+    parser = argparse.ArgumentParser(
+        description="Build compact NPU service capsule and GPU task packet."
+    )
     parser.add_argument("--track-stem", required=True)
     parser.add_argument("--analysis", required=True)
     parser.add_argument("--track-summary", required=True)
@@ -343,7 +358,9 @@ def main() -> None:
         analysis_ai_context_path=Path(args.analysis_ai_context),
         blender_keyframes_path=Path(args.blender_keyframes_json),
         dual_plan_path=Path(args.dual_plan) if args.dual_plan else None,
-        npu_notes=Path(args.npu_notes).read_text(encoding="utf-8", errors="replace") if args.npu_notes else "",
+        npu_notes=Path(args.npu_notes).read_text(encoding="utf-8", errors="replace")
+        if args.npu_notes
+        else "",
         npu_status=args.npu_status,
     )
     print(f"[OK] Wrote: {result['capsule_json']}")

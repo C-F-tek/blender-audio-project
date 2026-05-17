@@ -5,7 +5,6 @@ from typing import Any
 from .artifact_paths import validate_generated_artifact_paths
 from .config import DEFAULT_ALLOWED_ARTIFACT_PREFIXES
 
-
 REQUIRED_IMPLEMENTATION_DRAFT_KEYS = (
     "implementation_kind",
     "safety",

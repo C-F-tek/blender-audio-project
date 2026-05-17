@@ -6,8 +6,9 @@ Keep JSON field assumptions documented in inputs/input_schema.json.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 
 @dataclass
@@ -45,7 +46,11 @@ def controls_from_summary(summary: Mapping[str, Any] | None) -> VisualControls:
         low_energy=clamp01(bands.get("low", 0.0) if isinstance(bands, Mapping) else 0.0),
         mid_energy=clamp01(bands.get("mid", 0.0) if isinstance(bands, Mapping) else 0.0),
         high_energy=clamp01(bands.get("high", 0.0) if isinstance(bands, Mapping) else 0.0),
-        beat_strength=clamp01(rhythm.get("beat_strength", 0.0) if isinstance(rhythm, Mapping) else 0.0),
-        onset_strength=clamp01(rhythm.get("onset_strength", 0.0) if isinstance(rhythm, Mapping) else 0.0),
+        beat_strength=clamp01(
+            rhythm.get("beat_strength", 0.0) if isinstance(rhythm, Mapping) else 0.0
+        ),
+        onset_strength=clamp01(
+            rhythm.get("onset_strength", 0.0) if isinstance(rhythm, Mapping) else 0.0
+        ),
         section_intensity=clamp01(summary.get("section_intensity", 0.0)),
     )

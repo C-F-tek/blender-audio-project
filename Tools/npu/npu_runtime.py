@@ -7,11 +7,20 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_NPU_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe" if os.name == "nt" else ROOT / ".venv" / "bin" / "python"
-DEFAULT_MODEL_DIR = Path(os.environ.get("SPAZIOTEMPO_NPU_MODEL_DIR", Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov"))
+DEFAULT_NPU_PYTHON = (
+    ROOT / ".venv" / "Scripts" / "python.exe"
+    if os.name == "nt"
+    else ROOT / ".venv" / "bin" / "python"
+)
+DEFAULT_MODEL_DIR = Path(
+    os.environ.get(
+        "SPAZIOTEMPO_NPU_MODEL_DIR",
+        Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov",
+    )
+)
 DEFAULT_TIMEOUT_SEC = float(os.environ.get("SPAZIOTEMPO_NPU_PREFLIGHT_TIMEOUT", "30"))
+
 
 def resolve_project_python(repo_root: Path | None = None) -> Path:
     # Resolve the project Python required by IA-Carmine runtime policy.
@@ -26,12 +35,13 @@ def resolve_project_python(repo_root: Path | None = None) -> Path:
     return candidate
 
 
-
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _run_python(python_exe: Path, code: str, timeout: float = DEFAULT_TIMEOUT_SEC) -> tuple[bool, str, int | None]:
+def _run_python(
+    python_exe: Path, code: str, timeout: float = DEFAULT_TIMEOUT_SEC
+) -> tuple[bool, str, int | None]:
     try:
         result = subprocess.run(
             [str(python_exe), "-c", code],
@@ -119,7 +129,9 @@ def npu_preflight(
     if not ok:
         checks["errors"].append(f"openvino import failed: {text}")
 
-    ok, text, _ = _run_python(python_exe, "import openvino_genai; print('openvino_genai ok')", timeout=timeout)
+    ok, text, _ = _run_python(
+        python_exe, "import openvino_genai; print('openvino_genai ok')", timeout=timeout
+    )
     checks["openvino_genai_import"] = ok
     if not ok:
         checks["warnings"].append(f"openvino_genai import failed: {text}")
@@ -153,7 +165,9 @@ def npu_preflight(
         checks["mode"] = "npu_device_available_runtime_incomplete"
         checks["recommended_workers"] = 2
     else:
-        checks["warnings"].append("NPU device not available; guardrail service will continue in heuristic mode.")
+        checks["warnings"].append(
+            "NPU device not available; guardrail service will continue in heuristic mode."
+        )
     return checks
 
 

@@ -125,9 +125,7 @@ def make_step(
     }
 
 
-def build_steps(
-    profile: str, complexity: dict[str, Any], basename: str
-) -> list[dict[str, Any]]:
+def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list[dict[str, Any]]:
     high_or_medium = complexity["level"] in {"medium", "high"}
     steps: list[dict[str, Any]] = [
         make_step(
@@ -219,9 +217,7 @@ def build_steps(
                 "after_step:ollama_gpu_advisory_first",
                 "npu_context_broker",
                 depends_on=["ollama_gpu_advisory_first", "validate_selected_chunks"],
-                outputs=[
-                    f"output/ai_pipeline/{basename}_npu_knowledge_broker_packet.json"
-                ],
+                outputs=[f"output/ai_pipeline/{basename}_npu_knowledge_broker_packet.json"],
             )
         )
     else:
@@ -233,9 +229,7 @@ def build_steps(
                 "after_step:validate_selected_chunks",
                 "npu_context_broker",
                 depends_on=["validate_selected_chunks"],
-                outputs=[
-                    f"output/ai_pipeline/{basename}_npu_knowledge_broker_packet.json"
-                ],
+                outputs=[f"output/ai_pipeline/{basename}_npu_knowledge_broker_packet.json"],
             )
         )
         steps.append(
@@ -262,9 +256,7 @@ def build_steps(
                 "after_step:build_agent_state",
                 "validation",
                 depends_on=["build_agent_state"],
-                outputs=[
-                    f"output/validation/{basename}_adapter_manifest_contract.json"
-                ],
+                outputs=[f"output/validation/{basename}_adapter_manifest_contract.json"],
             ),
             make_step(
                 "validate_npu_broker_packet",
@@ -283,9 +275,7 @@ def build_steps(
                         else "npu_knowledge_broker_parallel"
                     )
                 ],
-                outputs=[
-                    f"output/validation/{basename}_npu_knowledge_broker_packet_contract.json"
-                ],
+                outputs=[f"output/validation/{basename}_npu_knowledge_broker_packet_contract.json"],
             ),
             make_step(
                 "generate_manual_review_proposals",
@@ -372,25 +362,19 @@ def main() -> int:
     parser.add_argument("--task-file", default="")
     parser.add_argument("--profile", choices=("docs", "core", "npu"), default="docs")
     parser.add_argument("--basename", default="local_ai_enrichment_plan")
-    parser.add_argument(
-        "--output", default="output/ai_pipeline/local_ai_enrichment_plan.json"
-    )
+    parser.add_argument("--output", default="output/ai_pipeline/local_ai_enrichment_plan.json")
     parser.add_argument(
         "--markdown-output", default="output/ai_pipeline/local_ai_enrichment_plan.md"
     )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    plan = build_plan(
-        repo_root, args.objective, args.task_file, args.profile, args.basename
-    )
+    plan = build_plan(repo_root, args.objective, args.task_file, args.profile, args.basename)
     output = resolve_repo_path(repo_root, args.output)
     markdown_output = resolve_repo_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output.write_text(render_markdown(plan), encoding="utf-8")
     print(
         json.dumps(

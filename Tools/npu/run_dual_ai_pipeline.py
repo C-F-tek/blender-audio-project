@@ -1,25 +1,34 @@
 from __future__ import annotations
 
-from pathlib import Path
 import argparse
 import json
 import subprocess
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
+from build_ai_service_packet import build_ai_service_packet
+from build_ai_service_packet import slugify as packet_slugify
+from build_blender_manual_context import build_manual_context
 from build_music_context import build_music_context
 from build_npu_code_context import main as build_code_context
-from build_blender_manual_context import build_manual_context
-from build_ai_service_packet import build_ai_service_packet, slugify as packet_slugify
 from build_project_ai_index import PROJECT_INDEX_MD, PROJECT_MANIFEST_JSON, build_project_ai_index
-from npu_runtime import DEFAULT_MODEL_DIR, DEFAULT_NPU_PYTHON, npu_preflight, write_npu_preflight_report
+from npu_runtime import (
+    DEFAULT_MODEL_DIR,
+    DEFAULT_NPU_PYTHON,
+    npu_preflight,
+    write_npu_preflight_report,
+)
 from ollama_runtime import OllamaModelManager, parse_json_response
 from run_ollama_music_agent import build_prompt as build_music_prompt
 from run_ollama_music_agent import markdown_from_insights
 
 try:
-    from pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path
-    from pipeline.artifact_paths import validate_legacy_runtime_output_paths
+    from pipeline.artifact_paths import (
+        is_allowed_generated_artifact_path,
+        normalize_repo_relative_path,
+        validate_legacy_runtime_output_paths,
+    )
     from pipeline.artifact_writer import PlannedArtifactWrite, write_planned_artifact
     from pipeline.context_builder import summarize_music_context
     from pipeline.io_utils import read_json, read_optional_json, read_text, write_json
@@ -31,11 +40,22 @@ try:
     from pipeline.providers import normalize_provider_preflight_report
     from pipeline.validators import validate_implementation_draft_contract
 except ImportError:  # Allows package-style imports from repo-root validation.
-    from Tools.npu.pipeline.artifact_paths import is_allowed_generated_artifact_path, normalize_repo_relative_path  # type: ignore
-    from Tools.npu.pipeline.artifact_paths import validate_legacy_runtime_output_paths  # type: ignore
-    from Tools.npu.pipeline.artifact_writer import PlannedArtifactWrite, write_planned_artifact  # type: ignore
+    from Tools.npu.pipeline.artifact_paths import (  # type: ignore
+        is_allowed_generated_artifact_path,
+        normalize_repo_relative_path,
+        validate_legacy_runtime_output_paths,  # type: ignore
+    )
+    from Tools.npu.pipeline.artifact_writer import (  # type: ignore
+        PlannedArtifactWrite,
+        write_planned_artifact,
+    )
     from Tools.npu.pipeline.context_builder import summarize_music_context  # type: ignore
-    from Tools.npu.pipeline.io_utils import read_json, read_optional_json, read_text, write_json  # type: ignore
+    from Tools.npu.pipeline.io_utils import (  # type: ignore
+        read_json,
+        read_optional_json,
+        read_text,
+        write_json,
+    )
     from Tools.npu.pipeline.prompts import (  # type: ignore
         build_creative_scene_prompt_payload,
         build_implementation_retry_payload,
@@ -146,7 +166,11 @@ def update_track_paths(track_stem: str, analysis_ai_context: str | None = None) 
     global IMPLEMENTATION_DRAFT_JSON
 
     TRACK_STEM = track_stem
-    MUSIC_AI_CONTEXT = Path(analysis_ai_context) if analysis_ai_context else OUTPUT_DIR / f"{TRACK_STEM}_analysis_ai_context.json"
+    MUSIC_AI_CONTEXT = (
+        Path(analysis_ai_context)
+        if analysis_ai_context
+        else OUTPUT_DIR / f"{TRACK_STEM}_analysis_ai_context.json"
+    )
     DUAL_PLAN_JSON = OUTPUT_DIR / f"{TRACK_STEM}_dual_ai_scene_plan.json"
     OLLAMA_INSIGHTS_JSON = OUTPUT_DIR / f"{TRACK_STEM}_ollama_music_insights.json"
     IMPLEMENTATION_DRAFT_JSON = OUTPUT_DIR / f"{TRACK_STEM}_ai_implementation_draft.json"
@@ -162,7 +186,9 @@ def apply_default_input_paths(args: argparse.Namespace) -> None:
     if args.analysis_ai_context is None:
         args.analysis_ai_context = str(OUTPUT_DIR / f"{args.track_stem}_analysis_ai_context.json")
     if args.blender_keyframes_json is None:
-        args.blender_keyframes_json = str(OUTPUT_DIR / f"{args.track_stem}_analysis_blender_keyframes.json")
+        args.blender_keyframes_json = str(
+            OUTPUT_DIR / f"{args.track_stem}_analysis_blender_keyframes.json"
+        )
 
 
 def validate_input_files(args: argparse.Namespace) -> None:
@@ -201,7 +227,9 @@ def looks_degraded_text(text: str) -> bool:
     return markdown_heads < 2 and useful_words < 5
 
 
-def deterministic_technical_notes(music_context: dict[str, Any], project_manifest: dict[str, Any], reason: str) -> str:
+def deterministic_technical_notes(
+    music_context: dict[str, Any], project_manifest: dict[str, Any], reason: str
+) -> str:
     music_summary = summarize_music_context(music_context)
     summary = music_summary["analysis_summary"]
     track_summary = music_summary["track_summary"]
@@ -209,15 +237,17 @@ def deterministic_technical_notes(music_context: dict[str, Any], project_manifes
     priority_files = [
         item.get("file")
         for item in files
-        if item.get("file", "").endswith((
-            "Scripting/v61b/config.py",
-            "Scripting/v61b/materials.py",
-            "Scripting/v61b/fog_dynamics.py",
-            "Scripting/v61b/physics_setup.py",
-            "Scripting/v61b/scene_tuning_panel.py",
-            "Tools/workflow/workflow_state.py",
-            "Tools/npu/run_dual_ai_pipeline.py",
-        ))
+        if item.get("file", "").endswith(
+            (
+                "Scripting/v61b/config.py",
+                "Scripting/v61b/materials.py",
+                "Scripting/v61b/fog_dynamics.py",
+                "Scripting/v61b/physics_setup.py",
+                "Scripting/v61b/scene_tuning_panel.py",
+                "Tools/workflow/workflow_state.py",
+                "Tools/npu/run_dual_ai_pipeline.py",
+            )
+        )
     ]
 
     lines = [
@@ -294,7 +324,9 @@ def run_npu_technical_pass(args: argparse.Namespace) -> str:
     return read_text(NPU_TECH_MD)
 
 
-def build_creative_scene_prompt(music_context: dict[str, Any], npu_notes: str, project_index: str) -> str:
+def build_creative_scene_prompt(
+    music_context: dict[str, Any], npu_notes: str, project_index: str
+) -> str:
     payload_data = build_creative_scene_prompt_payload(
         music_context,
         npu_notes=npu_notes,
@@ -420,7 +452,11 @@ def build_implementation_prompt(
     asset_inventory: dict[str, Any] | None = None,
 ) -> str:
     manual_index_path = TOOLS_DIR / "npu_blender_manual_index.md"
-    manual_index = read_text(manual_index_path)[:12000] if include_manual and manual_index_path.exists() else ""
+    manual_index = (
+        read_text(manual_index_path)[:12000]
+        if include_manual and manual_index_path.exists()
+        else ""
+    )
     project_index = read_text(PROJECT_INDEX_MD)[:14000]
     project_manifest = read_text(PROJECT_MANIFEST_JSON)[:10000]
     guide = read_text(ROOT / "Scripting" / "v61b" / "SCENE_TUNING_GUIDE.md")[:10000]
@@ -533,11 +569,11 @@ def build_implementation_retry_prompt(
 
     manifest = read_json(PROJECT_MANIFEST_JSON) if PROJECT_MANIFEST_JSON.exists() else {}
     indexed_files = sorted(
-        item.get("file")
-        for item in manifest.get("files", [])
-        if item.get("file")
+        item.get("file") for item in manifest.get("files", []) if item.get("file")
     )
-    preferred_files = [file_name for file_name in indexed_files if file_name in PREFERRED_IMPLEMENTATION_FILES]
+    preferred_files = [
+        file_name for file_name in indexed_files if file_name in PREFERRED_IMPLEMENTATION_FILES
+    ]
 
     payload = build_implementation_retry_payload(
         plan,
@@ -640,7 +676,9 @@ def extract_python_script(text: str) -> str:
     return ""
 
 
-def draft_from_raw_python_script(text: str, model: str | None, reason: str) -> dict[str, Any] | None:
+def draft_from_raw_python_script(
+    text: str, model: str | None, reason: str
+) -> dict[str, Any] | None:
     script = extract_python_script(text)
     if not script:
         return None
@@ -743,8 +781,12 @@ def validate_implementation_draft(draft: dict[str, Any]) -> dict[str, Any]:
             file_name = normalize_repo_relative_path(raw_file_name)
             if file_name in indexed_files:
                 issues.append(f"Proposed file must not be an existing source file: {file_name}")
-            if not is_allowed_generated_artifact_path(file_name, allowed_prefixes=ALLOWED_NEW_PREFIXES):
-                issues.append(f"Proposed file is not under an allowed generated-output prefix: {file_name}")
+            if not is_allowed_generated_artifact_path(
+                file_name, allowed_prefixes=ALLOWED_NEW_PREFIXES
+            ):
+                issues.append(
+                    f"Proposed file is not under an allowed generated-output prefix: {file_name}"
+                )
 
     support_files = draft.get("support_files") or []
     if support_files and not isinstance(support_files, list):
@@ -761,12 +803,21 @@ def validate_implementation_draft(draft: dict[str, Any]) -> dict[str, Any]:
             file_name = normalize_repo_relative_path(raw_file_name)
             if file_name in indexed_files:
                 issues.append(f"Support file must not be an existing source file: {file_name}")
-            if not is_allowed_generated_artifact_path(file_name, allowed_prefixes=ALLOWED_NEW_PREFIXES):
-                issues.append(f"Support file is not under an allowed generated-output prefix: {file_name}")
+            if not is_allowed_generated_artifact_path(
+                file_name, allowed_prefixes=ALLOWED_NEW_PREFIXES
+            ):
+                issues.append(
+                    f"Support file is not under an allowed generated-output prefix: {file_name}"
+                )
             if "content" not in item:
                 issues.append(f"Support file has no content: {file_name}")
 
-    script = str(draft.get("scene_script") or draft.get("hotpatch_candidate_script") or draft.get("script") or "")
+    script = str(
+        draft.get("scene_script")
+        or draft.get("hotpatch_candidate_script")
+        or draft.get("script")
+        or ""
+    )
     script_lower = script.lower()
     stripped_script = script.strip()
     if len(stripped_script) < 2500:
@@ -783,14 +834,18 @@ def validate_implementation_draft(draft: dict[str, Any]) -> dict[str, Any]:
         issues.append("scene_script must include at least one mesh/modifier-driven visual system.")
     if "materials.new" not in script and ".data.materials" not in script:
         issues.append("scene_script must create or assign materials.")
-    if any(token in script_lower for token in ["placeholder", "todo", "can't assist", "cannot assist"]):
+    if any(
+        token in script_lower for token in ["placeholder", "todo", "can't assist", "cannot assist"]
+    ):
         issues.append("scene_script contains placeholder/refusal text.")
     if "\n    pass" in script or "\n\tpass" in script:
         issues.append("scene_script contains pass blocks instead of implementation.")
     if "analysis_blender_keyframes" in script and "write" in script.lower():
         issues.append("Candidate script appears to write keyframe analysis data; review required.")
     if any(token in script for token in ["apply_patch", "git ", "Remove-Item", "shutil.rmtree"]):
-        issues.append("Candidate script contains project/file mutation commands outside Blender scene creation.")
+        issues.append(
+            "Candidate script contains project/file mutation commands outside Blender scene creation."
+        )
 
     return {
         "ok": not issues,
@@ -819,8 +874,11 @@ def deterministic_scene_builder_script(
     scene_brief: dict[str, Any] | None = None,
 ) -> str:
     brief_text = json.dumps(scene_brief or {}, ensure_ascii=False).lower()
-    use_dual_focus = any(token in brief_text for token in ["dualismo", "doppio", "doppi fuoco", "due oggetti", "contrappost"])
-    return f'''# Standalone Blender scene builder generated from Spaziotempo JSON context.
+    use_dual_focus = any(
+        token in brief_text
+        for token in ["dualismo", "doppio", "doppi fuoco", "due oggetti", "contrappost"]
+    )
+    return f"""# Standalone Blender scene builder generated from Spaziotempo JSON context.
 # Review-only draft: run inside Blender Text Editor with Alt+P.
 from __future__ import annotations
 
@@ -1189,10 +1247,12 @@ def build_scene() -> None:
 
 if __name__ == "__main__":
     build_scene()
-'''
+"""
 
 
-def deterministic_support_files(track_stem: str, scene_brief: dict[str, Any] | None = None) -> list[dict[str, str]]:
+def deterministic_support_files(
+    track_stem: str, scene_brief: dict[str, Any] | None = None
+) -> list[dict[str, str]]:
     slug = packet_slugify(track_stem)
     bundle_dir = f"indexAI/scene_scripts/{slug}_scene_bundle"
     manifest = {
@@ -1261,7 +1321,9 @@ def build_fallback_implementation_draft(
         music_context_json=str(Path(args.compact_json)) if args else "",
         ai_context_json=str(Path(args.analysis_ai_context)) if args else "",
         blender_keyframes_json=str(Path(args.blender_keyframes_json)) if args else "",
-        asset_inventory_json=str(Path(args.asset_inventory)) if args and getattr(args, "asset_inventory", None) else "",
+        asset_inventory_json=str(Path(args.asset_inventory))
+        if args and getattr(args, "asset_inventory", None)
+        else "",
         scene_brief=scene_brief,
     )
 
@@ -1324,8 +1386,10 @@ def build_fallback_implementation_draft(
         draft["asset_inventory_used"] = {
             "asset_count": asset_inventory.get("asset_count"),
             "primary_assets": [
-                asset for asset in asset_inventory.get("assets", [])
-                if asset.get("role") in {"primary_ball_asset", "animated_effect_asset", "blend_scene_reference"}
+                asset
+                for asset in asset_inventory.get("assets", [])
+                if asset.get("role")
+                in {"primary_ball_asset", "animated_effect_asset", "blend_scene_reference"}
             ][:10],
         }
 
@@ -1340,14 +1404,22 @@ def normalize_implementation_draft(
     asset_inventory: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if not isinstance(draft, dict):
-        return build_fallback_implementation_draft("draft is not a dictionary", model=model, args=args, scene_brief=scene_brief, asset_inventory=asset_inventory)
+        return build_fallback_implementation_draft(
+            "draft is not a dictionary",
+            model=model,
+            args=args,
+            scene_brief=scene_brief,
+            asset_inventory=asset_inventory,
+        )
 
     validation = validate_implementation_draft(draft)
     if validation.get("ok"):
         return draft
 
     reason = "; ".join(validation.get("issues", [])) or "unknown validation failure"
-    fallback = build_fallback_implementation_draft(reason, model=model, args=args, scene_brief=scene_brief, asset_inventory=asset_inventory)
+    fallback = build_fallback_implementation_draft(
+        reason, model=model, args=args, scene_brief=scene_brief, asset_inventory=asset_inventory
+    )
     fallback["raw_invalid_draft"] = draft
     fallback["original_validation"] = validation
     return fallback
@@ -1413,10 +1485,18 @@ def generate_implementation_draft_with_retry(
     retry_draft["retry_of_invalid_draft"] = draft
     retry_draft["first_validation"] = validation
 
-    return normalize_implementation_draft(retry_draft, model=retry_model, args=args, scene_brief=scene_brief, asset_inventory=asset_inventory)
+    return normalize_implementation_draft(
+        retry_draft,
+        model=retry_model,
+        args=args,
+        scene_brief=scene_brief,
+        asset_inventory=asset_inventory,
+    )
 
 
-def write_brief(plan: dict[str, Any], creative: dict[str, Any], technical: dict[str, Any], npu_notes: str) -> None:
+def write_brief(
+    plan: dict[str, Any], creative: dict[str, Any], technical: dict[str, Any], npu_notes: str
+) -> None:
     lines = [
         "# Dual AI Blender Agent Brief\n\n",
         f"Generated: `{datetime.now().isoformat(timespec='seconds')}`\n\n",
@@ -1443,7 +1523,9 @@ def write_implementation_draft(draft: dict[str, Any]) -> None:
     draft["validation"] = validate_implementation_draft(draft)
     write_legacy_json_output(IMPLEMENTATION_DRAFT_JSON, draft)
 
-    script = draft.get("scene_script", draft.get("hotpatch_candidate_script", draft.get("script", "")))
+    script = draft.get(
+        "scene_script", draft.get("hotpatch_candidate_script", draft.get("script", ""))
+    )
     if not script:
         script = (
             "# AI implementation draft did not contain a scene script.\n"
@@ -1515,7 +1597,9 @@ def write_implementation_draft(draft: dict[str, Any]) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build code/music contexts, run NPU technical pass and Ollama creative passes.")
+    parser = argparse.ArgumentParser(
+        description="Build code/music contexts, run NPU technical pass and Ollama creative passes."
+    )
     parser.add_argument("--phase", choices=["plan", "implementation", "full"], default="plan")
     parser.add_argument("--track-stem", default=DEFAULT_TRACK_STEM)
     parser.add_argument("--analysis", default=None)
@@ -1535,9 +1619,19 @@ def main() -> None:
     parser.add_argument("--npu-reduce-tokens", type=int, default=650)
     parser.add_argument("--npu-final-tokens", type=int, default=900)
     parser.add_argument("--max-new-tokens", type=int, default=1800)
-    parser.add_argument("--force-npu", action="store_true", help="Re-run NPU notes even when reusable notes exist.")
-    parser.add_argument("--scene-brief", default=None, help="Optional scene director brief JSON created by the workflow shell/GUI.")
-    parser.add_argument("--asset-inventory", default=None, help="Optional asset inventory JSON with known local Blender/FBX/GLTF assets.")
+    parser.add_argument(
+        "--force-npu", action="store_true", help="Re-run NPU notes even when reusable notes exist."
+    )
+    parser.add_argument(
+        "--scene-brief",
+        default=None,
+        help="Optional scene director brief JSON created by the workflow shell/GUI.",
+    )
+    parser.add_argument(
+        "--asset-inventory",
+        default=None,
+        help="Optional asset inventory JSON with known local Blender/FBX/GLTF assets.",
+    )
     args = parser.parse_args()
 
     apply_default_input_paths(args)
@@ -1551,7 +1645,9 @@ def main() -> None:
             "Crea prima il track summary o usa la workflow shell che ora lo ripara automaticamente."
         )
     if args.phase == "implementation" and not DUAL_PLAN_JSON.exists():
-        raise FileNotFoundError(f"Dual AI scene plan missing, run phase plan first: {DUAL_PLAN_JSON}")
+        raise FileNotFoundError(
+            f"Dual AI scene plan missing, run phase plan first: {DUAL_PLAN_JSON}"
+        )
 
     build_code_context()
     project_manifest = build_project_ai_index()
@@ -1589,7 +1685,9 @@ def main() -> None:
                     npu_notes = f"NPU technical pass unavailable after ready preflight: {exc}"
                     write_legacy_text_output(NPU_TECH_MD, npu_notes)
             else:
-                npu_notes = "NPU not ready. Preflight:\n" + json.dumps(report, indent=2, ensure_ascii=False)
+                npu_notes = "NPU not ready. Preflight:\n" + json.dumps(
+                    report, indent=2, ensure_ascii=False
+                )
                 write_legacy_text_output(NPU_TECH_MD, npu_notes)
 
         if looks_degraded_text(npu_notes):
@@ -1642,7 +1740,14 @@ def main() -> None:
             if args.ollama_base_url:
                 manager_kwargs["base_url"] = args.ollama_base_url
             with OllamaModelManager(**manager_kwargs) as manager:
-                implementation_prompt = build_implementation_prompt(plan, npu_notes, args.include_manual, gpu_task_packet, scene_brief, asset_inventory)
+                implementation_prompt = build_implementation_prompt(
+                    plan,
+                    npu_notes,
+                    args.include_manual,
+                    gpu_task_packet,
+                    scene_brief,
+                    asset_inventory,
+                )
                 draft = generate_implementation_draft_with_retry(
                     manager=manager,
                     model_name=args.technical_model,
@@ -1681,7 +1786,9 @@ def main() -> None:
             manager_kwargs["base_url"] = args.ollama_base_url
 
         with OllamaModelManager(**manager_kwargs) as manager:
-            creative_prompt = build_creative_scene_prompt(music_context, npu_notes, read_text(PROJECT_INDEX_MD))
+            creative_prompt = build_creative_scene_prompt(
+                music_context, npu_notes, read_text(PROJECT_INDEX_MD)
+            )
             creative_text, creative_model = manager.generate(
                 args.creative_model,
                 creative_prompt,
@@ -1712,7 +1819,14 @@ def main() -> None:
             plan["merge_model"] = merge_model
 
             if args.phase == "full":
-                implementation_prompt = build_implementation_prompt(plan, npu_notes, args.include_manual, gpu_task_packet, scene_brief, asset_inventory)
+                implementation_prompt = build_implementation_prompt(
+                    plan,
+                    npu_notes,
+                    args.include_manual,
+                    gpu_task_packet,
+                    scene_brief,
+                    asset_inventory,
+                )
                 draft = generate_implementation_draft_with_retry(
                     manager=manager,
                     model_name=args.technical_model,
@@ -1735,9 +1849,15 @@ def main() -> None:
             "phase": args.phase,
             "manual_context_used": args.include_manual,
             "scene_brief_json": str(Path(args.scene_brief)) if args.scene_brief else None,
-            "asset_inventory_json": str(Path(args.asset_inventory)) if args.asset_inventory else None,
-            "implementation_draft_json": str(IMPLEMENTATION_DRAFT_JSON) if args.phase in {"implementation", "full"} else None,
-            "implementation_script": str(IMPLEMENTATION_SCRIPT) if args.phase in {"implementation", "full"} else None,
+            "asset_inventory_json": str(Path(args.asset_inventory))
+            if args.asset_inventory
+            else None,
+            "implementation_draft_json": str(IMPLEMENTATION_DRAFT_JSON)
+            if args.phase in {"implementation", "full"}
+            else None,
+            "implementation_script": str(IMPLEMENTATION_SCRIPT)
+            if args.phase in {"implementation", "full"}
+            else None,
             "legacy_runtime_output_policy": legacy_runtime_output_policy_report(),
         },
         "npu_preflight_json": str(NPU_PREFLIGHT_JSON),

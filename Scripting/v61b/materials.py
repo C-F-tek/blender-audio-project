@@ -1,24 +1,24 @@
 import bpy
 
 from config import (
-    PEACE_PALETTE,
+    AURA_EMIT_MIN,
+    BACKDROP_EMISSION_MIN,
+    FOG_CLUMP_RAMP_HIGH_BASE,
+    FOG_CLUMP_RAMP_LOW_BASE,
+    FOG_CLUMP_SCALE_MIN,
     FOG_DENSITY_MIN,
     FOG_EMISSION_MIN,
-    FOG_NOISE_SCALE_MIN,
-    FOG_CLUMP_SCALE_MIN,
-    FOG_CLUMP_RAMP_LOW_BASE,
-    FOG_CLUMP_RAMP_HIGH_BASE,
-    FOG_WAVE_SCALE_MIN,
-    FOG_WAVE_DISTORTION_MIN,
-    FOG_WAVE_WEIGHT_MIN,
     FOG_FILAMENT_ALPHA_MIN,
     FOG_FILAMENT_EMISSION_MIN,
     FOG_FILAMENT_NOISE_SCALE_MIN,
     FOG_FILAMENT_WAVE_SCALE_MIN,
-    AURA_EMIT_MIN,
-    RING_EMIT_MIN,
+    FOG_NOISE_SCALE_MIN,
+    FOG_WAVE_DISTORTION_MIN,
+    FOG_WAVE_SCALE_MIN,
+    FOG_WAVE_WEIGHT_MIN,
+    PEACE_PALETTE,
     RIBBON_EMIT_MIN,
-    BACKDROP_EMISSION_MIN,
+    RING_EMIT_MIN,
 )
 
 
@@ -69,9 +69,9 @@ def build_invisible_surface_material(name="InvisibleSurfaceMaterial"):
     mat.use_nodes = True
 
     if hasattr(mat, "blend_method"):
-        mat.blend_method = 'BLEND'
+        mat.blend_method = "BLEND"
     if hasattr(mat, "shadow_method"):
-        mat.shadow_method = 'NONE'
+        mat.shadow_method = "NONE"
 
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
@@ -142,9 +142,9 @@ def build_aura_material():
     mat.use_nodes = True
 
     if hasattr(mat, "blend_method"):
-        mat.blend_method = 'BLEND'
+        mat.blend_method = "BLEND"
     if hasattr(mat, "shadow_method"):
-        mat.shadow_method = 'NONE'
+        mat.shadow_method = "NONE"
 
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
@@ -273,7 +273,7 @@ def build_atmosphere_volume_material():
     mat["spaziotempo_volume_fog"] = True
 
     try:
-        mat.blend_method = 'BLEND'
+        mat.blend_method = "BLEND"
     except Exception:
         pass
     try:
@@ -327,11 +327,11 @@ def build_atmosphere_volume_material():
     wave.location = (-520, -270)
     wave.name = "FogWindWave"
     try:
-        wave.wave_type = 'RINGS'
+        wave.wave_type = "RINGS"
     except Exception:
         pass
     try:
-        wave.bands_direction = 'Z'
+        wave.bands_direction = "Z"
     except Exception:
         pass
     if "Scale" in wave.inputs:
@@ -342,13 +342,13 @@ def build_atmosphere_volume_material():
     wave_weight = nodes.new("ShaderNodeMath")
     wave_weight.location = (-270, -275)
     wave_weight.name = "FogWindWaveWeight"
-    wave_weight.operation = 'MULTIPLY'
+    wave_weight.operation = "MULTIPLY"
     wave_weight.inputs[1].default_value = FOG_WAVE_WEIGHT_MIN
 
     clump_mask = nodes.new("ShaderNodeMath")
     clump_mask.location = (-20, 15)
     clump_mask.name = "FogClumpMask"
-    clump_mask.operation = 'MULTIPLY'
+    clump_mask.operation = "MULTIPLY"
     try:
         clump_mask.use_clamp = True
     except Exception:
@@ -357,7 +357,7 @@ def build_atmosphere_volume_material():
     wave_inside_clumps = nodes.new("ShaderNodeMath")
     wave_inside_clumps.location = (-20, -175)
     wave_inside_clumps.name = "FogWaveInsideClumps"
-    wave_inside_clumps.operation = 'MULTIPLY'
+    wave_inside_clumps.operation = "MULTIPLY"
     try:
         wave_inside_clumps.use_clamp = True
     except Exception:
@@ -366,7 +366,7 @@ def build_atmosphere_volume_material():
     smoke_mix = nodes.new("ShaderNodeMath")
     smoke_mix.location = (190, 30)
     smoke_mix.name = "FogSmokeShapeMix"
-    smoke_mix.operation = 'ADD'
+    smoke_mix.operation = "ADD"
     try:
         smoke_mix.use_clamp = True
     except Exception:
@@ -384,7 +384,7 @@ def build_atmosphere_volume_material():
 
     density_mul = nodes.new("ShaderNodeMath")
     density_mul.location = (410, 40)
-    density_mul.operation = 'MULTIPLY'
+    density_mul.operation = "MULTIPLY"
 
     links.new(texcoord.outputs["Generated"], mapping.inputs["Vector"])
     links.new(mapping.outputs["Vector"], noise.inputs["Vector"])
@@ -480,8 +480,8 @@ def build_fog_filament_material(name="FogFilamentMaterial"):
     mat.use_nodes = True
 
     for attr, value in [
-        ("blend_method", 'BLEND'),
-        ("shadow_method", 'NONE'),
+        ("blend_method", "BLEND"),
+        ("shadow_method", "NONE"),
         ("use_screen_refraction", False),
         ("show_transparent_back", True),
     ]:
@@ -535,11 +535,11 @@ def build_fog_filament_material(name="FogFilamentMaterial"):
     wave.name = "FogFilamentWave"
     wave.location = (-460, -60)
     try:
-        wave.wave_type = 'RINGS'
+        wave.wave_type = "RINGS"
     except Exception:
         pass
     try:
-        wave.bands_direction = 'Z'
+        wave.bands_direction = "Z"
     except Exception:
         pass
     if "Scale" in wave.inputs:
@@ -550,13 +550,13 @@ def build_fog_filament_material(name="FogFilamentMaterial"):
     wave_weight = nodes.new("ShaderNodeMath")
     wave_weight.name = "FogFilamentWaveWeight"
     wave_weight.location = (-230, -60)
-    wave_weight.operation = 'MULTIPLY'
+    wave_weight.operation = "MULTIPLY"
     wave_weight.inputs[1].default_value = 0.20
 
     alpha_mix = nodes.new("ShaderNodeMath")
     alpha_mix.name = "FogFilamentAlphaMask"
     alpha_mix.location = (10, 55)
-    alpha_mix.operation = 'ADD'
+    alpha_mix.operation = "ADD"
     try:
         alpha_mix.use_clamp = True
     except Exception:
@@ -570,7 +570,7 @@ def build_fog_filament_material(name="FogFilamentMaterial"):
     alpha_mul = nodes.new("ShaderNodeMath")
     alpha_mul.name = "FogFilamentAlphaMultiply"
     alpha_mul.location = (240, 20)
-    alpha_mul.operation = 'MULTIPLY'
+    alpha_mul.operation = "MULTIPLY"
 
     emission_value = nodes.new("ShaderNodeValue")
     emission_value.name = "FogFilamentEmissionValue"
@@ -620,9 +620,9 @@ def build_mist_particle_material(name, color):
     mat.use_nodes = True
 
     if hasattr(mat, "blend_method"):
-        mat.blend_method = 'BLEND'
+        mat.blend_method = "BLEND"
     if hasattr(mat, "shadow_method"):
-        mat.shadow_method = 'NONE'
+        mat.shadow_method = "NONE"
 
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links

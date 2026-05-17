@@ -8,6 +8,7 @@ summary artifacts to explicit output paths.
 It does not execute providers, run Blender, apply patches or modify source
 files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,13 +24,12 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
 
 from Tools.ai.code_patch_plan_common import (  # noqa: E402
     now_iso,
+    repo_rel,
     report_only_guardrails,
     resolve_output_path,
-    repo_rel,
     write_json_and_markdown,
 )
 from Tools.validation.report_utils import count_file_lines, split_csv_values  # noqa: E402
-
 
 REPORT_KIND = "python_line_count_csv"
 DEFAULT_CSV = "docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_latest.csv"
@@ -68,18 +68,32 @@ def excluded_by_dir(path: Path, repo_root: Path, excluded_dirs: set[str]) -> boo
     return any(part in excluded_dirs for part in parts)
 
 
-def should_include_python(path: Path, repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]) -> bool:
+def should_include_python(
+    path: Path, repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]
+) -> bool:
     """Return true when a path should be counted as source Python."""
-    return path.suffix.lower() == ".py" and path.suffix.lower() not in excluded_suffixes and not excluded_by_dir(path, repo_root, excluded_dirs)
+    return (
+        path.suffix.lower() == ".py"
+        and path.suffix.lower() not in excluded_suffixes
+        and not excluded_by_dir(path, repo_root, excluded_dirs)
+    )
 
 
-def iter_included_python_files(repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]) -> list[Path]:
+def iter_included_python_files(
+    repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]
+) -> list[Path]:
     """Return included Python files in stable repository-relative order."""
-    paths = [path for path in repo_root.rglob("*.py") if should_include_python(path, repo_root, excluded_dirs, excluded_suffixes)]
+    paths = [
+        path
+        for path in repo_root.rglob("*.py")
+        if should_include_python(path, repo_root, excluded_dirs, excluded_suffixes)
+    ]
     return sorted(paths, key=lambda value: repo_rel(repo_root, value).lower())
 
 
-def collect_python_counts(repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]) -> tuple[list[dict[str, Any]], list[str]]:
+def collect_python_counts(
+    repo_root: Path, excluded_dirs: set[str], excluded_suffixes: set[str]
+) -> tuple[list[dict[str, Any]], list[str]]:
     """Collect line counts for included Python files."""
     rows: list[dict[str, Any]] = []
     errors: list[str] = []
@@ -111,7 +125,13 @@ def write_csv(rows: list[dict[str, Any]], output: Path) -> None:
         writer.writerows(rows)
 
 
-def build_report(repo_root: Path, rows: list[dict[str, Any]], errors: list[str], csv_path: Path, excluded_dirs: set[str]) -> dict[str, Any]:
+def build_report(
+    repo_root: Path,
+    rows: list[dict[str, Any]],
+    errors: list[str],
+    csv_path: Path,
+    excluded_dirs: set[str],
+) -> dict[str, Any]:
     """Build JSON validation/evidence summary for the CSV output."""
     return {
         "schema_version": 1,
@@ -148,7 +168,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append("")
     lines.append("## Guardrail")
     lines.append("")
-    lines.append("This artifact is line-count evidence only. It is not a patch plan and it must not be committed from `output/**`.")
+    lines.append(
+        "This artifact is line-count evidence only. It is not a patch plan and it must not be committed from `output/**`."
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -177,19 +199,38 @@ def default_csv_path(repo_root: Path, timestamped: bool) -> Path:
     """Return default CSV path, optionally timestamped."""
     if not timestamped:
         return resolve_output_path(repo_root, DEFAULT_CSV)
-    return repo_root / "docs" / "LOCAL_VALIDATION_EVIDENCE" / f"python_line_count_{timestamp_from_iso(now_iso())}.csv"
+    return (
+        repo_root
+        / "docs"
+        / "LOCAL_VALIDATION_EVIDENCE"
+        / f"python_line_count_{timestamp_from_iso(now_iso())}.csv"
+    )
 
 
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--csv-output", help="CSV output path. Defaults to docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_latest.csv")
+    parser.add_argument(
+        "--csv-output",
+        help="CSV output path. Defaults to docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_latest.csv",
+    )
     parser.add_argument("--report-output", default=DEFAULT_REPORT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
-    parser.add_argument("--timestamped", action="store_true", help="Write a timestamped CSV under docs/LOCAL_VALIDATION_EVIDENCE/.")
-    parser.add_argument("--exclude-dir", action="append", default=[], help="Additional directory name to exclude; comma-separated values are accepted.")
-    parser.add_argument("--include-default-excludes", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument(
+        "--timestamped",
+        action="store_true",
+        help="Write a timestamped CSV under docs/LOCAL_VALIDATION_EVIDENCE/.",
+    )
+    parser.add_argument(
+        "--exclude-dir",
+        action="append",
+        default=[],
+        help="Additional directory name to exclude; comma-separated values are accepted.",
+    )
+    parser.add_argument(
+        "--include-default-excludes", action=argparse.BooleanOptionalAction, default=True
+    )
     return parser.parse_args()
 
 
@@ -198,12 +239,18 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     excluded_dirs = set(DEFAULT_EXCLUDED_DIRS) if args.include_default_excludes else set()
     excluded_dirs.update(split_csv_values(args.exclude_dir))
-    csv_path = resolve_output_path(repo_root, args.csv_output) if args.csv_output else default_csv_path(repo_root, args.timestamped)
+    csv_path = (
+        resolve_output_path(repo_root, args.csv_output)
+        if args.csv_output
+        else default_csv_path(repo_root, args.timestamped)
+    )
 
     rows, errors = collect_python_counts(repo_root, excluded_dirs, set(DEFAULT_EXCLUDED_SUFFIXES))
     write_csv(rows, csv_path)
     report = build_report(repo_root, rows, errors, csv_path, excluded_dirs)
-    json_text = write_json_and_markdown(repo_root, report, args.report_output, args.markdown_output, render_markdown(report))
+    json_text = write_json_and_markdown(
+        repo_root, report, args.report_output, args.markdown_output, render_markdown(report)
+    )
     print(json.dumps(json.loads(json_text), indent=2, ensure_ascii=False), end="\n")
     return 0 if report["passed"] else 2
 

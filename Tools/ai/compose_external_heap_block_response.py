@@ -60,9 +60,7 @@ def write_text(path: Path, text: str) -> None:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def compact(text: str, limit: int) -> str:
@@ -210,9 +208,7 @@ def build_markdown(
         lines.extend(block_section(f"Proposal block {index}", block, max_chars))
 
     blocking = (
-        composer.get("blocking_issues")
-        if isinstance(composer.get("blocking_issues"), list)
-        else []
+        composer.get("blocking_issues") if isinstance(composer.get("blocking_issues"), list) else []
     )
     if blocking:
         lines.extend(["## Blocking issues", ""])
@@ -238,9 +234,7 @@ def build_markdown(
         "source_block_count": pointer.get("source_block_count"),
         "pointer_block_count": pointer.get("block_count"),
         "pointer_max_blocks_applied": pointer.get("max_blocks_applied"),
-        "all_roles_present": pointer.get(
-            "all_roles_present", pointer.get("roles_present")
-        ),
+        "all_roles_present": pointer.get("all_roles_present", pointer.get("roles_present")),
     }
     return "\n".join(lines).rstrip() + "\n", stats
 
@@ -249,9 +243,7 @@ def append_download_manifest(manifest_path: Path, output_paths: list[Path]) -> N
     lines: list[str] = []
     if manifest_path.exists():
         try:
-            lines = manifest_path.read_text(
-                encoding="utf-8-sig", errors="replace"
-            ).splitlines()
+            lines = manifest_path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
         except Exception:
             lines = []
     existing = set(lines)
@@ -262,9 +254,7 @@ def append_download_manifest(manifest_path: Path, output_paths: list[Path]) -> N
             additions.append(line)
     if len(additions) > 2:
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_path.write_text(
-            "\n".join(lines + additions).rstrip() + "\n", encoding="utf-8"
-        )
+        manifest_path.write_text("\n".join(lines + additions).rstrip() + "\n", encoding="utf-8")
 
 
 def attach_to_composer_documents(
@@ -273,9 +263,7 @@ def attach_to_composer_documents(
     json_path: Path,
     explicit_documents_dir: str,
 ) -> dict[str, str]:
-    documents_dir_value = explicit_documents_dir or str(
-        composer.get("documents_dir") or ""
-    )
+    documents_dir_value = explicit_documents_dir or str(composer.get("documents_dir") or "")
     if not documents_dir_value:
         return {}
     documents_dir = Path(documents_dir_value).expanduser().resolve()
@@ -323,9 +311,7 @@ def main() -> int:
         else pointer_path.with_name("external_heap_primary_long_response.md")
     )
     json_output = (
-        Path(args.json_output).resolve()
-        if args.json_output
-        else output.with_suffix(".json")
+        Path(args.json_output).resolve() if args.json_output else output.with_suffix(".json")
     )
     markdown, stats = build_markdown(
         pointer,
@@ -343,12 +329,8 @@ def main() -> int:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": True,
         "pointer_manifest": str(pointer_path),
-        "composer_json": (
-            str(Path(args.composer_json).resolve()) if args.composer_json else ""
-        ),
-        "causality_json": (
-            str(Path(args.causality_json).resolve()) if args.causality_json else ""
-        ),
+        "composer_json": (str(Path(args.composer_json).resolve()) if args.composer_json else ""),
+        "causality_json": (str(Path(args.causality_json).resolve()) if args.causality_json else ""),
         "output": str(output),
         "documents_copy_performed": False,
         "documents_outputs": {},
@@ -358,9 +340,7 @@ def main() -> int:
         "provider_execution_semantics": pointer.get("provider_execution_semantics")
         or "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
         "stats": stats,
-        "provider_execution_performed": normalize_bool(
-            pointer.get("provider_execution_performed")
-        )
+        "provider_execution_performed": normalize_bool(pointer.get("provider_execution_performed"))
         or any(
             block_provider_execution_performed(block)
             for block in (pointer.get("blocks") or [])
@@ -388,9 +368,7 @@ def main() -> int:
             write_json(json_output, report)
             documents_json = documents_outputs.get("documents_json")
             if documents_json:
-                shutil.copyfile(
-                    json_output, Path(documents_json).expanduser().resolve()
-                )
+                shutil.copyfile(json_output, Path(documents_json).expanduser().resolve())
         else:
             report["warnings"].append(
                 "composer documents_dir not found; long response kept in run dir only"

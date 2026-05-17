@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the real product intrinsic capability contract validator."""
+
 from __future__ import annotations
 
 import argparse
@@ -23,12 +24,20 @@ def require(condition: bool, errors: list[str], message: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/real_product_intrinsic_capability_contract_smoke.json")
+    parser.add_argument(
+        "--output",
+        default="output/validation/real_product_intrinsic_capability_contract_smoke.json",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    contract_json = repo_root / "output/validation/real_product_intrinsic_capability_contract_smoke_contract.json"
-    contract_md = repo_root / "output/validation/real_product_intrinsic_capability_contract_smoke_contract.md"
+    contract_json = (
+        repo_root
+        / "output/validation/real_product_intrinsic_capability_contract_smoke_contract.json"
+    )
+    contract_md = (
+        repo_root / "output/validation/real_product_intrinsic_capability_contract_smoke_contract.md"
+    )
 
     env = dict(os.environ)
     env["PYTHONPATH"] = str(repo_root)
@@ -50,7 +59,9 @@ def main() -> int:
         check=False,
     )
 
-    contract = json.loads(contract_json.read_text(encoding="utf-8-sig")) if contract_json.exists() else {}
+    contract = (
+        json.loads(contract_json.read_text(encoding="utf-8-sig")) if contract_json.exists() else {}
+    )
     errors: list[str] = []
     require(result.returncode == 0, errors, "contract validator failed")
     require(contract.get("passed") is True, errors, "contract report did not pass")

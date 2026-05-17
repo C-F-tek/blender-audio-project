@@ -11,7 +11,6 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 COMPOSER = REPO_ROOT / "Tools" / "ai" / "compose_heap_final_proposals.py"
 

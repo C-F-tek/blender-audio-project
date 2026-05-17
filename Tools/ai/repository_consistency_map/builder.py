@@ -46,9 +46,7 @@ def build_report(
     markdown_files = filter_manifest_by_extensions(all_files, DOC_EXTENSIONS)
     python_files = filter_manifest_by_extensions(all_files, {".py"})
     file_records = build_repo_file_records(repo_root, all_files)
-    counted_file_records = [
-        item for item in file_records if item.get("line_count_available")
-    ]
+    counted_file_records = [item for item in file_records if item.get("line_count_available")]
     markdown_file_count = len(markdown_files)
     python_file_count = len(python_files)
     timings["file_discovery_seconds"] = elapsed_seconds(phase_started)
@@ -160,9 +158,7 @@ def build_report(
         "finding_kind_counts": dict(sorted(kind_counts.items())),
         "markdown_reference_kind_counts": dict(sorted(references_by_kind.items())),
         "findings": findings,
-        "markdown_references": (
-            md_refs[:max_detail_items] if max_detail_items else md_refs
-        ),
+        "markdown_references": (md_refs[:max_detail_items] if max_detail_items else md_refs),
         "markdown_python_commands": (
             md_commands[:max_detail_items] if max_detail_items else md_commands
         ),

@@ -129,9 +129,9 @@ def target_path_error(path: str, repo_root: Path) -> str | None:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         return f"forbidden target prefix: {normalized}"
     lower = normalized.lower()
-    if any(
-        fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS
-    ) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(
+        ".json"
+    ):
         return f"forbidden full-analysis JSON target: {normalized}"
     if "*" in normalized or normalized.endswith("/"):
         return "target is a path group, glob or directory"
@@ -172,16 +172,10 @@ def proposal_outputs(proposal: dict[str, Any]) -> list[dict[str, Any]]:
     target_files = proposal.get("target_files")
     if not isinstance(target_files, list):
         return []
-    return [
-        output_descriptor_from_target(str(path))
-        for path in target_files
-        if str(path).strip()
-    ]
+    return [output_descriptor_from_target(str(path)) for path in target_files if str(path).strip()]
 
 
-def build_metadata_operation(
-    *, proposal_id: str, output: dict[str, Any]
-) -> dict[str, Any]:
+def build_metadata_operation(*, proposal_id: str, output: dict[str, Any]) -> dict[str, Any]:
     return {
         "path": normalize_repo_path(output.get("path")),
         "replacements": [],
@@ -220,8 +214,7 @@ def build_concrete_operation(
         "draft_status": "concrete_review_ready",
         "source_id": raw.get("source_id") or proposal_id,
         "family": raw.get("family") or "repository_change_proposals",
-        "description": raw.get("description")
-        or "concrete operation from repository proposal",
+        "description": raw.get("description") or "concrete operation from repository proposal",
         "require_contains_after": raw.get("require_contains_after") or [],
         "forbid_contains_after": raw.get("forbid_contains_after") or [],
     }
@@ -254,17 +247,13 @@ def concrete_operations_from_proposal(
         return operations, skipped
     for raw in raw_operations:
         if not isinstance(raw, dict):
-            skipped.append(
-                {"path": "", "reason": "concrete operation is not an object"}
-            )
+            skipped.append({"path": "", "reason": "concrete operation is not an object"})
             continue
         operation, error = build_concrete_operation(
             proposal_id=proposal_id, raw=raw, repo_root=repo_root
         )
         if error:
-            skipped.append(
-                {"path": normalize_repo_path(raw.get("path")), "reason": error}
-            )
+            skipped.append({"path": normalize_repo_path(raw.get("path")), "reason": error})
             continue
         if operation:
             operations.append(operation)
@@ -283,9 +272,7 @@ def build_spec_for_proposal(
     seen_paths: set[str] = set()
 
     if proposal.get("apply_mode") != EXPECTED_APPLY_MODE:
-        skipped.append(
-            {"path": "", "reason": "proposal apply_mode is not manual_review_only"}
-        )
+        skipped.append({"path": "", "reason": "proposal apply_mode is not manual_review_only"})
         return None, skipped
 
     concrete_ops, concrete_skipped = concrete_operations_from_proposal(
@@ -329,30 +316,22 @@ def build_spec_for_proposal(
             )
             continue
         if artifact_kind not in SUPPORTED_OUTPUT_KINDS:
-            skipped.append(
-                {"path": path, "reason": f"unsupported artifact kind: {artifact_kind}"}
-            )
+            skipped.append({"path": path, "reason": f"unsupported artifact kind: {artifact_kind}"})
             continue
         error = target_path_error(path, repo_root)
         if error:
             skipped.append({"path": path, "reason": error})
             continue
         if path in seen_paths:
-            skipped.append(
-                {"path": path, "reason": "duplicate target path in proposal"}
-            )
+            skipped.append({"path": path, "reason": "duplicate target path in proposal"})
             continue
         seen_paths.add(path)
-        operations.append(
-            build_metadata_operation(proposal_id=proposal_id, output=output)
-        )
+        operations.append(build_metadata_operation(proposal_id=proposal_id, output=output))
 
     if not operations:
         return None, skipped
 
-    draft_status = (
-        "concrete_review_ready" if concrete_ops else "needs_concrete_replacements"
-    )
+    draft_status = "concrete_review_ready" if concrete_ops else "needs_concrete_replacements"
     spec = {
         "version": 1,
         "schema_version": 1,
@@ -385,9 +364,7 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
     lines.append(f"- Patch spec count: `{manifest['patch_spec_count']}`")
     lines.append(f"- Concrete spec count: `{manifest['concrete_spec_count']}`")
     lines.append(f"- Skipped target count: `{manifest['skipped_target_count']}`")
-    lines.append(
-        f"- Provider execution performed: `{manifest['provider_execution_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{manifest['provider_execution_performed']}`")
     lines.append("")
     lines.append("## Specs")
     lines.append("")
@@ -405,9 +382,7 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
     if manifest["skipped_targets"]:
         for item in manifest["skipped_targets"]:
             path = item.get("path") or "(proposal)"
-            lines.append(
-                f"- `{item.get('proposal_id')}` `{path}`: {item.get('reason')}"
-            )
+            lines.append(f"- `{item.get('proposal_id')}` `{path}`: {item.get('reason')}")
     else:
         lines.append("- none")
     lines.append("")
@@ -462,9 +437,7 @@ def build_patch_specs(
     specs: list[dict[str, Any]] = []
     skipped_targets: list[dict[str, str]] = []
 
-    proposal_items = (
-        proposals[:max_proposals] if max_proposals is not None else proposals
-    )
+    proposal_items = proposals[:max_proposals] if max_proposals is not None else proposals
     for item in proposal_items:
         if not isinstance(item, dict):
             skipped_targets.append(
@@ -481,9 +454,7 @@ def build_patch_specs(
             proposal_report_path=proposal_path,
             repo_root=repo_root,
         )
-        skipped_targets.extend(
-            {"proposal_id": proposal_id, **target} for target in skipped
-        )
+        skipped_targets.extend({"proposal_id": proposal_id, **target} for target in skipped)
         if spec is None:
             continue
         spec_path = spec_dir / f"{sanitize_filename(proposal_id)}.json"
@@ -514,9 +485,7 @@ def build_patch_specs(
             }
         )
 
-    concrete_spec_count = sum(
-        1 for item in specs if item.get("concrete_operation_count", 0) > 0
-    )
+    concrete_spec_count = sum(1 for item in specs if item.get("concrete_operation_count", 0) > 0)
     if require_concrete and concrete_spec_count <= 0:
         errors.append(
             "concrete patch specs are required for this real-product run; "
@@ -538,9 +507,7 @@ def build_patch_specs(
         "metadata_fallback_enabled": not bool(require_concrete),
         "apply_mode": EXPECTED_APPLY_MODE,
         "draft_status": (
-            "concrete_review_ready"
-            if concrete_spec_count
-            else "needs_concrete_replacements"
+            "concrete_review_ready" if concrete_spec_count else "needs_concrete_replacements"
         ),
         "patch_spec_count": len(specs),
         "concrete_spec_count": concrete_spec_count,

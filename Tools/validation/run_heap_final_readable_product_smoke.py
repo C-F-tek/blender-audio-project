@@ -18,9 +18,7 @@ def now_stamp() -> str:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def write_text(path: Path, text: str) -> None:
@@ -30,11 +28,7 @@ def write_text(path: Path, text: str) -> None:
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -69,8 +63,18 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "target_count": 2,
             "validation_count": 1,
             "targets": [
-                {"target_file": "Tools/ai/assemble_heap_final_readable_product.py", "ast_ok": True, "import_ok": True, "help_ok": True},
-                {"target_file": "Tools/ai/heap_final_readable_synthesis.py", "ast_ok": True, "import_ok": True, "help_ok": True},
+                {
+                    "target_file": "Tools/ai/assemble_heap_final_readable_product.py",
+                    "ast_ok": True,
+                    "import_ok": True,
+                    "help_ok": True,
+                },
+                {
+                    "target_file": "Tools/ai/heap_final_readable_synthesis.py",
+                    "ast_ok": True,
+                    "import_ok": True,
+                    "help_ok": True,
+                },
             ],
             "guardrails": {
                 "free_shell_exposed": False,
@@ -194,7 +198,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     work_dir = (
         Path(args.work_dir).resolve()
         if args.work_dir
-        else repo_root / "output" / "validation" / f"heap_final_readable_product_smoke_{now_stamp()}"
+        else repo_root
+        / "output"
+        / "validation"
+        / f"heap_final_readable_product_smoke_{now_stamp()}"
     )
     run_dir, documents_dir = build_fixture(repo_root, work_dir)
     output = run_dir / "heap_final_readable_product.json"
@@ -231,9 +238,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     zip_path = Path(str(documents_dir) + ".zip")
     body = final_md.read_text(encoding="utf-8-sig") if final_md.exists() else ""
     code_product_body = (
-        full_code_product.read_text(encoding="utf-8-sig")
-        if full_code_product.exists()
-        else ""
+        full_code_product.read_text(encoding="utf-8-sig") if full_code_product.exists() else ""
     )
     required_phrases = [
         "Decisione finale",

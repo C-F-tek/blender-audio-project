@@ -51,11 +51,16 @@ def is_active_artifact(rel: str, active_stamps: set[str]) -> bool:
     return False
 
 
-def iter_top_level_candidates(root: Path, before: datetime, include_memory: bool, include_index: bool, active_stamps: set[str]):
+def iter_top_level_candidates(
+    root: Path, before: datetime, include_memory: bool, include_index: bool, active_stamps: set[str]
+):
     for category, rel_root, optional in TARGETS:
         if category == "agent_memory" and not include_memory:
             continue
-        if category in {"generated_index_context", "generated_project_chunks"} and not include_index:
+        if (
+            category in {"generated_index_context", "generated_project_chunks"}
+            and not include_index
+        ):
             continue
         base = root / rel_root
         if not base.exists():
@@ -104,7 +109,9 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         "",
     ]
     for item in report.get("candidate_preview", []):
-        lines.append(f"- `{item.get('path')}` category=`{item.get('category')}` deleted=`{item.get('deleted')}`")
+        lines.append(
+            f"- `{item.get('path')}` category=`{item.get('category')}` deleted=`{item.get('deleted')}`"
+        )
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {err}" for err in report["errors"])
@@ -116,7 +123,9 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Bounded local AI artifact reset for pre-run cleanup.")
+    parser = argparse.ArgumentParser(
+        description="Bounded local AI artifact reset for pre-run cleanup."
+    )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--before-date", default="")
     parser.add_argument("--apply", action="store_true")
@@ -176,7 +185,9 @@ def main() -> int:
             )
 
     if len(candidates) > args.max_preview:
-        warnings.append(f"candidate preview truncated to {args.max_preview} of {len(candidates)} top-level candidates")
+        warnings.append(
+            f"candidate preview truncated to {args.max_preview} of {len(candidates)} top-level candidates"
+        )
 
     report = {
         "schema_version": 1,
@@ -203,7 +214,11 @@ def main() -> int:
     }
 
     output = repo_root / args.output if not Path(args.output).is_absolute() else Path(args.output)
-    md_output = repo_root / args.markdown_output if not Path(args.markdown_output).is_absolute() else Path(args.markdown_output)
+    md_output = (
+        repo_root / args.markdown_output
+        if not Path(args.markdown_output).is_absolute()
+        else Path(args.markdown_output)
+    )
     write_json(output, report)
     write_markdown(md_output, report)
     print(json.dumps(report, ensure_ascii=False, indent=2))

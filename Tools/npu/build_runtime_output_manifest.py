@@ -6,6 +6,7 @@ Blender, does not call Ollama/NPU, and does not modify legacy runtime outputs.
 It only writes a manifest report describing expected or extra runtime output
 paths and whether they match the existing exact legacy output policy.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -140,7 +141,16 @@ def main() -> int:
         output = repo_root / output
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({"passed": manifest.get("passed"), "output": str(output), "blocked_count": manifest.get("blocked_count")}, indent=2))
+    print(
+        json.dumps(
+            {
+                "passed": manifest.get("passed"),
+                "output": str(output),
+                "blocked_count": manifest.get("blocked_count"),
+            },
+            indent=2,
+        )
+    )
     return 0 if manifest.get("passed") is True else 2
 
 

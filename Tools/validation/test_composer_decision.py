@@ -11,7 +11,6 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 COMPOSER = REPO_ROOT / "Tools" / "ai" / "compose_heap_final_proposals.py"
 
@@ -95,7 +94,9 @@ def test_no_verified_target_emits_blocked() -> None:
         )
         payload = run_composer(run_dir, [])
         decision = payload["operator_decision"]["decision"]
-        assert decision == "BLOCKED_NO_VERIFIED_TARGET", f"Expected BLOCKED_NO_VERIFIED_TARGET, got {decision}"
+        assert decision == "BLOCKED_NO_VERIFIED_TARGET", (
+            f"Expected BLOCKED_NO_VERIFIED_TARGET, got {decision}"
+        )
         assert "forbidden placeholder" in payload["operator_decision_text"]
         # Verify OPERATOR_DECISION.txt content
         assert "BLOCKED_NO_VERIFIED_TARGET" in payload["operator_decision_text"]
@@ -151,7 +152,9 @@ def test_forbidden_markers_also_set_blocked() -> None:
         )
         payload = run_composer(run_dir, [])
         decision = payload["operator_decision"]["decision"]
-        assert decision == "BLOCKED_NO_VERIFIED_TARGET", f"Expected BLOCKED_NO_VERIFIED_TARGET, got {decision}"
+        assert decision == "BLOCKED_NO_VERIFIED_TARGET", (
+            f"Expected BLOCKED_NO_VERIFIED_TARGET, got {decision}"
+        )
         decision_text = payload["operator_decision_text"]
         assert "forbidden placeholder" in decision_text
 

@@ -72,11 +72,7 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -101,12 +97,7 @@ def infer_level(path: str, report: dict[str, Any]) -> str:
     normalized_path = path.lower().replace("\\", "/")
     if "workflow" in kind:
         return "workflow"
-    if (
-        "npu" in kind
-        or "gpu" in kind
-        or "provider" in kind
-        or "parallel_gpu" in normalized_path
-    ):
+    if "npu" in kind or "gpu" in kind or "provider" in kind or "parallel_gpu" in normalized_path:
         return "provider"
     if "broker" in kind or "runtime_tool" in kind:
         return "runtime"
@@ -190,9 +181,7 @@ def extract_existing_warnings(
                 "severity": "warning",
                 "classification": "reported_warning",
                 "recoverable": True,
-                "message": json.dumps(raw_warnings, sort_keys=True, ensure_ascii=False)[
-                    :500
-                ],
+                "message": json.dumps(raw_warnings, sort_keys=True, ensure_ascii=False)[:500],
                 "index": 0,
             }
         )
@@ -221,9 +210,7 @@ def final_decision_recovered(
     return True
 
 
-def is_final_authoritative(
-    path: str, report: dict[str, Any], final_report_paths: set[str]
-) -> bool:
+def is_final_authoritative(path: str, report: dict[str, Any], final_report_paths: set[str]) -> bool:
     if path in final_report_paths:
         return True
     return str(report.get("kind") or "") in FINAL_KINDS
@@ -264,9 +251,7 @@ def build_policy_report(args: argparse.Namespace) -> dict[str, Any]:
 
     seen_paths: set[str] = set()
     for value in report_values:
-        path, report, load_errors = load_report(
-            repo_root, value, missing_is_error=False
-        )
+        path, report, load_errors = load_report(repo_root, value, missing_is_error=False)
         rel_path = repo_rel(path, repo_root)
         if rel_path in seen_paths:
             continue
@@ -297,19 +282,16 @@ def build_policy_report(args: argparse.Namespace) -> dict[str, Any]:
                 "level": level,
                 "severity": (
                     "warning"
-                    if recovered
-                    and not is_final_authoritative(rel_path, report, final_paths)
+                    if recovered and not is_final_authoritative(rel_path, report, final_paths)
                     else "error"
                 ),
                 "classification": (
                     "input_nonfatal"
-                    if recovered
-                    and not is_final_authoritative(rel_path, report, final_paths)
+                    if recovered and not is_final_authoritative(rel_path, report, final_paths)
                     else "fatal_report_failure"
                 ),
                 "recoverable": bool(
-                    recovered
-                    and not is_final_authoritative(rel_path, report, final_paths)
+                    recovered and not is_final_authoritative(rel_path, report, final_paths)
                 ),
                 "reason": extract_reason(report),
                 "recommended_next_layer": extract_next_layer(report),
@@ -381,12 +363,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report['passed']}`")
     lines.append(f"- Decision recovered: `{report['decision_recovered']}`")
     lines.append(f"- Warning count: `{report['warning_count']}`")
-    lines.append(
-        f"- Input-nonfatal warning count: `{report['input_nonfatal_warning_count']}`"
-    )
-    lines.append(
-        f"- Fatal report failure count: `{report['fatal_report_failure_count']}`"
-    )
+    lines.append(f"- Input-nonfatal warning count: `{report['input_nonfatal_warning_count']}`")
+    lines.append(f"- Fatal report failure count: `{report['fatal_report_failure_count']}`")
     lines.append(f"- Recommendation count: `{report.get('recommendation_count')}`")
     lines.append(f"- Patch plan count: `{report.get('patch_plan_count')}`")
     lines.append("")
@@ -400,17 +378,13 @@ def render_markdown(report: dict[str, Any]) -> str:
     if not report.get("input_nonfatal_warnings"):
         lines.append("- none")
     for item in report.get("input_nonfatal_warnings", []):
-        lines.append(
-            f"- `{item.get('level')}` `{item.get('path')}`: {item.get('reason')}"
-        )
+        lines.append(f"- `{item.get('level')}` `{item.get('path')}`: {item.get('reason')}")
     if report.get("fatal_report_failures"):
         lines.append("")
         lines.append("## Fatal report failures")
         lines.append("")
         for item in report.get("fatal_report_failures", []):
-            lines.append(
-                f"- `{item.get('level')}` `{item.get('path')}`: {item.get('reason')}"
-            )
+            lines.append(f"- `{item.get('level')}` `{item.get('path')}`: {item.get('reason')}")
     return "\n".join(lines) + "\n"
 
 

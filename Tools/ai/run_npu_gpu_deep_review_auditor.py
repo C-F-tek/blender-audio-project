@@ -56,12 +56,7 @@ except ImportError:
     DEFAULT_NPU_PYTHON = Path(
         os.environ.get(
             "SPAZIOTEMPO_NPU_PYTHON",
-            Path.home()
-            / "blender"
-            / "venvs"
-            / "blender-npu-ai"
-            / "Scripts"
-            / "python.exe",
+            Path.home() / "blender" / "venvs" / "blender-npu-ai" / "Scripts" / "python.exe",
         )
     )
 
@@ -88,11 +83,7 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -103,9 +94,7 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def compact_json(data: Any, max_chars: int) -> str:
@@ -131,9 +120,7 @@ def summarize_runtime_tool_context_report(
         item["read_error"] = f"{type(exc).__name__}: {exc}"
         return item
     item["json_ok"] = True
-    tool_results = (
-        data.get("tool_results") if isinstance(data.get("tool_results"), list) else []
-    )
+    tool_results = data.get("tool_results") if isinstance(data.get("tool_results"), list) else []
     item.update(
         {
             "kind": data.get("kind"),
@@ -145,12 +132,8 @@ def summarize_runtime_tool_context_report(
             "provider_execution_performed": data.get("provider_execution_performed"),
             "patch_application_performed": data.get("patch_application_performed"),
             "sqlite_write_performed": data.get("sqlite_write_performed"),
-            "persistent_memory_write_performed": data.get(
-                "persistent_memory_write_performed"
-            ),
-            "operational_sqlite_write_performed": data.get(
-                "operational_sqlite_write_performed"
-            ),
+            "persistent_memory_write_performed": data.get("persistent_memory_write_performed"),
+            "operational_sqlite_write_performed": data.get("operational_sqlite_write_performed"),
             "guardrails": data.get("guardrails", {}),
             "tool_results": [
                 {
@@ -184,9 +167,7 @@ def load_runtime_tool_context_reports(
         if key in seen:
             continue
         seen.add(key)
-        reports.append(
-            summarize_runtime_tool_context_report(path, repo_root, max_chars)
-        )
+        reports.append(summarize_runtime_tool_context_report(path, repo_root, max_chars))
     return reports
 
 
@@ -256,9 +237,7 @@ def extract_npu_tool_requests_from_text(
             }
         )
     if len(raw_requests) > max_requests:
-        errors.append(
-            f"tool_requests truncated: {len(raw_requests)} requested, max {max_requests}"
-        )
+        errors.append(f"tool_requests truncated: {len(raw_requests)} requested, max {max_requests}")
     return valid, errors
 
 
@@ -318,9 +297,7 @@ def build_npu_deterministic_tool_fallback_requests(
 def npu_python_path(value: str | None) -> Path:
     if value:
         return Path(value).expanduser()
-    return Path(
-        os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))
-    ).expanduser()
+    return Path(os.environ.get("SPAZIOTEMPO_NPU_PYTHON", str(DEFAULT_NPU_PYTHON))).expanduser()
 
 
 def build_context(
@@ -354,12 +331,8 @@ def build_context(
         "gpu_review_summary": {
             "kind": gpu_review.get("kind"),
             "passed": gpu_review.get("passed"),
-            "provider_execution_performed": gpu_review.get(
-                "provider_execution_performed"
-            ),
-            "patch_application_performed": gpu_review.get(
-                "patch_application_performed"
-            ),
+            "provider_execution_performed": gpu_review.get("provider_execution_performed"),
+            "patch_application_performed": gpu_review.get("patch_application_performed"),
             "model_used": gpu_review.get("model_used"),
             "round_count": gpu_review.get("round_count"),
             "recommendation_count": gpu_review.get("recommendation_count"),
@@ -377,16 +350,12 @@ def build_context(
                 "If additional evidence is needed, include optional JSON tool_requests using the shared broker schema; do not execute tools directly.",
                 "When useful, include a fenced ```json object with top-level tool_requests so the broker can parse it.",
             ],
-            "provider_tool_guidance": build_provider_tool_guidance_payload(
-                "npu_openvino"
-            ),
+            "provider_tool_guidance": build_provider_tool_guidance_payload("npu_openvino"),
         },
         "recommendations": recommendations,
         "rounds": compact_rounds,
     }
-    return (
-        "# NPU GPU Deep Review Audit Context\n\n" + compact_json(payload, 42000) + "\n"
-    )
+    return "# NPU GPU Deep Review Audit Context\n\n" + compact_json(payload, 42000) + "\n"
 
 
 def text_metrics(text: str) -> dict[str, Any]:
@@ -401,8 +370,7 @@ def text_metrics(text: str) -> dict[str, Any]:
         "word_count": len(words),
         "alpha_ratio": round(alpha / chars, 4) if chars else 0,
         "digit_ratio": round(digit / chars, 4) if chars else 0,
-        "markdown_heading_count": text.count("\n#")
-        + (1 if text.startswith("#") else 0),
+        "markdown_heading_count": text.count("\n#") + (1 if text.startswith("#") else 0),
     }
 
 
@@ -440,11 +408,7 @@ def classify_npu_output(
         warnings.append("NPU provider returned an empty response")
         return "provider_empty_response", warnings
     metrics = text_metrics(text)
-    if (
-        metrics["word_count"] < 20
-        or metrics["alpha_ratio"] < 0.25
-        or metrics["digit_ratio"] > 0.65
-    ):
+    if metrics["word_count"] < 20 or metrics["alpha_ratio"] < 0.25 or metrics["digit_ratio"] > 0.65:
         warnings.append("NPU auditor output appears unusable or non-linguistic")
         return "unusable_output", warnings
     return "usable_audit_text", warnings
@@ -549,9 +513,7 @@ def run_auditor(args: argparse.Namespace) -> dict[str, Any]:
             except OSError as exc:
                 error = f"{type(exc).__name__}: {exc}"
     else:
-        stdout = (
-            "NPU auditor skipped by default. Pass --run-npu to execute OpenVINO/NPU."
-        )
+        stdout = "NPU auditor skipped by default. Pass --run-npu to execute OpenVINO/NPU."
 
     classification, warnings = classify_npu_output(
         npu_text, int(returncode or 0), error, stdout, stderr, args.metadata_only
@@ -693,24 +655,14 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Non-blocking: `{report['non_blocking']}`")
     lines.append(f"- NPU Python: `{report['npu_python']}`")
     lines.append(f"- NPU Python exists: `{report['npu_python_exists']}`")
-    lines.append(
-        f"- Provider execution requested: `{report['provider_execution_requested']}`"
-    )
+    lines.append(f"- Provider execution requested: `{report['provider_execution_requested']}`")
     lines.append(f"- Provider load attempted: `{report['provider_load_attempted']}`")
-    lines.append(
-        f"- Provider execution succeeded: `{report['provider_execution_succeeded']}`"
-    )
-    lines.append(
-        f"- Provider empty response: `{report.get('provider_empty_response')}`"
-    )
+    lines.append(f"- Provider execution succeeded: `{report['provider_execution_succeeded']}`")
+    lines.append(f"- Provider empty response: `{report.get('provider_empty_response')}`")
     lines.append(f"- Dependency missing: `{report['dependency_missing']}`")
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Classification: `{report['npu_auditor']['classification']}`")
-    lines.append(
-        f"- Runtime tool context seen: `{report.get('runtime_tool_context_seen')}`"
-    )
+    lines.append(f"- Runtime tool context seen: `{report.get('runtime_tool_context_seen')}`")
     lines.append(
         f"- Runtime tool context report count: `{report.get('runtime_tool_context_report_count')}`"
     )

@@ -4,8 +4,8 @@ import sys
 from pathlib import Path
 
 import librosa
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def moving_average(x: np.ndarray, window: int) -> np.ndarray:
@@ -15,7 +15,9 @@ def moving_average(x: np.ndarray, window: int) -> np.ndarray:
     return np.convolve(x, kernel, mode="same")
 
 
-def robust_normalize(x: np.ndarray, floor_percentile: float = 5.0, ceil_percentile: float = 99.0) -> np.ndarray:
+def robust_normalize(
+    x: np.ndarray, floor_percentile: float = 5.0, ceil_percentile: float = 99.0
+) -> np.ndarray:
     lo = np.percentile(x, floor_percentile)
     hi = np.percentile(x, ceil_percentile)
     if hi - lo < 1e-12:
@@ -104,7 +106,9 @@ def build_ai_memory_context_if_available(track_stem: str, output_dir: Path) -> d
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analizza un WAV e genera curve low/mid/high + onsets + beats per Blender.")
+    parser = argparse.ArgumentParser(
+        description="Analizza un WAV e genera curve low/mid/high + onsets + beats per Blender."
+    )
     parser.add_argument("input_wav", type=str, help="Percorso del file WAV")
     parser.add_argument("--output-dir", type=str, default="output", help="Cartella output")
     parser.add_argument("--fps", type=float, default=30.0, help="FPS target per Blender")
@@ -120,9 +124,17 @@ def main():
     parser.add_argument("--gamma-low", type=float, default=0.8, help="Compressione gamma low")
     parser.add_argument("--gamma-mid", type=float, default=0.85, help="Compressione gamma mid")
     parser.add_argument("--gamma-high", type=float, default=0.9, help="Compressione gamma high")
-    parser.add_argument("--skip-music-context", action="store_true", help="Non rigenerare i chunk NPU musicali")
-    parser.add_argument("--run-ollama-agent", action="store_true", help="Esegue Ollama sul contesto compatto dopo l'analisi")
-    parser.add_argument("--ollama-model", default="qwen2.5-coder:14b", help="Modello Ollama per insight JSON")
+    parser.add_argument(
+        "--skip-music-context", action="store_true", help="Non rigenerare i chunk NPU musicali"
+    )
+    parser.add_argument(
+        "--run-ollama-agent",
+        action="store_true",
+        help="Esegue Ollama sul contesto compatto dopo l'analisi",
+    )
+    parser.add_argument(
+        "--ollama-model", default="qwen2.5-coder:14b", help="Modello Ollama per insight JSON"
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input_wav).expanduser().resolve()
@@ -155,9 +167,15 @@ def main():
     high_env = band_envelope_from_stft(S_mag, freqs, args.mid_max, args.high_max)
 
     # Normalizzazione + smoothing + compressione
-    low_env = compress_curve(robust_normalize(moving_average(low_env, args.smooth_low)), args.gamma_low)
-    mid_env = compress_curve(robust_normalize(moving_average(mid_env, args.smooth_mid)), args.gamma_mid)
-    high_env = compress_curve(robust_normalize(moving_average(high_env, args.smooth_high)), args.gamma_high)
+    low_env = compress_curve(
+        robust_normalize(moving_average(low_env, args.smooth_low)), args.gamma_low
+    )
+    mid_env = compress_curve(
+        robust_normalize(moving_average(mid_env, args.smooth_mid)), args.gamma_mid
+    )
+    high_env = compress_curve(
+        robust_normalize(moving_average(high_env, args.smooth_high)), args.gamma_high
+    )
 
     # Onset envelope
     onset_env = librosa.onset.onset_strength(y=y, sr=sr, hop_length=args.hop_length)

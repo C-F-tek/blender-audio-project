@@ -29,9 +29,7 @@ def collect_runtime_tool_context_reports(
     base = resolve_path(repo_root, args.runtime_tool_output_dir)
     candidates = [
         base / "round_000" / "round_000_runtime_tool_broker.json",
-        base
-        / f"round_{round_id:03d}"
-        / f"round_{round_id:03d}_runtime_tool_broker.json",
+        base / f"round_{round_id:03d}" / f"round_{round_id:03d}_runtime_tool_broker.json",
     ]
     reports: list[Path] = []
     seen: set[str] = set()
@@ -44,9 +42,7 @@ def collect_runtime_tool_context_reports(
     return reports
 
 
-def npu_micro_support_output_path(
-    args: argparse.Namespace, repo_root: Path, round_id: int
-) -> Path:
+def npu_micro_support_output_path(args: argparse.Namespace, repo_root: Path, round_id: int) -> Path:
     support_dir = resolve_path(repo_root, args.npu_micro_support_dir)
     support_dir.mkdir(parents=True, exist_ok=True)
     return support_dir / f"round_{round_id:03d}_npu_micro_support.json"

@@ -1,7 +1,7 @@
-from pathlib import Path
 import argparse
 import json
 import sys
+from pathlib import Path
 from statistics import mean
 
 ROOT = Path.home() / "blender"
@@ -24,7 +24,7 @@ def safe_mean(values):
 
 
 def build_summary(analysis_json: Path, out_json: Path, update_music_context: bool = True) -> dict:
-    with open(analysis_json, "r", encoding="utf-8") as f:
+    with open(analysis_json, encoding="utf-8") as f:
         data = json.load(f)
 
     meta = data["meta"]
@@ -45,7 +45,9 @@ def build_summary(analysis_json: Path, out_json: Path, update_music_context: boo
         try:
             from ai_memory_context import build_ai_memory_context
 
-            ai_memory_context = build_ai_memory_context(track_stem=track_name, output_dir=out_json.parent)
+            ai_memory_context = build_ai_memory_context(
+                track_stem=track_name, output_dir=out_json.parent
+            )
         except Exception:
             ai_memory_context = {}
 

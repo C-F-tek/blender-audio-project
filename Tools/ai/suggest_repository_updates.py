@@ -26,9 +26,7 @@ DEFAULT_MAX_CHARS = 6000
 IGNORED_PLAN_FILENAMES = {"README.md"}
 
 WORKLOAD_QUALITY_REPORT = "output/validation/ai_workload_report_quality.json"
-WORKLOAD_QUALITY_ROUTING_REPORT = (
-    "output/validation/ai_workload_quality_lane_routing.json"
-)
+WORKLOAD_QUALITY_ROUTING_REPORT = "output/validation/ai_workload_quality_lane_routing.json"
 NPU_DECODE_REMEDIATION_REPORT = "output/validation/npu_decode_quality_remediation.json"
 NPU_DECODE_SMOKE_REPORT = "output/validation/npu_decode_smoke_diagnostic.json"
 TRACKED_WORKLOAD_CONTEXT_FILES = (
@@ -280,13 +278,13 @@ def _ensure_repo_imports(repo_root: Path) -> None:
         sys.path.insert(0, root_text)
 
 
-def tracked_workload_context_decision(
-    path: str, reason: str, error: str = ""
-) -> dict[str, Any]:
+def tracked_workload_context_decision(path: str, reason: str, error: str = "") -> dict[str, Any]:
     lane = (
         "npu"
         if path.endswith("npu_real_workload_report.md")
-        else "ollama" if path.endswith("ollama_gpu_real_workload_report.md") else ""
+        else "ollama"
+        if path.endswith("ollama_gpu_real_workload_report.md")
+        else ""
     )
     return {
         "path": path,
@@ -310,19 +308,13 @@ def build_advisory_context_routing(
             route_context_files_by_quality,
         )
 
-        quality_report = load_workload_quality_report(
-            repo_root, WORKLOAD_QUALITY_REPORT
-        )
-        routing = route_context_files_by_quality(
-            requested_context_files, quality_report
-        )
+        quality_report = load_workload_quality_report(repo_root, WORKLOAD_QUALITY_REPORT)
+        routing = route_context_files_by_quality(requested_context_files, quality_report)
         routing["enforced"] = True
         routing["policy"] = "quality-approved-workload-context-only"
         routing["provider_execution_performed"] = False
         return routing
-    except (
-        Exception
-    ) as exc:  # noqa: BLE001 - keep non-workload docs open, workload reports closed.
+    except Exception as exc:  # noqa: BLE001 - keep non-workload docs open, workload reports closed.
         error = f"{type(exc).__name__}: {exc}"
         trusted = []
         excluded = []
@@ -379,9 +371,7 @@ def collect_context(
         list(PROFILE_REPORTS.get(profile, ())) + report_files + extra_reports
     )
 
-    advisory_routing = build_advisory_context_routing(
-        repo_root, requested_context_files
-    )
+    advisory_routing = build_advisory_context_routing(repo_root, requested_context_files)
     trusted_context_files = unique_items(
         [
             str(item.get("path"))
@@ -391,8 +381,7 @@ def collect_context(
     )
 
     docs = [
-        read_text_if_exists(repo_root / rel, max_chars=max_chars)
-        for rel in trusted_context_files
+        read_text_if_exists(repo_root / rel, max_chars=max_chars) for rel in trusted_context_files
     ]
     reports_raw = [read_json_if_exists(repo_root / rel) for rel in all_report_files]
 
@@ -433,9 +422,7 @@ def collect_context(
         "advisory_context_routing": advisory_routing,
         "report_files": all_report_files,
         "docs": docs,
-        "validation_reports": [
-            compact_report_summary(report) for report in reports_raw
-        ],
+        "validation_reports": [compact_report_summary(report) for report in reports_raw],
         "execution_plans": {
             "active": [path.relative_to(repo_root).as_posix() for path in active_plans],
             "completed_tail": [
@@ -509,15 +496,11 @@ def deterministic_suggestions(context: dict[str, Any]) -> list[dict[str, str]]:
     return suggestions
 
 
-def build_ollama_prompt(
-    context: dict[str, Any], deterministic: list[dict[str, str]]
-) -> str:
+def build_ollama_prompt(context: dict[str, Any], deterministic: list[dict[str, str]]) -> str:
     routing = context.get("advisory_context_routing", {})
     compact_routing = {
         "enforced": routing.get("enforced") if isinstance(routing, dict) else None,
-        "advisory_lanes": (
-            routing.get("advisory_lanes") if isinstance(routing, dict) else []
-        ),
+        "advisory_lanes": (routing.get("advisory_lanes") if isinstance(routing, dict) else []),
         "excluded_advisory_lanes": (
             routing.get("excluded_advisory_lanes") if isinstance(routing, dict) else []
         ),
@@ -525,9 +508,7 @@ def build_ollama_prompt(
             routing.get("excluded_context_files") if isinstance(routing, dict) else []
         ),
         "provider_execution_performed": (
-            routing.get("provider_execution_performed")
-            if isinstance(routing, dict)
-            else False
+            routing.get("provider_execution_performed") if isinstance(routing, dict) else False
         ),
     }
     compact = {
@@ -550,16 +531,12 @@ def build_ollama_prompt(
     )
 
 
-def maybe_run_ollama(
-    repo_root: Path, prompt: str, *, model: str | None
-) -> dict[str, Any]:
+def maybe_run_ollama(repo_root: Path, prompt: str, *, model: str | None) -> dict[str, Any]:
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
     from Tools.npu.ollama_runtime import OllamaSession  # noqa: PLC0415
 
-    with OllamaSession(
-        model=model, shutdown_server=False, unload_model=True
-    ) as session:
+    with OllamaSession(model=model, shutdown_server=False, unload_model=True) as session:
         text = session.generate(prompt, max_new_tokens=1200, temperature=0.1)
     return {"used": True, "model": model, "text": text, "error": ""}
 
@@ -607,9 +584,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- `{path}`")
     lines.append("")
     excluded = (
-        report["context"]
-        .get("advisory_context_routing", {})
-        .get("excluded_context_files", [])
+        report["context"].get("advisory_context_routing", {}).get("excluded_context_files", [])
     )
     if excluded:
         lines.append("### Excluded advisory context files")
@@ -636,9 +611,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def build_output_paths(
-    repo_root: Path, output_dir: str, basename: str
-) -> tuple[Path, Path, Path]:
+def build_output_paths(repo_root: Path, output_dir: str, basename: str) -> tuple[Path, Path, Path]:
     directory = repo_root / output_dir
     return (
         directory / f"{basename}.json",
@@ -650,9 +623,7 @@ def build_output_paths(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--profile", default="core", choices=sorted(PROFILE_CONTEXT_FILES.keys())
-    )
+    parser.add_argument("--profile", default="core", choices=sorted(PROFILE_CONTEXT_FILES.keys()))
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--basename", default=DEFAULT_PACKET_BASENAME)
     parser.add_argument(

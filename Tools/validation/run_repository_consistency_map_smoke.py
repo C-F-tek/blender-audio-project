@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the repository consistency mapper."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,11 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 DEFAULT_OUTPUT = "output/validation/repository_consistency_map_smoke.json"
 DEFAULT_MARKDOWN = "output/validation/repository_consistency_map_smoke.md"
@@ -41,7 +46,9 @@ def load_json(path: Path) -> tuple[dict[str, Any], str | None]:
     return data, None
 
 
-def run_command(command: list[str], repo_root: Path, timeout_seconds: int) -> tuple[int, str, str, str | None]:
+def run_command(
+    command: list[str], repo_root: Path, timeout_seconds: int
+) -> tuple[int, str, str, str | None]:
     try:
         completed = subprocess.run(
             command,
@@ -89,7 +96,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Elapsed seconds: `{report.get('elapsed_seconds')}`")
     lines.append(f"- Finding count: `{report.get('finding_count')}`")
     lines.append(f"- Markdown reference count: `{report.get('markdown_reference_count')}`")
-    lines.append(f"- Markdown Python command count: `{report.get('markdown_python_command_count')}`")
+    lines.append(
+        f"- Markdown Python command count: `{report.get('markdown_python_command_count')}`"
+    )
     lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
     lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- SQLite write performed: `{report['sqlite_write_performed']}`")
@@ -101,7 +110,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def run_smoke(repo_root: Path, timeout_seconds: int, workers: int, map_report: str | None) -> dict[str, Any]:
+def run_smoke(
+    repo_root: Path, timeout_seconds: int, workers: int, map_report: str | None
+) -> dict[str, Any]:
     started = time.perf_counter()
     errors: list[str] = []
     warnings: list[str] = []
@@ -117,8 +128,12 @@ def run_smoke(repo_root: Path, timeout_seconds: int, workers: int, map_report: s
             map_output = repo_root / map_output
         map_markdown: Path | None = None
     else:
-        map_output = repo_root / "output" / "validation" / "repository_consistency_map_smoke_map.json"
-        map_markdown = repo_root / "output" / "validation" / "repository_consistency_map_smoke_map.md"
+        map_output = (
+            repo_root / "output" / "validation" / "repository_consistency_map_smoke_map.json"
+        )
+        map_markdown = (
+            repo_root / "output" / "validation" / "repository_consistency_map_smoke_map.md"
+        )
         command = [
             sys.executable,
             "Tools/ai/build_repository_consistency_map.py",
@@ -190,8 +205,16 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--timeout-seconds", type=int, default=180)
-    parser.add_argument("--workers", type=int, default=8, help="Worker count passed to build_repository_consistency_map.py when not reusing --map-report.")
-    parser.add_argument("--map-report", help="Existing repository_consistency_map JSON to validate instead of rerunning the mapper.")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=8,
+        help="Worker count passed to build_repository_consistency_map.py when not reusing --map-report.",
+    )
+    parser.add_argument(
+        "--map-report",
+        help="Existing repository_consistency_map JSON to validate instead of rerunning the mapper.",
+    )
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
     args = parser.parse_args()

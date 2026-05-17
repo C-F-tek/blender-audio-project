@@ -1,50 +1,50 @@
-import bpy
 import math
 import random
 
+import bpy
+from asset_setup import assign_material_to_hierarchy, duplicate_hierarchy
+from fog_filaments import ensure_fog_filaments
+from materials import (
+    build_atmosphere_volume_material,
+    build_aura_material,
+    build_mist_particle_material,
+    build_ribbon_material,
+    build_ring_material,
+    build_variant_material,
+)
+from scene_utils import create_controller_empty
+
 from config import (
-    PRIMARY_BASE_Z,
-    AURA_RADIUS,
-    USE_HERO_AURA_MESH,
-    AURA_DEFORM_SUBDIV_VIEW,
-    AURA_DEFORM_SUBDIV_RENDER,
-    AURA_DEFORM_FIELD_RADIUS,
-    AURA_DEFORM_DISPLACE_MIN,
-    AURA_DEFORM_DISPLACE_MAX,
-    AURA_DEFORM_DETAIL_MAX,
-    AURA_DEFORM_WAVE_HEIGHT_MAX,
-    AURA_DEFORM_FIELD_STRENGTH_MAX,
-    ENERGY_RING_COUNT,
-    RIBBON_COUNT,
-    CREATE_VARIANTS,
-    VARIANT_COUNT,
-    VARIANT_RING_RADIUS,
-    VARIANT_SCALE_MIN,
-    VARIANT_SCALE_MAX,
-    USE_MIST_PARTICLES,
-    MIST_PARTICLE_COUNT,
-    MIST_SCALE_MIN,
-    MIST_SCALE_MAX,
     ATMOSPHERE_CUBE_SIZE,
+    AURA_DEFORM_DETAIL_MAX,
+    AURA_DEFORM_DISPLACE_MAX,
+    AURA_DEFORM_DISPLACE_MIN,
+    AURA_DEFORM_FIELD_RADIUS,
+    AURA_DEFORM_FIELD_STRENGTH_MAX,
+    AURA_DEFORM_SUBDIV_RENDER,
+    AURA_DEFORM_SUBDIV_VIEW,
+    AURA_DEFORM_WAVE_HEIGHT_MAX,
+    AURA_RADIUS,
+    CREATE_VARIANTS,
+    ENERGY_RING_COUNT,
+    FOG_RAMP_HIGH_BASE,
+    FOG_RAMP_LOW_BASE,
     FOG_VOLUME_ENABLED,
     FOG_VOLUME_VIEWPORT_VISIBLE,
-    FOG_RAMP_LOW_BASE,
-    FOG_RAMP_HIGH_BASE,
+    MIST_PARTICLE_COUNT,
+    MIST_SCALE_MAX,
+    MIST_SCALE_MIN,
     PALETTE_LIST,
     PEACE_PALETTE,
+    PRIMARY_BASE_Z,
+    RIBBON_COUNT,
+    USE_HERO_AURA_MESH,
+    USE_MIST_PARTICLES,
+    VARIANT_COUNT,
+    VARIANT_RING_RADIUS,
+    VARIANT_SCALE_MAX,
+    VARIANT_SCALE_MIN,
 )
-from materials import (
-    build_aura_material,
-    build_ring_material,
-    build_ribbon_material,
-    build_variant_material,
-    build_atmosphere_volume_material,
-    build_mist_particle_material,
-)
-from asset_setup import duplicate_hierarchy, assign_material_to_hierarchy
-from scene_utils import create_controller_empty
-from fog_filaments import ensure_fog_filaments
-
 
 AURA_AUDIO_PROPS = [
     "low",
@@ -76,7 +76,7 @@ def add_prop_driver(idblock, data_path, expression, prop_targets):
         return None
 
     driver = fcurve.driver
-    driver.type = 'SCRIPTED'
+    driver.type = "SCRIPTED"
     driver.expression = expression
 
     while driver.variables:
@@ -86,7 +86,7 @@ def add_prop_driver(idblock, data_path, expression, prop_targets):
         var = driver.variables.new()
         var.name = var_name
         target = var.targets[0]
-        target.id_type = 'OBJECT'
+        target.id_type = "OBJECT"
         target.id = target_obj
         target.data_path = f'["{prop_name}"]'
 
@@ -102,7 +102,7 @@ def create_aura_deform_field(controller, aura_location, parent=None):
     )
     field = bpy.context.active_object
     field.name = "AuraAudioDeformField"
-    field.display_type = 'WIRE'
+    field.display_type = "WIRE"
     field.hide_render = True
     field.hide_viewport = True
     field.hide_select = True
@@ -115,7 +115,7 @@ def create_aura_deform_field(controller, aura_location, parent=None):
     except Exception:
         pass
 
-    tex = bpy.data.textures.new("AuraAudioDeformFieldTexture", type='CLOUDS')
+    tex = bpy.data.textures.new("AuraAudioDeformFieldTexture", type="CLOUDS")
     for attr, value in [
         ("noise_scale", 0.92),
         ("noise_depth", 5),
@@ -126,7 +126,7 @@ def create_aura_deform_field(controller, aura_location, parent=None):
         except Exception:
             pass
 
-    mod = field.modifiers.new("AudioFieldInvisibleDisplace", 'DISPLACE')
+    mod = field.modifiers.new("AudioFieldInvisibleDisplace", "DISPLACE")
     mod.strength = 0.0
     mod.mid_level = 0.50
     mod.texture = tex
@@ -147,11 +147,11 @@ def add_hero_aura_deformers(aura, controller, deform_field):
     except Exception:
         pass
 
-    subdiv = aura.modifiers.new("AuraAudioSubdivision", 'SUBSURF')
+    subdiv = aura.modifiers.new("AuraAudioSubdivision", "SUBSURF")
     subdiv.levels = AURA_DEFORM_SUBDIV_VIEW
     subdiv.render_levels = AURA_DEFORM_SUBDIV_RENDER
 
-    breath_tex = bpy.data.textures.new("AuraBreathDisplaceTexture", type='VORONOI')
+    breath_tex = bpy.data.textures.new("AuraBreathDisplaceTexture", type="VORONOI")
     for attr, value in [
         ("noise_scale", 1.85),
         ("intensity", 0.42),
@@ -162,13 +162,13 @@ def add_hero_aura_deformers(aura, controller, deform_field):
         except Exception:
             pass
 
-    breath = aura.modifiers.new("AuraAudioBreathDisplace", 'DISPLACE')
+    breath = aura.modifiers.new("AuraAudioBreathDisplace", "DISPLACE")
     breath.strength = AURA_DEFORM_DISPLACE_MIN
     breath.mid_level = 0.48
     breath.texture = breath_tex
     try:
-        breath.direction = 'NORMAL'
-        breath.texture_coords = 'OBJECT'
+        breath.direction = "NORMAL"
+        breath.texture_coords = "OBJECT"
         breath.texture_coords_object = deform_field
     except Exception:
         pass
@@ -180,7 +180,7 @@ def add_hero_aura_deformers(aura, controller, deform_field):
         [("aura", controller, "aura_deform")],
     )
 
-    detail_tex = bpy.data.textures.new("AuraTransientDetailTexture", type='CLOUDS')
+    detail_tex = bpy.data.textures.new("AuraTransientDetailTexture", type="CLOUDS")
     for attr, value in [
         ("noise_scale", 0.54),
         ("noise_depth", 6),
@@ -191,13 +191,13 @@ def add_hero_aura_deformers(aura, controller, deform_field):
         except Exception:
             pass
 
-    detail = aura.modifiers.new("AuraAudioTransientDetail", 'DISPLACE')
+    detail = aura.modifiers.new("AuraAudioTransientDetail", "DISPLACE")
     detail.strength = 0.0
     detail.mid_level = 0.50
     detail.texture = detail_tex
     try:
-        detail.direction = 'NORMAL'
-        detail.texture_coords = 'OBJECT'
+        detail.direction = "NORMAL"
+        detail.texture_coords = "OBJECT"
         detail.texture_coords_object = deform_field
     except Exception:
         pass
@@ -209,9 +209,9 @@ def add_hero_aura_deformers(aura, controller, deform_field):
         [("detail", controller, "detail")],
     )
 
-    wave = aura.modifiers.new("AuraAudioBeatWave", 'WAVE')
+    wave = aura.modifiers.new("AuraAudioBeatWave", "WAVE")
     try:
-        wave.type = 'RINGS'
+        wave.type = "RINGS"
         wave.use_x = True
         wave.use_y = True
         wave.use_normal = True
@@ -281,10 +281,7 @@ def create_hero_aura(parent=None):
 
     mat, aura_strength_socket, aura_edge_ctrl = build_aura_material()
 
-    bpy.ops.mesh.primitive_uv_sphere_add(
-        radius=AURA_RADIUS,
-        location=aura_location
-    )
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=AURA_RADIUS, location=aura_location)
     aura = bpy.context.active_object
     aura.name = "HeroAura"
     aura.data.materials.append(mat)
@@ -334,7 +331,7 @@ def create_energy_rings(parent=None):
                 math.radians(82 + i * 8),
                 math.radians(10 + i * 10),
                 math.radians(i * 20),
-            )
+            ),
         )
         ring = bpy.context.active_object
         ring.name = f"EnergyRing_{i:02d}"
@@ -346,14 +343,16 @@ def create_energy_rings(parent=None):
         if parent is not None:
             ring.parent = parent
 
-        rings.append({
-            "object": ring,
-            "emit_socket": emit_socket,
-            "base_scale": ring.scale.copy(),
-            "base_rot": ring.rotation_euler.copy(),
-            "base_loc": ring.location.copy(),
-            "phase": i * 0.9,
-        })
+        rings.append(
+            {
+                "object": ring,
+                "emit_socket": emit_socket,
+                "base_scale": ring.scale.copy(),
+                "base_rot": ring.rotation_euler.copy(),
+                "base_loc": ring.location.copy(),
+                "phase": i * 0.9,
+            }
+        )
 
     return rings
 
@@ -362,9 +361,7 @@ def create_energy_ribbons(parent=None):
     ribbons = []
 
     for i in range(RIBBON_COUNT):
-        bpy.ops.curve.primitive_bezier_circle_add(
-            location=(0, 0, PRIMARY_BASE_Z + 1.05 + i * 0.20)
-        )
+        bpy.ops.curve.primitive_bezier_circle_add(location=(0, 0, PRIMARY_BASE_Z + 1.05 + i * 0.20))
         ribbon = bpy.context.active_object
         ribbon.name = f"EnergyRibbon_{i:02d}"
         ribbon.scale = (2.55 + i * 0.30, 1.35 + i * 0.14, 1.0)
@@ -384,14 +381,16 @@ def create_energy_ribbons(parent=None):
         if parent is not None:
             ribbon.parent = parent
 
-        ribbons.append({
-            "object": ribbon,
-            "emit_socket": emit_socket,
-            "base_rot": ribbon.rotation_euler.copy(),
-            "base_loc": ribbon.location.copy(),
-            "base_scale": ribbon.scale.copy(),
-            "phase": i * 1.15,
-        })
+        ribbons.append(
+            {
+                "object": ribbon,
+                "emit_socket": emit_socket,
+                "base_rot": ribbon.rotation_euler.copy(),
+                "base_loc": ribbon.location.copy(),
+                "base_scale": ribbon.scale.copy(),
+                "phase": i * 1.15,
+            }
+        )
 
     return ribbons
 
@@ -420,12 +419,14 @@ def create_variants(hero_root, parent=None):
         mat = build_variant_material(f"VariantPeaceMat_{i:02d}", color)
         assign_material_to_hierarchy(dup, mat)
 
-        variants.append({
-            "root": dup,
-            "angle": ang,
-            "base_location": dup.location.copy(),
-            "base_scale": scale,
-        })
+        variants.append(
+            {
+                "root": dup,
+                "angle": ang,
+                "base_location": dup.location.copy(),
+                "base_scale": scale,
+            }
+        )
 
     return variants
 
@@ -443,7 +444,7 @@ def create_atmosphere_cube(parent=None):
         ATMOSPHERE_CUBE_SIZE * 0.5,
     )
     cube.data.materials.append(mat)
-    cube.display_type = 'WIRE'
+    cube.display_type = "WIRE"
     cube.hide_select = True
     cube.hide_render = not FOG_VOLUME_ENABLED
     cube.hide_viewport = not FOG_VOLUME_VIEWPORT_VISIBLE
@@ -504,7 +505,7 @@ def create_mist_particles(parent=None):
     if not USE_MIST_PARTICLES:
         return particles
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))
+    bpy.ops.object.empty_add(type="PLAIN_AXES", location=(0, 0, 0))
     root = bpy.context.active_object
     root.name = "MistParticlesRoot"
 
@@ -535,20 +536,19 @@ def create_mist_particles(parent=None):
         obj.parent = root
 
         color = random.choice(color_choices)
-        mat, em_socket, mix_socket = build_mist_particle_material(
-            f"MistParticleMat_{i:02d}",
-            color
-        )
+        mat, em_socket, mix_socket = build_mist_particle_material(f"MistParticleMat_{i:02d}", color)
         obj.data.materials.append(mat)
 
-        particles.append({
-            "object": obj,
-            "material": mat,
-            "emission_socket": em_socket,
-            "mix_socket": mix_socket,
-            "base_location": obj.location.copy(),
-            "phase": random.uniform(0.0, math.tau),
-            "base_scale": random.uniform(MIST_SCALE_MIN, MIST_SCALE_MAX),
-        })
+        particles.append(
+            {
+                "object": obj,
+                "material": mat,
+                "emission_socket": em_socket,
+                "mix_socket": mix_socket,
+                "base_location": obj.location.copy(),
+                "phase": random.uniform(0.0, math.tau),
+                "base_scale": random.uniform(MIST_SCALE_MIN, MIST_SCALE_MAX),
+            }
+        )
 
     return particles

@@ -100,17 +100,11 @@ def ps_quote(value: Any) -> str:
 
 
 def choose_profile(profile_doc: dict[str, Any], profile_name: str) -> dict[str, Any]:
-    profiles = (
-        profile_doc.get("profiles")
-        if isinstance(profile_doc.get("profiles"), dict)
-        else {}
-    )
+    profiles = profile_doc.get("profiles") if isinstance(profile_doc.get("profiles"), dict) else {}
     selected = profile_name or str(profile_doc.get("default_profile") or "")
     profile = profiles.get(selected)
     if not isinstance(profile, dict):
-        raise SystemExit(
-            f"unknown profile '{selected}'. Available: {', '.join(sorted(profiles))}"
-        )
+        raise SystemExit(f"unknown profile '{selected}'. Available: {', '.join(sorted(profiles))}")
     result = dict(profile)
     result["profile_name"] = selected
     return result
@@ -196,9 +190,7 @@ def revision_context_from_profile(
     return None, {}
 
 
-def revision_context_prompt(
-    payload: dict[str, Any], path: Path | None, max_tasks: int
-) -> str:
+def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
     if not payload:
         return ""
     tasks = payload.get("tasks") if isinstance(payload.get("tasks"), list) else []
@@ -355,11 +347,7 @@ def render_postrun_package_command(repo_root: Path, project_python: str) -> str:
 
 
 def list_profiles(profile_doc: dict[str, Any]) -> dict[str, Any]:
-    profiles = (
-        profile_doc.get("profiles")
-        if isinstance(profile_doc.get("profiles"), dict)
-        else {}
-    )
+    profiles = profile_doc.get("profiles") if isinstance(profile_doc.get("profiles"), dict) else {}
     return {
         "schema_version": 1,
         "kind": "heap_runtime_launcher_profile_list",
@@ -368,26 +356,18 @@ def list_profiles(profile_doc: dict[str, Any]) -> dict[str, Any]:
         "profiles": [
             {
                 "name": name,
-                "description": (
-                    value.get("description", "") if isinstance(value, dict) else ""
-                ),
+                "description": (value.get("description", "") if isinstance(value, dict) else ""),
                 "universe_enabled": (
                     value.get("universe_enabled") if isinstance(value, dict) else None
                 ),
                 "revision_context_mode": (
-                    value.get("revision_context_mode")
-                    if isinstance(value, dict)
-                    else None
+                    value.get("revision_context_mode") if isinstance(value, dict) else None
                 ),
                 "context_document_count": (
-                    value.get("context_document_count")
-                    if isinstance(value, dict)
-                    else None
+                    value.get("context_document_count") if isinstance(value, dict) else None
                 ),
                 "semantic_code_chunk_limit": (
-                    value.get("semantic_code_chunk_limit")
-                    if isinstance(value, dict)
-                    else None
+                    value.get("semantic_code_chunk_limit") if isinstance(value, dict) else None
                 ),
             }
             for name, value in sorted(profiles.items())
@@ -434,18 +414,12 @@ def main() -> int:
         revision_context_path,
         revision_context_payload,
     )
-    block_pointer_command = render_block_pointer_command(
-        repo_root, project_python, profile
-    )
-    revision_context_command = render_revision_context_command(
-        repo_root, project_python
-    )
+    block_pointer_command = render_block_pointer_command(repo_root, project_python, profile)
+    revision_context_command = render_revision_context_command(repo_root, project_python)
     postrun_package_command = render_postrun_package_command(repo_root, project_python)
     candidate_summary = (
         revision_context_payload.get("candidate_applicability_summary")
-        if isinstance(
-            revision_context_payload.get("candidate_applicability_summary"), dict
-        )
+        if isinstance(revision_context_payload.get("candidate_applicability_summary"), dict)
         else {}
     )
     report = {
@@ -457,13 +431,10 @@ def main() -> int:
         "profile": profile,
         "revision_context_selection_policy": (
             "latest_complete_heap_context_closure_with_composer_json"
-            if profile.get("revision_context_mode") == "auto_latest"
-            and not args.revision_context
+            if profile.get("revision_context_mode") == "auto_latest" and not args.revision_context
             else ("explicit_revision_context" if args.revision_context else "off")
         ),
-        "revision_context_path": (
-            str(revision_context_path) if revision_context_path else ""
-        ),
+        "revision_context_path": (str(revision_context_path) if revision_context_path else ""),
         "revision_context_loaded": bool(revision_context_payload),
         "revision_context_task_count": (
             len(revision_context_payload.get("tasks", []))
@@ -497,9 +468,7 @@ def main() -> int:
         if not output.is_absolute():
             output = repo_root / output
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(
-            json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-        )
+        output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(command)
     if args.include_block_pointer_command:
         print("\n# External heap block-pointer manifest command")

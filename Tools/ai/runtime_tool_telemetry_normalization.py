@@ -53,10 +53,7 @@ def normalize_tool_entry(entry: dict[str, Any]) -> dict[str, Any]:
     result = safe_dict(normalized.get("result"))
     if "returncode" not in normalized and result.get("returncode") is not None:
         normalized["returncode"] = result.get("returncode")
-    if (
-        normalized.get("executed") is False
-        and normalized["status"] == "declared_not_executed"
-    ):
+    if normalized.get("executed") is False and normalized["status"] == "declared_not_executed":
         normalized.setdefault(
             "declared_not_executed_reason",
             "planner_declared_request_without_matching_broker_result",
@@ -65,14 +62,11 @@ def normalize_tool_entry(entry: dict[str, Any]) -> dict[str, Any]:
 
 
 def status_quality(entries: list[dict[str, Any]]) -> dict[str, Any]:
-    status_missing = [
-        item for item in entries if not str(item.get("status") or "").strip()
-    ]
+    status_missing = [item for item in entries if not str(item.get("status") or "").strip()]
     elapsed_missing = [
         item
         for item in entries
-        if item.get("executed") is True
-        and safe_float(item.get("elapsed_seconds")) <= 0.0
+        if item.get("executed") is True and safe_float(item.get("elapsed_seconds")) <= 0.0
     ]
     return {
         "status_normalized": not status_missing,

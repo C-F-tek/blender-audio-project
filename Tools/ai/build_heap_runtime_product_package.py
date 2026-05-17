@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from report_utils import resolve_output_path, write_json_report, write_text_report
+    from report_utils import write_json_report
 except ImportError:
     from tools.validation.report_utils import (  # type: ignore
         write_json_report,
@@ -29,11 +29,7 @@ def now_iso() -> str:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -66,12 +62,8 @@ def compact_report(path: Path, repo_root: Path) -> dict[str, Any]:
         "provider_execution_performed": (
             data.get("provider_execution_performed") if data else None
         ),
-        "patch_application_performed": (
-            data.get("patch_application_performed") if data else None
-        ),
-        "source_writes_performed": (
-            data.get("source_writes_performed") if data else None
-        ),
+        "patch_application_performed": (data.get("patch_application_performed") if data else None),
+        "source_writes_performed": (data.get("source_writes_performed") if data else None),
         "errors": (data.get("errors") if data else []) or [],
         "warnings": (data.get("warnings") if data else []) or [],
     }
@@ -252,18 +244,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     report_paths = [resolve_repo_path(repo_root, value) for value in args.run_report]
-    artifact_paths = [
-        resolve_repo_path(repo_root, value) for value in args.run_artifact
-    ]
+    artifact_paths = [resolve_repo_path(repo_root, value) for value in args.run_artifact]
 
-    reports = [
-        compact_report(path, repo_root) for path in report_paths if str(path).strip()
-    ]
-    artifacts = [
-        compact_artifact(path, repo_root)
-        for path in artifact_paths
-        if str(path).strip()
-    ]
+    reports = [compact_report(path, repo_root) for path in report_paths if str(path).strip()]
+    artifacts = [compact_artifact(path, repo_root) for path in artifact_paths if str(path).strip()]
 
     missing_reports = [item["path"] for item in reports if not item["exists"]]
     warnings = [f"missing run report: {path}" for path in missing_reports]
@@ -301,22 +285,16 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "raw_output_commit_allowed": False,
         },
     }
-    manifest = write_manifest(output_dir, report)
-    evidence = write_evidence_index(output_dir, report)
-    readiness = write_readiness(output_dir, report)
-    report["manifest"] = repo_rel(
-        output_dir / "heap_runtime_product_manifest.json", repo_root
-    )
+    write_manifest(output_dir, report)
+    write_evidence_index(output_dir, report)
+    write_readiness(output_dir, report)
+    report["manifest"] = repo_rel(output_dir / "heap_runtime_product_manifest.json", repo_root)
     report["evidence_index"] = repo_rel(
         output_dir / "heap_runtime_product_evidence_index.json", repo_root
     )
-    report["readiness"] = repo_rel(
-        output_dir / "heap_runtime_product_readiness.json", repo_root
-    )
+    report["readiness"] = repo_rel(output_dir / "heap_runtime_product_readiness.json", repo_root)
 
-    (output_dir / "heap_runtime_product.md").write_text(
-        render_markdown(report), encoding="utf-8"
-    )
+    (output_dir / "heap_runtime_product.md").write_text(render_markdown(report), encoding="utf-8")
     (output_dir / "README.md").write_text(
         "# Heap Runtime Product Package\n\n"
         "Deterministic product package built from heap/runtime reports and artifacts.\n"

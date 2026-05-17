@@ -5,6 +5,7 @@ The NPU knowledge broker is a context-preparation helper, not an advisory lane.
 This validator enforces that packets remain report-only, provider-free,
 patch-free and bounded.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -83,7 +84,13 @@ def validate_candidate(item: Any, index: int) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     if not isinstance(item, dict):
-        return {"label": label, "path": label, "ok": False, "errors": ["candidate must be an object"], "warnings": []}
+        return {
+            "label": label,
+            "path": label,
+            "ok": False,
+            "errors": ["candidate must be an object"],
+            "warnings": [],
+        }
     path = normalize_path(item.get("path"))
     errors.extend(path_errors(path))
     score = item.get("score")
@@ -100,7 +107,9 @@ def validate_candidate(item: Any, index: int) -> dict[str, Any]:
     return {"label": label, "path": path, "ok": not errors, "errors": errors, "warnings": warnings}
 
 
-def validate_packet(repo_root: Path, packet_path: Path, min_candidates: int, max_candidates: int) -> dict[str, Any]:
+def validate_packet(
+    repo_root: Path, packet_path: Path, min_candidates: int, max_candidates: int
+) -> dict[str, Any]:
     rel_path = repo_relative(packet_path, repo_root)
     errors: list[str] = []
     warnings: list[str] = []

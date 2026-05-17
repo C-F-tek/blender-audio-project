@@ -6,6 +6,7 @@ checks that profile-driven command generation exposes the expected external heap
 operator commands and injects an explicitly supplied revision context into the
 reviewable launcher request.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,12 +21,18 @@ from typing import Any
 try:
     from report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
-    from Tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report  # type: ignore
+    from Tools.validation.report_utils import (  # type: ignore
+        resolve_output_path,
+        write_json_report,
+        write_text_report,
+    )
 
 
 def env_for(repo_root: Path) -> dict[str, str]:
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(repo_root) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env["PYTHONPATH"] = str(repo_root) + (
+        os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
+    )
     return env
 
 
@@ -58,7 +65,9 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def load_heap_closure_module(repo_root: Path) -> Any:
     module_path = repo_root / "Tools" / "ai" / "run_heap_runtime_context_closure.py"
-    spec = importlib.util.spec_from_file_location("heap_runtime_context_closure_smoke_module", module_path)
+    spec = importlib.util.spec_from_file_location(
+        "heap_runtime_context_closure_smoke_module", module_path
+    )
     if spec is None or spec.loader is None:
         raise RuntimeError(f"cannot load module spec for {module_path}")
     module = importlib.util.module_from_spec(spec)
@@ -139,8 +148,12 @@ def write_revision_context_fixture(repo_root: Path) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/heap_runtime_launcher_command_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/heap_runtime_launcher_command_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/heap_runtime_launcher_command_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/heap_runtime_launcher_command_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -164,14 +177,29 @@ def main() -> int:
     generated_command = str(payload.get("command") or "")
     revision_fixture_payload = read_json(fixture_path)
     closure_module = load_heap_closure_module(repo_root)
-    native_revision_prompt = closure_module.revision_context_prompt(revision_fixture_payload, fixture_path, 12)
+    native_revision_prompt = closure_module.revision_context_prompt(
+        revision_fixture_payload, fixture_path, 12
+    )
     checks = [
         {"name": "command_builder_returncode_zero", "passed": result.get("passed") is True},
         {"name": "schema_version_6", "passed": payload.get("schema_version") == 6},
-        {"name": "profile_balanced", "passed": payload.get("profile_name") == "balanced_external_heap"},
-        {"name": "postrun_package_command_present", "passed": bool(payload.get("postrun_package_command"))},
-        {"name": "revision_context_loaded", "passed": payload.get("revision_context_loaded") is True},
-        {"name": "revision_context_selection_explicit", "passed": payload.get("revision_context_selection_policy") == "explicit_revision_context"},
+        {
+            "name": "profile_balanced",
+            "passed": payload.get("profile_name") == "balanced_external_heap",
+        },
+        {
+            "name": "postrun_package_command_present",
+            "passed": bool(payload.get("postrun_package_command")),
+        },
+        {
+            "name": "revision_context_loaded",
+            "passed": payload.get("revision_context_loaded") is True,
+        },
+        {
+            "name": "revision_context_selection_explicit",
+            "passed": payload.get("revision_context_selection_policy")
+            == "explicit_revision_context",
+        },
         {
             "name": "revision_context_injected_into_request",
             "passed": "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN" in generated_command,
@@ -179,7 +207,8 @@ def main() -> int:
         {
             "name": "rewrite_priority_exposed_in_report",
             "passed": payload.get("revision_context_requires_concrete_rewrite") is True
-            and payload.get("revision_context_priority_next_action") == "rewrite_non_concrete_candidates",
+            and payload.get("revision_context_priority_next_action")
+            == "rewrite_non_concrete_candidates",
         },
         {
             "name": "rewrite_priority_injected_into_request",
@@ -207,7 +236,8 @@ def main() -> int:
         },
         {
             "name": "postrun_command_targets_orchestrator",
-            "passed": "run_external_heap_postrun_package.py" in str(payload.get("postrun_package_command") or ""),
+            "passed": "run_external_heap_postrun_package.py"
+            in str(payload.get("postrun_package_command") or ""),
         },
     ]
     errors = [check["name"] for check in checks if not check.get("passed")]

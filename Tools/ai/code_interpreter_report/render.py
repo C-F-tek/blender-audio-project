@@ -17,12 +17,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Risk signals: `{report['total_risk_signals']}`")
     lines.append(f"- TODO/FIXME markers: `{report['total_todos']}`")
     lines.append(f"- Recommendation count: `{report['recommendation_count']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append("")
     lines.append("## Largest files")

@@ -1,4 +1,5 @@
 """Build AI workload quality validation reports."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,7 +16,8 @@ def quality_decision(results: list[dict[str, Any]]) -> dict[str, Any]:
     ollama_primary = any(item["lane"] == "ollama" and item.get("usable") for item in results)
     npu_usable = any(item["lane"] == "npu" and item.get("usable") for item in results)
     npu_excluded = any(
-        item["lane"] == "npu" and not item.get("advisory_use", {}).get("allowed_as_advisory_context")
+        item["lane"] == "npu"
+        and not item.get("advisory_use", {}).get("allowed_as_advisory_context")
         for item in results
     )
     return {
@@ -45,10 +47,14 @@ def build_quality_report(
         results.append(classify_report(path, lane=lane, repo_root=repo_root))
 
     errors = [f"{item['lane']}: {error}" for item in results for error in item.get("errors", [])]
-    warnings = [f"{item['lane']}: {warning}" for item in results for warning in item.get("warnings", [])]
+    warnings = [
+        f"{item['lane']}: {warning}" for item in results for warning in item.get("warnings", [])
+    ]
     unselected = list(unselected_known_reports or [])
     for item in unselected:
-        warnings.append(f"{item.get('lane', 'unknown')}: known workload report not selected: {item.get('reason')}")
+        warnings.append(
+            f"{item.get('lane', 'unknown')}: known workload report not selected: {item.get('reason')}"
+        )
 
     if not results:
         warnings.append("no workload reports selected from output folder")
@@ -71,13 +77,24 @@ def build_quality_report(
         "selection_mode": selection_mode,
         "report_dir_cli_supported": True,
         "report_dir": relative_or_absolute_path(report_dir, repo_root),
-        "packet_dirs": [relative_or_absolute_path(item, repo_root) for item in packet_dirs(repo_root, report_dir)],
-        "selected_reports": [{"lane": lane, "path": relative_or_absolute_path(Path(path), repo_root)} for lane, path in report_specs],
+        "packet_dirs": [
+            relative_or_absolute_path(item, repo_root)
+            for item in packet_dirs(repo_root, report_dir)
+        ],
+        "selected_reports": [
+            {"lane": lane, "path": relative_or_absolute_path(Path(path), repo_root)}
+            for lane, path in report_specs
+        ],
         "unselected_known_reports": unselected,
         "usable_lanes": usable,
         "unusable_lanes": unusable,
         "decision": quality_decision(results),
-        "checks": {"report_count": len(results), "usable_count": len(usable), "unusable_count": len(unusable), "results": results},
+        "checks": {
+            "report_count": len(results),
+            "usable_count": len(usable),
+            "unusable_count": len(unusable),
+            "results": results,
+        },
     }
 
 

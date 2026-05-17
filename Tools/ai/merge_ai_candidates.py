@@ -26,7 +26,9 @@ def extract(path: Path):
     raw = (
         data.get("candidates", [])
         if isinstance(data, dict)
-        else data if isinstance(data, list) else [data]
+        else data
+        if isinstance(data, list)
+        else [data]
     )
     out = []
     for i, item in enumerate(raw):
@@ -60,9 +62,7 @@ def main() -> int:
     }
     out = Path(args.output).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    out.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(payload, indent=2, ensure_ascii=False))
     return 0
 

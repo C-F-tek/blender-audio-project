@@ -76,7 +76,9 @@ def validate_report_shape(report: dict[str, Any]) -> tuple[list[str], list[str]]
     return errors, warnings
 
 
-def validate_artifacts_against_zip(report: dict[str, Any], members: set[str]) -> tuple[list[str], list[str], list[dict[str, Any]]]:
+def validate_artifacts_against_zip(
+    report: dict[str, Any], members: set[str]
+) -> tuple[list[str], list[str], list[dict[str, Any]]]:
     errors: list[str] = []
     warnings: list[str] = []
     checks: list[dict[str, Any]] = []
@@ -125,7 +127,9 @@ def validate_artifacts_against_zip(report: dict[str, Any], members: set[str]) ->
     return errors, warnings, checks
 
 
-def validate_required_recursive_roots(required_roots: list[str], members: set[str]) -> tuple[list[str], list[dict[str, Any]]]:
+def validate_required_recursive_roots(
+    required_roots: list[str], members: set[str]
+) -> tuple[list[str], list[dict[str, Any]]]:
     errors: list[str] = []
     checks: list[dict[str, Any]] = []
     for root in required_roots:
@@ -138,7 +142,9 @@ def validate_required_recursive_roots(required_roots: list[str], members: set[st
     return errors, checks
 
 
-def validate_bundle(repo_root: Path, zip_path: Path, report_path: Path | None, required_recursive_roots: list[str]) -> dict[str, Any]:
+def validate_bundle(
+    repo_root: Path, zip_path: Path, report_path: Path | None, required_recursive_roots: list[str]
+) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     members, zip_error = read_zip_members(zip_path)
@@ -155,7 +161,9 @@ def validate_bundle(repo_root: Path, zip_path: Path, report_path: Path | None, r
             shape_errors, shape_warnings = validate_report_shape(report)
             errors.extend(shape_errors)
             warnings.extend(shape_warnings)
-            artifact_errors, artifact_warnings, artifact_checks = validate_artifacts_against_zip(report, members)
+            artifact_errors, artifact_warnings, artifact_checks = validate_artifacts_against_zip(
+                report, members
+            )
             errors.extend(artifact_errors)
             warnings.extend(artifact_warnings)
     else:

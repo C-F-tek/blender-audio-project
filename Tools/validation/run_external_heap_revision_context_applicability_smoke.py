@@ -11,6 +11,7 @@ Regression covered:
 - symbol propagation must be skipped for non-concrete candidates;
 - PowerShell files must not be validated with python -m py_compile.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -140,7 +141,8 @@ def run_smoke() -> dict[str, Any]:
     report = build_report(pointer, composer, causality)
     summary = report.get("candidate_applicability_summary") or {}
     rewrite_tasks = [
-        task for task in report.get("tasks", [])
+        task
+        for task in report.get("tasks", [])
         if isinstance(task, dict) and task.get("task_type") == "rewrite_rejected_block"
     ]
     first_task = rewrite_tasks[0] if rewrite_tasks else {}
@@ -208,7 +210,10 @@ def run_smoke() -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", default="output/validation/external_heap_revision_context_applicability_smoke.json")
+    parser.add_argument(
+        "--output",
+        default="output/validation/external_heap_revision_context_applicability_smoke.json",
+    )
     args = parser.parse_args()
 
     report = run_smoke()

@@ -60,11 +60,12 @@ def main() -> int:
     markdown = Path(args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    markdown.write_text(f"# NPU Micro-task Companion Smoke\n\n- Passed: `{passed}`\n", encoding="utf-8")
+    markdown.write_text(
+        f"# NPU Micro-task Companion Smoke\n\n- Passed: `{passed}`\n", encoding="utf-8"
+    )
     print(json.dumps({"passed": passed, "output": str(output)}, indent=2))
     return 0 if passed else 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

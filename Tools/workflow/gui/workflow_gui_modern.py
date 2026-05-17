@@ -30,7 +30,9 @@ class ModernWorkflowGui(LegacyWorkflowGui):
 
         header = ttk.Frame(root)
         header.pack(fill="x", pady=(0, 10))
-        ttk.Label(header, text="Spaziotempo Workflow Control", style="Header.TLabel").pack(side="left")
+        ttk.Label(header, text="Spaziotempo Workflow Control", style="Header.TLabel").pack(
+            side="left"
+        )
         ttk.Label(
             header,
             text="Pipeline audio, AI, script Blender, artefatti e pubblicazione GitHub",
@@ -54,24 +56,30 @@ class ModernWorkflowGui(LegacyWorkflowGui):
 
         toggles = ttk.Frame(options)
         toggles.pack(fill="x")
-        ttk.Checkbutton(toggles, text="Include manual", variable=self.include_manual).pack(anchor="w", pady=(0, 2))
-        ttk.Checkbutton(toggles, text="Skip NPU heavy pass", variable=self.skip_npu).pack(anchor="w", pady=(0, 2))
-        ttk.Checkbutton(toggles, text="Skip Ollama", variable=self.skip_ollama).pack(anchor="w", pady=(0, 6))
+        ttk.Checkbutton(toggles, text="Include manual", variable=self.include_manual).pack(
+            anchor="w", pady=(0, 2)
+        )
+        ttk.Checkbutton(toggles, text="Skip NPU heavy pass", variable=self.skip_npu).pack(
+            anchor="w", pady=(0, 2)
+        )
+        ttk.Checkbutton(toggles, text="Skip Ollama", variable=self.skip_ollama).pack(
+            anchor="w", pady=(0, 6)
+        )
 
         model_grid = ttk.Frame(options)
         model_grid.pack(fill="x")
         ttk.Label(model_grid, text="Creative").grid(row=0, column=0, sticky="w", pady=(0, 4))
-        ttk.Combobox(model_grid, textvariable=self.creative_model, values=self.available_models, width=31).grid(
-            row=0, column=1, sticky="ew", padx=(8, 0), pady=(0, 4)
-        )
+        ttk.Combobox(
+            model_grid, textvariable=self.creative_model, values=self.available_models, width=31
+        ).grid(row=0, column=1, sticky="ew", padx=(8, 0), pady=(0, 4))
         ttk.Label(model_grid, text="Technical").grid(row=1, column=0, sticky="w", pady=(0, 4))
-        ttk.Combobox(model_grid, textvariable=self.technical_model, values=self.available_models, width=31).grid(
-            row=1, column=1, sticky="ew", padx=(8, 0), pady=(0, 4)
-        )
+        ttk.Combobox(
+            model_grid, textvariable=self.technical_model, values=self.available_models, width=31
+        ).grid(row=1, column=1, sticky="ew", padx=(8, 0), pady=(0, 4))
         ttk.Label(model_grid, text="Chat").grid(row=2, column=0, sticky="w", pady=(0, 4))
-        ttk.Combobox(model_grid, textvariable=self.chat_model, values=self.available_models, width=31).grid(
-            row=2, column=1, sticky="ew", padx=(8, 0), pady=(0, 4)
-        )
+        ttk.Combobox(
+            model_grid, textvariable=self.chat_model, values=self.available_models, width=31
+        ).grid(row=2, column=1, sticky="ew", padx=(8, 0), pady=(0, 4))
         model_grid.columnconfigure(1, weight=1)
 
         lower = ttk.Frame(options)
@@ -80,7 +88,9 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         ttk.Entry(lower, textvariable=self.script_tokens, width=8).pack(side="left", padx=(8, 0))
         ttk.Label(lower, text="Manual limit").pack(side="left", padx=(14, 0))
         ttk.Entry(lower, textvariable=self.manual_limit, width=8).pack(side="left", padx=(8, 0))
-        ttk.Button(options, text="Save AI models", command=self.save_ai_models).pack(fill="x", pady=(8, 0))
+        ttk.Button(options, text="Save AI models", command=self.save_ai_models).pack(
+            fill="x", pady=(8, 0)
+        )
 
         action_panel = GroupedActionPanel(parent, title="Workflow Actions", min_width=370)
         action_panel.pack(fill="both", expand=True)
@@ -216,8 +226,16 @@ class ModernWorkflowGui(LegacyWorkflowGui):
             ActionGroup(
                 "Track setup",
                 (
-                    ActionSpec("Choose WAV", self.choose_wav, description="Seleziona un nuovo file audio WAV."),
-                    ActionSpec("Reset default WAV", self.reset_wav, description="Torna alla traccia predefinita."),
+                    ActionSpec(
+                        "Choose WAV",
+                        self.choose_wav,
+                        description="Seleziona un nuovo file audio WAV.",
+                    ),
+                    ActionSpec(
+                        "Reset default WAV",
+                        self.reset_wav,
+                        description="Torna alla traccia predefinita.",
+                    ),
                 ),
             ),
             ActionGroup(
@@ -225,22 +243,31 @@ class ModernWorkflowGui(LegacyWorkflowGui):
                 (
                     ActionSpec(
                         "Analyze WAV",
-                        lambda: self.run_task("Analyze WAV", lambda: wf.run_analyze_wav(self.session, skip_music_context=True)),
+                        lambda: self.run_task(
+                            "Analyze WAV",
+                            lambda: wf.run_analyze_wav(self.session, skip_music_context=True),
+                        ),
                         description="Genera l'analisi tecnica del WAV e i file JSON base necessari al resto del workflow.",
                     ),
                     ActionSpec(
                         "Track summary",
-                        lambda: self.run_task("Track summary", lambda: wf.run_track_summary(self.session)),
+                        lambda: self.run_task(
+                            "Track summary", lambda: wf.run_track_summary(self.session)
+                        ),
                         description="Crea un riassunto tecnico compatto della traccia partendo dall'analisi audio.",
                     ),
                     ActionSpec(
                         "Music context",
-                        lambda: self.run_task("Music context", lambda: wf.run_music_context(self.session)),
+                        lambda: self.run_task(
+                            "Music context", lambda: wf.run_music_context(self.session)
+                        ),
                         description="Produce un contesto musicale strutturato per le fasi IA successive.",
                     ),
                     ActionSpec(
                         "Full audio prepare",
-                        lambda: self.run_task("Full audio prepare", lambda: wf.run_full_audio_prepare(self.session)),
+                        lambda: self.run_task(
+                            "Full audio prepare", lambda: wf.run_full_audio_prepare(self.session)
+                        ),
                         description="Esegue la preparazione audio completa: analisi, summary, contesto e keyframe Blender.",
                     ),
                 ),
@@ -265,43 +292,112 @@ class ModernWorkflowGui(LegacyWorkflowGui):
                 (
                     ActionSpec(
                         "Code context + indexAI",
-                        lambda: self.run_task("Code context + indexAI", lambda: wf.run_code_context(self.session)),
+                        lambda: self.run_task(
+                            "Code context + indexAI", lambda: wf.run_code_context(self.session)
+                        ),
                         description="Aggiorna contesto codice e indici AI tradizionali usati dalla pipeline dual-AI.",
                     ),
                     ActionSpec(
                         "Rebuild indexAI",
-                        lambda: self.run_task("Rebuild indexAI", lambda: wf.run_project_ai_index(self.session, force=True)),
+                        lambda: self.run_task(
+                            "Rebuild indexAI",
+                            lambda: wf.run_project_ai_index(self.session, force=True),
+                        ),
                         description="Rigenera forzatamente l'indice progetto quando hai modificato codice, documentazione o strutture IA.",
                     ),
-                    ActionSpec("Index manuals", self.index_manuals, description="Indicizza manuali locali Blender/progetto con il limite file configurato."),
+                    ActionSpec(
+                        "Index manuals",
+                        self.index_manuals,
+                        description="Indicizza manuali locali Blender/progetto con il limite file configurato.",
+                    ),
                 ),
             ),
             ActionGroup(
                 "Creative AI pipeline",
                 (
-                    ActionSpec("Dual AI plan", self.dual_ai_plan, description="Genera il piano scena strutturato usando Ollama e, se non bypassato, il vecchio passaggio NPU pesante."),
-                    ActionSpec("Scene director chat", self.scene_director_chat, description="Apre la chat locale per affinare il brief e salvare preferenze creative persistenti."),
-                    ActionSpec("Dual AI scene script", self.dual_ai_draft, description="Genera la bozza dello script Blender finale a partire dal piano, dal brief e dal contesto tecnico."),
+                    ActionSpec(
+                        "Dual AI plan",
+                        self.dual_ai_plan,
+                        description="Genera il piano scena strutturato usando Ollama e, se non bypassato, il vecchio passaggio NPU pesante.",
+                    ),
+                    ActionSpec(
+                        "Scene director chat",
+                        self.scene_director_chat,
+                        description="Apre la chat locale per affinare il brief e salvare preferenze creative persistenti.",
+                    ),
+                    ActionSpec(
+                        "Dual AI scene script",
+                        self.dual_ai_draft,
+                        description="Genera la bozza dello script Blender finale a partire dal piano, dal brief e dal contesto tecnico.",
+                    ),
                 ),
             ),
             ActionGroup(
                 "Review and diagnostics",
                 (
-                    ActionSpec("Open log panel", self.open_log_window, always_enabled=True, description="Consulta eventi workflow, ultimo risultato e log operativi."),
-                    ActionSpec("Advanced debug check", self.open_advanced_debug_window, always_enabled=True, description="Esegue controlli diagnostici avanzati su percorsi, scrittura file e stato progetto."),
-                    ActionSpec("Startup service check", self.startup_service_check, always_enabled=True, description="Verifica i servizi locali necessari al workflow, inclusi runtime e modelli quando disponibili."),
-                    ActionSpec("Project stats", self.open_project_stats_window, always_enabled=True, description="Apre la dashboard di spazio occupato e riepilogo delle aree del progetto."),
-                    ActionSpec("Debug monitor shell", self.open_debug_monitor_shell, always_enabled=True, description="Apre un monitor debug in una shell separata con aggiornamento periodico."),
+                    ActionSpec(
+                        "Open log panel",
+                        self.open_log_window,
+                        always_enabled=True,
+                        description="Consulta eventi workflow, ultimo risultato e log operativi.",
+                    ),
+                    ActionSpec(
+                        "Advanced debug check",
+                        self.open_advanced_debug_window,
+                        always_enabled=True,
+                        description="Esegue controlli diagnostici avanzati su percorsi, scrittura file e stato progetto.",
+                    ),
+                    ActionSpec(
+                        "Startup service check",
+                        self.startup_service_check,
+                        always_enabled=True,
+                        description="Verifica i servizi locali necessari al workflow, inclusi runtime e modelli quando disponibili.",
+                    ),
+                    ActionSpec(
+                        "Project stats",
+                        self.open_project_stats_window,
+                        always_enabled=True,
+                        description="Apre la dashboard di spazio occupato e riepilogo delle aree del progetto.",
+                    ),
+                    ActionSpec(
+                        "Debug monitor shell",
+                        self.open_debug_monitor_shell,
+                        always_enabled=True,
+                        description="Apre un monitor debug in una shell separata con aggiornamento periodico.",
+                    ),
                 ),
             ),
             ActionGroup(
                 "Maintenance",
                 (
-                    ActionSpec("Cleanup intermedi", self.cleanup_intermediates, description="Rimuove intermedi generati in modo controllato, preservando audio e render finali."),
-                    ActionSpec("Cleanup render frames", self.cleanup_render_frames, description="Pulisce la directory dei frame render della traccia corrente, mantenendo gli MP4 finali."),
-                    ActionSpec("Toggle debug", self.toggle_debug, always_enabled=True, description="Abilita o disabilita il logging dettagliato del workflow."),
-                    ActionSpec("Mark interrupted", self.mark_interrupted, always_enabled=True, description="Marca manualmente l'operazione corrente come interrotta nei log di workflow."),
-                    ActionSpec("Refresh", self.refresh_session, always_enabled=True, description="Aggiorna lo stato della sessione e la lista degli output rilevati."),
+                    ActionSpec(
+                        "Cleanup intermedi",
+                        self.cleanup_intermediates,
+                        description="Rimuove intermedi generati in modo controllato, preservando audio e render finali.",
+                    ),
+                    ActionSpec(
+                        "Cleanup render frames",
+                        self.cleanup_render_frames,
+                        description="Pulisce la directory dei frame render della traccia corrente, mantenendo gli MP4 finali.",
+                    ),
+                    ActionSpec(
+                        "Toggle debug",
+                        self.toggle_debug,
+                        always_enabled=True,
+                        description="Abilita o disabilita il logging dettagliato del workflow.",
+                    ),
+                    ActionSpec(
+                        "Mark interrupted",
+                        self.mark_interrupted,
+                        always_enabled=True,
+                        description="Marca manualmente l'operazione corrente come interrotta nei log di workflow.",
+                    ),
+                    ActionSpec(
+                        "Refresh",
+                        self.refresh_session,
+                        always_enabled=True,
+                        description="Aggiorna lo stato della sessione e la lista degli output rilevati.",
+                    ),
                 ),
             ),
         )

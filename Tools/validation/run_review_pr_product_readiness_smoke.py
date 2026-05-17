@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test review PR product readiness gate."""
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,9 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
-def run_checker(source_repo: Path, repo: Path, payload: dict[str, Any], name: str) -> dict[str, Any]:
+def run_checker(
+    source_repo: Path, repo: Path, payload: dict[str, Any], name: str
+) -> dict[str, Any]:
     args_report = repo / f"output/validation/{name}_args.json"
     output = repo / f"output/validation/{name}_readiness.json"
     markdown = repo / f"output/validation/{name}_readiness.md"
@@ -102,7 +105,9 @@ def require(condition: bool, errors: list[str], message: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/review_pr_product_readiness_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/review_pr_product_readiness_smoke.json"
+    )
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
@@ -113,10 +118,32 @@ def main() -> int:
         repo.mkdir()
 
         cases = [
-            run_checker(source_repo, repo, args_payload(include_count=2, apply_report="", apply_product=False), "include_paths"),
-            run_checker(source_repo, repo, args_payload(include_count=0, apply_report="output/apply.json", apply_product=True), "apply_product"),
-            run_checker(source_repo, repo, args_payload(include_count=0, apply_report="", apply_product=False), "missing_product"),
-            run_checker(source_repo, repo, args_payload(include_count=0, apply_report="output/apply.json", apply_product=False), "non_concrete_apply"),
+            run_checker(
+                source_repo,
+                repo,
+                args_payload(include_count=2, apply_report="", apply_product=False),
+                "include_paths",
+            ),
+            run_checker(
+                source_repo,
+                repo,
+                args_payload(include_count=0, apply_report="output/apply.json", apply_product=True),
+                "apply_product",
+            ),
+            run_checker(
+                source_repo,
+                repo,
+                args_payload(include_count=0, apply_report="", apply_product=False),
+                "missing_product",
+            ),
+            run_checker(
+                source_repo,
+                repo,
+                args_payload(
+                    include_count=0, apply_report="output/apply.json", apply_product=False
+                ),
+                "non_concrete_apply",
+            ),
             run_checker(
                 source_repo,
                 repo,
@@ -144,35 +171,77 @@ def main() -> int:
                     include_count=1,
                     apply_report="",
                     apply_product=False,
-                    argv=["Tools/ai/prepare_review_pr.py", "--repo-root", ".", "--branch", "CARMINEai/smoke"],
+                    argv=[
+                        "Tools/ai/prepare_review_pr.py",
+                        "--repo-root",
+                        ".",
+                        "--branch",
+                        "CARMINEai/smoke",
+                    ],
                 ),
                 "missing_prepare_output",
             ),
-            run_checker(source_repo, repo, args_payload(include_count=1, apply_report="", apply_product=False, passed=False), "args_failed"),
+            run_checker(
+                source_repo,
+                repo,
+                args_payload(include_count=1, apply_report="", apply_product=False, passed=False),
+                "args_failed",
+            ),
         ]
 
     by_name = {case["name"]: case for case in cases}
     require(by_name["include_paths"]["returncode"] == 0, errors, "include paths case should pass")
-    require(by_name["include_paths"]["report"].get("prepare_review_pr_ready") is True, errors, "include paths should be ready")
+    require(
+        by_name["include_paths"]["report"].get("prepare_review_pr_ready") is True,
+        errors,
+        "include paths should be ready",
+    )
     require(by_name["apply_product"]["returncode"] == 0, errors, "apply product case should pass")
-    require(by_name["apply_product"]["report"].get("prepare_review_pr_ready") is True, errors, "apply product should be ready")
-    require(by_name["missing_product"]["returncode"] == 2, errors, "missing product case should fail")
-    require(by_name["missing_product"]["report"].get("prepare_review_pr_ready") is False, errors, "missing product should not be ready")
-    require(by_name["non_concrete_apply"]["returncode"] == 2, errors, "non concrete apply case should fail")
-    require(by_name["duplicate_prepare_script"]["returncode"] == 2, errors, "duplicate prepare script case should fail")
+    require(
+        by_name["apply_product"]["report"].get("prepare_review_pr_ready") is True,
+        errors,
+        "apply product should be ready",
+    )
+    require(
+        by_name["missing_product"]["returncode"] == 2, errors, "missing product case should fail"
+    )
+    require(
+        by_name["missing_product"]["report"].get("prepare_review_pr_ready") is False,
+        errors,
+        "missing product should not be ready",
+    )
+    require(
+        by_name["non_concrete_apply"]["returncode"] == 2,
+        errors,
+        "non concrete apply case should fail",
+    )
+    require(
+        by_name["duplicate_prepare_script"]["returncode"] == 2,
+        errors,
+        "duplicate prepare script case should fail",
+    )
     require(
         by_name["duplicate_prepare_script"]["report"].get("prepare_script_reference_count") == 2,
         errors,
         "duplicate prepare script case should report reference count 2",
     )
-    require(by_name["missing_prepare_output"]["returncode"] == 2, errors, "missing prepare output case should fail")
     require(
-        "--output" in (by_name["missing_prepare_output"]["report"].get("missing_prepare_flags") or []),
+        by_name["missing_prepare_output"]["returncode"] == 2,
+        errors,
+        "missing prepare output case should fail",
+    )
+    require(
+        "--output"
+        in (by_name["missing_prepare_output"]["report"].get("missing_prepare_flags") or []),
         errors,
         "missing prepare output case should report missing --output",
     )
     require(by_name["args_failed"]["returncode"] == 2, errors, "args failed case should fail")
-    require(all(case.get("markdown_exists") for case in cases), errors, "all cases should write markdown")
+    require(
+        all(case.get("markdown_exists") for case in cases),
+        errors,
+        "all cases should write markdown",
+    )
 
     report = {
         "schema_version": 1,

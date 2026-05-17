@@ -4,6 +4,7 @@ This module is intentionally lightweight and additive. It should not import
 ``bpy`` at module import time, so normal Python validation can still compile it
 outside Blender.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,7 +16,9 @@ def require_bpy() -> Any:
     try:
         import bpy  # type: ignore
     except Exception as exc:  # pragma: no cover - executed outside Blender only on failure.
-        raise RuntimeError("This helper requires Blender's bpy module and must run inside Blender.") from exc
+        raise RuntimeError(
+            "This helper requires Blender's bpy module and must run inside Blender."
+        ) from exc
     return bpy
 
 
@@ -38,7 +41,9 @@ def ensure_sequence_editor(scene: Any | None = None) -> Any:
 def clear_sequence_editor(scene: Any | None = None) -> int:
     """Remove all strips from the scene sequence editor and return removed count."""
     editor = ensure_sequence_editor(scene)
-    sequences = list(getattr(editor, "sequences_all", None) or getattr(editor, "strips_all", []) or [])
+    sequences = list(
+        getattr(editor, "sequences_all", None) or getattr(editor, "strips_all", []) or []
+    )
     strip_collection = getattr(editor, "sequences", None) or getattr(editor, "strips", None)
     if strip_collection is None:
         return 0
@@ -67,7 +72,9 @@ def create_sound_strip(
 
     sequences = getattr(editor, "sequences", None) or getattr(editor, "strips", None)
     if sequences is not None and hasattr(sequences, "new_sound"):
-        return sequences.new_sound(name=name, filepath=audio_file, channel=channel, frame_start=frame_start)
+        return sequences.new_sound(
+            name=name, filepath=audio_file, channel=channel, frame_start=frame_start
+        )
 
     bpy.ops.sequencer.sound_strip_add(filepath=audio_file, frame_start=frame_start, channel=channel)
     strip = getattr(active_scene.sequence_editor, "active_strip", None)
@@ -125,7 +132,9 @@ def set_frame_range_from_seconds(
 ) -> tuple[int, int]:
     """Set scene frame range from duration seconds and return `(start, end)`."""
     active_scene = scene or get_scene()
-    effective_fps = int(fps or getattr(active_scene, "fps", None) or getattr(active_scene.render, "fps", 30) or 30)
+    effective_fps = int(
+        fps or getattr(active_scene, "fps", None) or getattr(active_scene.render, "fps", 30) or 30
+    )
     frame_end = frame_start + max(1, int(round(float(duration_seconds) * effective_fps))) - 1
     active_scene.frame_start = int(frame_start)
     active_scene.frame_end = int(frame_end)

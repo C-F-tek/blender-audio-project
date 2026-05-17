@@ -5,11 +5,11 @@ import argparse
 import ast
 import json
 import re
-import sys
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 EXCLUDE_DIR_NAMES = {
     ".git",
@@ -118,6 +118,7 @@ def normalize_ref(raw: str) -> str:
         value = value[3:]
     return value
 
+
 def is_excluded_rel(rel: str) -> bool:
     rel = rel.replace("\\", "/")
     if any(rel.startswith(prefix) for prefix in EXCLUDE_PREFIXES):
@@ -127,7 +128,9 @@ def is_excluded_rel(rel: str) -> bool:
 
 
 def is_active_md(rel: str) -> bool:
-    return rel.endswith(".md") and any(rel == root or rel.startswith(root) for root in ACTIVE_MD_ROOTS)
+    return rel.endswith(".md") and any(
+        rel == root or rel.startswith(root) for root in ACTIVE_MD_ROOTS
+    )
 
 
 def iter_repo_files(repo: Path, suffixes: tuple[str, ...]) -> Iterable[Path]:
@@ -252,7 +255,9 @@ def collect_md_refs(text: str) -> set[str]:
     return {r for r in refs if r and not r.startswith("http")}
 
 
-def collect_doc_command_refs(text: str) -> tuple[list[tuple[str, list[str]]], list[tuple[str, list[str]]]]:
+def collect_doc_command_refs(
+    text: str,
+) -> tuple[list[tuple[str, list[str]]], list[tuple[str, list[str]]]]:
     py_refs: list[tuple[str, list[str]]] = []
     ps_refs: list[tuple[str, list[str]]] = []
     lines = text.splitlines()
@@ -307,6 +312,7 @@ def classify_missing_ref(ref: str, source_doc: str = "") -> tuple[str, str]:
         return "medium", "stale-or-historical"
     return "low", "unknown"
 
+
 def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dict[str, Any]:
     findings: list[Finding] = []
     docs: dict[str, Any] = {}
@@ -328,73 +334,89 @@ def analyze_markdown(repo: Path, scripts: dict[str, Any], max_lines: int) -> dic
             "powershell_command_count": len(ps_cmds),
         }
         if is_active_md(rel) and lines > max_lines:
-            findings.append(Finding(
-                "high",
-                "active_markdown_over_line_budget",
-                rel,
-                rel,
-                f"{lines} lines > {max_lines}; split into stub + directory parts.",
-                "active-current",
-            ))
+            findings.append(
+                Finding(
+                    "high",
+                    "active_markdown_over_line_budget",
+                    rel,
+                    rel,
+                    f"{lines} lines > {max_lines}; split into stub + directory parts.",
+                    "active-current",
+                )
+            )
         for ref in refs:
             if is_excluded_rel(ref):
                 continue
             if not reference_exists(repo, path, ref, file_index):
                 severity, classification = classify_missing_ref(ref, rel)
-                findings.append(Finding(
-                    severity,
-                    "markdown_reference_missing",
-                    rel,
-                    ref,
-                    "Referenced path does not exist in current working tree.",
-                    classification,
-                ))
+                findings.append(
+                    Finding(
+                        severity,
+                        "markdown_reference_missing",
+                        rel,
+                        ref,
+                        "Referenced path does not exist in current working tree.",
+                        classification,
+                    )
+                )
         for script, flags in py_cmds:
             if script not in python_scripts:
                 severity, classification = classify_missing_ref(script, rel)
-                findings.append(Finding(
-                    severity,
-                    "markdown_python_command_missing_script",
-                    rel,
-                    script,
-                    "Documented Python command points to a missing script.",
-                    classification,
-                ))
+                findings.append(
+                    Finding(
+                        severity,
+                        "markdown_python_command_missing_script",
+                        rel,
+                        script,
+                        "Documented Python command points to a missing script.",
+                        classification,
+                    )
+                )
                 continue
             known = set(python_scripts[script].get("args") or [])
             for flag in flags:
                 if known and flag not in known:
-                    findings.append(Finding(
-                        "medium",
-                        "markdown_python_flag_not_in_argparse",
-                        rel,
-                        f"{script} {flag}",
-                        "Documented long flag is not present in argparse.add_argument().",
-                        "stale-or-future",
-                    ))
+                    findings.append(
+                        Finding(
+                            "medium",
+                            "markdown_python_flag_not_in_argparse",
+                            rel,
+                            f"{script} {flag}",
+                            "Documented long flag is not present in argparse.add_argument().",
+                            "stale-or-future",
+                        )
+                    )
         for script, flags in ps_cmds:
             if script not in powershell_scripts:
                 severity, classification = classify_missing_ref(script, rel)
-                findings.append(Finding(
-                    severity,
-                    "markdown_powershell_command_missing_script",
-                    rel,
-                    script,
-                    "Documented PowerShell command points to a missing script.",
-                    classification,
-                ))
+                findings.append(
+                    Finding(
+                        severity,
+                        "markdown_powershell_command_missing_script",
+                        rel,
+                        script,
+                        "Documented PowerShell command points to a missing script.",
+                        classification,
+                    )
+                )
                 continue
             known = set(powershell_scripts[script].get("params") or [])
             for flag in flags:
-                if known and flag not in known and flag not in {"-NoProfile", "-ExecutionPolicy", "-File"}:
-                    findings.append(Finding(
-                        "medium",
-                        "markdown_powershell_flag_not_in_param_block",
-                        rel,
-                        f"{script} {flag}",
-                        "Documented PowerShell parameter is not visible in param() block.",
-                        "stale-or-future",
-                    ))
+                if (
+                    known
+                    and flag not in known
+                    and flag not in {"-NoProfile", "-ExecutionPolicy", "-File"}
+                ):
+                    findings.append(
+                        Finding(
+                            "medium",
+                            "markdown_powershell_flag_not_in_param_block",
+                            rel,
+                            f"{script} {flag}",
+                            "Documented PowerShell parameter is not visible in param() block.",
+                            "stale-or-future",
+                        )
+                    )
     return {"documents": docs, "findings": [asdict(f) for f in findings]}
 
 
@@ -441,13 +463,15 @@ def render_markdown(report: dict[str, Any], max_rows: int = 120) -> str:
         )
     if len(findings) > max_rows:
         lines.extend(["", f"_Truncated: {len(findings) - max_rows} more findings in JSON report._"])
-    lines.extend([
-        "",
-        "## Policy",
-        "",
-        "Use this report to rewrite active Markdown from current code, not from historical evidence.",
-        "Raw reports under `output/**` are local artifacts and must not be committed.",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Policy",
+            "",
+            "Use this report to rewrite active Markdown from current code, not from historical evidence.",
+            "Raw reports under `output/**` are local artifacts and must not be committed.",
+        ]
+    )
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -456,7 +480,9 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--max-lines", type=int, default=400)
     parser.add_argument("--output", default="output/validation/md_code_coherence_report.json")
-    parser.add_argument("--markdown-output", default="output/validation/md_code_coherence_report.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/md_code_coherence_report.md"
+    )
     parser.add_argument("--max-markdown-finding-rows", type=int, default=120)
     args = parser.parse_args()
 

@@ -5,6 +5,7 @@ The enrichment plan coordinates semantic chunks, selected chunks, context packs,
 agent state, GPU advisory and NPU knowledge-broker scheduling. The contract is
 report-only and explicitly keeps NPU out of the advisory lane.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -78,7 +79,11 @@ def validate_step(step: Any, index: int, known_ids: set[str]) -> dict[str, Any]:
     outputs = step.get("outputs")
     if not isinstance(outputs, list):
         errors.append("outputs must be a list")
-    for bool_field in ("provider_execution_required", "source_writes_performed", "patch_application_performed"):
+    for bool_field in (
+        "provider_execution_required",
+        "source_writes_performed",
+        "patch_application_performed",
+    ):
         if step.get(bool_field) not in (True, False):
             errors.append(f"{bool_field} must be boolean")
     if step.get("source_writes_performed") is not False:
@@ -94,7 +99,16 @@ def validate_plan(repo_root: Path, plan_path: Path) -> dict[str, Any]:
     warnings: list[str] = []
     data, parse_error = read_json_object(plan_path)
     if parse_error or data is None:
-        return {"path": rel_path, "exists": plan_path.exists(), "json_ok": False, "ok": False, "errors": [parse_error or "unknown JSON parse error"], "warnings": warnings, "step_count": 0, "step_checks": []}
+        return {
+            "path": rel_path,
+            "exists": plan_path.exists(),
+            "json_ok": False,
+            "ok": False,
+            "errors": [parse_error or "unknown JSON parse error"],
+            "warnings": warnings,
+            "step_count": 0,
+            "step_checks": [],
+        }
 
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
@@ -158,9 +172,13 @@ def validate_plan(repo_root: Path, plan_path: Path) -> dict[str, Any]:
         if "ollama_gpu_advisory_first" not in step_by_id:
             errors.append("medium/high complexity plans must include ollama_gpu_advisory_first")
         if "npu_knowledge_broker_after_gpu" not in step_by_id:
-            errors.append("medium/high complexity plans must include npu_knowledge_broker_after_gpu")
+            errors.append(
+                "medium/high complexity plans must include npu_knowledge_broker_after_gpu"
+            )
         npu_step = step_by_id.get("npu_knowledge_broker_after_gpu", {})
-        if isinstance(npu_step, dict) and "ollama_gpu_advisory_first" not in npu_step.get("depends_on", []):
+        if isinstance(npu_step, dict) and "ollama_gpu_advisory_first" not in npu_step.get(
+            "depends_on", []
+        ):
             errors.append("npu_knowledge_broker_after_gpu must depend on ollama_gpu_advisory_first")
     if level == "low":
         if "npu_knowledge_broker_parallel" not in step_by_id:

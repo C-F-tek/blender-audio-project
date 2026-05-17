@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test schema repair retry prompt and acceptance policy."""
+
 from __future__ import annotations
 
 import argparse
@@ -59,7 +60,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/schema_repair_retry_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/schema_repair_retry_smoke.md")
+    parser.add_argument(
+        "--markdown-output", default="output/validation/schema_repair_retry_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -151,8 +154,16 @@ def main() -> int:
         },
     }
 
-    output = (repo_root / args.output).resolve() if not Path(args.output).is_absolute() else Path(args.output)
-    markdown = (repo_root / args.markdown_output).resolve() if not Path(args.markdown_output).is_absolute() else Path(args.markdown_output)
+    output = (
+        (repo_root / args.output).resolve()
+        if not Path(args.output).is_absolute()
+        else Path(args.output)
+    )
+    markdown = (
+        (repo_root / args.markdown_output).resolve()
+        if not Path(args.markdown_output).is_absolute()
+        else Path(args.markdown_output)
+    )
 
     write_json(output, report)
     markdown.parent.mkdir(parents=True, exist_ok=True)

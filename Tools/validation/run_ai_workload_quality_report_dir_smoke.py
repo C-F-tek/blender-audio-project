@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke test for AI workload quality --report-dir semantics."""
+
 from __future__ import annotations
 
 import argparse
@@ -7,7 +8,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-
 
 GOOD_REPORT = """# Workload report
 
@@ -22,7 +22,9 @@ providers.
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--work-dir", default="output/validation/ai_workload_quality_report_dir_smoke")
+    parser.add_argument(
+        "--work-dir", default="output/validation/ai_workload_quality_report_dir_smoke"
+    )
     return parser.parse_args()
 
 

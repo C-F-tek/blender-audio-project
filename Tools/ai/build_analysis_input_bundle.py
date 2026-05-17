@@ -99,9 +99,7 @@ def text_line_count(text: str) -> int:
 
 def split_csv_values(values: list[str]) -> set[str]:
     """Expand repeated comma-separated CLI values into a set."""
-    return {
-        item.strip() for value in values for item in value.split(",") if item.strip()
-    }
+    return {item.strip() for value in values for item in value.split(",") if item.strip()}
 
 
 def is_excluded(
@@ -112,11 +110,7 @@ def is_excluded(
     if suffix in excluded_suffixes:
         return True
     try:
-        parts = (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .parts
-        )
+        parts = path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).parts
     except ValueError:
         parts = path.parts
     return any(part in excluded_dirs for part in parts)
@@ -127,11 +121,7 @@ def resolve_inputs(repo_root: Path, values: list[str]) -> list[Path]:
     paths: list[Path] = []
     for value in values:
         candidate = Path(value)
-        full = (
-            candidate.resolve()
-            if candidate.is_absolute()
-            else (repo_root / candidate).resolve()
-        )
+        full = candidate.resolve() if candidate.is_absolute() else (repo_root / candidate).resolve()
         paths.append(full)
     return paths
 
@@ -288,12 +278,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Candidate count: `{report['candidate_count']}`")
     lines.append(f"- Included count: `{report['included_count']}`")
     lines.append(f"- Included chars: `{report['included_chars']}`")
-    lines.append(
-        f"- Provider execution performed: `{report['provider_execution_performed']}`"
-    )
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Provider execution performed: `{report['provider_execution_performed']}`")
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append(f"- Source writes performed: `{report['source_writes_performed']}`")
     lines.append("")
     lines.append("## Largest included files")

@@ -22,12 +22,16 @@ def require(condition: bool, errors: list[str], message: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/real_product_preflight_gate_smoke.json")
+    parser.add_argument(
+        "--output", default="output/validation/real_product_preflight_gate_smoke.json"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=120)
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    preflight_json = repo_root / "output/validation/real_product_preflight_gate_smoke_preflight.json"
+    preflight_json = (
+        repo_root / "output/validation/real_product_preflight_gate_smoke_preflight.json"
+    )
     preflight_md = repo_root / "output/validation/real_product_preflight_gate_smoke_preflight.md"
 
     env = dict(os.environ)
@@ -54,14 +58,30 @@ def main() -> int:
         check=False,
     )
 
-    report = json.loads(preflight_json.read_text(encoding="utf-8-sig")) if preflight_json.exists() else {}
+    report = (
+        json.loads(preflight_json.read_text(encoding="utf-8-sig"))
+        if preflight_json.exists()
+        else {}
+    )
     errors: list[str] = []
 
     require(result.returncode == 0, errors, "preflight gate failed")
     require(report.get("passed") is True, errors, "preflight report did not pass")
-    require(report.get("provider_execution_performed") is False, errors, "preflight must not execute providers")
-    require(report.get("patch_application_performed") is False, errors, "preflight must not apply patches")
-    require(report.get("source_writes_performed") is False, errors, "preflight must not write source products")
+    require(
+        report.get("provider_execution_performed") is False,
+        errors,
+        "preflight must not execute providers",
+    )
+    require(
+        report.get("patch_application_performed") is False,
+        errors,
+        "preflight must not apply patches",
+    )
+    require(
+        report.get("source_writes_performed") is False,
+        errors,
+        "preflight must not write source products",
+    )
     require(preflight_md.exists(), errors, "preflight markdown missing")
 
     expected_steps = {

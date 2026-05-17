@@ -81,8 +81,7 @@ def classify_intent(text: str) -> dict[str, Any]:
             token in lower for token in ("gpu0", "gpu1", "npu", "provider")
         ),
         "mentions_shared_memory": any(
-            token in lower
-            for token in ("memoria", "memory", "shared", "ai-to-ai", "bundle")
+            token in lower for token in ("memoria", "memory", "shared", "ai-to-ai", "bundle")
         ),
     }
     return {
@@ -162,12 +161,8 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     task_path = repo_path(repo_root, args.task_file)
-    runtime_state = (
-        repo_path(repo_root, args.runtime_state) if args.runtime_state else None
-    )
-    observer_dir = (
-        repo_path(repo_root, args.observer_dir) if args.observer_dir else None
-    )
+    runtime_state = repo_path(repo_root, args.runtime_state) if args.runtime_state else None
+    observer_dir = repo_path(repo_root, args.observer_dir) if args.observer_dir else None
 
     errors: list[str] = []
     warnings: list[str] = []

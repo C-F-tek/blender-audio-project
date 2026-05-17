@@ -214,17 +214,11 @@ def main() -> int:
     observer_dir = repo_path(repo_root, args.observer_dir)
     output = (
         repo_path(repo_root, args.output)
-        or repo_root
-        / "output/ai_packets"
-        / args.stamp
-        / "heap_peer_runtime_manifest.json"
+        or repo_root / "output/ai_packets" / args.stamp / "heap_peer_runtime_manifest.json"
     )
     markdown_output = (
         repo_path(repo_root, args.markdown_output)
-        or repo_root
-        / "output/ai_packets"
-        / args.stamp
-        / "heap_peer_runtime_manifest.md"
+        or repo_root / "output/ai_packets" / args.stamp / "heap_peer_runtime_manifest.md"
     )
 
     entry, entry_error = load_json(runtime_entry_path)
@@ -240,9 +234,7 @@ def main() -> int:
     audit_lane = dict(AUDIT_LANE)
     audit_lane["available"] = True
     audit_lane["evidence_present"] = (
-        "deterministic" in text
-        or "audit" in text
-        or bool(lanes.get("deterministic_audit"))
+        "deterministic" in text or "audit" in text or bool(lanes.get("deterministic_audit"))
     )
 
     warnings: list[str] = []

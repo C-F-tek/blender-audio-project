@@ -231,9 +231,7 @@ def build_proposals() -> list[dict[str, Any]]:
                 "The preset must not touch Blender runtime files.",
             ],
             suggestion_outputs=[
-                suggestion(
-                    "Tools/workflow/run_local_ai_task_via_pipeline.ps1", "powershell"
-                ),
+                suggestion("Tools/workflow/run_local_ai_task_via_pipeline.ps1", "powershell"),
                 suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
             ],
         ),
@@ -330,9 +328,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         lines.append(f"- Change type: `{proposal['change_type']}`")
         lines.append(f"- Risk: `{proposal['risk_level']}`")
         lines.append(f"- Apply allowed now: `{proposal['apply_allowed_now']}`")
-        lines.append(
-            f"- Requires manual review: `{proposal['requires_manual_review']}`"
-        )
+        lines.append(f"- Requires manual review: `{proposal['requires_manual_review']}`")
         lines.append("")
         lines.append(proposal["rationale"])
         lines.append("")
@@ -395,9 +391,7 @@ def main() -> int:
         default="",
         help="Optional source proposal/report JSON for provenance",
     )
-    parser.add_argument(
-        "--output", default="output/ai_pipeline/full_context_golden_proposals.json"
-    )
+    parser.add_argument("--output", default="output/ai_pipeline/full_context_golden_proposals.json")
     parser.add_argument(
         "--markdown-output",
         default="output/ai_pipeline/full_context_golden_proposals.md",
@@ -410,9 +404,7 @@ def main() -> int:
     payload = build_payload(repo_root, args.source_report)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output.write_text(render_markdown(payload), encoding="utf-8")
     print(
         json.dumps(

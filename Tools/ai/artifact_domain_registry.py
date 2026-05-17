@@ -61,9 +61,7 @@ DOMAINS: tuple[ArtifactDomain, ...] = (
         + ("indexAI/code_chunks/", "indexAI/project_code_chunks/"),
         blocked_target_suffixes=COMMON_BLOCKED_SUFFIXES,
         blocked_target_fragments=COMMON_BLOCKED_FRAGMENTS,
-        notes=(
-            "Code proposals may describe edits but must not apply them by default.",
-        ),
+        notes=("Code proposals may describe edits but must not apply them by default.",),
     ),
     ArtifactDomain(
         domain="docs",
@@ -79,9 +77,7 @@ DOMAINS: tuple[ArtifactDomain, ...] = (
         blocked_target_prefixes=COMMON_BLOCKED_PREFIXES,
         blocked_target_suffixes=COMMON_BLOCKED_SUFFIXES,
         blocked_target_fragments=COMMON_BLOCKED_FRAGMENTS,
-        notes=(
-            "Documentation edits should be narrow and cross-referenced to evidence.",
-        ),
+        notes=("Documentation edits should be narrow and cross-referenced to evidence.",),
     ),
     ArtifactDomain(
         domain="validation",
@@ -115,9 +111,7 @@ DOMAINS: tuple[ArtifactDomain, ...] = (
         blocked_target_prefixes=COMMON_BLOCKED_PREFIXES,
         blocked_target_suffixes=COMMON_BLOCKED_SUFFIXES,
         blocked_target_fragments=COMMON_BLOCKED_FRAGMENTS,
-        notes=(
-            "Workflow artifacts must keep provider execution and runtime execution explicit.",
-        ),
+        notes=("Workflow artifacts must keep provider execution and runtime execution explicit.",),
     ),
     ArtifactDomain(
         domain="text",
@@ -149,9 +143,7 @@ DOMAINS: tuple[ArtifactDomain, ...] = (
         blocked_target_prefixes=COMMON_BLOCKED_PREFIXES,
         blocked_target_suffixes=COMMON_BLOCKED_SUFFIXES,
         blocked_target_fragments=COMMON_BLOCKED_FRAGMENTS,
-        notes=(
-            "Audio raw/full analysis remains local unless compacted into reviewable evidence.",
-        ),
+        notes=("Audio raw/full analysis remains local unless compacted into reviewable evidence.",),
     ),
     ArtifactDomain(
         domain="scene_spec",
@@ -167,9 +159,7 @@ DOMAINS: tuple[ArtifactDomain, ...] = (
         blocked_target_suffixes=COMMON_BLOCKED_SUFFIXES,
         blocked_target_fragments=COMMON_BLOCKED_FRAGMENTS,
         runtime_allowed_by_default=False,
-        notes=(
-            "Scene specs may describe Blender work but must not execute Blender by default.",
-        ),
+        notes=("Scene specs may describe Blender work but must not execute Blender by default.",),
     ),
     ArtifactDomain(
         domain="provider_result",
@@ -225,9 +215,7 @@ def registry_report() -> dict[str, Any]:
     }
 
 
-def validate_domain(
-    domain: ArtifactDomain, seen: set[str]
-) -> tuple[list[str], list[str]]:
+def validate_domain(domain: ArtifactDomain, seen: set[str]) -> tuple[list[str], list[str]]:
     """Validate one domain policy and update the seen-name set."""
     errors: list[str] = []
     warnings: list[str] = []
@@ -248,10 +236,7 @@ def validate_domain(
     if not (domain.proposal_kinds or domain.evidence_kinds or domain.pack_kinds):
         warnings.append(f"{domain.domain}: no artifact kinds declared")
     for guardrail in domain.required_guardrails:
-        if (
-            not guardrail.endswith("performed")
-            and guardrail != "manual_review_required"
-        ):
+        if not guardrail.endswith("performed") and guardrail != "manual_review_required":
             warnings.append(f"{domain.domain}: unusual guardrail field `{guardrail}`")
     return errors, warnings
 

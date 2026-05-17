@@ -8,10 +8,10 @@ quality gate, then emits a concrete manual fix plan.
 It does not rewrite Markdown, execute providers, apply patches, run Blender or
 read ignored runtime outputs.
 """
+
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 from typing import Any
 
@@ -188,21 +188,11 @@ def render_markdown(report: dict[str, Any]) -> str:
 
 def validate_docs_contract_drift(repo_root: Path) -> dict[str, Any]:
     checks = [check_doc(repo_root, spec) for spec in DOC_CHECKS]
-    errors = [
-        f"{check['path']}: {error}"
-        for check in checks
-        for error in check.get("errors", [])
-    ]
+    errors = [f"{check['path']}: {error}" for check in checks for error in check.get("errors", [])]
     warnings = [
-        f"{check['path']}: {warning}"
-        for check in checks
-        for warning in check.get("warnings", [])
+        f"{check['path']}: {warning}" for check in checks for warning in check.get("warnings", [])
     ]
-    safe_actions = [
-        action
-        for check in checks
-        for action in check.get("safe_actions", [])
-    ]
+    safe_actions = [action for check in checks for action in check.get("safe_actions", [])]
     drift_count = sum(
         1
         for check in checks

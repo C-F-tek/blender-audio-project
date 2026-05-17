@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate AI dry-run matrix case definitions without running the matrix."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,10 @@ except ImportError:  # Allows direct execution from Tools/validation.
     repo_root = Path(__file__).resolve().parents[2]
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.ai.run_pipeline_dry_run_matrix import default_cases, default_matrix_workers  # type: ignore
+    from Tools.ai.run_pipeline_dry_run_matrix import (  # type: ignore
+        default_cases,
+        default_matrix_workers,
+    )
 
 
 SAFE_CASE_NAME_RE = re.compile(r"^[a-z0-9_]+$")
@@ -70,8 +74,12 @@ def validate_cases(min_case_count: int) -> dict[str, Any]:
             if not _has_flag(case.args, flag):
                 case_errors.append(f"missing required flag: {flag}")
 
-        if _has_flag(case.args, "--build-music-summary") and not _has_flag(case.args, "--analysis-json"):
-            case_errors.append("--build-music-summary requires --analysis-json even for dry-run preflight")
+        if _has_flag(case.args, "--build-music-summary") and not _has_flag(
+            case.args, "--analysis-json"
+        ):
+            case_errors.append(
+                "--build-music-summary requires --analysis-json even for dry-run preflight"
+            )
 
         if _has_flag(case.args, "--analysis-json"):
             analysis_path = _arg_after(case.args, "--analysis-json")
@@ -87,11 +95,24 @@ def validate_cases(min_case_count: int) -> dict[str, Any]:
             elif "dry run" not in gpu_command.lower() and "dry-run" not in gpu_command.lower():
                 case_warnings.append("gpu command does not clearly state dry-run intent")
 
-        if _looks_gpu_related(case) and "dry-run" not in case.purpose.lower() and "without executing" not in case.purpose.lower():
-            case_warnings.append("GPU-related case purpose should clearly state that no GPU workload executes")
+        if (
+            _looks_gpu_related(case)
+            and "dry-run" not in case.purpose.lower()
+            and "without executing" not in case.purpose.lower()
+        ):
+            case_warnings.append(
+                "GPU-related case purpose should clearly state that no GPU workload executes"
+            )
 
-        if _looks_npu_related(case) and "dry-run" not in case.purpose.lower() and "without executing" not in case.purpose.lower() and "planning" not in case.purpose.lower():
-            case_warnings.append("NPU-related case purpose should clearly state planning/no-execution intent")
+        if (
+            _looks_npu_related(case)
+            and "dry-run" not in case.purpose.lower()
+            and "without executing" not in case.purpose.lower()
+            and "planning" not in case.purpose.lower()
+        ):
+            case_warnings.append(
+                "NPU-related case purpose should clearly state planning/no-execution intent"
+            )
 
         errors.extend(f"{case.name}: {item}" for item in case_errors)
         warnings.extend(f"{case.name}: {item}" for item in case_warnings)

@@ -1,9 +1,8 @@
 import bpy
-from mathutils import Vector
-
 from fog_dynamics import animate_fog_frame
 from fog_filaments import ensure_fog_filaments
 from materials import build_atmosphere_volume_material
+from mathutils import Vector
 
 from .common import cfg_value, clear_animation, store_base_vector
 
@@ -13,7 +12,7 @@ def find_or_create_fog_controller(cube):
     if controller is not None:
         return controller
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=cube.location.copy())
+    bpy.ops.object.empty_add(type="PLAIN_AXES", location=cube.location.copy())
     controller = bpy.context.active_object
     controller.name = "FogPulseController"
     controller.empty_display_size = 0.42
@@ -34,7 +33,7 @@ def ensure_fog_cube():
     cube["spaziotempo_volume_container"] = True
     cube.hide_render = not bool(cfg_value("FOG_VOLUME_ENABLED", False))
     cube.hide_viewport = not bool(cfg_value("FOG_VOLUME_VIEWPORT_VISIBLE", False))
-    cube.display_type = 'WIRE'
+    cube.display_type = "WIRE"
 
     material, controls = build_atmosphere_volume_material()
     cube.data.materials.clear()

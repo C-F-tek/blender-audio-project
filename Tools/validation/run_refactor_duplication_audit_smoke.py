@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test the report-only refactor duplication audit tool."""
+
 from __future__ import annotations
 
 import argparse
@@ -51,11 +52,29 @@ def create_fake_reports(repo_root: Path, stamp: str) -> dict[str, Path]:
         "bundle_smoke": base / f"bundle_smoke_{stamp}.json",
         "memory_routing": base / f"memory_routing_{stamp}.json",
     }
-    write_json(reports["line_count"], {**fake_report("python_line_count"), "file_count": 10, "total_lines": 1000})
-    write_json(reports["code_interpreter"], {**fake_report("code_interpreter_report"), "input_count": 4})
-    write_json(reports["syntax"], {**fake_report("python_syntax_validation"), "checked_count": 10, "failed_count": 0})
-    write_json(reports["bundle_smoke"], {**fake_report("shared_toolbox_ai_to_ai_bundle_smoke"), "bundle_validation_passed": True, "chunked_file_count": 1})
-    write_json(reports["memory_routing"], {**fake_report("agent_memory_routing_policy"), "tool_request_count": 12})
+    write_json(
+        reports["line_count"],
+        {**fake_report("python_line_count"), "file_count": 10, "total_lines": 1000},
+    )
+    write_json(
+        reports["code_interpreter"], {**fake_report("code_interpreter_report"), "input_count": 4}
+    )
+    write_json(
+        reports["syntax"],
+        {**fake_report("python_syntax_validation"), "checked_count": 10, "failed_count": 0},
+    )
+    write_json(
+        reports["bundle_smoke"],
+        {
+            **fake_report("shared_toolbox_ai_to_ai_bundle_smoke"),
+            "bundle_validation_passed": True,
+            "chunked_file_count": 1,
+        },
+    )
+    write_json(
+        reports["memory_routing"],
+        {**fake_report("agent_memory_routing_policy"), "tool_request_count": 12},
+    )
     return reports
 
 
@@ -84,12 +103,29 @@ def smoke_args(repo_root: Path, reports: dict[str, Path]) -> SimpleNamespace:
     )
 
 
-
 def run_broker_smoke(repo_root: Path, reports: dict[str, Path], stamp: str) -> dict[str, Any]:
-    request_file = repo_root / "output" / "testdata" / "refactor_duplication_audit_smoke" / f"broker_request_{stamp}.json"
-    broker_output = repo_root / "output" / "validation" / f"refactor_duplication_audit_broker_smoke_{stamp}.json"
-    broker_markdown = repo_root / "output" / "validation" / f"refactor_duplication_audit_broker_smoke_{stamp}.md"
-    tool_output_dir = repo_root / "output" / "ai_runtime_tools" / f"refactor_duplication_audit_broker_smoke_{stamp}"
+    request_file = (
+        repo_root
+        / "output"
+        / "testdata"
+        / "refactor_duplication_audit_smoke"
+        / f"broker_request_{stamp}.json"
+    )
+    broker_output = (
+        repo_root
+        / "output"
+        / "validation"
+        / f"refactor_duplication_audit_broker_smoke_{stamp}.json"
+    )
+    broker_markdown = (
+        repo_root / "output" / "validation" / f"refactor_duplication_audit_broker_smoke_{stamp}.md"
+    )
+    tool_output_dir = (
+        repo_root
+        / "output"
+        / "ai_runtime_tools"
+        / f"refactor_duplication_audit_broker_smoke_{stamp}"
+    )
     request = {
         "schema_version": 1,
         "kind": "refactor_duplication_audit_broker_smoke_request",
@@ -127,7 +163,9 @@ def run_broker_smoke(repo_root: Path, reports: dict[str, Path], stamp: str) -> d
         str(broker_markdown),
     ]
     completed = subprocess.run(command, cwd=repo_root, text=True, capture_output=True, check=False)
-    broker_report = json.loads(broker_output.read_text(encoding="utf-8-sig")) if broker_output.exists() else {}
+    broker_report = (
+        json.loads(broker_output.read_text(encoding="utf-8-sig")) if broker_output.exists() else {}
+    )
     return {
         "command": command,
         "returncode": completed.returncode,
@@ -146,6 +184,7 @@ def run_broker_smoke(repo_root: Path, reports: dict[str, Path], stamp: str) -> d
         "sqlite_write_performed": broker_report.get("sqlite_write_performed"),
         "persistent_memory_write_performed": broker_report.get("persistent_memory_write_performed"),
     }
+
 
 def render_smoke_markdown(report: dict[str, Any]) -> str:
     lines = ["# Refactor Duplication Audit Smoke", ""]
@@ -176,21 +215,31 @@ def render_smoke_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/refactor_duplication_audit_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/refactor_duplication_audit_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/refactor_duplication_audit_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/refactor_duplication_audit_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     fake_reports = create_fake_reports(repo_root, SMOKE_STAMP)
     audit = build_report(smoke_args(repo_root, fake_reports))
     broker_smoke = run_broker_smoke(repo_root, fake_reports, SMOKE_STAMP)
-    audit_json = repo_root / "output" / "analysis" / f"refactor_duplication_audit_{SMOKE_STAMP}.json"
+    audit_json = (
+        repo_root / "output" / "analysis" / f"refactor_duplication_audit_{SMOKE_STAMP}.json"
+    )
     audit_md = repo_root / "output" / "analysis" / f"refactor_duplication_audit_{SMOKE_STAMP}.md"
     write_json(audit_json, audit)
     audit_md.parent.mkdir(parents=True, exist_ok=True)
     audit_md.write_text(render_markdown(audit), encoding="utf-8")
 
-    verification = audit.get("refactor_verification", {}) if isinstance(audit.get("refactor_verification"), dict) else {}
+    verification = (
+        audit.get("refactor_verification", {})
+        if isinstance(audit.get("refactor_verification"), dict)
+        else {}
+    )
     errors: list[str] = []
     if audit.get("passed") is not True:
         errors.append("audit passed is not true")
@@ -234,9 +283,13 @@ def main() -> int:
         "audit_markdown": repo_rel(audit_md, repo_root),
         "audit_passed": audit.get("passed"),
         "duplication_candidate_count": audit.get("duplication_candidate_count"),
-        "manual_review_patch_plan_candidate_count": len(audit.get("manual_review_patch_plan_candidates", [])),
+        "manual_review_patch_plan_candidate_count": len(
+            audit.get("manual_review_patch_plan_candidates", [])
+        ),
         "layering_preserved": verification.get("layering_preserved"),
-        "builder_delegates_to_common_bundle": verification.get("builder_delegates_to_common_bundle"),
+        "builder_delegates_to_common_bundle": verification.get(
+            "builder_delegates_to_common_bundle"
+        ),
         "chunking_in_common_evidence_layer": verification.get("chunking_in_common_evidence_layer"),
         "validator_reused": verification.get("validator_reused"),
         "smoke_coverage_present": verification.get("smoke_coverage_present"),

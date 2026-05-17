@@ -5,6 +5,7 @@ This test does not run Ollama, NPU, Blender, patch application, Git writes or SQ
 It verifies that schema repair is skipped for an empty/missing raw provider response
 and that the supervised runner source contains explicit provider-error hardening markers.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,11 +48,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         source = runner_path.read_text(encoding="utf-8-sig")
 
     required_markers = {
-        "raw_response_initialized": "raw_response = \"\"",
-        "provider_error_initialized": "provider_error = \"\"",
+        "raw_response_initialized": 'raw_response = ""',
+        "provider_error_initialized": 'provider_error = ""',
         "empty_raw_response_repair_guard": "empty_or_missing_raw_response",
-        "provider_error_report_field": "\"provider_error\": provider_error",
-        "provider_error_count_report_field": "\"provider_error_count\": provider_error_count",
+        "provider_error_report_field": '"provider_error": provider_error',
+        "provider_error_count_report_field": '"provider_error_count": provider_error_count',
         "raw_response_assignment_after_generate": "raw_response = response",
     }
     marker_results: dict[str, bool] = {}
@@ -67,7 +68,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     repair_result: dict[str, Any] | None = None
     manager = FailingRepairManager()
     try:
-        from Tools.ai.run_agent_gpu_deep_planning_supervised import run_schema_repair_retry_for_round
+        from Tools.ai.run_agent_gpu_deep_planning_supervised import (
+            run_schema_repair_retry_for_round,
+        )
 
         repair_result = run_schema_repair_retry_for_round(
             manager=manager,
@@ -153,8 +156,12 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/gpu_runner_provider_error_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/gpu_runner_provider_error_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/gpu_runner_provider_error_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/gpu_runner_provider_error_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()

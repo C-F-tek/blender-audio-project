@@ -35,9 +35,7 @@ except ImportError:
     from tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
 
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
-DEFAULT_ORCHESTRATOR = (
-    "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
-)
+DEFAULT_ORCHESTRATOR = "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"
 DEFAULT_OUTPUT = "output/ai_pipeline/deterministic_recommendations.json"
 DEFAULT_MARKDOWN = "output/ai_pipeline/deterministic_recommendations.md"
 
@@ -75,18 +73,12 @@ def resolve_path(repo_root: Path, value: str | Path) -> Path:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
 
-def load_report(
-    path: Path, *, missing_is_error: bool = True
-) -> tuple[dict[str, Any], list[str]]:
+def load_report(path: Path, *, missing_is_error: bool = True) -> tuple[dict[str, Any], list[str]]:
     data, errors = read_json_object(path, missing_is_error=missing_is_error)
     return data, [f"{repo_rel(path, path.parents[0])}: {error}" for error in errors]
 
@@ -126,9 +118,9 @@ def target_path_error(path_value: str, repo_root: Path) -> str | None:
     if any(normalized.startswith(prefix) for prefix in FORBIDDEN_TARGET_PREFIXES):
         return f"forbidden generated/runtime target prefix: {normalized}"
     lower = normalized.lower()
-    if any(
-        fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS
-    ) and lower.endswith(".json"):
+    if any(fragment in lower for fragment in FORBIDDEN_TARGET_FRAGMENTS) and lower.endswith(
+        ".json"
+    ):
         return f"forbidden full-analysis JSON target: {normalized}"
     if "*" in normalized or normalized.endswith("/"):
         return "target is a glob or directory, not a concrete file"
@@ -204,53 +196,36 @@ def npu_audit_refs(orchestrator: dict[str, Any]) -> list[dict[str, Any]]:
                 "classification": audit.get("classification"),
                 "runtime_tool_context_seen": audit.get("runtime_tool_context_seen"),
                 "npu_tool_request_count": audit.get("npu_tool_request_count"),
-                "npu_runtime_tool_execution_count": audit.get(
-                    "npu_runtime_tool_execution_count"
-                ),
-                "npu_runtime_tool_failed_count": audit.get(
-                    "npu_runtime_tool_failed_count"
-                ),
-                "npu_runtime_tool_blocked_count": audit.get(
-                    "npu_runtime_tool_blocked_count"
-                ),
+                "npu_runtime_tool_execution_count": audit.get("npu_runtime_tool_execution_count"),
+                "npu_runtime_tool_failed_count": audit.get("npu_runtime_tool_failed_count"),
+                "npu_runtime_tool_blocked_count": audit.get("npu_runtime_tool_blocked_count"),
             }
         )
     return refs
 
 
-def summarize_tool_report(
-    path: Path, repo_root: Path, data: dict[str, Any]
-) -> dict[str, Any]:
+def summarize_tool_report(path: Path, repo_root: Path, data: dict[str, Any]) -> dict[str, Any]:
     summary = data.get("summary") if isinstance(data.get("summary"), dict) else {}
     return {
         "path": repo_rel(path, repo_root),
         "kind": data.get("kind"),
         "passed": data.get("passed"),
-        "tool_request_count": data.get("tool_request_count")
-        or summary.get("tool_request_count"),
+        "tool_request_count": data.get("tool_request_count") or summary.get("tool_request_count"),
         "tool_execution_count": data.get("tool_execution_count")
         or summary.get("tool_execution_count"),
-        "failed_tool_count": data.get("failed_tool_count")
-        or summary.get("failed_tool_count"),
-        "blocked_tool_count": data.get("blocked_tool_count")
-        or summary.get("blocked_tool_count"),
+        "failed_tool_count": data.get("failed_tool_count") or summary.get("failed_tool_count"),
+        "blocked_tool_count": data.get("blocked_tool_count") or summary.get("blocked_tool_count"),
         "provider_execution_performed": data.get("provider_execution_performed"),
         "patch_application_performed": data.get("patch_application_performed"),
     }
 
 
-def recommendation_schema_errors(
-    rec: dict[str, Any], index: int, repo_root: Path
-) -> list[str]:
+def recommendation_schema_errors(rec: dict[str, Any], index: int, repo_root: Path) -> list[str]:
     errors = validate_recommendation_object(rec, index)
-    for target in (
-        rec.get("target_files", []) if isinstance(rec.get("target_files"), list) else []
-    ):
+    for target in rec.get("target_files", []) if isinstance(rec.get("target_files"), list) else []:
         target_error = target_path_error(str(target), repo_root)
         if target_error:
-            errors.append(
-                f"recommendations[{index}].target_files {target!r}: {target_error}"
-            )
+            errors.append(f"recommendations[{index}].target_files {target!r}: {target_error}")
     return errors
 
 
@@ -388,8 +363,7 @@ def doc_doc_recommendation(
         else []
     )
     terms_text = (
-        ", ".join(f"`{term}`" for term in missing_terms[:10])
-        or "the missing cross-reference terms"
+        ", ".join(f"`{term}`" for term in missing_terms[:10]) or "the missing cross-reference terms"
     )
     return (
         {
@@ -562,9 +536,7 @@ def is_patchable_consistency_finding(finding: dict[str, Any], repo_root: Path) -
     return bool(path) and target_path_error(path, repo_root) is None
 
 
-def consistency_target_file(
-    finding: dict[str, Any], repo_root: Path
-) -> tuple[str, str | None]:
+def consistency_target_file(finding: dict[str, Any], repo_root: Path) -> tuple[str, str | None]:
     patch_target = finding_patch_target_file(finding)
     if patch_target:
         patch_error = target_path_error(patch_target, repo_root)
@@ -716,9 +688,7 @@ def area_diverse_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]
     return ordered
 
 
-def area_diverse_items(
-    items: list[dict[str, Any]], *, limit: int
-) -> list[dict[str, Any]]:
+def area_diverse_items(items: list[dict[str, Any]], *, limit: int) -> list[dict[str, Any]]:
     """Round-robin items by product area while preserving relative order within each area."""
     preferred_areas = [
         "python_python",
@@ -770,9 +740,7 @@ def synthesize_from_repository_consistency_maps(
     skipped: list[dict[str, str]] = []
     raw_finding_count = len(findings)
     patchable_findings = [
-        finding
-        for finding in findings
-        if is_patchable_consistency_finding(finding, repo_root)
+        finding for finding in findings if is_patchable_consistency_finding(finding, repo_root)
     ]
     skipped_unpatchable_count = raw_finding_count - len(patchable_findings)
     if skipped_unpatchable_count:
@@ -821,9 +789,7 @@ def load_gpu_report(
 ) -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
     if explicit_gpu_report:
-        data, errors = load_report_at(
-            repo_root, explicit_gpu_report, missing_is_error=True
-        )
+        data, errors = load_report_at(repo_root, explicit_gpu_report, missing_is_error=True)
         return data, errors
 
     gpu_output = normalize_repo_path(orchestrator.get("gpu_output"))
@@ -847,9 +813,7 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
 
-    evidence, evidence_errors = load_report_at(
-        repo_root, args.evidence, missing_is_error=True
-    )
+    evidence, evidence_errors = load_report_at(repo_root, args.evidence, missing_is_error=True)
     errors.extend(evidence_errors)
 
     orchestrator: dict[str, Any] = {}
@@ -894,14 +858,12 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
     deterministic_used = False
     consistency_recommendation_count = 0
     if repository_consistency_maps:
-        consistency_synthesized, consistency_skipped = (
-            synthesize_from_repository_consistency_maps(
-                repository_maps=repository_consistency_maps,
-                repo_root=repo_root,
-                npu_refs=npu_refs,
-                tool_refs=tool_refs,
-                max_recommendations=args.max_recommendations,
-            )
+        consistency_synthesized, consistency_skipped = synthesize_from_repository_consistency_maps(
+            repository_maps=repository_consistency_maps,
+            repo_root=repo_root,
+            npu_refs=npu_refs,
+            tool_refs=tool_refs,
+            max_recommendations=args.max_recommendations,
         )
         skipped.extend(consistency_skipped)
         consistency_recommendation_count = len(consistency_synthesized)
@@ -915,9 +877,7 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
                     continue
                 combined_seen.add(key)
                 combined.append(rec)
-            recommendations = area_diverse_items(
-                combined, limit=args.max_recommendations
-            )
+            recommendations = area_diverse_items(combined, limit=args.max_recommendations)
             seen = {recommendation_key(rec) for rec in recommendations}
 
     if not recommendations and evidence:
@@ -960,14 +920,10 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
         "recommendation_count": len(recommendations),
         "recommendations": recommendations,
         "missing_evidence": (
-            []
-            if recommendations
-            else ["no evidence-sufficient items with safe existing targets"]
+            [] if recommendations else ["no evidence-sufficient items with safe existing targets"]
         ),
         "next_best_action": (
-            "build_agent_review_patch_plan.py"
-            if recommendations
-            else "collect_more_evidence"
+            "build_agent_review_patch_plan.py" if recommendations else "collect_more_evidence"
         ),
         "skipped_candidate_count": len(skipped),
         "skipped_candidates": skipped,
@@ -982,9 +938,7 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
             "substantive_consistency_recommendation_count": consistency_recommendation_count,
             "cosmetic_patch_suppression_enabled": True,
             "recommended_next_layer": (
-                "build_agent_review_patch_plan.py"
-                if recommendations
-                else "collect_more_evidence"
+                "build_agent_review_patch_plan.py" if recommendations else "collect_more_evidence"
             ),
             "manual_review_required": True,
         },
@@ -1022,9 +976,7 @@ def build_patch_plan_bridge_orchestrator(
     recommendation_output: Path,
     source_orchestrator: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    source_orchestrator = (
-        source_orchestrator if isinstance(source_orchestrator, dict) else {}
-    )
+    source_orchestrator = source_orchestrator if isinstance(source_orchestrator, dict) else {}
     return {
         "schema_version": 1,
         "kind": "deterministic_recommendation_patch_plan_bridge_orchestrator",
@@ -1037,9 +989,7 @@ def build_patch_plan_bridge_orchestrator(
         "patch_application_performed": False,
         "source_writes_performed": False,
         "gpu_output": repo_rel(recommendation_output, repo_root),
-        "gpu_recommendation_count": recommendation_report.get(
-            "recommendation_count", 0
-        ),
+        "gpu_recommendation_count": recommendation_report.get("recommendation_count", 0),
         "gpu_empty_recommendations_reason": "",
         "gpu_recommended_next_layer": "build_agent_review_patch_plan.py",
         "npu_audits": source_orchestrator.get("npu_audits", []),
@@ -1076,9 +1026,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Evidence ready for manual patch count: `{report['decision']['evidence_ready_for_manual_patch_count']}`"
     )
     lines.append(f"- Next best action: `{report['next_best_action']}`")
-    lines.append(
-        f"- Patch application performed: `{report['patch_application_performed']}`"
-    )
+    lines.append(f"- Patch application performed: `{report['patch_application_performed']}`")
     lines.append("")
     lines.append("## Recommendations")
     lines.append("")
@@ -1101,9 +1049,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("## Guardrails")
     lines.append("")
-    lines.append(
-        "This report is deterministic and report-only. It is not a patch queue."
-    )
+    lines.append("This report is deterministic and report-only. It is not a patch queue.")
     return "\n".join(lines) + "\n"
 
 

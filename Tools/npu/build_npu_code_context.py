@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 import ast
 import hashlib
 import json
 import re
 import warnings
 from datetime import datetime
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_DIR = ROOT / "Scripting" / "v61b"
@@ -91,7 +90,9 @@ def collect_files() -> list[Path]:
 
     for base, patterns in DISCOVERY_GLOBS:
         for pattern in patterns:
-            for path in sorted(base.glob(pattern), key=lambda item: rel_to_root(item.resolve()).lower()):
+            for path in sorted(
+                base.glob(pattern), key=lambda item: rel_to_root(item.resolve()).lower()
+            ):
                 add(path)
 
     return ordered
@@ -202,7 +203,10 @@ def format_symbol_summary(record: dict) -> str:
         lines.append(f"- Syntax error: `{symbols['syntax_error']}`")
 
     if symbols.get("syntax_warnings"):
-        lines.append("- Syntax warnings: " + "; ".join(f"`{item}`" for item in symbols["syntax_warnings"][:12]))
+        lines.append(
+            "- Syntax warnings: "
+            + "; ".join(f"`{item}`" for item in symbols["syntax_warnings"][:12])
+        )
 
     imports = symbols.get("imports", [])
     if imports:
@@ -276,7 +280,9 @@ def write_context_chunks(files: list[dict], sources: dict[str, str]) -> list[dic
     for record in files:
         rel_file = record["file"]
         source = sources[rel_file]
-        for part_index, (start_line, end_line, lines) in enumerate(split_source(source, MAX_CHUNK_CHARS), 1):
+        for part_index, (start_line, end_line, lines) in enumerate(
+            split_source(source, MAX_CHUNK_CHARS), 1
+        ):
             pending.append(
                 {
                     "file": rel_file,

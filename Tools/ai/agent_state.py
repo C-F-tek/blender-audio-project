@@ -109,11 +109,7 @@ def read_text(path: Path, limit: int = 240000) -> str:
 def relative_path(path: Path, repo_root: Path) -> str:
     """Return a stable repository-relative path where possible."""
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -174,8 +170,7 @@ class MemoryRecord:
         scope = str(payload.get("scope") or "project")
         tags = payload.get("tags") if isinstance(payload.get("tags"), list) else []
         record_id = str(
-            payload.get("record_id")
-            or sha256_text(f"{kind}:{scope}:{source}:{content}")[:20]
+            payload.get("record_id") or sha256_text(f"{kind}:{scope}:{source}:{content}")[:20]
         )
         return cls(
             record_id=record_id,
@@ -269,15 +264,9 @@ def ensure_memory_db(path: Path) -> None:
                 metadata_json TEXT NOT NULL
             )
             """)
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_memory_kind ON memory_records(kind)"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_memory_scope ON memory_records(scope)"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_memory_source ON memory_records(source)"
-        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_kind ON memory_records(kind)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_scope ON memory_records(scope)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_source ON memory_records(source)")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS memory_meta (
                 key TEXT PRIMARY KEY,
@@ -392,14 +381,10 @@ def records_from_files(
 def score_record(record: MemoryRecord, objective: str) -> float:
     """Score a memory record against the current objective."""
     objective_terms = set(keywords(objective, 80))
-    record_terms = set(record.tags) | set(
-        keywords(record.summary + " " + record.source, 80)
-    )
+    record_terms = set(record.tags) | set(keywords(record.summary + " " + record.source, 80))
     overlap = len(objective_terms & record_terms)
     tag_bonus = (
-        0.7
-        if {"guardrail", "memory", "pipeline", "blender", "audio"} & set(record.tags)
-        else 0.0
+        0.7 if {"guardrail", "memory", "pipeline", "blender", "audio"} & set(record.tags) else 0.0
     )
     return round(overlap * 4.0 + record.confidence * 2.0 + tag_bonus, 4)
 
@@ -408,9 +393,7 @@ def select_memory(
     records: Iterable[MemoryRecord], objective: str, max_chars: int
 ) -> list[dict[str, Any]]:
     """Rank and select memory records under a character budget."""
-    ranked = sorted(
-        records, key=lambda item: score_record(item, objective), reverse=True
-    )
+    ranked = sorted(records, key=lambda item: score_record(item, objective), reverse=True)
     selected: list[dict[str, Any]] = []
     used = 0
     for record in ranked:
@@ -430,9 +413,7 @@ def default_microtasks(
     objective: str, selected_memory: list[dict[str, Any]]
 ) -> list[AgentMicroTask]:
     """Create a generic first-pass microtask graph."""
-    source_paths = tuple(
-        str(item.get("source")) for item in selected_memory if item.get("source")
-    )
+    source_paths = tuple(str(item.get("source")) for item in selected_memory if item.get("source"))
     objective_slug = slugify(objective, "objective")[:48]
     return [
         AgentMicroTask(
@@ -527,14 +508,10 @@ def build_agent_state_packet(
         },
         "budgets": {
             "max_memory_chars": max_memory_chars,
-            "selected_memory_chars": sum(
-                len(str(item.get("content") or "")) for item in selected
-            ),
+            "selected_memory_chars": sum(len(str(item.get("content") or "")) for item in selected),
         },
         "selected_memory": selected,
-        "memory_manifest": sorted(
-            manifest, key=lambda item: item["rank_score"], reverse=True
-        ),
+        "memory_manifest": sorted(manifest, key=lambda item: item["rank_score"], reverse=True),
         "microtasks": [item.to_dict() for item in microtasks],
         "assumptions": [
             "Operational self-awareness means structured state, constraints, memory and validation status.",

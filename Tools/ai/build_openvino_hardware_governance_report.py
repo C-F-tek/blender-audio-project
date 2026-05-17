@@ -26,18 +26,12 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return path.resolve(strict=False).as_posix()
 
@@ -109,9 +103,7 @@ def build_governance(repo_root: Path, args: argparse.Namespace) -> dict[str, Any
         "repo_root": str(repo_root),
         "passed": True,
         "classification": (
-            "openvino_probe_available"
-            if not error
-            else "openvino_probe_unavailable_advisory"
+            "openvino_probe_available" if not error else "openvino_probe_unavailable_advisory"
         ),
         "provider_execution_performed": False,
         "patch_application_performed": False,
@@ -177,9 +169,7 @@ def main() -> int:
         default="deferred",
         choices=["startup", "deferred", "live-seed-only", "disabled"],
     )
-    parser.add_argument(
-        "--output", default="output/validation/openvino_hardware_governance.json"
-    )
+    parser.add_argument("--output", default="output/validation/openvino_hardware_governance.json")
     parser.add_argument(
         "--markdown-output", default="output/validation/openvino_hardware_governance.md"
     )

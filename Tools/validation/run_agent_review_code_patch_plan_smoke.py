@@ -5,6 +5,7 @@ This smoke validator is report-only. It validates the proposed future
 `agent_review_code_patch_plan` contract without applying patches, executing
 providers, running Blender or writing source files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,7 +27,6 @@ from Tools.ai.code_patch_plan_common import (  # noqa: E402
     write_json_report,
 )
 
-
 REPORT_KIND = "agent_review_code_patch_plan_smoke"
 EXPECTED_PLAN_KIND = "agent_review_code_patch_plan"
 EXPECTED_APPLY_MODE = "report_only_manual_review_code_patch_plan"
@@ -36,7 +36,11 @@ REQUIRED_PLAN_LISTS = ("validation_commands", "stop_conditions")
 
 def validate_required_strings(item: dict[str, Any]) -> list[str]:
     """Validate required non-empty string fields on a plan item."""
-    return [f"missing or invalid string field: {field}" for field in REQUIRED_PLAN_STRINGS if not isinstance(item.get(field), str) or not item.get(field)]
+    return [
+        f"missing or invalid string field: {field}"
+        for field in REQUIRED_PLAN_STRINGS
+        if not isinstance(item.get(field), str) or not item.get(field)
+    ]
 
 
 def validate_non_empty_string_list(item: dict[str, Any], field: str) -> list[str]:
@@ -56,10 +60,18 @@ def plan_id_for(item: dict[str, Any], index: int) -> str:
 
 def invalid_plan_check(index: int) -> dict[str, Any]:
     """Return the legacy check payload for a non-object plan item."""
-    return {"index": index, "id": f"<invalid-{index}>", "ok": False, "errors": ["plan item must be an object"], "warnings": []}
+    return {
+        "index": index,
+        "id": f"<invalid-{index}>",
+        "ok": False,
+        "errors": ["plan item must be an object"],
+        "warnings": [],
+    }
 
 
-def validate_target_files(repo_root: Path, item: dict[str, Any]) -> tuple[list[str], list[str], list[str]]:
+def validate_target_files(
+    repo_root: Path, item: dict[str, Any]
+) -> tuple[list[str], list[str], list[str]]:
     """Validate plan target_files and return errors, warnings and normalized paths."""
     errors: list[str] = []
     warnings: list[str] = []
@@ -74,7 +86,9 @@ def validate_target_files(repo_root: Path, item: dict[str, Any]) -> tuple[list[s
             continue
         normalized = normalize_repo_path(target)
         normalized_targets.append(normalized)
-        path_errors = target_path_errors(repo_root, normalized, require_existing=False, require_code_like=False)
+        path_errors = target_path_errors(
+            repo_root, normalized, require_existing=False, require_code_like=False
+        )
         errors.extend(f"{normalized}: {error}" for error in path_errors)
         if not (repo_root / normalized).exists():
             warnings.append(f"target file does not currently exist: {normalized}")
@@ -186,7 +200,9 @@ def resolve_report_path(repo_root: Path, report_value: str) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--report", default="Tools/ai/fixtures/agent_review_code_patch_plan_fixture.json")
+    parser.add_argument(
+        "--report", default="Tools/ai/fixtures/agent_review_code_patch_plan_fixture.json"
+    )
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()
 

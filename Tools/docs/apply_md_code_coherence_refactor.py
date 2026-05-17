@@ -32,13 +32,15 @@ def limited_text(lines: list[str], limit: int) -> str:
     if len(lines) <= limit:
         return "\n".join(lines).rstrip() + "\n"
     head = lines[: max(0, limit - 7)]
-    head.extend([
-        "",
-        "## Troncato",
-        "",
-        f"Documento limitato a {limit} righe.",
-        "Rigenerare `output/validation/md_code_coherence_report.json` per il dettaglio completo.",
-    ])
+    head.extend(
+        [
+            "",
+            "## Troncato",
+            "",
+            f"Documento limitato a {limit} righe.",
+            "Rigenerare `output/validation/md_code_coherence_report.json` per il dettaglio completo.",
+        ]
+    )
     return "\n".join(head).rstrip() + "\n"
 
 
@@ -48,24 +50,30 @@ def load_or_build_report(repo: Path, report_arg: str, max_lines: int) -> dict[st
         builder = repo / "Tools" / "docs" / "build_code_aware_md_coherence.py"
         if not builder.exists():
             raise SystemExit(f"[FAIL] Missing report and builder: {report_path}")
-        subprocess.run([
-            sys.executable,
-            str(builder),
-            "--repo-root",
-            str(repo),
-            "--max-lines",
-            str(max_lines),
-            "--output",
-            report_arg,
-            "--markdown-output",
-            "output/validation/md_code_coherence_report.md",
-        ], cwd=repo, check=True)
+        subprocess.run(
+            [
+                sys.executable,
+                str(builder),
+                "--repo-root",
+                str(repo),
+                "--max-lines",
+                str(max_lines),
+                "--output",
+                report_arg,
+                "--markdown-output",
+                "output/validation/md_code_coherence_report.md",
+            ],
+            cwd=repo,
+            check=True,
+        )
     return json.loads(report_path.read_text(encoding="utf-8-sig"))
 
 
 def top_scripts(scripts: dict[str, Any], key: str, limit: int) -> list[dict[str, Any]]:
     items = list(scripts.get(key, {}).values())
-    return sorted(items, key=lambda x: (-int(x.get("line_count") or 0), x.get("path") or ""))[:limit]
+    return sorted(items, key=lambda x: (-int(x.get("line_count") or 0), x.get("path") or ""))[
+        :limit
+    ]
 
 
 def render_tool_index(report: dict[str, Any], max_doc_lines: int) -> str:
@@ -88,7 +96,9 @@ def render_tool_index(report: dict[str, Any], max_doc_lines: int) -> str:
         lines.append(
             f"| `{item['path']}` | {item.get('line_count')} | `{args}` | {item.get('functions')} | {item.get('classes')} |"
         )
-    lines.extend(["", "## PowerShell workflows", "", "| Path | Lines | Parameters |", "|---|---:|---|"])
+    lines.extend(
+        ["", "## PowerShell workflows", "", "| Path | Lines | Parameters |", "|---|---:|---|"]
+    )
     for item in top_scripts(scripts, "powershell", 80):
         params = ", ".join(item.get("params") or []) or "-"
         if len(params) > 200:
@@ -121,22 +131,26 @@ def render_current_state(report: dict[str, Any], max_doc_lines: int) -> str:
     lines.extend(["", "## Finding kinds", ""])
     for key, count in by_kind.most_common(30):
         lines.append(f"- `{key}`: `{count}`")
-    lines.extend([
-        "",
-        "## Operational decision",
-        "",
-        "Do not bulk-fix all findings blindly.",
-        "Use high findings first for active commands and missing scripts.",
-        "Historical/evidence-only references must be demoted or described as historical, not recreated as fake active files.",
-        "",
-        "## Top high findings",
-        "",
-        "| Kind | Document | Target | Classification |",
-        "|---|---|---|---|",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Operational decision",
+            "",
+            "Do not bulk-fix all findings blindly.",
+            "Use high findings first for active commands and missing scripts.",
+            "Historical/evidence-only references must be demoted or described as historical, not recreated as fake active files.",
+            "",
+            "## Top high findings",
+            "",
+            "| Kind | Document | Target | Classification |",
+            "|---|---|---|---|",
+        ]
+    )
     high = [f for f in findings if f.get("severity") == "high"][:80]
     for item in high:
-        lines.append(f"| {item.get('kind')} | `{item.get('path')}` | `{item.get('target')}` | {item.get('classification')} |")
+        lines.append(
+            f"| {item.get('kind')} | `{item.get('path')}` | `{item.get('target')}` | {item.get('classification')} |"
+        )
     return limited_text(lines, max_doc_lines)
 
 
@@ -164,7 +178,9 @@ def render_command_contract(report: dict[str, Any], max_doc_lines: int) -> str:
         lines.append(f"| `{item['path']}` | `{value}` |")
         if len(lines) >= max_doc_lines - 40:
             break
-    lines.extend(["", "## PowerShell parameter contracts", "", "| Script | Parameters |", "|---|---|"])
+    lines.extend(
+        ["", "## PowerShell parameter contracts", "", "| Script | Parameters |", "|---|---|"]
+    )
     ps_items = sorted(scripts.get("powershell", {}).values(), key=lambda x: x.get("path") or "")
     for item in ps_items:
         params = item.get("params") or []
@@ -194,7 +210,9 @@ def write_if_changed(path: Path, content: str, apply: bool) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate compact Markdown docs from code-aware coherence report.")
+    parser = argparse.ArgumentParser(
+        description="Generate compact Markdown docs from code-aware coherence report."
+    )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--report", default="output/validation/md_code_coherence_report.json")
     parser.add_argument("--max-lines", type=int, default=400)

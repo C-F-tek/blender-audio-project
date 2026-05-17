@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test runtime-tool feedback loop context handoff."""
+
 from __future__ import annotations
 
 import argparse
@@ -57,8 +58,12 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--output", default="output/validation/runtime_tool_feedback_loop_smoke.json")
-    parser.add_argument("--markdown-output", default="output/validation/runtime_tool_feedback_loop_smoke.md")
+    parser.add_argument(
+        "--output", default="output/validation/runtime_tool_feedback_loop_smoke.json"
+    )
+    parser.add_argument(
+        "--markdown-output", default="output/validation/runtime_tool_feedback_loop_smoke.md"
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -109,7 +114,10 @@ def main() -> int:
         errors.append("fallback/provider distinction missing")
     if not appended or len(context_reports) != 1:
         errors.append("append_runtime_tool_feedback_context did not append exactly one report")
-    if context_reports and context_reports[0].get("tool_results", [])[0].get("tool") != "check_python_syntax":
+    if (
+        context_reports
+        and context_reports[0].get("tool_results", [])[0].get("tool") != "check_python_syntax"
+    ):
         errors.append("tool result was not preserved in compact feedback context")
 
     report = {
@@ -139,14 +147,28 @@ def main() -> int:
         },
     }
 
-    output = (repo_root / args.output).resolve() if not Path(args.output).is_absolute() else Path(args.output)
-    markdown = (repo_root / args.markdown_output).resolve() if not Path(args.markdown_output).is_absolute() else Path(args.markdown_output)
+    output = (
+        (repo_root / args.output).resolve()
+        if not Path(args.output).is_absolute()
+        else Path(args.output)
+    )
+    markdown = (
+        (repo_root / args.markdown_output).resolve()
+        if not Path(args.markdown_output).is_absolute()
+        else Path(args.markdown_output)
+    )
 
     write_json(output, report)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     markdown.write_text(render_markdown(report), encoding="utf-8")
 
-    print(json.dumps({"passed": report["passed"], "output": str(output), "markdown": str(markdown)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"passed": report["passed"], "output": str(output), "markdown": str(markdown)},
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
     return 0 if report["passed"] else 2
 
 

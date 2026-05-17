@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Smoke-test prepare_review_pr.py argv construction."""
+
 from __future__ import annotations
 
 import argparse
@@ -133,20 +134,26 @@ def main() -> int:
         create_without_push_context["push"] = False
         create_without_push_context["create_pr"] = True
         create_without_push_context["draft_pr"] = False
-        cases.append(run_helper(source_repo, repo, create_without_push_context, "create_without_push"))
+        cases.append(
+            run_helper(source_repo, repo, create_without_push_context, "create_without_push")
+        )
 
         draft_without_create_context = dict(full_context)
         draft_without_create_context["push"] = False
         draft_without_create_context["create_pr"] = False
         draft_without_create_context["draft_pr"] = True
-        cases.append(run_helper(source_repo, repo, draft_without_create_context, "draft_without_create"))
+        cases.append(
+            run_helper(source_repo, repo, draft_without_create_context, "draft_without_create")
+        )
 
     full = cases[0]["report"]
     full_argv = full.get("argv") or []
     require(cases[0]["returncode"] == 0, errors, "full case helper failed")
     require("--include-path" in full_argv, errors, "full case missing include paths")
     require("--apply-report" in full_argv, errors, "full case missing apply report")
-    require("--auto-include-from-apply-report" in full_argv, errors, "full case missing auto include")
+    require(
+        "--auto-include-from-apply-report" in full_argv, errors, "full case missing auto include"
+    )
     require("--push" in full_argv, errors, "full case missing push")
     require("--create-pr" in full_argv, errors, "full case missing create-pr")
     require("--draft-pr" in full_argv, errors, "full case missing draft-pr")
@@ -155,15 +162,26 @@ def main() -> int:
     missing = cases[1]["report"]
     missing_argv = missing.get("argv") or []
     require(cases[1]["returncode"] == 0, errors, "missing apply case helper failed")
-    require("--apply-report" not in missing_argv, errors, "missing apply case should omit --apply-report")
-    require("--auto-include-from-apply-report" not in missing_argv, errors, "missing apply case should omit auto include")
+    require(
+        "--apply-report" not in missing_argv,
+        errors,
+        "missing apply case should omit --apply-report",
+    )
+    require(
+        "--auto-include-from-apply-report" not in missing_argv,
+        errors,
+        "missing apply case should omit auto include",
+    )
     require(bool(missing.get("warnings")), errors, "missing apply case should warn")
 
     no_product = cases[2]["report"]
     require(cases[2]["returncode"] == 2, errors, "no product input case should fail")
     require(not bool(no_product.get("passed")), errors, "no product input case should not pass")
     require(
-        any("review PR product input missing" in str(item) for item in no_product.get("errors") or []),
+        any(
+            "review PR product input missing" in str(item)
+            for item in no_product.get("errors") or []
+        ),
         errors,
         "no product input case should explain missing product input",
     )
@@ -176,7 +194,10 @@ def main() -> int:
         "create without push case should fail",
     )
     require(
-        any("create_pr requires push" in str(item) for item in create_without_push.get("errors") or []),
+        any(
+            "create_pr requires push" in str(item)
+            for item in create_without_push.get("errors") or []
+        ),
         errors,
         "create without push case should explain create_pr requires push",
     )
@@ -188,7 +209,10 @@ def main() -> int:
         "draft without create case should fail",
     )
     require(
-        any("draft_pr requires create_pr" in str(item) for item in draft_without_create.get("errors") or []),
+        any(
+            "draft_pr requires create_pr" in str(item)
+            for item in draft_without_create.get("errors") or []
+        ),
         errors,
         "draft without create case should explain draft_pr requires create_pr",
     )

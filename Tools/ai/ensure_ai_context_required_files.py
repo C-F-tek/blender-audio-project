@@ -276,11 +276,7 @@ requirement and the artifact usefulness explicitly.
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return path.as_posix()
 
@@ -304,9 +300,7 @@ def required_path_exists(path: Path) -> bool:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -348,9 +342,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--profile", default="project_self_improvement")
-    parser.add_argument(
-        "--output", default="output/validation/required_ai_context_files.json"
-    )
+    parser.add_argument("--output", default="output/validation/required_ai_context_files.json")
     parser.add_argument(
         "--markdown-output", default="output/validation/required_ai_context_files.md"
     )
@@ -399,9 +391,7 @@ def main() -> int:
                     created = True
                     created_files.append(rel_path)
                 else:
-                    warnings.append(
-                        f"would initialize missing required context file: {rel_path}"
-                    )
+                    warnings.append(f"would initialize missing required context file: {rel_path}")
             elif initializable and target.exists() and target.is_dir():
                 # A directory exists but is not a valid split Markdown doc. Do not overwrite it.
                 missing_unhandled.append(rel_path)

@@ -123,9 +123,7 @@ def elapsed_from_timestamps(started: Any, finished: Any) -> float:
     return round(max(0.0, (finish_dt - start_dt).total_seconds()), 3)
 
 
-def read_optional_json(
-    repo_root: Path, value: str
-) -> tuple[dict[str, Any], list[str], str]:
+def read_optional_json(repo_root: Path, value: str) -> tuple[dict[str, Any], list[str], str]:
     if not value:
         return {}, [], ""
     path = resolve_output_path(repo_root, value)
@@ -165,9 +163,7 @@ def summarize_result_output(result: dict[str, Any]) -> dict[str, Any]:
         value = result.get(key)
         if isinstance(value, str) and value and value not in output_paths:
             output_paths.append(value)
-    nested_output = (
-        result.get("output") if isinstance(result.get("output"), dict) else {}
-    )
+    nested_output = result.get("output") if isinstance(result.get("output"), dict) else {}
     for key, value in nested_output.items():
         if isinstance(value, str) and value and value not in output_paths:
             output_paths.append(value)
@@ -219,9 +215,7 @@ def normalize_tool_result(
             "round": round_id,
             "broker_source": broker_source,
             "broker_report": broker_path,
-            "tool_request_id": result.get("id")
-            or result.get("request_id")
-            or request.get("id"),
+            "tool_request_id": result.get("id") or result.get("request_id") or request.get("id"),
             "tool": tool_name,
             "reason": request.get("reason") or result.get("reason"),
             "requested_args": (
@@ -284,8 +278,7 @@ def collect_from_broker_report(
             )
         )
     if (not entries) and (
-        broker_report.get("tool_request_count")
-        or broker_report.get("requested_tool_count")
+        broker_report.get("tool_request_count") or broker_report.get("requested_tool_count")
     ):
         entries.append(
             normalize_tool_entry(
@@ -294,9 +287,7 @@ def collect_from_broker_report(
                     "phase": phase,
                     "round": round_id,
                     "broker_source": str(
-                        broker_report.get("source")
-                        or broker_report.get("kind")
-                        or phase
+                        broker_report.get("source") or broker_report.get("kind") or phase
                     ),
                     "broker_report": broker_path,
                     "tool_request_id": None,
@@ -308,9 +299,7 @@ def collect_from_broker_report(
                         "passed": broker_report.get("passed"),
                         "tool_request_count": broker_report.get("tool_request_count")
                         or broker_report.get("requested_tool_count"),
-                        "tool_execution_count": broker_report.get(
-                            "tool_execution_count"
-                        ),
+                        "tool_execution_count": broker_report.get("tool_execution_count"),
                         "blocked_tool_count": broker_report.get("blocked_tool_count"),
                         "failed_tool_count": broker_report.get("failed_tool_count"),
                         "output_paths": [
@@ -392,28 +381,21 @@ def collect_broker_pointer_entries(
     return entries
 
 
-def append_default_broker_report_if_present(
-    repo_root: Path, stamp: str, values: Any
-) -> list[str]:
+def append_default_broker_report_if_present(repo_root: Path, stamp: str, values: Any) -> list[str]:
     # Preserve final broker telemetry even if a caller omits --broker-report.
     paths = split_path_values(values)
     if not stamp:
         return paths
 
     default_path = (
-        repo_root
-        / "output"
-        / "validation"
-        / f"runtime_tool_broker_full_toolbox_{stamp}.json"
+        repo_root / "output" / "validation" / f"runtime_tool_broker_full_toolbox_{stamp}.json"
     )
     if not default_path.exists():
         return paths
 
     default_rel = repo_rel(repo_root, default_path)
     normalized_existing = {
-        repo_rel(repo_root, resolve_output_path(repo_root, item))
-        for item in paths
-        if item
+        repo_rel(repo_root, resolve_output_path(repo_root, item)) for item in paths if item
     }
     if default_rel not in normalized_existing:
         paths.append(default_rel)
@@ -489,9 +471,7 @@ def collect_gpu_declared_requests(gpu_report: dict[str, Any]) -> list[dict[str, 
             continue
         round_id = safe_int(round_item.get("round"), -1)
         parsed = safe_dict(round_item.get("parsed_response"))
-        for index, request in enumerate(
-            safe_list(parsed.get("tool_requests")), start=1
-        ):
+        for index, request in enumerate(safe_list(parsed.get("tool_requests")), start=1):
             if not isinstance(request, dict):
                 continue
             entries.append(
@@ -504,14 +484,10 @@ def collect_gpu_declared_requests(gpu_report: dict[str, Any]) -> list[dict[str, 
                         "broker_report": "",
                         "tool_request_id": request.get("id")
                         or f"gpu_round_{round_id:03d}_declared_{index:03d}",
-                        "tool": request.get("tool")
-                        or request.get("tool_name")
-                        or "unknown",
+                        "tool": request.get("tool") or request.get("tool_name") or "unknown",
                         "reason": request.get("reason"),
                         "requested_args": (
-                            request.get("args")
-                            if isinstance(request.get("args"), dict)
-                            else {}
+                            request.get("args") if isinstance(request.get("args"), dict) else {}
                         ),
                         "status": "declared_not_necessarily_executed",
                         "executed": False,
@@ -533,9 +509,7 @@ def collect_npu_declared_requests(orchestrator: dict[str, Any]) -> list[dict[str
         if not isinstance(audit, dict):
             continue
         round_id = safe_int(audit.get("round"), -1)
-        for index, request in enumerate(
-            safe_list(audit.get("npu_tool_requests")), start=1
-        ):
+        for index, request in enumerate(safe_list(audit.get("npu_tool_requests")), start=1):
             if not isinstance(request, dict):
                 continue
             entries.append(
@@ -548,14 +522,10 @@ def collect_npu_declared_requests(orchestrator: dict[str, Any]) -> list[dict[str
                         "broker_report": "",
                         "tool_request_id": request.get("id")
                         or f"npu_round_{round_id:03d}_declared_{index:03d}",
-                        "tool": request.get("tool")
-                        or request.get("tool_name")
-                        or "unknown",
+                        "tool": request.get("tool") or request.get("tool_name") or "unknown",
                         "reason": request.get("reason"),
                         "requested_args": (
-                            request.get("args")
-                            if isinstance(request.get("args"), dict)
-                            else {}
+                            request.get("args") if isinstance(request.get("args"), dict) else {}
                         ),
                         "status": "declared_not_necessarily_executed",
                         "executed": False,
@@ -603,9 +573,7 @@ def collect_npu_micro_support_broker_entries(
                 round_id=round_id if round_id >= 0 else None,
             )
             for entry in broker_entries:
-                entry["npu_micro_support_live"] = (
-                    broker.get("executed_while_gpu1_active") is True
-                )
+                entry["npu_micro_support_live"] = broker.get("executed_while_gpu1_active") is True
                 entry["npu_micro_support_status"] = micro.get("status")
                 entry["npu_micro_broker_source"] = broker_source
             entries.extend(broker_entries)
@@ -619,17 +587,14 @@ def provider_evidence_summary(
     gpu_provider_performed = bool(
         gpu_report.get("provider_execution_performed")
         and gpu_round_count > 0
-        and str(gpu_report.get("classification") or "")
-        != "required_provider_artifact_missing"
+        and str(gpu_report.get("classification") or "") != "required_provider_artifact_missing"
         and not bool(gpu_report.get("provider_empty_response"))
     )
     npu_success_count = safe_int(orchestrator.get("npu_audit_success_count"))
     npu_audit_count = safe_int(orchestrator.get("npu_audit_count"))
     npu_provider_performed = npu_success_count > 0
     npu_micro_support_count = safe_int(orchestrator.get("npu_micro_support_count"))
-    npu_micro_support_success_count = safe_int(
-        orchestrator.get("npu_micro_support_success_count")
-    )
+    npu_micro_support_success_count = safe_int(orchestrator.get("npu_micro_support_success_count"))
     npu_micro_runtime_tool_execution_count = safe_int(
         orchestrator.get("npu_micro_runtime_tool_execution_count")
     )
@@ -637,8 +602,7 @@ def provider_evidence_summary(
         orchestrator.get("npu_micro_runtime_tool_live_execution_count")
     )
     npu_micro_support_performed = bool(
-        npu_micro_support_success_count > 0
-        or npu_micro_runtime_tool_execution_count > 0
+        npu_micro_support_success_count > 0 or npu_micro_runtime_tool_execution_count > 0
     )
     gpu0_peer_support_performed = bool(
         orchestrator.get("gpu0_peer_support_provider_execution_performed")
@@ -666,14 +630,10 @@ def provider_evidence_summary(
             f"lane_mode={orchestrator.get('npu_lane_mode')}"
         )
     return {
-        "provider_execution_performed": bool(
-            gpu_provider_performed or npu_provider_performed
-        ),
+        "provider_execution_performed": bool(gpu_provider_performed or npu_provider_performed),
         "gpu_provider_execution_performed": gpu_provider_performed,
         "gpu0_peer_support_provider_execution_performed": gpu0_peer_support_performed,
-        "gpu0_peer_support_count": safe_int(
-            orchestrator.get("gpu0_peer_support_count")
-        ),
+        "gpu0_peer_support_count": safe_int(orchestrator.get("gpu0_peer_support_count")),
         "gpu_round_count": gpu_round_count,
         "gpu_classification": gpu_report.get("classification"),
         "gpu_provider_empty_response": bool(gpu_report.get("provider_empty_response")),
@@ -718,29 +678,21 @@ def extract_declared_runtime_tool_counters(
                     return value
         return 0
 
-    request_count = first_int(
-        "runtime_tool_request_count", "runtime_tool_provider_request_count"
-    )
+    request_count = first_int("runtime_tool_request_count", "runtime_tool_provider_request_count")
     execution_count = first_int(
         "runtime_tool_execution_count", "runtime_tool_provider_request_execution_count"
     )
     failed_count = first_int("runtime_tool_failed_count")
     blocked_count = first_int("runtime_tool_blocked_count")
-    fallback_request_count = first_int(
-        "deterministic_runtime_tool_fallback_request_count"
-    )
-    fallback_execution_count = first_int(
-        "deterministic_runtime_tool_fallback_execution_count"
-    )
+    fallback_request_count = first_int("deterministic_runtime_tool_fallback_request_count")
+    fallback_execution_count = first_int("deterministic_runtime_tool_fallback_execution_count")
 
     return {
         "runtime_tool_request_count": request_count,
         "runtime_tool_execution_count": execution_count,
         "runtime_tool_failed_count": failed_count,
         "runtime_tool_blocked_count": blocked_count,
-        "runtime_tool_provider_request_count": first_int(
-            "runtime_tool_provider_request_count"
-        ),
+        "runtime_tool_provider_request_count": first_int("runtime_tool_provider_request_count"),
         "runtime_tool_provider_request_execution_count": first_int(
             "runtime_tool_provider_request_execution_count"
         ),
@@ -847,13 +799,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
     errors: list[str] = []
     warnings: list[str] = []
-    orchestrator, orch_errors, orch_path = read_optional_json(
-        repo_root, args.orchestrator
-    )
+    orchestrator, orch_errors, orch_path = read_optional_json(repo_root, args.orchestrator)
     gpu_report, gpu_errors, gpu_path = read_optional_json(repo_root, args.gpu_report)
-    gpu_npu_sync, sync_errors, sync_path = read_optional_json(
-        repo_root, args.gpu_npu_sync
-    )
+    gpu_npu_sync, sync_errors, sync_path = read_optional_json(repo_root, args.gpu_npu_sync)
     decision_loop, decision_errors, decision_path = read_optional_json(
         repo_root, args.decision_loop
     )
@@ -927,9 +875,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "passed": not errors,
         "errors": errors,
         "warnings": warnings,
-        "provider_execution_performed": provider_evidence[
-            "provider_execution_performed"
-        ],
+        "provider_execution_performed": provider_evidence["provider_execution_performed"],
         "provider_evidence": provider_evidence,
         "provider_broker_loop": provider_broker_loop,
         "patch_application_performed": False,
@@ -958,9 +904,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "report_only": True,
             "committable_location": "docs/LOCAL_VALIDATION_EVIDENCE",
             "raw_output_commit_allowed": False,
-            "provider_execution_performed": provider_evidence[
-                "provider_execution_performed"
-            ],
+            "provider_execution_performed": provider_evidence["provider_execution_performed"],
             "gpu_provider_execution_performed": provider_evidence[
                 "gpu_provider_execution_performed"
             ],
@@ -980,9 +924,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Stamp: `{report.get('stamp')}`")
     provider_evidence = safe_dict(report.get("provider_evidence"))
-    lines.append(
-        f"- Provider execution performed: `{report.get('provider_execution_performed')}`"
-    )
+    lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
     lines.append(
         f"- GPU provider execution performed: `{provider_evidence.get('gpu_provider_execution_performed')}`"
     )
@@ -1003,32 +945,20 @@ def render_markdown(report: dict[str, Any]) -> str:
     )
     telemetry_quality = safe_dict(summary.get("telemetry_quality"))
     if telemetry_quality:
-        lines.append(
-            f"- Status normalized: `{telemetry_quality.get('status_normalized')}`"
-        )
-        lines.append(
-            f"- Status missing count: `{telemetry_quality.get('status_missing_count')}`"
-        )
+        lines.append(f"- Status normalized: `{telemetry_quality.get('status_normalized')}`")
+        lines.append(f"- Status missing count: `{telemetry_quality.get('status_missing_count')}`")
         lines.append(
             f"- Executed elapsed missing count: `{telemetry_quality.get('executed_elapsed_missing_count')}`"
         )
-    lines.append(
-        f"- Declared runtime tool requests: `{summary.get('runtime_tool_request_count')}`"
-    )
+    lines.append(f"- Declared runtime tool requests: `{summary.get('runtime_tool_request_count')}`")
     lines.append(
         f"- Declared runtime tool executions: `{summary.get('runtime_tool_execution_count')}`"
     )
-    lines.append(
-        f"- Broker runtime tool executions: `{summary.get('broker_executed_count')}`"
-    )
-    lines.append(
-        f"- Declared not executed count: `{summary.get('declared_not_executed_count')}`"
-    )
+    lines.append(f"- Broker runtime tool executions: `{summary.get('broker_executed_count')}`")
+    lines.append(f"- Declared not executed count: `{summary.get('declared_not_executed_count')}`")
     provider_broker_loop = safe_dict(report.get("provider_broker_loop"))
     if provider_broker_loop:
-        lines.append(
-            f"- Provider-broker loop active: `{provider_broker_loop.get('active')}`"
-        )
+        lines.append(f"- Provider-broker loop active: `{provider_broker_loop.get('active')}`")
         lines.append(
             f"- Provider-broker loop executor: `{provider_broker_loop.get('controlled_executor')}`"
         )

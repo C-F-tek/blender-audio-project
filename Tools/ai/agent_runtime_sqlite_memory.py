@@ -53,11 +53,7 @@ def read_arg_file(repo_root: Path, value: str) -> str:
 
 def repo_rel(path: Path, repo_root: Path) -> str:
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -130,9 +126,7 @@ def operational_status(db_path: Path) -> dict[str, Any]:
     ensure_operational_db(db_path)
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        row_count = conn.execute(
-            "SELECT count(*) FROM operational_memory_records"
-        ).fetchone()[0]
+        row_count = conn.execute("SELECT count(*) FROM operational_memory_records").fetchone()[0]
         kind_rows = conn.execute(
             "SELECT kind, count(*) AS count FROM operational_memory_records GROUP BY kind ORDER BY count DESC, kind"
         ).fetchall()
@@ -172,9 +166,7 @@ def persistent_status(db_path: Path) -> dict[str, Any]:
                 count = None
             tables.append({"name": table_name, "row_count": count})
         if any(item["name"] == "memory_records" for item in tables):
-            record_count = conn.execute(
-                "SELECT count(*) FROM memory_records"
-            ).fetchone()[0]
+            record_count = conn.execute("SELECT count(*) FROM memory_records").fetchone()[0]
     return {
         "exists": True,
         "opened_read_only": True,
@@ -201,12 +193,8 @@ def ensure_persistent_db(db_path: Path) -> None:
                 metadata_json TEXT NOT NULL
             )
             """)
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_memory_records_kind ON memory_records(kind)"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_memory_records_scope ON memory_records(scope)"
-        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_records_kind ON memory_records(kind)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_records_scope ON memory_records(scope)")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_memory_records_source ON memory_records(source)"
         )
@@ -445,10 +433,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                     )
                     operational_write = True
                 elif memory_scope == "persistent":
-                    if (
-                        not args.allow_persistent_write
-                        or args.confirm != "persistent_write"
-                    ):
+                    if not args.allow_persistent_write or args.confirm != "persistent_write":
                         raise ValueError(
                             "persistent remember requires --allow-persistent-write and --confirm persistent_write"
                         )
@@ -466,9 +451,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                     )
                     persistent_write = True
                 else:
-                    raise ValueError(
-                        f"unsupported memory scope for remember: {memory_scope}"
-                    )
+                    raise ValueError(f"unsupported memory scope for remember: {memory_scope}")
             elif operation == "search":
                 result = {
                     "query": args.query,
@@ -480,9 +463,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                 }
             elif operation == "clear_operational":
                 if memory_scope != "operational":
-                    raise ValueError(
-                        "clear_operational is allowed only for operational memory"
-                    )
+                    raise ValueError("clear_operational is allowed only for operational memory")
                 result = clear_operational(operational_db, args.confirm)
                 operational_write = True
                 operational_clear = True
@@ -572,9 +553,7 @@ def main() -> int:
         choices=("status", "remember", "search", "clear_operational"),
         default="status",
     )
-    parser.add_argument(
-        "--scope", choices=("operational", "persistent"), default="operational"
-    )
+    parser.add_argument("--scope", choices=("operational", "persistent"), default="operational")
     parser.add_argument("--database", default=DEFAULT_OPERATIONAL_DB)
     parser.add_argument("--persistent-database", default=DEFAULT_PERSISTENT_DB)
     parser.add_argument("--request-id", default="runtime_sqlite_memory")
@@ -601,9 +580,7 @@ def main() -> int:
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown.write_text(render_markdown(report), encoding="utf-8")
     print(
         json.dumps(
@@ -614,15 +591,9 @@ def main() -> int:
                 "action": report["action"],
                 "scope": report["scope"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
-                "persistent_memory_write_performed": report[
-                    "persistent_memory_write_performed"
-                ],
-                "operational_sqlite_write_performed": report[
-                    "operational_sqlite_write_performed"
-                ],
-                "operational_memory_clear_performed": report[
-                    "operational_memory_clear_performed"
-                ],
+                "persistent_memory_write_performed": report["persistent_memory_write_performed"],
+                "operational_sqlite_write_performed": report["operational_sqlite_write_performed"],
+                "operational_memory_clear_performed": report["operational_memory_clear_performed"],
                 "patch_application_performed": report["patch_application_performed"],
             },
             indent=2,

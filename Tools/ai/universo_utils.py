@@ -34,11 +34,7 @@ def read_request_file(repo_root: Path, value: str) -> str:
 def repo_rel(repo_root: Path, path: Path) -> str:
     """Return ``path`` relative to ``repo_root`` if possible, otherwise ``str``."""
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
