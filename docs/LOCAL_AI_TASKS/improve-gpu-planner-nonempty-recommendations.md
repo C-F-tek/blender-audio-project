@@ -105,9 +105,9 @@ stop conditions
 ## Validation commands after future implementation
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
-python .\Tools\validation\run_agent_review_patch_plan_smoke.py --repo-root . --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json --min-patch-plans 12 --expect-fallback --output .\output\validation\agent_review_patch_plan_smoke.json --markdown-output .\output\validation\agent_review_patch_plan_smoke.md
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation run_agent_review_patch_plan_smoke --repo-root . --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json --min-patch-plans 12 --expect-fallback --output .\output\validation\agent_review_patch_plan_smoke.json --markdown-output .\output\validation\agent_review_patch_plan_smoke.md
 git diff --check
 git status --short
 ```

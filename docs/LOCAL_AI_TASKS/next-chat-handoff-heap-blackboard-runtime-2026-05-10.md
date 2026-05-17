@@ -39,7 +39,7 @@ File modificati in queste patch:
 
 - `Tools/ai/run_heap_runtime_completeness_gate.py`
 - `Tools/ai/build_npu_micro_task_companion_report.py`
-- `Tools/npu/npu_runtime.py`
+- `Tools/npu/_shared/npu_runtime.py`
 
 ## Evidenze runtime importanti
 
@@ -66,7 +66,7 @@ Nota tecnica: `openvino.runtime` non e' disponibile nell'ambiente corrente; il p
 Comando di prova riuscito:
 
 ```powershell
-& $ProjectPython .\Tools\ai\build_npu_micro_task_companion_report.py `
+& $ProjectPython -m Tools.ai build_npu_micro_task_companion_report `
   --repo-root . `
   --request "test npu project env con workload reale su dispositivo NPU" `
   --python-exe $ProjectPython `
@@ -309,7 +309,7 @@ Tool da usare/integrare come fase iniziale:
 
 - `Tools/ai/build_agent_agnostic_tool_inventory.py`
 - `Tools/ai/build_agent_memory_inventory.py`
-- `Tools/ai/agent_runtime_sqlite_memory.py` / runtime sqlite memory wrapper effettivo
+- `python -m Tools.ai agent_runtime_sqlite_memory` / runtime sqlite memory wrapper effettivo
 - `Tools/ai/build_agent_transient_request_context.py`
 - `Tools/ai/select_semantic_code_chunks.py`
 - `Tools/ai/build_ai_context_pack.py`
@@ -414,14 +414,14 @@ python -m py_compile `
   .\Tools\ai\run_heap_runtime_completeness_gate.py `
   .\Tools\ai\run_heap_runtime_context_closure.py `
   .\Tools\ai\build_npu_micro_task_companion_report.py `
-  .\Tools\npu\npu_runtime.py
+  .\Tools\npu\_shared\npu_runtime.py
 ```
 
 ### NPU reale
 
 ```powershell
 $ProjectPython = (Resolve-Path .\.venv\Scripts\python.exe).Path
-& $ProjectPython .\Tools\ai\build_npu_micro_task_companion_report.py `
+& $ProjectPython -m Tools.ai build_npu_micro_task_companion_report `
   --repo-root . `
   --request "test npu project env con workload reale su dispositivo NPU" `
   --python-exe $ProjectPython `
@@ -446,7 +446,7 @@ mode                             : npu_openvino_micro_workload
 
 ```powershell
 $ProjectPython = (Resolve-Path .\.venv\Scripts\python.exe).Path
-& $ProjectPython .\Tools\ai\run_heap_runtime_context_closure.py `
+& $ProjectPython -m Tools.ai run_heap_runtime_context_closure `
   --repo-root . `
   --python-exe $ProjectPython `
   --budget-minutes 10 `

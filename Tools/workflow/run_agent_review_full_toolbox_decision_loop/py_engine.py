@@ -10,43 +10,42 @@ from py_product import run_decision_and_bundle
 from py_support import WorkflowContext, build_paths, read_json, resolve_python, write_line_inventory
 
 COMPILE_TARGETS = [
-    "Tools/ai/gpu_planner_json_contract.py",
-    "Tools/ai/replay_gpu_planner_json_contract.py",
-    "Tools/ai/analyze_gpu_npu_run_sync.py",
-    "Tools/ai/build_deterministic_recommendations.py",
-    "Tools/ai/build_agent_review_patch_plan.py",
-    "Tools/ai/build_full_toolbox_run_telemetry_summary.py",
-    "Tools/ai/build_patch_notes_quality_product.py",
-    "Tools/ai/agent_runtime_tool_broker_execution.py",
-    "Tools/ai/build_runtime_tool_usage_telemetry.py",
-    "Tools/ai/runtime_tool_telemetry_normalization.py",
-    "Tools/ai/build_runtime_tool_capability_manifest.py",
-    "Tools/ai/build_semantic_evidence_chunks.py",
-    "Tools/ai/build_runtime_flow_map.py",
-    "Tools/ai/build_agent_review_evidence_sufficiency.py",
-    "Tools/ai/run_megalithic_repo_review.py",
-    "Tools/ai/refine_megalithic_review_signals.py",
-    "Tools/ai/build_openvino_hardware_governance_report.py",
-    "Tools/ai/build_ai_peer_exchange_packet.py",
-    "Tools/ai/provider_runtime_heap.py",
-    "Tools/ai/provider_runtime_heap_live_signals.py",
-    "Tools/ai/build_provider_runtime_heap_from_peer_reports.py",
-    "Tools/ai/build_provider_runtime_heap_telemetry.py",
-    "Tools/ai/run_provider_runtime_heap_gpu_peer_smoke.py",
-    "Tools/ai/run_gpu0_peer_companion_worker.py",
-    "Tools/ai/run_npu_gpu_deep_review_auditor.py",
-    "Tools/ai/run_agent_review_decision_loop.py",
-    "Tools/ai/build_repository_consistency_map.py",
-    "Tools/validation/check_ai_peer_exchange_contract.py",
-    "Tools/validation/run_repository_consistency_map_smoke.py",
-    "Tools/validation/run_gpu_planner_json_contract_smoke.py",
-    "Tools/validation/run_deterministic_recommendation_synthesizer_smoke.py",
-    "Tools/validation/run_agent_review_decision_loop_smoke.py",
-    "Tools/validation/run_patch_notes_quality_product_smoke.py",
-    "Tools/validation/check_provider_evidence_contract.py",
+    "Tools/ai/_shared/gpu_planner_json_contract.py",
+    "Tools/ai/replay_gpu_planner_json_contract/cli.py",
+    "Tools/ai/gpu_npu_run_sync_analysis/cli.py",
+    "Tools/ai/deterministic_recommendations/cli.py",
+    "Tools/ai/agent_review_patch_plan/cli.py",
+    "Tools/ai/full_toolbox_telemetry_summary/cli.py",
+    "Tools/ai/build_patch_notes_quality_product/cli.py",
+    "Tools/ai/_shared/agent_runtime_tool_broker_execution.py",
+    "Tools/ai/runtime_tool_usage_telemetry/cli.py",
+    "Tools/ai/_shared/runtime_tool_telemetry_normalization.py",
+    "Tools/ai/build_runtime_tool_capability_manifest/cli.py",
+    "Tools/ai/semantic_evidence_chunks/cli.py",
+    "Tools/ai/runtime_flow_map/cli.py",
+    "Tools/ai/agent_review/evidence_cli.py",
+    "Tools/ai/megalithic_repo_review/cli.py",
+    "Tools/ai/megalithic_review_refinement/cli.py",
+    "Tools/ai/build_openvino_hardware_governance_report/cli.py",
+    "Tools/ai/peer_exchange_packet/cli.py",
+    "Tools/ai/provider_runtime_blackboard/cli.py",
+    "Tools/ai/provider_runtime_heap_live_signals/cli.py",
+    "Tools/ai/build_provider_runtime_heap_from_peer_reports/cli.py",
+    "Tools/ai/build_provider_runtime_heap_telemetry/cli.py",
+    "Tools/ai/run_provider_runtime_heap_gpu_peer_smoke/cli.py",
+    "Tools/ai/run_gpu0_peer_companion_worker/cli.py",
+    "Tools/ai/npu_gpu_deep_review_auditor/cli.py",
+    "Tools/ai/run_agent_review_decision_loop/cli.py",
+    "Tools/ai/build_repository_consistency_map/cli.py",
+    "Tools/validation/check_ai_peer_exchange_contract/cli.py",
+    "Tools/validation/run_repository_consistency_map_smoke/cli.py",
+    "Tools/validation/run_gpu_planner_json_contract_smoke/cli.py",
+    "Tools/validation/run_deterministic_recommendation_synthesizer_smoke/cli.py",
+    "Tools/validation/run_agent_review_decision_loop_smoke/cli.py",
+    "Tools/validation/run_patch_notes_quality_product_smoke/cli.py",
+    "Tools/validation/check_provider_evidence_contract/cli.py",
     "Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_patch_notes.py",
 ]
-
 
 def init_context(args: Any) -> WorkflowContext:
     repo_root = Path(args.RepoRoot).resolve()
@@ -56,7 +55,6 @@ def init_context(args: Any) -> WorkflowContext:
     return WorkflowContext(
         args=args, repo_root=repo_root, python_exe=resolve_python(repo_root), paths=paths
     )
-
 
 def existing(ctx: WorkflowContext, *keys: str) -> list[str]:
     return [ctx.p(key) for key in keys if Path(ctx.p(key)).exists()]
@@ -73,7 +71,9 @@ def run_project_review_refinement(ctx: WorkflowContext) -> None:
         "openvino_governance_json",
     )
     review_args = [
-        "Tools/ai/run_megalithic_repo_review.py",
+        "-m",
+        "Tools.ai",
+        "run_megalithic_repo_review",
         "--repo-root",
         ".",
         "--include-all-docs",
@@ -90,7 +90,9 @@ def run_project_review_refinement(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "Refine project review signals",
         [
-            "Tools/ai/refine_megalithic_review_signals.py",
+            "-m",
+            "Tools.ai",
+            "refine_megalithic_review_signals",
             "--review",
             ctx.p("megalithic_review_json"),
             "--proposals",
@@ -110,7 +112,7 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     if not ctx.args.SkipMemoryReload:
         ctx.run_powershell(
             "Full memory/tool regeneration",
-            "Tools/workflow/run_full_memory_tool_regeneration.ps1",
+            "Tools/workflow/_powershell/run_full_memory_tool_regeneration.ps1",
             {
                 "RepoRoot": ".",
                 "Stamp": ctx.p("artifact_stamp"),
@@ -123,7 +125,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "Full Python line-count inventory",
         [
-            "Tools/validation/build_python_line_count_csv.py",
+            "-m",
+            "Tools.validation",
+            "build_python_line_count_csv",
             "--repo-root",
             ".",
             "--timestamped",
@@ -145,7 +149,8 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
         "Python syntax validation",
         [
             "-m",
-            "Tools.validation.check_python_syntax",
+            "Tools.validation",
+            "check_python_syntax",
             "--repo-root",
             ".",
             "--output",
@@ -156,7 +161,8 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
         "Code interpreter/static report",
         [
             "-m",
-            "Tools.ai.build_code_interpreter_report",
+            "Tools.ai",
+            "build_code_interpreter_report",
             "--repo-root",
             ".",
             "--input",
@@ -181,7 +187,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "GPU planner JSON contract smoke",
         [
-            "Tools/validation/run_gpu_planner_json_contract_smoke.py",
+            "-m",
+            "Tools.validation",
+            "run_gpu_planner_json_contract_smoke",
             "--repo-root",
             ".",
             "--output",
@@ -193,7 +201,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "Deterministic recommendation synthesizer smoke",
         [
-            "Tools/validation/run_deterministic_recommendation_synthesizer_smoke.py",
+            "-m",
+            "Tools.validation",
+            "run_deterministic_recommendation_synthesizer_smoke",
             "--repo-root",
             ".",
             "--output",
@@ -205,7 +215,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "Agent review decision-loop smoke",
         [
-            "Tools/validation/run_agent_review_decision_loop_smoke.py",
+            "-m",
+            "Tools.validation",
+            "run_agent_review_decision_loop_smoke",
             "--repo-root",
             ".",
             "--output",
@@ -217,7 +229,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "NPU provider environment preflight",
         [
-            "Tools/ai/check_npu_provider_environment.py",
+            "-m",
+            "Tools.ai",
+            "check_npu_provider_environment",
             "--repo-root",
             ".",
             "--output",
@@ -229,7 +243,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "OpenVINO hardware governance report",
         [
-            "Tools/ai/build_openvino_hardware_governance_report.py",
+            "-m",
+            "Tools.ai",
+            "build_openvino_hardware_governance_report",
             "--repo-root",
             ".",
             "--npu-micro-start-mode",
@@ -243,7 +259,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "Repository consistency map",
         [
-            "Tools/ai/build_repository_consistency_map.py",
+            "-m",
+            "Tools.ai",
+            "build_repository_consistency_map",
             "--repo-root",
             ".",
             "--output",
@@ -263,7 +281,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "Repository consistency map smoke",
         [
-            "Tools/validation/run_repository_consistency_map_smoke.py",
+            "-m",
+            "Tools.validation",
+            "run_repository_consistency_map_smoke",
             "--repo-root",
             ".",
             "--map-report",
@@ -280,7 +300,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "Agent review evidence sufficiency",
         [
-            "Tools/ai/build_agent_review_evidence_sufficiency.py",
+            "-m",
+            "Tools.ai",
+            "build_agent_review_evidence_sufficiency",
             "--repo-root",
             ".",
             "--refined-review",
@@ -311,7 +333,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "GPU0 companion worker task lane",
         [
-            "Tools/ai/build_gpu0_companion_task_lane.py",
+            "-m",
+            "Tools.ai",
+            "build_gpu0_companion_task_lane",
             "--repo-root",
             ".",
             "--stamp",
@@ -344,7 +368,9 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     ctx.run_python(
         "GPU0 companion worker contract",
         [
-            "Tools/validation/check_gpu0_companion_contract.py",
+            "-m",
+            "Tools.validation",
+            "check_gpu0_companion_contract",
             "--report",
             ctx.p("gpu0_companion_json"),
             "--output",
@@ -353,7 +379,6 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
             ctx.p("gpu0_companion_contract_md"),
         ],
     )
-
 
 def run_workflow(args: Any) -> int:
     ctx = init_context(args)

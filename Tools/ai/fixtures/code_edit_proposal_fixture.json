@@ -6,9 +6,9 @@
   "provider_execution_performed": false,
   "patch_application_performed": false,
   "source_writes_performed": false,
-  "target_file": "Tools/ai/code_patch_plan_common.py",
+  "target_file": "Tools/ai/_shared/code_patch_plan_common.py",
   "target_metadata": {
-    "path": "Tools/ai/code_patch_plan_common.py",
+    "path": "Tools/ai/_shared/code_patch_plan_common.py",
     "exists": true,
     "sha256": null,
     "line_count": null,

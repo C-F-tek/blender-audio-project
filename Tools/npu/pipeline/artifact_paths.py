@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path, PurePosixPath
 
-from .config import DEFAULT_ALLOWED_ARTIFACT_PREFIXES
+from .config import DEFAULT_ALLOWED_ARTIFACT_PREFIXES, slugify_track_stem
 
 
 def normalize_repo_relative_path(path: str) -> str:
@@ -74,13 +74,13 @@ def dual_ai_legacy_runtime_output_paths(track_stem: str) -> tuple[str, ...]:
         f"output/{track_stem}_dual_ai_scene_plan.json",
         f"output/{track_stem}_ollama_music_insights.json",
         f"output/{track_stem}_ai_implementation_draft.json",
-        "Tools/npu/dual_ai_blender_agent_brief.md",
-        "Tools/npu/ollama_music_insights.md",
-        "Tools/npu/npu_dual_ai_technical_notes.md",
+        f"indexAI/scene_scripts/{slugify_track_stem(track_stem)}_scene_builder_candidate.py",
+        "Tools/npu/context_artifacts/dual_ai_blender_agent_brief.md",
+        "Tools/npu/context_artifacts/ollama_music_insights.md",
+        "Tools/npu/context_artifacts/npu_dual_ai_technical_notes.md",
         "Tools/npu/npu_preflight_report.json",
-        "Tools/npu/generated_blender_script_candidate.py",
-        "Tools/npu/generated_implementation_notes.md",
-        "Tools/npu/npu_dual_ai_implementation_notes.md",
+        "Tools/npu/context_artifacts/generated_implementation_notes.md",
+        "Tools/npu/context_artifacts/npu_dual_ai_implementation_notes.md",
     )
 
 

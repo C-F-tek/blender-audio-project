@@ -175,13 +175,13 @@ operational_memory_search
 `prepare_heap_context_memory_reload.py` esegue in startup:
 
 ```text
-agent_runtime_sqlite_memory.py --action status --scope operational
-agent_runtime_sqlite_memory.py --action search --scope operational
+python -m Tools.ai agent_runtime_sqlite_memory --action status --scope operational
+python -m Tools.ai agent_runtime_sqlite_memory --action search --scope operational
 ```
 
 ma non risulta una `remember` operational durante il preload.
 
-`agent_runtime_sqlite_memory.py` supporta `remember` operational e garantisce che il DB operativo stia sotto `output/**`.
+`python -m Tools.ai agent_runtime_sqlite_memory` supporta `remember` operational e garantisce che il DB operativo stia sotto `output/**`.
 
 ### Problema
 

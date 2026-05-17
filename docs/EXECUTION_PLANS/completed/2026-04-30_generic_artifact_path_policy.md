@@ -24,7 +24,7 @@ Is the generated Python compatible with Blender or another runtime?
 
 ## Scope completed
 
-- Extended `Tools/validation/generated_file_policy.py` with reusable path-policy primitives.
+- Extended `Tools/validation/_shared/generated_file_policy.py` with reusable path-policy primitives.
 - Added `Tools/validation/check_generated_artifact_path_policy.py`.
 - Updated local validation workflow and AI-facing docs.
 - Kept sample checks deterministic and cheap.

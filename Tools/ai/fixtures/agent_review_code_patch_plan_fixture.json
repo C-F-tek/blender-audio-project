@@ -15,7 +15,7 @@
       "risk": "low",
       "status": "ready_for_manual_review",
       "target_files": [
-        "Tools/validation/check_validation_report_contract.py"
+        "Tools/validation/check_validation_report_contract/cli.py"
       ],
       "rationale": "Fixture-only example showing a low-risk validator documentation/code review target without applying a patch.",
       "edit_strategy": "Manual review only; inspect current file before preparing any concrete edit.",

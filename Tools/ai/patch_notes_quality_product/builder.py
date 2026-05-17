@@ -127,7 +127,7 @@ def build_report(args: Any) -> dict[str, Any]:
     )
     validation_commands = patch_summary.get("validation_commands") or [
         "python -m py_compile tools/ai/build_patch_notes_quality_product.py",
-        "python tools/validation/run_patch_notes_quality_product_smoke.py --repo-root .",
+        "python -m Tools.validation run_patch_notes_quality_product_smoke --repo-root .",
         "git diff --check",
     ]
     report: dict[str, Any] = {

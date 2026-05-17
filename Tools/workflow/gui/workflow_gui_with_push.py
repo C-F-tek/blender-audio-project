@@ -9,7 +9,10 @@ WORKFLOW_DIR = THIS_DIR.parent
 if str(WORKFLOW_DIR) not in sys.path:
     sys.path.insert(0, str(WORKFLOW_DIR))
 
-import workflow_state as wf  # noqa: E402
+try:
+    import workflow_core as wf  # noqa: E402
+except ImportError:
+    from Tools.workflow import workflow_core as wf  # noqa: E402
 from components.artifact_browser import ArtifactBrowserWindow  # noqa: E402
 from git_auto_push import run_auto_push_full_project, run_auto_push_generated_data  # noqa: E402
 from workflow_gui_modern import WorkflowGui as BaseWorkflowGui  # noqa: E402

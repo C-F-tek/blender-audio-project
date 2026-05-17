@@ -1,6 +1,6 @@
 # Single-owner scripts and flow boundaries — 2026-05-07
 
-Status: active code-driven rule  
+Status: active code-driven rule
 Scope: scripts that must not be duplicated, bypassed or reimplemented as parallel entrypoints.
 
 ## Purpose
@@ -18,7 +18,7 @@ When replacing an owner, update this document, the launcher runbook, package REA
 | Responsibility | Owner | Do not duplicate with |
 |---|---|---|
 | Operator launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` | New full-run, docs-run, provider-run or reset entrypoints. |
-| Full-toolbox engine wrapper | `Tools/workflow/run_agent_review_full_toolbox_decision_loop.py` | New orchestration wrappers that skip the packaged engine. |
+| Full-toolbox engine wrapper | `python -m Tools.workflow run_agent_review_full_toolbox_decision_loop` | New orchestration wrappers that skip the packaged engine. |
 | Full-toolbox static foundation | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_engine.py` | Independent static-foundation runners. |
 | Provider mesh and peer exchange orchestration | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_mesh.py` | Standalone GPU1/GPU0/NPU production flows outside launcher. |
 | Product/bundle/telemetry finalization | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_product.py` | One-off final bundle or telemetry runners for normal flows. |

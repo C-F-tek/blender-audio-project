@@ -48,7 +48,7 @@ final composer package
 | Tool catalog | `Tools/ai/build_agent_agnostic_tool_inventory.py` |
 | Memory inventory | `Tools/ai/build_agent_memory_inventory.py` |
 | Transient request context | `Tools/ai/build_agent_transient_request_context.py` |
-| Operational SQLite memory | `Tools/ai/agent_runtime_sqlite_memory.py` |
+| Operational SQLite memory | `python -m Tools.ai agent_runtime_sqlite_memory` |
 | Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` |
 
 ## Preload surfaces

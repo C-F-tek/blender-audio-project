@@ -12,7 +12,7 @@ Status: implemented in the current working tree.
 Files:
 
 - `Tools/ai/compose_heap_final_proposals.py`
-- `Tools/ai/heap_proposal_gate.py`
+- `Tools/ai/_shared/heap_proposal_gate.py`
 - `Tools/validation/test_proposal_gate.py`
 
 Implementation detail:
@@ -104,7 +104,7 @@ Status: implemented and validated.
 
 Files:
 
-- `Tools/ai/heap_code_execution_tool_core.py`
+- `Tools/ai/_shared/heap_code_execution_tool_core.py`
 - `Tools/ai/run_heap_code_execution_tool.py`
 - `Tools/validation/run_heap_code_execution_tool_smoke.py`
 - `Tools/ai/agent_runtime_tool_broker.py`

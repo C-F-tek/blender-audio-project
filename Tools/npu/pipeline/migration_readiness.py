@@ -64,7 +64,7 @@ def default_runtime_wiring_readiness(
         ),
     ]
     return build_migration_readiness_report(
-        target_file="Tools/npu/run_dual_ai_pipeline.py",
+        target_file="Tools/npu/dual_ai_pipeline/cli.py",
         checks=checks,
         allowed_to_modify_runtime=False,
     )

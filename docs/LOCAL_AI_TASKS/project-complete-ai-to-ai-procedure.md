@@ -58,7 +58,7 @@ The local AI run must use the Markdown request as the task input. Do not rely on
 ## 2. Run NPU/provider preflight
 
 ```powershell
-python .\Tools\ai\check_npu_provider_environment.py `
+python -m Tools.ai check_npu_provider_environment `
   --repo-root . `
   --output ".\output\validation\npu_provider_environment_project_complete_$Stamp.json" `
   --markdown-output ".\output\validation\npu_provider_environment_project_complete_$Stamp.md"
@@ -99,7 +99,7 @@ renders/**
 ## 4. Run the official GPU/NPU AI-to-AI orchestrator
 
 ```powershell
-python .\Tools\ai\run_agent_gpu_npu_parallel_orchestrator.py `
+python -m Tools.ai run_agent_gpu_npu_parallel_orchestrator `
   --repo-root . `
   --budget-minutes 30 `
   --max-rounds 24 `
@@ -188,14 +188,14 @@ $params = @{
 ## 7. Run fallback manual-review patch-plan and smoke validation
 
 ```powershell
-python .\Tools\ai\build_agent_review_patch_plan.py `
+python -m Tools.ai build_agent_review_patch_plan `
   --repo-root . `
   --orchestrator ".\output\ai_pipeline\project_complete_${Stamp}_orchestrator.json" `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `
   --output ".\output\patch_specs\agent_review_patch_plan_project_complete_$Stamp.json" `
   --markdown-output ".\output\patch_specs\agent_review_patch_plan_project_complete_$Stamp.md"
 
-python .\Tools\validation\run_agent_review_patch_plan_smoke.py `
+python -m Tools.validation run_agent_review_patch_plan_smoke `
   --repo-root . `
   --orchestrator ".\output\ai_pipeline\project_complete_${Stamp}_orchestrator.json" `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `

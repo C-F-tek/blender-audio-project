@@ -73,10 +73,10 @@ should likely be validated/merged before PR #109 if ordering matters
 Suggested local checks:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax_pr108.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links_pr108.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax_pr108.json
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links_pr108.json
 # Removed obsolete check_markdown_command_hygiene.py command; the script is not tracked in current master. Use check_docs_links.py plus check_validation_report_contract.py for this gate.
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract_pr108.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract_pr108.json
 git diff --check
 ```
 

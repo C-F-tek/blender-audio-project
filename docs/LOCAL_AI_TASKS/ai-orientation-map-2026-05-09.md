@@ -125,12 +125,12 @@ Do not create a new one-off patcher if patchkit operations can express the chang
 ## Patchkit command pattern
 
 ```powershell
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -193,7 +193,7 @@ python -m py_compile `
   .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
   .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
 
-python .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py `
+python -m Tools.validation run_heap_exchange_runtime_lifecycle_smoke `
   --repo-root .
 ```
 
@@ -208,7 +208,7 @@ python -m py_compile `
   .\Tools\ai\patchkit\apply_patch_bundle.py `
   .\Tools\validation\run_patchkit_smoke.py
 
-python .\Tools\validation\run_patchkit_smoke.py `
+python -m Tools.validation run_patchkit_smoke `
   --repo-root .
 
 git diff --check
@@ -217,8 +217,8 @@ git diff --check
 Docs-only:
 
 ```powershell
-python .\Tools\validation\check_docs_links.py --repo-root . --output output/validation/docs_links.json
-python .\Tools\validation\check_file_line_limits.py --repo-root . --output output/validation/file_line_limits.json
+python -m Tools.validation check_docs_links --repo-root . --output output/validation/docs_links.json
+python -m Tools.validation check_file_line_limits --repo-root . --output output/validation/file_line_limits.json
 git diff --check
 ```
 

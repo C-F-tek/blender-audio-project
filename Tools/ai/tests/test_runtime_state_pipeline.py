@@ -123,8 +123,8 @@ class HeapProductContractHelperTests(unittest.TestCase):
     def test_source_anchor_prefers_operator_existing_files(self) -> None:
         repo_root = Path(__file__).resolve().parents[3]
         request = (
-            "Use Tools/ai/provider_runtime_heap.py and "
-            "Tools/ai/evidence_to_recommendation.py. "
+            "Use Tools/ai/provider_runtime_heap/cli.py and "
+            "Tools/ai/evidence_to_recommendation/cli.py. "
             "Do not use Tools/data_processor/real_existing_file.py."
         )
         candidates = real_source_file_candidates(
@@ -133,8 +133,8 @@ class HeapProductContractHelperTests(unittest.TestCase):
             broker_output_refs=[],
             limit=4,
         )
-        self.assertEqual(candidates[0], "Tools/ai/provider_runtime_heap.py")
-        self.assertIn("Tools/ai/evidence_to_recommendation.py", candidates)
+        self.assertEqual(candidates[0], "Tools/ai/provider_runtime_heap/cli.py")
+        self.assertIn("Tools/ai/evidence_to_recommendation/cli.py", candidates)
         quality = response_file_reference_quality(
             repo_root=repo_root,
             text="TARGET_FILES:\n- Tools/data_processor/real_existing_file.py",

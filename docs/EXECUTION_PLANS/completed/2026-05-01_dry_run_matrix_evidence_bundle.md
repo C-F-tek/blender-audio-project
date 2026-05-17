@@ -42,18 +42,18 @@ docs/EXECUTION_PLANS/active/2026-04-30_dry_run_matrix_contract_followups.md
 ## Validation commands
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\validation\check_ai_dry_run_matrix_cases.py --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
-python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
-python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy_from_matrix.json
-python .\Tools\ai\build_dry_run_matrix_evidence_bundle.py --repo-root . --basename ai_pipeline_dry_run_matrix_evidence
-python .\Tools\validation\check_dry_run_matrix_evidence_bundle.py --repo-root . --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\ai_pipeline_dry_run_matrix_evidence.json --output .\output\validation\dry_run_matrix_evidence_bundle.json
-python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.validation check_ai_dry_run_matrix_cases --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
+python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
+python -m Tools.validation check_ai_dry_run_matrix_contract --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
+python -m Tools.validation check_ai_dry_run_matrix_outputs --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
+python -m Tools.validation check_generated_artifact_path_policy --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy_from_matrix.json
+python -m Tools.ai build_dry_run_matrix_evidence_bundle --repo-root . --basename ai_pipeline_dry_run_matrix_evidence
+python -m Tools.validation check_dry_run_matrix_evidence_bundle --repo-root . --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\ai_pipeline_dry_run_matrix_evidence.json --output .\output\validation\dry_run_matrix_evidence_bundle.json
+python -m Tools.validation check_json_artifacts --repo-root . --output .\output\validation\json_artifacts.json
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
+python -m Tools.validation check_execution_plan_status --repo-root . --output .\output\validation\execution_plan_status.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 ```
 
 ## Risk level

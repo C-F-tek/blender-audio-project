@@ -74,11 +74,11 @@ latest commits include CHATGPT hardware/memory concept docs
 ```powershell
 git diff --check
 
-python .\Tools\validation\check_docs_links.py `
+python -m Tools.validation check_docs_links `
   --repo-root . `
   --output .\output\validation\docs_links_after_chatgpt_hardware_memory_docs.json
 
-python .\Tools\validation\check_validation_report_contract.py `
+python -m Tools.validation check_validation_report_contract `
   --repo-root . `
   --output .\output\validation\validation_report_contract_after_chatgpt_hardware_memory_docs.json
 ```

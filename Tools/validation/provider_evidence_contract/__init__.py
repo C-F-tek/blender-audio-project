@@ -1,0 +1,1 @@
+"""Provider evidence contract validator."""

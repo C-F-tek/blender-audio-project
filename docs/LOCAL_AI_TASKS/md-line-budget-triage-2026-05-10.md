@@ -90,7 +90,7 @@ Azione safe:
 ~~~powershell
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
-& $RepoPy .\Tools\validation\check_file_line_limits.py `
+& $RepoPy -m Tools.validation check_file_line_limits `
   --repo-root . `
   --output .\output\validation\file_line_limits.json `
   --markdown-output .\output\validation\file_line_limits.md
@@ -99,7 +99,7 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 Per farlo diventare bloccante in una PR dedicata:
 
 ~~~powershell
-& $RepoPy .\Tools\validation\check_file_line_limits.py `
+& $RepoPy -m Tools.validation check_file_line_limits `
   --repo-root . `
   --output .\output\validation\file_line_limits.json `
   --markdown-output .\output\validation\file_line_limits.md `
@@ -133,7 +133,7 @@ Per farlo diventare bloccante in una PR dedicata:
 ~~~powershell
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
-& $RepoPy .\Tools\validation\check_file_line_limits.py `
+& $RepoPy -m Tools.validation check_file_line_limits `
   --repo-root . `
   --output .\output\validation\file_line_limits.json `
   --markdown-output .\output\validation\file_line_limits.md

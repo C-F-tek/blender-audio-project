@@ -1,0 +1,277 @@
+if aura_audio_controller is not None and aura_sample_keyframe:
+    aura_deform = min(1.0, low * 0.44 + mid * 0.24 + transient * 0.58)
+    aura_detail = min(1.0, high * 0.60 + onset * 0.55 + beat * 0.25)
+    phase = i * 0.011 + mid * 0.35 + onset * 0.18
+    audio_values = {
+        "low": low,
+        "mid": mid,
+        "high": high,
+        "onset": onset,
+        "beat": beat,
+        "pulse": pulse,
+        "aura_deform": aura_deform,
+        "detail": aura_detail,
+        "phase": phase,
+    }
+
+    for prop in aura_audio_props:
+        if prop not in audio_values:
+            continue
+        aura_audio_controller[prop] = audio_values[prop]
+        keyframe_if_possible(aura_audio_controller, f'["{prop}"]', i)
+
+    aura_audio_controller.location.x = aura_audio_base_loc.x + math.sin(i * 0.018) * 0.18
+    aura_audio_controller.location.y = aura_audio_base_loc.y + math.cos(i * 0.016) * 0.14
+    aura_audio_controller.location.z = aura_audio_base_loc.z + aura_deform * 0.20
+    aura_audio_controller.rotation_euler.x = aura_audio_base_rot.x + i * 0.006 + high * 0.18
+    aura_audio_controller.rotation_euler.y = (
+        aura_audio_base_rot.y + math.sin(i * 0.021) * 0.14
+    )
+    aura_audio_controller.rotation_euler.z = aura_audio_base_rot.z + phase
+    aura_sampler_scale = 1.0 + aura_deform * 0.22
+    aura_audio_controller.scale = (
+        aura_audio_base_scale.x * aura_sampler_scale,
+        aura_audio_base_scale.y * (1.0 + aura_detail * 0.12),
+        aura_audio_base_scale.z * (1.0 + low * 0.10),
+    )
+    aura_audio_controller.keyframe_insert(data_path="location", frame=i)
+    aura_audio_controller.keyframe_insert(data_path="rotation_euler", frame=i)
+    aura_audio_controller.keyframe_insert(data_path="scale", frame=i)
+
+    if aura_deform_field is not None:
+        aura_deform_field.location.x = aura_field_base_loc.x + math.sin(
+            i * 0.025
+        ) * AURA_DEFORM_FIELD_DRIFT * (0.35 + mid)
+        aura_deform_field.location.y = aura_field_base_loc.y + math.cos(
+            i * 0.020
+        ) * AURA_DEFORM_FIELD_DRIFT * (0.25 + high)
+        aura_deform_field.location.z = (
+            aura_field_base_loc.z + aura_deform * 0.16 + beat * 0.06
+        )
+        aura_deform_field.rotation_euler.x = aura_field_base_rot.x + i * 0.009 + high * 0.22
+        aura_deform_field.rotation_euler.y = (
+            aura_field_base_rot.y + math.sin(i * 0.031) * 0.20 + onset * 0.08
+        )
+        aura_deform_field.rotation_euler.z = aura_field_base_rot.z + i * 0.013 + low * 0.12
+
+        compact = 1.0 - aura_deform * AURA_DEFORM_FIELD_SCALE * 0.45
+        stretch = 1.0 + aura_deform * AURA_DEFORM_FIELD_SCALE
+        aura_deform_field.scale = (
+            aura_field_base_scale.x * compact,
+            aura_field_base_scale.y * (1.0 + aura_detail * AURA_DEFORM_FIELD_SCALE * 0.45),
+            aura_field_base_scale.z * stretch,
+        )
+        aura_deform_field.keyframe_insert(data_path="location", frame=i)
+        aura_deform_field.keyframe_insert(data_path="rotation_euler", frame=i)
+        aura_deform_field.keyframe_insert(data_path="scale", frame=i)
+
+# LIGHTS
+if lights:
+    for light in lights:
+        try:
+            area_drive = min(1.0, high * 0.006 + mid * 0.006 + low * 0.005 + pulse * 0.004)
+            light.data.energy = LIGHT_ENERGY_MIN + area_drive * (
+                LIGHT_ENERGY_MAX - LIGHT_ENERGY_MIN
+            )
+            light.data.keyframe_insert(data_path="energy", frame=i)
+        except Exception:
+            pass
+
+# COMPOSITOR BREATH
+if deform_keyframe:
+    comp_drive = min(1.0, high * 0.52 + onset * 0.34 + beat * 0.22)
+
+    if compositor_glare is not None:
+        try:
+            compositor_glare.threshold = COMPOSITOR_GLARE_THRESHOLD_MAX - comp_drive * (
+                COMPOSITOR_GLARE_THRESHOLD_MAX - COMPOSITOR_GLARE_THRESHOLD_MIN
+            )
+            keyframe_if_possible(compositor_glare, "threshold", i)
+        except Exception:
+            pass
+
+    if compositor_lens is not None:
+        try:
+            if "Distort" in compositor_lens.inputs:
+                compositor_lens.inputs["Distort"].default_value = (
+                    COMPOSITOR_LENS_DISTORT_MIN
+                    + comp_drive
+                    * (COMPOSITOR_LENS_DISTORT_MAX - COMPOSITOR_LENS_DISTORT_MIN)
+                )
+                keyframe_if_possible(compositor_lens.inputs["Distort"], "default_value", i)
+            if "Dispersion" in compositor_lens.inputs:
+                compositor_lens.inputs["Dispersion"].default_value = (
+                    COMPOSITOR_LENS_DISPERSION_MIN
+                    + comp_drive
+                    * (COMPOSITOR_LENS_DISPERSION_MAX - COMPOSITOR_LENS_DISPERSION_MIN)
+                )
+                keyframe_if_possible(
+                    compositor_lens.inputs["Dispersion"], "default_value", i
+                )
+        except Exception:
+            pass
+
+# FOG
+animate_fog_frame(
+    frame=i,
+    low=low,
+    mid=mid,
+    high=high,
+    onset=onset,
+    beat=beat,
+    pulse=pulse,
+    fog_controller=fog_controller,
+    fog_obj=fog_obj,
+    fog_control=fog_control,
+    fog_base_scale=fog_base_scale,
+    fog_base_loc=fog_base_loc,
+)
+
+# BACKDROP
+if backdrop is not None and backdrop_controls:
+    backdrop_drive = min(0.22, high * 0.035 + mid * 0.025 + pulse * 0.020)
+    if "emission_socket" in backdrop_controls:
+        backdrop_controls["emission_socket"].default_value = (
+            BACKDROP_EMISSION_MIN
+            + backdrop_drive * (BACKDROP_EMISSION_MAX - BACKDROP_EMISSION_MIN)
+        )
+        backdrop_controls["emission_socket"].keyframe_insert(
+            data_path="default_value", frame=i
+        )
+
+    if "mapping_location_socket" in backdrop_controls:
+        bloc = backdrop_controls["mapping_location_socket"].default_value
+        bloc[0] = i * 0.00018 + math.sin(i * 0.006) * 0.012
+        bloc[1] = i * 0.00012 + backdrop_drive * 0.015
+        bloc[2] = 0.0
+        backdrop_controls["mapping_location_socket"].keyframe_insert(
+            data_path="default_value", frame=i
+        )
+
+    if "noise_scale_socket" in backdrop_controls:
+        backdrop_controls["noise_scale_socket"].default_value = 2.18 + backdrop_drive * 0.12
+        backdrop_controls["noise_scale_socket"].keyframe_insert(
+            data_path="default_value", frame=i
+        )
+
+    if backdrop_base_scale is not None and backdrop_base_loc is not None:
+        bscale = 1.0 + backdrop_drive * BACKDROP_BREATHE_SCALE
+        backdrop.scale = (
+            backdrop_base_scale.x * bscale,
+            backdrop_base_scale.y * (1.0 + backdrop_drive * BACKDROP_BREATHE_SCALE * 0.55),
+            backdrop_base_scale.z,
+        )
+        backdrop.location.z = backdrop_base_loc.z + math.sin(i * 0.009) * 0.012
+        backdrop.keyframe_insert(data_path="scale", frame=i)
+        backdrop.keyframe_insert(data_path="location", frame=i)
+
+    if backdrop_control is not None and backdrop_base_loc is not None:
+        backdrop_control.location.x = backdrop_base_loc.x
+        backdrop_control.location.y = backdrop_base_loc.y
+        backdrop_control.location.z = backdrop_base_loc.z + backdrop_drive * 0.012
+        backdrop_control.scale = (
+            1.0 + backdrop_drive * 0.012,
+            1.0 + backdrop_drive * 0.012,
+            1.0,
+        )
+        backdrop_control.keyframe_insert(data_path="location", frame=i)
+        backdrop_control.keyframe_insert(data_path="scale", frame=i)
+
+# MIST
+for item in mist_particles:
+    obj = item["object"]
+    phase = item["phase"]
+    base_loc = item["base_location"]
+    base_scale = item["base_scale"]
+
+    obj.location.x = base_loc.x + math.sin(i * 0.012 + phase) * 0.16
+    obj.location.y = base_loc.y + math.cos(i * 0.010 + phase) * 0.14
+    obj.location.z = (
+        base_loc.z
+        + math.sin(i * 0.015 + phase) * MIST_FLOAT_AMPLITUDE
+        + beat * MIST_BEAT_BOOST
+    )
+    obj.keyframe_insert(data_path="location", frame=i)
+
+    pscale = base_scale + high * 0.02 + pulse * 0.02
+    obj.scale = (pscale, pscale, pscale)
+    obj.keyframe_insert(data_path="scale", frame=i)
+
+    em_val = 0.10 + high * 0.45 + pulse * 0.35
+    mix_val = 0.12 + pulse * 0.08
+
+    item["emission_socket"].default_value = em_val
+    item["emission_socket"].keyframe_insert(data_path="default_value", frame=i)
+
+    item["mix_socket"].default_value = mix_val
+    item["mix_socket"].keyframe_insert(data_path="default_value", frame=i)
+
+# VARIANTS
+for idx, item in enumerate(variants):
+    obj = item["root"]
+    ang = item["angle"]
+    base_loc = item["base_location"]
+    base_scale = item["base_scale"]
+    phase = idx * 0.55
+
+    obj.location.x = base_loc.x + math.sin(i * 0.016 + phase) * 0.20
+    obj.location.y = base_loc.y + math.cos(i * 0.014 + phase) * 0.18
+    obj.location.z = base_loc.z + high * 0.18 + math.sin(i * 0.018 + phase) * 0.04
+
+    sc = base_scale + low * 0.07
+    obj.scale = (sc, sc, sc)
+    obj.rotation_euler.z = ang + math.sin(i * 0.012 + phase) * math.radians(14.0)
+
+    obj.keyframe_insert(data_path="location", frame=i)
+    obj.keyframe_insert(data_path="scale", frame=i)
+    obj.keyframe_insert(data_path="rotation_euler", frame=i)
+
+# RINGS / RIBBONS
+for item in energy_rings:
+    ring = item["object"]
+    phase = item["phase"]
+    base_scale = item["base_scale"]
+    base_rot = item["base_rot"]
+    base_loc = item["base_loc"]
+
+    pulse_scale = 1.0 + low * 0.03 + pulse * 0.02
+    ring.scale = (
+        base_scale.x * pulse_scale,
+        base_scale.y * pulse_scale,
+        base_scale.z * pulse_scale,
+    )
+    ring.location.z = base_loc.z + math.sin(i * 0.009 + phase) * 0.05
+    ring.rotation_euler.z = base_rot.z + i * 0.006 + phase
+
+    ring.keyframe_insert(data_path="scale", frame=i)
+    ring.keyframe_insert(data_path="location", frame=i)
+    ring.keyframe_insert(data_path="rotation_euler", frame=i)
+
+    emit = 0.06 + (pulse * 0.40 + high * 0.60) * 0.70
+    item["emit_socket"].default_value = emit
+    item["emit_socket"].keyframe_insert(data_path="default_value", frame=i)
+
+for item in energy_ribbons:
+    ribbon = item["object"]
+    phase = item["phase"]
+    base_rot = item["base_rot"]
+    base_loc = item["base_loc"]
+    base_scale = item["base_scale"]
+
+    ribbon.location.z = base_loc.z + math.sin(i * 0.008 + phase) * 0.12 + low * 0.03
+    ribbon.scale = (
+        base_scale.x * (1.0 + mid * 0.05),
+        base_scale.y * (1.0 + high * 0.04),
+        base_scale.z,
+    )
+    ribbon.rotation_euler.z = base_rot.z + i * 0.007 + phase * 0.25
+
+    ribbon.keyframe_insert(data_path="location", frame=i)
+    ribbon.keyframe_insert(data_path="scale", frame=i)
+    ribbon.keyframe_insert(data_path="rotation_euler", frame=i)
+
+    emit = 0.08 + (mid * 0.55 + pulse * 0.45) * 0.82
+    item["emit_socket"].default_value = emit
+    item["emit_socket"].keyframe_insert(data_path="default_value", frame=i)
+
+# PHYSICS ACCENTS

@@ -25,7 +25,7 @@ Il post-run vero e' `Tools/ai/run_external_heap_postrun_package.py`.
 Non considerare questo comando una run:
 
 ```powershell
-& $RepoPy .\Tools\ai\build_heap_runtime_launcher_command.py `
+& $RepoPy -m Tools.ai build_heap_runtime_launcher_command `
   --repo-root . `
   --profile balanced_external_heap `
   --request $DebugRequest `
@@ -66,7 +66,7 @@ Regole:
 - se il prodotto non e' accettabile, blocca con reason concreta
 "@
 
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py `
+& $RepoPy -m Tools.ai run_heap_runtime_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --request $DebugRequest `
@@ -88,7 +88,7 @@ Regole:
 Eseguire solo dopo la fine della run:
 
 ```powershell
-& $RepoPy .\Tools\ai\run_external_heap_postrun_package.py `
+& $RepoPy -m Tools.ai run_external_heap_postrun_package `
   --repo-root . `
   --include-rejected-history `
   --include-peer-blocks

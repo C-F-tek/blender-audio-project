@@ -9,7 +9,7 @@ The gateway lets an Ollama model use controlled memory and file-reading tools wi
 ## Added script
 
 ```text
-Tools/ai/ollama_tool_gateway.py
+Tools/ai/ollama_tool_gateway/
 ```
 
 ## Purpose
@@ -53,7 +53,7 @@ no reading DB/SQLite/secret/token/password paths
 ## Basic command
 
 ```powershell
-python .\Tools\ai\ollama_tool_gateway.py `
+python -m Tools.ai ollama_tool_gateway `
   --repo-root . `
   --model qwen3.5:cloud `
   --task "Cerca nel progetto i componenti memoria/tool e riassumi cosa esiste."
@@ -65,7 +65,7 @@ Claude Code can call the gateway as an external command:
 
 ```text
 Esegui questo comando e usa il risultato come contesto:
-python .\Tools\ai\ollama_tool_gateway.py --repo-root . --model qwen3.5:cloud --task "analizza Tools/ai per memoria e file gateway"
+python -m Tools.ai ollama_tool_gateway --repo-root . --model qwen3.5:cloud --task "analizza Tools/ai per memoria e file gateway"
 ```
 
 This avoids depending on Claude Code native tool calling for non-Anthropic or local models.
@@ -83,17 +83,17 @@ These files are local runtime artifacts and must not be committed.
 ## Suggested first task
 
 ```powershell
-python .\Tools\ai\ollama_tool_gateway.py `
+python -m Tools.ai ollama_tool_gateway `
   --repo-root . `
   --model qwen3.5:cloud `
-  --task "Usa file_search e file_read per controllare Tools/ai/agent_runtime_tool_broker.py e Tools/ai/agent_runtime_sqlite_memory.py. Spiega come usarli per dare memoria dinamica a Ollama."
+  --task "Usa file_search e file_read per controllare Tools/ai/agent_runtime_tool_broker.py e python -m Tools.ai agent_runtime_sqlite_memory. Spiega come usarli per dare memoria dinamica a Ollama."
 ```
 
 ## Validation
 
 ```powershell
-python -m py_compile .\Tools\ai\ollama_tool_gateway.py
-python .\Tools\ai\ollama_tool_gateway.py --help
+python -m py_compile .\Tools\ai\ollama_tool_gateway\cli.py -m Tools.ai common
+python -m Tools.ai ollama_tool_gateway --help
 ```
 
 ## Notes

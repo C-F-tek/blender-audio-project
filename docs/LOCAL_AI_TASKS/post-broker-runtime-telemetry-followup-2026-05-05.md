@@ -211,7 +211,7 @@ Patch objective:
 
 Validation:
 
-    python -m py_compile .\Tools\ai\build_runtime_tool_usage_telemetry.py .\Tools\ai\agent_runtime_tool_broker.py
+    python -m py_compile .\Tools\ai\build_runtime_tool_usage_telemetry.py -m Tools.ai agent_runtime_tool_broker
 
     powershell -NoProfile -ExecutionPolicy Bypass -Command '$p=(Resolve-Path ".\Tools\workflow\run_agent_review_full_toolbox_decision_loop.ps1").Path; $t=$null; $e=$null; [System.Management.Automation.Language.Parser]::ParseFile($p,[ref]$t,[ref]$e)|Out-Null; $e'
 

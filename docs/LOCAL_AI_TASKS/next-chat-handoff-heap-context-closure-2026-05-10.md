@@ -296,13 +296,13 @@ Deve usare almeno questi tool già presenti o equivalenti storici di run unica:
 ```text
 Tools/ai/build_agent_agnostic_tool_inventory.py
 Tools/ai/build_agent_memory_inventory.py
-Tools/ai/agent_runtime_sqlite_memory.py
+python -m Tools.ai agent_runtime_sqlite_memory
 Tools/ai/build_agent_transient_request_context.py
 Tools/ai/select_semantic_code_chunks.py
 Tools/ai/build_ai_context_pack.py
 Tools/ai/build_semantic_evidence_chunks.py
 Tools/ai/run_gpu_planner_json_contract_smoke.py
-Tools/ai/agent_runtime_debug_lab.py
+python -m Tools.ai agent_runtime_debug_lab
 ```
 
 La fase startup dovrebbe produrre un manifest unico:
@@ -401,7 +401,7 @@ Dopo pull e py_compile:
 ```powershell
 $ProjectPython = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
-& $ProjectPython .\Tools\ai\run_heap_runtime_context_closure.py `
+& $ProjectPython -m Tools.ai run_heap_runtime_context_closure `
   --repo-root . `
   --python-exe $ProjectPython `
   --budget-minutes 10 `

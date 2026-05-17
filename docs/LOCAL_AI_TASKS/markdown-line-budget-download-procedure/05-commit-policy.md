@@ -23,7 +23,8 @@ Downloads/*.zip
 
 ```powershell
 git add `
-  .\Tools\docs\split_large_markdown.py `
+  .\Tools\docs\_shared\large_markdown_splitter_core.py `
+  .\Tools\docs\_shared\split_large_markdown_cli.py `
   .\Tools\docs\README.md `
   .\Tools\validation\check_markdown_line_limits.py `
   .\docs\LOCAL_AI_TASKS\markdown-line-budget-policy.md

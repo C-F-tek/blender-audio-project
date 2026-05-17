@@ -34,7 +34,7 @@ Current external heap adapters:
 - `Tools/ai/normalize_heap_final_causality.py`
 - `Tools/ai/build_external_heap_block_pointer_manifest.py`
 - `Tools/ai/compose_external_heap_block_response.py`
-- `Tools/ai/build_external_heap_revision_context.py`
+- `python -m Tools.ai build_external_heap_revision_context`
 - `Tools/ai/run_external_heap_postrun_package.py`
 
 The external layer models long AI work as persistent blocks rather than a single provider response window. Blocks may carry navigation and refinement pointers:

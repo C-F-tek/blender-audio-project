@@ -9,7 +9,7 @@ from typing import Any
 try:
     from tools.validation.report_utils import resolve_output_path, write_text_report
 except ImportError:
-    from report_utils import resolve_output_path, write_text_report  # type: ignore
+    from Tools.validation._shared.report_utils import resolve_output_path, write_text_report  # type: ignore
 
 
 def render_guardrails(report: dict[str, Any]) -> list[str]:

@@ -62,8 +62,8 @@ promotion requires evidence, manual review and explicit future command
 
 ```text
 Tools/ai/agent_runtime_tool_broker.py
-Tools/ai/agent_runtime_sqlite_memory.py
-Tools/ai/agent_memory_routing_policy.py
+python -m Tools.ai agent_runtime_sqlite_memory
+python -m Tools.ai agent_memory_routing_policy
 Tools/ai/build_agent_memory_inventory.py
 Tools/ai/build_agent_agnostic_tool_inventory.py
 Tools/ai/build_agent_transient_request_context.py

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Plan and validation notes for integrating `Tools.ai.gpu_planner_json_contract.validate_model_response_contract()` into the real GPU planning runners.
+Plan and validation notes for integrating `Tools.ai._shared.gpu_planner_json_contract.validate_model_response_contract()` into the real GPU planning runners.
 
 Target runners:
 
@@ -26,7 +26,7 @@ It does not run providers and does not write source files.
 ## Command
 
 ```powershell
-python .\Tools\ai\replay_gpu_planner_json_contract.py `
+python -m Tools.ai replay_gpu_planner_json_contract `
   --repo-root . `
   --gpu-report ".\output\ai_pipeline\project_complete_20260502-195523_parallel_gpu.json" `
   --output ".\output\analysis\gpu_json_contract_replay_20260502-195523.json" `

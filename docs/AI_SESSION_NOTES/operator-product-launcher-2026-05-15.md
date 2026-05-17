@@ -17,13 +17,13 @@ The launcher lets the operator choose:
 - final code-product artifact for review/apply.
 
 It does not replace `run_heap_runtime_context_closure.py` or the profile builder.
-It builds on the existing profile file and uses `analyze_code_product_artifact.py`
+It builds on the existing profile file and uses `Tools.ai.code_product_artifact_intake`
 for deterministic review and safe apply.
 
 ## Files
 
 ```text
-Tools/ai/operator_product_launcher_core.py
+Tools/ai/operator_product_core/
 Tools/ai/operator_product_launcher.py
 Tools/validation/run_operator_product_launcher_smoke.py
 ```

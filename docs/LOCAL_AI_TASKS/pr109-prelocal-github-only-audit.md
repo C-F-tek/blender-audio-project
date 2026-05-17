@@ -36,11 +36,11 @@ no merge to master from GitHub-only audit
 ## GitHub-only work completed before this note
 
 - Split GitHub evidence bundle logic into dedicated modules:
-  - `Tools/ai/github_evidence_bundle_io.py`
-  - `Tools/ai/github_evidence_bundle_artifacts.py`
-  - `Tools/ai/github_evidence_bundle_reports.py`
-  - `Tools/ai/github_evidence_bundle_decisions.py`
-  - `Tools/ai/github_evidence_bundle_markdown.py`
+  - `Tools/ai/_shared/github_evidence_bundle_io.py`
+  - `Tools/ai/_shared/github_evidence_bundle_artifacts.py`
+  - `Tools/ai/_shared/github_evidence_bundle_reports.py`
+  - `Tools/ai/_shared/github_evidence_bundle_decisions.py`
+  - `Tools/ai/_shared/github_evidence_bundle_markdown.py`
 - Added `Tools/ai/github_evidence_bundle_build_github_evidence_bundle_ready.py` as replacement-ready orchestrator.
 - Refactored decision helpers and Markdown renderer into smaller functions.
 - Reused promoted helpers across validation and code proposal tooling where safe.
@@ -74,13 +74,13 @@ Compile the files touched by GitHub-only refactors:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\github_evidence_bundle_io.py `
-  .\Tools\ai\github_evidence_bundle_artifacts.py `
-  .\Tools\ai\github_evidence_bundle_reports.py `
-  .\Tools\ai\github_evidence_bundle_decisions.py `
-  .\Tools\ai\github_evidence_bundle_markdown.py `
+  .\Tools\ai\_shared\github_evidence_bundle_io.py `
+  .\Tools\ai\_shared\github_evidence_bundle_artifacts.py `
+  .\Tools\ai\_shared\github_evidence_bundle_reports.py `
+  .\Tools\ai\_shared\github_evidence_bundle_decisions.py `
+  .\Tools\ai\_shared\github_evidence_bundle_markdown.py `
   .\Tools\ai\github_evidence_bundle_build_github_evidence_bundle_ready.py `
-  .\Tools\ai\code_edit_proposal_helpers.py `
+  .\Tools\ai\_shared\code_edit_proposal_helpers.py `
   .\Tools\ai\build_code_interpreter_report.py `
   .\Tools\validation\check_github_evidence_bundle.py
 ```
@@ -99,18 +99,18 @@ python -m py_compile .\Tools\ai\build_github_evidence_bundle.py
 ## Focused validation after wiring
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py `
+python -m Tools.validation check_python_syntax `
   --repo-root . `
   --output .\output\validation\python_syntax_pr109_after_wiring.json
 
-python .\Tools\ai\build_code_interpreter_report.py `
+python -m Tools.ai build_code_interpreter_report `
   --repo-root . `
   --input Tools/ai `
   --input Tools/validation `
   --output .\output\analysis\code_interpreter_report_pr109_after_wiring.json `
   --markdown-output .\output\analysis\code_interpreter_report_pr109_after_wiring.md
 
-python .\Tools\validation\check_github_evidence_bundle.py `
+python -m Tools.validation check_github_evidence_bundle `
   --repo-root . `
   --output .\output\validation\github_evidence_bundle_pr109_after_wiring.json
 ```
@@ -126,7 +126,7 @@ $Reports = @(
   ".\output\validation\github_evidence_bundle_pr109_after_wiring.json"
 ) | Where-Object { Test-Path $_ }
 
-python .\Tools\ai\build_github_evidence_bundle.py `
+python -m Tools.ai build_github_evidence_bundle `
   --repo-root . `
   --basename pr109_after_wiring_bundle_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
@@ -137,7 +137,7 @@ python .\Tools\ai\build_github_evidence_bundle.py `
   --max-included-artifact-chars 12000 `
   --max-included-artifacts 80
 
-python .\Tools\validation\check_github_evidence_bundle.py `
+python -m Tools.validation check_github_evidence_bundle `
   --repo-root . `
   --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\pr109_after_wiring_bundle_$Stamp.json" `
   --output ".\output\validation\pr109_after_wiring_bundle_${Stamp}_validation.json"
@@ -242,22 +242,22 @@ git status --short
 git diff --check
 
 # 3. Compile refactored entry points
-python -m py_compile .\Tools\ai\github_evidence_bundle_build_github_evidence_bundle_ready.py .\Tools\ai\github_evidence_bundle_io.py .\Tools\ai\github_evidence_bundle_artifacts.py .\Tools\ai\github_evidence_bundle_reports.py .\Tools\ai\github_evidence_bundle_decisions.py .\Tools\ai\github_evidence_bundle_markdown.py .\Tools\ai\code_edit_proposal_helpers.py .\Tools\ai\build_code_interpreter_report.py .\Tools\ai\build_analysis_input_bundle.py .\Tools\validation\check_github_evidence_bundle.py
+python -m py_compile .\Tools\ai\github_evidence_bundle_build_github_evidence_bundle_ready.py -m Tools.ai github_evidence_bundle_io .\Tools\ai\_shared\github_evidence_bundle_artifacts.py -m Tools.ai github_evidence_bundle_reports .\Tools\ai\_shared\github_evidence_bundle_decisions.py -m Tools.ai github_evidence_bundle_markdown .\Tools\ai\_shared\code_edit_proposal_helpers.py -m Tools.ai build_code_interpreter_report .\Tools\ai\build_analysis_input_bundle.py -m Tools.validation check_github_evidence_bundle
 
 # 4. Wire replacement-ready orchestrator locally
-Copy-Item .\Tools\ai\github_evidence_bundle_build_github_evidence_bundle_ready.py .\Tools\ai\build_github_evidence_bundle.py -Force
+Copy-Item .\Tools\ai\github_evidence_bundle_build_github_evidence_bundle_ready.py -m Tools.ai build_github_evidence_bundle -Force
 
 # 5. Compile wired orchestrator
 python -m py_compile .\Tools\ai\build_github_evidence_bundle.py
 
 # 6. Run focused syntax validation
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax_pr109_after_wiring.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax_pr109_after_wiring.json
 
 # 7. Rebuild focused static report
-python .\Tools\ai\build_code_interpreter_report.py --repo-root . --input Tools/ai --input Tools/validation --output .\output\analysis\code_interpreter_report_pr109_after_wiring.json --markdown-output .\output\analysis\code_interpreter_report_pr109_after_wiring.md
+python -m Tools.ai build_code_interpreter_report --repo-root . --input Tools/ai --input Tools/validation --output .\output\analysis\code_interpreter_report_pr109_after_wiring.json --markdown-output .\output\analysis\code_interpreter_report_pr109_after_wiring.md
 
 # 8. Build and validate fresh compact bundle
-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"; $Reports = @(".\output\validation\python_syntax_pr109_after_wiring.json", ".\output\analysis\code_interpreter_report_pr109_after_wiring.json") | Where-Object { Test-Path $_ }; python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename pr109_after_wiring_bundle_$Stamp --output-dir docs/LOCAL_VALIDATION_EVIDENCE --report ($Reports -join ',') --artifact .\output\analysis\code_interpreter_report_pr109_after_wiring.md --artifact .\docs\LOCAL_AI_TASKS\pr109-prelocal-github-only-audit.md --max-included-artifact-chars 12000 --max-included-artifacts 80; python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\pr109_after_wiring_bundle_$Stamp.json" --output ".\output\validation\pr109_after_wiring_bundle_${Stamp}_validation.json"
+$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"; $Reports = @(".\output\validation\python_syntax_pr109_after_wiring.json", ".\output\analysis\code_interpreter_report_pr109_after_wiring.json") | Where-Object { Test-Path $_ }; python -m Tools.ai build_github_evidence_bundle --repo-root . --basename pr109_after_wiring_bundle_$Stamp --output-dir docs/LOCAL_VALIDATION_EVIDENCE --report ($Reports -join ',') --artifact .\output\analysis\code_interpreter_report_pr109_after_wiring.md --artifact .\docs\LOCAL_AI_TASKS\pr109-prelocal-github-only-audit.md --max-included-artifact-chars 12000 --max-included-artifacts 80; python -m Tools.validation check_github_evidence_bundle --repo-root . --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\pr109_after_wiring_bundle_$Stamp.json" --output ".\output\validation\pr109_after_wiring_bundle_${Stamp}_validation.json"
 
 # 9. Stage only source wiring and compact evidence
 git status --short
@@ -303,11 +303,11 @@ Tools/ai/enrich_github_evidence_bundle_code_plan.py — 231 additions
 docs/LOCAL_AI_TASKS/build-analysis-input-bundle.md — 230 additions
 Tools/validation/build_python_line_count_csv.py — 225 additions
 docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md — growing runbook; keep edits append-only
-Tools/ai/artifact_domain_registry.py — 217 additions
-Tools/ai/code_patch_plan_common.py — 216 additions
-Tools/ai/github_evidence_bundle_reports.py — 211 additions
-Tools/ai/github_evidence_bundle_markdown.py — 209 additions
+Tools/ai/_shared/artifact_domain_registry.py — 217 additions
+Tools/ai/_shared/code_patch_plan_common.py — 216 additions
+Tools/ai/_shared/github_evidence_bundle_reports.py — 211 additions
+Tools/ai/_shared/github_evidence_bundle_markdown.py — 209 additions
 Tools/validation/run_code_edit_proposal_smoke.py — 203 additions
 Tools/validation/run_agent_review_code_patch_plan_smoke.py — 201 additions
-Tools/ai/code_edit_proposal_helpers.py — 201 additions
+Tools/ai/_shared/code_edit_proposal_helpers.py — 201 additions
 ```

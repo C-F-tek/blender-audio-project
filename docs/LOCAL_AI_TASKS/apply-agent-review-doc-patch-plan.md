@@ -17,7 +17,7 @@ output/patch_specs/agent_review_patch_plan.md
 If `output/patch_specs/agent_review_patch_plan.*` is missing, regenerate it with:
 
 ```powershell
-python .\Tools\ai\build_agent_review_patch_plan.py `
+python -m Tools.ai build_agent_review_patch_plan `
   --repo-root . `
   --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `
@@ -98,7 +98,7 @@ Do not merge to master.
 Run this canonical command after edits. It runs the patch-plan smoke check, docs links, Python syntax, validation report contract, compact GitHub evidence bundle build, evidence bundle validation, `git diff --check` and `git status --short`.
 
 ```powershell
-python .\Tools\validation\run_agent_review_patch_plan_full_validation.py `
+python -m Tools.validation run_agent_review_patch_plan_full_validation `
   --repo-root . `
   --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `

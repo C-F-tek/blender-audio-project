@@ -151,7 +151,7 @@ $env:PYTHONPATH = (Resolve-Path .).Path
 Dopo una run reale heap:
 
 ```powershell
-& $RepoPy .\Tools\ai\run_external_heap_postrun_package.py `
+& $RepoPy -m Tools.ai run_external_heap_postrun_package `
   --repo-root . `
   --include-rejected-history `
   --include-peer-blocks
@@ -188,7 +188,7 @@ run_dir_selection_policy : latest_complete_heap_context_closure_with_composer_js
 Controllo command builder:
 
 ```powershell
-& $RepoPy .\Tools\ai\build_heap_runtime_launcher_command.py `
+& $RepoPy -m Tools.ai build_heap_runtime_launcher_command `
   --repo-root . `
   --profile balanced_external_heap `
   --include-postrun-package-command `
@@ -216,7 +216,7 @@ revision_context_selection_policy : latest_complete_heap_context_closure_with_co
 Smoke:
 
 ```powershell
-& $RepoPy .\Tools\validation\run_heap_runtime_launcher_command_smoke.py `
+& $RepoPy -m Tools.validation run_heap_runtime_launcher_command_smoke `
   --repo-root . `
   --output .\output\validation\heap_runtime_launcher_command_smoke.json `
   --markdown-output .\output\validation\heap_runtime_launcher_command_smoke.md

@@ -40,11 +40,11 @@ Tools/ai/run_heap_runtime_context_closure.py
 Tools/ai/run_heap_runtime_completeness_gate.py
 Tools/ai/agent_runtime_tool_broker.py
 Tools/ai/run_heap_code_execution_tool.py
-Tools/ai/heap_code_execution_tool_core.py
-Tools/ai/heap_final_code_product.py
-Tools/ai/heap_final_readable_synthesis.py
+Tools/ai/_shared/heap_code_execution_tool_core.py
+Tools/ai/_shared/heap_final_code_product.py
+Tools/ai/_shared/heap_final_readable_synthesis.py
 Tools/ai/compose_heap_final_proposals.py
-Tools/ai/heap_proposal_gate.py
+Tools/ai/_shared/heap_proposal_gate.py
 Tools/validation/run_heap_code_execution_tool_smoke.py
 Tools/validation/test_proposal_gate.py
 ```

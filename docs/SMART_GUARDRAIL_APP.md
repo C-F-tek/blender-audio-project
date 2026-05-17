@@ -18,8 +18,8 @@ It acts as a lightweight control app around the workflow:
 
 `Tools/ai/review_wave_entrypoints.py` reviews:
 
-- `analyze_wav.py`;
-- `build_track_summary.py`.
+- `Tools/workflow/audio_analysis/analyze_cli.py`;
+- `Tools/workflow/audio_analysis/summary_cli.py`.
 
 It emits:
 
@@ -72,7 +72,7 @@ Python/code fixes are intentionally not auto-applied. They remain reviewable req
 ## Recommended command
 
 ```powershell
-py .\Tools\ai\run_parallel_artifact_pipeline.py `
+py -m Tools.ai run_parallel_artifact_pipeline `
   --repo-root . `
   --analysis-json .\output\Feel_The_Light_analysis.json `
   --track-stem "Feel The Light" `

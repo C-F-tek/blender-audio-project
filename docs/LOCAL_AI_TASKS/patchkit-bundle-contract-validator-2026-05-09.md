@@ -87,7 +87,7 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
 
-& $RepoPy .\Tools\validation\check_patchkit_bundle_contract.py `
+& $RepoPy -m Tools.validation check_patchkit_bundle_contract `
   --repo-root . `
   --bundle .\patch_specs\repo_hygiene_cleanup\bundle.json `
   --output output\validation\repo_hygiene_patchkit_bundle_contract.json `
@@ -101,7 +101,7 @@ $env:PYTHONPATH = (Resolve-Path .).Path
   .\Tools\validation\check_patchkit_bundle_contract.py `
   .\Tools\validation\run_patchkit_bundle_contract_smoke.py
 
-& $RepoPy .\Tools\validation\run_patchkit_bundle_contract_smoke.py --repo-root .
+& $RepoPy -m Tools.validation run_patchkit_bundle_contract_smoke --repo-root .
 
 git diff --check
 ```

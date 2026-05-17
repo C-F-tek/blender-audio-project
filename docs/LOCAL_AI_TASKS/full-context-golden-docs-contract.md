@@ -128,7 +128,7 @@ full analysis JSON files
 Validate this contract with:
 
 ```powershell
-python .\Tools\validation\check_full_context_golden_docs_contract.py `
+python -m Tools.validation check_full_context_golden_docs_contract `
   --repo-root . `
   --output .\output\validation\full_context_golden_docs_contract.json
 ```
@@ -136,10 +136,10 @@ python .\Tools\validation\check_full_context_golden_docs_contract.py `
 Recommended local validation block for P3 changes:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\validation\check_full_context_golden_docs_contract.py --repo-root . --output .\output\validation\full_context_golden_docs_contract.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.validation check_full_context_golden_docs_contract --repo-root . --output .\output\validation\full_context_golden_docs_contract.json
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 git diff --check
 ```
 

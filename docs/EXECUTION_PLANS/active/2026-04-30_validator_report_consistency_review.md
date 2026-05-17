@@ -32,13 +32,13 @@ warnings where applicable
 | `check_generated_artifact_path_policy.py` | expected | expected | expected | expected | expected | expected | Confirm in local/source review before code change. |
 | `check_generated_blender_script_policy.py` | expected | expected | expected | expected | expected | expected | Should remain composed over generic Python policy. |
 | `check_ai_dry_run_matrix_contract.py` | expected | expected | expected | expected | expected | expected | Contract validator should preserve forward compatibility. |
-| `check_agent_memory_policy.py` | expected | expected | expected | expected | not confirmed | not confirmed | Requires source review before alignment. |
+| `check_agent_memory/policy.py` | expected | expected | expected | expected | not confirmed | not confirmed | Requires source review before alignment. |
 
 ## Implemented in PR #34
 
 | Item | Scope | Runtime impact | Validation required locally |
 |---|---|---|---|
-| `Tools/validation/report_utils.py` | Shared JSON report helpers for output resolution, JSON serialization and compact root error/warning messages. | None | Python syntax validation. |
+| `Tools/validation/_shared/report_utils.py` | Shared JSON report helpers for output resolution, JSON serialization and compact root error/warning messages. | None | Python syntax validation. |
 | `check_python_syntax.py` root fields | Added `kind: python_syntax`; added root `errors`; reused shared output writer. | None | `check_python_syntax.py`. |
 | `check_json_artifacts.py` root fields | Added `kind: json_artifacts`; added root `errors`; reused shared output writer. | None | `check_json_artifacts.py`. |
 | `check_package_structure.py` root fields | Added `kind: package_structure`; added root `errors` and `warnings`; warnings remain non-blocking unless `--strict`. | None | `check_package_structure.py` with and without `--strict`. |

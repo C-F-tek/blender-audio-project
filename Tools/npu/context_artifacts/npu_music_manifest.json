@@ -1,0 +1,703 @@
+{
+  "created_at": "2026-04-28T23:07:49",
+  "root": "C:\\Users\\carmi\\blender\\blender-audio-project",
+  "analysis_json": "output/LLL-Luca Vera_Master_analysis.json",
+  "blender_keyframes_json": "output/LLL-Luca Vera_Master_analysis_blender_keyframes.json",
+  "analysis_ai_context_json": "output/LLL-Luca Vera_Master_analysis_ai_context.json",
+  "track_summary_json": "output/LLL-Luca Vera_Master_track_summary.json",
+  "compact_json": "output/LLL-Luca Vera_Master_music_context.json",
+  "ai_memory_context": {
+    "format": "SPAZIOTEMPO_AI_MEMORY_CONTEXT_V1",
+    "track_stem": "LLL-Luca Vera_Master",
+    "scene_brief_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_scene_brief.json",
+    "asset_inventory_json": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\spaziotempo_asset_inventory.json",
+    "has_scene_brief": true,
+    "scene_preferences": {
+      "creative_intent": "cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+      "hero_object": "sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+      "background": "azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+      "fog": "filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+      "particles_orbits": "orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+      "materials_lights": "materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+      "camera_motion": "movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+      "avoid": "placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+      "render_target": "test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+      "free_notes": "esplodi la tua brillante su questa scena blender dove alla fine uscira un capolarovoro! voglio due sfere che si comportano in maniera opposta come fossero ying yang"
+    },
+    "conversation_memory": {
+      "updated_at": "2026-04-28T23:07:07",
+      "memory_version": 4,
+      "message_count": 4,
+      "preference_summary": [
+        "creative_intent: cinematica, audio-reactive, materia luminosa, spazio profondo non troppo nero",
+        "hero_object: sfera/aura viva con deformazione mesh completa su tutti i keyframe audio",
+        "background: azzurro/verde sfumato coerente con cover, niente nero piatto, niente linee/pannelli visibili",
+        "fog: filamenti o banchi morbidi tipo fumo, visibili ma leggeri, compressi/decompressi dal suono",
+        "particles_orbits: orbite attorno al centro come atomo musicale, mini-satelliti, emissione sugli oggetti fisici esistenti",
+        "materials_lights: materia + emissione fusi, luce generale stabile, no strobo forte, accenti su oggetti secondari",
+        "camera_motion: movimento lento e musicale, micro pressione sui beat, niente scatti aggressivi",
+        "avoid: placeholder, scena vuota, oggetti importati brutti, nero dominante, nebbia squadrettata, perdita di keyframe",
+        "render_target: test veloce con NPU spenta, qualita alta ma evitando volumi pesanti e luci globali variabili",
+        "free_notes: esplodi la tua brillante su questa scena blender dove alla fine uscira un capolarovoro! voglio due sfere che si comportano in maniera opposta come fossero ying yang"
+      ],
+      "recent_user_requests": [
+        "esplodi la tua brillante su questa scena blender dove alla fine uscira un capolarovoro!",
+        "voglio due sfere che si comportano in maniera opposta come fossero ying yang"
+      ],
+      "recent_user_questions": [],
+      "recent_assistant_notes": [
+        "**Nota del regista tecnico – Blender Spaziotempo (LLL‑Luca Vera)** 1. **Animazione hero (sfera/aura)** - Utilizzare *analysis_blender_keyframes.json* per impostare la deformazione mesh su **tutti i frame** (5905). - Mappare l’intensità di *low‑mid‑high* a *scale* e *vertex‑gro...",
+        "**Nota del regista tecnico – Blender Spaziotempo (LLL‑Luca Vera)** 1. **Animazione “ball‑centric” con tutti i key‑frames** - Utilizzare l’intero array di frame presente in `blender_keyframes_json` (5905 frame) come base per la deformazione dei due asset “ball”. - Mappare **low..."
+      ],
+      "durable_constraints": [
+        "esplodi la tua brillante su questa scena blender dove alla fine uscira un capolarovoro!"
+      ],
+      "asset_mentions": [
+        "ball",
+        "indexai",
+        "manual",
+        "primary_ball_asset"
+      ],
+      "memory_policy": "Compact director memory. Full files are used by generation pipeline, not by chat prompt."
+    },
+    "recent_user_requests": [
+      "esplodi la tua brillante su questa scena blender dove alla fine uscira un capolarovoro!",
+      "voglio due sfere che si comportano in maniera opposta come fossero ying yang"
+    ],
+    "durable_constraints": [
+      "esplodi la tua brillante su questa scena blender dove alla fine uscira un capolarovoro!"
+    ],
+    "asset_memory": {
+      "asset_count": 8,
+      "primary_assets": [
+        {
+          "role": "primary_ball_asset",
+          "name": "ball",
+          "path": "C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+          "type": ".fbx"
+        },
+        {
+          "role": "primary_ball_asset",
+          "name": "ball",
+          "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\assets\\ball\\source\\ball.fbx",
+          "type": ".fbx"
+        },
+        {
+          "role": "animated_effect_asset",
+          "name": "Animated effect",
+          "path": "C:\\Users\\carmi\\blender\\assets\\animated-effect\\source\\Animated effect.blend",
+          "type": ".blend"
+        },
+        {
+          "role": "animated_effect_asset",
+          "name": "Animated effect",
+          "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\assets\\animated-effect\\source\\Animated effect.blend",
+          "type": ".blend"
+        },
+        {
+          "role": "blend_scene_reference",
+          "name": "First good",
+          "path": "C:\\Users\\carmi\\blender\\First good.blend",
+          "type": ".blend"
+        },
+        {
+          "role": "blend_scene_reference",
+          "name": "second good",
+          "path": "C:\\Users\\carmi\\blender\\second good.blend",
+          "type": ".blend"
+        }
+      ],
+      "notes": [
+        "Use primary_ball_asset as known existing ball/hero asset when the scene director asks for ball or dual focus.",
+        "Do not assume imported .blend files are available inside the current Blender scene; import/link explicitly in generated scripts."
+      ]
+    },
+    "project_awareness": {
+      "format": "SPAZIOTEMPO_PROJECT_AWARENESS_V1",
+      "generated_at": "2026-04-28T23:06:59",
+      "track_identity": {
+        "track_stem": "LLL-Luca Vera_Master",
+        "title": "LLL",
+        "artist": "Luca Vera",
+        "identity_source": "current workflow WAV filename/session",
+        "external_metadata_allowed": false
+      },
+      "pipeline_state": {
+        "audio_already_loaded_by_pipeline": true,
+        "wav_analysis_ready": true,
+        "music_context_ready": true,
+        "project_index_ready": true,
+        "manual_index_ready": true,
+        "service_packet_ready": true,
+        "scene_brief_ready": true,
+        "can_generate_scene_script": true,
+        "segment_count": 13
+      },
+      "npu_context": {
+        "preflight_ready": false,
+        "available_devices": [],
+        "can_delegate_uncertainty": false,
+        "fallback": "If NPU is not ready, use deterministic project awareness and existing chunks instead of pretending uncertainty."
+      },
+      "verified_answers": [
+        {
+          "question": "Di che brano stiamo parlando?",
+          "answer": "Il brano corrente e `LLL` di `Luca Vera`. Non usare titoli/artisti esterni non presenti nei file del progetto.",
+          "evidence": {
+            "track_stem": "LLL-Luca Vera_Master",
+            "title": "LLL",
+            "artist": "Luca Vera",
+            "identity_source": "current workflow WAV filename/session",
+            "external_metadata_allowed": false
+          }
+        },
+        {
+          "question": "Cosa pensi della traccia del progetto?",
+          "answer": "Parlo del brano del progetto, `LLL - Luca Vera`, non di metadati esterni.\nDai JSON lo leggo come una traccia con 13 segmenti compatti e BPM stimato 99.38.\nL'apertura sembra guidata da banda `mid` con intensita `low`, mentre la coda arriva su `low` / `quiet`.\nDa art direction lo tratterei come un brano da doppio fulcro: due `primary_ball_asset` centrali in controfase, uno piu materico e uno piu luminoso, usando tutti i frame del `blender_keyframes_json`.\nI punti da far respirare visivamente sono: segmento 8 (112.0-128.0s, mid, medium); segmento 7 (96.0-112.0s, mid, medium); segmento 11 (160.0-176.0s, mid, medium).\nQuindi: niente narrativa generica da canzone pop; qui conviene costruire una scena audio-reactive precisa, con deformazioni mesh e materiali che seguono low/mid/high/onset/beat.",
+          "evidence": {
+            "duration_sec": 196.80009070294784,
+            "fps": 30.0,
+            "bpm": 99.38401442307692,
+            "segment_count": 13,
+            "first_segment": {
+              "dominant_band": "mid",
+              "intensity": "low",
+              "controls": {
+                "primary_band": "mid",
+                "intensity": "low",
+                "hero_deformation": 0.43,
+                "material_shimmer": 0.4511,
+                "fog_motion": 0.1286,
+                "accent_emission": 0.4734,
+                "camera_pressure": 0.2217
+              }
+            },
+            "last_segment": {
+              "dominant_band": "low",
+              "intensity": "quiet",
+              "controls": {
+                "primary_band": "low",
+                "intensity": "quiet",
+                "hero_deformation": 0.0027,
+                "material_shimmer": 0.0,
+                "fog_motion": 0.0,
+                "accent_emission": 0.0,
+                "camera_pressure": 0.0094
+              }
+            },
+            "top_energy_segments": [
+              {
+                "index": 8,
+                "start_sec": 112.0,
+                "end_sec": 128.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.4406,
+                "intensity": "medium"
+              },
+              {
+                "index": 7,
+                "start_sec": 96.0,
+                "end_sec": 112.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.4275,
+                "intensity": "medium"
+              },
+              {
+                "index": 11,
+                "start_sec": 160.0,
+                "end_sec": 176.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.4124,
+                "intensity": "medium"
+              },
+              {
+                "index": 10,
+                "start_sec": 144.0,
+                "end_sec": 160.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.4029,
+                "intensity": "medium"
+              },
+              {
+                "index": 9,
+                "start_sec": 128.0,
+                "end_sec": 144.0,
+                "dominant_band": "mid",
+                "intensity_score": 0.3993,
+                "intensity": "medium"
+              }
+            ]
+          }
+        },
+        {
+          "question": "Abbiamo qualcosa che puo essere usata sui keyframe dell'audio?",
+          "answer": "Si. Usa `blender_keyframes_json`: contiene il JSON frame-by-frame completo con `frames` per low/mid/high/onset/beat. `music_context_json` e i segmenti servono solo per decisioni macro.",
+          "evidence": {
+            "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_analysis_blender_keyframes.json",
+            "exists": true,
+            "bytes": 1205564,
+            "updated": "2026-04-28T23:03:28"
+          }
+        },
+        {
+          "question": "Serve importare manualmente il WAV in Blender?",
+          "answer": "No. Il WAV e gia rappresentato dai JSON `analysis_json`, `music_context_json` e `blender_keyframes_json`. La chat deve parlare di pipeline/script, non di import audio manuale.",
+          "evidence": {
+            "audio_already_loaded_by_pipeline": true,
+            "analysis_json": {
+              "path": "C:\\Users\\carmi\\blender\\blender-audio-project\\output\\LLL-Luca Vera_Master_analysis.json",
+              "exists": true,
+              "bytes": 1205564,
+              "updated": "2026-04-28T23:02:13"
+            }
+          }
+        },
+        {
+          "question": "Quale asset va usato quando l'utente dice ball?",
+          "answer": "Usa `primary_ball_asset`: C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+          "evidence": {
+            "role": "primary_ball_asset",
+            "name": "ball",
+            "path": "C:\\Users\\carmi\\blender\\assets\\ball\\source\\ball.fbx",
+            "type": ".fbx"
+          }
+        },
+        {
+          "question": "La pipeline e pronta per generare lo script scena?",
+          "answer": "Si: analisi, music context, project index, manual index, service packet e scene brief risultano pronti.",
+          "evidence": {
+            "audio_already_loaded_by_pipeline": true,
+            "wav_analysis_ready": true,
+            "music_context_ready": true,
+            "project_index_ready": true,
+            "manual_index_ready": true,
+            "service_packet_ready": true,
+            "scene_brief_ready": true,
+            "can_generate_scene_script": true,
+            "segment_count": 13
+          }
+        },
+        {
+          "question": "Quanti segmenti musicali compatti sono disponibili?",
+          "answer": "Sono disponibili 13 segmenti compatti.",
+          "evidence": {
+            "segment_count": 13
+          }
+        }
+      ],
+      "director_rules": [
+        "Never suggest manually importing audio into Blender; the WAV is already represented by analysis/music/keyframe JSON.",
+        "Never suggest opening Blender as the next generic step; the user decides when to run Blender.",
+        "Do not suggest rebuilding from scratch if technical files already exist.",
+        "When technical files exist, refer to the pipeline action: scene brief, dual AI plan, scene script draft, hot update, or review generated script.",
+        "Use project asset roles. If user says ball, prefer primary_ball_asset.",
+        "Full analysis_blender_keyframes JSON is authoritative and must not be summarized away.",
+        "If unsure, say which technical file/chunk should be checked, not generic Blender advice."
+      ],
+      "missing_or_suspicious": [
+        "npu_preflight"
+      ]
+    },
+    "operating_rules": [
+      "Use this memory as interpretation context for AI outputs, never to alter numeric audio analysis.",
+      "Respect user corrections over generic defaults.",
+      "If the user mentions ball, prefer asset role primary_ball_asset.",
+      "Full analysis_blender_keyframes frames must remain complete and authoritative.",
+      "For two central ball objects, use counterphase animation and inverted audio mapping.",
+      "Do not suggest manual Blender/audio import steps already handled by the project pipeline."
+    ]
+  },
+  "context_md": "Tools/npu/context_artifacts/npu_music_context.md",
+  "chunk_dir": "Tools/npu/npu_music_chunks",
+  "chunk_count": 19,
+  "segment_seconds": 16.0,
+  "segment_count": 13,
+  "scene_files": [
+    {
+      "file": "scene_spec_album_driven.json",
+      "chars": 1775,
+      "lines": 76,
+      "sha256": "4c65268928e2562850baa27cc07d6081babcd9f1dea0e32016467b5828155baf",
+      "summary": {
+        "file": "scene_spec_album_driven.json",
+        "type": "json",
+        "keys": [
+          "audio_mapping",
+          "camera_style",
+          "environment",
+          "hero_object",
+          "lighting_style",
+          "objects",
+          "palette",
+          "scene_name",
+          "style_mode",
+          "visual_concept"
+        ],
+        "scene_name": ". .",
+        "visual_concept": ".",
+        "style_mode": "stylized_cinematic_abstract",
+        "environment": "reflective_void_stage",
+        "lighting_style": "soft_volumetric_glow",
+        "palette": [
+          "deep_blue",
+          "muted_gold",
+          "soft_white",
+          "soft_white",
+          "midnight_black"
+        ],
+        "camera": {
+          "mood": "intimate",
+          "movement": "gentle_push",
+          "lens": 100,
+          "angle_bias": "slightly_top"
+        },
+        "objects_count": 3,
+        "materials_count": 0,
+        "audio_mapping_count": 6,
+        "node_animation_count": 0,
+        "object_names": [
+          "reflective_void_stage",
+          "luminous_arches",
+          "floating_centerpiece"
+        ],
+        "audio_targets": [
+          "reflective_void_stage:intensity:low",
+          "reflective_void_stage:intensity:mid",
+          "reflective_void_stage:intensity:high",
+          "floating_centerpiece:intensity:low",
+          "floating_centerpiece:intensity:mid",
+          "floating_centerpiece:intensity:high"
+        ]
+      }
+    },
+    {
+      "file": "scene_spec_album_driven_normalized.json",
+      "chars": 7341,
+      "lines": 325,
+      "sha256": "ad7b9afbf649af9a06f1c1dae92c685d2982e9be24a648944c4c818627d95dc7",
+      "summary": {
+        "file": "scene_spec_album_driven_normalized.json",
+        "type": "json",
+        "keys": [
+          "audio_mapping",
+          "camera_style",
+          "environment",
+          "hero_object",
+          "lighting_style",
+          "materials",
+          "node_animation",
+          "objects",
+          "optimization",
+          "palette",
+          "render_strategy",
+          "scene_name",
+          "style_mode",
+          "visual_concept"
+        ],
+        "scene_name": ". .",
+        "visual_concept": "Cinematic abstract soul architecture",
+        "style_mode": "stylized_cinematic_abstract",
+        "environment": "reflective_void_stage",
+        "lighting_style": "soft_volumetric_glow",
+        "palette": [
+          "#1F3A5F",
+          "#B08D57",
+          "#F2F0E8",
+          "#0B0D12"
+        ],
+        "camera": {
+          "mood": "intimate",
+          "movement": "gentle_push",
+          "lens": 65.0,
+          "angle_bias": "slightly_top",
+          "location": [
+            0.0,
+            -9.2,
+            3.4
+          ],
+          "rotation_degrees": [
+            72.0,
+            0.0,
+            0.0
+          ]
+        },
+        "objects_count": 5,
+        "materials_count": 5,
+        "audio_mapping_count": 6,
+        "node_animation_count": 7,
+        "object_names": [
+          "hero_core",
+          "light_architecture",
+          "reflective_floor",
+          "floating_lights",
+          "volumetric_shell"
+        ],
+        "audio_targets": [
+          "hero_core:scale:low",
+          "hero_core:rotation:mid",
+          "light_architecture:rotation:mid",
+          "light_architecture:emission:high",
+          "floating_lights:intensity:high",
+          "camera:pulse:beat"
+        ]
+      }
+    },
+    {
+      "file": "scene_spec_album_driven_raw.txt",
+      "chars": 1319,
+      "lines": 1,
+      "sha256": "661f73c43add339a50e542f7e65c23199a29b167163a1453edbc7114b2819f7e",
+      "summary": {
+        "file": "scene_spec_album_driven_raw.txt",
+        "type": "text",
+        "chars": 1319,
+        "lines": 1
+      }
+    },
+    {
+      "file": "scene_spec_from_npu.json",
+      "chars": 993,
+      "lines": 65,
+      "sha256": "c4f28325c5249aa6f434707884d3d97766f45d7768d0e067f649253ad26baf69",
+      "summary": {
+        "file": "scene_spec_from_npu.json",
+        "type": "json",
+        "keys": [
+          "audio_mapping",
+          "camera",
+          "objects",
+          "palette",
+          "scene_name"
+        ],
+        "scene_name": ".",
+        "visual_concept": null,
+        "style_mode": null,
+        "environment": null,
+        "lighting_style": null,
+        "palette": [
+          "#20354D",
+          "#38215A",
+          "#4D2A37"
+        ],
+        "camera": {
+          "location": [
+            16,
+            16,
+            16
+          ],
+          "rotation": [
+            0,
+            540,
+            360
+          ],
+          "lens": 455
+        },
+        "objects_count": 2,
+        "materials_count": 0,
+        "audio_mapping_count": 4,
+        "node_animation_count": 0,
+        "object_names": [
+          "central_sphere",
+          "."
+        ],
+        "audio_targets": [
+          "central_sphere:material_select:beat",
+          "light_cobinates_ring:strength:beat",
+          "central_sphere:material_shader:beat",
+          "light_cobinates_ring:strength:beat"
+        ]
+      }
+    },
+    {
+      "file": "scene_spec_from_npu_raw.txt",
+      "chars": 1014,
+      "lines": 53,
+      "sha256": "dfcc73cfd7b3c1a0e1cc79f68cc0c31e0c30a8f7243bb160bfe2dcba04addc5a",
+      "summary": {
+        "file": "scene_spec_from_npu_raw.txt",
+        "type": "text",
+        "chars": 1014,
+        "lines": 53
+      }
+    }
+  ],
+  "chunks": [
+    {
+      "index": 1,
+      "kind": "overview",
+      "path": "Tools/npu/npu_music_chunks/chunk_001_music_overview.md",
+      "chars": 27004,
+      "sha256": "1ab6e26937077d5a3136901a8238fd872df9ed57c5ae118ebb2d09a5675fc207"
+    },
+    {
+      "index": 2,
+      "kind": "audio_segment",
+      "segment_index": 1,
+      "start_sec": 0.0,
+      "end_sec": 16.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_002_audio_segment_001.md",
+      "chars": 5644,
+      "sha256": "d711f54edffa743dbcb7a1f17dce083d5bd49305359b652b6dd1cd7cf4d6f729"
+    },
+    {
+      "index": 3,
+      "kind": "audio_segment",
+      "segment_index": 2,
+      "start_sec": 16.0,
+      "end_sec": 32.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_003_audio_segment_002.md",
+      "chars": 5788,
+      "sha256": "8517ce1fb069b9617575767095cbf22fcd7220542eee75eb1bfa0786a2b778a7"
+    },
+    {
+      "index": 4,
+      "kind": "audio_segment",
+      "segment_index": 3,
+      "start_sec": 32.0,
+      "end_sec": 48.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_004_audio_segment_003.md",
+      "chars": 5779,
+      "sha256": "19602d2ef645a668f9cce4b08d5bf9a167b1aada91aef45c269f2331bc1488ae"
+    },
+    {
+      "index": 5,
+      "kind": "audio_segment",
+      "segment_index": 4,
+      "start_sec": 48.0,
+      "end_sec": 64.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_005_audio_segment_004.md",
+      "chars": 5798,
+      "sha256": "fc8b61de2472b24bd2e76a59cb024f6fbf45c19ae95d688371bccb498eb00709"
+    },
+    {
+      "index": 6,
+      "kind": "audio_segment",
+      "segment_index": 5,
+      "start_sec": 64.0,
+      "end_sec": 80.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_006_audio_segment_005.md",
+      "chars": 5814,
+      "sha256": "a801a2f357bf88c87511f5859b18fd8664acd7949fa61a39e53ebcf763c6033d"
+    },
+    {
+      "index": 7,
+      "kind": "audio_segment",
+      "segment_index": 6,
+      "start_sec": 80.0,
+      "end_sec": 96.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_007_audio_segment_006.md",
+      "chars": 5800,
+      "sha256": "1975410c93912438a3604f3bf3d5daf0bd274b98f6b811a945e119767736476e"
+    },
+    {
+      "index": 8,
+      "kind": "audio_segment",
+      "segment_index": 7,
+      "start_sec": 96.0,
+      "end_sec": 112.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_008_audio_segment_007.md",
+      "chars": 5873,
+      "sha256": "12d82d0377b6d7a76d9e25b73c890ceb6ef92e6ff5b145d92aa3a1ee85adfe45"
+    },
+    {
+      "index": 9,
+      "kind": "audio_segment",
+      "segment_index": 8,
+      "start_sec": 112.0,
+      "end_sec": 128.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_009_audio_segment_008.md",
+      "chars": 5901,
+      "sha256": "0a89b7d70f4be857da127f9ac27617e37afd133e54008ec69fdbc9202d3690a9"
+    },
+    {
+      "index": 10,
+      "kind": "audio_segment",
+      "segment_index": 9,
+      "start_sec": 128.0,
+      "end_sec": 144.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_010_audio_segment_009.md",
+      "chars": 5897,
+      "sha256": "a61c2ce80b136548403055a5f409735f103fe4bd90b9ac79eef20bf5d6e88c59"
+    },
+    {
+      "index": 11,
+      "kind": "audio_segment",
+      "segment_index": 10,
+      "start_sec": 144.0,
+      "end_sec": 160.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_011_audio_segment_010.md",
+      "chars": 5916,
+      "sha256": "243c5603a1263a5c8d36a3d8e8efb4d5feeaeaaf6e750ebbc42765021321ed9d"
+    },
+    {
+      "index": 12,
+      "kind": "audio_segment",
+      "segment_index": 11,
+      "start_sec": 160.0,
+      "end_sec": 176.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_012_audio_segment_011.md",
+      "chars": 5920,
+      "sha256": "14462151c7f4edd3ec0ad1284bc4c00b2a3ce6be3399936f3c9745cde5ca405f"
+    },
+    {
+      "index": 13,
+      "kind": "audio_segment",
+      "segment_index": 12,
+      "start_sec": 176.0,
+      "end_sec": 192.0,
+      "path": "Tools/npu/npu_music_chunks/chunk_013_audio_segment_012.md",
+      "chars": 5784,
+      "sha256": "7d81fac7e1195a3cb32a9901bc0a2e9e368a47c5f5ffe0bd5589eaa31576be21"
+    },
+    {
+      "index": 14,
+      "kind": "audio_segment",
+      "segment_index": 13,
+      "start_sec": 192.0,
+      "end_sec": 196.8,
+      "path": "Tools/npu/npu_music_chunks/chunk_014_audio_segment_013.md",
+      "chars": 4961,
+      "sha256": "9929fac7021454f7edb094102bbc07feaae77c8f6008e5998e79232eba0ecefe"
+    },
+    {
+      "index": 15,
+      "kind": "scene_spec",
+      "source": "scene_spec_album_driven.json",
+      "path": "Tools/npu/npu_music_chunks/chunk_015_scene_scene_spec_album_driven.md",
+      "chars": 3048,
+      "sha256": "c3af8fef65c1f9e93fd6fa6b88bb1b254071841d3df99a2a8578a149e4bf2107"
+    },
+    {
+      "index": 16,
+      "kind": "scene_spec",
+      "source": "scene_spec_album_driven_normalized.json",
+      "path": "Tools/npu/npu_music_chunks/chunk_016_scene_scene_spec_album_driven_normalized.md",
+      "chars": 8821,
+      "sha256": "8519fc00d135275b09d59d75d96618501e2949f12d466a1a7eb76bd7e050e0fe"
+    },
+    {
+      "index": 17,
+      "kind": "scene_spec",
+      "source": "scene_spec_album_driven_raw.txt",
+      "path": "Tools/npu/npu_music_chunks/chunk_017_scene_scene_spec_album_driven_raw.md",
+      "chars": 1518,
+      "sha256": "40e8ac0d0504b76e8e6b43cde28980c44990d8136d4fc00499d279885819e75a"
+    },
+    {
+      "index": 18,
+      "kind": "scene_spec",
+      "source": "scene_spec_from_npu.json",
+      "path": "Tools/npu/npu_music_chunks/chunk_018_scene_scene_spec_from_npu.md",
+      "chars": 1925,
+      "sha256": "7f4d31dd82b912995ecd880535ceb706bbffdf88ba3fd8d6cacb6e3a049bca91"
+    },
+    {
+      "index": 19,
+      "kind": "scene_spec",
+      "source": "scene_spec_from_npu_raw.txt",
+      "path": "Tools/npu/npu_music_chunks/chunk_019_scene_scene_spec_from_npu_raw.md",
+      "chars": 1206,
+      "sha256": "0e937aa34c55922eeb3c22a7d631f20178680bcbb461552bc64768aca96d34a6"
+    }
+  ]
+}

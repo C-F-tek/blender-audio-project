@@ -10,8 +10,8 @@ Nelle prossime chat si può preparare solo un JSON con le operazioni richieste, 
 Dalla root del repository:
 
 ```powershell
-python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_spec.json --dry-run
-python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_spec.json --write --show-diff
+python -m Tools.repo_patch_runner apply_repo_mods --spec .\patch_spec.json --dry-run
+python -m Tools.repo_patch_runner apply_repo_mods --spec .\patch_spec.json --write --show-diff
 ```
 
 ## Caratteristiche
@@ -97,8 +97,8 @@ python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\patch_spec.json --w
 ## Esempio operativo
 
 ```powershell
-python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\Tools\repo_patch_runner\example_fix_blender_51_musgrave.json --dry-run
-python .\Tools\repo_patch_runner\apply_repo_mods.py --spec .\Tools\repo_patch_runner\example_fix_blender_51_musgrave.json --write --show-diff
+python -m Tools.repo_patch_runner apply_repo_mods --spec .\Tools\repo_patch_runner\examples\example_replace_fixture.json --dry-run
+python -m Tools.repo_patch_runner apply_repo_mods --spec .\Tools\repo_patch_runner\examples\example_replace_fixture.json --write --show-diff
 ```
 
 Poi:

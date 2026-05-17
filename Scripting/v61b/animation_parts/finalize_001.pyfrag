@@ -1,0 +1,94 @@
+
+set_linear_interpolation_idblock(hero_root)
+if hero_deform_controller is not None:
+    set_linear_interpolation_idblock(hero_deform_controller)
+for item in hero_deformers:
+    set_linear_interpolation_idblock(item.get("mesh"))
+for control in hero_material_controls:
+    set_linear_interpolation_idblock(control.get("node_tree"))
+compositor_tree = get_scene_compositor_tree(scene)
+if compositor_tree is not None:
+    set_linear_interpolation_idblock(compositor_tree)
+if aura_audio_controller is not None:
+    set_linear_interpolation_idblock(aura_audio_controller)
+if aura_deform_field is not None:
+    set_linear_interpolation_idblock(aura_deform_field)
+if secondary_root is not None:
+    set_linear_interpolation_idblock(secondary_root)
+set_linear_interpolation_idblock(aura_obj)
+set_linear_interpolation_idblock(camera)
+set_linear_interpolation_idblock(target)
+
+if lights:
+    for light in lights:
+        try:
+            set_linear_interpolation_idblock(light.data)
+        except Exception:
+            pass
+
+for item in mist_particles:
+    set_linear_interpolation_idblock(item["object"])
+    if item["material"]:
+        set_linear_interpolation_idblock(item["material"].node_tree)
+
+for item in variants:
+    set_linear_interpolation_idblock(item["root"])
+
+for item in accents:
+    set_linear_interpolation_idblock(item["anchor"])
+    set_linear_interpolation_idblock(item["object"])
+    if item.get("material"):
+        set_linear_interpolation_idblock(item["material"].node_tree)
+
+for item in rhythm_particles:
+    set_linear_interpolation_idblock(item.get("emitter"))
+    set_linear_interpolation_idblock(item.get("settings"))
+    for settings in item.get("settings_list", []):
+        set_linear_interpolation_idblock(settings)
+    set_linear_interpolation_idblock(item.get("letter_root"))
+    for letter in item.get("letter_sources", []):
+        set_linear_interpolation_idblock(letter.get("object"))
+    if item.get("material"):
+        set_linear_interpolation_idblock(item["material"].node_tree)
+
+for item in energy_rings:
+    set_linear_interpolation_idblock(item["object"])
+    if item["object"].active_material:
+        set_linear_interpolation_idblock(item["object"].active_material.node_tree)
+
+for item in energy_ribbons:
+    set_linear_interpolation_idblock(item["object"])
+    if item["object"].active_material:
+        set_linear_interpolation_idblock(item["object"].active_material.node_tree)
+
+aura_material = getattr(aura_obj, "active_material", None)
+if aura_material:
+    set_linear_interpolation_idblock(aura_material.node_tree)
+
+floor = scene.objects.get("PeaceFloor")
+if floor and floor.active_material:
+    set_linear_interpolation_idblock(floor.active_material.node_tree)
+
+if fog_controller and fog_controller["object"] and fog_controller["object"].active_material:
+    set_linear_interpolation_idblock(fog_controller["object"])
+    set_linear_interpolation_idblock(fog_controller["object"].active_material.node_tree)
+if fog_control is not None:
+    set_linear_interpolation_idblock(fog_control)
+
+if backdrop is not None:
+    set_linear_interpolation_idblock(backdrop)
+    if backdrop.active_material:
+        set_linear_interpolation_idblock(backdrop.active_material.node_tree)
+if backdrop_control is not None:
+    set_linear_interpolation_idblock(backdrop_control)
+
+if force_obj is not None:
+    set_linear_interpolation_idblock(force_obj)
+if turb_obj is not None:
+    set_linear_interpolation_idblock(turb_obj)
+if vortex_obj is not None:
+    set_linear_interpolation_idblock(vortex_obj)
+if wind_left is not None:
+    set_linear_interpolation_idblock(wind_left)
+if wind_right is not None:
+    set_linear_interpolation_idblock(wind_right)

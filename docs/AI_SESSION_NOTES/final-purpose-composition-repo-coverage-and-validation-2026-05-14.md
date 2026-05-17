@@ -118,7 +118,7 @@ Changed or candidate code files:
 
 - `Tools/ai/compose_heap_final_proposals.py`: oversized, 1147 lines before the
   latest wrapper/prompt edits.
-- `Tools/ai/heap_proposal_gate.py`: under budget.
+- `Tools/ai/_shared/heap_proposal_gate.py`: under budget.
 - `Tools/validation/test_proposal_gate.py`: under budget.
 - `Tools/ai/run_heap_runtime_context_closure.py`: oversized, 945 lines after
   Package B.
@@ -138,9 +138,9 @@ Required after A/B/C:
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
-& $RepoPy -m py_compile .\Tools\ai\compose_heap_final_proposals.py .\Tools\ai\heap_proposal_gate.py .\Tools\validation\test_proposal_gate.py .\Tools\ai\run_heap_runtime_context_closure.py .\Tools\ai\run_heap_runtime_completeness_gate.py
-& $RepoPy .\Tools\validation\test_proposal_gate.py
-& $RepoPy .\Tools\validation\check_docs_links.py --repo-root . --output output/validation/docs_links_after_final_purpose_apply.json
+& $RepoPy -m py_compile .\Tools\ai\compose_heap_final_proposals.py -m Tools.ai heap_proposal_gate .\Tools\validation\test_proposal_gate.py -m Tools.ai run_heap_runtime_context_closure .\Tools\ai\run_heap_runtime_completeness_gate.py
+& $RepoPy -m Tools.validation test_proposal_gate
+& $RepoPy -m Tools.validation check_docs_links --repo-root . --output output/validation/docs_links_after_final_purpose_apply.json
 git diff --check
 ```
 
@@ -149,12 +149,12 @@ Additional validation after code execution matrix:
 ```powershell
 & $RepoPy -m py_compile `
   .\Tools\ai\run_heap_code_execution_tool.py `
-  .\Tools\ai\heap_code_execution_tool_core.py `
+  .\Tools\ai\_shared\heap_code_execution_tool_core.py `
   .\Tools\validation\run_heap_code_execution_tool_smoke.py `
   .\Tools\ai\agent_runtime_tool_broker.py `
   .\Tools\ai\run_heap_runtime_completeness_gate.py
 
-& $RepoPy .\Tools\validation\run_heap_code_execution_tool_smoke.py `
+& $RepoPy -m Tools.validation run_heap_code_execution_tool_smoke `
   --repo-root . `
   --output output/validation/heap_code_execution_tool_smoke_after_split_20260514.json `
   --markdown-output output/validation/heap_code_execution_tool_smoke_after_split_20260514.md
@@ -171,7 +171,7 @@ Result:
 Optional request-file smoke:
 
 ```powershell
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py --repo-root . --python-exe $RepoPy --request-file .\docs\AI_SESSION_NOTES\final-purpose-repo-wide-apply-proposal-2026-05-14.md --skip-preflight --skip-startup-reload --no-documents --timeout-seconds 60
+& $RepoPy -m Tools.ai run_heap_runtime_context_closure --repo-root . --python-exe $RepoPy --request-file .\docs\AI_SESSION_NOTES\final-purpose-repo-wide-apply-proposal-2026-05-14.md --skip-preflight --skip-startup-reload --no-documents --timeout-seconds 60
 ```
 
 ## Risks

@@ -1,0 +1,284 @@
+for idx, item in enumerate(accents):
+    obj = item["object"]
+    anchor = item["anchor"]
+    base_loc = item["base_location"]
+    base_rot = item.get("base_rotation", obj.rotation_euler)
+    phase = item["phase"] + idx * 0.23
+    response = item.get("response", 0.65)
+    local_pulse = max(0.0, math.sin(i * (0.024 + response * 0.016) + phase)) * 0.20
+    accent_drive = rhythm_band_drive(
+        item.get("band", "mid"),
+        response,
+        low,
+        mid,
+        high,
+        onset,
+        beat,
+        pulse,
+        local_pulse,
+    )
+
+    orbit_radius = item.get("orbit_radius")
+    if orbit_radius is None:
+        orbit_radius = max(
+            0.20, math.sqrt(base_loc.x * base_loc.x + base_loc.y * base_loc.y)
+        )
+    orbit_angle = item.get("orbit_angle", math.atan2(base_loc.y, base_loc.x))
+    orbit_speed = item.get("orbit_speed", PHYSICS_ATOM_ORBIT_SPEED_MIN + response * 0.004)
+    orbit_tilt = item.get("orbit_tilt", 0.0)
+    orbit_z_offset = item.get("orbit_z_offset", base_loc.z - hero_base_loc.z)
+    micro_radius = item.get("micro_radius", PHYSICS_ATOM_MICRO_WOBBLE)
+
+    speed = orbit_speed + accent_drive * PHYSICS_ATOM_ORBIT_AUDIO_SPEED + beat * 0.004
+    angle = orbit_angle + i * speed + math.sin(i * 0.012 + phase) * 0.055
+    radius = orbit_radius * (
+        1.0 + accent_drive * PHYSICS_ATOM_ORBIT_RADIUS_PULSE + low * 0.035 - high * 0.012
+    )
+    y_radius = radius * (0.82 + math.cos(orbit_tilt) * 0.10)
+    atom_center = hero_root.location
+
+    anchor.location.x = atom_center.x + math.cos(angle) * radius
+    anchor.location.y = atom_center.y + math.sin(angle) * y_radius
+    anchor.location.z = (
+        atom_center.z
+        + orbit_z_offset
+        + math.sin(angle * 1.31 + orbit_tilt)
+        * PHYSICS_ATOM_ORBIT_HEIGHT_SWAY
+        * (0.35 + accent_drive)
+        + low * 0.10
+        + beat * 0.045
+    )
+    anchor.keyframe_insert(data_path="location", frame=i)
+
+    micro_angle = angle * 2.70 + i * (0.010 + accent_drive * 0.010) + phase
+    micro_drive = micro_radius * (0.55 + accent_drive * 0.85)
+    obj.location.x = anchor.location.x + math.cos(micro_angle) * micro_drive
+    obj.location.y = anchor.location.y + math.sin(micro_angle) * micro_drive * 0.72
+    obj.location.z = anchor.location.z + math.sin(micro_angle * 1.17) * micro_drive * 0.54
+    obj.keyframe_insert(data_path="location", frame=i)
+
+    obj.rotation_euler.x = base_rot.x + math.sin(i * 0.017 + phase) * 0.10 * (
+        0.35 + accent_drive
+    )
+    obj.rotation_euler.y = base_rot.y + math.cos(i * 0.015 + phase) * 0.08 * (
+        0.35 + accent_drive
+    )
+    obj.rotation_euler.z = (
+        base_rot.z
+        + angle
+        + i * (0.006 + accent_drive * 0.006)
+        + math.sin(i * 0.011 + phase) * 0.04
+    )
+    obj.keyframe_insert(data_path="rotation_euler", frame=i)
+
+    emission_socket = item.get("emission_socket")
+    if emission_socket is not None:
+        emission_socket.default_value = PHYSICS_ACCENT_EMISSION_MIN + accent_drive * (
+            PHYSICS_ACCENT_EMISSION_MAX - PHYSICS_ACCENT_EMISSION_MIN
+        )
+        keyframe_if_possible(emission_socket, "default_value", i)
+
+    mix_socket = item.get("mix_socket")
+    if mix_socket is not None:
+        mix_socket.default_value = PHYSICS_ACCENT_MIX_MIN + accent_drive * (
+            PHYSICS_ACCENT_MIX_MAX - PHYSICS_ACCENT_MIX_MIN
+        )
+        keyframe_if_possible(mix_socket, "default_value", i)
+
+# FORCE FIELDS
+if force_obj is not None:
+    gravity_drive = min(1.0, low * 0.44 + mid * 0.14 + pulse * 0.34 + beat * 0.16)
+    strength = HERO_GRAVITY_STRENGTH_MIN + gravity_drive * (
+        HERO_GRAVITY_STRENGTH_MAX - HERO_GRAVITY_STRENGTH_MIN
+    )
+    force_obj.field.strength = -strength
+    force_obj.location.x = hero_root.location.x
+    force_obj.location.y = hero_root.location.y
+    force_obj.location.z = hero_root.location.z + 0.34 + math.sin(i * 0.010) * 0.05
+    force_obj.keyframe_insert(data_path="field.strength", frame=i)
+    force_obj.keyframe_insert(data_path="location", frame=i)
+
+if turb_obj is not None:
+    turb_strength = (
+        TURB_STRENGTH_MIN
+        + high * (TURB_STRENGTH_MAX - TURB_STRENGTH_MIN) * 0.64
+        + pulse * 0.42
+    )
+    turb_obj.field.strength = turb_strength
+    turb_obj.location.x = hero_root.location.x
+    turb_obj.location.y = hero_root.location.y
+    turb_obj.location.z = hero_root.location.z + 0.74 + math.sin(i * 0.012) * 0.08
+    turb_obj.keyframe_insert(data_path="field.strength", frame=i)
+    turb_obj.keyframe_insert(data_path="location", frame=i)
+
+if vortex_obj is not None:
+    vortex_strength = VORTEX_STRENGTH_MIN + (mid * 0.62 + pulse * 0.18) * (
+        VORTEX_STRENGTH_MAX - VORTEX_STRENGTH_MIN
+    )
+    vortex_obj.field.strength = vortex_strength
+    vortex_obj.location.x = hero_root.location.x
+    vortex_obj.location.y = hero_root.location.y
+    vortex_obj.location.z = hero_root.location.z + 0.18
+    vortex_obj.rotation_euler.z = i * (0.004 + mid * 0.003 + beat * 0.002)
+    vortex_obj.keyframe_insert(data_path="field.strength", frame=i)
+    vortex_obj.keyframe_insert(data_path="location", frame=i)
+    vortex_obj.keyframe_insert(data_path="rotation_euler", frame=i)
+
+if wind_left is not None:
+    wl = onset * 6.0 + beat * 2.0
+    wind_left.field.strength = wl
+    wind_left.keyframe_insert(data_path="field.strength", frame=i)
+
+if wind_right is not None:
+    wr = high * 4.0 + beat * 1.8
+    wind_right.field.strength = wr
+    wind_right.keyframe_insert(data_path="field.strength", frame=i)
+
+# RHYTHM PARTICLE PHYSICS
+particle_keyframe = (
+    i == 1
+    or i == total_frames
+    or i % RHYTHM_PARTICLE_KEYFRAME_STEP == 0
+    or beat > 0.0
+    or onset > 0.72
+)
+
+if particle_keyframe:
+    for item in rhythm_particles:
+        emitter = item["emitter"]
+        settings = item["settings"]
+        settings_list = item.get("settings_list", [settings])
+        mode = item["mode"]
+        phase = item["phase"]
+        base_loc = item["base_location"]
+        base_rot = item["base_rotation"]
+        base_scale = item["base_scale"]
+
+        if mode == "pulse":
+            drive = min(1.0, beat * 0.90 + onset * 0.62 + low * 0.28)
+            settings.normal_factor = RHYTHM_PARTICLE_NORMAL_MIN + drive * (
+                RHYTHM_PARTICLE_NORMAL_MAX - RHYTHM_PARTICLE_NORMAL_MIN
+            )
+            settings.tangent_factor = RHYTHM_PARTICLE_TANGENT_MIN + (
+                mid * 0.55 + drive * 0.45
+            ) * (RHYTHM_PARTICLE_TANGENT_MAX - RHYTHM_PARTICLE_TANGENT_MIN)
+            settings.brownian_factor = RHYTHM_PARTICLE_BROWNIAN_MIN + (
+                high * 0.45 + drive * 0.55
+            ) * (RHYTHM_PARTICLE_BROWNIAN_MAX - RHYTHM_PARTICLE_BROWNIAN_MIN)
+            settings.particle_size = RHYTHM_PARTICLE_SIZE_MIN + drive * (
+                RHYTHM_PARTICLE_SIZE_MAX - RHYTHM_PARTICLE_SIZE_MIN
+            )
+            item["emission_socket"].default_value = RHYTHM_PARTICLE_EMIT_MIN + drive * (
+                RHYTHM_PARTICLE_EMIT_MAX - RHYTHM_PARTICLE_EMIT_MIN
+            )
+
+            emitter.location.z = base_loc.z + low * 0.10 + transient * 0.06
+            scale_boost = 1.0 + drive * 0.12
+            emitter.rotation_euler.z = (
+                base_rot.z + i * 0.010 + math.sin(i * 0.019 + phase) * 0.08
+            )
+
+        elif mode == "dust":
+            drive = min(1.0, mid * 0.46 + low * 0.26 + pulse * 0.18)
+            settings.normal_factor = 0.025 + drive * 0.35
+            settings.tangent_factor = 0.08 + drive * 0.42
+            settings.brownian_factor = 0.28 + (high * 0.55 + drive * 0.45) * 0.78
+            settings.particle_size = RHYTHM_PARTICLE_SIZE_MIN * (0.58 + drive * 0.55)
+            item["emission_socket"].default_value = (
+                0.10 + (high * 0.36 + drive * 0.38) * 0.90
+            )
+
+            emitter.location.x = base_loc.x + math.sin(i * 0.008 + phase) * 0.18
+            emitter.location.y = base_loc.y + math.cos(i * 0.007 + phase) * 0.16
+            emitter.location.z = (
+                base_loc.z + math.sin(i * 0.010 + phase) * 0.08 + low * 0.05
+            )
+            scale_boost = 1.0 + drive * 0.04
+            emitter.rotation_euler.z = base_rot.z + i * 0.003 + phase
+
+        elif mode == "streak":
+            drive = min(1.0, high * 0.85 + onset * 0.45 + beat * 0.20)
+            settings.normal_factor = 0.18 + drive * 1.72
+            settings.tangent_factor = 0.35 + drive * 1.10
+            settings.brownian_factor = 0.04 + drive * 0.38
+            settings.particle_size = RHYTHM_PARTICLE_SIZE_MIN * (0.70 + drive * 0.95)
+            item["emission_socket"].default_value = 0.12 + drive * 1.70
+
+            emitter.location.z = base_loc.z + high * 0.22 + transient * 0.05
+            scale_boost = 1.0 + drive * 0.08
+            emitter.rotation_euler.z = base_rot.z - i * 0.014 + phase
+
+        else:
+            drive = min(1.0, mid * 0.42 + onset * 0.44 + beat * 0.36 + high * 0.20)
+            settings.normal_factor = 0.08 + drive * 0.92
+            settings.tangent_factor = 0.24 + drive * 0.88
+            settings.brownian_factor = 0.06 + drive * 0.54
+            settings.particle_size = ALBUM_LETTER_PARTICLE_SIZE_MIN + drive * (
+                ALBUM_LETTER_PARTICLE_SIZE_MAX - ALBUM_LETTER_PARTICLE_SIZE_MIN
+            )
+
+            emitter.location.x = base_loc.x + math.sin(i * 0.011 + phase) * 0.24
+            emitter.location.y = base_loc.y + math.cos(i * 0.009 + phase) * 0.20
+            emitter.location.z = base_loc.z + mid * 0.18 + beat * 0.10
+            scale_boost = 1.0 + drive * 0.10
+            emitter.rotation_euler.z = base_rot.z + i * 0.006 + phase
+
+            letter_root = item.get("letter_root")
+            if letter_root is not None:
+                letter_scale = ALBUM_LETTER_ROOT_SCALE_MIN + drive * (
+                    ALBUM_LETTER_ROOT_SCALE_MAX - ALBUM_LETTER_ROOT_SCALE_MIN
+                )
+                letter_root.scale = (letter_scale, letter_scale, letter_scale)
+                letter_root.rotation_euler.z = math.sin(i * 0.018 + phase) * 0.12
+                letter_root.keyframe_insert(data_path="scale", frame=i)
+                letter_root.keyframe_insert(data_path="rotation_euler", frame=i)
+
+            for letter in item.get("letter_sources", []):
+                obj = letter["object"]
+                lphase = letter["phase"]
+                lscale = 1.0 + drive * 0.20 + math.sin(i * 0.030 + lphase) * 0.035
+                obj.scale = (
+                    letter["base_scale"].x * lscale,
+                    letter["base_scale"].y * (1.0 + high * 0.14),
+                    letter["base_scale"].z * (1.0 + beat * 0.18),
+                )
+                obj.keyframe_insert(data_path="scale", frame=i)
+
+        emitter.scale = (
+            base_scale.x * scale_boost,
+            base_scale.y * scale_boost,
+            base_scale.z * scale_boost,
+        )
+
+        for extra_settings in settings_list[1:]:
+            extra_settings.normal_factor = settings.normal_factor
+            extra_settings.tangent_factor = settings.tangent_factor
+            extra_settings.brownian_factor = settings.brownian_factor
+            extra_settings.particle_size = settings.particle_size
+
+        for particle_settings in settings_list:
+            keyframe_if_possible(particle_settings, "normal_factor", i)
+            keyframe_if_possible(particle_settings, "tangent_factor", i)
+            keyframe_if_possible(particle_settings, "brownian_factor", i)
+            keyframe_if_possible(particle_settings, "particle_size", i)
+        if item.get("emission_socket") is not None:
+            keyframe_if_possible(item["emission_socket"], "default_value", i)
+        emitter.keyframe_insert(data_path="location", frame=i)
+        emitter.keyframe_insert(data_path="rotation_euler", frame=i)
+        emitter.keyframe_insert(data_path="scale", frame=i)
+
+# CAMERA
+camera.location.x = cam_base_loc.x + math.sin(i * 0.020) * CAMERA_ORBIT_AMOUNT
+camera.location.y = cam_base_loc.y + low * CAMERA_PUSH_AMOUNT - beat * CAMERA_BEAT_BUMP_Y
+camera.location.z = (
+    cam_base_loc.z
+    + beat * CAMERA_BEAT_BUMP_Z
+    + math.sin(i * 0.018) * CAMERA_VERTICAL_SWAY
+    + high * 0.08
+)
+camera.keyframe_insert(data_path="location", frame=i)
+
+target.location.x = target_base_loc.x + (mid - 0.5) * 0.40
+target.location.y = target_base_loc.y
+target.location.z = target_base_loc.z + low * 0.25 + high * 0.08
+target.keyframe_insert(data_path="location", frame=i)

@@ -101,23 +101,21 @@ These are good candidates for documented project-tool status, but not necessaril
 
 | Path | Proposed level | Placement | Action |
 |---|---:|---|---|
-| `analyze_wav.py` | 2 | BLENDER_AUDIO_PIPELINE | Root audio analyzer; document as canonical audio analysis entrypoint, not broker. |
-| `build_track_summary.py` | 2 | BLENDER_AUDIO_PIPELINE / FULL_RUN_EVIDENCE | Root track-summary builder; document near audio workflow. |
+| `Tools/workflow/audio_analysis/analyze_cli.py` | 2 | BLENDER_AUDIO_PIPELINE | Workflow audio analyzer; document as canonical audio analysis entrypoint, not broker. |
+| `Tools/workflow/audio_analysis/summary_cli.py` | 2 | BLENDER_AUDIO_PIPELINE / FULL_RUN_EVIDENCE | Workflow track-summary builder; document near audio workflow. |
 | `Scripting/v61b/main_v61b.py` | 2 | BLENDER_AUDIO_PIPELINE | Main Blender scene runner; manual/runtime only. |
 | `Scripting/v61b/encode_image_sequence_v61b.py` | 2 | BLENDER_AUDIO_PIPELINE | Encoding helper; never brokered because FFmpeg/runtime side effects. |
 | `Scripting/v61b/encode_ffmpeg_v61b.py` | 2 | BLENDER_AUDIO_PIPELINE | FFmpeg encode lane; manual/runtime only. |
 | `Scripting/v61b/hot_update_scene_v61b.py` | 1 | BLENDER_AUDIO_PIPELINE | Candidate hot-update script; document as manual Blender-side utility. |
 | `Scripting/v61b/scene_tuning_panel.py` | 1 | LOCAL_UI_OR_MANUAL | UI/tuning panel; manual only. |
 | `Scripting/_template_audio_reactive_package/main.py` | 1 | GENERATED_OR_CANDIDATE / TEMPLATE | Template package entrypoint; document as scaffold. |
-| `Tools/npu/generated_blender_script_candidate.py` | 0 | GENERATED_OR_CANDIDATE | Must pass generated script policy before promotion. |
-| `Tools/npu/generated_blender_script_candidate_FristNear.py` | 0 | GENERATED_OR_CANDIDATE | Same; likely typo/name cleanup candidate. |
 
 ## High-value validation/provider tools to document as project tools
 
 | Path | Proposed level | Placement | Action |
 |---|---:|---|---|
-| `Tools/workflow/startup_check.py` | 2 | CORE_BOOTSTRAP | Promote as project startup diagnostic tool. |
-| `Tools/workflow/startup_preflight.ps1` | 2 | CORE_BOOTSTRAP | Wrapper; document after `startup_check.py`. |
+| `python -m Tools.workflow startup_check` | 2 | CORE_BOOTSTRAP | Promote as project startup diagnostic tool. |
+| `Tools/workflow/startup_preflight.ps1` | 2 | CORE_BOOTSTRAP | Wrapper; document after `python -m Tools.workflow startup_check`. |
 | `Tools/workflow/ai_runtime_diagnostics.py` | 2 | PROVIDER_DIAGNOSTIC | Good preflight diagnostics candidate. |
 | `Tools/ai/run_local_provider_probe.py` | 2 | PROVIDER_DIAGNOSTIC | Canonical provider probe. |
 | `Tools/ai/check_local_resource_lanes.py` | 2 | PROVIDER_DIAGNOSTIC | Local resource-lane checker. |
@@ -151,11 +149,11 @@ These are good candidates for documented project-tool status, but not necessaril
 | `Tools/validation/build_markdown_inventory.py` | 2 | DOCS_MAINTENANCE / FULL_RUN_EVIDENCE | Canonical markdown inventory. |
 | `Tools/validation/check_docs_links.py` | 2 | DOCS_MAINTENANCE / VALIDATION | Canonical docs link checker. |
 | `Tools/validation/build_script_inventory.py` | 2 | FULL_RUN_EVIDENCE | Script/tool inventory. |
-| `Tools/workflow/project_awareness.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Project-awareness helper. |
-| `Tools/workflow/smart_ai_context.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Context helper. |
-| `Tools/workflow/artifact_consult.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Artifact consult helper. |
-| `Tools/workflow/asset_inventory.py` | 1 | FULL_RUN_EVIDENCE / BLENDER_AUDIO_PIPELINE | Asset inventory candidate. |
-| `Tools/workflow/scene_brief.py` | 1 | BLENDER_AUDIO_PIPELINE / PATCH_PLAN_SUPPORT | Scene-brief candidate. |
+| `Tools/workflow/_shared/project_awareness.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Project-awareness helper. |
+| `python -m Tools.workflow smart_ai_context` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Context helper. |
+| `Tools/workflow/_shared/artifact_consult.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Artifact consult helper. |
+| `Tools/workflow/_shared/asset_inventory.py` | 1 | FULL_RUN_EVIDENCE / BLENDER_AUDIO_PIPELINE | Asset inventory candidate. |
+| `Tools/workflow/_shared/scene_brief.py` | 1 | BLENDER_AUDIO_PIPELINE / PATCH_PLAN_SUPPORT | Scene-brief candidate. |
 
 ## Manual-only or unsafe-to-broker tools
 
@@ -163,8 +161,8 @@ These may be useful, but must not be auto-brokered or included in unattended ful
 
 | Path | Placement | Reason |
 |---|---|---|
-| `Tools/workflow/workflow_shell.py` | LOCAL_UI_OR_MANUAL | Interactive shell/wrapper. |
-| `Tools/workflow/workflow_shell_with_push.py` | GIT_WRITE_TOOL | Push-capable; manual only. |
+| `python -m Tools.workflow workflow_shell` | LOCAL_UI_OR_MANUAL | Interactive shell/wrapper. |
+| `python -m Tools.workflow workflow_shell_with_push` | GIT_WRITE_TOOL | Push-capable; manual only. |
 | `Tools/workflow/git_auto_push.py` | GIT_WRITE_TOOL | Git mutation. |
 | `Tools/git/auto_push_generated_data.ps1` | GIT_WRITE_TOOL | Git mutation. |
 | `Tools/git/auto_push_generated_artifacts.ps1` | GIT_WRITE_TOOL | Git mutation. |
@@ -177,11 +175,11 @@ These should be documented as internal components, not promoted directly unless 
 
     Tools/ai/pipeline/*.py
     Tools/npu/pipeline/*.py
-    Tools/ai/workload_quality.py
-    Tools/ai/schema_repair_context.py
-    Tools/ai/agent_memory_policy.py
-    Tools/ai/agent_memory_routing_policy.py
-    Tools/validation/report_utils.py
+    Tools/ai/_shared/workload_quality.py
+    Tools/ai/schema_repair/
+    Tools/ai/agent_memory/policy.py
+    python -m Tools.ai agent_memory_routing_policy
+    Tools/validation/_shared/report_utils.py
 
 ## Immediate recommendations
 
@@ -219,7 +217,7 @@ The registry should include:
 
 Prioritize:
 
-    Tools/workflow/startup_check.py
+    python -m Tools.workflow startup_check
     Tools/ai/run_local_provider_probe.py
     Tools/validation/check_ai_workload_report_quality.py
     Tools/validation/run_orchestrator_gpu_runtime_tool_routing_smoke.py
@@ -228,8 +226,8 @@ Prioritize:
 
 Prioritize:
 
-    analyze_wav.py
-    build_track_summary.py
+    Tools/workflow/audio_analysis/analyze_cli.py
+    Tools/workflow/audio_analysis/summary_cli.py
     Scripting/v61b/main_v61b.py
     Scripting/v61b/encode_image_sequence_v61b.py
     Scripting/v61b/encode_ffmpeg_v61b.py

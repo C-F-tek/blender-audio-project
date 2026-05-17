@@ -9,7 +9,7 @@ The immediate goal is to reduce ambiguous GPU planner failures by classifying mo
 ## Added helper
 
 ```text
-Tools/ai/gpu_planner_json_contract.py
+Tools/ai/_shared/gpu_planner_json_contract.py
 ```
 
 The helper is report-only and does not run providers.

@@ -43,11 +43,11 @@ git fetch origin
 git switch codex/heap-exchange-runtime-lifecycle
 git pull --ff-only origin codex/heap-exchange-runtime-lifecycle
 
-python .\Tools\ai\patch_unified_heap_exchange_lifecycle_wiring.py `
+python -m Tools.ai patch_unified_heap_exchange_lifecycle_wiring `
   --repo-root . `
   --dry-run
 
-python .\Tools\ai\patch_unified_heap_exchange_lifecycle_wiring.py `
+python -m Tools.ai patch_unified_heap_exchange_lifecycle_wiring `
   --repo-root .
 ```
 
@@ -61,7 +61,7 @@ python -m py_compile `
   .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
   .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
 
-python .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py `
+python -m Tools.validation run_heap_exchange_runtime_lifecycle_smoke `
   --repo-root .
 
 $PsPath = "Tools/workflow/run_unified_local_ai_refactor.ps1"

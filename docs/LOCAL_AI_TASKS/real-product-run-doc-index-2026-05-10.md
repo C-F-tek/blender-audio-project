@@ -18,8 +18,8 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 
 | Concetto | Owner code |
 |---|---|
-| Entrata unica real product | `Tools/workflow/run_unified_real_product_pr.ps1` |
-| Universo heap/exchange | `Tools/workflow/run_unified_local_ai_refactor.ps1` |
+| Entrata unica real product | `python -m Tools.ai run` |
+| Universo heap/exchange | `python -m Tools.workflow run_unified_local_ai_refactor` |
 | Preflight obbligatorio | `Tools/validation/run_real_product_preflight_gate.py` |
 | GPU0 workload osservabile | `Tools/ai/build_openvino_gpu0_workload_report.py` |
 | NPU micro peer diagnostic/report lane | `Tools/ai/build_npu_micro_task_companion_report.py` |

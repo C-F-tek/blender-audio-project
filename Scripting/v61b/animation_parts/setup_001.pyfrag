@@ -1,0 +1,70 @@
+total_frames = len(frames)
+
+hero_root = hero_asset["root"]
+hero_base_scale = hero_asset["base_scale"].copy()
+hero_base_loc = hero_asset["base_location"].copy()
+hero_base_rot = hero_asset["base_rotation"].copy()
+hero_deform_controller = hero_asset.get("deform_controller")
+hero_deformers = hero_asset.get("deformers", [])
+hero_material_controls = hero_asset.get("material_controls", [])
+hero_deform_base_loc = (
+    hero_deform_controller.location.copy() if hero_deform_controller else None
+)
+hero_deform_base_rot = (
+    hero_deform_controller.rotation_euler.copy() if hero_deform_controller else None
+)
+hero_deform_base_scale = hero_deform_controller.scale.copy() if hero_deform_controller else None
+
+secondary_root = None
+secondary_base_scale = None
+secondary_base_loc = None
+secondary_base_rot = None
+
+if secondary_asset is not None:
+    secondary_root = secondary_asset["root"]
+    secondary_base_scale = secondary_asset["base_scale"].copy()
+    secondary_base_loc = secondary_asset["base_location"].copy()
+    secondary_base_rot = secondary_asset["base_rotation"].copy()
+
+aura_obj = aura_data["object"]
+aura_base_loc = aura_obj.location.copy()
+aura_audio_controller = aura_data.get("audio_controller")
+aura_deform_field = aura_data.get("deform_field")
+aura_audio_props = aura_data.get("audio_props", [])
+aura_audio_base_loc = aura_audio_controller.location.copy() if aura_audio_controller else None
+aura_audio_base_rot = (
+    aura_audio_controller.rotation_euler.copy() if aura_audio_controller else None
+)
+aura_audio_base_scale = aura_audio_controller.scale.copy() if aura_audio_controller else None
+aura_field_base_loc = aura_deform_field.location.copy() if aura_deform_field else None
+aura_field_base_rot = aura_deform_field.rotation_euler.copy() if aura_deform_field else None
+aura_field_base_scale = aura_deform_field.scale.copy() if aura_deform_field else None
+
+fog_obj = fog_controller["object"] if fog_controller else None
+fog_control = fog_controller.get("controller") if fog_controller else None
+fog_base_loc = fog_controller.get("base_location") if fog_controller else None
+fog_base_scale = fog_controller.get("base_scale") if fog_controller else None
+
+backdrop = scene_base.get("backdrop") if scene_base else None
+backdrop_control = scene_base.get("backdrop_controller") if scene_base else None
+backdrop_controls = scene_base.get("backdrop_controls", {}) if scene_base else {}
+backdrop_base_loc = scene_base.get("backdrop_base_location") if scene_base else None
+backdrop_base_scale = scene_base.get("backdrop_base_scale") if scene_base else None
+
+cam_base_loc = camera.location.copy()
+target_base_loc = target.location.copy()
+
+compositor_glare = None
+compositor_lens = None
+compositor_tree = get_scene_compositor_tree(scene)
+if compositor_tree is not None:
+    compositor_glare = compositor_tree.nodes.get("AudioSoftGlare")
+    compositor_lens = compositor_tree.nodes.get("AudioLensBreath")
+
+force_obj = physics_data["force_obj"]
+turb_obj = physics_data["turb_obj"]
+vortex_obj = physics_data["vortex_obj"]
+wind_left = physics_data["wind_left"]
+wind_right = physics_data["wind_right"]
+accents = physics_data["accents"]
+rhythm_particles = physics_data.get("rhythm_particles", [])

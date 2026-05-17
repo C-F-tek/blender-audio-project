@@ -351,9 +351,9 @@ python -m py_compile .\Tools\ai\prepare_heap_context_memory_reload.py
 python -m py_compile .\Tools\ai\compose_heap_final_proposals.py
 python -m py_compile .\Tools\validation\run_heap_startup_context_ingestion_smoke.py
 
-python .\Tools\validation\run_heap_startup_context_ingestion_smoke.py --repo-root . --output .\output\validation\heap_startup_context_ingestion_smoke.json
-python .\Tools\validation\run_heap_runtime_completeness_gate_smoke.py --repo-root . --output .\output\validation\heap_runtime_completeness_gate_smoke.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation run_heap_startup_context_ingestion_smoke --repo-root . --output .\output\validation\heap_startup_context_ingestion_smoke.json
+python -m Tools.validation run_heap_runtime_completeness_gate_smoke --repo-root . --output .\output\validation\heap_runtime_completeness_gate_smoke.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 
 git diff --check
 git status --short

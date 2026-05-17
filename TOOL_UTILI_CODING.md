@@ -18,7 +18,7 @@ Indice operativo dei tool utili per coding assistito da IA, refactor Markdown, v
 Comando tipico:
 
 ```powershell
-python .\Tools\docs\refactor_markdown_splits.py `
+python -m Tools.docs refactor_markdown_splits `
   --repo-root . `
   --apply `
   --migrate-legacy-splits `
@@ -41,10 +41,10 @@ python .\Tools\docs\refactor_markdown_splits.py `
 ```powershell
 python -m py_compile .\Tools\docs\refactor_markdown_splits.py
 python -m py_compile .\Tools\validation\run_md_split_dir_validator_smoke.py
-python .\Tools\validation\check_docs_links.py --repo-root .
-python .\Tools\validation\check_markdown_line_limits.py --repo-root . --max-lines 500
-python .\Tools\validation\check_file_line_limits.py --repo-root . --output .\output\validation\file_line_limits.json
-python .\Tools\validation\run_md_split_dir_validator_smoke.py --output .\output\validation\md_split_dir_validator_smoke.json --markdown-output .\output\validation\md_split_dir_validator_smoke.md
+python -m Tools.validation check_docs_links --repo-root .
+python -m Tools.validation check_markdown_line_limits --repo-root . --max-lines 500
+python -m Tools.validation check_file_line_limits --repo-root . --output .\output\validation\file_line_limits.json
+python -m Tools.validation run_md_split_dir_validator_smoke --output .\output\validation\md_split_dir_validator_smoke.json --markdown-output .\output\validation\md_split_dir_validator_smoke.md
 git diff --check
 git status --short
 ```

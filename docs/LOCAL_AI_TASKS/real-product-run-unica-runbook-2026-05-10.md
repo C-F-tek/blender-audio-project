@@ -6,8 +6,8 @@ Questo documento fotografa la struttura reale dopo la chiusura della catena PR #
 
 Entrata e uscita sono invece rigide:
 
-- entrata unica: `Tools/workflow/run_unified_real_product_pr.ps1`;
-- centro dinamico: `Tools/workflow/run_unified_local_ai_refactor.ps1`;
+- entrata unica: `python -m Tools.ai run`;
+- centro dinamico: `python -m Tools.workflow run_unified_local_ai_refactor`;
 - uscita unica: review PR product validato da final product contract.
 
 ## Catena reale corrente
@@ -131,8 +131,7 @@ ollama show qwen2.5-coder:14b | Out-Host
 $Stamp = "heap_exchange_process_gate_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 $Branch = "CARMINEai/heap-exchange-process-gate-$Stamp"
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass `
-  -File ".\Tools\workflow\run_unified_real_product_pr.ps1" `
+& $RepoPy -m Tools.ai run `
   -RepoRoot "." `
   -ProcessGateTask `
   -TaskBranch $Branch `
@@ -177,8 +176,8 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
   .\Tools\validation\run_repository_change_proposals_runtime_evidence_smoke.py `
   .\Tools\validation\run_generated_patch_specs_empty_product_smoke.py
 
-& $RepoPy .\Tools\validation\run_repository_change_proposals_runtime_evidence_smoke.py --repo-root .
-& $RepoPy .\Tools\validation\run_generated_patch_specs_empty_product_smoke.py --repo-root .
+& $RepoPy -m Tools.validation run_repository_change_proposals_runtime_evidence_smoke --repo-root .
+& $RepoPy -m Tools.validation run_generated_patch_specs_empty_product_smoke --repo-root .
 
 git diff --check
 ~~~

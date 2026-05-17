@@ -10,6 +10,13 @@ from typing import Any
 
 from .artifact_contracts import file_meta, planned_outputs, rel
 
+WAVE_ENTRYPOINT_FILES = [
+    "Tools/workflow/audio_analysis/analyze_cli.py",
+    "Tools/workflow/audio_analysis/analyzer.py",
+    "Tools/workflow/audio_analysis/summary_cli.py",
+    "Tools/workflow/audio_analysis/summary.py",
+]
+
 
 def read_text_if_exists(path: Path, limit: int = 6000) -> str | None:
     """Read a bounded text preview from a file when it exists."""
@@ -79,10 +86,13 @@ def preflight(repo: Path, out: Path, args: Any) -> dict[str, Any]:
         )
     if args.guardrail_auto_remediate and not args.npu_guardrail:
         warnings.append("Guardrail auto-remediation was requested but npu_guardrail is disabled.")
-    if args.review_wave_entrypoints and not (repo / "analyze_wav.py").exists():
-        warnings.append(
-            "Wave entrypoint review enabled but analyze_wav.py was not found at repository root."
-        )
+    if args.review_wave_entrypoints:
+        missing_wave_files = [item for item in WAVE_ENTRYPOINT_FILES if not (repo / item).exists()]
+        if missing_wave_files:
+            warnings.append(
+                "Wave entrypoint review enabled but audio_analysis package files were not found: "
+                + ", ".join(missing_wave_files)
+            )
     if args.gpu_command and "{brief}" not in args.gpu_command:
         warnings.append(
             "GPU command does not include {brief}; planner may not receive ai_scene_brief.json."
@@ -108,8 +118,7 @@ def preflight(repo: Path, out: Path, args: Any) -> dict[str, Any]:
     if agent_packet:
         input_files.append(file_meta(agent_packet, repo))
     for item in [
-        "analyze_wav.py",
-        "build_track_summary.py",
+        *WAVE_ENTRYPOINT_FILES,
         "docs/LOCAL_WORKSTATION_TARGET.md",
         "indexAI/task_capsules/blender_51_compat.json",
         "indexAI/task_capsules/resource_budget.json",

@@ -28,10 +28,10 @@ Add the next non-destructive step after proposal-derived draft patch specs: prom
 ## Validation Plan
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\ai\promote_patch_spec_draft.py --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
-python .\Tools\validation\check_reviewed_patch_specs.py --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 -Profile npu -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -Basename patch_spec_review_promotion_gpu_npu_multistep -ProposalBasename patch_spec_review_promotion_gpu_npu_multistep_proposals -EvidenceBasename patch_spec_review_promotion_gpu_npu_multistep_evidence
+python -m Tools.validation check_python_syntax --repo-root .
+python -m Tools.ai promote_patch_spec_draft --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
+python -m Tools.validation check_reviewed_patch_specs --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
+python -m Tools.workflow run_parallel_ai_provider_multistep -Profile npu -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -Basename patch_spec_review_promotion_gpu_npu_multistep -ProposalBasename patch_spec_review_promotion_gpu_npu_multistep_proposals -EvidenceBasename patch_spec_review_promotion_gpu_npu_multistep_evidence
 ```
 
 ## Exit Criteria

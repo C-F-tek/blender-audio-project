@@ -7,7 +7,7 @@ Document the required Python import context for the modularized PR #109 tools.
 After the GitHub evidence bundle split, some entry points import repository modules with package-style imports such as:
 
 ```python
-from Tools.ai.github_evidence_bundle_artifacts import build_included_artifacts
+from Tools.ai._shared.github_evidence_bundle_artifacts import build_included_artifacts
 ```
 
 When those tools are executed as direct script paths, Python may not include the repository root in `sys.path` and can fail with:
@@ -48,7 +48,7 @@ Use this instead of direct script execution when a tool imports `Tools.*` module
 python -m Tools.ai.build_github_evidence_bundle ...
 
 # Avoid for modularized Tools.* imports unless PYTHONPATH/import fallback is known good
-python .\Tools\ai\build_github_evidence_bundle.py ...
+python -m Tools.ai build_github_evidence_bundle ...
 ```
 
 ## PR109 bundle rebuild example

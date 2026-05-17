@@ -83,11 +83,11 @@ Executed before GitHub publication:
 
 ```text
 python -m py_compile selected Day 0 Python files
-python Tools/validation/test_proposal_gate.py
-python Tools/validation/test_composer_decision.py
-python Tools/validation/run_heap_code_execution_tool_smoke.py --repo-root . --timeout-seconds 180
-python Tools/validation/run_heap_virtual_dev_environment_smoke.py --repo-root . --timeout-seconds 180
-python Tools/validation/run_heap_final_readable_product_smoke.py --repo-root . --timeout-seconds 180
+python -m Tools.validation test_proposal_gate
+python -m Tools.validation test_composer_decision
+python -m Tools.validation run_heap_code_execution_tool_smoke --repo-root . --timeout-seconds 180
+python -m Tools.validation run_heap_virtual_dev_environment_smoke --repo-root . --timeout-seconds 180
+python -m Tools.validation run_heap_final_readable_product_smoke --repo-root . --timeout-seconds 180
 git diff --check
 ```
 

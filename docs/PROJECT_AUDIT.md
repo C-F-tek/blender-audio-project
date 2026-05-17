@@ -40,7 +40,7 @@ The repository has evolved from a Blender scripting workspace into a structured 
 
 It contains:
 
-- root audio-analysis and scene-spec tooling;
+- workflow-owned audio-analysis and scene-spec tooling;
 - a mature reference Blender workflow under `Scripting/v61b/`;
 - at least one large generated/refined Blender package under `Scripting/`;
 - shared-utility policy under `Scripting/shared/`;
@@ -70,9 +70,9 @@ It contains:
 
 | Area | Role |
 |---|---|
-| `analyze_wav.py` | Audio-analysis entry point. |
-| `build_track_summary.py` | Compact track-summary builder. |
-| `normalize_scene_spec.py` | Scene-spec normalization and defaulting. |
+| `Tools/workflow/audio_analysis/analyze_cli.py` | Audio-analysis entry point. |
+| `Tools/workflow/audio_analysis/summary_cli.py` | Compact track-summary builder. |
+| `Tools/workflow/scene_spec/cli.py` | Scene-spec normalization and defaulting. |
 | `Scripting/v61b/` | Main quality reference for complex Blender package structure. |
 | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Large generated/refined package and strong extraction candidate. |
 | `Scripting/_template_audio_reactive_package/` | Template for future generated packages. |
@@ -124,9 +124,9 @@ Some workflow and application scripts are large enough to make testing, reuse an
 
 Recommended solution: split orchestration, prompts, providers, validators and artifact writing into focused modules when touching those areas.
 
-### 3. Root tools are still script-shaped
+### 3. Audio/scene workflow tools need service-shaped ownership
 
-`analyze_wav.py`, `build_track_summary.py` and `normalize_scene_spec.py` contain reusable logic but are not yet cleanly separated into importable service modules plus CLI wrappers.
+The audio analysis, track summary and scene-spec tools now live under `Tools/workflow/`; keep reusable logic in importable modules and keep only thin CLI wrappers public.
 
 ### 4. Encoding logic should become shared
 

@@ -50,7 +50,7 @@ Tools/ai/reconcile_heap_report_with_startup_reload.py
 Tools/ai/run_heap_runtime_context_closure.py
 Tools/ai/compose_heap_final_proposals.py
 Tools/ai/provider_runtime_heap.py
-Tools/ai/agent_runtime_sqlite_memory.py
+python -m Tools.ai agent_runtime_sqlite_memory
 ```
 
 oppure in un nuovo adapter esterno, per esempio:
@@ -106,7 +106,7 @@ Tools/ai/prepare_heap_context_memory_reload.py
 L'heap/preload deve scrivere un record operativo nella scratch memory sotto `output/**`, usando:
 
 ```text
-Tools/ai/agent_runtime_sqlite_memory.py --action remember --scope operational
+python -m Tools.ai agent_runtime_sqlite_memory --action remember --scope operational
 ```
 
 Contenuto consigliato:

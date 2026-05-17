@@ -20,8 +20,8 @@ generic generated-file policy engine
 Do not move application-specific rules into:
 
 ```text
-Tools/validation/generated_file_policy.py
-Tools/validation/generated_python_policy.py
+Tools/validation/_shared/generated_file_policy.py
+Tools/validation/_shared/generated_python_policy.py
 ```
 
 ## Current generic layer
@@ -29,7 +29,7 @@ Tools/validation/generated_python_policy.py
 Use this layer first for every generated Python target:
 
 ```text
-Tools/validation/generated_python_policy.py
+Tools/validation/_shared/generated_python_policy.py
 Tools/validation/check_generated_python_policy.py
 ```
 

@@ -253,10 +253,10 @@ Do not implement these proposals in this task. Generate proposals and draft patc
 Run this task through the project-owned wrapper:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\full-context-ai-npu-golden-path.md `
   -TaskBranch codex/full-context-ai-npu-golden-run `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -BuildSemanticChunks -SelectSemanticChunks -BuildSelectedChunksEvidence -SelectedChunksEvidenceBasename full_context_golden_selected_chunks_evidence -ChunkQuery "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators npu knowledge broker context oracle retrieval ranking" -ChunkPathBoost Tools/workflow,Tools/ai,Tools/validation,Tools/npu -SelectedChunksBasename full_context_golden_selected_chunks -MaxSelectedChunks 24 -MaxSelectedChunkChars 32000 -MaxSelectedChunkExcerptChars 2500 -BuildContextPack -ContextPackProfile core_ai_backend -ContextPackBasename full_context_golden_core_ai_backend -ContextPackEvidenceBasename full_context_golden_core_ai_backend_context_pack_evidence -BuildAgentStatePacket -AgentStateBasename full_context_golden_agent_state -AgentStateObjective "Run full-context local AI/NPU golden path and propose controlled complexity escalation such as core helper, validator, wrapper flag, docs contract or NPU knowledge broker." -MemoryDb .\indexAI\agent_memory\agent_memory.sqlite -SaveInputsToMemoryDb -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename full_context_golden_local_ai_context -ProposalBasename full_context_golden_local_ai_context_proposals -EvidenceBasename full_context_golden_local_ai_context_evidence -MultistepBasename full_context_golden_local_ai_context_multistep -MultistepProposalBasename full_context_golden_local_ai_context_multistep_proposals -MultistepEvidenceBasename full_context_golden_local_ai_context_multistep_evidence'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -BuildSemanticChunks -SelectSemanticChunks -BuildSelectedChunksEvidence -SelectedChunksEvidenceBasename full_context_golden_selected_chunks_evidence -ChunkQuery "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators npu knowledge broker context oracle retrieval ranking" -ChunkPathBoost Tools/workflow,Tools/ai,Tools/validation,Tools/npu -SelectedChunksBasename full_context_golden_selected_chunks -MaxSelectedChunks 24 -MaxSelectedChunkChars 32000 -MaxSelectedChunkExcerptChars 2500 -BuildContextPack -ContextPackProfile core_ai_backend -ContextPackBasename full_context_golden_core_ai_backend -ContextPackEvidenceBasename full_context_golden_core_ai_backend_context_pack_evidence -BuildAgentStatePacket -AgentStateBasename full_context_golden_agent_state -AgentStateObjective "Run full-context local AI/NPU golden path and propose controlled complexity escalation such as core helper, validator, wrapper flag, docs contract or NPU knowledge broker." -MemoryDb .\indexAI\agent_memory\agent_memory.sqlite -SaveInputsToMemoryDb -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename full_context_golden_local_ai_context -ProposalBasename full_context_golden_local_ai_context_proposals -EvidenceBasename full_context_golden_local_ai_context_evidence -MultistepBasename full_context_golden_local_ai_context_multistep -MultistepProposalBasename full_context_golden_local_ai_context_multistep_proposals -MultistepEvidenceBasename full_context_golden_local_ai_context_multistep_evidence'
 ```
 
 ## Required post-run validation
@@ -264,7 +264,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
 Replace `<actual-run-dir>` with the real run directory.
 
 ```powershell
-python .\Tools\validation\check_selected_semantic_chunks.py `
+python -m Tools.validation check_selected_semantic_chunks `
   --repo-root . `
   --bundle .\output\ai_context_packs\full_context_golden_selected_chunks.json `
   --output .\output\validation\full_context_golden_selected_chunks_contract.json `
@@ -272,27 +272,27 @@ python .\Tools\validation\check_selected_semantic_chunks.py `
   --markdown-output .\docs\LOCAL_VALIDATION_EVIDENCE\full_context_golden_selected_chunks_evidence.md `
   --max-total-chars 32000
 
-python .\Tools\validation\check_repository_change_proposals.py `
+python -m Tools.validation check_repository_change_proposals `
   --repo-root . `
   --proposal .\output\local_ai_runs\<actual-run-dir>\pipeline\full_context_golden_local_ai_context_proposals.json `
   --output .\output\validation\full_context_golden_local_ai_context_proposals_contract.json
 
-python .\Tools\validation\check_patch_spec_drafts.py `
+python -m Tools.validation check_patch_spec_drafts `
   --repo-root . `
   --manifest .\output\patch_specs\full_context_golden_local_ai_context_patch_specs_manifest.json `
   --output .\output\validation\full_context_golden_local_ai_context_patch_spec_drafts.json
 
-python .\Tools\validation\check_ai_context_pack_contract.py `
+python -m Tools.validation check_ai_context_pack_contract `
   --repo-root . `
   --pack .\output\ai_context_packs\full_context_golden_core_ai_backend.json `
   --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\full_context_golden_core_ai_backend_context_pack_evidence.json `
   --output .\output\validation\full_context_golden_core_ai_backend_context_pack_contract.json
 
-python .\Tools\validation\check_github_evidence_bundle.py `
+python -m Tools.validation check_github_evidence_bundle `
   --repo-root . `
   --output .\output\validation\github_evidence_bundle.json
 
-python .\Tools\validation\check_validation_report_contract.py `
+python -m Tools.validation check_validation_report_contract `
   --repo-root . `
   --output .\output\validation\validation_report_contract.json
 

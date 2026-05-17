@@ -192,7 +192,7 @@ Stato attuale:
 - se `--max-blocks` limita i blocchi esposti, il manifest conserva `source_block_count`, `all_roles_present` e il provider execution calcolato sui blocchi sorgente completi;
 - i proposal block separano `candidate_response_preview`, `diagnostic_preview` e `preview_source`.
 
-### `Tools/ai/build_external_heap_revision_context.py`
+### `python -m Tools.ai build_external_heap_revision_context`
 
 Produce `external_heap_revision_context.json/md` da:
 
@@ -283,7 +283,7 @@ Non sostituisce il vecchio composer e non modifica il gate. Automatizza la seque
 1. `normalize_heap_final_causality.py`
 2. `build_external_heap_block_pointer_manifest.py`
 3. `compose_external_heap_block_response.py`
-4. `build_external_heap_revision_context.py`
+4. `python -m Tools.ai build_external_heap_revision_context`
 
 Output principale:
 
@@ -352,7 +352,7 @@ Esempio cold run:
 ```powershell
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py `
+& $RepoPy -m Tools.ai run_heap_runtime_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $Stamp `
@@ -380,7 +380,7 @@ $NextStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $RunDir = "C:\Users\carmi\blender\blender-audio-project\output\validation\heap_context_closure_20260512-144115"
 $RevisionContext = Join-Path $RunDir "external_heap_revision_context.json"
 
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py `
+& $RepoPy -m Tools.ai run_heap_runtime_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $NextStamp `
@@ -485,7 +485,7 @@ $env:PYTHONPATH = (Resolve-Path .).Path
   .\Tools\ai\normalize_heap_final_causality.py `
   .\Tools\ai\build_external_heap_block_pointer_manifest.py `
   .\Tools\ai\compose_external_heap_block_response.py `
-  .\Tools\ai\build_external_heap_revision_context.py `
+  -m Tools.ai build_external_heap_revision_context `
   .\Tools\ai\run_external_heap_postrun_package.py `
   .\Tools\validation\run_heap_runtime_launcher_command_smoke.py `
   .\Tools\validation\run_external_heap_revision_context_applicability_smoke.py
@@ -494,7 +494,7 @@ $env:PYTHONPATH = (Resolve-Path .).Path
 Smoke command builder:
 
 ```powershell
-& $RepoPy .\Tools\validation\run_heap_runtime_launcher_command_smoke.py `
+& $RepoPy -m Tools.validation run_heap_runtime_launcher_command_smoke `
   --repo-root . `
   --output .\output\validation\heap_runtime_launcher_command_smoke.json `
   --markdown-output .\output\validation\heap_runtime_launcher_command_smoke.md
@@ -503,7 +503,7 @@ Smoke command builder:
 Smoke revision applicability:
 
 ```powershell
-& $RepoPy .\Tools\validation\run_external_heap_revision_context_applicability_smoke.py `
+& $RepoPy -m Tools.validation run_external_heap_revision_context_applicability_smoke `
   --output .\output\validation\external_heap_revision_context_applicability_smoke.json
 ```
 

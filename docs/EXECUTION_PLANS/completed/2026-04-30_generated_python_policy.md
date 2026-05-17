@@ -27,7 +27,7 @@ Add a generic generated Python policy layer that improves AI guardrails without 
 
 ```text
 AGENTS.md
-Tools/validation/generated_python_policy.py
+Tools/validation/_shared/generated_python_policy.py
 Tools/validation/check_generated_python_policy.py
 Tools/validation/check_generated_blender_script_policy.py
 Tools/validation/README.md
@@ -47,12 +47,12 @@ Tools/npu/npu_code_manifest.json
 ## Validation commands
 
 ```powershell
-python .\Tools\validation\check_generated_python_policy.py --repo-root . --output .\output\validation\generated_python_policy.json
-python .\Tools\validation\check_generated_blender_script_policy.py --repo-root . --output .\output\validation\generated_blender_script_policy.json
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
+python -m Tools.validation check_generated_python_policy --repo-root . --output .\output\validation\generated_python_policy.json
+python -m Tools.validation check_generated_blender_script_policy --repo-root . --output .\output\validation\generated_blender_script_policy.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.workflow run_local_validation_after_refactor -SkipPull -ContinueOnError
+python -m Tools.npu build_project_ai_index
+python -m Tools.npu build_npu_code_context
 ```
 
 ## Risk level

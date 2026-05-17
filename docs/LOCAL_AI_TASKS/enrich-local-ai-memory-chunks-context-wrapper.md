@@ -56,10 +56,10 @@ Review and integrate the project-owned enrichment strategy into the local AI wor
 The local AI must verify how these existing components can work together:
 
 ```text
-Tools/ai/agent_state.py
+Tools/ai/agent_memory/state.py
 Tools/ai/build_agent_state_packet.py
 Tools/ai/review_agent_memory.py
-Tools/ai/agent_memory_policy.py
+Tools/ai/agent_memory/policy.py
 Tools/npu/build_semantic_code_chunks.py
 Tools/ai/build_ai_context_pack.py
 Tools/workflow/run_local_ai_markdown_task.ps1
@@ -181,9 +181,9 @@ Do not propose broad refactors in the first pass.
 If the operator wants to generate enrichment artifacts before this task run, these commands are allowed and report-only:
 
 ```powershell
-py .\Tools\npu\build_semantic_code_chunks.py --repo-root .
+py -m Tools.npu build_semantic_code_chunks --repo-root .
 
-python .\Tools\ai\build_ai_context_pack.py `
+python -m Tools.ai build_ai_context_pack `
   --repo-root . `
   --profile core_ai_backend `
   --basename enriched_local_ai_core_ai_backend `
@@ -191,7 +191,7 @@ python .\Tools\ai\build_ai_context_pack.py `
   --max-total-chars 96000 `
   --max-file-chars 8000
 
-py .\Tools\ai\build_agent_state_packet.py `
+py -m Tools.ai build_agent_state_packet `
   --repo-root . `
   --objective "Integrate SQLite memory, semantic chunks and context packs into the local AI wrapper/multistep workflow." `
   --memory-db .\indexAI\agent_memory\agent_memory.sqlite `
@@ -212,10 +212,10 @@ py .\Tools\ai\build_agent_state_packet.py `
 Run through the project-owned local wrapper and adapter:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\enrich-local-ai-memory-chunks-context-wrapper.md `
   -TaskBranch codex/enrich-local-ai-memory-chunks-context `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename enrich_local_ai_memory_chunks_context -ProposalBasename enrich_local_ai_memory_chunks_context_proposals -EvidenceBasename enrich_local_ai_memory_chunks_context_evidence -MultistepBasename enrich_local_ai_memory_chunks_context_multistep -MultistepProposalBasename enrich_local_ai_memory_chunks_context_multistep_proposals -MultistepEvidenceBasename enrich_local_ai_memory_chunks_context_multistep_evidence'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename enrich_local_ai_memory_chunks_context -ProposalBasename enrich_local_ai_memory_chunks_context_proposals -EvidenceBasename enrich_local_ai_memory_chunks_context_evidence -MultistepBasename enrich_local_ai_memory_chunks_context_multistep -MultistepProposalBasename enrich_local_ai_memory_chunks_context_multistep_proposals -MultistepEvidenceBasename enrich_local_ai_memory_chunks_context_multistep_evidence'
 ```
 
 ## Required validation after run
@@ -223,21 +223,21 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
 Run:
 
 ```powershell
-python .\Tools\validation\check_repository_change_proposals.py `
+python -m Tools.validation check_repository_change_proposals `
   --repo-root . `
   --proposal .\output\local_ai_runs\<actual-run-dir>\pipeline\enrich_local_ai_memory_chunks_context_proposals.json `
   --output .\output\validation\enrich_local_ai_memory_chunks_context_proposals_contract.json
 
-python .\Tools\validation\check_patch_spec_drafts.py `
+python -m Tools.validation check_patch_spec_drafts `
   --repo-root . `
   --manifest .\output\patch_specs\enrich_local_ai_memory_chunks_context_patch_specs_manifest.json `
   --output .\output\validation\enrich_local_ai_memory_chunks_context_patch_spec_drafts.json
 
-python .\Tools\validation\check_github_evidence_bundle.py `
+python -m Tools.validation check_github_evidence_bundle `
   --repo-root . `
   --output .\output\validation\github_evidence_bundle.json
 
-python .\Tools\validation\check_validation_report_contract.py `
+python -m Tools.validation check_validation_report_contract `
   --repo-root . `
   --output .\output\validation\validation_report_contract.json
 
@@ -302,7 +302,7 @@ Stop and report if:
 ```text
 AGENTS.md is missing
 LOCAL_AI_RUN_BOOTSTRAP.md is missing
-agent_state.py or build_agent_state_packet.py is missing
+agent_memory/state.py or build_agent_state_packet.py is missing
 semantic chunk builder is missing
 context pack builder is missing
 a proposal requires committing private/local SQLite memory

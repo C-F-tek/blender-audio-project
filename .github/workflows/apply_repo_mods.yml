@@ -85,11 +85,11 @@ jobs:
           while IFS= read -r SPEC; do
             [[ -z "$SPEC" ]] && continue
             echo "::group::Dry run $SPEC"
-            python Tools/repo_patch_runner/apply_repo_mods.py --spec "$SPEC" --dry-run
+            python -m Tools.repo_patch_runner apply_repo_mods --spec "$SPEC" --dry-run
             echo "::endgroup::"
 
             echo "::group::Apply $SPEC"
-            python Tools/repo_patch_runner/apply_repo_mods.py --spec "$SPEC" --write --no-backup --show-diff
+            python -m Tools.repo_patch_runner apply_repo_mods --spec "$SPEC" --write --no-backup --show-diff
             echo "::endgroup::"
 
             BASE_NAME="$(basename "$SPEC" .json)"

@@ -39,6 +39,7 @@ SOURCE_PREFIXES = (
     "Tools/docs/",
     "Tools/workflow/",
     "docs/",
+    "Scripting/",
 )
 EXECUTABLE_PYTHON_PREFIXES = (
     "Tools/ai/",
@@ -52,7 +53,6 @@ DENY_PREFIXES = (
     "indexAI/code_chunks/",
     "indexAI/project_code_chunks/",
     "docs/LOCAL_VALIDATION_EVIDENCE/",
-    "Scripting/",
 )
 DENY_SUFFIXES = (
     ".db",

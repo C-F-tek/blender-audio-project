@@ -64,11 +64,11 @@ Tools/ai/suggest_repository_updates.py
 ## Validation
 
 ```powershell
-python .\Tools\validation\check_provider_result_parsing.py --repo-root . --output .\output\validation\provider_result_parsing.json
-python .\Tools\npu\build_provider_result_report.py --repo-root . --use-samples --output .\output\validation\provider_result_report.json
-python .\Tools\ai\run_local_provider_probe.py --repo-root . --run-ollama --run-npu --output .\output\validation\local_provider_probe.json
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_post_validation_ai_packet.ps1 -Profile npu -OutputDir output\ai_packets -Basename npu_provider_adoption_after_tests -ProposalBasename npu_provider_adoption_proposals -ReportFile output\validation\provider_result_parsing.json,output\validation\provider_result_report.json,output\validation\local_provider_probe.json,output\validation\npu_runtime_output_manifest.json,output\validation\local_ai_resource_lanes.json
+python -m Tools.validation check_provider_result_parsing --repo-root . --output .\output\validation\provider_result_parsing.json
+python -m Tools.npu build_provider_result_report --repo-root . --use-samples --output .\output\validation\provider_result_report.json
+python -m Tools.ai run_local_provider_probe --repo-root . --run-ollama --run-npu --output .\output\validation\local_provider_probe.json
+python -m Tools.workflow run_npu_pipeline_helper_validation
+python -m Tools.workflow run_post_validation_ai_packet -Profile npu -OutputDir output\ai_packets -Basename npu_provider_adoption_after_tests -ProposalBasename npu_provider_adoption_proposals -ReportFile output\validation\provider_result_parsing.json,output\validation\provider_result_report.json,output\validation\local_provider_probe.json,output\validation\npu_runtime_output_manifest.json,output\validation\local_ai_resource_lanes.json
 ```
 
 ## Stop conditions

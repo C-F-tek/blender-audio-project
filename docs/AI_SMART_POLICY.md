@@ -37,7 +37,7 @@ AI phases that build or consume context should produce AI-readable intermediates
 When a workflow already produces a machine-readable report, prefer scanning the report rather than manually retyping every output path:
 
 ```powershell
-python .\Tools\validation\check_generated_artifact_path_policy.py --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
+python -m Tools.validation check_generated_artifact_path_policy --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy.json
 ```
 
 ## NPU role
@@ -118,8 +118,8 @@ External vector databases or embedding stores should remain optional providers u
 Review memory regularly with:
 
 ```powershell
-python .\Tools\ai\review_agent_memory.py --repo-root .
-python .\Tools\validation\check_agent_memory_policy.py --repo-root . --output .\output\validation\agent_memory_policy.json
+python -m Tools.ai review_agent_memory --repo-root .
+python -m Tools.validation policy --repo-root . --output .\output\validation\agent_memory_policy.json
 ```
 
 See `docs/AI_MEMORY_POLICY.md` for retention actions and promotion rules.

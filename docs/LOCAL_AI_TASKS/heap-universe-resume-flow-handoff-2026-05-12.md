@@ -105,7 +105,7 @@ Correzione:
 
 Questa e' la correzione piu' pulita: il preload non deve fingersi broker. Il broker esegue tool; `context_memory` rappresenta il contesto/memoria gia' materializzato nel task-file.
 
-### 2. `Tools/ai/build_external_heap_revision_context.py`
+### 2. `python -m Tools.ai build_external_heap_revision_context`
 
 Problemi osservati:
 
@@ -174,7 +174,7 @@ Compilazione/import:
 ```powershell
 & $RepoPy -m py_compile `
   .\Tools\ai\provider_runtime_heap.py `
-  .\Tools\ai\build_external_heap_revision_context.py `
+  -m Tools.ai build_external_heap_revision_context `
   .\Tools\ai\run_external_heap_postrun_package.py `
   .\Tools\ai\run_heap_runtime_context_closure.py `
   .\Tools\ai\run_heap_runtime_completeness_gate.py `
@@ -187,7 +187,7 @@ Compilazione/import:
 Smoke detector:
 
 ```powershell
-& $RepoPy .\Tools\validation\run_external_heap_revision_context_applicability_smoke.py `
+& $RepoPy -m Tools.validation run_external_heap_revision_context_applicability_smoke `
   --output .\output\validation\external_heap_revision_context_applicability_smoke.json
 ```
 
@@ -208,7 +208,7 @@ Usare la run locale che ha gia' heap passed:
 ```powershell
 $RunDir = "C:\Users\carmi\blender\blender-audio-project\output\validation\heap_context_closure_20260512-144115"
 
-& $RepoPy .\Tools\ai\build_external_heap_revision_context.py `
+& $RepoPy -m Tools.ai build_external_heap_revision_context `
   --pointer-manifest (Join-Path $RunDir "external_heap_block_pointer_manifest.json") `
   --composer-json (Join-Path $RunDir "heap_final_proposal_composer.json") `
   --causality-json (Join-Path $RunDir "heap_final_causality_normalized.json") `
@@ -260,7 +260,7 @@ $NextStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $RunDir = "C:\Users\carmi\blender\blender-audio-project\output\validation\heap_context_closure_20260512-144115"
 $RevisionContext = Join-Path $RunDir "external_heap_revision_context.json"
 
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py `
+& $RepoPy -m Tools.ai run_heap_runtime_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $NextStamp `
@@ -317,7 +317,7 @@ Al momento dello stato riportato dall'operatore:
 ```text
 git branch --show-current = master
 git status --short:
- M Tools/ai/build_external_heap_revision_context.py
+ M python -m Tools.ai build_external_heap_revision_context
  M Tools/ai/prepare_heap_context_memory_reload.py
  M Tools/ai/run_heap_runtime_completeness_gate.py
  M Tools/ai/run_heap_runtime_context_closure.py

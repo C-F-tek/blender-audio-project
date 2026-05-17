@@ -88,8 +88,8 @@ Additional requirements:
 
 Examples:
 
-    analyze_wav.py
-    build_track_summary.py
+    Tools/workflow/audio_analysis/analyze_cli.py
+    Tools/workflow/audio_analysis/summary_cli.py
     Scripting/v61b/main_v61b.py
     Scripting/v61b/encode_image_sequence_v61b.py
     Scripting/v61b/encode_ffmpeg_v61b.py
@@ -170,10 +170,10 @@ Promotion:
 
 Examples:
 
-    Tools/workflow/workflow_shell_with_push.py
-    Tools/workflow/git_auto_push.py
-    Tools/git/auto_push_generated_data.ps1
-    Tools/git/auto_push_generated_artifacts.ps1
+    python -m Tools.workflow workflow_shell_with_push
+    python -m Tools.workflow git_auto_push
+    python -m Tools.git auto_push_generated_data
+    python -m Tools.git auto_push_generated_artifacts
 
 Placement:
 
@@ -198,7 +198,7 @@ Preferred paths:
     Tools/npu/<tool>.py              NPU/provider-specific tooling
     Scripting/v61b/<tool>.py         Blender/audio runtime helpers
 
-Root-level tools are allowed only when they are user-facing canonical entrypoints, such as `analyze_wav.py`.
+Do not add new root-level tool entrypoints; user-facing tools should live under `Tools/workflow/`, `Tools/ai/`, `Tools/validation/`, `Tools/npu/` or `Scripting/` according to ownership.
 
 ### B. Define CLI contract
 
@@ -264,7 +264,7 @@ At minimum:
 
 If the tool emits JSON reports, validate with:
 
-    python .\Tools\validation\check_validation_report_contract.py --repo-root . --report-file <report> --output <contract-report>
+    python -m Tools.validation check_validation_report_contract --repo-root . --report-file <report> --output <contract-report>
 
 If it becomes workflow-critical, add a smoke under:
 
@@ -349,11 +349,11 @@ Validation after the concrete file exists:
 python -m py_compile <tracked validation tool> Tools/ai/agent_runtime_tool_broker.py
 ```
 
-## Example: promoting root audio analyzer
+## Example: promoting the workflow audio analyzer
 
 Path:
 
-    analyze_wav.py
+    Tools/workflow/audio_analysis/analyze_cli.py
 
 Placement:
 

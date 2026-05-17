@@ -84,7 +84,7 @@ No patch spec should be applied automatically.
 Before reading the runtime ZIP, code/docs inspection suggests one safe candidate family:
 
 ```text
-centralize report/telemetry helper functions in Tools/validation/report_utils.py
+centralize report/telemetry helper functions in Tools/validation/_shared/report_utils.py
 reuse them from Tools/ai/build_runtime_tool_usage_telemetry.py
 reuse them from Tools/ai/build_full_toolbox_run_telemetry_summary.py
 then evaluate Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py separately

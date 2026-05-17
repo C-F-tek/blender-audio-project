@@ -65,19 +65,19 @@ parallel_lanes
 Single dry run:
 
 ```powershell
-python .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --dry-run --write-dry-run-report
+python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --dry-run --write-dry-run-report
 ```
 
 Full dry run with common stages:
 
 ```powershell
-python .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
+python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
 ```
 
 Dry-run matrix:
 
 ```powershell
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 ## Hardware policy

@@ -31,12 +31,12 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
 
-& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+& $RepoPy -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+& $RepoPy -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```

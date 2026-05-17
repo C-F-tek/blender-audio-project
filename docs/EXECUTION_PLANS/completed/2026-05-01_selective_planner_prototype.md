@@ -59,13 +59,13 @@ output/validation/selective_execution_plan.json
 ## Validation commands
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\ai\build_selective_execution_plan.py --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
-python .\Tools\validation\check_selective_execution_plan.py --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
-python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.ai build_selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
+python -m Tools.validation check_selective_execution_plan --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
+python -m Tools.validation check_json_artifacts --repo-root . --output .\output\validation\json_artifacts.json
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
+python -m Tools.validation check_execution_plan_status --repo-root . --output .\output\validation\execution_plan_status.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 git diff --check
 ```
 
@@ -74,7 +74,7 @@ git diff --check
 Only Carmine can run real GPU/NPU evidence on the workstation:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_provider_multistep.ps1 `
+python -m Tools.workflow run_parallel_ai_provider_multistep `
   -Profile npu `
   -RunOllamaProbe `
   -RunNpuProbe `
@@ -84,9 +84,9 @@ powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_parallel_ai_pr
   -ProposalBasename parallel_gpu_npu_selective_planner_real_proposals `
   -EvidenceBasename parallel_gpu_npu_selective_planner_real_evidence
 
-python .\Tools\ai\build_github_evidence_bundle.py --repo-root . --basename parallel_gpu_npu_selective_planner_real_evidence
-python .\Tools\validation\check_github_evidence_bundle.py --repo-root . --output .\output\validation\github_evidence_bundle.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.ai build_github_evidence_bundle --repo-root . --basename parallel_gpu_npu_selective_planner_real_evidence
+python -m Tools.validation check_github_evidence_bundle --repo-root . --output .\output\validation\github_evidence_bundle.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 ```
 
 ## Acceptance criteria

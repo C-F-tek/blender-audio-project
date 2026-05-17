@@ -34,8 +34,8 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 | Repository | `C-F-tek/blender-audio-project` |
 | Main language | Python |
 | Active architecture | Shared runtime heap / blackboard, provider-lane orchestration, broker execution, semantic tools registry, deterministic CPU validators, telemetry/evidence workflows |
-| Operator product entrypoint | `Tools/workflow/run_unified_real_product_pr.ps1` |
-| Dynamic heap/exchange launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` |
+| Operator product entrypoint | `python -m Tools.ai run` |
+| Dynamic heap/exchange launcher | `python -m Tools.workflow run_unified_local_ai_refactor` |
 | Primary provider lane | `GPU1 / Ollama / RTX 5080 -> primary advisory planner/worker` |
 | Secondary provider lane | `GPU0 / OpenVINO -> observable support workload and peer evidence lane` |
 | Micro peer lane | `NPU / OpenVINO -> peer micro diagnostic/report lane until compute-provider behavior is validated` |
@@ -99,12 +99,12 @@ For real product, full toolbox, refactor, provider or run-unica local AI runs, t
 
 ```text
 Operator product path:
-  Tools/workflow/run_unified_real_product_pr.ps1
+  python -m Tools.ai run
   docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
   docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 
 Dynamic launcher / diagnostic path:
-  Tools/workflow/run_unified_local_ai_refactor.ps1
+  python -m Tools.workflow run_unified_local_ai_refactor
   docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
   docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 ```
@@ -149,7 +149,7 @@ run git diff before staging
 For structural Markdown hygiene, use the repository tool instead of manual splitting:
 
 ~~~powershell
-python .\Tools\docs\refactor_markdown_splits.py --repo-root . --migrate-legacy-splits --split-monolithic
+python -m Tools.docs refactor_markdown_splits --repo-root . --migrate-legacy-splits --split-monolithic
 ~~~
 
 Do not manually split, rewrite or delete Markdown trees when `Tools/docs/refactor_markdown_splits.py`, `Tools/docs/build_repo_hygiene_plan.py`, PatchKit, or validators can express the change safely.
@@ -167,8 +167,8 @@ Current compact operational state:
 
 ```text
 Baseline: master after PR #296 merge and subsequent docs alignment commits
-Product wrapper: Tools/workflow/run_unified_real_product_pr.ps1
-Dynamic launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Product wrapper: python -m Tools.ai run
+Dynamic launcher: python -m Tools.workflow run_unified_local_ai_refactor
 Current run index: docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
 Current runbook: docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 Current operating model: docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
@@ -272,12 +272,12 @@ patch_specs/<bundle>/fragments/*.py
 Standard apply path:
 
 ```powershell
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -308,12 +308,12 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
 
-& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+& $RepoPy -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+& $RepoPy -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```

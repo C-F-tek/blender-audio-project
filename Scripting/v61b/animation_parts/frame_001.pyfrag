@@ -1,0 +1,281 @@
+if i % 100 == 0:
+    print(f"[ANIMATE] frame {i}/{total_frames}")
+
+low = float(sample["low"])
+mid = float(sample["mid"])
+high = float(sample["high"])
+onset = float(sample["onset"])
+beat = float(sample["beat"])
+
+pulse = max(onset, beat)
+bass_drive = min(1.0, low * 0.78 + beat * 0.35)
+transient = min(1.0, onset * 0.68 + beat * 0.55)
+
+# HERO
+s = HERO_SCALE_MIN + bass_drive * (HERO_SCALE_MAX - HERO_SCALE_MIN) + transient * 0.035
+hero_root.scale = (
+    hero_base_scale.x * s,
+    hero_base_scale.y * s,
+    hero_base_scale.z * s,
+)
+
+hero_root.location.x = (
+    hero_base_loc.x
+    + math.sin(i * 0.025) * HERO_DRIFT_X * (0.35 + mid * 0.65)
+    + math.sin(i * 0.071) * HERO_ORBIT_X * (0.25 + transient)
+)
+hero_root.location.y = (
+    hero_base_loc.y
+    + math.cos(i * 0.020) * HERO_DRIFT_Y * (0.25 + high * 0.75)
+    + math.cos(i * 0.063) * HERO_ORBIT_Y * (0.25 + pulse)
+)
+hero_root.location.z = (
+    hero_base_loc.z
+    + bass_drive * HERO_BOUNCE_Z
+    + transient * 0.16
+    + math.sin(i * 0.045) * 0.035
+)
+
+onset_shake_x = math.sin(i * 0.43) * transient * HERO_ONSET_SHAKE
+onset_shake_y = math.cos(i * 0.37) * transient * HERO_ONSET_SHAKE * 0.65
+
+hero_root.rotation_euler.x = (
+    hero_base_rot.x + math.sin(i * 0.030) * HERO_ROT_X * (0.30 + mid * 0.70) + onset_shake_x
+)
+hero_root.rotation_euler.y = (
+    hero_base_rot.y
+    + math.cos(i * 0.018) * HERO_ROT_Y * (0.20 + high * 0.80)
+    + onset_shake_y
+)
+hero_root.rotation_euler.z = (
+    hero_base_rot.z
+    + math.sin(i * 0.020) * HERO_ROT_Z * (0.35 + pulse * 0.65)
+    + beat * HERO_BEAT_TWIST_Z
+    + onset * math.sin(i * 0.19) * HERO_BEAT_TWIST_Z * 0.35
+)
+
+hero_root.keyframe_insert(data_path="scale", frame=i)
+hero_root.keyframe_insert(data_path="location", frame=i)
+hero_root.keyframe_insert(data_path="rotation_euler", frame=i)
+
+# HERO MESH DEFORMATION
+deform_keyframe = (
+    i == 1
+    or i == total_frames
+    or i % HERO_DEFORM_KEYFRAME_STEP == 0
+    or beat > 0.0
+    or onset > 0.72
+)
+
+if hero_deformers and deform_keyframe:
+    deform_drive = min(1.0, low * 0.58 + mid * 0.20 + transient * 0.52)
+    if hero_deform_controller is not None:
+        hero_deform_controller.location.x = hero_deform_base_loc.x + math.sin(
+            i * 0.036
+        ) * HERO_DEFORM_CONTROLLER_RADIUS * (0.45 + deform_drive)
+        hero_deform_controller.location.y = hero_deform_base_loc.y + math.cos(
+            i * 0.031
+        ) * HERO_DEFORM_CONTROLLER_RADIUS * (0.35 + pulse)
+        hero_deform_controller.location.z = (
+            hero_deform_base_loc.z
+            + math.sin(i * 0.027) * HERO_DEFORM_CONTROLLER_RADIUS * 0.28
+            + beat * 0.08
+        )
+        hero_deform_controller.rotation_euler.x = (
+            hero_deform_base_rot.x + i * 0.006 + high * 0.14
+        )
+        hero_deform_controller.rotation_euler.y = (
+            hero_deform_base_rot.y + math.sin(i * 0.022) * 0.18
+        )
+        hero_deform_controller.rotation_euler.z = (
+            hero_deform_base_rot.z + i * 0.010 + onset * 0.24
+        )
+
+        deform_scale = 1.0 + deform_drive * 0.18
+        hero_deform_controller.scale = (
+            hero_deform_base_scale.x * deform_scale,
+            hero_deform_base_scale.y * (1.0 + high * 0.12),
+            hero_deform_base_scale.z * (1.0 + low * 0.10),
+        )
+
+        hero_deform_controller.keyframe_insert(data_path="location", frame=i)
+        hero_deform_controller.keyframe_insert(data_path="rotation_euler", frame=i)
+        hero_deform_controller.keyframe_insert(data_path="scale", frame=i)
+
+    for item in hero_deformers:
+        phase = item["phase"]
+        modifier = item["modifier"]
+        ripple = 0.5 + 0.5 * math.sin(i * 0.045 + phase)
+        main_strength_max = item.get("main_strength_max", HERO_DEFORM_STRENGTH_MAX)
+        strength = HERO_DEFORM_STRENGTH_MIN + deform_drive * (
+            main_strength_max - HERO_DEFORM_STRENGTH_MIN
+        )
+        modifier.strength = strength * (0.74 + ripple * 0.26)
+        keyframe_if_possible(modifier, "strength", i)
+
+        detail_modifier = item.get("detail_modifier")
+        if detail_modifier is not None:
+            detail_drive = min(1.0, high * 0.56 + onset * 0.46 + deform_drive * 0.30)
+            detail_modifier.strength = detail_drive * item.get(
+                "detail_strength_max",
+                HERO_DEFORM_DETAIL_STRENGTH_MAX,
+            )
+            keyframe_if_possible(detail_modifier, "strength", i)
+
+        wave_modifier = item.get("wave_modifier")
+        if wave_modifier is not None:
+            wave_drive = min(1.0, beat * 0.72 + onset * 0.36 + low * 0.20)
+            try:
+                wave_modifier.height = wave_drive * item.get(
+                    "wave_height_max",
+                    HERO_DEFORM_WAVE_HEIGHT_MAX,
+                )
+                keyframe_if_possible(wave_modifier, "height", i)
+            except Exception:
+                pass
+            try:
+                wave_modifier.time_offset = -i * 0.018 - phase
+                keyframe_if_possible(wave_modifier, "time_offset", i)
+            except Exception:
+                pass
+
+        twist_modifier = item.get("twist_modifier")
+        if twist_modifier is not None:
+            twist_drive = min(1.0, mid * 0.42 + beat * 0.42 + onset * 0.34 + high * 0.18)
+            twist_angle_max = item.get("twist_angle_max", HERO_DEFORM_TWIST_MAX)
+            try:
+                twist_modifier.angle = (
+                    math.sin(i * 0.030 + phase) * twist_drive * twist_angle_max
+                )
+                keyframe_if_possible(twist_modifier, "angle", i)
+            except Exception:
+                pass
+
+if hero_material_controls and deform_keyframe:
+    material_drive = min(1.0, high * 0.54 + mid * 0.22 + pulse * 0.38)
+    surface_drive = min(1.0, low * 0.24 + mid * 0.28 + high * 0.34 + onset * 0.26)
+
+    for control in hero_material_controls:
+        emission_socket = control.get("emission_socket")
+        if emission_socket is not None:
+            emission_socket.default_value = HERO_MATERIAL_EMISSION_MIN + material_drive * (
+                HERO_MATERIAL_EMISSION_MAX - HERO_MATERIAL_EMISSION_MIN
+            )
+            keyframe_if_possible(emission_socket, "default_value", i)
+
+        self_light_socket = control.get("self_light_socket")
+        if self_light_socket is not None:
+            edge_drive = min(
+                1.0, material_drive * 0.74 + surface_drive * 0.18 + pulse * 0.16
+            )
+            self_light_socket.default_value = HERO_MATERIAL_SELF_LIGHT_MIN + edge_drive * (
+                HERO_MATERIAL_SELF_LIGHT_MAX - HERO_MATERIAL_SELF_LIGHT_MIN
+            )
+            keyframe_if_possible(self_light_socket, "default_value", i)
+
+        roughness_socket = control.get("roughness_socket")
+        if roughness_socket is not None:
+            roughness_socket.default_value = (
+                HERO_MATERIAL_ROUGHNESS_MAX
+                - material_drive
+                * (HERO_MATERIAL_ROUGHNESS_MAX - HERO_MATERIAL_ROUGHNESS_MIN)
+            )
+            keyframe_if_possible(roughness_socket, "default_value", i)
+
+        bump_socket = control.get("bump_socket")
+        if bump_socket is not None:
+            bump_socket.default_value = HERO_MATERIAL_BUMP_MIN + surface_drive * (
+                HERO_MATERIAL_BUMP_MAX - HERO_MATERIAL_BUMP_MIN
+            )
+            keyframe_if_possible(bump_socket, "default_value", i)
+
+        noise_scale_socket = control.get("noise_scale_socket")
+        if noise_scale_socket is not None:
+            noise_scale_socket.default_value = (
+                HERO_MATERIAL_NOISE_SCALE_MIN
+                + surface_drive
+                * (HERO_MATERIAL_NOISE_SCALE_MAX - HERO_MATERIAL_NOISE_SCALE_MIN)
+            )
+            keyframe_if_possible(noise_scale_socket, "default_value", i)
+
+        mapping_location_socket = control.get("mapping_location_socket")
+        if mapping_location_socket is not None:
+            drift = HERO_MATERIAL_MAPPING_DRIFT
+            loc = mapping_location_socket.default_value
+            loc[0] = math.sin(i * 0.012) * drift + mid * drift * 0.45
+            loc[1] = math.cos(i * 0.010) * drift + high * drift * 0.35
+            loc[2] = i * 0.0018 + pulse * drift * 0.20
+            keyframe_if_possible(mapping_location_socket, "default_value", i)
+
+        mapping_rotation_socket = control.get("mapping_rotation_socket")
+        if mapping_rotation_socket is not None:
+            rot = mapping_rotation_socket.default_value
+            rot[0] = math.sin(i * 0.006) * 0.08 * (0.35 + surface_drive)
+            rot[1] = math.cos(i * 0.005) * 0.06 * (0.30 + material_drive)
+            rot[2] = i * 0.0025 + pulse * 0.09
+            keyframe_if_possible(mapping_rotation_socket, "default_value", i)
+
+# SECONDARY ASSET
+if secondary_root is not None:
+    ss = SECONDARY_SCALE_MIN + low * (SECONDARY_SCALE_MAX - SECONDARY_SCALE_MIN)
+    secondary_root.scale = (
+        secondary_base_scale.x * ss,
+        secondary_base_scale.y * ss,
+        secondary_base_scale.z * ss,
+    )
+
+    secondary_root.location.x = secondary_base_loc.x + math.sin(
+        i * 0.018
+    ) * SECONDARY_DRIFT_X * (0.35 + mid * 0.65)
+    secondary_root.location.y = secondary_base_loc.y + math.cos(
+        i * 0.022
+    ) * SECONDARY_DRIFT_Y * (0.30 + high * 0.70)
+    secondary_root.location.z = (
+        secondary_base_loc.z + low * SECONDARY_BOUNCE_Z + pulse * 0.06
+    )
+
+    secondary_root.rotation_euler.x = secondary_base_rot.x + math.sin(
+        i * 0.024
+    ) * SECONDARY_ROT_X * (0.35 + high * 0.65)
+    secondary_root.rotation_euler.y = secondary_base_rot.y + math.cos(
+        i * 0.016
+    ) * math.radians(3.0) * (0.25 + mid * 0.75)
+    secondary_root.rotation_euler.z = secondary_base_rot.z + math.sin(
+        i * 0.014
+    ) * SECONDARY_ROT_Z * (0.35 + pulse * 0.65)
+
+    secondary_root.keyframe_insert(data_path="scale", frame=i)
+    secondary_root.keyframe_insert(data_path="location", frame=i)
+    secondary_root.keyframe_insert(data_path="rotation_euler", frame=i)
+
+# AURA
+aura_obj.location.z = aura_base_loc.z + low * 0.08 + pulse * 0.04
+aura_obj.scale = (
+    1.0 + low * 0.06,
+    1.0 + low * 0.06,
+    1.0 + low * 0.06,
+)
+aura_obj.keyframe_insert(data_path="location", frame=i)
+aura_obj.keyframe_insert(data_path="scale", frame=i)
+
+aura_strength = 0.10 + (pulse * 0.55 + high * 0.45) * 1.25
+if aura_data.get("strength_socket") is not None:
+    aura_data["strength_socket"].default_value = aura_strength
+    aura_data["strength_socket"].keyframe_insert(data_path="default_value", frame=i)
+
+try:
+    aura_edge = max(0.05, min(0.42, 0.18 - high * 0.05 + pulse * 0.10))
+    if aura_data.get("edge_ctrl") is not None:
+        aura_data["edge_ctrl"].position = aura_edge
+        aura_data["edge_ctrl"].keyframe_insert(data_path="position", frame=i)
+except Exception:
+    pass
+
+# AURA AUDIO SAMPLER / INVISIBLE DEFORM FIELD
+aura_sample_keyframe = (
+    i == 1
+    or i == total_frames
+    or i % AURA_DEFORM_KEYFRAME_STEP == 0
+    or beat > 0.0
+    or onset > 0.72
+)

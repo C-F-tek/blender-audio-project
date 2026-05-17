@@ -5,7 +5,7 @@
 This document records the stable CLI contract for:
 
 ```text
-Tools/workflow/startup_check.py
+python -m Tools.workflow startup_check
 ```
 
 The tool is used directly by operators and indirectly by:
@@ -40,7 +40,7 @@ Supported options:
 The unified launcher may call:
 
 ```powershell
-python .\Tools\workflow\startup_check.py `
+python -m Tools.workflow startup_check `
   --repo-root . `
   --output .\output\validation\startup_check_smoke_<STAMP>.json `
   --json
@@ -61,7 +61,7 @@ ffmpeg_execution_performed = false
 Use:
 
 ```powershell
-python .\Tools\validation\run_startup_check_cli_contract_smoke.py `
+python -m Tools.validation run_startup_check_cli_contract_smoke `
   --repo-root . `
   --output .\output\validation\startup_check_cli_contract_smoke.json `
   --markdown-output .\output\validation\startup_check_cli_contract_smoke.md
@@ -98,6 +98,6 @@ It also keeps the legacy fields `project`, `root`, `ok`, `warning_count` and `ch
 
 ## Production/debug note
 
-`startup_check.py --output` is independent from the unified launcher's `-Prod` switch.
+`python -m Tools.workflow startup_check --output` is independent from the unified launcher's `-Prod` switch.
 
 `-Prod` controls extra launcher debug-tail evidence only. It does not remove the startup smoke report selected through `--output`.

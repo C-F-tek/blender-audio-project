@@ -117,7 +117,7 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | Tool family | Examples | Notes |
 |---|---|---|
 | Context and chunks | `build_ai_context_pack.py`, `select_semantic_code_chunks.py` | Provider-free context evidence. |
-| Agent state and memory | `build_agent_state_packet.py`, `review_agent_memory.py`, `agent_runtime_sqlite_memory.py` | SQLite outputs are local/private and must not be committed. |
+| Agent state and memory | `build_agent_state_packet.py`, `review_agent_memory.py`, `python -m Tools.ai agent_runtime_sqlite_memory` | SQLite outputs are local/private and must not be committed. |
 | AI peer exchange | `build_ai_peer_exchange_packet.py`, `run_gpu0_peer_companion_worker.py`, `run_npu_gpu_deep_review_auditor.py` | GPU1 output to GPU0/NPU peer response and broker evidence. |
 | Heap/exchange lifecycle | `build_heap_exchange_runtime_entry.py`, `build_heap_exchange_runtime_exit.py` | Dynamic center boundary: entry state, lane availability, public exchange events and deterministic exit product. |
 | Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
@@ -145,12 +145,12 @@ patch_specs/<bundle>/fragments/*.py
 Apply it with:
 
 ```powershell
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -335,15 +335,17 @@ Relevant owners:
 
 | Surface | Owner |
 |---|---|
-| Strict startup launcher | `run_heap_runtime_context_closure.py` |
+| Canonical non-GUI run | `python -m Tools.ai run` |
+| GUI view | `python -m Tools.ai operator_product_gui` |
+| Strict startup launcher | internal `run_heap_runtime_context_closure` tool |
 | Context/memory preload | `prepare_heap_context_memory_reload.py` |
 | Required docs initialization | `ensure_ai_context_required_files.py` |
 | Startup-to-heap reconciliation | `reconcile_heap_report_with_startup_reload.py` |
 | Heap universe / provider loop | `run_heap_runtime_completeness_gate.py` |
 | Final assembly | `compose_heap_final_proposals.py` |
-| SQLite operational memory | `agent_runtime_sqlite_memory.py` |
+| SQLite operational memory | `python -m Tools.ai agent_runtime_sqlite_memory` |
 | Tool catalog | `build_agent_agnostic_tool_inventory.py` |
 | Runtime broker | `agent_runtime_tool_broker.py` |
-| Operator product launcher | `operator_product_launcher.py`, `operator_product_launcher_core.py` |
+| Operator product app | `run/`, `operator_product_view/`, `operator_product_core/` |
 
 Do not promote this lane into the full run until same-heap GPU1/GPU0/NPU participation, refinement artifacts and final package semantics are validator-backed.

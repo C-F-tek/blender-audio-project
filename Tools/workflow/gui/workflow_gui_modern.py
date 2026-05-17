@@ -5,13 +5,17 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
 
-import workflow_state as wf
-from components.action_panel import ActionGroup, ActionSpec, GroupedActionPanel
+try:
+    import workflow_core as wf
+except ImportError:
+    from Tools.workflow import workflow_core as wf
+from components.action_panel import GroupedActionPanel
 from components.live_output_panel import LiveOutputPanel
 from components.session_overview import SessionOverviewFrame
 from components.st_theme import apply_spaziotempo_theme, text_widget_colors
 from components.storage_dashboard import StorageDashboardWindow
 from workflow_gui import WorkflowGui as LegacyWorkflowGui
+from workflow_gui_action_groups import build_modern_action_groups
 
 
 class ModernWorkflowGui(LegacyWorkflowGui):
@@ -222,185 +226,8 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         self.run_task(label, task)
 
     def build_action_groups(self) -> tuple[ActionGroup, ...]:
-        return (
-            ActionGroup(
-                "Track setup",
-                (
-                    ActionSpec(
-                        "Choose WAV",
-                        self.choose_wav,
-                        description="Seleziona un nuovo file audio WAV.",
-                    ),
-                    ActionSpec(
-                        "Reset default WAV",
-                        self.reset_wav,
-                        description="Torna alla traccia predefinita.",
-                    ),
-                ),
-            ),
-            ActionGroup(
-                "Data preparation",
-                (
-                    ActionSpec(
-                        "Analyze WAV",
-                        lambda: self.run_task(
-                            "Analyze WAV",
-                            lambda: wf.run_analyze_wav(self.session, skip_music_context=True),
-                        ),
-                        description="Genera l'analisi tecnica del WAV e i file JSON base necessari al resto del workflow.",
-                    ),
-                    ActionSpec(
-                        "Track summary",
-                        lambda: self.run_task(
-                            "Track summary", lambda: wf.run_track_summary(self.session)
-                        ),
-                        description="Crea un riassunto tecnico compatto della traccia partendo dall'analisi audio.",
-                    ),
-                    ActionSpec(
-                        "Music context",
-                        lambda: self.run_task(
-                            "Music context", lambda: wf.run_music_context(self.session)
-                        ),
-                        description="Produce un contesto musicale strutturato per le fasi IA successive.",
-                    ),
-                    ActionSpec(
-                        "Full audio prepare",
-                        lambda: self.run_task(
-                            "Full audio prepare", lambda: wf.run_full_audio_prepare(self.session)
-                        ),
-                        description="Esegue la preparazione audio completa: analisi, summary, contesto e keyframe Blender.",
-                    ),
-                ),
-            ),
-            ActionGroup(
-                "AI artifact pipeline",
-                (
-                    ActionSpec(
-                        "AI pipeline dry-run",
-                        lambda: self.run_ai_artifact_pipeline(dry_run=True),
-                        description="Verifica preflight, profilo macchina, input disponibili, lane CPU/NPU/GPU e output attesi senza scrivere artefatti reali.",
-                    ),
-                    ActionSpec(
-                        "AI artifact pipeline",
-                        lambda: self.run_ai_artifact_pipeline(dry_run=False),
-                        description="Genera chunk semantici, intermedi musicali AI-friendly, candidati di mapping, review NPU leggera e validazione artefatti.",
-                    ),
-                ),
-            ),
-            ActionGroup(
-                "Project intelligence",
-                (
-                    ActionSpec(
-                        "Code context + indexAI",
-                        lambda: self.run_task(
-                            "Code context + indexAI", lambda: wf.run_code_context(self.session)
-                        ),
-                        description="Aggiorna contesto codice e indici AI tradizionali usati dalla pipeline dual-AI.",
-                    ),
-                    ActionSpec(
-                        "Rebuild indexAI",
-                        lambda: self.run_task(
-                            "Rebuild indexAI",
-                            lambda: wf.run_project_ai_index(self.session, force=True),
-                        ),
-                        description="Rigenera forzatamente l'indice progetto quando hai modificato codice, documentazione o strutture IA.",
-                    ),
-                    ActionSpec(
-                        "Index manuals",
-                        self.index_manuals,
-                        description="Indicizza manuali locali Blender/progetto con il limite file configurato.",
-                    ),
-                ),
-            ),
-            ActionGroup(
-                "Creative AI pipeline",
-                (
-                    ActionSpec(
-                        "Dual AI plan",
-                        self.dual_ai_plan,
-                        description="Genera il piano scena strutturato usando Ollama e, se non bypassato, il vecchio passaggio NPU pesante.",
-                    ),
-                    ActionSpec(
-                        "Scene director chat",
-                        self.scene_director_chat,
-                        description="Apre la chat locale per affinare il brief e salvare preferenze creative persistenti.",
-                    ),
-                    ActionSpec(
-                        "Dual AI scene script",
-                        self.dual_ai_draft,
-                        description="Genera la bozza dello script Blender finale a partire dal piano, dal brief e dal contesto tecnico.",
-                    ),
-                ),
-            ),
-            ActionGroup(
-                "Review and diagnostics",
-                (
-                    ActionSpec(
-                        "Open log panel",
-                        self.open_log_window,
-                        always_enabled=True,
-                        description="Consulta eventi workflow, ultimo risultato e log operativi.",
-                    ),
-                    ActionSpec(
-                        "Advanced debug check",
-                        self.open_advanced_debug_window,
-                        always_enabled=True,
-                        description="Esegue controlli diagnostici avanzati su percorsi, scrittura file e stato progetto.",
-                    ),
-                    ActionSpec(
-                        "Startup service check",
-                        self.startup_service_check,
-                        always_enabled=True,
-                        description="Verifica i servizi locali necessari al workflow, inclusi runtime e modelli quando disponibili.",
-                    ),
-                    ActionSpec(
-                        "Project stats",
-                        self.open_project_stats_window,
-                        always_enabled=True,
-                        description="Apre la dashboard di spazio occupato e riepilogo delle aree del progetto.",
-                    ),
-                    ActionSpec(
-                        "Debug monitor shell",
-                        self.open_debug_monitor_shell,
-                        always_enabled=True,
-                        description="Apre un monitor debug in una shell separata con aggiornamento periodico.",
-                    ),
-                ),
-            ),
-            ActionGroup(
-                "Maintenance",
-                (
-                    ActionSpec(
-                        "Cleanup intermedi",
-                        self.cleanup_intermediates,
-                        description="Rimuove intermedi generati in modo controllato, preservando audio e render finali.",
-                    ),
-                    ActionSpec(
-                        "Cleanup render frames",
-                        self.cleanup_render_frames,
-                        description="Pulisce la directory dei frame render della traccia corrente, mantenendo gli MP4 finali.",
-                    ),
-                    ActionSpec(
-                        "Toggle debug",
-                        self.toggle_debug,
-                        always_enabled=True,
-                        description="Abilita o disabilita il logging dettagliato del workflow.",
-                    ),
-                    ActionSpec(
-                        "Mark interrupted",
-                        self.mark_interrupted,
-                        always_enabled=True,
-                        description="Marca manualmente l'operazione corrente come interrotta nei log di workflow.",
-                    ),
-                    ActionSpec(
-                        "Refresh",
-                        self.refresh_session,
-                        always_enabled=True,
-                        description="Aggiorna lo stato della sessione e la lista degli output rilevati.",
-                    ),
-                ),
-            ),
-        )
+        self.wf = wf
+        return build_modern_action_groups(self)
 
 
 WorkflowGui = ModernWorkflowGui

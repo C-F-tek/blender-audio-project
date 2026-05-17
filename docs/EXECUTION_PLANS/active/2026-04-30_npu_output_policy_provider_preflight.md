@@ -43,17 +43,17 @@ hand-edited generated indexes
 ## Validation commands
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
+python -m Tools.workflow run_npu_pipeline_helper_validation
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
+python -m Tools.npu build_project_ai_index
+python -m Tools.npu build_npu_code_context
 git diff --check
 ```
 
 Full local validation remains recommended before merge:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python -m Tools.workflow run_local_validation_after_refactor -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
 ```
 
 ## Risk level

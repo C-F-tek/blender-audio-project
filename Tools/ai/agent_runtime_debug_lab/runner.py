@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from policy import (  # type: ignore
+from .policy import (
     ALLOWED_OPERATION_TYPES,
     FORBIDDEN_OPERATION_TYPES,
     as_list,
@@ -241,7 +241,7 @@ def run_validation_report_contract(
         return base_operation_result(operation, output_error)
     command = [
         sys.executable,
-        "Tools/validation/check_validation_report_contract.py",
+        "Tools/validation/check_validation_report_contract/cli.py",
         "--repo-root",
         ".",
         "--report-file",

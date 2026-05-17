@@ -4,7 +4,7 @@
   "repo_root": ".",
   "passed": false,
   "errors": [
-    "Tools/validation/check_validation_report_contract.py: missing required term: fixture_manual_review_gate"
+    "Tools/validation/check_validation_report_contract/cli.py: missing required term: fixture_manual_review_gate"
   ],
   "warnings": [],
   "provider_execution_performed": false,
@@ -17,7 +17,7 @@
   },
   "checks": [
     {
-      "path": "Tools/validation/check_validation_report_contract.py",
+      "path": "Tools/validation/check_validation_report_contract/cli.py",
       "contract": "fixture_validation_report_contract_manual_review_gate",
       "owner_lane": "cpu_validation",
       "consumed_by_lanes": [
@@ -44,7 +44,7 @@
       ],
       "safe_actions": [
         {
-          "path": "Tools/validation/check_validation_report_contract.py",
+          "path": "Tools/validation/check_validation_report_contract/cli.py",
           "operation": "manual_code_patch_suggestion",
           "apply_mode": "manual_review_only",
           "owner_lane": "cpu_validation",
@@ -55,7 +55,7 @@
   ],
   "safe_actions": [
     {
-      "path": "Tools/validation/check_validation_report_contract.py",
+      "path": "Tools/validation/check_validation_report_contract/cli.py",
       "operation": "manual_code_patch_suggestion",
       "apply_mode": "manual_review_only",
       "owner_lane": "cpu_validation",
