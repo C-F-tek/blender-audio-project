@@ -77,8 +77,8 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         allowed_args=("input",),
         builder=build_code_interpreter_report,
     ),
-    "build_refactor_duplication_audit": ToolSpec(
-        name="build_refactor_duplication_audit",
+    "refactor_duplication_audit": ToolSpec(
+        name="refactor_duplication_audit",
         description="Build a report-only duplicated-helper/refactor audit over selected code roots and existing evidence reports.",
         allowed_args=(
             "root",
@@ -108,8 +108,8 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         ),
         builder=build_semantic_code_chunk_selection,
     ),
-    "build_ai_context_pack": ToolSpec(
-        name="build_ai_context_pack",
+    "ai_context_pack": ToolSpec(
+        name="ai_context_pack",
         description="Build a bounded final AI context pack from stable project profiles.",
         allowed_args=(
             "profile",
@@ -123,8 +123,8 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         ),
         builder=build_ai_context_pack_tool,
     ),
-    "build_semantic_evidence_chunks": ToolSpec(
-        name="build_semantic_evidence_chunks",
+    "semantic_evidence_chunks": ToolSpec(
+        name="semantic_evidence_chunks",
         description="Build linked semantic evidence chunks with previous/next context and deterministic summaries.",
         allowed_args=(
             "basename",

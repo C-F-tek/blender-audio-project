@@ -9,7 +9,7 @@ def run_run_telemetry(ctx: WorkflowContext) -> None:
     args = [
         "-m",
         "Tools.ai",
-        "build_full_toolbox_run_telemetry_summary",
+        "full_toolbox_telemetry_summary",
         "--repo-root",
         ".",
         "--stamp",
@@ -113,7 +113,7 @@ def run_semantic_chunks(ctx: WorkflowContext) -> None:
     args = [
         "-m",
         "Tools.ai",
-        "build_semantic_evidence_chunks",
+        "semantic_evidence_chunks",
         "--repo-root",
         ".",
         "--basename",

@@ -19,7 +19,7 @@ repo_root = Path(__file__).resolve().parents[3]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
-from Tools.ai import heap_source_anchors as source_anchors
+from Tools.ai._shared import heap_source_anchors as source_anchors
 from Tools.ai.heap_gate.provider_tool_scheduler import provider_patch_synthesis_plan
 from Tools.ai.heap_gate.target_planner import RuntimeTargetPlanner, request_focus_text, tokenize
 from Tools.ai.heap_gate.terminal_invariants import evaluate_terminal_invariants

@@ -37,12 +37,12 @@ def main() -> int:
     )
     gate = "\n".join(
         [
-            read("Tools/ai/run_heap_runtime_completeness_gate/cli.py"),
+            read("Tools/ai/heap_runtime/completeness_gate/cli.py"),
             read("Tools/ai/heap_gate/runtime_init.py"),
             read("Tools/ai/heap_gate/runtime_common.py"),
         ]
     )
-    transient = read("Tools/ai/build_agent_transient_request_context/cli.py")
+    transient = read("Tools/ai/agent_context/transient_request_context/cli.py")
     sqlite_memory = "\n".join(
         [
             read("Tools/ai/agent_memory/sqlite_cli.py"),

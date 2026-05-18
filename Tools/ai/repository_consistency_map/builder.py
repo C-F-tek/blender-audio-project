@@ -8,13 +8,13 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from tools.ai.repository_consistency_map.constants import DOC_EXTENSIONS
-from tools.ai.repository_consistency_map.findings import (
+from Tools.ai.repository_consistency_map.constants import DOC_EXTENSIONS
+from Tools.ai.repository_consistency_map.findings import (
     build_findings,
     build_provider_hints,
 )
-from tools.ai.repository_consistency_map.markdown import extract_markdown_references
-from tools.ai.repository_consistency_map.paths import (
+from Tools.ai.repository_consistency_map.markdown import extract_markdown_references
+from Tools.ai.repository_consistency_map.paths import (
     bounded_worker_count,
     build_existing_path_index,
     build_repo_file_manifest,
@@ -23,7 +23,7 @@ from tools.ai.repository_consistency_map.paths import (
     filter_manifest_by_extensions,
     now_iso,
 )
-from tools.ai.repository_consistency_map.python_inventory import (
+from Tools.ai.repository_consistency_map.python_inventory import (
     extract_python_inventory,
 )
 

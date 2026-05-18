@@ -26,7 +26,7 @@ Modalità operativa richiesta:
 
 ## Stato sintetico
 
-Stiamo trasformando `Tools/ai/run_heap_runtime_completeness_gate.py` e il relativo wrapper `Tools/ai/run_heap_runtime_context_closure.py` da semplice gate/report a ciclo heap operativo:
+Stiamo trasformando `Tools/ai/heap_runtime/completeness_gate/cli.py` e il relativo wrapper `Tools/ai/heap_context_closure/cli.py` da semplice gate/report a ciclo heap operativo:
 
 ```text
 input richiesta
@@ -185,13 +185,13 @@ Questo deve restare bloccante.
 È stato aggiunto il composer finale:
 
 ```text
-Tools/ai/compose_heap_final_proposals.py
+Tools/ai/heap_final_proposals/cli.py
 ```
 
 È stato aggiunto/aggiornato il launcher:
 
 ```text
-Tools/ai/run_heap_runtime_context_closure.py
+Tools/ai/heap_context_closure/cli.py
 ```
 
 Obiettivo:
@@ -234,7 +234,7 @@ Il launcher ora deve esporre nel JSON finale:
 Run recente:
 
 ```text
-Tools/ai/run_heap_runtime_context_closure.py
+Tools/ai/heap_context_closure/cli.py
 ```
 
 ha prodotto:
@@ -253,7 +253,7 @@ ha prodotto:
 Il fallimento avviene nella fase startup reload, precisamente nel tool:
 
 ```text
-Tools/ai/build_ai_context_pack.py
+Tools/ai/ai_context_pack/cli.py
 ```
 
 Command tail indicava returncode `2` ma stdout JSON:
@@ -271,9 +271,9 @@ Command tail indicava returncode `2` ma stdout JSON:
 Interpretazione operativa:
 
 - Il preload è partito e alcuni tool hanno funzionato:
-  - `build_agent_agnostic_tool_inventory.py`
-  - `build_agent_memory_inventory.py`
-  - `build_agent_transient_request_context.py`
+  - `python -m Tools.ai build_agent_agnostic_tool_inventory`
+  - `python -m Tools.ai build_agent_memory_inventory`
+  - `python -m Tools.ai build_agent_transient_request_context`
 - però `build_ai_context_pack.py` ha segnato `passed=false` probabilmente per policy interna su file troncati, profilo, evidenza o limiti.
 - Il launcher attuale tratta qualsiasi startup reload failed come blocco totale e salta heap/composer.
 
@@ -294,13 +294,13 @@ Il preload deve essere una fase canonica `input-ready-before-heap`, non un acces
 Deve usare almeno questi tool già presenti o equivalenti storici di run unica:
 
 ```text
-Tools/ai/build_agent_agnostic_tool_inventory.py
-Tools/ai/build_agent_memory_inventory.py
+Tools/ai/agent_context/agnostic_tool_inventory/cli.py
+Tools/ai/agent_context/memory_inventory/cli.py
 python -m Tools.ai agent_runtime_sqlite_memory
-Tools/ai/build_agent_transient_request_context.py
+Tools/ai/agent_context/transient_request_context/cli.py
 Tools/ai/select_semantic_code_chunks.py
-Tools/ai/build_ai_context_pack.py
-Tools/ai/build_semantic_evidence_chunks.py
+Tools/ai/ai_context_pack/cli.py
+Tools/ai/semantic_evidence_chunks/cli.py
 Tools/ai/run_gpu_planner_json_contract_smoke.py
 python -m Tools.ai agent_runtime_debug_lab
 ```
@@ -316,7 +316,7 @@ startup_context_memory_reload/heap_startup_input_ready_context.md
 Il `heap_startup_input_ready_context.md` deve contenere riferimenti e sintesi dei pezzi caricati, non solo testo libero. Deve diventare il `--task-file` passato a:
 
 ```text
-Tools/ai/run_heap_runtime_completeness_gate.py
+Tools/ai/heap_runtime/completeness_gate/cli.py
 ```
 
 Contratto desiderato:
@@ -356,15 +356,15 @@ fix(ai): make heap context startup reload tool-owned and degradable
 Target probabili:
 
 ```text
-Tools/ai/prepare_heap_context_memory_reload.py
-Tools/ai/run_heap_runtime_context_closure.py
-Tools/ai/build_ai_context_pack.py   # solo se il failure è una policy troppo rigida o poco spiegata
-Tools/ai/compose_heap_final_proposals.py
+Tools/ai/heap_context_memory_reload/cli.py
+Tools/ai/heap_context_closure/cli.py
+Tools/ai/ai_context_pack/cli.py   # solo se il failure è una policy troppo rigida o poco spiegata
+Tools/ai/heap_final_proposals/cli.py
 ```
 
 Azioni richieste:
 
-1. Ispezionare `Tools/ai/prepare_heap_context_memory_reload.py` e capire perché `build_ai_context_pack.py` ritorna `2` con `included_file_count=11` e `truncated_file_count=5`.
+1. Ispezionare `Tools/ai/heap_context_memory_reload/cli.py` e capire perché `build_ai_context_pack.py` ritorna `2` con `included_file_count=11` e `truncated_file_count=5`.
 2. Capire se `build_ai_context_pack.py` sta fallendo correttamente o se il launcher deve accettare un output degradato.
 3. Far sì che startup reload scriva sempre un manifest leggibile anche in failure parziale.
 4. Far sì che il launcher non salti automaticamente composer/export: se heap non parte, il composer o un fallback composer deve almeno esportare startup manifest, stdout/stderr e proposta diagnostica in `Documents`.

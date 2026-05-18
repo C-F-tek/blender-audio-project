@@ -7,7 +7,7 @@ from pathlib import Path
 
 from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
-from .checker import check_npu_pipeline_modules
+from .checker import npu_pipeline_modules_check
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -16,7 +16,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    report = check_npu_pipeline_modules(repo_root)
+    report = npu_pipeline_modules_check(repo_root)
     output = resolve_output_path(repo_root, args.output) if args.output else None
     text = write_json_report(report, output)
     print(text, end="")

@@ -11,30 +11,17 @@ repo_root_for_import = Path(__file__).resolve().parents[2]
 if str(repo_root_for_import) not in sys.path:
     sys.path.insert(0, str(repo_root_for_import))
 
+from Tools.ai.heap_exchange.runtime_entry.cli import (
+    append_jsonl,
+    build_knowledge_surface,
+    build_lanes,
+    discover_first,
+    load_json,
+    rel,
+    repo_path,
+    write_public_event,
+)
 from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
-
-try:
-    from build_heap_exchange_runtime_entry import (
-        append_jsonl,
-        build_knowledge_surface,
-        build_lanes,
-        discover_first,
-        load_json,
-        rel,
-        repo_path,
-        write_public_event,
-    )
-except ModuleNotFoundError:
-    from Tools.ai.build_heap_exchange_runtime_entry import (
-        append_jsonl,
-        build_knowledge_surface,
-        build_lanes,
-        discover_first,
-        load_json,
-        rel,
-        repo_path,
-        write_public_event,
-    )
 
 
 def render_markdown(report: dict[str, Any]) -> str:

@@ -11,7 +11,7 @@ from pathlib import Path
 TARGETS = [
     "Tools/workflow/_powershell/run_agent_review_full_toolbox_decision_loop.ps1",
     "Tools/ai/build_repository_consistency_map/cli.py",
-    "Tools/ai/build_runtime_tool_usage_telemetry/cli.py",
+    "Tools/ai/runtime_tool_usage_telemetry/cli.py",
     "Tools/ai/build_runtime_tool_capability_manifest/cli.py",
 ]
 
@@ -65,7 +65,7 @@ def main() -> int:
         errors.append("capability manifest does not expose declared_runtime_tool_counters")
     compile_targets = [
         repo_root / "Tools/ai/build_repository_consistency_map/cli.py",
-        repo_root / "Tools/ai/build_runtime_tool_usage_telemetry/cli.py",
+        repo_root / "Tools/ai/runtime_tool_usage_telemetry/cli.py",
         repo_root / "Tools/ai/build_runtime_tool_capability_manifest/cli.py",
         repo_root / "Tools/validation/run_full_toolbox_deterministic_chunks_telemetry_smoke/cli.py",
     ]

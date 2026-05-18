@@ -11,11 +11,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.ai.patch_suggestion_bundle.task_markdown import (
+from Tools.ai.patch_suggestion_bundle.task_markdown import (
     build_task_patch_suggestion_report,
     write_markdown,
 )
-from tools.validation.report_utils import resolve_output_path, write_json_report
+from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
 
 def main() -> int:

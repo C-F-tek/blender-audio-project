@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from typing import Any
 
 try:
-    from Tools.ai.run_agent_gpu_npu_parallel_orchestrator import (
+    from Tools.ai.gpu_npu_parallel_orchestrator import (
         apply_orchestrator_direct_gpu_and_lane_diagnostics,
         effective_npu_auditor_every_rounds,
         npu_lane_diagnostics,
@@ -22,7 +22,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.run_agent_gpu_npu_parallel_orchestrator import (  # type: ignore
+    from Tools.ai.gpu_npu_parallel_orchestrator import (  # type: ignore
         apply_orchestrator_direct_gpu_and_lane_diagnostics,
         effective_npu_auditor_every_rounds,
         npu_lane_diagnostics,

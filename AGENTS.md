@@ -40,7 +40,7 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 | Secondary provider lane | `GPU0 / OpenVINO -> observable support workload and peer evidence lane` |
 | Micro peer lane | `NPU / OpenVINO -> peer micro diagnostic/report lane until compute-provider behavior is validated` |
 | Current source-write boundary | `Tools/ai/patchkit/apply_patch_bundle.py` for reviewed patchkit bundles when operations can express the change |
-| Current generated-product boundary | generated patch specs plus `Tools/ai/apply_generated_patch_specs_for_review_pr.py` for concrete review PR operations |
+| Current generated-product boundary | generated patch specs plus `Tools/ai/generated_patch_specs/apply_cli.py` for concrete review PR operations |
 | Legacy domain | Blender audio-reactive scene automation |
 
 The repository name is historical. Do not infer that Blender/audio is the current architectural boundary.
@@ -183,7 +183,7 @@ Markdown line-budget triage: docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-1
 Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 Main runtime architecture: docs/MAIN_RUNTIME_ARCHITECTURE.md
 Patchkit boundary: Tools/ai/patchkit/apply_patch_bundle.py
-Generated product boundary: Tools/ai/apply_generated_patch_specs_for_review_pr.py
+Generated product boundary: Tools/ai/generated_patch_specs/apply_cli.py
 Current mode: code-driven, docs-first updates unless source changes are explicitly scoped
 Review posture: no destructive actions, force-push, deploy, permission/secret changes or protected-branch merge unless explicitly requested
 ```

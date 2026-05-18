@@ -113,7 +113,7 @@ AI pipeline, NPU helper, report-contract and memory checks:
 
 ```powershell
 python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python -m Tools.validation check_npu_pipeline_modules --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python -m Tools.validation check_ai_model_json --repo-root . --output .\output\validation\ai_model_json.json
 python -m Tools.validation check_ai_dry_run_matrix_cases --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
@@ -127,7 +127,7 @@ python -m Tools.validation check_selected_semantic_chunks --repo-root . --bundle
 python -m Tools.validation check_repository_change_proposals --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
 python -m Tools.validation check_full_context_golden_proposals --repo-root . --proposal .\output\ai_pipeline\full_context_golden_proposals.json --output .\output\validation\full_context_golden_proposals_contract.json --min-proposals 6
 python -m Tools.validation check_patch_spec_drafts --repo-root . --manifest .\output\patch_specs\proposal_patch_specs_manifest.json --output .\output\validation\patch_spec_drafts.json
-python -m Tools.validation check_reviewed_patch_specs --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
+python -m Tools.validation reviewed_patch_specs_check --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
 python -m Tools.validation check_ai_context_pack_contract --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json
 python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 python -m Tools.validation check_refactor_status_consistency --repo-root . --output .\output\validation\refactor_status_consistency.json
@@ -199,7 +199,7 @@ Metadata-only mode must keep provider execution disabled.
 | `check_docs_links.py` | Validates repository-local Markdown links and ignores external URLs. | No |
 | `check_execution_plan_status.py` | Ensures terminal execution plans are not left under `docs/EXECUTION_PLANS/active/`. | No |
 | `check_ai_pipeline_modules.py` | Imports modular AI pipeline code and validates representative planning/report helpers. | No |
-| `check_npu_pipeline_modules.py` | Imports app-agnostic NPU pipeline helpers and validates representative contract, provider-planning and boundary helpers. | No |
+| `npu_pipeline_modules_check.py` | Imports app-agnostic NPU pipeline helpers and validates representative contract, provider-planning and boundary helpers. | No |
 | `check_npu_pipeline_helper_tests.py` | Runs deterministic `unittest` coverage for app-agnostic NPU helper modules and emits a JSON validation report. | No |
 | `test_npu_pipeline_helpers.py` | Unit test module used by `check_npu_pipeline_helper_tests.py`. | No |
 | `check_ai_model_json.py` | Validates deterministic parsing of JSON-like model output and legacy wrapper behavior. | No |
@@ -214,7 +214,7 @@ Metadata-only mode must keep provider execution disabled.
 | `check_repository_change_proposals.py` | Validates manual-review repository proposal reports and their code/Markdown/JSON suggestion descriptors. | No |
 | `check_full_context_golden_proposals.py` | Validates semantic coverage of full-context golden proposal families beyond the generic repository proposal schema. | No |
 | `check_patch_spec_drafts.py` | Validates proposal-derived draft patch specs under `output/patch_specs/` and rejects queued or concrete replacements. | No |
-| `check_reviewed_patch_specs.py` | Validates reviewed patch specs and reruns dry-run without writing source files. | No |
+| `reviewed_patch_specs_check.py` | Validates reviewed patch specs and reruns dry-run without writing source files. | No |
 | `check_ai_context_pack_contract.py` | Validates AI context packs and compact context-pack evidence without executing providers. | No |
 | `check_validation_report_contract.py` | Validates generated reports in `output/validation/` for common root fields. | No |
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and docs agree. | No |

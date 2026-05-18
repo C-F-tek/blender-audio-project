@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from tools.ai.provider_tool_loop import openvino_tool_loop_report
-from tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
+from Tools.ai._shared.provider_tool_loop import openvino_tool_loop_report
+from Tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
 
 
 def resolve_path(repo_root: Path, value: str) -> Path:

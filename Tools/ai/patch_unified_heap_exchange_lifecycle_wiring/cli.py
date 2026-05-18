@@ -68,7 +68,7 @@ $HeapExchangeEntryJson = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.js
 $HeapExchangeEntryMd = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.md"
 $HeapExchangeRuntimeState = Join-Path $AiPacketsDir "heap_exchange_runtime_state.jsonl"
 $HeapExchangeEntryArgs = @(
-    "Tools/ai/build_heap_exchange_runtime_entry/cli.py",
+    "Tools/ai/heap_exchange/runtime_entry/cli.py",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--task-file", $TaskFile,
@@ -92,7 +92,7 @@ def exit_block() -> str:
 $HeapExchangeExitJson = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.json"
 $HeapExchangeExitMd = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.md"
 $HeapExchangeExitArgs = @(
-    "Tools/ai/build_heap_exchange_runtime_exit/cli.py",
+    "Tools/ai/heap_exchange/runtime_exit/cli.py",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--runtime-entry", $HeapExchangeEntryJson,
@@ -290,8 +290,8 @@ def validate_policy(text_lf: str) -> list[str]:
         "Build heap/exchange runtime entry",
         "Build heap/exchange runtime exit product",
         "Validate heap/exchange runtime lifecycle",
-        "Tools/ai/build_heap_exchange_runtime_entry/cli.py",
-        "Tools/ai/build_heap_exchange_runtime_exit/cli.py",
+        "Tools/ai/heap_exchange/runtime_entry/cli.py",
+        "Tools/ai/heap_exchange/runtime_exit/cli.py",
         "Tools/validation/check_heap_exchange_runtime_lifecycle/cli.py",
     ):
         if token not in text_lf:

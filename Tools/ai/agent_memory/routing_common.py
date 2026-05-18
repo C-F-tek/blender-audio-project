@@ -7,14 +7,14 @@ from datetime import datetime
 from pathlib import Path
 
 try:
-    from tools.validation.report_utils import write_json_report
+    from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     import sys
 
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.validation.report_utils import write_json_report
+    from Tools.validation._shared.report_utils import write_json_report
 
 DEFAULT_OUTPUT = "output/validation/agent_memory_routing_policy.json"
 DEFAULT_MARKDOWN = "output/validation/agent_memory_routing_policy.md"

@@ -12,13 +12,13 @@ from types import SimpleNamespace
 from typing import Any
 
 try:
-    from Tools.ai.build_refactor_duplication_audit import build_report, render_markdown
+    from Tools.ai.refactor_duplication_audit import build_report, render_markdown
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.build_refactor_duplication_audit import build_report, render_markdown
+    from Tools.ai.refactor_duplication_audit import build_report, render_markdown
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
 
@@ -132,7 +132,7 @@ def run_broker_smoke(repo_root: Path, reports: dict[str, Path], stamp: str) -> d
         "tool_requests": [
             {
                 "id": "refactor_duplication_audit",
-                "tool": "build_refactor_duplication_audit",
+                "tool": "refactor_duplication_audit",
                 "reason": "Validate that the reusable duplication audit is broker-callable.",
                 "args": {
                     "root": ["Tools/ai", "Tools/validation"],

@@ -236,7 +236,7 @@ class RuntimeGateHeapExchangeMixin:
         paths = self.heap_exchange_paths()
         command = [
             self.child_python(),
-            "tools/ai/build_heap_exchange_runtime_exit.py",
+            "Tools/ai/heap_exchange/runtime_exit/cli.py",
             "--repo-root",
             ".",
             "--stamp",

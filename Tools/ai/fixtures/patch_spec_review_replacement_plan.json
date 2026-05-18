@@ -34,7 +34,7 @@
     }
   ],
   "validation_commands": [
-    "python .\\Tools\\validation\\check_reviewed_patch_specs.py --repo-root . --manifest .\\output\\patch_specs\\reviewed_patch_spec_fixture_manifest.json --output .\\output\\validation\\reviewed_patch_specs.json"
+    "python .\\Tools\\validation\\reviewed_patch_specs_check.py --repo-root . --manifest .\\output\\patch_specs\\reviewed_patch_spec_fixture_manifest.json --output .\\output\\validation\\reviewed_patch_specs.json"
   ],
   "stop_conditions": [
     "Any validation would write source files."

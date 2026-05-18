@@ -34,7 +34,7 @@ The prototype must read existing context/evidence artifacts and produce JSON/Mar
 
 | File | Action | Purpose |
 |---|---|---|
-| `Tools/ai/build_selective_execution_plan.py` | add | Build report-only selective execution plans. |
+| `Tools/ai/selective_execution_plan/cli.py` | add | Build report-only selective execution plans. |
 | `Tools/validation/check_selective_execution_plan.py` | add | Validate selective plan contract. |
 | `docs/AI_SELECTIVE_PLANNER.md` | add | Stable documentation for the prototype. |
 | `docs/EXECUTION_PLANS/active/2026-05-01_selective_planner_prototype.md` | add | Durable task control for this PR. |

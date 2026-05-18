@@ -10,14 +10,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.heap_event_pointers import source_pointer_bundle
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict
+    from Tools.ai.heap_event_pointers import source_pointer_bundle
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.heap_event_pointers import source_pointer_bundle  # type: ignore
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict  # type: ignore
+    from Tools.ai.heap_event_pointers import source_pointer_bundle  # type: ignore
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict  # type: ignore
 
 
 def degraded_lanes(snapshot: dict[str, Any]) -> list[str]:

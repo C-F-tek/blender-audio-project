@@ -23,9 +23,9 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 | Preflight obbligatorio | `Tools/validation/run_real_product_preflight_gate.py` |
 | GPU0 workload osservabile | `Tools/ai/build_openvino_gpu0_workload_report.py` |
 | NPU micro peer diagnostic/report lane | `Tools/ai/build_npu_micro_task_companion_report.py` |
-| Empty generated product fail-fast | `Tools/ai/apply_generated_patch_specs_for_review_pr.py` |
-| Runtime evidence proposal feed | `Tools/ai/build_repository_change_proposals.py` |
-| Concrete ops into patch specs | `Tools/ai/build_patch_specs_from_proposals.py` |
+| Empty generated product fail-fast | `Tools/ai/generated_patch_specs/apply_cli.py` |
+| Runtime evidence proposal feed | `Tools/ai/repository_change_proposals/cli.py` |
+| Concrete ops into patch specs | `Tools/ai/generated_patch_specs/proposal_cli.py` |
 | Runtime evidence proposal smoke | `Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py` |
 | Empty product smoke | `Tools/validation/run_generated_patch_specs_empty_product_smoke.py` |
 | Markdown line-budget policy | `Tools/validation/check_file_line_limits.py` |
@@ -39,7 +39,7 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 - NPU resta peer micro/diagnostic finché non esiste compute lane validata.
 - Metadata-only patch specs non sono prodotto PR.
 - `operation_count=0` con `--apply` è fallimento.
-- Draft PR finale è valido solo se `prepare_review_pr.py` produce prodotto reale e il final product contract passa.
+- Draft PR finale è valido solo se `agent_review_prepare_pr.py` produce prodotto reale e il final product contract passa.
 - Ogni nuovo MD operativo deve restare sotto la soglia policy o diventare indice + parti.
 
 ## Drift da evitare

@@ -7,9 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_suggestion_bundle.operations import discover_operations
-from tools.ai.patch_suggestion_bundle.product import build_manual_review_product
-from tools.validation.report_utils import write_text_report
+from Tools.ai.patch_suggestion_bundle.operations import discover_operations
+from Tools.ai.patch_suggestion_bundle.product import build_manual_review_product
+from Tools.validation._shared.report_utils import write_text_report
 
 PATCH_FENCE_TOKENS = ("patch_suggestion", "patch-suggestion", "patch suggestions")
 

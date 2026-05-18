@@ -7,8 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_suggestion_bundle.git_branch import create_review_branch, validate_branch_name
-from tools.validation.report_utils import resolve_output_path, write_json_report
+from Tools.ai.patch_suggestion_bundle.git_branch import create_review_branch, validate_branch_name
+from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
 from .review_pr_common import (
     create_commit,
@@ -131,7 +131,7 @@ def main() -> int:
                 errors.append(
                     "auto include from apply report requires at least one report with "
                     "source_writes_performed=true or patch_application_performed=true; "
-                    "run deterministic suggestions with apply enabled before prepare_review_pr.py"
+                    "run deterministic suggestions with apply enabled before agent_review_prepare_pr.py"
                 )
             if not auto_include_paths and not args.include_path:
                 errors.append("no safe product include paths discovered from apply reports")

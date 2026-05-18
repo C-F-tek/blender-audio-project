@@ -139,7 +139,7 @@ try {
     Invoke-Step -Name "python syntax validation" -Command "python" -Arguments @("-m", "Tools.validation", "check_python_syntax", "--repo-root", ".", "--output", ".\output\validation\python_syntax.json")
     Invoke-Step -Name "ai model json validation" -Command "python" -Arguments @("-m", "Tools.validation", "check_ai_model_json", "--repo-root", ".", "--output", ".\output\validation\ai_model_json.json")
     Invoke-Step -Name "ai pipeline module smoke validation" -Command "python" -Arguments @("-m", "Tools.validation", "check_ai_pipeline_modules", "--repo-root", ".", "--output", ".\output\validation\ai_pipeline_modules.json")
-    Invoke-Step -Name "npu pipeline module smoke validation" -Command "python" -Arguments @("-m", "Tools.validation", "check_npu_pipeline_modules", "--repo-root", ".", "--output", ".\output\validation\npu_pipeline_modules.json")
+    Invoke-Step -Name "npu pipeline module smoke validation" -Command "python" -Arguments @("-m", "Tools.validation", "npu_pipeline_modules_check", "--repo-root", ".", "--output", ".\output\validation\npu_pipeline_modules.json")
     Invoke-Step -Name "npu pipeline helper unit tests" -Command "python" -Arguments @("-m", "Tools.validation", "check_npu_pipeline_helper_tests", "--repo-root", ".", "--output", ".\output\validation\npu_pipeline_helper_tests.json")
     Invoke-Step -Name "npu pipeline docs validation" -Command "python" -Arguments @("-m", "Tools.validation", "check_npu_pipeline_docs", "--repo-root", ".", "--output", ".\output\validation\npu_pipeline_docs.json")
     Invoke-Step -Name "execution plan status validation" -Command "python" -Arguments @("-m", "Tools.validation", "check_execution_plan_status", "--repo-root", ".", "--output", ".\output\validation\execution_plan_status.json")

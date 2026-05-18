@@ -100,7 +100,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Ensure known workload reports fail closed when the quality report is missing or unreadable.",
     ),
     CodeContractSpec(
-        path="Tools/ai/suggest_repository_updates/cli.py",
+        path="Tools/ai/repository_update_suggestions/cli.py",
         contract="packet_builder_quality_approved_context_only",
         owner_lane="cpu_packet_builder",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),
@@ -119,7 +119,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Keep workload report content filtered by quality routing before it is read into packets.",
     ),
     CodeContractSpec(
-        path="Tools/ai/build_repository_change_proposals/cli.py",
+        path="Tools/ai/repository_change_proposals/cli.py",
         contract="repository_proposals_quality_gate_evidence",
         owner_lane="cpu_proposal_builder",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),

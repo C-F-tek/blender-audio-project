@@ -135,7 +135,7 @@ def build_recommendations(
             "Selective planner v2: score and rank validators",
             "Current prototype emits deterministic validator recommendations; next patch spec should add scoring without executing validators.",
             [
-                "Tools/ai/build_selective_execution_plan/cli.py",
+                "Tools/ai/selective_execution_plan/cli.py",
                 "docs/AI_SELECTIVE_PLANNER.md",
             ],
             blocked=False,
@@ -160,7 +160,7 @@ def build_recommendations(
             "Patch spec generator integration from selective plan",
             "After this report-only planner is validated, a future tool can convert recommended_patch_specs into draft patch specs.",
             [
-                "Tools/ai/build_patch_specs_from_proposals/cli.py",
+                "Tools/ai/generated_patch_specs/proposal_cli.py",
                 "Tools/validation/check_patch_spec_drafts/cli.py",
             ],
             blocked=context.get("passed") is not True or dry_run.get("passed") is not True,
@@ -192,8 +192,8 @@ def command_sets() -> dict[str, list[str]]:
     """Return copy-pasteable command sets."""
     return {
         "build_and_validate_selective_plan": [
-            r"python -m Tools.ai build_ai_context_pack --repo-root . --profile project_self_improvement",
-            r"python -m Tools.ai build_selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md",
+            r"python -m Tools.ai ai_context_pack --repo-root . --profile project_self_improvement",
+            r"python -m Tools.ai selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md",
             r"python -m Tools.validation check_selective_execution_plan --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json",
         ],
         "real_gpu_npu_evidence_for_carmine": [

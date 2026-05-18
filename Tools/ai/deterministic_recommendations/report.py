@@ -142,7 +142,7 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
             [] if recommendations else ["no evidence-sufficient items with safe existing targets"]
         ),
         "next_best_action": (
-            "build_agent_review_patch_plan.py" if recommendations else "collect_more_evidence"
+            "python -m Tools.ai agent_review_patch_plan" if recommendations else "collect_more_evidence"
         ),
         "skipped_candidate_count": len(skipped),
         "skipped_candidates": skipped,
@@ -157,7 +157,7 @@ def build_recommendation_report(args: argparse.Namespace) -> dict[str, Any]:
             "substantive_consistency_recommendation_count": consistency_recommendation_count,
             "cosmetic_patch_suppression_enabled": True,
             "recommended_next_layer": (
-                "build_agent_review_patch_plan.py" if recommendations else "collect_more_evidence"
+                "python -m Tools.ai agent_review_patch_plan" if recommendations else "collect_more_evidence"
             ),
             "manual_review_required": True,
         },
@@ -209,12 +209,12 @@ def build_patch_plan_bridge_orchestrator(
         "gpu_output": repo_rel(recommendation_output, repo_root),
         "gpu_recommendation_count": recommendation_report.get("recommendation_count", 0),
         "gpu_empty_recommendations_reason": "",
-        "gpu_recommended_next_layer": "build_agent_review_patch_plan.py",
+        "gpu_recommended_next_layer": "python -m Tools.ai agent_review_patch_plan",
         "npu_audits": source_orchestrator.get("npu_audits", []),
         "decision": {
             "deterministic_recommendation_bridge": True,
             "manual_review_required": True,
-            "recommended_next_layer": "build_agent_review_patch_plan.py",
+            "recommended_next_layer": "python -m Tools.ai agent_review_patch_plan",
         },
         "guardrails": {
             "report_only": True,

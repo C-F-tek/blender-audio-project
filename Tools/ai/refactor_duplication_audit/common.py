@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.validation.report_utils import (
+    from Tools.validation._shared.report_utils import (
         read_json_report,
         resolve_output_path,
         write_json_report,
@@ -19,7 +19,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.validation.report_utils import (
+    from Tools.validation._shared.report_utils import (
         read_json_report,
         resolve_output_path,
         write_json_report,
@@ -44,7 +44,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
         ),
         "repeated_logic": "Repository-relative and path resolution helper patterns.",
         "existing_helper_available": True,
-        "preferred_existing_helper_or_module": "tools.ai.github_evidence_bundle_io for evidence-bundle paths; tools.validation.report_utils for validation output paths.",
+        "preferred_existing_helper_or_module": "Tools.ai._shared.github_evidence_bundle_io for evidence-bundle paths; Tools.validation._shared.report_utils for validation output paths.",
         "recommendation_type": "reuse_existing_helper",
         "risk": "medium",
         "schema_or_cli_impact": "none expected if imports preserve path normalization semantics.",
@@ -56,7 +56,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
         ),
         "repeated_logic": "JSON/text read-write helpers repeated across report scripts and smoke tests.",
         "existing_helper_available": True,
-        "preferred_existing_helper_or_module": "tools.validation.report_utils.write_json_report plus existing evidence-bundle IO helpers for read paths.",
+        "preferred_existing_helper_or_module": "Tools.validation._shared.report_utils.write_json_report plus existing evidence-bundle IO helpers for read paths.",
         "recommendation_type": "promote_existing_function",
         "risk": "low",
         "schema_or_cli_impact": "none if UTF-8 and JSON indentation are preserved.",
@@ -78,7 +78,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
         ),
         "repeated_logic": "Argument/list splitting and compact-value helpers.",
         "existing_helper_available": True,
-        "preferred_existing_helper_or_module": "Reuse tools.ai.github_evidence_bundle_io.split_path_values/compact_value when the semantics match.",
+        "preferred_existing_helper_or_module": "Reuse Tools.ai._shared.github_evidence_bundle_io.split_path_values/compact_value when the semantics match.",
         "recommendation_type": "reuse_existing_helper",
         "risk": "medium",
         "schema_or_cli_impact": "possible subtle CLI behavior changes; validate with broker/orchestrator smoke tests.",
@@ -88,7 +88,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
         "name_pattern": re.compile(r"^(line_count|load_line_counts|count_lines)$"),
         "repeated_logic": "Line-count calculation/loading helper patterns.",
         "existing_helper_available": True,
-        "preferred_existing_helper_or_module": "tools.validation.build_python_line_count_csv is the authoritative generator; use report CSV/JSON outputs instead of re-counting when possible.",
+        "preferred_existing_helper_or_module": "Tools.validation.build_python_line_count_csv is the authoritative generator; use report CSV/JSON outputs instead of re-counting when possible.",
         "recommendation_type": "reuse_existing_helper",
         "risk": "low",
         "schema_or_cli_impact": "none if CSV schema remains File/Lines.",
@@ -100,7 +100,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
         ),
         "repeated_logic": "Artifact discovery, inclusion and large-file chunk pointer logic.",
         "existing_helper_available": True,
-        "preferred_existing_helper_or_module": "tools.ai.github_evidence_bundle_artifacts.",
+        "preferred_existing_helper_or_module": "Tools.ai._shared.github_evidence_bundle_artifacts.",
         "recommendation_type": "reuse_existing_helper",
         "risk": "medium",
         "schema_or_cli_impact": "must preserve bundle schema fields and chunk pointer metadata.",

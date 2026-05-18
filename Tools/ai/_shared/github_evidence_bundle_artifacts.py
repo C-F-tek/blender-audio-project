@@ -7,7 +7,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
-from tools.ai.github_evidence_bundle_io import (
+from Tools.ai._shared.github_evidence_bundle_io import (
     CONTENT_EXTENSION_ALLOWLIST,
     MAX_ARTIFACT_PREVIEW_CHARS,
     line_count,

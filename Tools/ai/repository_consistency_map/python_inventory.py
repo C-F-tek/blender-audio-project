@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
-from tools.ai.repository_consistency_map.paths import (
+from Tools.ai.repository_consistency_map.paths import (
     bounded_worker_count,
     iter_files,
     read_text,

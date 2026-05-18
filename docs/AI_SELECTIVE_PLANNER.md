@@ -146,15 +146,15 @@ Current product path:
 build_task_patch_suggestion_report.py
 apply_patch_suggestion_bundle.py
 check_patch_suggestion_product_separation.py
-prepare_review_pr.py
+agent_review_prepare_pr.py
 ```
 
 Current limits:
 
 ```text
 ReviewPrIncludePath is explicit.
-prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
-prepare_review_pr.py does not create draft PRs yet.
+agent_review_prepare_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
+agent_review_prepare_pr.py does not create draft PRs yet.
 ```
 
 A planner recommendation may cite patch suggestion readiness only when product/separation evidence exists or the launcher manifest exposes that phase.
@@ -194,7 +194,7 @@ edit generated indexes manually
 edit full analysis JSON files
 change provider prompts, models, temperatures or orchestration behavior
 treat a patch-spec recommendation as complete when its full-run evidence lacks telemetry/capability context
-treat product separation success as draft PR support when prepare_review_pr.py does not implement draft PR creation
+treat product separation success as draft PR support when agent_review_prepare_pr.py does not implement draft PR creation
 ```
 
 ## Next iterations

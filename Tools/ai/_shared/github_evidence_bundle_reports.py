@@ -6,7 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tools.ai.github_evidence_bundle_io import (
+from Tools.ai._shared.github_evidence_bundle_io import (
     DEFAULT_SELECTED_CHUNKS_EVIDENCE,
     MAX_PATCH_PLAN_TEXT_CHARS,
     compact_value,

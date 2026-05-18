@@ -1,5 +1,5 @@
 if ($CreatePr -and -not $Push) {
-    Stop-RealProductLauncher -Code "create_pr_requires_push" -Message "-CreatePr requires -Push because prepare_review_pr.py needs the branch on the remote" -Root $RepoRoot -StampValue $Stamp
+    Stop-RealProductLauncher -Code "create_pr_requires_push" -Message "-CreatePr requires -Push because agent_review_prepare_pr.py needs the branch on the remote" -Root $RepoRoot -StampValue $Stamp
 }
 if ($DraftPr -and -not $CreatePr) {
     Stop-RealProductLauncher -Code "draft_pr_requires_create_pr" -Message "-DraftPr requires -CreatePr" -Root $RepoRoot -StampValue $Stamp

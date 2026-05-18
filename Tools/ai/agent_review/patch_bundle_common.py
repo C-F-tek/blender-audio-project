@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from tools.ai.code_patch_plan_common import read_json_object
+from Tools.ai._shared.code_patch_plan_common import read_json_object
 
 DEFAULT_PATCH_PLAN = "output/patch_specs/agent_review_patch_plan.json"
 DEFAULT_OUTPUT_DIR = "output/validation/patch_bundles"

@@ -38,16 +38,16 @@ final composer package
 
 | Responsibility | Owner |
 |---|---|
-| Standalone launcher / single strict input | `Tools/ai/run_heap_runtime_context_closure.py` |
-| Startup context/memory/tool preload | `Tools/ai/prepare_heap_context_memory_reload.py` |
+| Standalone launcher / single strict input | `Tools/ai/heap_context_closure/cli.py` |
+| Startup context/memory/tool preload | `Tools/ai/heap_context_memory_reload/cli.py` |
 | Required docs initialization | `Tools/ai/ensure_ai_context_required_files.py` |
 | Startup preload -> heap report reconciliation | `Tools/ai/reconcile_heap_report_with_startup_reload.py` |
-| Heap universe / completeness / provider loop | `Tools/ai/run_heap_runtime_completeness_gate.py` |
-| Final package assembly | `Tools/ai/compose_heap_final_proposals.py` |
-| Context pack | `Tools/ai/build_ai_context_pack.py` |
-| Tool catalog | `Tools/ai/build_agent_agnostic_tool_inventory.py` |
-| Memory inventory | `Tools/ai/build_agent_memory_inventory.py` |
-| Transient request context | `Tools/ai/build_agent_transient_request_context.py` |
+| Heap universe / completeness / provider loop | `Tools/ai/heap_runtime/completeness_gate/cli.py` |
+| Final package assembly | `Tools/ai/heap_final_proposals/cli.py` |
+| Context pack | `Tools/ai/ai_context_pack/cli.py` |
+| Tool catalog | `Tools/ai/agent_context/agnostic_tool_inventory/cli.py` |
+| Memory inventory | `Tools/ai/agent_context/memory_inventory/cli.py` |
+| Transient request context | `Tools/ai/agent_context/transient_request_context/cli.py` |
 | Operational SQLite memory | `python -m Tools.ai agent_runtime_sqlite_memory` |
 | Runtime broker | `Tools/ai/agent_runtime_tool_broker.py` |
 

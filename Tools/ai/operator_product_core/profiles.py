@@ -89,7 +89,7 @@ def build_heap_command(config: LauncherConfig) -> list[str]:
         cfg.python_exe,
         "-m",
         "Tools.ai",
-        "run_heap_runtime_context_closure",
+        "heap_context_closure",
         "--repo-root",
         ".",
         "--python-exe",

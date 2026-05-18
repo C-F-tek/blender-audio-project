@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tools.ai.patch_suggestion_bundle.operations import is_safe_target
+from Tools.ai.patch_suggestion_bundle.operations import is_safe_target
 
 AUXILIARY_FAMILIES = {
     "validation",

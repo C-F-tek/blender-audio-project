@@ -95,7 +95,7 @@ For broader source or workflow changes:
 ```powershell
 python -m Tools.validation check_python_syntax --repo-root .
 python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python -m Tools.validation check_npu_pipeline_modules --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python -m Tools.validation check_npu_pipeline_docs --repo-root . --output .\output\validation\npu_pipeline_docs.json
 python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error

@@ -22,38 +22,38 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.build_agent_review_patch_plan import build_patch_plan
-    from tools.ai.build_agent_review_patch_plan import (
+    from Tools.ai.agent_review.patch_plan import build_patch_plan
+    from Tools.ai.agent_review.patch_plan import (
         render_markdown as render_patch_plan_markdown,
     )
-    from tools.ai.build_deterministic_recommendations import (
+    from Tools.ai.deterministic_recommendations import (
         build_patch_plan_bridge_orchestrator,
         build_recommendation_report,
         load_report_at,
         resolve_path,
     )
-    from tools.ai.build_deterministic_recommendations import (
+    from Tools.ai.deterministic_recommendations import (
         render_markdown as render_recommendations_markdown,
     )
-    from tools.validation.report_utils import write_json_report, write_text_report
+    from Tools.validation._shared.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.build_agent_review_patch_plan import build_patch_plan  # type: ignore
-    from tools.ai.build_agent_review_patch_plan import (
+    from Tools.ai.agent_review.patch_plan import build_patch_plan  # type: ignore
+    from Tools.ai.agent_review.patch_plan import (
         render_markdown as render_patch_plan_markdown,
     )
-    from tools.ai.build_deterministic_recommendations import (  # type: ignore
+    from Tools.ai.deterministic_recommendations import (  # type: ignore
         build_patch_plan_bridge_orchestrator,
         build_recommendation_report,
         load_report_at,
         resolve_path,
     )
-    from tools.ai.build_deterministic_recommendations import (
+    from Tools.ai.deterministic_recommendations import (
         render_markdown as render_recommendations_markdown,
     )
-    from tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
+    from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
 
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
 DEFAULT_ORCHESTRATOR = "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"

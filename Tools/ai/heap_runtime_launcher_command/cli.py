@@ -105,7 +105,7 @@ def main() -> int:
         "postrun_package_command": postrun_package_command,
         "execution_performed": False,
         "notes": [
-            "command targets python -m Tools.ai run_heap_runtime_context_closure",
+            "command targets python -m Tools.ai heap_context_closure",
             "revision context is injected into --request text, not into the gate",
             "auto_latest revision context ignores smoke fixtures and requires a complete heap run with composer json",
             "postrun_package_command runs the external post-run adapter chain after the heap run",

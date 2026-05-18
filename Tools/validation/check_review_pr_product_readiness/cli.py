@@ -91,9 +91,9 @@ def build_report(repo_root: Path, args_report_path: Path) -> dict[str, Any]:
     prepare_reference_count = sum(
         1
         for index, item in enumerate(normalized_argv)
-        if item.endswith("Tools/ai/prepare_review_pr/cli.py")
+        if item.endswith("Tools/ai/agent_review/review_pr_cli.py")
         or (
-            item == "prepare_review_pr"
+            item == "agent_review_prepare_pr"
             and index >= 2
             and normalized_argv[index - 2 : index] == ["-m", "Tools.ai"]
         )
@@ -115,12 +115,12 @@ def build_report(repo_root: Path, args_report_path: Path) -> dict[str, Any]:
     ):
         errors.append("review PR apply report is present but not concrete")
     if prepare_reference_count == 0:
-        errors.append("prepare_review_pr entrypoint is not referenced by argv")
+        errors.append("agent_review_prepare_pr entrypoint is not referenced by argv")
     elif prepare_reference_count > 1:
-        errors.append("prepare_review_pr entrypoint is referenced more than once by argv")
+        errors.append("agent_review_prepare_pr entrypoint is referenced more than once by argv")
     if missing_prepare_flags:
         errors.append(
-            "prepare_review_pr argv missing required flags: " + ", ".join(missing_prepare_flags)
+            "agent_review_prepare_pr argv missing required flags: " + ", ".join(missing_prepare_flags)
         )
 
     review_pr_args_ready = args_report_passed and prepare_referenced

@@ -26,7 +26,7 @@ if (-not (Get-Variable -Name HeapExchangeRuntimeState -ErrorAction SilentlyConti
 
 if (-not (Test-Path -LiteralPath $HeapExchangeEntryJson -PathType Leaf)) {
     $HeapExchangeEntryArgs = @(
-        "-m", "Tools.ai", "build_heap_exchange_runtime_entry",
+        "-m", "Tools.ai", "heap_exchange_runtime_entry",
         "--repo-root", ".",
         "--stamp", $DataStamp,
         "--task-file", $TaskFile,
@@ -48,7 +48,7 @@ if (-not (Test-Path -LiteralPath $HeapExchangeEntryJson -PathType Leaf)) {
 $HeapPeerRuntimeJson = Join-Path $AiPacketsDir "heap_peer_runtime_manifest.json"
 $HeapPeerRuntimeMd = Join-Path $AiPacketsDir "heap_peer_runtime_manifest.md"
 $HeapPeerRuntimeArgs = @(
-    "-m", "Tools.ai", "build_heap_peer_runtime_manifest",
+    "-m", "Tools.ai", "heap_exchange_peer_runtime_manifest",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--runtime-entry", $HeapExchangeEntryJson,
@@ -70,7 +70,7 @@ $PhaseReports.heap_peer_runtime_manifest_markdown = $HeapPeerRuntimeMd
 $HeapExchangeClosureAuditJson = Join-Path $AiPacketsDir "heap_exchange_closure_audit.json"
 $HeapExchangeClosureAuditMd = Join-Path $AiPacketsDir "heap_exchange_closure_audit.md"
 $HeapExchangeClosureAuditArgs = @(
-    "-m", "Tools.ai", "build_heap_exchange_closure_audit",
+    "-m", "Tools.ai", "heap_exchange_closure_audit",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--heap-peer-runtime", $HeapPeerRuntimeJson,

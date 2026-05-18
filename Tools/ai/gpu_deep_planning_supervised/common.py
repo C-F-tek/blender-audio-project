@@ -16,14 +16,14 @@ from __future__ import annotations
 from pathlib import Path
 
 try:
-    from tools.ai.schema_repair_context import build_schema_repair_context_stack
+    from Tools.ai.schema_repair_context import build_schema_repair_context_stack
 except ImportError:
     import sys as _schema_repair_sys
 
     _schema_repair_repo_root = Path(__file__).resolve().parents[2]
     if str(_schema_repair_repo_root) not in _schema_repair_sys.path:
         _schema_repair_sys.path.insert(0, str(_schema_repair_repo_root))
-    from tools.ai.schema_repair_context import build_schema_repair_context_stack  # type: ignore
+    from Tools.ai.schema_repair_context import build_schema_repair_context_stack  # type: ignore
 
 import argparse
 import json
@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.run_agent_gpu_deep_planning_review import (
+    from Tools.ai.gpu_deep_planning_review import (
         DEFAULT_EVIDENCE,
         DEFAULT_REFINED,
         aggregate_recommendation_diagnostics,
@@ -54,7 +54,7 @@ try:
         resolve_path,
         split_batches,
     )
-    from tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests
+    from Tools.ai._shared.runtime_tool_guidance import deterministic_fallback_tool_requests
     from Tools.npu._shared.ollama_runtime import (
         DEFAULT_BASE_URL,
         OllamaModelManager,
@@ -64,7 +64,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.run_agent_gpu_deep_planning_review import (  # type: ignore
+    from Tools.ai.gpu_deep_planning_review import (  # type: ignore
         DEFAULT_EVIDENCE,
         DEFAULT_REFINED,
         aggregate_recommendation_diagnostics,
@@ -82,7 +82,7 @@ except ImportError:
         resolve_path,
         split_batches,
     )
-    from tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
+    from Tools.ai._shared.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
     from Tools.npu._shared.ollama_runtime import (  # type: ignore
         DEFAULT_BASE_URL,
         OllamaModelManager,

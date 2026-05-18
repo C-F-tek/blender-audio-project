@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.provider_mesh_runtime.python_runtime import command_env
-    from tools.ai.runtime_file_refs import (
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env
+    from Tools.ai.runtime_file_refs import (
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
@@ -20,8 +20,8 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.provider_mesh_runtime.python_runtime import command_env  # type: ignore
-    from tools.ai.runtime_file_refs import (  # type: ignore
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env  # type: ignore
+    from Tools.ai.runtime_file_refs import (  # type: ignore
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
@@ -147,7 +147,7 @@ def build_debug_lab_request(
     return {
         "schema_version": 1,
         "kind": "agent_runtime_debug_lab_request",
-        "generated_by": "run_heap_code_execution_tool.py",
+        "generated_by": "python -m Tools.ai run_heap_code_execution_tool",
         "operations": operations,
     }
 

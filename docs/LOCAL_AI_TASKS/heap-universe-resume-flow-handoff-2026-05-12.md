@@ -86,7 +86,7 @@ Branch GitHub:
 codex/heap-universe-resume-docs-fixes
 ```
 
-### 1. `Tools/ai/provider_runtime_heap.py`
+### 1. `Tools/ai/provider_runtime_blackboard/cli.py`
 
 Problema osservato:
 
@@ -95,7 +95,7 @@ ValueError: unsupported provider lane: 'context_memory'
 ValueError: unsupported runtime heap event type: 'startup_task_file_context'
 ```
 
-Causa: `run_heap_runtime_completeness_gate.py` pubblicava il preload startup come evento causale di heap usando `source="context_memory"` e `event_type="startup_task_file_context"`, ma `ProviderRuntimeHeap` non esponeva ancora quella lane/event type nell'allowlist.
+Causa: `python -m Tools.ai run_heap_runtime_completeness_gate` pubblicava il preload startup come evento causale di heap usando `source="context_memory"` e `event_type="startup_task_file_context"`, ma `ProviderRuntimeHeap` non esponeva ancora quella lane/event type nell'allowlist.
 
 Correzione:
 
@@ -173,11 +173,11 @@ Compilazione/import:
 
 ```powershell
 & $RepoPy -m py_compile `
-  .\Tools\ai\provider_runtime_heap.py `
+  .\Tools\ai\provider_runtime_blackboard\cli.py `
   -m Tools.ai build_external_heap_revision_context `
   .\Tools\ai\run_external_heap_postrun_package.py `
-  .\Tools\ai\run_heap_runtime_context_closure.py `
-  .\Tools\ai\run_heap_runtime_completeness_gate.py `
+  .\Tools\ai\heap_context_closure\cli.py `
+  .\Tools\ai\heap_runtime\completeness_gate\cli.py `
   .\Tools\validation\run_external_heap_revision_context_applicability_smoke.py
 
 & $RepoPy -c "import Tools.ai.build_external_heap_revision_context as m; print('revision_context_import_ok')"
@@ -318,12 +318,12 @@ Al momento dello stato riportato dall'operatore:
 git branch --show-current = master
 git status --short:
  M python -m Tools.ai build_external_heap_revision_context
- M Tools/ai/prepare_heap_context_memory_reload.py
- M Tools/ai/run_heap_runtime_completeness_gate.py
- M Tools/ai/run_heap_runtime_context_closure.py
+ M Tools/ai/heap_context_memory_reload/cli.py
+ M Tools/ai/heap_runtime/completeness_gate/cli.py
+ M Tools/ai/heap_context_closure/cli.py
 ```
 
-La branch GitHub non deve essere applicata alla cieca sopra quei file locali senza prima confrontare diff. In particolare `run_heap_runtime_completeness_gate.py` locale contiene fix manuali sui publish/eventi startup; la patch GitHub preferisce correggere l'allowlist heap in `provider_runtime_heap.py` cosi' `context_memory` resta una lane reale e non viene degradato a broker.
+La branch GitHub non deve essere applicata alla cieca sopra quei file locali senza prima confrontare diff. In particolare `python -m Tools.ai run_heap_runtime_completeness_gate` locale contiene fix manuali sui publish/eventi startup; la patch GitHub preferisce correggere l'allowlist heap in `provider_runtime_heap.py` cosi' `context_memory` resta una lane reale e non viene degradato a broker.
 
 ## Prossime priorita'
 

@@ -112,7 +112,7 @@ def _render_markdown(report: dict[str, Any]) -> str:
 def build_lane_routing_report(
     repo_root: Path, quality_report_path: Path, context_files: list[str]
 ) -> dict[str, Any]:
-    from tools.ai.workload_quality import (  # noqa: PLC0415
+    from Tools.ai._shared.workload_quality import (  # noqa: PLC0415
         build_quality_routing_summary,
         load_workload_quality_report,
         route_context_files_by_quality,
@@ -177,7 +177,7 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     _ensure_repo_imports(repo_root)
-    from tools.validation.report_utils import (  # noqa: PLC0415
+    from Tools.validation._shared.report_utils import (  # noqa: PLC0415
         resolve_output_path,
         write_json_report,
     )

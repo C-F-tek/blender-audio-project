@@ -13,12 +13,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, record_lane_diagnostic
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, record_lane_diagnostic
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.provider_runtime_heap import (  # type: ignore
+    from Tools.ai.provider_runtime_blackboard import (  # type: ignore
         ProviderRuntimeHeap,
         record_lane_diagnostic,
     )

@@ -61,7 +61,7 @@ The run must start from the unified launcher with:
 - review-PR bridge;
 - unified heap/exchange chain contract;
 - product separation;
-- prepare_review_pr;
+- agent_review_prepare_pr;
 - GitHub draft PR creation.
 
 ## Exit contract
@@ -75,7 +75,7 @@ The run is successful only if all of these are true:
 5. generated patch specs are current-stamp and concrete;
 6. at least one concrete deterministic operation is available for review;
 7. product separation classifies the output as reviewable product, not supplemental telemetry only;
-8. prepare_review_pr creates a draft PR with real source/doc changes;
+8. agent_review_prepare_pr creates a draft PR with real source/doc changes;
 9. the review PR final product contract validates the remote PR product.
 
 Concrete patch operations may use only safe deterministic operations such as:

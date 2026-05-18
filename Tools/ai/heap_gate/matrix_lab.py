@@ -172,7 +172,7 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
             "tools/ai/agent_runtime_debug_lab/policy.py",
             "tools/ai/agent_runtime_debug_lab/reporting.py",
             "tools/ai/agent_runtime_debug_lab/runner.py",
-            "tools/ai/run_heap_runtime_completeness_gate.py",
+            "Tools/ai/heap_runtime/completeness_gate/cli.py",
             "tools/ai/agent_runtime_tool_broker.py",
         ]
         return [path for path in candidates if (self.repo_root / path).exists()]

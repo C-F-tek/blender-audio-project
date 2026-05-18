@@ -13,9 +13,9 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, record_lane_diagnostic
-from tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
-from tools.validation.report_utils import (
+from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, record_lane_diagnostic
+from Tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
+from Tools.validation._shared.report_utils import (
     resolve_output_path,
     write_json_report,
     write_text_report,

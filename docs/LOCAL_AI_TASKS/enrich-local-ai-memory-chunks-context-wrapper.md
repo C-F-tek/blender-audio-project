@@ -57,11 +57,11 @@ The local AI must verify how these existing components can work together:
 
 ```text
 Tools/ai/agent_memory/state.py
-Tools/ai/build_agent_state_packet.py
+Tools/ai/agent_context/state_packet/cli.py
 Tools/ai/review_agent_memory.py
 Tools/ai/agent_memory/policy.py
 Tools/npu/build_semantic_code_chunks.py
-Tools/ai/build_ai_context_pack.py
+Tools/ai/ai_context_pack/cli.py
 Tools/workflow/run_local_ai_markdown_task.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_parallel_ai_provider_multistep.ps1
@@ -100,7 +100,7 @@ master-AI task MD
   -> run_local_ai_markdown_task.ps1 builds local_ai_prompt.md
   -> optional build_semantic_code_chunks.py updates semantic chunk artifacts
   -> optional build_ai_context_pack.py creates bounded task context
-  -> optional build_agent_state_packet.py reads SQLite memory + current files + operator notes
+  -> optional `python -m Tools.ai build_agent_state_packet` reads SQLite memory + current files + operator notes
   -> run_local_ai_task_via_pipeline.ps1 passes prompt + task + enriched context files
   -> optional explicit run_parallel_ai_provider_multistep.ps1 produces provider evidence
   -> run_post_validation_ai_packet.ps1 builds advisory packet/proposals
@@ -302,7 +302,7 @@ Stop and report if:
 ```text
 AGENTS.md is missing
 LOCAL_AI_RUN_BOOTSTRAP.md is missing
-agent_memory/state.py or build_agent_state_packet.py is missing
+agent_memory/state.py or `python -m Tools.ai build_agent_state_packet` is missing
 semantic chunk builder is missing
 context pack builder is missing
 a proposal requires committing private/local SQLite memory

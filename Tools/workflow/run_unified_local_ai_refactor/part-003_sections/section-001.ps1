@@ -269,7 +269,7 @@ $HeapExchangeEntryJson = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.js
 $HeapExchangeEntryMd = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.md"
 $HeapExchangeRuntimeState = Join-Path $AiPacketsDir "heap_exchange_runtime_state.jsonl"
 $HeapExchangeEntryArgs = @(
-    "-m", "Tools.ai", "build_heap_exchange_runtime_entry",
+    "-m", "Tools.ai", "heap_exchange_runtime_entry",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--task-file", $TaskFile,
@@ -309,7 +309,7 @@ if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality -and -not (Test-Pat
 $TaskIngressContractJson = Join-Path $AiPacketsDir "task_ingress_contract.json"
 $TaskIngressContractMd = Join-Path $AiPacketsDir "task_ingress_contract.md"
 $TaskIngressArgs = @(
-    "-m", "Tools.ai", "build_task_ingress_contract",
+    "-m", "Tools.ai", "heap_exchange_task_ingress_contract",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--task-file", $TaskFile,

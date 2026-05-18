@@ -77,7 +77,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         repo_root / "Tools/validation/check_real_product_intrinsic_capability_contract/cli.py"
     )
     readiness_text = read_text(repo_root / "Tools/validation/check_review_pr_product_readiness/cli.py")
-    prepare_text = read_text(repo_root / "Tools/ai/prepare_review_pr/cli.py")
+    prepare_text = read_text(repo_root / "Tools/ai/agent_review/review_pr_cli.py")
 
     memory_sqlite_text = read_text(repo_root / "Tools/ai/agent_memory/sqlite_cli.py")
     broker_text = read_text(repo_root / "Tools/ai/agent_runtime_tool_broker/cli.py")
@@ -91,11 +91,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     openvino_peer_topology_contract_text = read_text(
         repo_root / "Tools/validation/check_openvino_peer_topology_contract/cli.py"
     )
-    heap_text = read_text(repo_root / "Tools/ai/provider_runtime_heap/cli.py")
+    heap_text = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/cli.py")
     budget_text = read_text(repo_root / "Tools/ai/heap_provider_budget_governor/cli.py")
     invocation_text = read_text(repo_root / "Tools/ai/heap_provider_invocation_contract/cli.py")
     product_text = read_text(repo_root / "Tools/ai/build_heap_runtime_product_package/cli.py")
-    completeness_gate_text = read_text(repo_root / "Tools/ai/run_heap_runtime_completeness_gate/cli.py")
+    completeness_gate_text = read_text(repo_root / "Tools/ai/heap_runtime/completeness_gate/cli.py")
 
     gpu1_provider_surface = "\n".join([ollama_probe_text, local_provider_probe_text]).lower()
     memory_surface = memory_sqlite_text.lower()
@@ -154,8 +154,8 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "shared_memory_evidence": has(wrapper_text, "-SaveInputsToMemoryDb")
         and has(wrapper_text, "-BuildEvidence")
         and has(launcher_text, "shared_memory_evidence")
-        and exists(repo_root, "Tools/ai/build_shared_toolbox_ai_to_ai_bundle/cli.py")
-        and exists(repo_root, "Tools/ai/build_heap_peer_runtime_manifest/cli.py"),
+        and exists(repo_root, "Tools/ai/shared_toolbox_bundle/cli.py")
+        and exists(repo_root, "Tools/ai/heap_exchange/peer_runtime_manifest/cli.py"),
         "sqlite_runtime_memory": exists(repo_root, "Tools/ai/agent_memory/sqlite_cli.py")
         and ("sqlite" in memory_surface)
         and ("persistent" in memory_surface)
@@ -167,12 +167,12 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and ("execute" in broker_exec_text.lower() or "tool" in broker_exec_text.lower())
         and exists(repo_root, "Tools/validation/run_agent_runtime_tool_broker_smoke/cli.py")
         and exists(repo_root, "Tools/ai/build_runtime_tool_capability_manifest/cli.py")
-        and exists(repo_root, "Tools/ai/build_runtime_tool_usage_telemetry/cli.py"),
+        and exists(repo_root, "Tools/ai/runtime_tool_usage_telemetry/cli.py"),
         "direct_reasoning_assistance": exists(repo_root, "Tools/ai/_shared/runtime_tool_guidance.py")
-        and exists(repo_root, "Tools/ai/provider_runtime_heap_broker_bridge/cli.py")
-        and exists(repo_root, "Tools/ai/provider_runtime_heap_live_signals/cli.py")
-        and exists(repo_root, "Tools/ai/build_provider_runtime_heap_telemetry/cli.py"),
-        "runtime_flow_map_evidence": exists(repo_root, "Tools/ai/build_runtime_flow_map/cli.py")
+        and exists(repo_root, "Tools/ai/provider_runtime_blackboard/broker_bridge/cli.py")
+        and exists(repo_root, "Tools/ai/provider_runtime_blackboard/live_signals/cli.py")
+        and exists(repo_root, "Tools/ai/provider_runtime_blackboard/telemetry/cli.py"),
+        "runtime_flow_map_evidence": exists(repo_root, "Tools/ai/runtime_flow_map/cli.py")
         and has(launcher_text, "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN")
         and has(launcher_text, "build_runtime_flow_map.py")
         and has(launcher_text, "runtime_flow_"),
@@ -182,15 +182,15 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             has(wrapper_text, "-ReviewPrApplyDeterministicSuggestions")
             or has(wrapper_text, "-ReviewPrFromGeneratedPatchSpecs")
         )
-        and exists(repo_root, "Tools/ai/build_deterministic_recommendations/cli.py")
-        and exists(repo_root, "Tools/ai/build_patch_specs_from_proposals/cli.py"),
+        and exists(repo_root, "Tools/ai/deterministic_recommendations/cli.py")
+        and exists(repo_root, "Tools/ai/generated_patch_specs/proposal_cli.py"),
         "heap_exchange_close": has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-BEGIN")
         and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN")
         and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-END")
-        and exists(repo_root, "Tools/ai/build_heap_exchange_runtime_exit/cli.py")
+        and exists(repo_root, "Tools/ai/heap_exchange/runtime_exit/cli.py")
         and exists(repo_root, "Tools/validation/check_heap_exchange_runtime_lifecycle/cli.py"),
         "heap_runtime_completeness_gate": exists(
-            repo_root, "Tools/ai/run_heap_runtime_completeness_gate/cli.py"
+            repo_root, "Tools/ai/heap_runtime/completeness_gate/cli.py"
         )
         and exists(repo_root, "Tools/validation/run_heap_runtime_completeness_gate_smoke/cli.py")
         and "product_signal" in heap_contract_surface
@@ -272,7 +272,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "heap runtime product package",
         "heap/exchange CLOSE",
         "product readiness",
-        "prepare_review_pr.py",
+        "python -m Tools.ai agent_review_prepare_pr",
         "PR finale testabile",
     ]
 

@@ -19,8 +19,8 @@ Primary files:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
 Tools/validation/check_heap_exchange_runtime_lifecycle.py
 Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
 Tools/ai/patchkit/apply_patch_bundle.py
@@ -251,8 +251,8 @@ Heap/exchange lifecycle:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\build_heap_exchange_runtime_entry.py `
-  .\Tools\ai\build_heap_exchange_runtime_exit.py `
+  python -m Tools.ai heap_exchange_runtime_entry `
+  python -m Tools.ai heap_exchange_runtime_exit `
   .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
   .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
 
@@ -315,7 +315,7 @@ A standalone heap universe lane now exists as an incubation path for the core he
 Current owner path:
 
 ```text
-Tools/ai/run_heap_runtime_context_closure.py
+Tools/ai/heap_context_closure/cli.py
 ```
 
 Dedicated operating note:

@@ -7,8 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from tools.ai.agent_runtime_tool_broker_execution import execute_command_timed
-from tools.validation.report_utils import read_json_report
+from Tools.ai.runtime_tool_broker.registry_execution import execute_command_timed
+from Tools.validation._shared.report_utils import read_json_report
 
 from .common import (
     compact_value,

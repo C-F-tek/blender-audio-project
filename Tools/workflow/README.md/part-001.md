@@ -120,7 +120,7 @@ python -m Tools.ai run `
   -DraftPr
 ~~~
 
-This profile is the operator-facing path from task Markdown or generated process-gate task to reviewable PR product. It enables mandatory preflight, task ingress, heap/exchange, GPU1/GPU0/NPU peer runtime evidence, shared memory, closure audit, patch suggestion/apply report, runtime evidence correlation, prepare_review_pr and optional remote draft PR creation.
+This profile is the operator-facing path from task Markdown or generated process-gate task to reviewable PR product. It enables mandatory preflight, task ingress, heap/exchange, GPU1/GPU0/NPU peer runtime evidence, shared memory, closure audit, patch suggestion/apply report, runtime evidence correlation, agent_review_prepare_pr and optional remote draft PR creation.
 
 The profile owns the architectural lane flags internally and keeps runtime sizing, model, Python, observer and review-PR controls external. Operators should pass task-specific budgets and context limits from the CLI instead of editing the wrapper. Its default NPU micro-start mode is `peer`, so the heap/exchange product lane starts with GPU1/GPU0/NPU as coordinated peers instead of deferring NPU participation.
 
@@ -151,7 +151,7 @@ OUT
   lifecycle validation
   runtime evidence correlation
   patchkit or deterministic patch bridge
-  prepare_review_pr.py
+  agent_review_prepare_pr.py
   review PR product
 ```
 
@@ -167,14 +167,14 @@ run_unified_real_product_pr.ps1
   -> mandatory preflight
   -> run_unified_local_ai_refactor.ps1
   -> inventories/context/agent-state/workload-quality
-  -> Tools/ai/build_heap_exchange_runtime_entry.py
+  -> python -m Tools.ai heap_exchange_runtime_entry
   -> official adapter/provider/patch-spec lanes
-  -> Tools/ai/build_heap_exchange_runtime_exit.py
+  -> python -m Tools.ai heap_exchange_runtime_exit
   -> Tools/validation/check_heap_exchange_runtime_lifecycle.py
-  -> Tools/ai/build_repository_change_proposals.py
-  -> Tools/ai/build_patch_specs_from_proposals.py
-  -> Tools/ai/apply_generated_patch_specs_for_review_pr.py
-  -> Tools/ai/prepare_review_pr.py
+  -> Tools/ai/repository_change_proposals/cli.py
+  -> Tools/ai/generated_patch_specs/proposal_cli.py
+  -> Tools/ai/generated_patch_specs/apply_cli.py
+  -> Tools/ai/agent_review/review_pr_cli.py
   -> Tools/validation/check_review_pr_final_product_contract.py
 ```
 
@@ -182,7 +182,7 @@ Legacy deterministic suggestion bridge remains available:
 
 ```text
 Tools/ai/build_task_patch_suggestion_report.py
-Tools/ai/apply_patch_suggestion_bundle.py
+Tools/ai/patch_suggestion_bundle/cli.py
 Tools/validation/check_patch_suggestion_product_separation.py
 ```
 
@@ -199,8 +199,8 @@ Current limitations and hard gates:
 
 ```text
 ReviewPrIncludePath remains supported for explicit/manual allowlists.
-prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
-prepare_review_pr.py supports draft PR creation through `--draft-pr` when `--create-pr` and `--push` are selected.
+agent_review_prepare_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
+agent_review_prepare_pr.py supports draft PR creation through `--draft-pr` when `--create-pr` and `--push` are selected.
 metadata-only patch drafts are not enough for a successful review PR product.
 operation_count=0 under generated patch-spec --apply is a hard failure.
 P-NEXT-NPU-OBSERVABILITY is fallback/backlog, not final success when runtime peer evidence exists.

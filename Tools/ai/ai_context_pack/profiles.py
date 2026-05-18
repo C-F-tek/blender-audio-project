@@ -54,15 +54,15 @@ PROFILES: dict[str, dict[str, Any]] = {
             {"path": "docs/JSON_SCHEMAS.md", "role": "schema_notes"},
             {"path": "tools/validation/README.md", "role": "validation_commands"},
             {
-                "path": "tools/ai/build_repository_change_proposals.py",
+                "path": "Tools/ai/repository_change_proposals/cli.py",
                 "role": "proposal_builder",
             },
             {
-                "path": "tools/ai/build_patch_specs_from_proposals.py",
+                "path": "tools/ai/generated_patch_specs_from_proposals.py",
                 "role": "draft_patch_spec_builder",
             },
             {
-                "path": "tools/ai/promote_patch_spec_draft.py",
+                "path": "tools/ai/generated_patch_specs_promote_draft.py",
                 "role": "reviewed_patch_spec_builder",
             },
         ],
@@ -102,7 +102,7 @@ PROFILES: dict[str, dict[str, Any]] = {
                 "role": "lane_routing",
             },
             {
-                "path": "tools/ai/suggest_repository_updates.py",
+                "path": "Tools/ai/repository_update_suggestions/cli.py",
                 "role": "advisory_packet",
             },
             {
@@ -177,7 +177,7 @@ PROFILES: dict[str, dict[str, Any]] = {
                 "role": "machine_readable_status",
             },
             {
-                "path": "tools/ai/run_pipeline_dry_run_matrix.py",
+                "path": "Tools/ai/pipeline_dry_run_matrix/cli.py",
                 "role": "dry_run_matrix",
             },
             {
@@ -192,7 +192,7 @@ PROFILES: dict[str, dict[str, Any]] = {
         "validation_commands": [
             "python -m Tools.validation check_refactor_status_consistency --repo-root . --output .\\output\\validation\\refactor_status_consistency.json",
             "python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\\output\\validation\\ai_pipeline_modules.json",
-            "python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error",
+            "python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error",
         ],
         "stop_conditions": [
             "Do not interpret pending matrix evidence as provider execution.",

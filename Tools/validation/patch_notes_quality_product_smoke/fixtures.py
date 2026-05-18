@@ -31,7 +31,7 @@ def build_fixtures(repo_root: Path, stamp: str) -> dict[str, str]:
                     "edit_strategy": "Add report-only product evidence and keep patch application separate.",
                     "source_evidence": {"smoke": True},
                     "validation_commands": [
-                        "python -m Tools.validation run_patch_notes_quality_product_smoke --repo-root ."
+                        "python -m Tools.validation patch_notes_quality_product_smoke --repo-root ."
                     ],
                     "stop_conditions": ["manual review rejects evidence"],
                     "manual_review_required": True,

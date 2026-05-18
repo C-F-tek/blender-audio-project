@@ -6,13 +6,13 @@ import ast
 from pathlib import Path
 from typing import Any
 
-from tools.ai.code_interpreter_report.constants import (
+from Tools.ai.code_interpreter_report.constants import (
     BRANCH_NODES,
     RISK_CALLS,
     TODO_PATTERN,
 )
-from tools.ai.code_patch_plan_common import compact_text, repo_rel
-from tools.ai.github_evidence_bundle_io import line_count, read_text
+from Tools.ai._shared.code_patch_plan_common import compact_text, repo_rel
+from Tools.ai._shared.github_evidence_bundle_io import line_count, read_text
 
 
 def split_csv_values(values: list[str]) -> set[str]:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tools.ai.patch_plan_quality_product.scoring import list_plans
+from Tools.ai.patch_plan_quality_product.scoring import list_plans
 
 from .scoring_common import _text, _unique_strings, safe_dict, safe_list
 

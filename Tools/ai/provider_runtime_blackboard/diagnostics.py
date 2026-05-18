@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tools.ai.provider_runtime_state import normalize_status
+from .state import normalize_status
 
 from .common import normalize_lane, safe_dict
 from .heap import ProviderRuntimeHeap

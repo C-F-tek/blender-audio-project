@@ -131,16 +131,16 @@ These are good candidates for documented project-tool status, but not necessaril
 
 | Path | Proposed level | Placement | Action |
 |---|---:|---|---|
-| `Tools/ai/build_agent_review_patch_plan.py` | 2 | PATCH_PLAN_SUPPORT | Canonical patch-plan builder. |
-| `Tools/ai/build_agent_review_code_patch_plan.py` | 2 | PATCH_PLAN_SUPPORT | Code patch-plan lane. |
-| `Tools/ai/build_code_edit_proposal_from_plan.py` | 2 | PATCH_PLAN_SUPPORT | Converts plan to code edit proposal. |
-| `Tools/ai/build_code_patch_artifact_pack.py` | 2 | PATCH_PLAN_SUPPORT / FULL_RUN_EVIDENCE | Artifact pack builder. |
-| `Tools/ai/build_code_patch_docs_followup.py` | 2 | PATCH_PLAN_SUPPORT / DOCS_MAINTENANCE | Docs follow-up builder. |
+| `Tools/ai/agent_review/patch_plan/cli.py` | 2 | PATCH_PLAN_SUPPORT | Canonical patch-plan builder. |
+| `Tools/ai/agent_review/code_patch_plan_cli.py` | 2 | PATCH_PLAN_SUPPORT | Code patch-plan lane. |
+| `Tools/ai/code_product/edit_proposal_from_plan/cli.py` | 2 | PATCH_PLAN_SUPPORT | Converts plan to code edit proposal. |
+| `Tools/ai/code_product/patch_artifact_pack/cli.py` | 2 | PATCH_PLAN_SUPPORT / FULL_RUN_EVIDENCE | Artifact pack builder. |
+| `Tools/ai/code_product/patch_docs_followup/cli.py` | 2 | PATCH_PLAN_SUPPORT / DOCS_MAINTENANCE | Docs follow-up builder. |
 | `Tools/ai/merge_ai_candidates.py` | 2 | PATCH_PLAN_SUPPORT | Candidate merge helper; review safety before broker. |
 | `Tools/validation/run_code_edit_proposal_smoke.py` | 2 | VALIDATION | Smoke for code-edit proposal. |
-| `Tools/validation/run_agent_review_code_patch_plan_smoke.py` | 2 | VALIDATION | Smoke for code patch plan. |
-| `Tools/validation/run_agent_review_patch_plan_smoke.py` | 2 | VALIDATION | Smoke for patch-plan builder. |
-| `Tools/validation/run_agent_review_patch_plan_full_validation.py` | 2 | VALIDATION | Full patch-plan validation. |
+| `Tools/validation/agent_review/code_patch_plan_smoke/cli.py` | 2 | VALIDATION | Smoke for code patch plan. |
+| `Tools/validation/agent_review/patch_plan_smoke/cli.py` | 2 | VALIDATION | Smoke for patch-plan builder. |
+| `Tools/validation/agent_review/patch_plan_full_validation/cli.py` | 2 | VALIDATION | Full patch-plan validation. |
 
 ## Docs/project awareness tools
 

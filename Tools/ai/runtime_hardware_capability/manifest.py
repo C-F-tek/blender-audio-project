@@ -4,11 +4,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from tools.ai.runtime_hardware_capability.policy import (
+from Tools.ai.runtime_hardware_capability.policy import (
     build_hardware_runtime_policy,
     policy_warnings,
 )
-from tools.ai.runtime_hardware_capability.probes import (
+from Tools.ai.runtime_hardware_capability.probes import (
     cpu_diagnostics,
     detect_openvino_devices,
     nvidia_smi_diagnostics,

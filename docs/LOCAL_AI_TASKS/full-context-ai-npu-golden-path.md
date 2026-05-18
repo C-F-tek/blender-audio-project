@@ -140,8 +140,8 @@ docs/AI_MEMORY_POLICY.md
 docs/JSON_SCHEMAS.md
 Tools/ai/README.md
 Tools/ai/select_semantic_code_chunks.py
-Tools/ai/build_ai_context_pack.py
-Tools/ai/build_agent_state_packet.py
+Tools/ai/ai_context_pack/cli.py
+Tools/ai/agent_context/state_packet/cli.py
 Tools/workflow/run_local_ai_markdown_task.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_parallel_ai_provider_multistep.ps1

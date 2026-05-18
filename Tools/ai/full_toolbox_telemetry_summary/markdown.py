@@ -75,7 +75,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(
         f"- NPU final close-path provider required: `{npu_final_review.get('npu_final_provider_close_path_required')}`"
     )
-    heap_evidence = safe_dict(report.get("provider_runtime_heap"))
+    heap_evidence = safe_dict(report.get("provider_runtime_blackboard"))
     lines.append(f"- Runtime heap events: `{heap_evidence.get('event_count')}`")
     lines.append(f"- Runtime heap live signals: `{heap_evidence.get('live_signal_count')}`")
     lines.append(

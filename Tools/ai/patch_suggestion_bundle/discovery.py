@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_suggestion_bundle.common import (
+from Tools.ai.patch_suggestion_bundle.common import (
     DEFAULT_CURRENT_SUGGESTION_REPORTS,
     repo_relative,
 )

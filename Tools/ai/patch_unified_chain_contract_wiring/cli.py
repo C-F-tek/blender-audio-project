@@ -62,7 +62,7 @@ $RequireConcretePatchSpecsForChain = [bool]$ReviewPrFromGeneratedPatchSpecs
 $RequireReviewPrProductForChain = [bool]($PrepareReviewPr -and ($ReviewPrFromGeneratedPatchSpecs -or $ReviewPrApplyDeterministicSuggestions))
 
 $UnifiedChainArgs = @(
-    "Tools/validation/check_unified_chain_contract/cli.py",
+    "Tools/validation/unified_chain_contract/cli.py",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--mode-name", $ModeName,
@@ -131,7 +131,7 @@ def validate_policy(text_lf: str) -> list[str]:
     required = [
         CHAIN_GATE_MARKER,
         "Validate unified heap/exchange chain contract",
-        "Tools/validation/check_unified_chain_contract/cli.py",
+        "Tools/validation/unified_chain_contract/cli.py",
         "--require-ai-exchange",
         "--require-concrete-patch-specs",
         "--require-review-pr-product",

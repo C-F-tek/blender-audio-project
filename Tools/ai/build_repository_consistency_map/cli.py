@@ -3,7 +3,7 @@
 
 The CLI entrypoint stays stable while the path scanner, Markdown scanner,
 Python inventory, finding builder and renderer live in
-tools.ai.repository_consistency_map.
+Tools.ai.repository_consistency_map.
 """
 
 from __future__ import annotations
@@ -14,21 +14,21 @@ import sys
 from pathlib import Path
 
 try:
-    from tools.validation.report_utils import write_json_report, write_text_report
+    from Tools.validation._shared.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
+    from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
 
-from tools.ai.repository_consistency_map.builder import build_report  # noqa: E402
-from tools.ai.repository_consistency_map.constants import (  # noqa: E402
+from Tools.ai.repository_consistency_map.builder import build_report  # noqa: E402
+from Tools.ai.repository_consistency_map.constants import (  # noqa: E402
     DEFAULT_MARKDOWN,
     DEFAULT_MAX_SNIPPET_CHARS,
     DEFAULT_OUTPUT,
 )
-from tools.ai.repository_consistency_map.paths import resolve_path  # noqa: E402
-from tools.ai.repository_consistency_map.render import render_markdown  # noqa: E402
+from Tools.ai.repository_consistency_map.paths import resolve_path  # noqa: E402
+from Tools.ai.repository_consistency_map.render import render_markdown  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:

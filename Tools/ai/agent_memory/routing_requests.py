@@ -197,7 +197,7 @@ def build_discovery_tool_requests(args: argparse.Namespace) -> list[dict[str, An
                 ),
                 tool_request(
                     request_id="refactor_duplication_audit",
-                    tool="build_refactor_duplication_audit",
+                    tool="refactor_duplication_audit",
                     reason="Audit duplicated helper/function patterns and verify refactor layering before proposing implementation patches.",
                     args={
                         "root": [

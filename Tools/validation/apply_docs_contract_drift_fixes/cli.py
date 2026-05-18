@@ -77,8 +77,8 @@ Tools/validation/check_ai_workload_report_quality/cli.py
 Consumer:
 Tools/ai/_shared/workload_quality.py
 Tools/ai/build_workload_quality_lane_routing/cli.py
-Tools/ai/suggest_repository_updates/cli.py
-Tools/ai/build_repository_change_proposals/cli.py
+Tools/ai/repository_update_suggestions/cli.py
+Tools/ai/repository_change_proposals/cli.py
 Tools/ai/build_github_evidence_bundle/cli.py
 Required fields:
 schema_version, kind, repo_root, passed, errors, warnings, provider_execution_performed, source_writes_performed, policy, mode, usable_lanes, unusable_lanes, decision, checks

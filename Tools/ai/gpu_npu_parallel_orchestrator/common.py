@@ -42,37 +42,37 @@ DEFAULT_NPU_MICRO_SUPPORT_DIR = "output/ai_pipeline/npu_micro_support_parallel"
 ROUND_RE = re.compile(r"round_(\d{3})\.json$")
 
 try:
-    from tools.ai.evidence_to_recommendation import write_recommendation_event
-    from tools.ai.patch_plan_generator import write_patch_plan_event
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap
-    from tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests
-    from tools.ai.validation_step import write_validation_event
+    from Tools.ai.evidence_to_recommendation import write_recommendation_event
+    from Tools.ai.patch_plan_generator import write_patch_plan_event
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap
+    from Tools.ai._shared.runtime_tool_guidance import deterministic_fallback_tool_requests
+    from Tools.ai.validation_step import write_validation_event
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.evidence_to_recommendation import write_recommendation_event  # type: ignore
-    from tools.ai.patch_plan_generator import write_patch_plan_event  # type: ignore
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
-    from tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
-    from tools.ai.validation_step import write_validation_event  # type: ignore
+    from Tools.ai.evidence_to_recommendation import write_recommendation_event  # type: ignore
+    from Tools.ai.patch_plan_generator import write_patch_plan_event  # type: ignore
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap  # type: ignore
+    from Tools.ai._shared.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
+    from Tools.ai.validation_step import write_validation_event  # type: ignore
 
 try:
-    from tools.ai.provider_mesh_runtime.gpu0_peer import (
+    from Tools.ai.provider_mesh_runtime.gpu0_peer import (
         build_gpu0_peer_support_command,
         gpu0_peer_support_output_path,
         should_launch_gpu0_peer_support,
     )
-    from tools.ai.provider_mesh_runtime.npu_micro import (
+    from Tools.ai.provider_mesh_runtime.npu_micro import (
         build_npu_micro_support_command,
         collect_runtime_tool_context_reports,
         npu_micro_support_output_path,
     )
-    from tools.ai.provider_mesh_runtime.python_runtime import (
+    from Tools.ai.provider_mesh_runtime.python_runtime import (
         command_env,
         resolve_child_python,
     )
-    from tools.ai.provider_mesh_runtime.runtime_heap import (
+    from Tools.ai.provider_mesh_runtime.runtime_heap import (
         append_runtime_heap_event,
         record_runtime_lane_diagnostic,
         write_runtime_heap_snapshot,
@@ -81,21 +81,21 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.provider_mesh_runtime.gpu0_peer import (  # type: ignore
+    from Tools.ai.provider_mesh_runtime.gpu0_peer import (  # type: ignore
         build_gpu0_peer_support_command,
         gpu0_peer_support_output_path,
         should_launch_gpu0_peer_support,
     )
-    from tools.ai.provider_mesh_runtime.npu_micro import (  # type: ignore
+    from Tools.ai.provider_mesh_runtime.npu_micro import (  # type: ignore
         build_npu_micro_support_command,
         collect_runtime_tool_context_reports,
         npu_micro_support_output_path,
     )
-    from tools.ai.provider_mesh_runtime.python_runtime import (  # type: ignore
+    from Tools.ai.provider_mesh_runtime.python_runtime import (  # type: ignore
         command_env,
         resolve_child_python,
     )
-    from tools.ai.provider_mesh_runtime.runtime_heap import (  # type: ignore
+    from Tools.ai.provider_mesh_runtime.runtime_heap import (  # type: ignore
         append_runtime_heap_event,
         record_runtime_lane_diagnostic,
         write_runtime_heap_snapshot,

@@ -102,8 +102,8 @@ provider behavior changes
 | `Tools/npu/run_npu_review.py` | explicit local diagnostic/review helper | Not the unified launcher. |
 | `Tools/npu/run_npu_context.ps1` | explicit local context/review wrapper | Useful local helper; not canonical full 0-to-10 path. |
 | `Tools/npu/build_provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces; bundle/telemetry visibility required when promoted. |
-| `Tools/ai/run_npu_gpu_deep_review_auditor.py` | diagnostic/support lane | Not primary advisory proof by itself. |
-| `Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py` | provider orchestration lane | Prefer unified launcher; verify current caller before changing behavior. |
+| `Tools/ai/npu_gpu_deep_review_auditor/cli.py` | diagnostic/support lane | Not primary advisory proof by itself. |
+| `Tools/ai/gpu_npu_parallel_orchestrator/cli.py` | provider orchestration lane | Prefer unified launcher; verify current caller before changing behavior. |
 
 Policy:
 

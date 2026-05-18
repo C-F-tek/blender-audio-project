@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_plan_quality_product.io_utils import read_text, repo_rel, resolve
+from Tools.ai.patch_plan_quality_product.io_utils import read_text, repo_rel, resolve
 
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 

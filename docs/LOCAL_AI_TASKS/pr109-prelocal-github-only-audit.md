@@ -81,7 +81,7 @@ python -m py_compile `
   .\Tools\ai\_shared\github_evidence_bundle_markdown.py `
   .\Tools\ai\github_evidence_bundle_build_github_evidence_bundle_ready.py `
   .\Tools\ai\_shared\code_edit_proposal_helpers.py `
-  .\Tools\ai\build_code_interpreter_report.py `
+  .\Tools\ai\code_interpreter_report\cli.py `
   .\Tools\validation\check_github_evidence_bundle.py
 ```
 
@@ -283,11 +283,11 @@ docs/LOCAL_VALIDATION_EVIDENCE/pr109_static_code_plan_bundle_20260502-143630.jso
 docs/LOCAL_AI_TASKS/macro-local-validation-prototype-gate.md — 675 additions
 docs/LOCAL_VALIDATION_EVIDENCE/pr109_code_interpreter_and_agnostic_bundle_20260502-141921.json — 530 additions
 docs/LOCAL_VALIDATION_EVIDENCE/pr109_static_code_plan_bundle_20260502-142630.json — 500 additions
-Tools/ai/build_agent_review_code_patch_plan.py — 499 additions
+Tools/ai/agent_review/code_patch_plan_cli.py — 499 additions
 docs/LOCAL_RUNS_TESTING_AND_EVIDENCE.md — 472 additions
 docs/AGENT_REVIEW_CODE_PATCH_PLAN.md — 454 additions
 docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md — 452 additions
-Tools/ai/build_code_interpreter_report.py — 437 additions
+Tools/ai/code_interpreter_report/cli.py — 437 additions
 Tools/ai/build_github_evidence_bundle.py — 421 changed lines; local wiring pending
 ```
 
@@ -295,10 +295,10 @@ Tools/ai/build_github_evidence_bundle.py — 421 changed lines; local wiring pen
 
 ```text
 Tools/ai/build_analysis_input_bundle.py — 304 additions
-Tools/ai/build_code_patch_docs_followup.py — 266 additions
+Tools/ai/code_product/patch_docs_followup/cli.py — 266 additions
 docs/LOCAL_VALIDATION_EVIDENCE/python_line_count_20260502-141635.csv — 266 additions
-Tools/ai/build_code_patch_artifact_pack.py — 258 additions
-Tools/ai/build_code_edit_proposal_from_plan.py — 250 additions
+Tools/ai/code_product/patch_artifact_pack/cli.py — 258 additions
+Tools/ai/code_product/edit_proposal_from_plan/cli.py — 250 additions
 Tools/ai/enrich_github_evidence_bundle_code_plan.py — 231 additions
 docs/LOCAL_AI_TASKS/build-analysis-input-bundle.md — 230 additions
 Tools/validation/build_python_line_count_csv.py — 225 additions
@@ -308,6 +308,6 @@ Tools/ai/_shared/code_patch_plan_common.py — 216 additions
 Tools/ai/_shared/github_evidence_bundle_reports.py — 211 additions
 Tools/ai/_shared/github_evidence_bundle_markdown.py — 209 additions
 Tools/validation/run_code_edit_proposal_smoke.py — 203 additions
-Tools/validation/run_agent_review_code_patch_plan_smoke.py — 201 additions
+Tools/validation/agent_review/code_patch_plan_smoke/cli.py — 201 additions
 Tools/ai/_shared/code_edit_proposal_helpers.py — 201 additions
 ```

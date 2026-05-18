@@ -53,7 +53,7 @@ kind: gpu_repair_failure_recommendation
 recommendation_count: 1
 recommendations[0].id: gpu_repair_failure_001
 recommendations[0].status: ready_for_manual_review
-recommended_next_layer: build_agent_review_patch_plan.py
+recommended_next_layer: python -m Tools.ai agent_review_patch_plan
 ```
 
 Guardrails stay report-only:

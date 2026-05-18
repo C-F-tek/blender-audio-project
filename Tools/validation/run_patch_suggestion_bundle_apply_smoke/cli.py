@@ -180,7 +180,7 @@ def main() -> int:
         dry = run_command(
             [
                 sys.executable,
-                "Tools/ai/apply_patch_suggestion_bundle/cli.py",
+                "Tools/ai/patch_suggestion_bundle/cli.py",
                 "--repo-root",
                 ".",
                 "--Stamp",
@@ -197,7 +197,7 @@ def main() -> int:
         apply = run_command(
             [
                 sys.executable,
-                "Tools/ai/apply_patch_suggestion_bundle/cli.py",
+                "Tools/ai/patch_suggestion_bundle/cli.py",
                 "--repo-root",
                 ".",
                 "--Stamp",

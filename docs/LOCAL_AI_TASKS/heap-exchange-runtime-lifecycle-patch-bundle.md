@@ -8,7 +8,7 @@ The run remains code-driven and reuse-first:
 
 - reuses `unified_run_observer.ps1` and `ai_public_events.jsonl`;
 - reuses generated patch specs and the existing review-PR bridge;
-- reuses `check_unified_chain_contract.py` for final product envelope validation;
+- reuses `unified_chain_contract.py` for final product envelope validation;
 - adds entry/exit lifecycle artifacts so the heap/exchange layer is present while provider/GPU/NPU/runtime lanes operate.
 
 ## Runtime model
@@ -27,8 +27,8 @@ The lifecycle does not prescribe internal reasoning or lane order.
 ## Added tools
 
 ```text
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
 Tools/validation/check_heap_exchange_runtime_lifecycle.py
 Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
 Tools/ai/patch_unified_heap_exchange_lifecycle_wiring.py
@@ -55,8 +55,8 @@ python -m Tools.ai patch_unified_heap_exchange_lifecycle_wiring `
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\build_heap_exchange_runtime_entry.py `
-  .\Tools\ai\build_heap_exchange_runtime_exit.py `
+  python -m Tools.ai heap_exchange_runtime_entry `
+  python -m Tools.ai heap_exchange_runtime_exit `
   .\Tools\ai\patch_unified_heap_exchange_lifecycle_wiring.py `
   .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
   .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
@@ -114,8 +114,8 @@ Do not commit runtime outputs.
 Allowed product files for this PR:
 
 ```text
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
 Tools/ai/patch_unified_heap_exchange_lifecycle_wiring.py
 Tools/validation/check_heap_exchange_runtime_lifecycle.py
 Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py

@@ -93,7 +93,7 @@ if ($BuildRuntimeEvidenceCorrelation -or $PrepareReviewPr) {
     )
 
     $RuntimeFlowArgs = @(
-        "Tools/ai/build_runtime_flow_map/cli.py",
+        "Tools/ai/runtime_flow_map/cli.py",
         "--repo-root", ".",
         "--stamp", $DataStamp,
         "--entrypoint", "python -m Tools.workflow run_unified_local_ai_refactor",

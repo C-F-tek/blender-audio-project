@@ -49,7 +49,9 @@ def main() -> int:
         result = subprocess.run(
             [
                 sys.executable,
-                str(source_repo / "Tools/ai/build_task_ingress_contract/cli.py"),
+                "-m",
+                "Tools.ai",
+                "heap_exchange_task_ingress_contract",
                 "--repo-root",
                 str(repo),
                 "--stamp",

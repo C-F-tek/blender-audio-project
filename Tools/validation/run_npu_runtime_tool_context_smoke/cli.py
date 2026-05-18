@@ -135,7 +135,7 @@ def main() -> int:
 
     command = [
         sys.executable,
-        "Tools/ai/run_npu_gpu_deep_review_auditor/cli.py",
+        "Tools/ai/npu_gpu_deep_review_auditor/cli.py",
         "--repo-root",
         ".",
         "--gpu-review",

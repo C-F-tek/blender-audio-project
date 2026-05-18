@@ -116,13 +116,13 @@ After Package B:
 
 Changed or candidate code files:
 
-- `Tools/ai/compose_heap_final_proposals.py`: oversized, 1147 lines before the
+- `Tools/ai/heap_final_proposals/cli.py`: oversized, 1147 lines before the
   latest wrapper/prompt edits.
 - `Tools/ai/_shared/heap_proposal_gate.py`: under budget.
 - `Tools/validation/test_proposal_gate.py`: under budget.
-- `Tools/ai/run_heap_runtime_context_closure.py`: oversized, 945 lines after
+- `Tools/ai/heap_context_closure/cli.py`: oversized, 945 lines after
   Package B.
-- `Tools/ai/run_heap_runtime_completeness_gate.py`: heavily oversized,
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`: heavily oversized,
   4787 lines after Package C.
 
 Decision:
@@ -138,7 +138,7 @@ Required after A/B/C:
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
-& $RepoPy -m py_compile .\Tools\ai\compose_heap_final_proposals.py -m Tools.ai heap_proposal_gate .\Tools\validation\test_proposal_gate.py -m Tools.ai run_heap_runtime_context_closure .\Tools\ai\run_heap_runtime_completeness_gate.py
+& $RepoPy -m py_compile .\Tools\ai\heap_final_proposals\cli.py -m Tools.ai heap_proposal_gate .\Tools\validation\test_proposal_gate.py -m Tools.ai run_heap_runtime_context_closure .\Tools\ai\heap_runtime\completeness_gate\cli.py
 & $RepoPy -m Tools.validation test_proposal_gate
 & $RepoPy -m Tools.validation check_docs_links --repo-root . --output output/validation/docs_links_after_final_purpose_apply.json
 git diff --check
@@ -148,11 +148,11 @@ Additional validation after code execution matrix:
 
 ```powershell
 & $RepoPy -m py_compile `
-  .\Tools\ai\run_heap_code_execution_tool.py `
+  .\Tools\ai\heap_runtime\code_execution_tool\cli.py `
   .\Tools\ai\_shared\heap_code_execution_tool_core.py `
   .\Tools\validation\run_heap_code_execution_tool_smoke.py `
   .\Tools\ai\agent_runtime_tool_broker.py `
-  .\Tools\ai\run_heap_runtime_completeness_gate.py
+  .\Tools\ai\heap_runtime\completeness_gate\cli.py
 
 & $RepoPy -m Tools.validation run_heap_code_execution_tool_smoke `
   --repo-root . `

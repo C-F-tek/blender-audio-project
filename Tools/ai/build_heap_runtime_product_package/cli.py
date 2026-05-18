@@ -18,7 +18,7 @@ from typing import Any
 try:
     from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
-    from tools.validation.report_utils import (  # type: ignore
+    from Tools.validation._shared.report_utils import (  # type: ignore
         write_json_report,
     )
 

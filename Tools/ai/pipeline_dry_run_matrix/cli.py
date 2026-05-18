@@ -10,7 +10,7 @@ from pathlib import Path
 try:
     from pipeline.markdown_report import write_dry_run_matrix_markdown
 except ImportError:
-    from tools.ai.pipeline.markdown_report import write_dry_run_matrix_markdown  # type: ignore
+    from Tools.ai.pipeline.markdown_report import write_dry_run_matrix_markdown  # type: ignore
 
 from .cases import default_cases
 from .common import default_matrix_workers, repeat_cases

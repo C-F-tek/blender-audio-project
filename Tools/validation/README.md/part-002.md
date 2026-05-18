@@ -150,7 +150,7 @@ Proposal-derived patch specs turn validated repository proposals into reviewable
 Generate drafts from a proposal report:
 
 ```powershell
-python -m Tools.ai build_patch_specs_from_proposals --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output-dir output\patch_specs --basename proposal_patch_specs
+python -m Tools.ai generated_patch_specs_from_proposals --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output-dir output\patch_specs --basename proposal_patch_specs
 ```
 
 Validate the draft manifest:
@@ -180,13 +180,13 @@ Reviewed patch specs are produced from a draft plus an explicit replacement plan
 Promote the fixture draft with dry-run:
 
 ```powershell
-python -m Tools.ai promote_patch_spec_draft --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
+python -m Tools.ai generated_patch_specs_promote_draft --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
 ```
 
 Validate the reviewed spec:
 
 ```powershell
-python -m Tools.validation check_reviewed_patch_specs --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
+python -m Tools.validation reviewed_patch_specs_check --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
 ```
 
 ## AI context-pack validation

@@ -56,7 +56,7 @@ Use it after a real product run to prove that one stamp contains the complete pr
 - tool broker capability or usage telemetry;
 - heap/exchange closure audit;
 - review PR product readiness;
-- `prepare_review_pr.py` result;
+- `agent_review_prepare_pr.py` result;
 - final unified chain contract.
 
 The smoke `Tools/validation/run_runtime_evidence_correlation_smoke.py` is also part of the mandatory preflight to prevent drift in the validator itself. It is report-only and does not execute providers or apply patches.
@@ -108,7 +108,7 @@ This prevents downstream tooling from relying on implicit path guesses for the f
 <!-- IA-CARMINE-REVIEW-PR-FINAL-PRODUCT-CONTRACT-BEGIN -->
 ## Review PR final product contract
 
-`Tools/validation/check_review_pr_final_product_contract.py` validates the output of `prepare_review_pr.py`.
+`Tools/validation/check_review_pr_final_product_contract.py` validates the output of `agent_review_prepare_pr.py`.
 
 It distinguishes two modes:
 
@@ -135,11 +135,11 @@ When `-CreatePr` is used, final product validation automatically runs in remote 
 <!-- IA-CARMINE-RUNTIME-PEER-EVIDENCE-FEED-BEGIN -->
 ## Runtime peer evidence feed into proposals
 
-`Tools/ai/build_repository_change_proposals.py` reads current-stamp heap/exchange, GPU0, NPU, runtime-correlation and generated patch-spec apply reports when available.
+`Tools/ai/repository_change_proposals/cli.py` reads current-stamp heap/exchange, GPU0, NPU, runtime-correlation and generated patch-spec apply reports when available.
 
 If those reports prove that the runtime mesh existed but generated patch specs were metadata-only, the expected product proposal is `P-RUNTIME-PEER-EVIDENCE-FEED`. The fallback `P-NEXT-NPU-OBSERVABILITY` remains a backlog/default proposal and must not be treated as successful final product when runtime peer evidence exists.
 
-`Tools/ai/build_patch_specs_from_proposals.py` can carry reviewed `concrete_operations` into generated patch specs. Allowed operations remain deterministic and reviewable: `replace_once`, `append_once`, `insert_after_once`, `insert_before_once`, `write_file`.
+`Tools/ai/generated_patch_specs/proposal_cli.py` can carry reviewed `concrete_operations` into generated patch specs. Allowed operations remain deterministic and reviewable: `replace_once`, `append_once`, `insert_after_once`, `insert_before_once`, `write_file`.
 
 `Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py` covers the complete route: runtime evidence -> proposal -> patch spec -> generated patch apply.
 <!-- IA-CARMINE-RUNTIME-PEER-EVIDENCE-FEED-END -->

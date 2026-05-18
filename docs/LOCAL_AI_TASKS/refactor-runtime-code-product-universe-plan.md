@@ -23,11 +23,11 @@ Flusso visto:
 
 ## Bug Architetturali Trovati
 
-- `run_heap_runtime_completeness_gate.py` usava una lista statica di target matrix.
-- `run_heap_code_execution_tool.py` considerava concreta solo una modifica gia presente nel worktree.
+- `python -m Tools.ai run_heap_runtime_completeness_gate` usava una lista statica di target matrix.
+- `python -m Tools.ai run_heap_code_execution_tool` considerava concreta solo una modifica gia presente nel worktree.
 - `VALIDATION_COMMANDS` poteva viaggiare vicino a `TARGET_FILES` senza un modello runtime separato.
 - `output/**` e artifact citati dal provider non avevano un tipo che impedisse la promozione a source target.
-- `run_heap_virtual_dev_environment.py` duplicava regole path/test invece di usare un resolver comune.
+- `python -m Tools.ai run_heap_virtual_dev_environment` duplicava regole path/test invece di usare un resolver comune.
 - `heap_final_code_product.py` distingueva poco tra target verificato, prodotto patchabile e blocco diagnostico.
 - Il provider vedeva allowlist testuale, ma non un riepilogo chiaro del runtime file universe.
 
@@ -66,11 +66,11 @@ Flusso visto:
 - `Tools/ai/runtime_file_refs/*`
 - `Tools/ai/runtime_universe/*`
 - `Tools/ai/synthesize_patch_candidates.py`
-- `Tools/ai/run_heap_code_execution_tool.py`
+- `Tools/ai/heap_runtime/code_execution_tool/cli.py`
 - `Tools/ai/_shared/heap_code_execution_tool_core.py`
-- `Tools/ai/run_heap_virtual_dev_environment.py`
+- `Tools/ai/heap_runtime/virtual_dev_environment/cli.py`
 - `Tools/ai/agent_runtime_tool_broker.py`
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 - `Tools/ai/_shared/heap_final_code_product.py`
 - `Tools/ai/assemble_heap_final_readable_product.py`
 - `Tools/validation/run_runtime_file_refs_smoke.py`

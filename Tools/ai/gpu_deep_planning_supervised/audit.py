@@ -15,7 +15,7 @@ def run_npu_audit_for_checkpoint(
 ) -> dict[str, Any]:
     command = [
         sys.executable,
-        "tools/ai/run_npu_gpu_deep_review_auditor.py",
+        "Tools/ai/npu_gpu_deep_review_auditor/cli.py",
         "--repo-root",
         ".",
         "--gpu-review",

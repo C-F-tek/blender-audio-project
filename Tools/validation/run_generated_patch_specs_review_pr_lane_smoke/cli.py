@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test generated patch specs -> apply report -> prepare_review_pr chain."""
+"""Smoke-test generated patch specs -> apply report -> agent_review_prepare_pr chain."""
 
 from __future__ import annotations
 
@@ -158,7 +158,7 @@ def main() -> int:
 
         apply_command = [
             sys.executable,
-            str(source_repo / "Tools/ai/apply_generated_patch_specs_for_review_pr/cli.py"),
+            str(source_repo / "Tools/ai/generated_patch_specs/apply_cli.py"),
             "--repo-root",
             str(repo),
             "--manifest",
@@ -203,7 +203,7 @@ def main() -> int:
             sys.executable,
             "-m",
             "Tools.ai",
-            "prepare_review_pr",
+            "agent_review_prepare_pr",
             "--repo-root",
             str(repo),
             "--Stamp",
@@ -233,7 +233,7 @@ def main() -> int:
         )
 
         if not prepare_result["ok"]:
-            errors.append(f"prepare_review_pr.py failed rc={prepare_result['returncode']}")
+            errors.append(f"agent_review_prepare_pr.py failed rc={prepare_result['returncode']}")
         if review_report.get("passed") is not True:
             errors.append("review PR prepare report did not pass")
         if review_report.get("auto_include_paths") != [TARGET]:

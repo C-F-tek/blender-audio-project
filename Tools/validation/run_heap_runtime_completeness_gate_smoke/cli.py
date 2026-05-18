@@ -61,7 +61,7 @@ def run_gate(
     child_python, env = provider_child_python_and_env(repo_root)
     command = [
         child_python,
-        "Tools/ai/run_heap_runtime_completeness_gate/cli.py",
+        "Tools/ai/heap_runtime/completeness_gate/cli.py",
         "--repo-root",
         ".",
         "--stamp",
@@ -96,7 +96,7 @@ def run_gate(
 def complete_smoke_request(repo_root: Path) -> str:
     target = repo_root / "Tools" / "ai" / "provider_tool_loop.py"
     if not target.is_file():
-        target = repo_root / "Tools" / "ai" / "run_heap_runtime_completeness_gate.py"
+        target = repo_root / "Tools" / "ai" / "heap_runtime" / "completeness_gate" / "cli.py"
     rel_target = target.relative_to(repo_root).as_posix()
     return f"""
 # Heap Runtime Complete Smoke Request

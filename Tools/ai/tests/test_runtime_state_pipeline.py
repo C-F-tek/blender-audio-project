@@ -7,17 +7,17 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.ai.evidence_to_recommendation import write_recommendation_event
-from tools.ai.heap_event_pointers import source_pointer_bundle
-from tools.ai.heap_source_anchors import (
+from Tools.ai.evidence_to_recommendation import write_recommendation_event
+from Tools.ai.heap_event_pointers import source_pointer_bundle
+from Tools.ai._shared.heap_source_anchors import (
     real_source_file_candidates,
     response_file_reference_quality,
 )
-from tools.ai.patch_plan_generator import write_patch_plan_event
-from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, record_lane_diagnostic
-from tools.ai.run_agent_gpu_npu_parallel_orchestrator import runtime_state_gate
-from tools.ai.run_heap_runtime_completeness_gate import runtime_state_lane_gate
-from tools.ai.validation_step import write_validation_event
+from Tools.ai.patch_plan_generator import write_patch_plan_event
+from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, record_lane_diagnostic
+from Tools.ai.gpu_npu_parallel_orchestrator import runtime_state_gate
+from Tools.ai.heap_runtime.completeness_gate import runtime_state_lane_gate
+from Tools.ai.validation_step import write_validation_event
 
 
 class RuntimeStateTests(unittest.TestCase):
@@ -123,7 +123,7 @@ class HeapProductContractHelperTests(unittest.TestCase):
     def test_source_anchor_prefers_operator_existing_files(self) -> None:
         repo_root = Path(__file__).resolve().parents[3]
         request = (
-            "Use Tools/ai/provider_runtime_heap/cli.py and "
+            "Use Tools/ai/provider_runtime_blackboard/cli.py and "
             "Tools/ai/evidence_to_recommendation/cli.py. "
             "Do not use Tools/data_processor/real_existing_file.py."
         )
@@ -133,7 +133,7 @@ class HeapProductContractHelperTests(unittest.TestCase):
             broker_output_refs=[],
             limit=4,
         )
-        self.assertEqual(candidates[0], "Tools/ai/provider_runtime_heap/cli.py")
+        self.assertEqual(candidates[0], "Tools/ai/provider_runtime_blackboard/cli.py")
         self.assertIn("Tools/ai/evidence_to_recommendation/cli.py", candidates)
         quality = response_file_reference_quality(
             repo_root=repo_root,

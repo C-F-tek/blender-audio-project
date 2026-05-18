@@ -16,12 +16,12 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from tools.ai.code_patch_plan_common import (  # noqa: E402
+from Tools.ai._shared.code_patch_plan_common import (  # noqa: E402
     compact_text,
     normalize_repo_path,
     target_path_errors,
 )
-from tools.ai.github_evidence_bundle_io import (
+from Tools.ai._shared.github_evidence_bundle_io import (
     line_count,
     read_text,
     sha256_file,

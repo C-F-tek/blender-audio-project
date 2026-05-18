@@ -5,15 +5,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from tools.ai.full_run_bundle_zip.discovery import (
+from Tools.ai.full_run_bundle_zip.discovery import (
     candidate_entry,
     collect_candidates,
     discover_recursive_dir_files,
 )
-from tools.ai.full_run_bundle_zip.git_status import run_git_status
-from tools.ai.full_run_bundle_zip.paths import repo_relative
-from tools.ai.full_run_bundle_zip.policy import default_required_recursive_roots
-from tools.ai.full_run_bundle_zip.reports import render_markdown_report, write_json
+from Tools.ai.full_run_bundle_zip.git_status import run_git_status
+from Tools.ai.full_run_bundle_zip.paths import repo_relative
+from Tools.ai.full_run_bundle_zip.policy import default_required_recursive_roots
+from Tools.ai.full_run_bundle_zip.reports import render_markdown_report, write_json
 
 
 def add_sidecar_paths(

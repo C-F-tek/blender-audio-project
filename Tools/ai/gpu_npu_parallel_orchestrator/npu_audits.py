@@ -133,7 +133,7 @@ def build_npu_command(
 ) -> list[str]:
     command = [
         resolve_child_python(),
-        "tools/ai/run_npu_gpu_deep_review_auditor.py",
+        "Tools/ai/npu_gpu_deep_review_auditor/cli.py",
         "--repo-root",
         ".",
         "--gpu-review",

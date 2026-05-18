@@ -98,11 +98,11 @@ def validation_for_candidate(candidate_id: str) -> list[str]:
     if "artifact" in candidate_id or "chunk" in candidate_id:
         return [
             "python -m Tools.validation run_shared_toolbox_ai_to_ai_bundle_smoke --repo-root .",
-            "python -m tools.validation.check_github_evidence_bundle --repo-root . --bundle <bundle>",
+            "python -m Tools.validation._shared.github_evidence_bundle_cli --repo-root . --bundle <bundle>",
         ]
     return [
         "python -m py_compile touched files",
-        "python -m tools.validation.check_python_syntax --repo-root .",
+        "python -m Tools.validation.check_python_syntax --repo-root .",
     ]
 
 def dedupe_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:

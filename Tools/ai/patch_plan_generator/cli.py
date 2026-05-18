@@ -10,22 +10,22 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict  # type: ignore
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict  # type: ignore
 
 LANE_FILES = {
     "gpu0": ["Tools/ai/provider_mesh_runtime/gpu0_peer.py"],
     "npu": ["Tools/ai/provider_mesh_runtime/npu_micro.py"],
-    "gpu1": ["Tools/ai/run_agent_gpu_deep_planning_supervised/cli.py"],
-    "orchestrator": ["Tools/ai/run_agent_gpu_npu_parallel_orchestrator/cli.py"],
+    "gpu1": ["Tools/ai/gpu_deep_planning_supervised/cli.py"],
+    "orchestrator": ["Tools/ai/gpu_npu_parallel_orchestrator/cli.py"],
 }
 COMMON_FILES = [
-    "Tools/ai/provider_runtime_heap/cli.py",
-    "Tools/ai/run_agent_gpu_npu_parallel_orchestrator/cli.py",
+    "Tools/ai/provider_runtime_blackboard/cli.py",
+    "Tools/ai/gpu_npu_parallel_orchestrator/cli.py",
 ]
 
 
@@ -70,7 +70,7 @@ def build_patch_plan(snapshot: dict[str, Any]) -> dict[str, Any]:
         command = ["python", "-m", "py_compile", *COMMON_FILES]
         plan_action = "dry_run_runtime_state_validation"
     else:
-        command = ["python", "-m", "Tools.ai", "provider_runtime_heap", "--help"]
+        command = ["python", "-m", "Tools.ai", "provider_runtime_blackboard", "--help"]
         plan_action = "dry_run_collect_more_evidence"
     return {
         "schema_version": 1,

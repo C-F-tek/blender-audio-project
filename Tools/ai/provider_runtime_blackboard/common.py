@@ -9,8 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from tools.ai.provider_runtime_state import RuntimeState, normalize_status
-from tools.validation.report_utils import resolve_output_path, write_json_report, write_text_report
+from .state import RuntimeState, normalize_status
+from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 
 LANES = (
     "gpu1",
@@ -101,14 +101,14 @@ def compact_payload(value: Any, max_chars: int = 8000) -> Any:
 def load_tool_specs() -> dict[str, Any]:
     """Load the existing broker allowlist lazily to avoid import cycles."""
     try:
-        from tools.ai.agent_runtime_tool_broker import (
+        from Tools.ai.runtime_tool_broker.registry import (
             TOOL_SPECS,  # pylint: disable=import-outside-toplevel
         )
     except ImportError:
         repo_root_for_import = Path(__file__).resolve().parents[2]
         if str(repo_root_for_import) not in sys.path:
             sys.path.insert(0, str(repo_root_for_import))
-        from tools.ai.agent_runtime_tool_broker import (
+        from Tools.ai.runtime_tool_broker.registry import (
             TOOL_SPECS,  # type: ignore  # pylint: disable=import-outside-toplevel
         )
     return TOOL_SPECS

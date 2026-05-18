@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from tools.validation.report_utils import write_json_report, write_text_report
+from Tools.validation._shared.report_utils import write_json_report, write_text_report
 
 from .patch_bundle_builder import build_bundle, render_markdown
 from .patch_bundle_common import (

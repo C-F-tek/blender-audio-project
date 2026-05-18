@@ -40,7 +40,7 @@ class FailingRepairManager:
 def build_report(repo_root: Path) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
-    runner_path = repo_root / "Tools/ai/run_agent_gpu_deep_planning_supervised/cli.py"
+    runner_path = repo_root / "Tools/ai/gpu_deep_planning_supervised/cli.py"
     if not runner_path.exists():
         errors.append(f"missing runner file: {runner_path}")
         source = ""
@@ -68,7 +68,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     repair_result: dict[str, Any] | None = None
     manager = FailingRepairManager()
     try:
-        from Tools.ai.run_agent_gpu_deep_planning_supervised import (
+        from Tools.ai.gpu_deep_planning_supervised import (
             run_schema_repair_retry_for_round,
         )
 

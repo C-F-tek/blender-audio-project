@@ -86,7 +86,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "stage": 2,
             "requirement": "ai_context_pack",
             "id": "ai-context-pack",
-            "tool": "build_ai_context_pack",
+            "tool": "ai_context_pack",
             "args": {
                 "profile": "core_ai_backend",
                 "basename": f"heap_runtime_context_pack_{owner.stamp}",
@@ -105,7 +105,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "stage": 3,
             "requirement": "semantic_evidence_chunks",
             "id": "semantic-evidence-chunk-manifest",
-            "tool": "build_semantic_evidence_chunks",
+            "tool": "semantic_evidence_chunks",
             "args": {},
             "reason": "chunk oversized context/evidence into linked logical pieces before provider synthesis",
         },

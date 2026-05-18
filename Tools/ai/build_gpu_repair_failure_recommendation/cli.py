@@ -141,9 +141,9 @@ def build_recommendation(summary: dict[str, Any]) -> dict[str, Any]:
         "status": "ready_for_manual_review",
         "risk": "medium",
         "target_files": [
-            "Tools/ai/run_agent_gpu_deep_planning_review/cli.py",
-            "Tools/ai/run_agent_gpu_deep_planning_supervised/cli.py",
-            "Tools/ai/run_agent_gpu_npu_parallel_orchestrator/cli.py",
+            "Tools/ai/gpu_deep_planning_review/cli.py",
+            "Tools/ai/gpu_deep_planning_supervised/cli.py",
+            "Tools/ai/gpu_npu_parallel_orchestrator/cli.py",
             "docs/LOCAL_AI_TASKS/gpu-npu-parallel-evidence-runbook.md",
         ],
         "rationale": (
@@ -214,7 +214,7 @@ def build_report(repo_root: Path, orchestrator_path: Path, gpu_report_path: Path
         "decision": {
             "repair_failure_recommendation_emitted": bool(recommendations),
             "recommended_next_layer": (
-                "build_agent_review_patch_plan.py"
+                "python -m Tools.ai agent_review_patch_plan"
                 if recommendations
                 else summary.get("recommended_next_layer", "")
                 if summary

@@ -37,11 +37,11 @@ except ImportError:  # pragma: no cover
 
 
 SOURCE_FILES = {
-    "launcher": "Tools/ai/run_heap_runtime_context_closure/cli.py",
-    "gate": "Tools/ai/run_heap_runtime_completeness_gate/cli.py",
-    "preload": "Tools/ai/prepare_heap_context_memory_reload/cli.py",
+    "launcher": "Tools/ai/heap_context_closure/cli.py",
+    "gate": "Tools/ai/heap_runtime/completeness_gate/cli.py",
+    "preload": "Tools/ai/heap_context_memory_reload/cli.py",
     "reconciler": "Tools/ai/reconcile_heap_report_with_startup_reload/cli.py",
-    "composer": "Tools/ai/compose_heap_final_proposals/cli.py",
+    "composer": "Tools/ai/heap_final_proposals/cli.py",
 }
 
 
@@ -152,7 +152,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         check_id="launcher_passes_startup_task_file",
         passed="--task-file" in launcher and "startup_task_file" in launcher,
         severity="critical",
-        evidence="launcher should pass heap_startup_input_ready_context.md into run_heap_runtime_completeness_gate.py",
+        evidence="launcher should pass heap_startup_input_ready_context.md into python -m Tools.ai run_heap_runtime_completeness_gate",
         recommendation="Keep --task-file forwarding in run_heap_runtime_context_closure.py.",
     )
 
@@ -162,7 +162,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         passed="--task-file" in gate,
         severity="critical",
         evidence="gate parser must accept --task-file if launcher passes it",
-        recommendation="Add parser.add_argument('--task-file', ...) to run_heap_runtime_completeness_gate.py if absent.",
+        recommendation="Add parser.add_argument('--task-file', ...) to python -m Tools.ai run_heap_runtime_completeness_gate if absent.",
     )
 
     task_file_read = bool(

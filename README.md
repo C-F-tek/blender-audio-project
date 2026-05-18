@@ -90,7 +90,7 @@ OUT
   repository change proposals
   generated patch specs with concrete deterministic operations
   lifecycle/final product validation
-  prepare_review_pr.py
+  agent_review_prepare_pr.py
   draft review PR product when requested
 ```
 
@@ -202,7 +202,7 @@ run_unified_real_product_pr.ps1
   -> repository change proposals
   -> generated patch specs
   -> generated patch-spec apply report
-  -> prepare_review_pr.py
+  -> agent_review_prepare_pr.py
   -> final review PR product contract
   -> draft review PR for manual review when selected
 ```
@@ -217,9 +217,9 @@ Current generated review product boundary:
 
 ```text
 Tools/ai/build_repository_change_proposals.py
-Tools/ai/build_patch_specs_from_proposals.py
-Tools/ai/apply_generated_patch_specs_for_review_pr.py
-Tools/ai/prepare_review_pr.py
+Tools/ai/generated_patch_specs/proposal_cli.py
+Tools/ai/generated_patch_specs/apply_cli.py
+Tools/ai/agent_review/review_pr_cli.py
 Tools/validation/check_review_pr_final_product_contract.py
 ```
 

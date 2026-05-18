@@ -66,12 +66,12 @@ Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_parallel_ai_provider_multistep.ps1
 Tools/workflow/run_post_validation_ai_packet.ps1
 Tools/ai/build_github_evidence_bundle.py
-Tools/ai/build_ai_context_pack.py
-Tools/ai/build_selective_execution_plan.py
-Tools/ai/build_repository_change_proposals.py
-Tools/ai/build_patch_specs_from_proposals.py
-Tools/ai/promote_patch_spec_draft.py
-Tools/ai/suggest_repository_updates.py
+Tools/ai/ai_context_pack/cli.py
+Tools/ai/selective_execution_plan/cli.py
+Tools/ai/repository_change_proposals/cli.py
+Tools/ai/generated_patch_specs/proposal_cli.py
+Tools/ai/generated_patch_specs/review_cli.py
+Tools/ai/repository_update_suggestions/cli.py
 Tools/ai/_shared/workload_quality.py
 ```
 

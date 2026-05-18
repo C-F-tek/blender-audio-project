@@ -75,7 +75,7 @@ def main() -> int:
         "static_deterministic_script_lane",
         "heap_exchange_close",
         "product_readiness",
-        "prepare_review_pr",
+        "agent_review_prepare_pr",
         "final_pr_product",
     ]:
         require(contract.get(key) is True, errors, f"contract capability failed: {key}")

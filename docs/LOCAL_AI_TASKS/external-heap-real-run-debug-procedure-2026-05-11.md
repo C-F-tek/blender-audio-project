@@ -4,9 +4,9 @@
 
 Questo documento registra la procedura corretta, verificata dalla run locale `heap_context_closure_20260511-192953`, per eseguire una run heap completa e poi il post-run package esterno.
 
-Correzione operativa importante: `Tools/ai/build_heap_runtime_launcher_command.py` non lancia la run. E' solo un command builder reviewabile.
+Correzione operativa importante: `Tools/ai/heap_runtime_launcher_command/cli.py` non lancia la run. E' solo un command builder reviewabile.
 
-La run vera e' `Tools/ai/run_heap_runtime_context_closure.py`.
+La run vera e' `Tools/ai/heap_context_closure/cli.py`.
 
 Il post-run vero e' `Tools/ai/run_external_heap_postrun_package.py`.
 
@@ -242,6 +242,6 @@ Interpretazione iniziale:
 
 ## Nota sul command builder
 
-`Tools/ai/build_heap_runtime_launcher_command.py` resta utile per produrre una stringa comando reviewabile e per ispezionare profili/revision context, ma non e' il comando da usare come run effettiva.
+`Tools/ai/heap_runtime_launcher_command/cli.py` resta utile per produrre una stringa comando reviewabile e per ispezionare profili/revision context, ma non e' il comando da usare come run effettiva.
 
 Per run reali preferire il comando diretto su `run_heap_runtime_context_closure.py` finche' non verra' introdotto un launcher esecutivo separato.

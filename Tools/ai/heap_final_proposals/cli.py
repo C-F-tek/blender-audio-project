@@ -33,7 +33,7 @@ from Tools.ai.heap_final_proposals.rendering import render_markdown
 try:
     from Tools.ai._shared.heap_proposal_gate import build_operator_decision, gate_proposals, load_allowlist
 except ImportError:  # pragma: no cover
-    from tools.ai.heap_proposal_gate import (  # type: ignore
+    from Tools.ai._shared.heap_proposal_gate import (  # type: ignore
         build_operator_decision,
         gate_proposals,
         load_allowlist,

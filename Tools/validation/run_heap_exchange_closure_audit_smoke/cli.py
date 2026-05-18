@@ -85,7 +85,9 @@ def main() -> int:
         result = subprocess.run(
             [
                 sys.executable,
-                str(source_repo / "Tools/ai/build_heap_exchange_closure_audit/cli.py"),
+                "-m",
+                "Tools.ai",
+                "heap_exchange_closure_audit",
                 "--repo-root",
                 str(repo),
                 "--stamp",

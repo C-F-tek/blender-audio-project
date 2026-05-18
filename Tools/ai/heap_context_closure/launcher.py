@@ -276,7 +276,7 @@ def _run_composer(args: Any, state: dict[str, Any]) -> None:
         state["project_python"],
         "-m",
         "Tools.ai",
-        "compose_heap_final_proposals",
+        "heap_final_proposals",
         "--repo-root",
         ".",
         "--run-dir",

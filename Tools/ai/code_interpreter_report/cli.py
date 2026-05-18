@@ -5,15 +5,15 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from tools.ai.code_interpreter_report.builder import build_report
-from tools.ai.code_interpreter_report.constants import (
+from Tools.ai.code_interpreter_report.builder import build_report
+from Tools.ai.code_interpreter_report.constants import (
     DEFAULT_EXCLUDED_DIRS,
     DEFAULT_MARKDOWN,
     DEFAULT_OUTPUT,
 )
-from tools.ai.code_interpreter_report.render import render_markdown
-from tools.ai.code_interpreter_report.scanner import resolve_roots, split_csv_values
-from tools.ai.code_patch_plan_common import write_json_and_markdown
+from Tools.ai.code_interpreter_report.render import render_markdown
+from Tools.ai.code_interpreter_report.scanner import resolve_roots, split_csv_values
+from Tools.ai._shared.code_patch_plan_common import write_json_and_markdown
 
 
 def parse_args() -> argparse.Namespace:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from typing import Any
 
-from tools.ai.repository_consistency_map.python_inventory import (
+from Tools.ai.repository_consistency_map.python_inventory import (
     smoke_candidates_for_script,
 )
 

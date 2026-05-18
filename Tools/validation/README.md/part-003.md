@@ -14,7 +14,7 @@ Sorgente indice: [`README.md`](README.md)
 Focused import/contract smoke:
 
 ```powershell
-python -m Tools.validation check_npu_pipeline_modules --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
 ```
 
 Focused unit-test report:
@@ -207,7 +207,7 @@ Manual core block:
 python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
 python -m Tools.validation check_ai_model_json --repo-root . --output .\output\validation\ai_model_json.json
 python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python -m Tools.validation check_npu_pipeline_modules --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python -m Tools.validation check_execution_plan_status --repo-root . --output .\output\validation\execution_plan_status.json
 python -m Tools.validation check_ai_dry_run_matrix_cases --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
@@ -232,7 +232,7 @@ python -m Tools.validation check_json_artifacts --repo-root . --output .\output\
 python -m Tools.validation check_github_evidence_bundle --repo-root . --output .\output\validation\github_evidence_bundle.json
 python -m Tools.validation check_repository_change_proposals --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output .\output\validation\repository_change_proposals_contract.json
 python -m Tools.validation check_patch_spec_drafts --repo-root . --manifest .\output\patch_specs\proposal_patch_specs_manifest.json --output .\output\validation\patch_spec_drafts.json
-python -m Tools.validation check_reviewed_patch_specs --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
+python -m Tools.validation reviewed_patch_specs_check --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_manifest.json --output .\output\validation\reviewed_patch_specs.json
 python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 python -m Tools.npu build_project_ai_index
 python -m Tools.npu build_npu_code_context

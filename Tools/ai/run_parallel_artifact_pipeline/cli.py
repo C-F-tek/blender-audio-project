@@ -27,17 +27,17 @@ try:
         build_step_commands,
     )
 except ImportError:  # Allows package-style imports during external checks.
-    from tools.ai.pipeline.artifact_contracts import slugify  # type: ignore
-    from tools.ai.pipeline.cli import build_parser  # type: ignore
-    from tools.ai.pipeline.preflight import preflight  # type: ignore
-    from tools.ai.pipeline.remediation import execute_remediation_loop  # type: ignore
-    from tools.ai.pipeline.scheduler import build_schedule, execute_schedule  # type: ignore
-    from tools.ai.pipeline.schema_report import (  # type: ignore
+    from Tools.ai.pipeline.artifact_contracts import slugify  # type: ignore
+    from Tools.ai.pipeline.cli import build_parser  # type: ignore
+    from Tools.ai.pipeline.preflight import preflight  # type: ignore
+    from Tools.ai.pipeline.remediation import execute_remediation_loop  # type: ignore
+    from Tools.ai.pipeline.scheduler import build_schedule, execute_schedule  # type: ignore
+    from Tools.ai.pipeline.schema_report import (  # type: ignore
         build_report,
         empty_failed_report,
         write_report_if_requested,
     )
-    from tools.ai.pipeline.steps import (  # type: ignore
+    from Tools.ai.pipeline.steps import (  # type: ignore
         build_parallel_steps,
         build_serial_steps,
         build_step_commands,

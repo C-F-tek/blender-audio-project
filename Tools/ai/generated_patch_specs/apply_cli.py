@@ -189,7 +189,7 @@ def main() -> int:
     report = {
         "schema_version": 1,
         "kind": "patch_suggestion_bundle_apply",
-        "generated_by": "apply_generated_patch_specs_for_review_pr.py",
+        "generated_by": "generated_patch_specs_apply.py",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
         "branch": branch,

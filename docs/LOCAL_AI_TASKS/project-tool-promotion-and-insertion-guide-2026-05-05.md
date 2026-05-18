@@ -151,10 +151,10 @@ Promotion:
 
 Examples:
 
-    Tools/ai/build_agent_review_patch_plan.py
-    Tools/ai/build_agent_review_code_patch_plan.py
-    Tools/ai/build_code_edit_proposal_from_plan.py
-    Tools/ai/build_code_patch_artifact_pack.py
+    Tools/ai/agent_review/patch_plan/cli.py
+    Tools/ai/agent_review/code_patch_plan_cli.py
+    Tools/ai/code_product/edit_proposal_from_plan/cli.py
+    Tools/ai/code_product/patch_artifact_pack/cli.py
 
 Placement:
 

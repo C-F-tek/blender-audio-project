@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_suggestion_bundle.common import (
+from Tools.ai.patch_suggestion_bundle.common import (
     DENY_FRAGMENTS,
     DENY_PREFIXES,
     PROPOSAL_ONLY_OPERATIONS,

@@ -13,8 +13,8 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.ai.patch_suggestion_bundle.operations import is_safe_target
-from tools.validation.report_utils import resolve_output_path, write_json_report
+from Tools.ai.patch_suggestion_bundle.operations import is_safe_target
+from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
 TASK_PREFIX = "docs/LOCAL_AI_TASKS/"
 

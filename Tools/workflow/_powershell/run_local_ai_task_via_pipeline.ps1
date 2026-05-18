@@ -182,9 +182,9 @@ if ($IsRealProductOfficialAdapter) {
         "Tools/workflow/_powershell/run_unified_real_product_pr.ps1",
         "Tools/workflow/_powershell/run_unified_local_ai_refactor.ps1",
         "Tools/workflow/run_local_ai_task_via_pipeline.ps1",
-        "Tools/ai/build_repository_change_proposals/cli.py",
-        "Tools/ai/build_patch_specs_from_proposals/cli.py",
-        "Tools/ai/apply_generated_patch_specs_for_review_pr/cli.py",
+        "Tools/ai/repository_change_proposals/cli.py",
+        "Tools/ai/generated_patch_specs/proposal_cli.py",
+        "Tools/ai/generated_patch_specs/apply_cli.py",
         "Tools/ai/build_openvino_gpu0_workload_report/cli.py",
         "Tools/ai/build_npu_micro_task_companion_report/cli.py"
     )

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.run_agent_gpu_deep_planning_supervised import (
+    from Tools.ai.gpu_deep_planning_supervised import (
         append_runtime_tool_feedback_context,
         runtime_tool_feedback_context_report,
     )
@@ -20,7 +20,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.run_agent_gpu_deep_planning_supervised import (  # type: ignore
+    from Tools.ai.gpu_deep_planning_supervised import (  # type: ignore
         append_runtime_tool_feedback_context,
         runtime_tool_feedback_context_report,
     )

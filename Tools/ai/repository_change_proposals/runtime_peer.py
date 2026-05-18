@@ -115,8 +115,8 @@ def runtime_peer_evidence_proposal(summary: dict[str, Any]) -> dict[str, Any]:
             "surface current runtime evidence and emit a concrete, reviewable product lane."
         ),
         target_files=[
-            "Tools/ai/build_repository_change_proposals/cli.py",
-            "Tools/ai/build_patch_specs_from_proposals/cli.py",
+            "Tools/ai/repository_change_proposals/cli.py",
+            "Tools/ai/generated_patch_specs/proposal_cli.py",
             "Tools/validation/README.md",
         ],
         change_type="runtime_evidence_proposal_feed",
@@ -140,7 +140,7 @@ def runtime_peer_evidence_proposal(summary: dict[str, Any]) -> dict[str, Any]:
         validation=[
             "python -m Tools.validation run_repository_change_proposals_runtime_evidence_smoke --repo-root .",
             "python -m Tools.validation run_generated_patch_specs_empty_product_smoke --repo-root .",
-            "python -m py_compile .\\Tools\\ai\\build_repository_change_proposals.py .\\Tools\\ai\\build_patch_specs_from_proposals.py",
+            "python -m py_compile .\\Tools\\ai\\build_repository_change_proposals.py .\\Tools\\ai\\generated_patch_specs_from_proposals.py",
             "git diff --check",
         ],
         stop_conditions=[

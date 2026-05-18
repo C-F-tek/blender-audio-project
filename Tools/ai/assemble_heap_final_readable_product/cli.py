@@ -12,22 +12,22 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.heap_final_code_product import (
+    from Tools.ai._shared.heap_final_code_product import (
         code_product_items,
         code_product_status,
         render_full_code_product_markdown,
     )
-    from tools.ai.heap_final_readable_synthesis import render_markdown
+    from Tools.ai._shared.heap_final_readable_synthesis import render_markdown
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.heap_final_code_product import (  # type: ignore
+    from Tools.ai._shared.heap_final_code_product import (  # type: ignore
         code_product_items,
         code_product_status,
         render_full_code_product_markdown,
     )
-    from tools.ai.heap_final_readable_synthesis import render_markdown  # type: ignore
+    from Tools.ai._shared.heap_final_readable_synthesis import render_markdown  # type: ignore
 
 
 def now_iso() -> str:

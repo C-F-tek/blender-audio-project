@@ -10,11 +10,11 @@ docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md
 docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
-Tools/ai/run_agent_gpu_deep_planning_review.py
-Tools/ai/run_agent_gpu_deep_planning_supervised.py
-Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py
-Tools/ai/build_agent_review_patch_plan.py
-Tools/validation/run_agent_review_patch_plan_smoke.py
+Tools/ai/gpu_deep_planning_review/cli.py
+Tools/ai/gpu_deep_planning_supervised/cli.py
+Tools/ai/gpu_npu_parallel_orchestrator/cli.py
+Tools/ai/agent_review/patch_plan/cli.py
+Tools/validation/agent_review/patch_plan_smoke/cli.py
 ```
 
 ## Problem statement
@@ -75,11 +75,11 @@ Do not edit output/** or generated indexes as source.
 ## Candidate target files
 
 ```text
-Tools/ai/run_agent_gpu_deep_planning_review.py
-Tools/ai/run_agent_gpu_deep_planning_supervised.py
-Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py
-Tools/validation/run_agent_review_patch_plan_smoke.py
-Tools/validation/run_agent_review_patch_plan_full_validation.py
+Tools/ai/gpu_deep_planning_review/cli.py
+Tools/ai/gpu_deep_planning_supervised/cli.py
+Tools/ai/gpu_npu_parallel_orchestrator/cli.py
+Tools/validation/agent_review/patch_plan_smoke/cli.py
+Tools/validation/agent_review/patch_plan_full_validation/cli.py
 docs/JSON_SCHEMAS.md
 Tools/validation/README.md
 ```

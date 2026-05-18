@@ -14,12 +14,12 @@ from dataclasses import dataclass
 from typing import Any
 
 try:
-    from tools.ai.model_json import (
+    from Tools.ai._shared.model_json import (
         ModelJsonParseError,
         parse_model_json_object,
         strip_markdown_json_fence,
     )
-    from tools.ai.runtime_tool_guidance import ALLOWED_RUNTIME_TOOLS
+    from Tools.ai._shared.runtime_tool_guidance import ALLOWED_RUNTIME_TOOLS
 except ImportError:  # Script-style execution from tools/ai.
     from Tools.ai._shared.model_json import (  # type: ignore
         ModelJsonParseError,
@@ -47,7 +47,7 @@ REQUIRED_RECOMMENDATION_KEYS = {
     "validation_commands",
     "stop_conditions",
 }
-# ALLOWED_RUNTIME_TOOLS is imported from tools.ai.runtime_tool_guidance so GPU,
+# ALLOWED_RUNTIME_TOOLS is imported from Tools.ai._shared.runtime_tool_guidance so GPU,
 # NPU and live provider loops share the same broker allowlist.
 REQUIRED_TOOL_REQUEST_KEYS = {"id", "tool", "reason", "args"}
 CONTEXT_ECHO_TOP_LEVEL_KEYS = {

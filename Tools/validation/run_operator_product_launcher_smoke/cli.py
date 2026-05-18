@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.operator_product_core import (
+    from Tools.ai.operator_product_core import (
         LauncherConfig,
         analyze_code_product,
         build_heap_command,
@@ -194,7 +194,7 @@ def main() -> int:
                 resolved.python_exe,
                 "-m",
                 "Tools.ai",
-                "run_heap_runtime_context_closure",
+                "heap_context_closure",
             ],
         },
         {

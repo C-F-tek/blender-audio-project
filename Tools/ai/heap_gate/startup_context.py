@@ -76,7 +76,7 @@ class RuntimeGateStartupContextMixin:
         fact = {
             "id": "startup_task_file_context_loaded",
             "kind": "startup_task_file_context",
-            "source": "prepare_heap_context_memory_reload",
+            "source": "heap_context_memory_reload",
             "status": "available",
             "task_file": context.get("task_file"),
             "sha256": context.get("sha256"),

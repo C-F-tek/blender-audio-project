@@ -6,7 +6,7 @@ import json
 import re
 from typing import Any
 
-from tools.ai.runtime_tool_guidance import (
+from Tools.ai._shared.runtime_tool_guidance import (
     ALLOWED_RUNTIME_TOOLS,
     deterministic_fallback_tool_requests,
     validate_runtime_tool_request_object,

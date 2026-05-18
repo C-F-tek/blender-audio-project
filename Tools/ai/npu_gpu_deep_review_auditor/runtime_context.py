@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from tools.ai.runtime_tool_guidance import build_provider_tool_guidance_payload
+from Tools.ai._shared.runtime_tool_guidance import build_provider_tool_guidance_payload
 
 from .common import compact_json, read_json, repo_rel, resolve_path
 

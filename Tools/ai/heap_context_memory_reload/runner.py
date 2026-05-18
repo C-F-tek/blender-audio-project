@@ -288,7 +288,7 @@ def _run_ai_context_pack(state: ReloadRun) -> None:
             state.project_python,
             "-m",
             "Tools.ai",
-            "build_ai_context_pack",
+            "ai_context_pack",
             "--repo-root",
             ".",
             "--profile",

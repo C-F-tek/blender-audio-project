@@ -93,7 +93,9 @@ def main() -> int:
         result = subprocess.run(
             [
                 sys.executable,
-                str(source_repo / "Tools/ai/build_heap_peer_runtime_manifest/cli.py"),
+                "-m",
+                "Tools.ai",
+                "heap_exchange_peer_runtime_manifest",
                 "--repo-root",
                 str(repo),
                 "--stamp",

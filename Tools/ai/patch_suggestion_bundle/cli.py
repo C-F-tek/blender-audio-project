@@ -6,7 +6,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from tools.ai.patch_suggestion_bundle.common import (
+from Tools.ai.patch_suggestion_bundle.common import (
     DEFAULT_DISCOVER_SUGGESTION_ROOTS,
     DEFAULT_DISCOVER_SUGGESTION_TOKENS,
     ReportPathNormalizer,
@@ -17,20 +17,20 @@ from tools.ai.patch_suggestion_bundle.common import (
     split_values,
     unique_in_order,
 )
-from tools.ai.patch_suggestion_bundle.discovery import (
+from Tools.ai.patch_suggestion_bundle.discovery import (
     discover_current_suggestion_reports,
     discover_suggestion_reports,
 )
-from tools.ai.patch_suggestion_bundle.git_branch import (
+from Tools.ai.patch_suggestion_bundle.git_branch import (
     create_review_branch,
     push_review_branch,
 )
-from tools.ai.patch_suggestion_bundle.operations import (
+from Tools.ai.patch_suggestion_bundle.operations import (
     apply_operation,
     discover_operations,
 )
-from tools.ai.patch_suggestion_bundle.product import build_manual_review_product
-from tools.validation.report_utils import resolve_output_path, write_json_report
+from Tools.ai.patch_suggestion_bundle.product import build_manual_review_product
+from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
 
 def parse_args() -> argparse.Namespace:

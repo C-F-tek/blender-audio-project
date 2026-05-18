@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from typing import Any
 
 try:
-    from Tools.ai.build_deterministic_recommendations import (
+    from Tools.ai.deterministic_recommendations import (
         build_recommendation_report,
         render_markdown,
     )
@@ -22,7 +22,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.build_deterministic_recommendations import (  # type: ignore
+    from Tools.ai.deterministic_recommendations import (  # type: ignore
         build_recommendation_report,
         render_markdown,
     )
@@ -60,10 +60,10 @@ def build_fixture_reports(repo_root: Path, work_dir: Path) -> tuple[Path, Path, 
                 "items": [
                     {
                         "doc": "AGENTS.md",
-                        "reference": "Tools/ai/build_deterministic_recommendations/cli.py",
-                        "existing_candidate": "Tools/ai/build_agent_review_patch_plan/cli.py",
+                        "reference": "Tools/ai/deterministic_recommendations/cli.py",
+                        "existing_candidate": "Tools/ai/agent_review/patch_plan/cli.py",
                         "candidate_references": [
-                            "Tools/ai/build_agent_review_patch_plan/cli.py",
+                            "Tools/ai/agent_review/patch_plan/cli.py",
                             "Tools/ai/_shared/gpu_planner_json_contract.py",
                         ],
                         "reason": "The documentation points at a recommendation lane that must be normalized before patch-plan construction.",
@@ -142,7 +142,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         synthesized.get("passed") is True
         and synthesized.get("recommendation_count") == 1
         and synthesized.get("decision", {}).get("deterministic_synthesizer_used") is True
-        and synthesized.get("next_best_action") == "build_agent_review_patch_plan.py"
+        and synthesized.get("next_best_action") == "python -m Tools.ai agent_review_patch_plan"
         and not schema_errors
         and synthesized.get("provider_execution_performed") is False
         and synthesized.get("patch_application_performed") is False

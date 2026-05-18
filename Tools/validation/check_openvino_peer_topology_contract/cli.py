@@ -53,10 +53,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     gpu0_peer = read_text(repo_root / "Tools/ai/provider_mesh_runtime/gpu0_peer.py")
     npu_micro = read_text(repo_root / "Tools/ai/provider_mesh_runtime/npu_micro.py")
     runtime_heap = read_text(repo_root / "Tools/ai/provider_mesh_runtime/runtime_heap.py")
-    shared_heap = read_text(repo_root / "Tools/ai/provider_runtime_heap/cli.py")
+    shared_heap = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/cli.py")
     budget_governor = read_text(repo_root / "Tools/ai/heap_provider_budget_governor/cli.py")
     invocation_contract = read_text(repo_root / "Tools/ai/heap_provider_invocation_contract/cli.py")
-    orchestrator = read_text(repo_root / "Tools/ai/run_agent_gpu_npu_parallel_orchestrator/cli.py")
+    orchestrator = read_text(repo_root / "Tools/ai/gpu_npu_parallel_orchestrator/cli.py")
     runtime_mesh = read_text(
         repo_root / "Tools/validation/check_real_product_runtime_mesh_contract/cli.py"
     )

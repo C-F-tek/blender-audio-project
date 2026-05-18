@@ -77,7 +77,7 @@ Se `--run-dir` viene passato esplicitamente, il report usa:
 File coinvolti:
 
 ```text
-Tools/ai/build_heap_runtime_launcher_command.py
+Tools/ai/heap_runtime_launcher_command/cli.py
 Tools/validation/run_heap_runtime_launcher_command_smoke.py
 ```
 
@@ -144,7 +144,7 @@ $env:PYTHONPATH = (Resolve-Path .).Path
 
 & $RepoPy -m py_compile `
   .\Tools\ai\run_external_heap_postrun_package.py `
-  .\Tools\ai\build_heap_runtime_launcher_command.py `
+  .\Tools\ai\heap_runtime_launcher_command\cli.py `
   .\Tools\validation\run_heap_runtime_launcher_command_smoke.py
 ```
 

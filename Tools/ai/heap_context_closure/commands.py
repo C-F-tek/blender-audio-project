@@ -10,7 +10,7 @@ def startup_command(args: Any, state: dict[str, Any]) -> list[str]:
         state["project_python"],
         "-m",
         "Tools.ai",
-        "prepare_heap_context_memory_reload",
+        "heap_context_memory_reload",
         "--repo-root",
         ".",
         "--request-file",

@@ -16,12 +16,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.code_patch_plan_common import now_iso, read_json_object, repo_rel
-    from tools.ai.runtime_tool_telemetry_normalization import (
+    from Tools.ai._shared.code_patch_plan_common import now_iso, read_json_object, repo_rel
+    from Tools.ai._shared.runtime_tool_telemetry_normalization import (
         normalize_tool_entry,
         status_quality,
     )
-    from tools.validation.report_utils import (
+    from Tools.validation._shared.report_utils import (
         resolve_output_path,
         write_json_report,
         write_text_report,
@@ -30,12 +30,12 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.code_patch_plan_common import now_iso, read_json_object, repo_rel  # type: ignore
-    from tools.ai.runtime_tool_telemetry_normalization import (  # type: ignore
+    from Tools.ai._shared.code_patch_plan_common import now_iso, read_json_object, repo_rel  # type: ignore
+    from Tools.ai._shared.runtime_tool_telemetry_normalization import (  # type: ignore
         normalize_tool_entry,
         status_quality,
     )
-    from tools.validation.report_utils import (  # type: ignore
+    from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
         write_text_report,

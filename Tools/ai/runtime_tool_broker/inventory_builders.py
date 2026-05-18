@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
+from Tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
 
 from .common import base_outputs, repo_rel, resolve_path, split_values, truthy
 
@@ -67,7 +67,7 @@ def build_agent_agnostic_tool_inventory(
     report, markdown = base_outputs(out_dir, request_id, "agent_agnostic_tool_inventory")
     command = [
         resolve_child_python(repo_root),
-        "tools/ai/build_agent_agnostic_tool_inventory.py",
+        "Tools/ai/agent_context/agnostic_tool_inventory/cli.py",
         "--repo-root",
         ".",
         "--output",
@@ -89,7 +89,7 @@ def build_agent_transient_request_context(
     report, markdown = base_outputs(out_dir, request_id, "agent_transient_request_context")
     command = [
         resolve_child_python(repo_root),
-        "tools/ai/build_agent_transient_request_context.py",
+        "Tools/ai/agent_context/transient_request_context/cli.py",
         "--repo-root",
         ".",
         "--objective",
@@ -171,7 +171,7 @@ def build_code_interpreter_report(
     report, markdown = base_outputs(out_dir, request_id, "code_interpreter_report")
     command = [
         resolve_child_python(repo_root),
-        "tools/ai/build_code_interpreter_report.py",
+        "Tools/ai/code_interpreter_report/cli.py",
         "--repo-root",
         ".",
         "--output",
@@ -201,7 +201,7 @@ def build_refactor_duplication_audit(
         resolve_child_python(repo_root),
         "-m",
         "Tools.ai",
-        "build_refactor_duplication_audit",
+        "refactor_duplication_audit",
         "--repo-root",
         ".",
         "--output",

@@ -131,7 +131,7 @@ function Invoke-LocalAiTaskPipelineValidation {
         else {
             # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-BEGIN
             $PatchSpecArgs = @(
-                "-m", "Tools.ai", "build_patch_specs_from_proposals",
+                "-m", "Tools.ai", "generated_patch_specs_from_proposals",
                 "--repo-root", ".",
                 "--proposal", $ProposalRel,
                 "--output-dir", "output\patch_specs",

@@ -158,7 +158,7 @@ def main() -> int:
         sys.executable,
         "-m",
         "Tools.ai",
-        "build_heap_runtime_launcher_command",
+        "heap_runtime_launcher_command",
         "--repo-root",
         ".",
         "--profile",

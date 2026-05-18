@@ -119,7 +119,7 @@ Campi importanti:
 
 I profili operativi usano `revision_context_mode = auto_latest`. Il profilo `dry_packaging_external_heap` usa `revision_context_mode = off` per evitare che un dry-run di packaging consumi automaticamente task di revisione precedenti.
 
-### `Tools/ai/provider_runtime_heap.py`
+### `Tools/ai/provider_runtime_blackboard/cli.py`
 
 Heap append-only JSONL usato come blackboard runtime.
 
@@ -147,7 +147,7 @@ unsupported provider lane: 'context_memory'
 unsupported runtime heap event type: 'startup_task_file_context'
 ```
 
-### `Tools/ai/build_heap_runtime_launcher_command.py`
+### `Tools/ai/heap_runtime_launcher_command/cli.py`
 
 Questo tool non esegue il runtime heap. Genera comandi PowerShell reviewabili.
 
@@ -449,8 +449,8 @@ feat(ai): bind external profile context budgets into startup preload selectors
 
 Target potenziali:
 
-- `Tools/ai/build_heap_runtime_launcher_command.py`
-- `Tools/ai/prepare_heap_context_memory_reload.py`
+- `Tools/ai/heap_runtime_launcher_command/cli.py`
+- `Tools/ai/heap_context_memory_reload/cli.py`
 
 ### 3. Post-run package non e' ancora invocato automaticamente dal launcher core
 
@@ -464,7 +464,7 @@ feat(ai): let heap closure launcher optionally run external postrun package
 
 Target potenziale:
 
-- `Tools/ai/run_heap_runtime_context_closure.py`
+- `Tools/ai/heap_context_closure/cli.py`
 
 Vincolo: mantenere opzionale e non sostituire il vecchio composer.
 
@@ -480,8 +480,8 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:PYTHONPATH = (Resolve-Path .).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\provider_runtime_heap.py `
-  .\Tools\ai\build_heap_runtime_launcher_command.py `
+  .\Tools\ai\provider_runtime_blackboard\cli.py `
+  .\Tools\ai\heap_runtime_launcher_command\cli.py `
   .\Tools\ai\normalize_heap_final_causality.py `
   .\Tools\ai\build_external_heap_block_pointer_manifest.py `
   .\Tools\ai\compose_external_heap_block_response.py `

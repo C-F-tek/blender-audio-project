@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
+from Tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
 
 
 def resolve_path(repo_root: Path, value: str | Path) -> Path:
@@ -77,7 +77,7 @@ def build_npu_micro_support_command(
 ) -> list[str]:
     command = [
         resolve_child_python(),
-        "tools/ai/run_npu_gpu_deep_review_auditor.py",
+        "Tools/ai/npu_gpu_deep_review_auditor/cli.py",
         "--repo-root",
         ".",
         "--gpu-review",

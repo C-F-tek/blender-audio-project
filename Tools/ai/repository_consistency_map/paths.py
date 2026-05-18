@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from tools.ai.repository_consistency_map.constants import (
+from Tools.ai.repository_consistency_map.constants import (
     EXCLUDE_DIRS,
     GENERATED_EVIDENCE_CHUNK_RE,
     TEXT_EXTENSIONS,

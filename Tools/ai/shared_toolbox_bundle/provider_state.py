@@ -70,7 +70,7 @@ def extract_provider_diagnostics_summary(
             "agent_runtime_tool_broker",
             "ai_peer_exchange",
             "ai_peer_exchange_contract",
-            "provider_runtime_heap_live_signals",
+            "provider_runtime_live_signals",
             "provider_runtime_heap_from_peer_reports",
             "provider_runtime_heap_telemetry",
         }:

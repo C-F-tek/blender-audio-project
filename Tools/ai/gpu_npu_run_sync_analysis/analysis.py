@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from tools.ai.code_patch_plan_common import read_json_object
+from Tools.ai._shared.code_patch_plan_common import read_json_object
 
 from .common import (
     audit_duration_seconds,

@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from tools.ai.github_evidence_bundle_artifacts import (
+from Tools.ai._shared.github_evidence_bundle_artifacts import (
     DEFAULT_CHUNK_LINES,
     DEFAULT_RECURSIVE_MAX_FILES,
     build_artifact_chunk_index,
@@ -23,8 +23,8 @@ from tools.ai.github_evidence_bundle_artifacts import (
     discover_recursive_artifacts,
     summarize_artifact,
 )
-from tools.ai.github_evidence_bundle_decisions import build_decision
-from tools.ai.github_evidence_bundle_io import (
+from Tools.ai._shared.github_evidence_bundle_decisions import build_decision
+from Tools.ai._shared.github_evidence_bundle_io import (
     CONTENT_EXTENSION_ALLOWLIST,
     DEFAULT_INCLUDED_ARTIFACT_CHARS,
     DEFAULT_MAX_INCLUDED_ARTIFACTS,
@@ -35,8 +35,8 @@ from tools.ai.github_evidence_bundle_io import (
     resolve_repo_path,
     split_path_values,
 )
-from tools.ai.github_evidence_bundle_markdown import render_markdown
-from tools.ai.github_evidence_bundle_reports import (
+from Tools.ai._shared.github_evidence_bundle_markdown import render_markdown
+from Tools.ai._shared.github_evidence_bundle_reports import (
     discover_selected_chunks_evidence,
     summarize_report,
     summarize_selected_chunks_evidence,

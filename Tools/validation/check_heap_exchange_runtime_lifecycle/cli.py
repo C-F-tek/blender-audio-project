@@ -13,6 +13,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from Tools.ai.heap_exchange.io import load_jsonl
+
 try:
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
@@ -63,29 +65,6 @@ def load_json(path: Path | None) -> tuple[dict[str, Any] | None, str | None]:
     if not isinstance(value, dict):
         return None, "json root is not an object"
     return value, None
-
-
-def load_jsonl(path: Path | None) -> tuple[list[dict[str, Any]], str | None]:
-    if path is None:
-        return [], "not provided"
-    if not path.exists():
-        return [], "missing"
-    events: list[dict[str, Any]] = []
-    errors: list[str] = []
-    for index, line in enumerate(
-        path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1
-    ):
-        stripped = line.strip()
-        if not stripped:
-            continue
-        try:
-            value = json.loads(stripped)
-        except Exception as exc:  # noqa: BLE001
-            errors.append(f"line {index}: {type(exc).__name__}: {exc}")
-            continue
-        if isinstance(value, dict):
-            events.append(value)
-    return events, "; ".join(errors) if errors else None
 
 
 def event_kind(event: dict[str, Any]) -> str:
@@ -190,7 +169,7 @@ def main() -> int:
         passed=bool(entry and not entry_error and entry_dynamic),
         expected="heap_exchange_runtime_entry exists and center_is_dynamic=true",
         actual=f"entry_error={entry_error} center_is_dynamic={entry_dynamic}",
-        action="Run build_heap_exchange_runtime_entry.py after agent-state/workload routing.",
+        action="Run python -m Tools.ai heap_exchange_runtime_entry after agent-state/workload routing.",
         artifacts=[rel(repo_root, entry_path)],
     )
 

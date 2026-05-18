@@ -37,7 +37,7 @@ Commit locali gia' pushati dall'utente durante la sessione:
 
 File modificati in queste patch:
 
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 - `Tools/ai/build_npu_micro_task_companion_report.py`
 - `Tools/npu/_shared/npu_runtime.py`
 
@@ -307,16 +307,16 @@ Devono essere usati i tool gia' responsabili della run unica e i loro artifact d
 
 Tool da usare/integrare come fase iniziale:
 
-- `Tools/ai/build_agent_agnostic_tool_inventory.py`
-- `Tools/ai/build_agent_memory_inventory.py`
+- `Tools/ai/agent_context/agnostic_tool_inventory/cli.py`
+- `Tools/ai/agent_context/memory_inventory/cli.py`
 - `python -m Tools.ai agent_runtime_sqlite_memory` / runtime sqlite memory wrapper effettivo
-- `Tools/ai/build_agent_transient_request_context.py`
+- `Tools/ai/agent_context/transient_request_context/cli.py`
 - `Tools/ai/select_semantic_code_chunks.py`
-- `Tools/ai/build_ai_context_pack.py`
-- `Tools/ai/build_semantic_evidence_chunks.py`
+- `Tools/ai/ai_context_pack/cli.py`
+- `Tools/ai/semantic_evidence_chunks/cli.py`
 - eventuali tool storici della run unica per context pack/evidence bundle/chunk manifest/composer
 
-Il launcher `Tools/ai/run_heap_runtime_context_closure.py` ha iniziato a fare startup reload, ma una run ha fallito cosi':
+Il launcher `Tools/ai/heap_context_closure/cli.py` ha iniziato a fare startup reload, ma una run ha fallito cosi':
 
 ```text
 startup_reload_performed : true
@@ -411,8 +411,8 @@ Obiettivi patch:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\run_heap_runtime_completeness_gate.py `
-  .\Tools\ai\run_heap_runtime_context_closure.py `
+  .\Tools\ai\heap_runtime\completeness_gate\cli.py `
+  .\Tools\ai\heap_context_closure\cli.py `
   .\Tools\ai\build_npu_micro_task_companion_report.py `
   .\Tools\npu\_shared\npu_runtime.py
 ```

@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_suggestion_bundle.common import (
+from Tools.ai.patch_suggestion_bundle.common import (
     current_branch,
     git_status_short,
     unsafe_git_status_short,

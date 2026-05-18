@@ -41,7 +41,7 @@ Conclusion:
 
 File:
 
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 
 Change:
 
@@ -114,11 +114,11 @@ Validation commands completed after Run 2:
 
 Resulting line counts for touched code/script files:
 
-- `Tools/ai/compose_heap_final_proposals.py`: 1147 lines.
+- `Tools/ai/heap_final_proposals/cli.py`: 1147 lines.
 - `Tools/ai/_shared/heap_proposal_gate.py`: 275 lines.
 - `Tools/validation/test_proposal_gate.py`: 149 lines.
-- `Tools/ai/run_heap_runtime_context_closure.py`: 945 lines.
-- `Tools/ai/run_heap_runtime_completeness_gate.py`: 4914 lines.
+- `Tools/ai/heap_context_closure/cli.py`: 945 lines.
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`: 4914 lines.
 
 Line-count risk:
 

@@ -289,7 +289,7 @@ def build_report(composer: dict[str, Any], composer_path: Path) -> dict[str, Any
         "errors": [],
         "warnings": [
             "causal_chain_passed does not imply product_acceptance_passed",
-            "this adapter is external to run_heap_runtime_completeness_gate.py",
+            "this adapter is external to python -m Tools.ai run_heap_runtime_completeness_gate",
         ],
     }
 

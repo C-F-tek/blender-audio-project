@@ -11,7 +11,7 @@ def build_gpu_command(
 ) -> list[str]:
     command = [
         resolve_child_python(),
-        "tools/ai/run_agent_gpu_deep_planning_supervised.py",
+        "Tools/ai/gpu_deep_planning_supervised/cli.py",
         "--repo-root",
         ".",
         "--use-ollama",

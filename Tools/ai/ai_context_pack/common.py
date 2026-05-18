@@ -9,12 +9,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.validation.report_utils import physical_line_count
+    from Tools.validation._shared.report_utils import physical_line_count
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.validation.report_utils import physical_line_count
+    from Tools.validation._shared.report_utils import physical_line_count
 
 from .profiles import FORBIDDEN_PATH_EXACT, FORBIDDEN_PATH_FRAGMENTS, FORBIDDEN_PATH_PREFIXES
 

@@ -4,8 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-from tools.ai.runtime_hardware_capability.manifest import build_manifest
-from tools.ai.runtime_hardware_capability.markdown import render_markdown
+from Tools.ai.runtime_hardware_capability.manifest import build_manifest
+from Tools.ai.runtime_hardware_capability.markdown import render_markdown
 
 
 def resolve_output(repo_root: Path, raw: str | None) -> Path | None:

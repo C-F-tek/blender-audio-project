@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.run_npu_gpu_deep_review_auditor import (
+    from Tools.ai.npu_gpu_deep_review_auditor import (
         build_npu_deterministic_tool_fallback_requests,
         should_use_npu_deterministic_tool_fallback,
     )
@@ -21,7 +21,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.run_npu_gpu_deep_review_auditor import (  # type: ignore
+    from Tools.ai.npu_gpu_deep_review_auditor import (  # type: ignore
         build_npu_deterministic_tool_fallback_requests,
         should_use_npu_deterministic_tool_fallback,
     )

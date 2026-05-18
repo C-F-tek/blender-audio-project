@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
+from Tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
 
 
 def resolve_path(repo_root: Path, value: str | Path) -> Path:

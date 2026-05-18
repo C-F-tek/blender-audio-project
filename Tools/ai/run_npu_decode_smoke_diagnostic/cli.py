@@ -326,7 +326,7 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     _ensure_repo_imports(repo_root)
-    from tools.validation.report_utils import (  # noqa: PLC0415
+    from Tools.validation._shared.report_utils import (  # noqa: PLC0415
         resolve_output_path,
         write_json_report,
     )

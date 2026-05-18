@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tools.ai.code_patch_plan_common import (
+from Tools.ai._shared.code_patch_plan_common import (
     line_count_for,
     load_line_counts,
     normalize_repo_path,

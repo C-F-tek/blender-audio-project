@@ -9,7 +9,7 @@ def run_runtime_telemetry(ctx: WorkflowContext, label: str) -> None:
         [
             "-m",
             "Tools.ai",
-            "build_runtime_tool_usage_telemetry",
+            "runtime_tool_usage_telemetry",
             "--repo-root",
             ".",
             "--stamp",
@@ -110,7 +110,7 @@ def run_runtime_flow_map(ctx: WorkflowContext) -> None:
     args = [
         "-m",
         "Tools.ai",
-        "build_runtime_flow_map",
+        "runtime_flow_map",
         "--repo-root",
         ".",
         "--stamp",
@@ -193,7 +193,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
             "Shared toolbox AI-to-AI bundle",
             [
                 "-m",
-                "Tools.ai.build_shared_toolbox_ai_to_ai_bundle",
+                "Tools.ai.shared_toolbox_bundle",
                 "--repo-root",
                 ".",
                 "--stamp",
@@ -284,7 +284,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
         "Validate full toolbox GitHub evidence bundle",
         [
             "-m",
-            "Tools.validation.check_github_evidence_bundle",
+            "Tools.validation._shared.github_evidence_bundle_cli",
             "--repo-root",
             ".",
             "--bundle",

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
+from Tools.ai.provider_mesh_runtime.python_runtime import resolve_child_python
 
 from .common import base_outputs, repo_rel, resolve_path, safe_id, split_values, truthy
 
@@ -28,7 +28,7 @@ def build_ai_context_pack_tool(
     )
     command = [
         resolve_child_python(repo_root),
-        "tools/ai/build_ai_context_pack.py",
+        "Tools/ai/ai_context_pack/cli.py",
         "--repo-root",
         ".",
         "--profile",
@@ -74,7 +74,7 @@ def build_semantic_evidence_chunk_manifest(
     )
     command = [
         resolve_child_python(repo_root),
-        "tools/ai/build_semantic_evidence_chunks.py",
+        "Tools/ai/semantic_evidence_chunks/cli.py",
         "--repo-root",
         ".",
         "--basename",

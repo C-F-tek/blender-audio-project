@@ -12,7 +12,7 @@ Wire the existing app-agnostic prompt payload helpers into `Tools/npu/run_dual_a
 
 ```text
 Tools/npu/run_dual_ai_pipeline.py
-Tools/validation/check_npu_pipeline_modules.py
+Tools/validation/npu_pipeline_modules_check/cli.py
 docs/EXECUTION_PLANS/README.md
 docs/EXECUTION_PLANS/completed/2026-04-30_npu_runtime_prompt_payload_wiring.md
 docs/TECH_DEBT_TRACKER.md
@@ -36,7 +36,7 @@ hand-edited generated indexes
 
 ```text
 Tools/npu/run_dual_ai_pipeline.py
-Tools/validation/check_npu_pipeline_modules.py
+Tools/validation/npu_pipeline_modules_check/cli.py
 docs/EXECUTION_PLANS/README.md
 docs/EXECUTION_PLANS/completed/2026-04-30_npu_runtime_prompt_payload_wiring.md
 docs/TECH_DEBT_TRACKER.md

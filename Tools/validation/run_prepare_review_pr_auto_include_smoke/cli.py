@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for prepare_review_pr.py apply-report include-path autodiscovery."""
+"""Smoke test for agent_review_prepare_pr.py apply-report include-path autodiscovery."""
 
 from __future__ import annotations
 
@@ -141,7 +141,7 @@ def main() -> int:
             sys.executable,
             "-m",
             "Tools.ai",
-            "prepare_review_pr",
+            "agent_review_prepare_pr",
             "--repo-root",
             str(repo),
             "--Stamp",
@@ -168,7 +168,7 @@ def main() -> int:
             json.loads(review_json.read_text(encoding="utf-8-sig")) if review_json.exists() else {}
         )
         if not command_result["ok"]:
-            errors.append(f"prepare_review_pr.py failed rc={command_result['returncode']}")
+            errors.append(f"agent_review_prepare_pr.py failed rc={command_result['returncode']}")
         if review_report.get("passed") is not True:
             errors.append("review PR prepare report did not pass")
         if review_report.get("auto_include_paths") != [TARGET]:

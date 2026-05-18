@@ -9,28 +9,28 @@ import sys
 from pathlib import Path
 
 try:
-    from tools.ai.runtime_tool_broker.common import (
+    from Tools.ai.runtime_tool_broker.common import (
         DEFAULT_MARKDOWN,
         DEFAULT_OUTPUT,
         resolve_path,
     )
-    from tools.ai.runtime_tool_broker.executor import build_report
-    from tools.ai.runtime_tool_broker.markdown import render_markdown
-    from tools.ai.runtime_tool_broker.registry import TOOL_SPECS
-    from tools.validation.report_utils import write_json_report
+    from Tools.ai.runtime_tool_broker.executor import build_report
+    from Tools.ai.runtime_tool_broker.markdown import render_markdown
+    from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS
+    from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.runtime_tool_broker.common import (  # type: ignore
+    from Tools.ai.runtime_tool_broker.common import (  # type: ignore
         DEFAULT_MARKDOWN,
         DEFAULT_OUTPUT,
         resolve_path,
     )
-    from tools.ai.runtime_tool_broker.executor import build_report  # type: ignore
-    from tools.ai.runtime_tool_broker.markdown import render_markdown  # type: ignore
-    from tools.ai.runtime_tool_broker.registry import TOOL_SPECS  # type: ignore
-    from tools.validation.report_utils import write_json_report  # type: ignore
+    from Tools.ai.runtime_tool_broker.executor import build_report  # type: ignore
+    from Tools.ai.runtime_tool_broker.markdown import render_markdown  # type: ignore
+    from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS  # type: ignore
+    from Tools.validation._shared.report_utils import write_json_report  # type: ignore
 
 
 def main() -> int:

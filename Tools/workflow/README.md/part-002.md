@@ -96,7 +96,7 @@ produce audio/media output
 change provider/model execution semantics
 claim provider execution from light evidence-only profiles
 claim NPU compute-provider work when only diagnostic/report lane ran
-claim draft PR support before prepare_review_pr.py implements it
+claim draft PR support before agent_review_prepare_pr.py implements it
 claim metadata-only generated patch specs as reviewable product
 bypass heap/exchange lifecycle for review PR product paths
 bypass patchkit for new long/delicate patch bundles when patchkit can express the change
@@ -185,7 +185,7 @@ Required route:
 - static deterministic script/product lane
 - heap/exchange CLOSE
 - product readiness
-- prepare_review_pr.py
+- agent_review_prepare_pr.py
 - PR finale testabile
 
 Static gate:

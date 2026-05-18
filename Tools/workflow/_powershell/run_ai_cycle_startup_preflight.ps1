@@ -173,7 +173,7 @@ if (Test-Path $LineCountCsv) {
 
 if (-not $SkipCodeInterpreter) {
     Invoke-RepoPython -Label "Code interpreter/static report" -ArgsList @(
-        "-m", "Tools.ai.build_code_interpreter_report",
+        "-m", "Tools.ai build_code_interpreter_report",
         "--repo-root", ".",
         "--input", "Tools/ai",
         "--input", "Tools/validation",

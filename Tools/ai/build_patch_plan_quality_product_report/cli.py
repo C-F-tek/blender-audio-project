@@ -5,9 +5,9 @@ import argparse
 import json
 from pathlib import Path
 
-from tools.ai.patch_plan_quality_product.builder import build_report
-from tools.ai.patch_plan_quality_product.io_utils import resolve, write_json, write_text
-from tools.ai.patch_plan_quality_product.reporting import render_markdown
+from Tools.ai.patch_plan_quality_product.builder import build_report
+from Tools.ai.patch_plan_quality_product.io_utils import resolve, write_json, write_text
+from Tools.ai.patch_plan_quality_product.reporting import render_markdown
 
 
 def parse_args() -> argparse.Namespace:

@@ -10,7 +10,7 @@ from .boundary import build_boundary_context
 from .evaluation import build_report_from_context
 from .runtime_context import build_runtime_context
 
-def check_npu_pipeline_modules(repo_root: Path) -> dict[str, object]:
+def npu_pipeline_modules_check(repo_root: Path) -> dict[str, object]:
     root_text = str(repo_root)
     if root_text not in sys.path:
         sys.path.insert(0, root_text)

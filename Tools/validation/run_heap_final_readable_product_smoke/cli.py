@@ -116,12 +116,12 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     ],
                 },
                 {
-                    "target_file": "Tools/ai/run_heap_runtime_context_closure/cli.py",
+                    "target_file": "Tools/ai/heap_context_closure/cli.py",
                     "implementation_status": "developed_change_present",
-                    "git_status": "M Tools/ai/run_heap_runtime_context_closure/cli.py",
-                    "code_or_patch_sketch": "diff --git a/Tools/ai/run_heap_runtime_context_closure/cli.py b/Tools/ai/run_heap_runtime_context_closure/cli.py\n+    final_readable_product_command = [...]\n",
+                    "git_status": "M Tools/ai/heap_context_closure/cli.py",
+                    "code_or_patch_sketch": "diff --git a/Tools/ai/heap_context_closure/cli.py b/Tools/ai/heap_context_closure/cli.py\n+    final_readable_product_command = [...]\n",
                     "validation_commands": [
-                        "python -m py_compile Tools/ai/run_heap_runtime_context_closure/cli.py"
+                        "python -m py_compile Tools/ai/heap_context_closure/cli.py"
                     ],
                 },
                 {
@@ -262,7 +262,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and full_code_product.exists()
         and "CODE_PRODUCT_FULL_PATCH" in code_product_body
         and "Tools/ai/assemble_heap_final_readable_product/cli.py" in code_product_body
-        and "Tools/ai/run_heap_runtime_context_closure/cli.py" not in code_product_body
+        and "Tools/ai/heap_context_closure/cli.py" not in code_product_body
         and "Tools/ai/_shared/heap_final_code_product.py" not in code_product_body
         and "Tools/ai/worktree_extra.py" not in code_product_body
         and "Worktree diff fallback: `disabled`" in code_product_body

@@ -118,8 +118,8 @@ $Warnings = @()
 Add-OptionalModeWarning "validation" ".\Tools\workflow\_powershell\run_local_validation_after_refactor.ps1" ([ref]$Warnings)
 Add-OptionalModeWarning "smoke" ".\Tools\workflow\startup_check_core\cli.py" ([ref]$Warnings)
 Add-OptionalModeWarning "chunks" ".\Tools\npu\build_semantic_code_chunks\cli.py" ([ref]$Warnings)
-Add-OptionalModeWarning "context_pack" ".\Tools\ai\build_ai_context_pack\cli.py" ([ref]$Warnings)
-Add-OptionalModeWarning "agent_state" ".\Tools\ai\build_agent_state_packet\cli.py" ([ref]$Warnings)
+Add-OptionalModeWarning "context_pack" ".\Tools\ai\ai_context_pack\cli.py" ([ref]$Warnings)
+Add-OptionalModeWarning "agent_state" ".\Tools\ai\agent_context\state_packet\cli.py" ([ref]$Warnings)
 
 if ($ApplyReset -and $ConfirmResetText -ne "DELETE LOCAL AI ARTIFACTS") {
     throw "-ApplyReset requires -ConfirmResetText 'DELETE LOCAL AI ARTIFACTS'"

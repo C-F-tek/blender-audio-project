@@ -68,7 +68,7 @@ def tool_request_templates(
         },
         {
             "id": "gpu0_peer_refactor_duplication_context",
-            "tool": "build_refactor_duplication_audit",
+            "tool": "refactor_duplication_audit",
             "reason": "GPU0 peer worker needs deterministic reuse/refactor overlap evidence.",
             "args": (
                 {

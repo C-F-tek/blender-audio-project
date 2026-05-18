@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build argv for prepare_review_pr.py.
+"""Build argv for agent_review_prepare_pr.py.
 
 PowerShell remains the Windows wrapper. This helper owns review-PR argument
 construction so product-output wiring is testable outside the large launcher.
@@ -65,7 +65,7 @@ def load_apply_report(repo_root: Path, raw: Any) -> tuple[dict[str, Any] | None,
         return None, ""
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except Exception:  # noqa: BLE001 - report validation is handled by prepare_review_pr.py
+    except Exception:  # noqa: BLE001 - report validation is handled by agent_review_prepare_pr.py
         return None, value
     if not isinstance(data, dict):
         return None, value
@@ -121,7 +121,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     argv = [
         "-m",
         "Tools.ai",
-        "prepare_review_pr",
+        "agent_review_prepare_pr",
         "--repo-root",
         ".",
     ]
@@ -157,7 +157,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     if require_product_input and not include_paths and not apply_report:
         errors.append(
             "review PR product input missing: provide explicit include_paths or a generated apply_report "
-            "before invoking prepare_review_pr.py"
+            "before invoking agent_review_prepare_pr.py"
         )
     elif require_product_input and not include_paths and apply_report and not apply_report_product:
         errors.append(

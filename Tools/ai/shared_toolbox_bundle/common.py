@@ -19,44 +19,44 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.agent_runtime_tool_broker import TOOL_SPECS
-    from tools.ai.build_github_evidence_bundle import build_bundle
-    from tools.ai.github_evidence_bundle_artifacts import (
+    from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS
+    from Tools.ai.build_github_evidence_bundle import build_bundle
+    from Tools.ai._shared.github_evidence_bundle_artifacts import (
         DEFAULT_CHUNK_LINES,
         DEFAULT_RECURSIVE_MAX_FILES,
     )
-    from tools.ai.github_evidence_bundle_io import (
+    from Tools.ai._shared.github_evidence_bundle_io import (
         read_json,
         read_text,
         repo_relative,
         resolve_repo_path,
         split_path_values,
     )
-    from tools.validation.check_github_evidence_bundle import (
+    from Tools.validation._shared.github_evidence_bundle_cli import (
         validate_github_evidence_bundles,
     )
-    from tools.validation.report_utils import resolve_output_path, write_json_report
+    from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.agent_runtime_tool_broker import TOOL_SPECS
-    from tools.ai.build_github_evidence_bundle import build_bundle
-    from tools.ai.github_evidence_bundle_artifacts import (
+    from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS
+    from Tools.ai.build_github_evidence_bundle import build_bundle
+    from Tools.ai._shared.github_evidence_bundle_artifacts import (
         DEFAULT_CHUNK_LINES,
         DEFAULT_RECURSIVE_MAX_FILES,
     )
-    from tools.ai.github_evidence_bundle_io import (
+    from Tools.ai._shared.github_evidence_bundle_io import (
         read_json,
         read_text,
         repo_relative,
         resolve_repo_path,
         split_path_values,
     )
-    from tools.validation.check_github_evidence_bundle import (
+    from Tools.validation._shared.github_evidence_bundle_cli import (
         validate_github_evidence_bundles,
     )
-    from tools.validation.report_utils import resolve_output_path, write_json_report
+    from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
 
 DEFAULT_STAMP_FORMAT = "%Y%m%d-%H%M%S"
@@ -117,10 +117,10 @@ FULL_TOOLBOX_REPORT_TEMPLATES: tuple[str, ...] = (
     "output/validation/npu_micro_runtime_tool_broker_{stamp}.json",
     "output/validation/ai_peer_exchange_{stamp}.json",
     "output/validation/ai_peer_exchange_contract_{stamp}.json",
-    "output/validation/provider_runtime_heap_live_signals_init_{stamp}.json",
-    "output/validation/provider_runtime_heap_live_signals_gpu1_request_{stamp}.json",
-    "output/validation/provider_runtime_heap_live_signals_broker_results_{stamp}.json",
-    "output/validation/provider_runtime_heap_live_signals_npu_support_{stamp}.json",
+    "output/validation/provider_runtime_live_signals_init_{stamp}.json",
+    "output/validation/provider_runtime_live_signals_gpu1_request_{stamp}.json",
+    "output/validation/provider_runtime_live_signals_broker_results_{stamp}.json",
+    "output/validation/provider_runtime_live_signals_npu_support_{stamp}.json",
     "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.json",
     "output/ai_runtime_heap/{stamp}/snapshot.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.json",
@@ -152,10 +152,10 @@ FULL_TOOLBOX_ARTIFACT_TEMPLATES: tuple[str, ...] = (
     "output/validation/npu_micro_runtime_tool_broker_{stamp}.md",
     "output/validation/ai_peer_exchange_{stamp}.md",
     "output/validation/ai_peer_exchange_contract_{stamp}.md",
-    "output/validation/provider_runtime_heap_live_signals_init_{stamp}.md",
-    "output/validation/provider_runtime_heap_live_signals_gpu1_request_{stamp}.md",
-    "output/validation/provider_runtime_heap_live_signals_broker_results_{stamp}.md",
-    "output/validation/provider_runtime_heap_live_signals_npu_support_{stamp}.md",
+    "output/validation/provider_runtime_live_signals_init_{stamp}.md",
+    "output/validation/provider_runtime_live_signals_gpu1_request_{stamp}.md",
+    "output/validation/provider_runtime_live_signals_broker_results_{stamp}.md",
+    "output/validation/provider_runtime_live_signals_npu_support_{stamp}.md",
     "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.md",
     "output/ai_runtime_heap/{stamp}/snapshot.md",
     "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_integrated.md",

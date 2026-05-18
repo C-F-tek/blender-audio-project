@@ -19,10 +19,10 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 try:
-    from tools.validation.report_utils import (
+    from Tools.validation._shared.report_utils import (
         line_count_for_path as shared_line_count_for_path,
     )
-    from tools.validation.report_utils import (
+    from Tools.validation._shared.report_utils import (
         load_line_count_csv_map,
         parse_line_count_csv_row,
         resolve_output_path,

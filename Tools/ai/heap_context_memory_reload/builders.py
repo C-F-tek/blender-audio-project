@@ -168,7 +168,7 @@ def _semantic_score(repo_root: Path, path: Path, keywords: list[str]) -> int:
         "run_heap_runtime_context_closure.py",
         "prepare_heap_context_memory_reload.py",
         "compose_heap_final_proposals.py",
-        "run_heap_runtime_completeness_gate.py",
+        "python -m Tools.ai run_heap_runtime_completeness_gate",
         "build_ai_context_pack.py",
         "sqlite_cli.py",
     }:

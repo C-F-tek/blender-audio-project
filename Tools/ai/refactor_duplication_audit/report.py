@@ -75,9 +75,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         generated_patch_plan_candidates + imported_patch_plan_candidates
     )
     helper_reuse_recommendations = [
-        "Reuse tools.ai.github_evidence_bundle_io for evidence-bundle path/text/JSON helpers when semantics match.",
-        "Reuse tools.ai.github_evidence_bundle_artifacts for artifact discovery and chunk pointer metadata.",
-        "Reuse tools.validation.report_utils for validation output path resolution and JSON report writing.",
+        "Reuse Tools.ai._shared.github_evidence_bundle_io for evidence-bundle path/text/JSON helpers when semantics match.",
+        "Reuse Tools.ai._shared.github_evidence_bundle_artifacts for artifact discovery and chunk pointer metadata.",
+        "Reuse Tools.validation._shared.report_utils for validation output path resolution and JSON report writing.",
         "Prefer promoting existing local functions into existing helper modules over creating new generic helper modules.",
     ]
     for item in existing_audit_summary.get("helper_reuse_recommendations") or []:
@@ -114,9 +114,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "source_reports": report_status,
         "validation_commands": [
             "python -m py_compile tools/ai/refactor_duplication_audit/cli.py -m Tools.validation run_refactor_duplication_audit_smoke",
-            "python -m Tools.ai build_refactor_duplication_audit --help",
+            "python -m Tools.ai refactor_duplication_audit --help",
             "python -m Tools.validation run_refactor_duplication_audit_smoke --repo-root .",
-            "python -m tools.validation.check_python_syntax --repo-root .",
+            "python -m Tools.validation.check_python_syntax --repo-root .",
             "python -m Tools.validation run_agent_runtime_tool_broker_smoke --repo-root .",
         ],
         "stop_conditions": [

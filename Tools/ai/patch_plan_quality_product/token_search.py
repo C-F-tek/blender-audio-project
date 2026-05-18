@@ -6,7 +6,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_plan_quality_product.io_utils import (
+from Tools.ai.patch_plan_quality_product.io_utils import (
     flatten_json,
     read_text,
     repo_rel,

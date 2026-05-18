@@ -82,7 +82,7 @@ def build_schema_repair_context_report(
                 "recommendations": [RECOMMENDATION_TEMPLATE],
                 "tool_requests": [],
                 "missing_evidence": [],
-                "next_best_action": "build_agent_review_patch_plan.py",
+                "next_best_action": "python -m Tools.ai agent_review_patch_plan",
             },
             "minimum_valid_response_when_blocked": {
                 "summary": "One sentence blocker summary.",
@@ -216,7 +216,7 @@ def build_schema_repair_retry_prompt(
             "recommendations": [RECOMMENDATION_TEMPLATE],
             "tool_requests": [],
             "missing_evidence": [],
-            "next_best_action": "build_agent_review_patch_plan.py",
+            "next_best_action": "python -m Tools.ai agent_review_patch_plan",
         },
         "minimum_valid_response_when_blocked": {
             "summary": "One sentence blocker summary.",

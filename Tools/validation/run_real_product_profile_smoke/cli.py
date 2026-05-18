@@ -130,7 +130,7 @@ def main() -> int:
         and "tool_agnostic_broker" in runtime_mesh_contract_text,
         "runtime_mesh_contract_mentions_direct_reasoning": "direct_reasoning_assistance"
         in runtime_mesh_contract_text,
-        "runtime_flow_map_builder_exists": (repo / "Tools/ai/build_runtime_flow_map/cli.py").exists(),
+        "runtime_flow_map_builder_exists": (repo / "Tools/ai/runtime_flow_map/cli.py").exists(),
         "launcher_invokes_runtime_flow_map": "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN" in launcher_text
         and "build_runtime_flow_map.py" in launcher_text
         and "runtime_flow_" in launcher_text,
@@ -201,11 +201,11 @@ def main() -> int:
         "adapter_requires_provider_backed_specs": "--require-provider-execution"
         in adapter_validation_text,
         "patch_spec_builder_has_strict_cli": "--require-concrete"
-        in (repo / "Tools/ai/build_patch_specs_from_proposals/cli.py").read_text(
+        in (repo / "Tools/ai/generated_patch_specs/proposal_cli.py").read_text(
             encoding="utf-8-sig", errors="replace"
         )
         and "--require-provider-execution"
-        in (repo / "Tools/ai/build_patch_specs_from_proposals/cli.py").read_text(
+        in (repo / "Tools/ai/generated_patch_specs/proposal_cli.py").read_text(
             encoding="utf-8-sig", errors="replace"
         ),
         "preflight_validates_runtime_evidence_correlation_wiring": "run_runtime_evidence_correlation_launcher_wiring_smoke.py"

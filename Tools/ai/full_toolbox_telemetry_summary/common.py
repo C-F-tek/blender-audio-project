@@ -10,8 +10,8 @@ REPO_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORT))
 
-from tools.ai.code_patch_plan_common import now_iso, read_json_object, repo_rel
-from tools.validation.report_utils import (
+from Tools.ai._shared.code_patch_plan_common import now_iso, read_json_object, repo_rel
+from Tools.validation._shared.report_utils import (
     resolve_output_path,
     write_json_report,
     write_text_report,

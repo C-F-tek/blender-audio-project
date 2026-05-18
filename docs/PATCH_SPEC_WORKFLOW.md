@@ -17,7 +17,7 @@ patch_specs/<bundle>/bundle.json
 patch_specs/<bundle>/fragments/*.py
 patch_specs/<bundle>/fragments/*.ps1
 Tools/ai/patchkit/apply_patch_bundle.py
-Tools/ai/apply_generated_patch_specs_for_review_pr.py
+Tools/ai/generated_patch_specs/apply_cli.py
 ```
 
 Patch notes, proposal ledgers and generated summaries are review inputs only.

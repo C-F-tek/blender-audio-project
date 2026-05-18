@@ -60,7 +60,7 @@ if (-not (Test-Path -LiteralPath $OutputDir)) {
 }
 
 Invoke-ValidationStep -Name "NPU pipeline module smoke" -Arguments @(
-    "-m", "Tools.validation", "check_npu_pipeline_modules",
+    "-m", "Tools.validation", "npu_pipeline_modules_check",
     "--repo-root", ".",
     "--output", ".\output\validation\npu_pipeline_modules.json"
 )

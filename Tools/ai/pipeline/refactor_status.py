@@ -53,7 +53,7 @@ MODULAR_PIPELINE_STATUS = PipelineRefactorStatus(
         "python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\\output\\validation\\ai_pipeline_modules.json",
         "python -m Tools.validation check_refactor_status_consistency --repo-root . --output .\\output\\validation\\refactor_status_consistency.json",
         "python -m Tools.validation check_docs_links --repo-root . --output .\\output\\validation\\docs_links.json",
-        "python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error",
+        "python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error",
         "python -m Tools.validation check_package_structure --repo-root .",
         "python -m Tools.validation check_json_artifacts --repo-root .",
     ),

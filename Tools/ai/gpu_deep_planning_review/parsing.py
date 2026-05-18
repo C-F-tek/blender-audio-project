@@ -213,7 +213,7 @@ def recommendation_diagnostics_for_round(
             reason if reason == "evidence_ready_but_no_tool_requests" else ""
         ),
         "recommended_next_layer": (
-            "build_agent_review_patch_plan.py"
+            "python -m Tools.ai agent_review_patch_plan"
             if reason in {"evidence_ready_but_no_gpu_plan", "evidence_ready_but_no_tool_requests"}
             else ""
         ),
@@ -293,7 +293,7 @@ def aggregate_recommendation_diagnostics(
             reason if reason == "evidence_ready_but_no_tool_requests" else ""
         ),
         "recommended_next_layer": (
-            "build_agent_review_patch_plan.py"
+            "python -m Tools.ai agent_review_patch_plan"
             if evidence_ready_count > 0 or filtered_count > 0
             else "collect_more_evidence"
         ),

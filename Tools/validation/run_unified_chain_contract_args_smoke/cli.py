@@ -32,7 +32,7 @@ def run_helper(source_repo: Path, repo: Path, context: dict[str, Any], name: str
     result = subprocess.run(
         [
             sys.executable,
-            str(source_repo / "Tools/ai/build_unified_chain_contract_args/cli.py"),
+            str(source_repo / "Tools/ai/runtime_universe/unified/chain_contract_args/cli.py"),
             "--context",
             str(context_path),
             "--output",
@@ -77,7 +77,7 @@ def base_context(repo: Path) -> dict[str, Any]:
         "run_ollama_probe": False,
         "open_extended_observer_consoles": False,
         "review_pr_from_generated_patch_specs": True,
-        "prepare_review_pr": True,
+        "agent_review_prepare_pr": True,
         "review_pr_apply_deterministic_suggestions": False,
     }
 
@@ -110,7 +110,7 @@ def main() -> int:
             {
                 "use_primary_advisory_provider": False,
                 "review_pr_from_generated_patch_specs": False,
-                "prepare_review_pr": False,
+                "agent_review_prepare_pr": False,
                 "review_pr_apply_deterministic_suggestions": False,
                 "apply_report": str(repo / "missing/apply.json"),
             }

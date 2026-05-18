@@ -3,7 +3,7 @@
 
 This validator reads the report produced by:
 
-    Tools/ai/run_pipeline_dry_run_matrix/cli.py
+    Tools/ai/pipeline_dry_run_matrix/cli.py
 
 It checks only the machine-readable report shape and minimal stable fields.
 It does not run Blender, FFmpeg, NPU/GPU workloads or the dry-run matrix itself.

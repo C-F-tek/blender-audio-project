@@ -172,7 +172,7 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
         make_step(
             "build_context_pack",
             "Build bounded core context pack",
-            "python -m Tools.ai build_ai_context_pack",
+            "python -m Tools.ai ai_context_pack",
             "after_step:validate_selected_chunks",
             "cpu_context",
             depends_on=["validate_selected_chunks"],

@@ -61,7 +61,7 @@ def build_broker_request(path: Path) -> None:
                     "reason": "verify broker-callable virtual dev environment",
                     "args": {
                         "target_file": [
-                            "Tools/ai/run_heap_virtual_dev_environment/cli.py",
+                            "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
                             "Tools/ai/assemble_heap_final_readable_product/cli.py",
                         ],
                         "validation_script": [
@@ -107,11 +107,11 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     direct = run(
         [
             sys.executable,
-            "Tools/ai/run_heap_virtual_dev_environment/cli.py",
+            "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
             "--repo-root",
             ".",
             "--target-file",
-            "Tools/ai/run_heap_virtual_dev_environment/cli.py",
+            "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
             "--target-file",
             "Tools/ai/assemble_heap_final_readable_product/cli.py",
             "--validation-script",

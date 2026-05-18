@@ -52,7 +52,7 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
         f"- Heap/exchange close: `{report.get('heap_exchange_close')}`",
         f"- Product readiness: `{report.get('product_readiness')}`",
         f"- Runtime flow map evidence: `{report.get('runtime_flow_map_evidence')}`",
-        f"- prepare_review_pr.py: `{report.get('prepare_review_pr')}`",
+        f"- agent_review_prepare_pr.py: `{report.get('agent_review_prepare_pr')}`",
         f"- Final PR product: `{report.get('final_pr_product')}`",
         "",
         "## Contract order",
@@ -74,7 +74,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     launcher = repo_root / "Tools/workflow/_powershell/run_unified_local_ai_refactor.ps1"
     readiness = repo_root / "Tools/validation/check_review_pr_product_readiness/cli.py"
     args_builder = repo_root / "Tools/ai/build_review_pr_prepare_args/cli.py"
-    prepare = repo_root / "Tools/ai/prepare_review_pr/cli.py"
+    prepare = repo_root / "Tools/ai/agent_review/review_pr_cli.py"
 
     wrapper_text = read_text(wrapper)
     launcher_text = read_text(launcher)
@@ -99,7 +99,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and check_token(wrapper_text, "-NpuMicroStartMode")
         and check_token(wrapper_text, "-RunNpuProbe")
         and check_token(wrapper_text, "-RunNpuDecodeSmoke"),
-        "runtime_flow_map_evidence": (repo_root / "Tools/ai/build_runtime_flow_map/cli.py").exists()
+        "runtime_flow_map_evidence": (repo_root / "Tools/ai/runtime_flow_map/cli.py").exists()
         and check_token(launcher_text, "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN")
         and check_token(launcher_text, "build_runtime_flow_map.py")
         and check_token(launcher_text, "runtime_flow_"),
@@ -125,7 +125,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "product_readiness": check_token(launcher_text, "review_pr_product_readiness")
         and check_token(readiness_text, "prepare_review_pr_ready")
         and check_token(readiness_text, "has_concrete_product"),
-        "prepare_review_pr": check_token(launcher_text, "build_review_pr_prepare_args")
+        "agent_review_prepare_pr": check_token(launcher_text, "build_review_pr_prepare_args")
         and check_token(launcher_text, "Prepare review branch and PR")
         and check_token(prepare_text, "gh")
         and check_token(prepare_text, "pr")
@@ -147,7 +147,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "heap/exchange CLOSE",
         "runtime flow map evidence",
         "product readiness",
-        "prepare_review_pr.py",
+        "agent_review_prepare_pr.py",
         "PR finale testabile",
     ]
 
@@ -164,7 +164,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "launcher": launcher.as_posix(),
         "readiness_gate": readiness.as_posix(),
         "args_builder": args_builder.as_posix(),
-        "prepare_review_pr": prepare.as_posix(),
+        "agent_review_prepare_pr": prepare.as_posix(),
         "contract_order": contract_order,
         **checks,
         "provider_execution_performed": False,

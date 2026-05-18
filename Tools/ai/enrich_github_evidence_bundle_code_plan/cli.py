@@ -21,12 +21,12 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from tools.ai.build_github_evidence_bundle import (  # noqa: E402
+from Tools.ai.build_github_evidence_bundle import (  # noqa: E402
     compact_patch_plan,
     read_json,
     render_markdown,
 )
-from tools.ai.code_patch_plan_common import (  # noqa: E402
+from Tools.ai._shared.code_patch_plan_common import (  # noqa: E402
     now_iso,
     report_only_guardrails,
     resolve_output_path,

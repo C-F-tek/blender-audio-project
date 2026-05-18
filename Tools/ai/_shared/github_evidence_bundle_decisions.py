@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from tools.ai.github_evidence_bundle_io import as_list, list_contains
-from tools.ai.github_evidence_bundle_reports import report_summaries
+from Tools.ai._shared.github_evidence_bundle_io import as_list, list_contains
+from Tools.ai._shared.github_evidence_bundle_reports import report_summaries
 
 NPU_UNUSABLE_CLASSIFICATIONS = {"unusable_output", "unusable"}
 NPU_REAL_WORKLOAD_REPORT = "output/ai_packets/npu_real_workload_report.md"

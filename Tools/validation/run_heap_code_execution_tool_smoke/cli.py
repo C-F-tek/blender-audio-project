@@ -66,7 +66,7 @@ def write_broker_request(path: Path) -> None:
                 "requirement": "code_execution_matrix",
                 "args": {
                     "target_file": [
-                        "Tools/ai/run_heap_code_execution_tool/cli.py",
+                        "Tools/ai/heap_runtime/code_execution_tool/cli.py",
                         "Tools/ai/agent_runtime_debug_lab/policy.py",
                         "Tools/validation/run_heap_code_execution_tool_smoke/cli.py",
                     ],
@@ -129,11 +129,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     direct = run(
         [
             sys.executable,
-            "Tools/ai/run_heap_code_execution_tool/cli.py",
+            "Tools/ai/heap_runtime/code_execution_tool/cli.py",
             "--repo-root",
             ".",
             "--target-file",
-            "Tools/ai/run_heap_code_execution_tool/cli.py",
+            "Tools/ai/heap_runtime/code_execution_tool/cli.py",
             "--target-file",
             "Tools/ai/agent_runtime_debug_lab/policy.py",
             "--target-file",

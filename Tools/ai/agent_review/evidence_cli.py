@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from tools.validation.report_utils import write_json_report, write_text_report
+from Tools.validation._shared.report_utils import write_json_report, write_text_report
 
 from .evidence_common import DEFAULT_MARKDOWN, DEFAULT_OUTPUT, DEFAULT_REFINED_PROPOSALS, DEFAULT_REFINED_REVIEW, resolve_path
 from .evidence_report import build_report, render_markdown

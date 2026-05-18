@@ -22,6 +22,7 @@ IGNORE_PATH_PREFIXES = (
     "renders/",
 )
 ROOT_SCRIPT_ALLOWLIST = {"__init__.py", "__main__.py", "dispatch.py"}
+HIDDEN_PACKAGE_SUFFIXES = ("_cli", "_core", "_view", "_model", "_controller")
 LEGACY_COMMAND_PATTERNS = [
     re.compile(
         r"(?P<prefix>\bpython(?:\.exe)?\b|\bpy\b|"
@@ -158,6 +159,68 @@ def scan_root_scripts(root: Path, areas: set[str]) -> list[Finding]:
                     line=1,
                     detail="Script lives directly in a Tools/<area> root instead of a package/dispatcher surface.",
                     replacement=f"python -m Tools.{area_dir.name} {path.stem}",
+                )
+            )
+    return findings
+
+
+def _alias_target_package(text: str, area: str) -> str:
+    if re.search(r"^\s*(def|class)\s+", text, flags=re.MULTILINE):
+        return ""
+    patterns = [
+        re.compile(
+            rf"^\s*from\s+Tools\.{re.escape(area)}\.(?P<target>[A-Za-z0-9_]+)(?:\.|\s+import\s+main)",
+            flags=re.MULTILINE,
+        ),
+        re.compile(
+            r"^\s*from\s+(?P<target>[A-Za-z0-9_]+)(?:\.|\s+import\s+main)",
+            flags=re.MULTILINE,
+        ),
+    ]
+    for pattern in patterns:
+        match = pattern.search(text)
+        if match:
+            return match.group("target")
+    return ""
+
+
+def scan_alias_tool_packages(root: Path, areas: set[str]) -> list[Finding]:
+    findings: list[Finding] = []
+    tools_root = root / "Tools"
+    if not tools_root.exists():
+        return findings
+    for area_dir in iter_tool_roots(root):
+        area = area_dir.name
+        if areas and area not in areas:
+            continue
+        for package_dir in sorted(path for path in area_dir.iterdir() if path.is_dir()):
+            package = package_dir.name
+            if package.startswith("__") or package.endswith(HIDDEN_PACKAGE_SUFFIXES):
+                continue
+            cli = package_dir / "cli.py"
+            if not cli.exists():
+                continue
+            try:
+                text = cli.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            target = _alias_target_package(text, area)
+            if not target or target == package:
+                continue
+            if target.startswith("_") or target.endswith(HIDDEN_PACKAGE_SUFFIXES):
+                continue
+            target_cli = area_dir / target / "cli.py"
+            target_init = area_dir / target / "__init__.py"
+            if not target_cli.exists() and not target_init.exists():
+                continue
+            findings.append(
+                Finding(
+                    kind="alias_tool_package",
+                    severity="high",
+                    path=relative(root, cli),
+                    line=1,
+                    detail=f"`{package}` only delegates to `{target}` while both packages exist.",
+                    replacement=f"python -m Tools.{area} {target}",
                 )
             )
     return findings
@@ -301,6 +364,7 @@ def main() -> int:
     files = git_visible_files(root)
     findings: list[Finding] = []
     findings.extend(scan_root_scripts(root, areas))
+    findings.extend(scan_alias_tool_packages(root, areas))
     findings.extend(scan_legacy_invocations(root, files, areas))
     findings.extend(scan_large_files(root, files, args.code_max_lines, args.md_max_lines, areas))
     findings = sorted(findings, key=lambda item: (item.severity, item.kind, item.path, item.line))

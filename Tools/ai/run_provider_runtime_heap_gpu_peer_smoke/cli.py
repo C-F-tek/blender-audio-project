@@ -14,12 +14,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap  # type: ignore
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap  # type: ignore
 
 
 def append_gpu_peer_smoke(heap: ProviderRuntimeHeap, *, round_id: int) -> list[dict[str, Any]]:

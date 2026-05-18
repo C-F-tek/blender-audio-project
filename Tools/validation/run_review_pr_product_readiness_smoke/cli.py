@@ -77,7 +77,7 @@ def args_payload(
         argv = [
             "-m",
             "Tools.ai",
-            "prepare_review_pr",
+            "agent_review_prepare_pr",
             "--repo-root",
             ".",
             "--branch",
@@ -158,10 +158,10 @@ def main() -> int:
                     argv=[
                         "-m",
                         "Tools.ai",
-                        "prepare_review_pr",
+                        "agent_review_prepare_pr",
                         "-m",
                         "Tools.ai",
-                        "prepare_review_pr",
+                        "agent_review_prepare_pr",
                         "--repo-root",
                         ".",
                         "--branch",
@@ -182,7 +182,7 @@ def main() -> int:
                     argv=[
                         "-m",
                         "Tools.ai",
-                        "prepare_review_pr",
+                        "agent_review_prepare_pr",
                         "--repo-root",
                         ".",
                         "--branch",

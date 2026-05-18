@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_notes_quality_product.scoring import (
+from Tools.ai.patch_notes_quality_product.scoring import (
     build_patch_notes,
     build_product_sufficiency,
     classify,
@@ -12,24 +12,24 @@ from tools.ai.patch_notes_quality_product.scoring import (
     patch_plan_summary,
     score_product,
 )
-from tools.ai.patch_notes_quality_product.task_md import (
+from Tools.ai.patch_notes_quality_product.task_md import (
     build_request_summary,
     load_task_markdown,
 )
-from tools.ai.patch_notes_quality_product.telemetry_quality import (
+from Tools.ai.patch_notes_quality_product.telemetry_quality import (
     build_evidence_coverage,
     build_fallback_cases,
     build_success_cases,
     build_telemetry_quality,
 )
-from tools.ai.patch_plan_quality_product.io_utils import (
+from Tools.ai.patch_plan_quality_product.io_utils import (
     flatten_json,
     now_iso,
     read_json,
     repo_rel,
     resolve,
 )
-from tools.ai.patch_plan_quality_product.token_search import (
+from Tools.ai.patch_plan_quality_product.token_search import (
     build_search_index,
     safe_tokens,
     search_docs,
@@ -127,7 +127,7 @@ def build_report(args: Any) -> dict[str, Any]:
     )
     validation_commands = patch_summary.get("validation_commands") or [
         "python -m py_compile tools/ai/build_patch_notes_quality_product.py",
-        "python -m Tools.validation run_patch_notes_quality_product_smoke --repo-root .",
+        "python -m Tools.validation patch_notes_quality_product_smoke --repo-root .",
         "git diff --check",
     ]
     report: dict[str, Any] = {

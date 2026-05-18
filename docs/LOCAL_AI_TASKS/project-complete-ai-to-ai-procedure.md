@@ -75,7 +75,7 @@ python -m Tools.validation.check_python_syntax `
   --repo-root . `
   --output ".\output\validation\python_syntax_project_complete_$Stamp.json"
 
-python -m Tools.ai.build_code_interpreter_report `
+python -m Tools.ai build_code_interpreter_report `
   --repo-root . `
   --input Tools/ai `
   --input Tools/validation `
@@ -162,10 +162,10 @@ $ContextFiles = @(
   ".\docs\LOCAL_AI_TASKS\project-complete-ai-to-ai-review-request.md",
   ".\docs\LOCAL_AI_TASKS\gpu-npu-parallel-evidence-runbook.md",
   ".\docs\LOCAL_AI_TASKS\improve-gpu-planner-nonempty-recommendations.md",
-  ".\Tools\ai\run_agent_gpu_npu_parallel_orchestrator.py",
-  ".\Tools\ai\run_agent_gpu_deep_planning_review.py",
-  ".\Tools\ai\run_agent_gpu_deep_planning_supervised.py",
-  ".\Tools\ai\build_agent_review_patch_plan.py",
+  ".\Tools\ai\gpu_npu_parallel_orchestrator\cli.py",
+  ".\Tools\ai\gpu_deep_planning_review\cli.py",
+  ".\Tools\ai\gpu_deep_planning_supervised\cli.py",
+  ".\Tools\ai\agent_review\patch_plan\cli.py",
   ".\output\analysis\code_interpreter_project_complete_$Stamp.md"
 )
 
@@ -188,7 +188,7 @@ $params = @{
 ## 7. Run fallback manual-review patch-plan and smoke validation
 
 ```powershell
-python -m Tools.ai build_agent_review_patch_plan `
+python -m Tools.ai agent_review_patch_plan `
   --repo-root . `
   --orchestrator ".\output\ai_pipeline\project_complete_${Stamp}_orchestrator.json" `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `

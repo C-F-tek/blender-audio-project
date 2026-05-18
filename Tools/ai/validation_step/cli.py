@@ -11,17 +11,17 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
-    from tools.ai.provider_runtime_heap import ProviderRuntimeHeap, safe_dict, safe_list
+    from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
+    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict, safe_list
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.provider_mesh_runtime.python_runtime import (  # type: ignore
+    from Tools.ai.provider_mesh_runtime.python_runtime import (  # type: ignore
         command_env,
         resolve_child_python,
     )
-    from tools.ai.provider_runtime_heap import (  # type: ignore
+    from Tools.ai.provider_runtime_blackboard import (  # type: ignore
         ProviderRuntimeHeap,
         safe_dict,
         safe_list,

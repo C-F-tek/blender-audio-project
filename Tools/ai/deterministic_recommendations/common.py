@@ -20,19 +20,19 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.code_patch_plan_common import normalize_repo_path, read_json_object
-    from tools.ai.gpu_planner_json_contract import validate_recommendation_object
-    from tools.validation.report_utils import write_json_report, write_text_report
+    from Tools.ai._shared.code_patch_plan_common import normalize_repo_path, read_json_object
+    from Tools.ai._shared.gpu_planner_json_contract import validate_recommendation_object
+    from Tools.validation._shared.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.code_patch_plan_common import (  # type: ignore
+    from Tools.ai._shared.code_patch_plan_common import (  # type: ignore
         normalize_repo_path,
         read_json_object,
     )
-    from tools.ai.gpu_planner_json_contract import validate_recommendation_object  # type: ignore
-    from tools.validation.report_utils import write_json_report, write_text_report  # type: ignore
+    from Tools.ai._shared.gpu_planner_json_contract import validate_recommendation_object  # type: ignore
+    from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
 
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
 DEFAULT_ORCHESTRATOR = "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"

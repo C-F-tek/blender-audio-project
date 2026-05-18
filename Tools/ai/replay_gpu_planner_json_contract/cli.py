@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.gpu_planner_json_contract import (
+    from Tools.ai._shared.gpu_planner_json_contract import (
         result_to_dict,
         validate_model_response_contract,
     )
@@ -25,7 +25,7 @@ except ImportError:  # Script-style execution from tools/ai.
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.gpu_planner_json_contract import (  # type: ignore
+    from Tools.ai._shared.gpu_planner_json_contract import (  # type: ignore
         result_to_dict,
         validate_model_response_contract,
     )

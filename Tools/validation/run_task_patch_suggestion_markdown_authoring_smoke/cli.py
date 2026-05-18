@@ -128,7 +128,7 @@ def main() -> int:
 
         dry_cmd = [
             sys.executable,
-            str(source_repo / "Tools/ai/apply_patch_suggestion_bundle/cli.py"),
+            str(source_repo / "Tools/ai/patch_suggestion_bundle/cli.py"),
             "--repo-root",
             str(repo),
             "--suggestion-report",

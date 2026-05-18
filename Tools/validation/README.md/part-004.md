@@ -13,7 +13,7 @@ Sorgente indice: [`README.md`](README.md)
 The agent-review documentation patch-plan lane has a canonical wrapper:
 
 ```powershell
-python -m Tools.validation run_agent_review_patch_plan_full_validation `
+python -m Tools.validation agent_review_patch_plan_full_validation `
   --repo-root . `
   --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `

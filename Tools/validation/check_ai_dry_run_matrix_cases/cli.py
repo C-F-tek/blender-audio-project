@@ -10,14 +10,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.run_pipeline_dry_run_matrix import default_cases, default_matrix_workers
+    from Tools.ai.pipeline_dry_run_matrix import default_cases, default_matrix_workers
 except ImportError:  # Allows direct execution from Tools/validation.
     import sys
 
     repo_root = Path(__file__).resolve().parents[3]
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.ai.run_pipeline_dry_run_matrix import (  # type: ignore
+    from Tools.ai.pipeline_dry_run_matrix import (  # type: ignore
         default_cases,
         default_matrix_workers,
     )

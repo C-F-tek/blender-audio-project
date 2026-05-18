@@ -5,22 +5,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-try:
-    from build_agent_memory_inventory import (
-        DEFAULT_MARKDOWN,
-        DEFAULT_MEMORY_DB,
-        DEFAULT_OUTPUT,
-        build_inventory,
-        resolve_path,
-    )
-except ModuleNotFoundError:
-    from Tools.ai.build_agent_memory_inventory import (
-        DEFAULT_MARKDOWN,
-        DEFAULT_MEMORY_DB,
-        DEFAULT_OUTPUT,
-        build_inventory,
-        resolve_path,
-    )
+from Tools.ai.agent_context.memory_inventory import (
+    DEFAULT_MARKDOWN,
+    DEFAULT_MEMORY_DB,
+    DEFAULT_OUTPUT,
+    build_inventory,
+    resolve_path,
+)
 
 
 def render_markdown(report: dict[str, Any]) -> str:

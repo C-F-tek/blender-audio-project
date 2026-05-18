@@ -7,7 +7,7 @@ from typing import Any
 
 def broker_tool_catalog() -> list[dict[str, Any]]:
     try:
-        from tools.ai.agent_runtime_tool_broker import TOOL_SPECS
+        from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS
     except Exception:
         return []
     rows: list[dict[str, Any]] = []

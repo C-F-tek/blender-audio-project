@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from tools.ai.full_run_bundle_zip.paths import repo_relative, resolve_repo_path
-from tools.ai.full_run_bundle_zip.policy import TEXT_SUFFIX_ALLOWLIST, forbidden_reason
+from Tools.ai.full_run_bundle_zip.paths import repo_relative, resolve_repo_path
+from Tools.ai.full_run_bundle_zip.policy import TEXT_SUFFIX_ALLOWLIST, forbidden_reason
 
 
 @dataclass(frozen=True)

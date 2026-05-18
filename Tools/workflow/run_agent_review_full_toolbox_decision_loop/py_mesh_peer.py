@@ -25,7 +25,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
         [
             "-m",
             "Tools.ai",
-            "build_ai_peer_exchange_packet",
+            "peer_exchange_packet",
             *common,
             *sum(
                 (
@@ -144,7 +144,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
             [
                 "-m",
                 "Tools.ai",
-                "run_npu_gpu_deep_review_auditor",
+                "npu_gpu_deep_review_auditor",
                 "--repo-root",
                 ".",
                 "--gpu-review",
@@ -236,7 +236,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
         [
             "-m",
             "Tools.ai",
-            "build_ai_peer_exchange_packet",
+            "peer_exchange_packet",
             *common,
             *sum(
                 (
@@ -277,7 +277,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
         [
             "-m",
             "Tools.validation",
-            "check_ai_peer_exchange_contract",
+            "ai_peer_exchange_contract",
             "--repo-root",
             ".",
             "--stamp",
@@ -347,7 +347,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
     contract = [
         "-m",
         "Tools.validation",
-        "check_provider_evidence_contract",
+        "provider_evidence_contract",
         "--repo-root",
         ".",
         "--stamp",

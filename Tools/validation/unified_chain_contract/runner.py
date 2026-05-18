@@ -239,7 +239,7 @@ def run_contract(args: Any) -> int:
         edges,
         name="patch_specs_to_review_bridge",
         producer="generated patch specs",
-        consumer="apply_generated_patch_specs_for_review_pr",
+        consumer="generated_patch_specs_apply",
         expected="current-stamp apply report with concrete deterministic operations"
         if args.require_concrete_patch_specs
         else "not required for this invocation",
@@ -270,7 +270,7 @@ def run_contract(args: Any) -> int:
         edges,
         name="review_bridge_to_product_separation",
         producer="generated patch specs review bridge",
-        consumer="patch suggestion product separation / prepare_review_pr",
+        consumer="patch suggestion product separation / agent_review_prepare_pr",
         expected="product separation passed and review PR has concrete changed files"
         if args.require_review_pr_product
         else "product separation report when present",
@@ -282,7 +282,7 @@ def run_contract(args: Any) -> int:
         passed=product_ready
         if args.require_review_pr_product
         else bool(product_report and not product_error),
-        action="Block prepare_review_pr until product separation has deterministic operations or product-facing suggestions with concrete targets.",
+        action="Block agent_review_prepare_pr until product separation has deterministic operations or product-facing suggestions with concrete targets.",
         artifacts=[rel(repo_root, product_path)],
     )
 
@@ -304,7 +304,7 @@ def run_contract(args: Any) -> int:
         edges,
         name="product_separation_to_review_pr_product",
         producer="patch suggestion product separation / apply report",
-        consumer="prepare_review_pr.py",
+        consumer="agent_review_prepare_pr.py",
         expected="review_pr_prepare report passed with product commit and staged files"
         if args.require_review_pr_product
         else "not required for this invocation",
@@ -314,7 +314,7 @@ def run_contract(args: Any) -> int:
             else f"missing/invalid: {review_pr_error}"
         ),
         passed=review_pr_ready if args.require_review_pr_product else True,
-        action="Run prepare_review_pr.py after deterministic apply and require a concrete product commit before declaring the chain complete.",
+        action="Run agent_review_prepare_pr.py after deterministic apply and require a concrete product commit before declaring the chain complete.",
         artifacts=[rel(repo_root, review_pr_path)],
     )
 

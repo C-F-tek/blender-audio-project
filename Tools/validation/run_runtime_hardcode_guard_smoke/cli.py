@@ -37,8 +37,8 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     files = {
         rel: read(repo_root, rel)
         for rel in (
-            "Tools/ai/run_heap_runtime_completeness_gate/cli.py",
-            "Tools/ai/run_heap_virtual_dev_environment/cli.py",
+            "Tools/ai/heap_runtime/completeness_gate/cli.py",
+            "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
             "Tools/ai/_shared/heap_code_execution_tool_core.py",
             "Tools/ai/_shared/heap_final_code_product.py",
             "Tools/ai/heap_gate/target_planner.py",
@@ -48,22 +48,22 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         )
     }
 
-    gate = files["Tools/ai/run_heap_runtime_completeness_gate/cli.py"]
+    gate = files["Tools/ai/heap_runtime/completeness_gate/cli.py"]
     for needle in (
-        '"Tools/ai/compose_heap_final_proposals/cli.py"',
+        '"Tools/ai/heap_final_proposals/cli.py"',
         '"Tools/ai/_shared/heap_proposal_gate.py"',
         '"Tools/ai/agent_runtime_tool_broker/cli.py"',
     ):
         check_absent(
             gate,
             needle,
-            "Tools/ai/run_heap_runtime_completeness_gate/cli.py",
+            "Tools/ai/heap_runtime/completeness_gate/cli.py",
             errors,
             "static matrix target fallback is forbidden",
         )
 
     for rel in (
-        "Tools/ai/run_heap_virtual_dev_environment/cli.py",
+        "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
         "Tools/ai/agent_runtime_debug_lab/policy.py",
     ):
         path = repo_root / rel

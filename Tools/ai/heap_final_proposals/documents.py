@@ -12,7 +12,7 @@ from Tools.ai.heap_final_proposals.artifacts import proposal_text_for_review
 try:
     from Tools.ai._shared.heap_proposal_gate import record_operator_decision
 except ImportError:  # pragma: no cover
-    from tools.ai.heap_proposal_gate import record_operator_decision  # type: ignore
+    from Tools.ai._shared.heap_proposal_gate import record_operator_decision  # type: ignore
 
 
 def write_documents_package(

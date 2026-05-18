@@ -43,9 +43,9 @@ REQUIRED_TERMS = {
         "$UseExplicitProviders",
     ],
     "agnostic_context_artifacts": [
-        "build_agent_memory_inventory.py",
-        "build_agent_agnostic_tool_inventory.py",
-        "build_agent_transient_request_context.py",
+        "build_agent_memory_inventory",
+        "build_agent_agnostic_tool_inventory",
+        "build_agent_transient_request_context",
         "agent_memory_inventory_json",
         "agnostic_tool_inventory_json",
         "transient_request_context_json",

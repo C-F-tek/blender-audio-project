@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.agent_runtime_tool_broker import TOOL_SPECS
-    from tools.validation.report_utils import (
+    from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS
+    from Tools.validation._shared.report_utils import (
         resolve_output_path,
         write_json_report,
         write_text_report,
@@ -27,8 +27,8 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.agent_runtime_tool_broker import TOOL_SPECS  # type: ignore
-    from tools.validation.report_utils import (  # type: ignore
+    from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS  # type: ignore
+    from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
         write_text_report,
@@ -219,17 +219,17 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         ),
         source_entry(
             repo_root,
-            "tools/ai/build_runtime_tool_usage_telemetry.py",
+            "Tools/ai/runtime_tool_usage_telemetry/cli.py",
             "runtime_tool_usage_telemetry_builder",
         ),
         source_entry(
             repo_root,
-            "tools/ai/build_semantic_evidence_chunks.py",
+            "Tools/ai/semantic_evidence_chunks/cli.py",
             "semantic_cloud_handoff_chunker",
         ),
         source_entry(
             repo_root,
-            "tools/ai/build_shared_toolbox_ai_to_ai_bundle.py",
+            "Tools/ai/shared_toolbox_bundle/cli.py",
             "shared_toolbox_bundle_builder",
         ),
     ]

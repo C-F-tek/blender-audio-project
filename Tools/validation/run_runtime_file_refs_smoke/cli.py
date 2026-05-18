@@ -13,27 +13,27 @@ from pathlib import Path
 CORE_RUNTIME_GUARD = True
 
 try:
-    from tools.ai.runtime_file_refs import (
+    from Tools.ai.runtime_file_refs import (
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
     )
-    from tools.ai.runtime_file_refs.classifier import extract_target_refs, extract_validation_refs
-    from tools.validation.report_utils import write_json_report
+    from Tools.ai.runtime_file_refs.classifier import extract_target_refs, extract_validation_refs
+    from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.runtime_file_refs import (  # type: ignore
+    from Tools.ai.runtime_file_refs import (  # type: ignore
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
     )
-    from tools.ai.runtime_file_refs.classifier import (  # type: ignore
+    from Tools.ai.runtime_file_refs.classifier import (  # type: ignore
         extract_target_refs,
         extract_validation_refs,
     )
-    from tools.validation.report_utils import write_json_report  # type: ignore
+    from Tools.validation._shared.report_utils import write_json_report  # type: ignore
 
 
 def build_report(repo_root: Path) -> dict[str, object]:

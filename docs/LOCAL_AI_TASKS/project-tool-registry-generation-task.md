@@ -46,8 +46,8 @@ docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/README.md
 Tools/ai/agent_runtime_tool_broker.py
-Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
-Tools/ai/build_runtime_tool_usage_telemetry.py
+Tools/ai/shared_toolbox_bundle/cli.py
+Tools/ai/runtime_tool_usage_telemetry/cli.py
 Tools/validation/**
 Tools/workflow/**
 Tools/npu/**

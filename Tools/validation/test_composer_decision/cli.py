@@ -108,10 +108,10 @@ def test_all_rejected_gives_diagnostic_only() -> None:
         run_dir = Path(tmp) / "run"
         proposal_dir = run_dir / "team_context" / "proposal_iterations"
         # Write two proposals with same content (similarity loop breaker) targeting allowed source
-        text = "TARGET_FILES: Tools/ai/compose_heap_final_proposals/cli.py\n\ndef foo():\n    return 1"
-        write_proposal(proposal_dir, "001", "Tools/ai/compose_heap_final_proposals/cli.py", text, False)
-        write_proposal(proposal_dir, "002", "Tools/ai/compose_heap_final_proposals/cli.py", text, False)
-        payload = run_composer(run_dir, ["Tools/ai/compose_heap_final_proposals/cli.py"])
+        text = "TARGET_FILES: Tools/ai/heap_final_proposals/cli.py\n\ndef foo():\n    return 1"
+        write_proposal(proposal_dir, "001", "Tools/ai/heap_final_proposals/cli.py", text, False)
+        write_proposal(proposal_dir, "002", "Tools/ai/heap_final_proposals/cli.py", text, False)
+        payload = run_composer(run_dir, ["Tools/ai/heap_final_proposals/cli.py"])
         decision = payload["operator_decision"]["decision"]
         assert decision == "DIAGNOSTIC_ONLY", f"Expected DIAGNOSTIC_ONLY, got {decision}"
         reasons = "\n".join(payload["operator_decision"]["gate_reasons"])
@@ -123,13 +123,13 @@ def test_accepted_proposal_gives_patchable() -> None:
     with tempfile.TemporaryDirectory(prefix="composer-decision-") as tmp:
         run_dir = Path(tmp) / "run"
         proposal_dir = run_dir / "team_context" / "proposal_iterations"
-        target = "Tools/ai/compose_heap_final_proposals/cli.py"
+        target = "Tools/ai/heap_final_proposals/cli.py"
         text = (
             f"TARGET_FILES: {target}\n\n"
             "IMPLEMENTATION_CHANGES:\n"
             "- Wire operator_decision into the composer output.\n\n"
             "VALIDATION_COMMANDS:\n"
-            "- python -m py_compile Tools/ai/compose_heap_final_proposals/cli.py\n"
+            "- python -m py_compile Tools/ai/heap_final_proposals/cli.py\n"
         )
         write_proposal(proposal_dir, "001", target, text, True)
         payload = run_composer(run_dir, [target])
@@ -164,7 +164,7 @@ def test_decision_file_lists_targets() -> None:
     with tempfile.TemporaryDirectory(prefix="composer-decision-") as tmp:
         run_dir = Path(tmp) / "run"
         proposal_dir = run_dir / "team_context" / "proposal_iterations"
-        target = "Tools/ai/compose_heap_final_proposals/cli.py"
+        target = "Tools/ai/heap_final_proposals/cli.py"
         text = f"TARGET_FILES: {target}\n\nIMPLEMENTATION_CHANGES:\n- Test.\n\nVALIDATION_COMMANDS:\n- python -m py_compile {target}\n"
         write_proposal(proposal_dir, "001", target, text, True)
         payload = run_composer(run_dir, [target])

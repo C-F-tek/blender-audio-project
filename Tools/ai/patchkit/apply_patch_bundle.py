@@ -10,13 +10,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patchkit.anchors import (
+from Tools.ai.patchkit.anchors import (
     append_once,
     insert_after_marker,
     insert_before_marker,
     replace_once,
 )
-from tools.ai.patchkit.filesystem import (
+from Tools.ai.patchkit.filesystem import (
     LoadedText,
     backup_file,
     load_text,
@@ -24,12 +24,12 @@ from tools.ai.patchkit.filesystem import (
     repo_path,
     write_text_preserved,
 )
-from tools.ai.patchkit.powershell import (
+from Tools.ai.patchkit.powershell import (
     assert_no_naked_throw,
     insert_after_invoke_checked,
     run_parser,
 )
-from tools.ai.patchkit.reports import write_json, write_markdown
+from Tools.ai.patchkit.reports import write_json, write_markdown
 
 DENIED_DELETE_PREFIXES = (
     "output/",

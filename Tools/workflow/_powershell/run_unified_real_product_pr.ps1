@@ -17,7 +17,7 @@
     shared memory / AI-to-AI evidence
     deterministic/script closure audit
     patch suggestion product
-    prepare_review_pr product
+    agent_review_prepare_pr product
     optional push and GitHub PR creation
 
   Architectural lane selection is internal to the profile. Runtime sizing,

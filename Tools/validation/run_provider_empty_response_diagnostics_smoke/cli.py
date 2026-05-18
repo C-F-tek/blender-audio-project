@@ -16,14 +16,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.run_npu_gpu_deep_review_auditor import classify_npu_output
+    from Tools.ai.npu_gpu_deep_review_auditor import classify_npu_output
 except ImportError:
     import sys
 
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.run_npu_gpu_deep_review_auditor import classify_npu_output  # type: ignore
+    from Tools.ai.npu_gpu_deep_review_auditor import classify_npu_output  # type: ignore
 
 
 def now_iso() -> str:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test prepare_review_pr.py PR creation flag guardrails."""
+"""Smoke-test agent_review_prepare_pr.py PR creation flag guardrails."""
 
 from __future__ import annotations
 
@@ -104,7 +104,7 @@ def prepare_command(
         sys.executable,
         "-m",
         "Tools.ai",
-        "prepare_review_pr",
+        "agent_review_prepare_pr",
         "--repo-root",
         str(repo),
         "--Stamp",
@@ -135,7 +135,7 @@ def auto_include_command(
         sys.executable,
         "-m",
         "Tools.ai",
-        "prepare_review_pr",
+        "agent_review_prepare_pr",
         "--repo-root",
         str(repo),
         "--Stamp",

@@ -77,8 +77,8 @@ Do not reduce heap/exchange to a static chain. The run must provide context, evi
 | Responsibility | Code owner |
 |---|---|
 | Unified local AI run | `Tools/workflow/run_unified_local_ai_refactor.ps1` |
-| Heap/exchange runtime entry | `Tools/ai/build_heap_exchange_runtime_entry.py` |
-| Heap/exchange runtime exit | `Tools/ai/build_heap_exchange_runtime_exit.py` |
+| Heap/exchange runtime entry | `python -m Tools.ai heap_exchange_runtime_entry` |
+| Heap/exchange runtime exit | `python -m Tools.ai heap_exchange_runtime_exit` |
 | Heap/exchange lifecycle validation | `Tools/validation/check_heap_exchange_runtime_lifecycle.py` |
 | Heap/exchange smoke | `Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py` |
 | Reusable patch bundle apply | `Tools/ai/patchkit/apply_patch_bundle.py` |
@@ -87,14 +87,14 @@ Do not reduce heap/exchange to a static chain. The run must provide context, evi
 | Patchkit PowerShell helpers | `Tools/ai/patchkit/powershell.py` |
 | Patchkit reports | `Tools/ai/patchkit/reports.py` |
 | Patchkit smoke | `Tools/validation/run_patchkit_smoke.py` |
-| Review PR preparation | `Tools/ai/prepare_review_pr.py` |
-| Context pack | `Tools/ai/build_ai_context_pack.py` |
-| Agent state packet | `Tools/ai/build_agent_state_packet.py` |
+| Review PR preparation | `Tools/ai/agent_review/review_pr_cli.py` |
+| Context pack | `Tools/ai/ai_context_pack/cli.py` |
+| Agent state packet | `Tools/ai/agent_context/state_packet/cli.py` |
 | Script/tool inventory | `Tools/validation/build_script_inventory.py` |
 | Markdown inventory | `Tools/validation/build_markdown_inventory.py` |
 | JSON/report contracts | `Tools/validation/check_validation_report_contracts.py` |
 | Patch suggestion product | `Tools/ai/build_task_patch_suggestion_report.py` |
-| Legacy patch suggestion apply | `Tools/ai/apply_patch_suggestion_bundle.py` |
+| Legacy patch suggestion apply | `Tools/ai/patch_suggestion_bundle/cli.py` |
 
 Before creating a new script, check this table and the target package README.
 
@@ -188,8 +188,8 @@ Heap/exchange lifecycle:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\build_heap_exchange_runtime_entry.py `
-  .\Tools\ai\build_heap_exchange_runtime_exit.py `
+  python -m Tools.ai heap_exchange_runtime_entry `
+  python -m Tools.ai heap_exchange_runtime_exit `
   .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
   .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
 

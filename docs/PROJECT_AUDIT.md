@@ -180,11 +180,11 @@ Current AI workflow should remain owner-aligned:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
 Tools/validation/check_heap_exchange_runtime_lifecycle.py
 Tools/ai/patchkit/apply_patch_bundle.py
-Tools/ai/prepare_review_pr.py
+Tools/ai/agent_review/review_pr_cli.py
 ```
 
 Do not resurrect older monolithic flows as primary entrypoints.

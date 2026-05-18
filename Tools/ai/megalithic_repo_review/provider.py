@@ -35,7 +35,7 @@ def maybe_run_ollama(
             text = session.generate(prompt, max_new_tokens=max_new_tokens, temperature=0.1)
         parsed: Any = None
         try:
-            from tools.ai.model_json import parse_model_json_object
+            from Tools.ai._shared.model_json import parse_model_json_object
 
             parsed = parse_model_json_object(text)
         except Exception:

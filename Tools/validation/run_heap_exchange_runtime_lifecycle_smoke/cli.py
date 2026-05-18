@@ -158,9 +158,6 @@ def main() -> int:
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
-    entry_tool = source_repo / "Tools/ai/build_heap_exchange_runtime_entry/cli.py"
-    exit_tool = source_repo / "Tools/ai/build_heap_exchange_runtime_exit/cli.py"
-    lifecycle_tool = source_repo / "Tools/validation/check_heap_exchange_runtime_lifecycle/cli.py"
     cases: list[dict[str, Any]] = []
     errors: list[str] = []
 
@@ -174,7 +171,9 @@ def main() -> int:
         entry_result = run(
             [
                 sys.executable,
-                str(entry_tool),
+                "-m",
+                "Tools.ai",
+                "heap_exchange_runtime_entry",
                 "--repo-root",
                 str(repo),
                 "--stamp",
@@ -190,7 +189,9 @@ def main() -> int:
         exit_result = run(
             [
                 sys.executable,
-                str(exit_tool),
+                "-m",
+                "Tools.ai",
+                "heap_exchange_runtime_exit",
                 "--repo-root",
                 str(repo),
                 "--stamp",
@@ -207,7 +208,9 @@ def main() -> int:
         lifecycle_result = run(
             [
                 sys.executable,
-                str(lifecycle_tool),
+                "-m",
+                "Tools.validation",
+                "check_heap_exchange_runtime_lifecycle",
                 "--repo-root",
                 str(repo),
                 "--stamp",
@@ -248,7 +251,9 @@ def main() -> int:
         entry_result = run(
             [
                 sys.executable,
-                str(entry_tool),
+                "-m",
+                "Tools.ai",
+                "heap_exchange_runtime_entry",
                 "--repo-root",
                 str(repo),
                 "--stamp",
@@ -264,7 +269,9 @@ def main() -> int:
         exit_result = run(
             [
                 sys.executable,
-                str(exit_tool),
+                "-m",
+                "Tools.ai",
+                "heap_exchange_runtime_exit",
                 "--repo-root",
                 str(repo),
                 "--stamp",
@@ -281,7 +288,9 @@ def main() -> int:
         lifecycle_result = run(
             [
                 sys.executable,
-                str(lifecycle_tool),
+                "-m",
+                "Tools.validation",
+                "check_heap_exchange_runtime_lifecycle",
                 "--repo-root",
                 str(repo),
                 "--stamp",

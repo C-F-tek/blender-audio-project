@@ -7,8 +7,8 @@ Plan and validation notes for integrating `Tools.ai._shared.gpu_planner_json_con
 Target runners:
 
 ```text
-Tools/ai/run_agent_gpu_deep_planning_review.py
-Tools/ai/run_agent_gpu_deep_planning_supervised.py
+Tools/ai/gpu_deep_planning_review/cli.py
+Tools/ai/gpu_deep_planning_supervised/cli.py
 ```
 
 ## Current safe bridge

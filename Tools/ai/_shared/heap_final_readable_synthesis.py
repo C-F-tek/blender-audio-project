@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from tools.ai.heap_final_code_product import (
+from Tools.ai._shared.heap_final_code_product import (
     code_product_items,
     render_code_product_section,
     render_lab_section,

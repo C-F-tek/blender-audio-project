@@ -121,7 +121,7 @@ if ($ReviewPrFromGeneratedPatchSpecs) {
         $EffectiveGeneratedPatchSpecsBranch = "codex/generated-patch-specs-review-pr-$Stamp"
     }
     $GeneratedPatchSpecsArgs = @(
-        "-m", "Tools.ai", "apply_generated_patch_specs_for_review_pr",
+        "-m", "Tools.ai", "generated_patch_specs_apply",
         "--repo-root", ".",
         "--output", $PatchSuggestionJson,
         "--markdown-output", "$ValidationDir/generated_patch_specs_review_pr_apply_${ModeName}_$Stamp.md",
@@ -142,7 +142,7 @@ if ($ReviewPrFromGeneratedPatchSpecs) {
 $HeapExchangeExitJson = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.json"
 $HeapExchangeExitMd = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.md"
 $HeapExchangeExitArgs = @(
-    "-m", "Tools.ai", "build_heap_exchange_runtime_exit",
+    "-m", "Tools.ai", "heap_exchange_runtime_exit",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--runtime-entry", $HeapExchangeEntryJson,
@@ -195,7 +195,7 @@ if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and -not $Rev
     $HeapExchangeExitMd = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.md"
 
     $HeapExchangeExitArgs = @(
-        "-m", "Tools.ai", "build_heap_exchange_runtime_exit",
+        "-m", "Tools.ai", "heap_exchange_runtime_exit",
         "--repo-root", ".",
         "--stamp", $DataStamp,
         "--runtime-entry", $HeapExchangeEntryJson,
@@ -245,7 +245,7 @@ $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapE
 # Deferred intentionally.
 # The unified chain contract is a final product gate and must run after:
 # - patch suggestion product separation
-# - prepare_review_pr.py
+# - agent_review_prepare_pr.py
 # - manifest write
 # Running it here validates before the review PR product exists.
 # IA-CARMINE-UNIFIED-CHAIN-CONTRACT-GATE-END

@@ -171,7 +171,7 @@ class RuntimeGateLoopStepsMixin:
         )
         command = [
             self.child_python(),
-            "tools/ai/provider_runtime_heap_broker_bridge.py",
+            "python -m Tools.ai provider_runtime_broker_bridge",
             "--repo-root",
             ".",
             "--stamp",

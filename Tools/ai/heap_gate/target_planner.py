@@ -7,8 +7,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from tools.ai.runtime_file_refs import RuntimeFileRefResolver
-from tools.ai.runtime_universe.models import RepoRuntimeUniverse
+from Tools.ai.runtime_file_refs import RuntimeFileRefResolver
+from Tools.ai.runtime_universe.models import RepoRuntimeUniverse
 
 STOPWORDS = {
     "anche",

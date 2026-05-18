@@ -70,11 +70,11 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
           "id": "gpu_json_001",
           "area": "validation",
           "status": "ready_for_patch_plan",
-          "target_files": ["Tools/ai/run_agent_gpu_deep_planning_review/cli.py"],
+          "target_files": ["Tools/ai/gpu_deep_planning_review/cli.py"],
           "rationale": "contract hardening is isolated",
           "proposed_strategy": "reuse shared parser and validate recommendation schema",
           "risk": "low",
-          "validation_commands": ["python -m py_compile ./Tools/ai/run_agent_gpu_deep_planning_review/cli.py"],
+          "validation_commands": ["python -m py_compile ./Tools/ai/gpu_deep_planning_review/cli.py"],
           "stop_conditions": ["stop if parser invents recommendations"]
         }
       ],

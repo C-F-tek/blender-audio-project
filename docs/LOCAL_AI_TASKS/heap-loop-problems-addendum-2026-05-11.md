@@ -165,7 +165,7 @@ execution.artifact_summaries[].path
 
 ### Evidenza code-driven
 
-`run_heap_runtime_completeness_gate.py` include tra i requirement base:
+`python -m Tools.ai run_heap_runtime_completeness_gate` include tra i requirement base:
 
 ```text
 operational_memory_write
@@ -212,7 +212,7 @@ Guardrail: DB sotto `output/**`, mai persistent memory salvo conferma esplicita.
 
 ### Evidenza code-driven
 
-`Tools/ai/compose_heap_final_proposals.py` raccoglie:
+`Tools/ai/heap_final_proposals/cli.py` raccoglie:
 
 ```text
 startup manifest
@@ -281,7 +281,7 @@ product_signal
 telemetry_signal
 ```
 
-La funzione `append_reload_lifecycle_event()` in `run_heap_runtime_completeness_gate.py` incapsula il reload come payload `kind=memory_context_reload`, ma deve per forza usare uno degli event type generici tramite `append_heap_exchange_event()`.
+La funzione `append_reload_lifecycle_event()` in `python -m Tools.ai run_heap_runtime_completeness_gate` incapsula il reload come payload `kind=memory_context_reload`, ma deve per forza usare uno degli event type generici tramite `append_heap_exchange_event()`.
 
 ### Problema
 

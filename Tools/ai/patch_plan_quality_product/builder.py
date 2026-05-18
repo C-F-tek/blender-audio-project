@@ -4,15 +4,15 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patch_plan_quality_product.io_utils import (
+from Tools.ai.patch_plan_quality_product.io_utils import (
     flatten_json,
     now_iso,
     read_json,
     repo_rel,
     resolve,
 )
-from tools.ai.patch_plan_quality_product.scoring import classify, list_plans, score_plan
-from tools.ai.patch_plan_quality_product.token_search import (
+from Tools.ai.patch_plan_quality_product.scoring import classify, list_plans, score_plan
+from Tools.ai.patch_plan_quality_product.token_search import (
     build_search_index,
     safe_tokens,
     search_docs,

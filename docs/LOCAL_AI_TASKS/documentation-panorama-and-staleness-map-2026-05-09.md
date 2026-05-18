@@ -119,7 +119,7 @@ patch notes = ledger
 patch suggestion = bridge/product candidate
 heap exit product = deterministic product gate
 patchkit bundle = preferred source-write boundary
-prepare_review_pr.py = branch/commit/push/PR preparation owner
+agent_review_prepare_pr.py = branch/commit/push/PR preparation owner
 review PR = human-review product
 ```
 

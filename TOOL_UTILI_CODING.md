@@ -34,7 +34,7 @@ python -m Tools.docs refactor_markdown_splits `
 | `Tools/ai/build_task_patch_suggestion_report.py` | Estrae suggestion concrete da task Markdown. |
 | `Tools/ai/apply_patch_suggestion_bundle.py` | Applica/dry-run deterministic operations da patch suggestion report. |
 | `Tools/validation/check_patch_suggestion_product_separation.py` | Separa prodotto essenziale da telemetry/debug supplementare. |
-| `Tools/ai/prepare_review_pr.py` | Prepara branch/commit/PR reviewabile con allowlist/autodiscovery include-path. |
+| `Tools/ai/agent_review/review_pr_cli.py` | Prepara branch/commit/PR reviewabile con allowlist/autodiscovery include-path. |
 
 ## Validazioni minime
 

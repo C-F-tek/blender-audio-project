@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test prepare_review_pr.py argv construction."""
+"""Smoke-test agent_review_prepare_pr.py argv construction."""
 
 from __future__ import annotations
 

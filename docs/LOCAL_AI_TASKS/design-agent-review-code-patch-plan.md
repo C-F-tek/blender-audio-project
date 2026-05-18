@@ -102,8 +102,8 @@ No source implementation is required for this task.
 A later implementation PR may add:
 
 ```text
-Tools/ai/build_agent_review_code_patch_plan.py
-Tools/validation/run_agent_review_code_patch_plan_smoke.py
+Tools/ai/agent_review/code_patch_plan_cli.py
+Tools/validation/agent_review/code_patch_plan_smoke/cli.py
 docs/JSON_SCHEMAS.md update
 Tools/validation/README.md update
 ```

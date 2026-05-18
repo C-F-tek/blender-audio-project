@@ -31,7 +31,7 @@ def build_advisory_context_routing(
 
     _ensure_repo_imports(repo_root)
     try:
-        from tools.ai.workload_quality import (  # noqa: PLC0415
+        from Tools.ai._shared.workload_quality import (  # noqa: PLC0415
             load_workload_quality_report,
             route_context_files_by_quality,
         )

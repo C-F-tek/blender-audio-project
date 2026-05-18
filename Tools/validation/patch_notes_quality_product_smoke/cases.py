@@ -160,7 +160,7 @@ def deterministic_doc_python_patchable_smoke() -> dict[str, Any]:
     import tempfile
     from pathlib import Path
 
-    from Tools.ai.build_deterministic_recommendations import (
+    from Tools.ai.deterministic_recommendations import (
         synthesize_from_repository_consistency_maps,
     )
 

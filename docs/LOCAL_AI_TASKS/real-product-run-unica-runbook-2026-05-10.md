@@ -32,7 +32,7 @@ Ordine concettuale:
 16. heap/exchange runtime exit product;
 17. final chain contract;
 18. runtime evidence correlation;
-19. `prepare_review_pr.py`;
+19. `agent_review_prepare_pr.py`;
 20. draft PR finale.
 
 La catena non deve continuare fingendo prodotto quando l'apply report espone `operation_count=0` o solo draft metadata-only. Dopo #295, le generated patch specs metadata-only falliscono in modo esplicito se `--apply` è richiesto. Dopo #296, il proposal builder può leggere evidenza runtime current-stamp e generare `P-RUNTIME-PEER-EVIDENCE-FEED` con operazioni concrete reviewable.
@@ -72,7 +72,7 @@ Regola attuale:
 - task Markdown sotto `output/local_ai_task_inputs/` è entry contract, non sorgente obbligatoria di patch;
 - se non contiene fence patch-suggestion, può passare come `deferred_to_runtime_product=true`;
 - una patch-spec metadata-only non è prodotto reale;
-- con `--apply`, `apply_generated_patch_specs_for_review_pr.py` deve fallire se non trova operazioni concrete allowlisted;
+- con `--apply`, `generated_patch_specs_apply.py` deve fallire se non trova operazioni concrete allowlisted;
 - operazioni concrete ammesse: `replace_once`, `append_once`, `insert_after_once`, `insert_before_once`, `write_file`;
 - target vietati: `output/**`, `indexAI/**`, `docs/LOCAL_VALIDATION_EVIDENCE/**`, `renders/**`, database/runtime artifact.
 
@@ -170,9 +170,9 @@ $Branch = "CARMINEai/heap-exchange-process-gate-$Stamp"
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\build_repository_change_proposals.py `
-  .\Tools\ai\build_patch_specs_from_proposals.py `
-  .\Tools\ai\apply_generated_patch_specs_for_review_pr.py `
+  .\Tools\ai\repository_change_proposals\cli.py `
+  .\Tools\ai\generated_patch_specs\proposal_cli.py `
+  .\Tools\ai\generated_patch_specs\apply_cli.py `
   .\Tools\validation\run_repository_change_proposals_runtime_evidence_smoke.py `
   .\Tools\validation\run_generated_patch_specs_empty_product_smoke.py
 
@@ -190,7 +190,7 @@ git diff --check
 - runtime evidence correlation viene emessa dopo final chain contract;
 - generated patch specs non restano metadata-only;
 - apply report ha `operation_count > 0` e `changed_count > 0`;
-- `prepare_review_pr.py` crea commit di prodotto e draft PR;
+- `agent_review_prepare_pr.py` crea commit di prodotto e draft PR;
 - il prodotto finale non include `output/**`, `indexAI/code_chunks/**`, database o artifact runtime.
 
 ## Segnali di blocco da trattare domani
@@ -207,7 +207,7 @@ git diff --check
 A new standalone heap universe lane is being incubated outside the full run.
 
 ```text
-Tools/ai/run_heap_runtime_context_closure.py
+Tools/ai/heap_context_closure/cli.py
 ```
 
 Purpose:

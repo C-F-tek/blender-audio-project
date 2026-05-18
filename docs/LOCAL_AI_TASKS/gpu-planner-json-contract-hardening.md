@@ -78,8 +78,8 @@ replace local duplicated GPU parse/classification code with gpu_planner_json_con
 Target files:
 
 ```text
-Tools/ai/run_agent_gpu_deep_planning_review.py
-Tools/ai/run_agent_gpu_deep_planning_supervised.py
+Tools/ai/gpu_deep_planning_review/cli.py
+Tools/ai/gpu_deep_planning_supervised/cli.py
 ```
 
 ## Guardrails

@@ -31,7 +31,7 @@ def live_signal(
         [
             "-m",
             "Tools.ai",
-            "provider_runtime_heap_live_signals",
+            "provider_runtime_live_signals",
             "--repo-root",
             ".",
             "--stamp",

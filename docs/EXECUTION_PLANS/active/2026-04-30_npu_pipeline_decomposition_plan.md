@@ -159,7 +159,7 @@ Validation required before merge:
 
 ```powershell
 python -m Tools.workflow run_npu_pipeline_helper_validation
-python -m Tools.validation check_npu_pipeline_modules --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python -m Tools.validation check_npu_pipeline_docs --repo-root . --output .\output\validation\npu_pipeline_docs.json
 python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json

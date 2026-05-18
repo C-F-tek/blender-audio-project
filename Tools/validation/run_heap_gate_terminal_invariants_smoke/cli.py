@@ -13,14 +13,14 @@ from typing import Any
 CORE_RUNTIME_GUARD = True
 
 try:
-    from tools.ai.heap_gate.terminal_invariants import evaluate_terminal_invariants
-    from tools.validation.report_utils import write_json_report
+    from Tools.ai.heap_gate.terminal_invariants import evaluate_terminal_invariants
+    from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.heap_gate.terminal_invariants import evaluate_terminal_invariants  # type: ignore
-    from tools.validation.report_utils import write_json_report  # type: ignore
+    from Tools.ai.heap_gate.terminal_invariants import evaluate_terminal_invariants  # type: ignore
+    from Tools.validation._shared.report_utils import write_json_report  # type: ignore
 
 
 def ready_metrics() -> dict[str, Any]:

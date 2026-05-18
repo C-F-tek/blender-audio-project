@@ -15,7 +15,7 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
     provider_args = [
         "-m",
         "Tools.ai",
-        "run_agent_gpu_npu_parallel_orchestrator",
+        "gpu_npu_parallel_orchestrator",
         "--repo-root",
         ".",
         "--budget-minutes",
@@ -181,7 +181,7 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
             [
                 "-m",
                 "Tools.ai",
-                "analyze_gpu_npu_run_sync",
+                "gpu_npu_run_sync_analysis",
                 "--repo-root",
                 ".",
                 "--orchestrator",

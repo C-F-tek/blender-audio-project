@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ensure required AI context files exist before heap/context reload.
 
-This tool reads required files from tools.ai.build_ai_context_pack and creates
+This tool reads required files from Tools.ai.ai_context_pack and creates
 only known compact Markdown routing documents when a required path is truly
 missing. Directory-form Markdown docs such as docs/PROJECT_STATUS_POINT.md/
 are treated as existing when they contain README.md or part-*.md, matching
@@ -83,7 +83,7 @@ def render_markdown(report: dict[str, Any]) -> str:
 def load_profiles(repo_root: Path) -> dict[str, Any]:
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    module = importlib.import_module("Tools.ai.build_ai_context_pack")
+    module = importlib.import_module("Tools.ai.ai_context_pack")
     profiles = getattr(module, "PROFILES", {})
     return profiles if isinstance(profiles, dict) else {}
 

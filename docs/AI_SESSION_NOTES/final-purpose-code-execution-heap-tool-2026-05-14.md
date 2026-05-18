@@ -12,13 +12,13 @@ provider text.
 New:
 
 - `Tools/ai/_shared/heap_code_execution_tool_core.py`
-- `Tools/ai/run_heap_code_execution_tool.py`
+- `Tools/ai/heap_runtime/code_execution_tool/cli.py`
 - `Tools/validation/run_heap_code_execution_tool_smoke.py`
 
 Updated:
 
 - `Tools/ai/agent_runtime_tool_broker.py`
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 
 ## Runtime Capability
 
@@ -79,11 +79,11 @@ Validated locally:
 
 ```powershell
 & $RepoPy -m py_compile `
-  .\Tools\ai\run_heap_code_execution_tool.py `
+  .\Tools\ai\heap_runtime\code_execution_tool\cli.py `
   .\Tools\ai\_shared\heap_code_execution_tool_core.py `
   .\Tools\validation\run_heap_code_execution_tool_smoke.py `
   .\Tools\ai\agent_runtime_tool_broker.py `
-  .\Tools\ai\run_heap_runtime_completeness_gate.py
+  .\Tools\ai\heap_runtime\completeness_gate\cli.py
 
 & $RepoPy -m Tools.validation run_heap_code_execution_tool_smoke `
   --repo-root . `
@@ -102,7 +102,7 @@ Observed:
 
 ## Line Counts
 
-- `Tools/ai/run_heap_code_execution_tool.py`: 208 lines.
+- `Tools/ai/heap_runtime/code_execution_tool/cli.py`: 208 lines.
 - `Tools/ai/_shared/heap_code_execution_tool_core.py`: 317 lines.
 - `Tools/validation/run_heap_code_execution_tool_smoke.py`: 224 lines.
 

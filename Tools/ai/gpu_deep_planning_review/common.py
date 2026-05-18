@@ -18,14 +18,14 @@ It is still non-destructive:
 from __future__ import annotations
 
 try:
-    from tools.ai.schema_repair_context import build_schema_repair_context_stack
+    from Tools.ai.schema_repair_context import build_schema_repair_context_stack
 except ImportError:
     import sys as _schema_repair_sys
 
     _schema_repair_repo_root = Path(__file__).resolve().parents[2]
     if str(_schema_repair_repo_root) not in _schema_repair_sys.path:
         _schema_repair_sys.path.insert(0, str(_schema_repair_repo_root))
-    from tools.ai.schema_repair_context import build_schema_repair_context_stack  # type: ignore
+    from Tools.ai.schema_repair_context import build_schema_repair_context_stack  # type: ignore
 
 import argparse
 import json
@@ -37,18 +37,18 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.ai.runtime_tool_guidance import deterministic_fallback_tool_requests
+    from Tools.ai._shared.runtime_tool_guidance import deterministic_fallback_tool_requests
 except ImportError:  # Script-style execution from tools/ai.
     from Tools.ai._shared.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
 
 try:
-    from tools.ai.gpu_planner_json_contract import (
+    from Tools.ai._shared.gpu_planner_json_contract import (
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
         validate_tool_request_object,
     )
-    from tools.ai.runtime_tool_guidance import (
+    from Tools.ai._shared.runtime_tool_guidance import (
         ALLOWED_RUNTIME_TOOLS,
         TOOL_REQUEST_DECISION_GUIDE,
         build_provider_tool_guidance_payload,
@@ -62,13 +62,13 @@ except ImportError:  # Script-style execution from tools/ai.
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from tools.ai.gpu_planner_json_contract import (  # type: ignore
+    from Tools.ai._shared.gpu_planner_json_contract import (  # type: ignore
         result_to_dict,
         validate_model_response_contract,
         validate_recommendation_object,
         validate_tool_request_object,
     )
-    from tools.ai.runtime_tool_guidance import (  # type: ignore
+    from Tools.ai._shared.runtime_tool_guidance import (  # type: ignore
         ALLOWED_RUNTIME_TOOLS,
         TOOL_REQUEST_DECISION_GUIDE,
         build_provider_tool_guidance_payload,

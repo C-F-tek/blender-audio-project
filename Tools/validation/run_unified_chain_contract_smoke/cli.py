@@ -183,7 +183,7 @@ def main() -> int:
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
-    validator = source_repo / "Tools/validation/check_unified_chain_contract/cli.py"
+    validator = source_repo / "Tools/validation/unified_chain_contract/cli.py"
     errors: list[str] = []
     cases: list[dict[str, Any]] = []
 

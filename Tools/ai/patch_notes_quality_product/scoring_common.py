@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tools.ai.patch_plan_quality_product.scoring import list_plans
+from Tools.ai.patch_plan_quality_product.scoring import list_plans
 
 def safe_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}

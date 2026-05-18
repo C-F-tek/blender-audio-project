@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_OUTPUT_DIR = "docs/LOCAL_VALIDATION_EVIDENCE"
-DEFAULT_ENTRYPOINT = "tools/ai/run_agent_gpu_npu_parallel_orchestrator.py"
+DEFAULT_ENTRYPOINT = "Tools/ai/gpu_npu_parallel_orchestrator/cli.py"
 STAMP_RE = re.compile(r"\d{8}-\d{6}")
 CANONICAL_COMPONENTS = {
     "orchestrator": {"type": "process", "label": "orchestrator"},
