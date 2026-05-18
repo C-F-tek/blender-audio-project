@@ -25,20 +25,46 @@ python -m Tools.docs <tool>
 
 | Area | Macro package | Owns |
 |---|---|---|
+| `Tools.ai` | `agent_context` | Context packs, semantic chunks, shared toolbox bundles, task context and candidate merge helpers. |
+| `Tools.ai` | `agent_memory` | Runtime memory policy, routing, SQLite-backed memory and memory review helpers. |
+| `Tools.ai` | `agent_review` | Agent review patch plans, evidence sufficiency, warning policy and decision-loop helpers. |
+| `Tools.ai` | `ai_workload` | AI workload quality routing helpers. |
 | `Tools.ai` | `code_product` | Code interpreter reports, artifact intake and generated code-product helpers. |
+| `Tools.ai` | `deterministic_recommendations` | Deterministic recommendation synthesis and evidence-to-recommendation mapping. |
 | `Tools.ai` | `external_heap` | External heap pointers, revision context and postrun package logic. |
+| `Tools.ai` | `heap_context_closure` | Runtime heap/context closure orchestration. |
+| `Tools.ai` | `heap_context_memory_reload` | Heap startup memory reload and reconciliation logic. |
+| `Tools.ai` | `heap_exchange` | Heap exchange entry/exit, closure audit and peer runtime manifests. |
+| `Tools.ai` | `heap_final_proposals` | Final heap proposal composition, causality normalization and operator decision artifacts. |
+| `Tools.ai` | `heap_gate` | Heap gate prompt/runtime contract support. |
+| `Tools.ai` | `heap_provider` | Provider budget and invocation contract helpers. |
+| `Tools.ai` | `heap_runtime` | Heap runtime launcher command, code execution, completeness and virtual environment helpers. |
+| `Tools.ai` | `operator_product_core` | Shared model/controller/profile core for CLI run and GUI view. |
 | `Tools.ai` | `patch_product` | Patch notes, patch plans, task patch suggestions and patch-suggestion bundles. |
+| `Tools.ai` | `patchkit` | Deterministic PatchKit bundle application boundary. |
+| `Tools.ai` | `pipeline` | Pipeline dry-run matrix, artifact runner, validation step and artifact validation helpers. |
 | `Tools.ai` | `provider_mesh` | GPU1/GPU0/NPU provider probes, peers, auditors and provider runtime mesh helpers. |
+| `Tools.ai` | `provider_runtime_blackboard` | Provider runtime blackboard, telemetry, peer report and broker bridge helpers. |
 | `Tools.ai` | `repository_product` | GitHub evidence, repository consistency and review PR product builders. |
+| `Tools.ai` | `run` | Canonical non-GUI operator product command. |
 | `Tools.ai` | `runtime_tool` | Broker, allowlist execution and runtime tool telemetry. |
 | `Tools.ai` | `runtime_universe` | Unified chain/launcher patches and universe/observer helpers. |
+| `Tools.ai` | `schema_repair` | Provider response schema repair helpers. |
+| `Tools.validation` | `agent_context` | Agent-context contract checks and semantic context smokes. |
+| `Tools.validation` | `agent_memory` | Agent-memory policy and SQLite/routing smokes. |
+| `Tools.validation` | `agent_review` | Agent-review decision loop, patch plan and warning-policy smokes. |
+| `Tools.validation` | `code_product` | Code product artifact intake smoke. |
+| `Tools.validation` | `deterministic_recommendations` | Deterministic recommendation synthesizer smoke. |
 | `Tools.validation` | `ai_workload` | AI workload quality core and smokes. |
 | `Tools.validation` | `docs_hygiene` | Markdown and repository hygiene validators. |
 | `Tools.validation` | `external_heap` | External heap behavior smokes. |
+| `Tools.validation` | `generated_artifacts` | Generated artifact, Blender-script and generated-Python policy checks. |
 | `Tools.validation` | `generated_patch_specs` | Patch-spec draft/current-stamp/review-lane checks. |
 | `Tools.validation` | `heap_exchange` | Heap exchange lifecycle, closure and peer runtime smokes. |
+| `Tools.validation` | `heap_final_proposals` | Final proposal gate and operator decision smokes. |
 | `Tools.validation` | `heap_provider` | Provider budget/invocation contract smokes. |
 | `Tools.validation` | `heap_runtime` | Heap runtime code execution, completeness and launcher checks. |
+| `Tools.validation` | `legacy_blender` | Legacy Blender compatibility checks kept out of current runtime domains. |
 | `Tools.validation` | `patch_product` | Patch product separation and patch suggestion smokes. |
 | `Tools.validation` | `pipeline` | AI/NPU pipeline report and dry-run matrix checks. |
 | `Tools.validation` | `provider_mesh` | GPU/NPU/OpenVINO provider contract smokes. |
@@ -47,10 +73,19 @@ python -m Tools.docs <tool>
 | `Tools.validation` | `runtime_tool` | Runtime broker/tool feedback smokes. |
 | `Tools.validation` | `runtime_universe` | Unified run manifest, observer and chain checks. |
 | `Tools.validation` | `schema_repair` | Schema repair context/retry smokes. |
+| `Tools.validation` | `validation_gate` | Unified validation gate registry and runner. |
 | `Tools.validation` | `workflow_run` | Workflow invocation and launcher wiring checks. |
 | `Tools.docs` | `docs_hygiene` | Markdown coherence, split guide, root surface audit and package-family audit. |
 | `Tools.npu` | `provider_mesh` | NPU context, guardrail, review, Ollama runtime and code chunk helpers. |
 | `Tools.workflow` | `workflow_run` | Workflow core, shells, startup checks, audio analysis and scene helpers. |
+
+## Non-Command Support Paths
+
+| Path | Role |
+|---|---|
+| `Tools/ai/run/profiles/heap_runtime_launcher_profiles.json` | Runtime profile data owned by the canonical `run` surface. |
+| `Tools/ai/_shared/fixtures/` | Shared test/review fixtures; not a public command package. |
+| `Tools/npu/context_artifacts/` | Generated local NPU context output; ignored by Git and regenerated by `python -m Tools.npu build_npu_code_context`. |
 
 ## Cleanup Evidence
 
@@ -93,4 +128,29 @@ Validation evidence for this pass:
 module_duplication_audit_threshold_055_final.json: passed=true, finding_count=0
 check_python_syntax_after_module_cleanup.json: passed=true, failed_count=0
 tool_package_family_audit_after_module_cleanup.json: passed=true, finding_count=0
+```
+
+## Macro-Move Evidence
+
+The third cleanup pass removed immediate micro-package strata from `Tools.ai`,
+`Tools.validation` and `Tools.docs`; the public command names remain dispatcher
+aliases.
+
+```text
+tool_root_inventory_after_macro_moves.json: package_count=82, root_script_entrypoint_count=0
+tool_package_family_after_macro_moves.json: passed=true, finding_count=0
+module_duplication_after_macro_moves.json: passed=true, finding_count=0
+check_python_syntax_after_macro_moves.json: passed=true, failed_count=0
+```
+
+## Final Support-Path Cleanup
+
+The fourth cleanup pass moved profile/fixture data out of top-level package
+slots and removed stale tracked NPU context artifacts.
+
+```text
+Tools/ai/runtime_profiles/* -> Tools/ai/run/profiles/*
+Tools/ai/fixtures/* -> Tools/ai/_shared/fixtures/*
+Tools/npu/context_artifacts/* removed from Git tracking and ignored
+tool_root_inventory_final_macro_cleanup.json: package_count=70, root_script_entrypoint_count=0
 ```

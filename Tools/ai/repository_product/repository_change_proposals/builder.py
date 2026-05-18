@@ -105,7 +105,7 @@ def build_proposals(
                     title="Stabilize local NPU/GPU/Ollama resource-lane readiness",
                     rationale="One or more local AI resource lanes are unavailable or not ready. Keeping this as observability improves future parallel pipeline work.",
                     target_files=[
-                        "Tools/ai/check_local_resource_lanes/cli.py",
+                        "Tools/ai/provider_mesh/local_resource_lanes_check/cli.py",
                         "Tools/workflow/_powershell/run_post_validation_ai_packet.ps1",
                         "Tools/validation/README.md",
                     ],

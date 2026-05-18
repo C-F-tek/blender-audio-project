@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-DEFAULT_PROFILE_FILE = "Tools/ai/runtime_profiles/heap_runtime_launcher_profiles.json"
+DEFAULT_PROFILE_FILE = "Tools/ai/run/profiles/heap_runtime_launcher_profiles.json"
 REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
 PROFILE_TO_CLI: dict[str, tuple[str, str]] = {
     "budget_minutes": ("--budget-minutes", "value"),

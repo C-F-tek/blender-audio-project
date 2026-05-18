@@ -44,7 +44,7 @@ final composer package
 | Startup preload -> heap report reconciliation | `Tools/ai/reconcile_heap_report_with_startup_reload.py` |
 | Heap universe / completeness / provider loop | `Tools/ai/heap_runtime/completeness_gate/cli.py` |
 | Final package assembly | `Tools/ai/heap_final_proposals/cli.py` |
-| Context pack | `Tools/ai/ai_context_pack/cli.py` |
+| Context pack | `Tools/ai/agent_context/ai_context_pack/cli.py` |
 | Tool catalog | `Tools/ai/agent_context/agnostic_tool_inventory/cli.py` |
 | Memory inventory | `Tools/ai/agent_context/memory_inventory/cli.py` |
 | Transient request context | `Tools/ai/agent_context/transient_request_context/cli.py` |

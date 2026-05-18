@@ -130,7 +130,7 @@ def main() -> int:
         and "tool_agnostic_broker" in runtime_mesh_contract_text,
         "runtime_mesh_contract_mentions_direct_reasoning": "direct_reasoning_assistance"
         in runtime_mesh_contract_text,
-        "runtime_flow_map_builder_exists": (repo / "Tools/ai/runtime_flow_map/cli.py").exists(),
+        "runtime_flow_map_builder_exists": (repo / "Tools/ai/runtime_universe/flow_map/cli.py").exists(),
         "launcher_invokes_runtime_flow_map": "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN" in launcher_text
         and "build_runtime_flow_map.py" in launcher_text
         and "runtime_flow_" in launcher_text,

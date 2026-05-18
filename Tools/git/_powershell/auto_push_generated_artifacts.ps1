@@ -31,11 +31,6 @@ param(
         "output/*_analysis_ai_context.json",
         "output/*_dual_ai_scene_plan.json",
         "output/*_ai_implementation_draft.json",
-        "Tools/npu/context_artifacts/*_manifest.json",
-        "Tools/npu/context_artifacts/*_context.md",
-        "Tools/npu/context_artifacts/*_index.md",
-        "Tools/npu/context_artifacts/*_technical_notes.md",
-        "Tools/npu/context_artifacts/*_implementation_notes.md",
         "Tools/npu/npu_preflight_report.json"
     ),
     [switch]$IncludeFullAnalysisJson,

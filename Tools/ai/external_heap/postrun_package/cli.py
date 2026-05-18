@@ -5,9 +5,9 @@ This orchestrator is outside the gate. It does not replace the existing composer
 and does not modify provider/tool-call semantics. It only runs the external
 post-run adapters in the correct order for an existing heap_context_closure_* run:
 
-1. normalize_heap_final_causality.py
-2. build_external_heap_block_pointer_manifest.py
-3. compose_external_heap_block_response.py
+1. python -m Tools.ai normalize_heap_final_causality
+2. python -m Tools.ai build_external_heap_block_pointer_manifest
+3. python -m Tools.ai compose_external_heap_block_response
 4. python -m Tools.ai build_external_heap_revision_context
 
 Packaging is degradable: a product-quality failure in one adapter must be

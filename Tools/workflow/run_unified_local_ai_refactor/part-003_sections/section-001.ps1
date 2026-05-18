@@ -39,7 +39,7 @@ if ($PrepareReviewPr) {
 foreach ($warning in $Warnings) { Write-Warning $warning }
 
 $PhaseStatus.baseline_compile = Invoke-Checked "Baseline compile validation/inventory tools" {
-    Invoke-Python @("-m", "py_compile", ".\Tools\validation\docs_hygiene\markdown_inventory\cli.py", ".\Tools\validation\build_script_inventory\cli.py", ".\Tools\validation\check_validation_report_contract\cli.py")
+    Invoke-Python @("-m", "py_compile", ".\Tools\validation\docs_hygiene\markdown_inventory\cli.py", ".\Tools\validation\docs_hygiene\build_script_inventory\cli.py", ".\Tools\validation\pipeline\check_validation_report_contract\cli.py")
 }
 
 if (Test-ModeEnabled "smoke") {

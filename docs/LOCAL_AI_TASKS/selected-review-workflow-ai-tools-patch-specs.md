@@ -66,8 +66,8 @@ Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_parallel_ai_provider_multistep.ps1
 Tools/workflow/run_post_validation_ai_packet.ps1
 Tools/ai/repository_product/github_evidence_bundle.py
-Tools/ai/ai_context_pack/cli.py
-Tools/ai/selective_execution_plan/cli.py
+Tools/ai/agent_context/ai_context_pack/cli.py
+Tools/ai/runtime_universe/selective_execution_plan/cli.py
 Tools/ai/repository_product/repository_change_proposals/cli.py
 Tools/ai/generated_patch_specs/proposal_cli.py
 Tools/ai/generated_patch_specs/review_cli.py

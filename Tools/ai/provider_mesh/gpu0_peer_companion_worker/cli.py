@@ -14,7 +14,7 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, record_lane_diagnostic
-from Tools.ai.runtime_hardware_capability.workloads import run_openvino_gpu0_tensor_test
+from Tools.ai.provider_mesh.hardware_capability.workloads import run_openvino_gpu0_tensor_test
 from Tools.validation._shared.report_utils import (
     resolve_output_path,
     write_json_report,

@@ -194,7 +194,7 @@ Do not resurrect older monolithic flows as primary entrypoints.
 Existing lightweight validation helpers should be extended with docs-link, schema, lifecycle and patchkit checks:
 
 ```text
-Tools/validation/check_python_syntax.py
+python -m Tools.validation check_python_syntax
 Tools/validation/check_package_structure.py
 Tools/validation/check_json_artifacts.py
 Tools/validation/check_docs_links.py

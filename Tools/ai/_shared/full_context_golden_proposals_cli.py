@@ -12,7 +12,7 @@ try:
         resolve_repo_path,
     )
 except ModuleNotFoundError:
-    from Tools.ai.build_full_context_golden_proposals import (
+    from Tools.ai.agent_context.full_context_golden_proposals import (
         build_payload,
         repo_relative,
         resolve_repo_path,

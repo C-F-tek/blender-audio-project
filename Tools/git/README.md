@@ -24,8 +24,7 @@ them directly from operator docs or automation.
 Script intended to be called after the local app regenerates technical data such as:
 
 - `indexAI/` project indexes;
-- `Tools/npu/context_artifacts/*.json` manifests;
-- `Tools/npu/context_artifacts/*.md` generated context files;
+- local NPU context artifacts, which are generated under ignored paths and not source-tracked;
 - optional `output/*.json`, `output/*.md`, `output/*.txt` files;
 - optional documentation updates.
 

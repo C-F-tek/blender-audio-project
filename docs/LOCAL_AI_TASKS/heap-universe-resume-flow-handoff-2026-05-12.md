@@ -260,7 +260,7 @@ $NextStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $RunDir = "C:\Users\carmi\blender\blender-audio-project\output\validation\heap_context_closure_20260512-144115"
 $RevisionContext = Join-Path $RunDir "external_heap_revision_context.json"
 
-& $RepoPy -m Tools.ai run_heap_runtime_context_closure `
+& $RepoPy -m Tools.ai heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $NextStamp `

@@ -42,20 +42,20 @@ DEFAULT_NPU_MICRO_SUPPORT_DIR = "output/ai_pipeline/npu_micro_support_parallel"
 ROUND_RE = re.compile(r"round_(\d{3})\.json$")
 
 try:
-    from Tools.ai.evidence_to_recommendation import write_recommendation_event
+    from Tools.ai.deterministic_recommendations.evidence_to_recommendation import write_recommendation_event
     from Tools.ai.patch_product.patch_plan_generator import write_patch_plan_event
     from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap
     from Tools.ai._shared.runtime_tool_guidance import deterministic_fallback_tool_requests
-    from Tools.ai.validation_step import write_validation_event
+    from Tools.ai.pipeline.validation_step import write_validation_event
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.evidence_to_recommendation import write_recommendation_event  # type: ignore
+    from Tools.ai.deterministic_recommendations.evidence_to_recommendation import write_recommendation_event  # type: ignore
     from Tools.ai.patch_product.patch_plan_generator import write_patch_plan_event  # type: ignore
     from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap  # type: ignore
     from Tools.ai._shared.runtime_tool_guidance import deterministic_fallback_tool_requests  # type: ignore
-    from Tools.ai.validation_step import write_validation_event  # type: ignore
+    from Tools.ai.pipeline.validation_step import write_validation_event  # type: ignore
 
 try:
     from Tools.ai.provider_mesh.runtime.gpu0_peer import (

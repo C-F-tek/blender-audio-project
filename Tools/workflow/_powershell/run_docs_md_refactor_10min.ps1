@@ -101,7 +101,7 @@ $requiredFiles = @(
     "docs/LOCAL_AI_TASKS/docs-md-obsolete-pruning-next-step.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/LOCAL_MACHINE_VALIDATION.md",
     "Tools/validation/docs_hygiene/markdown_inventory/cli.py",
-    "Tools/validation/build_script_inventory/cli.py",
+    "Tools/validation/docs_hygiene/build_script_inventory/cli.py",
     "Tools/workflow/run_local_ai_markdown_task.ps1",
     "Tools/workflow/run_local_ai_task_via_pipeline.ps1"
 )
@@ -136,7 +136,7 @@ Write-Host "[INFO] TaskBranch: $TaskBranch"
 
 & $WorkflowPythonExe -m py_compile `
     .\Tools\validation\docs_hygiene\markdown_inventory\cli.py `
-    .\Tools\validation\build_script_inventory\cli.py
+    .\Tools\validation\docs_hygiene\build_script_inventory\cli.py
 if ($LASTEXITCODE -ne 0) {
     throw "inventory py_compile failed"
 }

@@ -50,9 +50,9 @@ def build_packet(
         "docs/LOCAL_AI_RUN_BOOTSTRAP.md",
         "docs/LOCAL_AI_WORKFLOW.md",
         "docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md",
-        "Tools/ai/select_semantic_code_chunks/cli.py",
-        "Tools/validation/check_selected_semantic_chunks/cli.py",
-        "Tools/validation/check_local_ai_adapter_manifest/cli.py",
+        "Tools/ai/agent_context/semantic_evidence_chunks/select_code_chunks/cli.py",
+        "Tools/validation/agent_context/check_selected_semantic_chunks/cli.py",
+        "Tools/validation/pipeline/check_local_ai_adapter_manifest/cli.py",
         "Tools/workflow/_powershell/run_local_ai_task_via_pipeline.ps1",
     ]
     for path in fallback_files:

@@ -152,7 +152,7 @@ For structural Markdown hygiene, use the repository tool instead of manual split
 python -m Tools.docs refactor_markdown_splits --repo-root . --migrate-legacy-splits --split-monolithic
 ~~~
 
-Do not manually split, rewrite or delete Markdown trees when `Tools/docs/refactor_markdown_splits.py`, `Tools/docs/build_repo_hygiene_plan.py`, PatchKit, or validators can express the change safely.
+Do not manually split, rewrite or delete Markdown trees when `python -m Tools.docs refactor_markdown_splits`, `python -m Tools.docs build_repo_hygiene_plan`, PatchKit, or validators can express the change safely.
 
 Markdown cleanup rules:
 

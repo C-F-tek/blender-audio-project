@@ -11,7 +11,7 @@ Vincolo operativo confermato: non modificare il formato o il contenuto dell'outp
 - `external_heap_revision_context.json/md`
 - package Documents del vecchio composer
 
-Le patch non toccano `compose_external_heap_block_response.py`, non cambiano il long response e non modificano il gate.
+Le patch non toccano `python -m Tools.ai compose_external_heap_block_response`, non cambiano il long response e non modificano il gate.
 
 ## Bug 1 — selezione run post-run troppo permissiva
 
@@ -41,7 +41,7 @@ Questa fixture serve solo per verificare l'injection del revision context nel co
 heap_final_proposal_composer.json
 ```
 
-Rischio: `run_external_heap_postrun_package.py`, senza `--run-dir`, poteva selezionare la fixture smoke come latest run e fallire per composer mancante.
+Rischio: `python -m Tools.ai external_heap_postrun_package`, senza `--run-dir`, poteva selezionare la fixture smoke come latest run e fallire per composer mancante.
 
 ### Fix applicato
 
@@ -151,7 +151,7 @@ $env:PYTHONPATH = (Resolve-Path .).Path
 Dopo una run reale heap:
 
 ```powershell
-& $RepoPy -m Tools.ai run_external_heap_postrun_package `
+& $RepoPy -m Tools.ai external_heap_postrun_package `
   --repo-root . `
   --include-rejected-history `
   --include-peer-blocks

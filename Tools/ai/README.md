@@ -295,7 +295,7 @@ Existing oversized files -> technical debt to refactor progressively, not blind 
 Validator:
 
 ```text
-Tools/validation/check_file_line_limits.py
+python -m Tools.validation check_file_line_limits
 ```
 
 ## Related docs
@@ -337,12 +337,12 @@ Relevant owners:
 |---|---|
 | Canonical non-GUI run | `python -m Tools.ai run` |
 | GUI view | `python -m Tools.ai operator_product_gui` |
-| Strict startup launcher | internal `run_heap_runtime_context_closure` tool |
-| Context/memory preload | `prepare_heap_context_memory_reload.py` |
+| Strict startup launcher | internal `heap_context_closure` tool |
+| Context/memory preload | `python -m Tools.ai heap_context_memory_reload` |
 | Required docs initialization | `ensure_ai_context_required_files.py` |
 | Startup-to-heap reconciliation | `reconcile_heap_report_with_startup_reload.py` |
 | Heap universe / provider loop | `python -m Tools.ai run_heap_runtime_completeness_gate` |
-| Final assembly | `compose_heap_final_proposals.py` |
+| Final assembly | `python -m Tools.ai heap_final_proposals` |
 | SQLite operational memory | `python -m Tools.ai agent_runtime_sqlite_memory` |
 | Tool catalog | `python -m Tools.ai build_agent_agnostic_tool_inventory` |
 | Runtime broker | `agent_runtime_tool_broker.py` |

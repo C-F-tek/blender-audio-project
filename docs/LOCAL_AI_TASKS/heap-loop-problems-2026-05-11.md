@@ -101,7 +101,7 @@ Se il test fallisce, patchare `python -m Tools.ai run_heap_runtime_completeness_
 
 ### Evidenza code-driven
 
-`Tools/ai/ai_context_pack/cli.py` imposta `entry["truncated"] = True` quando un file supera il budget, ma la truncation viene registrata come warning. Il pack fallisce (`passed=false`, return code `2`) quando un required file e' mancante, non incluso, o viola policy.
+`Tools/ai/agent_context/ai_context_pack/cli.py` imposta `entry["truncated"] = True` quando un file supera il budget, ma la truncation viene registrata come warning. Il pack fallisce (`passed=false`, return code `2`) quando un required file e' mancante, non incluso, o viola policy.
 
 Evidenza storica gia' versionata:
 

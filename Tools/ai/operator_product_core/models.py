@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-PROFILE_FILE = "Tools/ai/runtime_profiles/heap_runtime_launcher_profiles.json"
+PROFILE_FILE = "Tools/ai/run/profiles/heap_runtime_launcher_profiles.json"
 DEFAULT_PROFILE = "balanced_external_heap"
 
 CLI_VALUE_KEYS = {

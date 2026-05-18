@@ -201,7 +201,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument(
-        "--report", default="Tools/ai/fixtures/agent_review_code_patch_plan_fixture.json"
+        "--report", default="Tools/ai/_shared/fixtures/agent_review_code_patch_plan_fixture.json"
     )
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()

@@ -128,7 +128,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     steps_config = [
         ("real_product_profile", "Tools/validation/real_product/profile_smoke/cli.py"),
-        ("core_runtime_guard_suite", "Tools/validation/run_core_runtime_guard_suite/cli.py"),
+        ("core_runtime_guard_suite", "Tools/validation/runtime_universe/run_core_runtime_guard_suite/cli.py"),
         (
             "real_product_single_entry_exit",
             "Tools/validation/real_product/single_entry_exit_smoke/cli.py",
@@ -161,7 +161,7 @@ def main() -> int:
         ),
         (
             "runtime_evidence_correlation",
-            "Tools/validation/run_runtime_evidence_correlation_smoke/cli.py",
+            "Tools/validation/runtime_universe/run_runtime_evidence_correlation_smoke/cli.py",
         ),
         (
             "runtime_evidence_correlation_launcher_wiring",

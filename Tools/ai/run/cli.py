@@ -32,13 +32,13 @@ DEFAULT_PROFILE = "deep_external_heap"
 DEFAULT_BRANCH = "codex/code-product-intake"
 
 PREFLIGHT_FILES = [
-    "Tools/ai/operator_product_view/cli.py",
+    "Tools/ai/operator_product_core/view/cli.py",
     "Tools/ai/operator_product_core/controller.py",
     "Tools/ai/operator_product_core/cli.py",
     "Tools/ai/operator_product_core/runner.py",
     "Tools/ai/operator_product_core/profiles.py",
     "Tools/ai/heap_context_closure/cli.py",
-    "Tools/ai/assemble_heap_final_readable_product/cli.py",
+    "Tools/ai/code_product/final_readable_product/cli.py",
     "Tools/ai/code_product/artifact_intake/cli.py",
     "Tools/ai/code_product/artifact_intake/analyzer.py",
 ]

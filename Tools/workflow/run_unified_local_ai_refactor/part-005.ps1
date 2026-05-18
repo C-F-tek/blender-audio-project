@@ -33,7 +33,7 @@ if ($BuildRuntimeEvidenceCorrelation) {
     }
 
     $RuntimeEvidenceCorrelationArgs = @(
-        "Tools/validation/check_runtime_evidence_correlation/cli.py",
+        "Tools/validation/runtime_universe/check_runtime_evidence_correlation/cli.py",
         "--repo-root", ".",
         "--stamp", $DataStamp,
         "--output", $RuntimeEvidenceCorrelationJson,
@@ -93,7 +93,7 @@ if ($BuildRuntimeEvidenceCorrelation -or $PrepareReviewPr) {
     )
 
     $RuntimeFlowArgs = @(
-        "Tools/ai/runtime_flow_map/cli.py",
+        "Tools/ai/runtime_universe/flow_map/cli.py",
         "--repo-root", ".",
         "--stamp", $DataStamp,
         "--entrypoint", "python -m Tools.workflow run_unified_local_ai_refactor",

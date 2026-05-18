@@ -131,9 +131,7 @@ patch_specs/inbox/
 patch_specs/applied/
 Scripting/v61b/hotpatch/
 Tools/npu/npu_code_chunks/
-Tools/npu/context_artifacts/npu_code_context.md
-Tools/npu/context_artifacts/npu_code_index.md
-Tools/npu/context_artifacts/npu_code_manifest.json
+Tools/npu/context_artifacts/        # generated, ignored local NPU context
 ```
 
 Explicit generated artifact destination validation:
@@ -238,13 +236,12 @@ python -m Tools.npu build_project_ai_index
 python -m Tools.npu build_npu_code_context
 ```
 
-If only generated index files changed after this block, commit them as:
+If only generated index files changed after this block, commit tracked project
+indexes only. NPU `context_artifacts/` files are generated local context and
+ignored by Git.
 
 ```powershell
-git add Tools/npu/context_artifacts/npu_code_context.md `
-        Tools/npu/context_artifacts/npu_code_index.md `
-        Tools/npu/context_artifacts/npu_code_manifest.json `
-        indexAI/project_code_index.md `
+git add indexAI/project_code_index.md `
         indexAI/project_code_manifest.json
 
 git commit -m "chore: regenerate ai and npu indexes"

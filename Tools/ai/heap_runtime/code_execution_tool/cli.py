@@ -25,11 +25,11 @@ try:
         validate_target,
         validate_validation_script,
     )
-    from Tools.ai.synthesize_patch_candidates import (
+    from Tools.ai.patch_product.candidate_synthesis import (
         build_report as build_patch_candidate_report,
         render_markdown as render_patch_candidate_markdown,
     )
-    from Tools.ai.runtime_file_refs import (
+    from Tools.ai.runtime_tool.file_refs import (
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
@@ -54,11 +54,11 @@ except ImportError:
         validate_target,
         validate_validation_script,
     )
-    from Tools.ai.synthesize_patch_candidates import (  # type: ignore
+    from Tools.ai.patch_product.candidate_synthesis import (  # type: ignore
         build_report as build_patch_candidate_report,
         render_markdown as render_patch_candidate_markdown,
     )
-    from Tools.ai.runtime_file_refs import (  # type: ignore
+    from Tools.ai.runtime_tool.file_refs import (  # type: ignore
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,

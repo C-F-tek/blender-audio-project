@@ -33,7 +33,7 @@ def run_external_postrun_package(
         project_python,
         "-m",
         "Tools.ai",
-        "run_external_heap_postrun_package",
+        "external_heap_postrun_package",
         "--repo-root",
         ".",
         "--python-exe",

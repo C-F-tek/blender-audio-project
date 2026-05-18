@@ -180,7 +180,7 @@ Reviewed patch specs are produced from a draft plus an explicit replacement plan
 Promote the fixture draft with dry-run:
 
 ```powershell
-python -m Tools.ai generated_patch_specs_promote_draft --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
+python -m Tools.ai generated_patch_specs_promote_draft --repo-root . --draft .\Tools\ai\_shared\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\_shared\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
 ```
 
 Validate the reviewed spec:

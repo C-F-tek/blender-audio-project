@@ -14,9 +14,9 @@ Il post-run vero e' `Tools/ai/external_heap/postrun_package.py`.
 
 ```text
 1. definire richiesta operativa
-2. lanciare direttamente run_heap_runtime_context_closure.py
+2. lanciare direttamente python -m Tools.ai heap_context_closure
 3. attendere fine run
-4. lanciare run_external_heap_postrun_package.py
+4. lanciare python -m Tools.ai external_heap_postrun_package
 5. leggere launcher/composer/provider/pointer/revision/long-response
 ```
 
@@ -66,7 +66,7 @@ Regole:
 - se il prodotto non e' accettabile, blocca con reason concreta
 "@
 
-& $RepoPy -m Tools.ai run_heap_runtime_context_closure `
+& $RepoPy -m Tools.ai heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --request $DebugRequest `
@@ -88,7 +88,7 @@ Regole:
 Eseguire solo dopo la fine della run:
 
 ```powershell
-& $RepoPy -m Tools.ai run_external_heap_postrun_package `
+& $RepoPy -m Tools.ai external_heap_postrun_package `
   --repo-root . `
   --include-rejected-history `
   --include-peer-blocks
@@ -244,4 +244,4 @@ Interpretazione iniziale:
 
 `Tools/ai/heap_runtime/launcher_command/cli.py` resta utile per produrre una stringa comando reviewabile e per ispezionare profili/revision context, ma non e' il comando da usare come run effettiva.
 
-Per run reali preferire il comando diretto su `run_heap_runtime_context_closure.py` finche' non verra' introdotto un launcher esecutivo separato.
+Per run reali preferire il comando diretto su `python -m Tools.ai heap_context_closure` finche' non verra' introdotto un launcher esecutivo separato.

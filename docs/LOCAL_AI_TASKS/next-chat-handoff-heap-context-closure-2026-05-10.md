@@ -253,7 +253,7 @@ ha prodotto:
 Il fallimento avviene nella fase startup reload, precisamente nel tool:
 
 ```text
-Tools/ai/ai_context_pack/cli.py
+Tools/ai/agent_context/ai_context_pack/cli.py
 ```
 
 Command tail indicava returncode `2` ma stdout JSON:
@@ -299,8 +299,8 @@ Tools/ai/agent_context/memory_inventory/cli.py
 python -m Tools.ai agent_runtime_sqlite_memory
 Tools/ai/agent_context/transient_request_context/cli.py
 Tools/ai/select_semantic_code_chunks.py
-Tools/ai/ai_context_pack/cli.py
-Tools/ai/semantic_evidence_chunks/cli.py
+Tools/ai/agent_context/ai_context_pack/cli.py
+Tools/ai/agent_context/semantic_evidence_chunks/cli.py
 Tools/ai/run_gpu_planner_json_contract_smoke.py
 python -m Tools.ai agent_runtime_debug_lab
 ```
@@ -358,7 +358,7 @@ Target probabili:
 ```text
 Tools/ai/heap_context_memory_reload/cli.py
 Tools/ai/heap_context_closure/cli.py
-Tools/ai/ai_context_pack/cli.py   # solo se il failure è una policy troppo rigida o poco spiegata
+Tools/ai/agent_context/ai_context_pack/cli.py   # solo se il failure è una policy troppo rigida o poco spiegata
 Tools/ai/heap_final_proposals/cli.py
 ```
 
@@ -401,7 +401,7 @@ Dopo pull e py_compile:
 ```powershell
 $ProjectPython = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
-& $ProjectPython -m Tools.ai run_heap_runtime_context_closure `
+& $ProjectPython -m Tools.ai heap_context_closure `
   --repo-root . `
   --python-exe $ProjectPython `
   --budget-minutes 10 `

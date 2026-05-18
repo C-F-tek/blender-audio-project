@@ -112,9 +112,9 @@ Reason:
 
 Examples:
 
-    Tools/validation/check_python_syntax.py
+    python -m Tools.validation check_python_syntax
     Tools/validation/build_python_line_count_csv.py
-    Tools/validation/check_validation_report_contract.py
+    python -m Tools.validation check_validation_report_contract
     Tools/validation/docs_hygiene/markdown_inventory/cli.py
     Tools/validation/check_docs_links.py
 

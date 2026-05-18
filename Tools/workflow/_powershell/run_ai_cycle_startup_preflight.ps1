@@ -187,7 +187,7 @@ if (-not $SkipCodeInterpreter) {
 }
 
 Invoke-RepoPython -Label "Python syntax validation" -ArgsList @(
-    "-m", "Tools.validation.check_python_syntax",
+    "-m", "Tools.validation.docs_hygiene.check_python_syntax",
     "--repo-root", ".",
     "--output", $PythonSyntaxJson
 )

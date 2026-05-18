@@ -224,12 +224,12 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         ),
         source_entry(
             repo_root,
-            "Tools/ai/semantic_evidence_chunks/cli.py",
+            "Tools/ai/agent_context/semantic_evidence_chunks/cli.py",
             "semantic_cloud_handoff_chunker",
         ),
         source_entry(
             repo_root,
-            "Tools/ai/shared_toolbox_bundle/cli.py",
+            "Tools/ai/agent_context/shared_toolbox_bundle/cli.py",
             "shared_toolbox_bundle_builder",
         ),
     ]

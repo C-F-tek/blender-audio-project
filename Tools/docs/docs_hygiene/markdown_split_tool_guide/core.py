@@ -18,7 +18,7 @@ Indice operativo dei tool utili per coding assistito da IA, refactor Markdown, v
 |---|---|
 | `python -m Tools.docs refactor_markdown_splits` | Migra split legacy `nomefile/part-xxx.md` in `nomefile.md/part-xxx.md`, divide Markdown monolitici e pruna snapshot obsoleti allowlist-only. |
 | `Tools/validation/docs_hygiene/markdown_line_limits/cli.py` | Valida il budget righe Markdown. Usare `--max-lines 400` per policy preferita e `500` come soglia hard. |
-| `Tools/validation/check_docs_links/cli.py` | Controlla link Markdown dopo split, rename o pruning. |
+| `Tools/validation/docs_hygiene/check_docs_links/cli.py` | Controlla link Markdown dopo split, rename o pruning. |
 
 Comando tipico:
 

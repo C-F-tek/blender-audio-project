@@ -77,7 +77,7 @@ def build_context_pack(config: GatewayConfig, profile: str) -> dict[str, Any]:
     return run_repo_tool(
         config,
         [
-            "-m", "Tools.ai.ai_context_pack.cli",
+            "-m", "Tools.ai.agent_context.ai_context_pack.cli",
             "--profile",
             profile or "core_ai_backend",
             "--basename",

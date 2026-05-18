@@ -61,7 +61,7 @@ Tools/ai/agent_context/state_packet/cli.py
 Tools/ai/review_agent_memory.py
 Tools/ai/agent_memory/policy.py
 Tools/npu/provider_mesh/semantic_code_chunks.py
-Tools/ai/ai_context_pack/cli.py
+Tools/ai/agent_context/ai_context_pack/cli.py
 Tools/workflow/run_local_ai_markdown_task.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_parallel_ai_provider_multistep.ps1

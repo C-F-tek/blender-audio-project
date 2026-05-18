@@ -164,13 +164,15 @@ def _semantic_score(repo_root: Path, path: Path, keywords: list[str]) -> int:
         for token in ("heap", "context", "memory", "provider", "gpu", "npu", "composer")
     ):
         score += 8
-    if path.name in {
-        "run_heap_runtime_context_closure.py",
-        "prepare_heap_context_memory_reload.py",
-        "compose_heap_final_proposals.py",
-        "python -m Tools.ai run_heap_runtime_completeness_gate",
-        "build_ai_context_pack.py",
-        "sqlite_cli.py",
-    }:
+    normalized_rel = rel_lower.replace("\\", "/")
+    high_value_paths = {
+        "tools/ai/heap_context_closure/cli.py",
+        "tools/ai/heap_context_memory_reload/cli.py",
+        "tools/ai/heap_final_proposals/cli.py",
+        "tools/ai/heap_runtime/completeness_gate/cli.py",
+        "tools/ai/agent_context/ai_context_pack/cli.py",
+        "tools/ai/agent_memory/sqlite_cli.py",
+    }
+    if normalized_rel in high_value_paths:
         score += 20
     return score

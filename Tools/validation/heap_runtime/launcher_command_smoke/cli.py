@@ -229,11 +229,11 @@ def main() -> int:
         },
         {
             "name": "main_command_targets_heap_closure",
-            "passed": "-m Tools.ai run_heap_runtime_context_closure" in generated_command,
+            "passed": "-m Tools.ai heap_context_closure" in generated_command,
         },
         {
             "name": "postrun_command_targets_orchestrator",
-            "passed": "-m Tools.ai run_external_heap_postrun_package"
+            "passed": "-m Tools.ai external_heap_postrun_package"
             in str(payload.get("postrun_package_command") or ""),
         },
     ]

@@ -105,9 +105,9 @@ $Required = @(
     "docs/README.md",
     "docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md",
     "Tools/validation/docs_hygiene/markdown_inventory/cli.py",
-    "Tools/validation/build_script_inventory/cli.py",
-    "Tools/validation/check_docs_links/cli.py",
-    "Tools/validation/check_validation_report_contract/cli.py",
+    "Tools/validation/docs_hygiene/build_script_inventory/cli.py",
+    "Tools/validation/docs_hygiene/check_docs_links/cli.py",
+    "Tools/validation/pipeline/check_validation_report_contract/cli.py",
     "Tools/workflow/_powershell/run_local_ai_task_via_pipeline.ps1",
     "Tools/workflow/_powershell/run_post_validation_ai_packet.ps1",
     $TaskFile
@@ -118,7 +118,7 @@ $Warnings = @()
 Add-OptionalModeWarning "validation" ".\Tools\workflow\_powershell\run_local_validation_after_refactor.ps1" ([ref]$Warnings)
 Add-OptionalModeWarning "smoke" ".\Tools\workflow\workflow_run\startup_check_core\cli.py" ([ref]$Warnings)
 Add-OptionalModeWarning "chunks" ".\Tools\npu\provider_mesh\semantic_code_chunks\cli.py" ([ref]$Warnings)
-Add-OptionalModeWarning "context_pack" ".\Tools\ai\ai_context_pack\cli.py" ([ref]$Warnings)
+Add-OptionalModeWarning "context_pack" ".\Tools\ai\agent_context\ai_context_pack\cli.py" ([ref]$Warnings)
 Add-OptionalModeWarning "agent_state" ".\Tools\ai\agent_context\state_packet\cli.py" ([ref]$Warnings)
 
 if ($ApplyReset -and $ConfirmResetText -ne "DELETE LOCAL AI ARTIFACTS") {

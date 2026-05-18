@@ -23,12 +23,12 @@ from Tools.ai._shared import heap_source_anchors as source_anchors
 from Tools.ai.heap_gate.provider_tool_scheduler import provider_patch_synthesis_plan
 from Tools.ai.heap_gate.target_planner import RuntimeTargetPlanner, request_focus_text, tokenize
 from Tools.ai.heap_gate.terminal_invariants import evaluate_terminal_invariants
-from Tools.ai.heap_provider_budget_governor import (
+from Tools.ai.heap_provider.budget_governor import (
     ProviderBudgetConfig,
     build_heap_provider_budget_governor,
     clamp_loop_iterations,
 )
-from Tools.ai.heap_provider_invocation_contract import build_heap_provider_invocation_contract
+from Tools.ai.heap_provider.invocation_contract import build_heap_provider_invocation_contract
 from Tools.ai.provider_mesh.runtime.python_runtime import command_env, resolve_child_python
 from Tools.ai.provider_runtime_blackboard import (
     ProviderRuntimeHeap,
@@ -36,7 +36,7 @@ from Tools.ai.provider_runtime_blackboard import (
     safe_dict,
     safe_int,
 )
-from Tools.ai.runtime_file_refs import RuntimeFileRefResolver
+from Tools.ai.runtime_tool.file_refs import RuntimeFileRefResolver
 from Tools.ai.runtime_universe import RepoRuntimeUniverseBuilder
 from Tools.ai.runtime_universe.report import render_universe_markdown
 from Tools.ai._shared.universo_utils import (

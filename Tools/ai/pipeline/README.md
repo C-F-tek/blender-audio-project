@@ -92,7 +92,7 @@ Existing oversized files -> technical debt to refactor progressively, not blind 
 Validator:
 
 ```text
-Tools/validation/check_file_line_limits.py
+python -m Tools.validation check_file_line_limits
 ```
 
 ## Safe extension policy

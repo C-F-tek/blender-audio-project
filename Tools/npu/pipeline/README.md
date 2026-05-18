@@ -135,7 +135,7 @@ name.md/part-001.md
 Validator:
 
 ```text
-Tools/validation/check_file_line_limits.py
+python -m Tools.validation check_file_line_limits
 ```
 
 ## Validation ownership

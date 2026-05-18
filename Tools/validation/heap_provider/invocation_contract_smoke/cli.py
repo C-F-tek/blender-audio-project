@@ -9,11 +9,11 @@ import sys
 from pathlib import Path
 
 try:
-    from Tools.ai.heap_provider_budget_governor import (
+    from Tools.ai.heap_provider.budget_governor import (
         ProviderBudgetConfig,
         build_heap_provider_budget_governor,
     )
-    from Tools.ai.heap_provider_invocation_contract import build_heap_provider_invocation_contract
+    from Tools.ai.heap_provider.invocation_contract import build_heap_provider_invocation_contract
     from Tools.validation._shared.report_utils import (
         resolve_output_path,
         write_json_report,
@@ -23,11 +23,11 @@ except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.heap_provider_budget_governor import (  # type: ignore
+    from Tools.ai.heap_provider.budget_governor import (  # type: ignore
         ProviderBudgetConfig,
         build_heap_provider_budget_governor,
     )
-    from Tools.ai.heap_provider_invocation_contract import (
+    from Tools.ai.heap_provider.invocation_contract import (
         build_heap_provider_invocation_contract,  # type: ignore
     )
     from Tools.validation._shared.report_utils import (  # type: ignore

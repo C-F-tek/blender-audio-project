@@ -28,7 +28,7 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 | Concrete ops into patch specs | `Tools/ai/generated_patch_specs/proposal_cli.py` |
 | Runtime evidence proposal smoke | `Tools/validation/repository_product/repository_change_proposals_runtime_evidence_smoke/cli.py` |
 | Empty product smoke | `Tools/validation/generated_patch_specs/empty_product_smoke/cli.py` |
-| Markdown line-budget policy | `Tools/validation/check_file_line_limits.py` |
+| Markdown line-budget policy | `python -m Tools.validation check_file_line_limits` |
 
 ## Dottrina sintetica corrente
 

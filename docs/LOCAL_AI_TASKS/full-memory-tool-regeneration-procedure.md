@@ -70,8 +70,8 @@ Tools/ai/agent_context/transient_request_context/cli.py
 Tools/ai/code_product/interpreter_report/cli.py
 Tools/ai/repository_product/github_evidence_bundle.py
 Tools/validation/build_python_line_count_csv.py
-Tools/validation/check_python_syntax.py
-Tools/validation/check_validation_report_contract.py
+python -m Tools.validation check_python_syntax
+python -m Tools.validation check_validation_report_contract
 Tools/validation/runtime_tool/agent_runtime_tool_broker_smoke/cli.py
 Tools/validation/run_agent_memory_routing_policy_smoke.py
 ```

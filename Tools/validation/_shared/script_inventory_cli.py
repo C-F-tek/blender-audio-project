@@ -13,7 +13,7 @@ try:
         write_json,
     )
 except ModuleNotFoundError:
-    from Tools.validation.build_script_inventory import (
+    from Tools.validation.docs_hygiene.build_script_inventory import (
         DEFAULT_CSV_OUTPUT,
         DEFAULT_OUTPUT,
         build_report,

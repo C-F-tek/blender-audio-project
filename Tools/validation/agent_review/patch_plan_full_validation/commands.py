@@ -42,7 +42,7 @@ def build_commands(
             "docs_links",
             [
                 sys.executable,
-                "Tools/validation/check_docs_links/cli.py",
+                "Tools/validation/docs_hygiene/check_docs_links/cli.py",
                 "--repo-root",
                 ".",
                 "--output",
@@ -54,7 +54,7 @@ def build_commands(
             "python_syntax",
             [
                 sys.executable,
-                "Tools/validation/check_python_syntax/cli.py",
+                "Tools/validation/docs_hygiene/check_python_syntax/cli.py",
                 "--repo-root",
                 ".",
                 "--output",
@@ -66,7 +66,7 @@ def build_commands(
             "validation_report_contract",
             [
                 sys.executable,
-                "Tools/validation/check_validation_report_contract/cli.py",
+                "Tools/validation/pipeline/check_validation_report_contract/cli.py",
                 "--repo-root",
                 ".",
                 "--output",

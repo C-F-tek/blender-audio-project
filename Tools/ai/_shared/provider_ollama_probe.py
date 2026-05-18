@@ -32,7 +32,7 @@ def run_ollama_probe(
         list_models,
         list_models_from_disk,
     )
-    from Tools.ai.runtime_file_refs.classifier import (  # noqa: PLC0415
+    from Tools.ai.runtime_tool.file_refs.classifier import (  # noqa: PLC0415
         extract_target_refs,
         extract_validation_refs,
     )

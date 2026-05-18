@@ -99,7 +99,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and check_token(wrapper_text, "-NpuMicroStartMode")
         and check_token(wrapper_text, "-RunNpuProbe")
         and check_token(wrapper_text, "-RunNpuDecodeSmoke"),
-        "runtime_flow_map_evidence": (repo_root / "Tools/ai/runtime_flow_map/cli.py").exists()
+        "runtime_flow_map_evidence": (repo_root / "Tools/ai/runtime_universe/flow_map/cli.py").exists()
         and check_token(launcher_text, "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN")
         and check_token(launcher_text, "build_runtime_flow_map.py")
         and check_token(launcher_text, "runtime_flow_"),

@@ -70,7 +70,7 @@ Il nuovo layer opera intorno al gate, non dentro il gate. Eccezione tecnica amme
 
 ## Profili launcher attuali
 
-Il file `Tools/ai/heap_runtime_launcher_profiles.json` espone solo questi profili:
+Il file `Tools/ai/run/profiles/heap_runtime_launcher_profiles.json` espone solo questi profili:
 
 - `fast_external_heap`
 - `balanced_external_heap`
@@ -82,7 +82,7 @@ Il file `Tools/ai/heap_runtime_launcher_profiles.json` espone solo questi profil
 
 ## File code-driven coinvolti
 
-### `Tools/ai/heap_runtime_launcher_profiles.json`
+### `Tools/ai/run/profiles/heap_runtime_launcher_profiles.json`
 
 Schema corrente: `schema_version = 3`.
 
@@ -154,14 +154,14 @@ Questo tool non esegue il runtime heap. Genera comandi PowerShell reviewabili.
 Funzioni correnti:
 
 - legge `heap_runtime_launcher_profiles.json`;
-- materializza CLI args supportati da `run_heap_runtime_context_closure.py`;
+- materializza CLI args supportati da `python -m Tools.ai heap_context_closure`;
 - preserva metadati esterni non ancora CLI-bound;
 - cerca il latest `output/validation/heap_context_closure_*/external_heap_revision_context.json` quando il profilo usa `revision_context_mode = auto_latest`;
 - inietta un riassunto bounded del revision context direttamente dentro `--request`;
 - espone nel report JSON `revision_context_requires_concrete_rewrite`, `revision_context_priority_next_action` e `revision_context_candidate_applicability_summary`;
 - genera il comando run principale;
 - genera comandi debug step-by-step per block pointer manifest e revision context;
-- genera `postrun_package_command` per `run_external_heap_postrun_package.py`;
+- genera `postrun_package_command` per `python -m Tools.ai external_heap_postrun_package`;
 - puo' stampare il comando post-run con `--include-postrun-package-command`.
 
 Nota architetturale: il feed del revision context avviene nel testo `--request`, non tramite modifica del gate.
@@ -241,7 +241,7 @@ candidate_applicability_summary.symbol_propagation_skipped_task_count = 3
 candidate_applicability_summary.flag_counts = bare_pass=3, comment_only_function_stub=3, unresolved_angle_bracket_token=3
 ```
 
-### `Tools/ai/compose_external_heap_block_response.py`
+### `python -m Tools.ai compose_external_heap_block_response`
 
 Produce `external_heap_primary_long_response.md/json`.
 
@@ -258,7 +258,7 @@ Comportamento:
 - copia MD/JSON nella cartella Documents del composer quando possibile;
 - aggiorna `DOWNLOADS.txt` del composer.
 
-### `Tools/ai/normalize_heap_final_causality.py`
+### `python -m Tools.ai normalize_heap_final_causality`
 
 Separa due concetti che prima potevano essere ambigui:
 
@@ -280,9 +280,9 @@ Orchestratore esterno post-run.
 
 Non sostituisce il vecchio composer e non modifica il gate. Automatizza la sequenza esterna per una run `heap_context_closure_*` esistente:
 
-1. `normalize_heap_final_causality.py`
-2. `build_external_heap_block_pointer_manifest.py`
-3. `compose_external_heap_block_response.py`
+1. `python -m Tools.ai normalize_heap_final_causality`
+2. `python -m Tools.ai build_external_heap_block_pointer_manifest`
+3. `python -m Tools.ai compose_external_heap_block_response`
 4. `python -m Tools.ai build_external_heap_revision_context`
 
 Output principale:
@@ -316,8 +316,8 @@ Valida:
 - esposizione di `requires_concrete_rewrite` e `priority_next_action` nel report;
 - injection della priorita' rewrite nel request;
 - injection di `symbol_propagation_skipped` e `candidate_not_concrete_enough` nel request;
-- target corretto per `run_heap_runtime_context_closure.py`;
-- target corretto per `run_external_heap_postrun_package.py`.
+- target corretto per `python -m Tools.ai heap_context_closure`;
+- target corretto per `python -m Tools.ai external_heap_postrun_package`.
 
 Lo smoke crea una fixture sotto `output/validation/heap_context_closure_smoke_revision_context/external_heap_revision_context.json`. Questa e' un output artifact, non una source write. Lo smoke marca `source_writes_performed = false` e usa `output_artifact_writes_performed` per indicare la fixture.
 
@@ -345,14 +345,14 @@ candidate_concrete_enough = false
 
 ### Cold run manuale reale
 
-Per testare l'universo completo non basta stampare il command builder. Serve eseguire direttamente `run_heap_runtime_context_closure.py` o copiare/eseguire il comando prodotto dal builder.
+Per testare l'universo completo non basta stampare il command builder. Serve eseguire direttamente `python -m Tools.ai heap_context_closure` o copiare/eseguire il comando prodotto dal builder.
 
 Esempio cold run:
 
 ```powershell
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
-& $RepoPy -m Tools.ai run_heap_runtime_context_closure `
+& $RepoPy -m Tools.ai heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $Stamp `
@@ -380,7 +380,7 @@ $NextStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $RunDir = "C:\Users\carmi\blender\blender-audio-project\output\validation\heap_context_closure_20260512-144115"
 $RevisionContext = Join-Path $RunDir "external_heap_revision_context.json"
 
-& $RepoPy -m Tools.ai run_heap_runtime_context_closure `
+& $RepoPy -m Tools.ai heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $NextStamp `
@@ -454,7 +454,7 @@ Target potenziali:
 
 ### 3. Post-run package non e' ancora invocato automaticamente dal launcher core
 
-La sequenza post-run e' ora automatizzabile con `run_external_heap_postrun_package.py` e il command builder genera `postrun_package_command`, ma `run_heap_runtime_context_closure.py` non lo invoca automaticamente.
+La sequenza post-run e' ora automatizzabile con `python -m Tools.ai external_heap_postrun_package` e il command builder genera `postrun_package_command`, ma `python -m Tools.ai heap_context_closure` non lo invoca automaticamente.
 
 Possibile patch futura:
 
@@ -482,9 +482,9 @@ $env:PYTHONPATH = (Resolve-Path .).Path
 & $RepoPy -m py_compile `
   .\Tools\ai\provider_runtime_blackboard\cli.py `
   .\Tools\ai\heap_runtime\launcher_command\cli.py `
-  .\Tools\ai\normalize_heap_final_causality.py `
+  .\Tools\ai\python -m Tools.ai normalize_heap_final_causality `
   .\Tools\ai\external_heap\block_pointer_manifest.py `
-  .\Tools\ai\compose_external_heap_block_response.py `
+  .\Tools\ai\python -m Tools.ai compose_external_heap_block_response `
   -m Tools.ai build_external_heap_revision_context `
   .\Tools\ai\external_heap\postrun_package.py `
   .\Tools\validation\heap_runtime\launcher_command_smoke\cli.py `

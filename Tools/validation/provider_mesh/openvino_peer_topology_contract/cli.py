@@ -49,13 +49,13 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
-    workloads = read_text(repo_root / "Tools/ai/runtime_hardware_capability/workloads.py")
+    workloads = read_text(repo_root / "Tools/ai/provider_mesh/hardware_capability/workloads.py")
     gpu0_peer = read_text(repo_root / "Tools/ai/provider_mesh/runtime/gpu0_peer.py")
     npu_micro = read_text(repo_root / "Tools/ai/provider_mesh/runtime/npu_micro.py")
     runtime_heap = read_text(repo_root / "Tools/ai/provider_mesh/runtime/runtime_heap.py")
     shared_heap = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/cli.py")
-    budget_governor = read_text(repo_root / "Tools/ai/heap_provider_budget_governor/cli.py")
-    invocation_contract = read_text(repo_root / "Tools/ai/heap_provider_invocation_contract/cli.py")
+    budget_governor = read_text(repo_root / "Tools/ai/heap_provider/budget_governor/cli.py")
+    invocation_contract = read_text(repo_root / "Tools/ai/heap_provider/invocation_contract/cli.py")
     orchestrator = read_text(repo_root / "Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py")
     runtime_mesh = read_text(
         repo_root / "Tools/validation/real_product/runtime_mesh_contract/cli.py"
@@ -88,14 +88,14 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(shared_heap, "broker_request")
         and has(shared_heap, "product_signal"),
         "budget_governor_defines_lanes": exists(
-            repo_root, "Tools/ai/heap_provider_budget_governor/cli.py"
+            repo_root, "Tools/ai/heap_provider/budget_governor/cli.py"
         )
         and has(budget_governor, "provider_lanes")
         and has(budget_governor, "gpu1")
         and has(budget_governor, "gpu0")
         and has(budget_governor, "npu"),
         "invocation_contract_defines_telemetry": exists(
-            repo_root, "Tools/ai/heap_provider_invocation_contract/cli.py"
+            repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
         )
         and has(invocation_contract, "expected_telemetry_contract")
         and has(invocation_contract, "broker_request")

@@ -28,7 +28,7 @@ def build_ai_context_pack_tool(
     )
     command = [
         resolve_child_python(repo_root),
-        "Tools/ai/ai_context_pack/cli.py",
+        "Tools/ai/agent_context/ai_context_pack/cli.py",
         "--repo-root",
         ".",
         "--profile",
@@ -74,7 +74,7 @@ def build_semantic_evidence_chunk_manifest(
     )
     command = [
         resolve_child_python(repo_root),
-        "Tools/ai/semantic_evidence_chunks/cli.py",
+        "Tools/ai/agent_context/semantic_evidence_chunks/cli.py",
         "--repo-root",
         ".",
         "--basename",

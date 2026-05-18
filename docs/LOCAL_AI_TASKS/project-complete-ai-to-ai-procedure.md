@@ -71,7 +71,7 @@ Get-Content ".\output\validation\npu_provider_environment_project_complete_$Stam
 ## 3. Run project-only static gates
 
 ```powershell
-python -m Tools.validation.check_python_syntax `
+python -m Tools.validation.docs_hygiene.check_python_syntax `
   --repo-root . `
   --output ".\output\validation\python_syntax_project_complete_$Stamp.json"
 

@@ -4,7 +4,7 @@
 
 Owner validator:
 
-- `Tools/validation/check_file_line_limits.py`
+- `python -m Tools.validation check_file_line_limits`
 
 Soglia operativa corrente:
 

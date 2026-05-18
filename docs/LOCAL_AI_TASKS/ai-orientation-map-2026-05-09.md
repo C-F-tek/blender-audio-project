@@ -88,7 +88,7 @@ Do not reduce heap/exchange to a static chain. The run must provide context, evi
 | Patchkit reports | `Tools/ai/patchkit/reports.py` |
 | Patchkit smoke | `Tools/validation/run_patchkit_smoke.py` |
 | Review PR preparation | `Tools/ai/agent_review/review_pr_cli.py` |
-| Context pack | `Tools/ai/ai_context_pack/cli.py` |
+| Context pack | `Tools/ai/agent_context/ai_context_pack/cli.py` |
 | Agent state packet | `Tools/ai/agent_context/state_packet/cli.py` |
 | Script/tool inventory | `Tools/validation/build_script_inventory.py` |
 | Markdown inventory | `Tools/validation/docs_hygiene/markdown_inventory/cli.py` |

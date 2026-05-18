@@ -11,7 +11,7 @@ from typing import Any
 
 try:
     from Tools.ai.provider_mesh.runtime.python_runtime import command_env
-    from Tools.ai.runtime_file_refs import (
+    from Tools.ai.runtime_tool.file_refs import (
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
@@ -21,7 +21,7 @@ except ImportError:
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.provider_mesh.runtime.python_runtime import command_env  # type: ignore
-    from Tools.ai.runtime_file_refs import (  # type: ignore
+    from Tools.ai.runtime_tool.file_refs import (  # type: ignore
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,

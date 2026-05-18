@@ -117,7 +117,7 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
                     "target_file": self.virtual_dev_environment_targets(),
                     "validation_script": [
                         "Tools/validation/heap_runtime/virtual_dev_environment_smoke/cli.py",
-                        "Tools/validation/run_heap_final_readable_product_smoke/cli.py",
+                        "Tools/validation/heap_runtime/run_heap_final_readable_product_smoke/cli.py",
                     ],
                     "dynamic_import": True,
                     "help_probe": True,
@@ -144,10 +144,10 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
                 "args": {
                     "target_file": self.code_execution_matrix_targets(),
                     "validation_script": [
-                        "Tools/validation/test_proposal_gate/cli.py",
+                        "Tools/validation/heap_final_proposals/test_proposal_gate/cli.py",
                         "Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py",
                         "Tools/validation/heap_runtime/virtual_dev_environment_smoke/cli.py",
-                        "Tools/validation/run_heap_final_readable_product_smoke/cli.py",
+                        "Tools/validation/heap_runtime/run_heap_final_readable_product_smoke/cli.py",
                     ],
                     "timeout_seconds": min(max(int(self.args.timeout_seconds), 120), 600),
                     "tail_chars": 5000,

@@ -14,7 +14,7 @@ try:
         validate_ai_context_packs,
     )
 except ModuleNotFoundError:
-    from Tools.validation.check_ai_context_pack_contract import (
+    from Tools.validation.agent_context.check_ai_context_pack_contract import (
         resolve_repo_path as resolve_context_path,
         split_path_values as split_context_values,
         validate_ai_context_packs,
@@ -27,7 +27,7 @@ try:
         validate_manifests,
     )
 except ModuleNotFoundError:
-    from Tools.validation.check_local_ai_adapter_manifest import (
+    from Tools.validation.pipeline.check_local_ai_adapter_manifest import (
         resolve_repo_path as resolve_manifest_path,
         split_manifest_values,
         validate_manifests,

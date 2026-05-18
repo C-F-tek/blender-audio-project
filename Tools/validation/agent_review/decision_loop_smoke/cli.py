@@ -99,7 +99,7 @@ def build_fixtures(repo_root: Path, work_dir: Path) -> tuple[Path, Path, Path]:
                 "items": [
                     {
                         "doc": "AGENTS.md",
-                        "reference": "Tools/ai/run_agent_review_decision_loop/cli.py",
+                        "reference": "Tools/ai/agent_review/decision_loop_runner/cli.py",
                         "existing_candidate": "Tools/ai/agent_review/patch_plan/cli.py",
                         "candidate_references": [
                             "Tools/ai/deterministic_recommendations/cli.py",
@@ -204,7 +204,7 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
 
     command = [
         sys.executable,
-        "Tools/ai/run_agent_review_decision_loop/cli.py",
+        "Tools/ai/agent_review/decision_loop_runner/cli.py",
         "--repo-root",
         ".",
         "--evidence",

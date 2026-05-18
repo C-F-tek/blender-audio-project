@@ -20,12 +20,12 @@ def runtime_file_ref_import_block(existing_text: str) -> str:
     return sys_import + (
         "from typing import Any\n\n"
         "try:\n"
-        "    from Tools.ai.runtime_file_refs import RuntimeConsumer, RuntimeFileRefResolver, RuntimeRefProvenance\n"
+        "    from Tools.ai.runtime_tool.file_refs import RuntimeConsumer, RuntimeFileRefResolver, RuntimeRefProvenance\n"
         "except ImportError:\n"
         "    repo_root_for_import = Path(__file__).resolve().parents[2]\n"
         "    if str(repo_root_for_import) not in sys.path:\n"
         "        sys.path.insert(0, str(repo_root_for_import))\n"
-        "    from Tools.ai.runtime_file_refs import RuntimeConsumer, RuntimeFileRefResolver, RuntimeRefProvenance  # type: ignore\n"
+        "    from Tools.ai.runtime_tool.file_refs import RuntimeConsumer, RuntimeFileRefResolver, RuntimeRefProvenance  # type: ignore\n"
     )
 
 

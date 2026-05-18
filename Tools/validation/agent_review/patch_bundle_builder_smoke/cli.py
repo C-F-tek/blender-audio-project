@@ -123,12 +123,12 @@ def build_fixture_patch_plan(repo_root: Path, patch_plan_path: Path) -> None:
                 "source": "smoke",
                 "area": "code",
                 "status": "ready_for_manual_review",
-                "target_files": ["Tools/ai/run_agent_review_decision_loop/cli.py"],
+                "target_files": ["Tools/ai/agent_review/decision_loop_runner/cli.py"],
                 "rationale": "Non-Markdown targets must be skipped by the automatic bundle builder.",
                 "edit_strategy": "Manual review only.",
                 "risk": "medium",
                 "validation_commands": [
-                    "python -m py_compile Tools/ai/run_agent_review_decision_loop/cli.py"
+                    "python -m py_compile Tools/ai/agent_review/decision_loop_runner/cli.py"
                 ],
                 "stop_conditions": ["Stop if builder tries to mutate Python source."],
                 "manual_review_required": True,

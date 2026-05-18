@@ -63,11 +63,6 @@ output/*_music_context.json
 output/*_analysis_ai_context.json
 output/*_dual_ai_scene_plan.json
 output/*_ai_implementation_draft.json
-Tools/npu/context_artifacts/*_manifest.json
-Tools/npu/context_artifacts/*_context.md
-Tools/npu/context_artifacts/*_index.md
-Tools/npu/context_artifacts/*_technical_notes.md
-Tools/npu/context_artifacts/*_implementation_notes.md
 Tools/npu/npu_preflight_report.json
 ```
 
@@ -127,7 +122,7 @@ The app can pass a custom set of paths:
 
 ```powershell
 python -m Tools.git auto_push_generated_artifacts `
-  -Paths @("indexAI", "output/*_track_summary.json", "Tools/npu/context_artifacts/npu_code_manifest.json")
+  -Paths @("indexAI", "output/*_track_summary.json")
 ```
 
 ## AI rule

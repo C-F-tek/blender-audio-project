@@ -127,7 +127,7 @@ class RuntimeGateStartupContextMixin:
     def startup_manifest_from_task_file(self) -> tuple[Path | None, dict[str, Any]]:
         """Load the tool-owned startup manifest associated with --task-file.
 
-        run_heap_runtime_context_closure.py already prepares repo/docs/memory/tool
+        python -m Tools.ai heap_context_closure already prepares repo/docs/memory/tool
         context before this gate starts and passes the ready task file with
         --task-file. The sibling manifest is the structured proof of that preload.
         Seeding passed startup requirements into the heap prevents the provider

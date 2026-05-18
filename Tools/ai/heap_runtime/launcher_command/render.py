@@ -19,7 +19,7 @@ def render_command(
 ) -> str:
     parts = [
         "& " + ps_quote(project_python),
-        "-m Tools.ai run_heap_runtime_context_closure",
+        "-m Tools.ai heap_context_closure",
         "`\n  --repo-root .",
         "`\n  --python-exe " + ps_quote(project_python),
     ]
@@ -89,7 +89,7 @@ def render_postrun_package_command(repo_root: Path, project_python: str) -> str:
     return (
         "& "
         + ps_quote(project_python)
-        + " -m Tools.ai run_external_heap_postrun_package"
+        + " -m Tools.ai external_heap_postrun_package"
         + " `\n  --repo-root ."
         + " `\n  --include-rejected-history"
         + " `\n  --include-peer-blocks\n"

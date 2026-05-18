@@ -3,7 +3,7 @@
 
 Report-only utility used by IA-Carmine startup/refactor workflows. It does not
 scan source files itself; the authoritative source remains
-Tools/validation/build_python_line_count_csv/cli.py.
+Tools/validation/docs_hygiene/build_python_line_count_csv/cli.py.
 """
 
 from __future__ import annotations

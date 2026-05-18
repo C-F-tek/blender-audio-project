@@ -156,7 +156,7 @@ python -m Tools.ai operator_product_gui
 The lower-level heap closure remains an internal dispatched tool:
 
 ```text
-python -m Tools.ai run_heap_runtime_context_closure
+python -m Tools.ai heap_context_closure
 ```
 
 Workflow wrappers should call the Python dispatcher instead of direct script paths.

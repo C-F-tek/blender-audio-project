@@ -84,7 +84,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     broker_exec_text = read_text(repo_root / "Tools/ai/_shared/agent_runtime_tool_broker_execution.py")
     ollama_probe_text = read_text(repo_root / "Tools/ai/run_ollama_provider_probe.py")
     local_provider_probe_text = read_text(repo_root / "Tools/ai/provider_mesh/local_provider_probe/cli.py")
-    primary_advisory_text = read_text(repo_root / "Tools/ai/build_workload_quality_lane_routing/cli.py")
+    primary_advisory_text = read_text(repo_root / "Tools/ai/ai_workload/quality_lane_routing/cli.py")
     openvino_gpu0_text = read_text(repo_root / "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py")
     gpu0_companion_text = read_text(repo_root / "Tools/ai/provider_mesh/gpu0_companion_task_lane/cli.py")
     npu_companion_text = read_text(repo_root / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py")
@@ -92,8 +92,8 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         repo_root / "Tools/validation/provider_mesh/openvino_peer_topology_contract/cli.py"
     )
     heap_text = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/cli.py")
-    budget_text = read_text(repo_root / "Tools/ai/heap_provider_budget_governor/cli.py")
-    invocation_text = read_text(repo_root / "Tools/ai/heap_provider_invocation_contract/cli.py")
+    budget_text = read_text(repo_root / "Tools/ai/heap_provider/budget_governor/cli.py")
+    invocation_text = read_text(repo_root / "Tools/ai/heap_provider/invocation_contract/cli.py")
     product_text = read_text(repo_root / "Tools/ai/heap_runtime/product_package/cli.py")
     completeness_gate_text = read_text(repo_root / "Tools/ai/heap_runtime/completeness_gate/cli.py")
 
@@ -111,13 +111,13 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN")
         and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-PRE-REVIEW-BRIDGE-BEGIN"),
         "heap_provider_budget_governor": exists(
-            repo_root, "Tools/ai/heap_provider_budget_governor/cli.py"
+            repo_root, "Tools/ai/heap_provider/budget_governor/cli.py"
         )
         and has(budget_text, "ProviderBudgetConfig")
         and has(budget_text, "provider_lanes")
         and has(budget_text, "permit_allowed"),
         "heap_provider_invocation_contract": exists(
-            repo_root, "Tools/ai/heap_provider_invocation_contract/cli.py"
+            repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
         )
         and has(invocation_text, "expected_telemetry_contract")
         and has(invocation_text, "real_run_gate")
@@ -129,7 +129,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             exists(repo_root, "Tools/ai/run_ollama_provider_probe.py")
             or exists(repo_root, "Tools/ai/provider_mesh/local_provider_probe/cli.py")
         )
-        and exists(repo_root, "Tools/ai/build_workload_quality_lane_routing/cli.py")
+        and exists(repo_root, "Tools/ai/ai_workload/quality_lane_routing/cli.py")
         and (
             "ollama" in gpu1_provider_surface
             or "provider" in gpu1_provider_surface
@@ -154,13 +154,13 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "shared_memory_evidence": has(wrapper_text, "-SaveInputsToMemoryDb")
         and has(wrapper_text, "-BuildEvidence")
         and has(launcher_text, "shared_memory_evidence")
-        and exists(repo_root, "Tools/ai/shared_toolbox_bundle/cli.py")
+        and exists(repo_root, "Tools/ai/agent_context/shared_toolbox_bundle/cli.py")
         and exists(repo_root, "Tools/ai/heap_exchange/peer_runtime_manifest/cli.py"),
         "sqlite_runtime_memory": exists(repo_root, "Tools/ai/agent_memory/sqlite_cli.py")
         and ("sqlite" in memory_surface)
         and ("persistent" in memory_surface)
         and ("operational" in memory_surface)
-        and exists(repo_root, "Tools/validation/run_runtime_sqlite_persistent_write_smoke/cli.py"),
+        and exists(repo_root, "Tools/validation/agent_memory/run_runtime_sqlite_persistent_write_smoke/cli.py"),
         "tool_agnostic_broker": exists(repo_root, "Tools/ai/runtime_tool/agent_broker/cli.py")
         and exists(repo_root, "Tools/ai/_shared/agent_runtime_tool_broker_execution.py")
         and ("broker" in broker_text.lower())
@@ -172,7 +172,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and exists(repo_root, "Tools/ai/provider_runtime_blackboard/broker_bridge/cli.py")
         and exists(repo_root, "Tools/ai/provider_runtime_blackboard/live_signals/cli.py")
         and exists(repo_root, "Tools/ai/provider_runtime_blackboard/telemetry/cli.py"),
-        "runtime_flow_map_evidence": exists(repo_root, "Tools/ai/runtime_flow_map/cli.py")
+        "runtime_flow_map_evidence": exists(repo_root, "Tools/ai/runtime_universe/flow_map/cli.py")
         and has(launcher_text, "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN")
         and has(launcher_text, "build_runtime_flow_map.py")
         and has(launcher_text, "runtime_flow_"),
@@ -306,10 +306,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             or "gpu.0" in openvino_gpu0_text.lower(),
             "npu_companion_mentions_npu": "npu" in npu_companion_text.lower(),
             "heap_budget_governor_present": exists(
-                repo_root, "Tools/ai/heap_provider_budget_governor/cli.py"
+                repo_root, "Tools/ai/heap_provider/budget_governor/cli.py"
             ),
             "heap_invocation_contract_present": exists(
-                repo_root, "Tools/ai/heap_provider_invocation_contract/cli.py"
+                repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
             ),
             "heap_runtime_product_package_present": exists(
                 repo_root, "Tools/ai/heap_runtime/product_package/cli.py"

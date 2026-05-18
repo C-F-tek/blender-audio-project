@@ -61,7 +61,7 @@ def provider_report_adoption_proposal() -> dict[str, Any]:
             "Tools/npu/dual_ai_pipeline/cli.py",
             "Tools/npu/pipeline/providers.py",
             "Tools/npu/pipeline/reports.py",
-            "Tools/validation/check_provider_result_parsing/cli.py",
+            "Tools/validation/provider_mesh/check_provider_result_parsing/cli.py",
             "Tools/validation/pipeline/npu_pipeline_modules_check/cli.py",
             "Tools/npu/pipeline/README.md",
             "docs/JSON_SCHEMAS.md",
@@ -141,7 +141,7 @@ def default_npu_observability_proposal() -> dict[str, Any]:
         rationale="Current reports do not indicate blocking failures. The next safe app-agnostic step is deeper observability, not provider behavior changes.",
         target_files=[
             "Tools/npu/provider_mesh/runtime_output_manifest/cli.py",
-            "Tools/ai/check_local_resource_lanes/cli.py",
+            "Tools/ai/provider_mesh/local_resource_lanes_check/cli.py",
             "Tools/ai/repository_product/repository_update_suggestions/cli.py",
             "docs/JSON_SCHEMAS.md",
             "Tools/validation/README.md",

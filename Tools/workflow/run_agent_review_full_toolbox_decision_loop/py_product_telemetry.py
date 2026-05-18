@@ -193,7 +193,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
             "Shared toolbox AI-to-AI bundle",
             [
                 "-m",
-                "Tools.ai.shared_toolbox_bundle",
+                "Tools.ai.agent_context.shared_toolbox_bundle",
                 "--repo-root",
                 ".",
                 "--stamp",

@@ -33,7 +33,7 @@ Flusso visto:
 
 ## Refactor Plan
 
-1. Introdurre `Tools/ai/runtime_file_refs/`.
+1. Introdurre `Tools/ai/runtime_tool/file_refs/`.
    - Ogni ref diventa `RuntimeFileRef`.
    - Campi: repo-relative, absolute path, kind, provenance, status, consumers.
    - Stati: verified, missing, output_only, validation_only, rejected_non_allowlisted.
@@ -63,7 +63,7 @@ Flusso visto:
 
 ## File Coinvolti
 
-- `Tools/ai/runtime_file_refs/*`
+- `Tools/ai/runtime_tool/file_refs/*`
 - `Tools/ai/runtime_universe/*`
 - `Tools/ai/synthesize_patch_candidates.py`
 - `Tools/ai/heap_runtime/code_execution_tool/cli.py`
@@ -94,4 +94,4 @@ Flusso visto:
 - `python -m Tools.validation run_heap_virtual_dev_environment_smoke --repo-root .`
 - `python -m Tools.validation run_heap_final_readable_product_smoke --repo-root .`
 - `python -m Tools.validation run_operator_product_launcher_smoke --repo-root .`
-- full run finale con `run_heap_runtime_context_closure.py` attraverso launcher reale.
+- full run finale con `python -m Tools.ai heap_context_closure` attraverso launcher reale.

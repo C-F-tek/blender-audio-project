@@ -62,10 +62,10 @@ def build_broker_request(path: Path) -> None:
                     "args": {
                         "target_file": [
                             "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
-                            "Tools/ai/assemble_heap_final_readable_product/cli.py",
+                            "Tools/ai/code_product/final_readable_product/cli.py",
                         ],
                         "validation_script": [
-                            "Tools/validation/run_heap_final_readable_product_smoke/cli.py"
+                            "Tools/validation/heap_runtime/run_heap_final_readable_product_smoke/cli.py"
                         ],
                         "dynamic_import": True,
                         "help_probe": True,
@@ -113,9 +113,9 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
             "--target-file",
             "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
             "--target-file",
-            "Tools/ai/assemble_heap_final_readable_product/cli.py",
+            "Tools/ai/code_product/final_readable_product/cli.py",
             "--validation-script",
-            "Tools/validation/run_heap_final_readable_product_smoke/cli.py",
+            "Tools/validation/heap_runtime/run_heap_final_readable_product_smoke/cli.py",
             "--dynamic-import",
             "--help-probe",
             "--output",

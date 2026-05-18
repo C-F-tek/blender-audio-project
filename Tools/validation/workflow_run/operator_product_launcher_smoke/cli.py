@@ -108,7 +108,7 @@ def run_core_runtime_guard_suite(repo_root: Path, work_dir: Path, timeout_second
     output = work_dir / "core_runtime_guard_suite.json"
     command = [
         sys.executable,
-        "Tools/validation/run_core_runtime_guard_suite/cli.py",
+        "Tools/validation/runtime_universe/run_core_runtime_guard_suite/cli.py",
         "--repo-root",
         str(repo_root),
         "--output",

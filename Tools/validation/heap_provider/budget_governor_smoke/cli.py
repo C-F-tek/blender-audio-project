@@ -103,7 +103,7 @@ def main() -> int:
     completed = subprocess.run(
         [
             sys.executable,
-            "Tools/ai/heap_provider_budget_governor/cli.py",
+            "Tools/ai/heap_provider/budget_governor/cli.py",
             "--repo-root",
             ".",
             "--budget-minutes",

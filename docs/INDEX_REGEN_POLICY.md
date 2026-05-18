@@ -38,9 +38,9 @@ python -m Tools.npu build_project_ai_index
 The NPU-focused code context files are:
 
 ```text
-Tools/npu/context_artifacts/npu_code_context.md
-Tools/npu/context_artifacts/npu_code_index.md
-Tools/npu/context_artifacts/npu_code_manifest.json
+Tools/npu/context_artifacts/npu_code_context.md        # generated, ignored
+Tools/npu/context_artifacts/npu_code_index.md          # generated, ignored
+Tools/npu/context_artifacts/npu_code_manifest.json     # generated, ignored
 Tools/npu/npu_code_chunks/
 ```
 
@@ -161,9 +161,9 @@ indexAI/project_code_index.md
 indexAI/project_code_manifest.json
 indexAI/project_code_chunks/
 indexAI/README.md
-Tools/npu/context_artifacts/npu_code_context.md
-Tools/npu/context_artifacts/npu_code_index.md
-Tools/npu/context_artifacts/npu_code_manifest.json
+Tools/npu/context_artifacts/npu_code_context.md        # generated, ignored
+Tools/npu/context_artifacts/npu_code_index.md          # generated, ignored
+Tools/npu/context_artifacts/npu_code_manifest.json     # generated, ignored
 Tools/npu/npu_code_chunks/
 ```
 
@@ -178,13 +178,12 @@ git status
 git diff --stat
 ```
 
-If only generated AI/NPU indexes changed, commit the standard tracked files:
+If only generated AI indexes changed, commit the standard tracked files. NPU
+`Tools/npu/context_artifacts/` outputs are generated local context and are
+ignored by Git.
 
 ```powershell
-git add Tools/npu/context_artifacts/npu_code_context.md `
-        Tools/npu/context_artifacts/npu_code_index.md `
-        Tools/npu/context_artifacts/npu_code_manifest.json `
-        indexAI/project_code_index.md `
+git add indexAI/project_code_index.md `
         indexAI/project_code_manifest.json
 
 git commit -m "chore: regenerate ai and npu indexes"

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.runtime_file_refs import (
+    from Tools.ai.runtime_tool.file_refs import (
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
@@ -18,7 +18,7 @@ except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.runtime_file_refs import (  # type: ignore
+    from Tools.ai.runtime_tool.file_refs import (  # type: ignore
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
