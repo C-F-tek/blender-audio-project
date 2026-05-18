@@ -7,7 +7,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .sqlite_common import is_under, now_iso, parse_tags, read_arg_file, repo_rel, resolve_path
+from .common import (
+    is_under,
+    read_arg_file,
+    relative_path,
+    resolve_repo_path,
+    split_csv_values,
+    utc_now_iso,
+)
 from .sqlite_store import (
     clear_operational,
     operational_status,
@@ -17,6 +24,23 @@ from .sqlite_store import (
     search_operational,
     search_persistent,
 )
+
+
+def now_iso() -> str:
+    return utc_now_iso()
+
+
+def resolve_path(repo_root: Path, value: str | Path) -> Path:
+    return resolve_repo_path(repo_root, value)
+
+
+def repo_rel(path: Path, repo_root: Path) -> str:
+    return relative_path(path, repo_root)
+
+
+def parse_tags(values: list[str]) -> list[str]:
+    return split_csv_values(values)
+
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()

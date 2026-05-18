@@ -24,6 +24,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "code_aware_md_refs": "Tools.docs.docs_hygiene.code_aware_md_refs.cli:main",
     "markdown_split_tool_guide": "Tools.docs.docs_hygiene.markdown_split_tool_guide.cli:main",
     "md_code_coherence_refactor_core": "Tools.docs.docs_hygiene.md_code_coherence_refactor_core.cli:main",
+    "module_duplication_audit": "Tools.docs.docs_hygiene.module_duplication_audit.cli:main",
 }
 
 

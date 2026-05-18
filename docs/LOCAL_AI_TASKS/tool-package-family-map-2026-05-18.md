@@ -58,6 +58,7 @@ The cleanup is validated by report-only tools:
 
 ```powershell
 python -m Tools.docs tool_package_family_audit --repo-root . --area ai --area validation --area workflow --area npu --area docs
+python -m Tools.docs module_duplication_audit --repo-root . --area ai --area validation --area workflow --area npu --area docs --fail-on-findings
 python -m Tools.docs repo_tool_surface_audit --repo-root . --area ai --area validation --area workflow --area npu --area docs --fail-on-findings
 python -m Tools.validation check_python_syntax --repo-root .
 ```
@@ -66,6 +67,7 @@ Expected result after this cleanup:
 
 ```text
 tool_package_family_audit.finding_count = 0
+module_duplication_audit.finding_count = 0
 repo_tool_surface_audit.finding_count = 0
 check_python_syntax.failed_count = 0
 ```

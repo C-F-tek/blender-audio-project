@@ -2,15 +2,31 @@
 
 from __future__ import annotations
 
+import argparse
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .routing_common import now_iso, repo_rel, resolve_path, write_json_report
+from Tools.validation._shared.report_utils import write_json_report
+
+from .common import relative_path, resolve_repo_path
 from .routing_requests import (
     build_discovery_tool_requests,
     build_memory_tool_requests,
     build_promotion_candidates,
 )
+
+
+def now_iso() -> str:
+    return datetime.now().isoformat(timespec="seconds")
+
+
+def resolve_path(repo_root: Path, value: str | Path) -> Path:
+    return resolve_repo_path(repo_root, value)
+
+
+def repo_rel(path: Path, repo_root: Path) -> str:
+    return relative_path(path, repo_root)
 
 def build_policy(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()

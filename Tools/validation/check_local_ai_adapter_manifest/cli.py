@@ -388,11 +388,9 @@ def validate_manifests(repo_root: Path, manifests: list[Path]) -> dict[str, Any]
 
 
 def main() -> int:
-    try:
-        from Tools.validation._shared.local_ai_adapter_manifest_cli import main as cli_main
-    except ModuleNotFoundError:
-        from Tools.validation._shared.local_ai_adapter_manifest_cli import main as cli_main
-    return cli_main()
+    from Tools.validation._shared.validation_contract_clis import local_ai_adapter_manifest_main
+
+    return local_ai_adapter_manifest_main()
 
 
 if __name__ == "__main__":

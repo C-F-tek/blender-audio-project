@@ -6,14 +6,21 @@ import argparse
 import json
 from pathlib import Path
 
-from .sqlite_common import (
-    DEFAULT_MARKDOWN,
+from .common import (
     DEFAULT_OPERATIONAL_DB,
-    DEFAULT_OUTPUT,
     DEFAULT_PERSISTENT_DB,
-    resolve_path,
+    DEFAULT_SQLITE_MARKDOWN,
+    DEFAULT_SQLITE_OUTPUT,
+    resolve_repo_path,
 )
 from .sqlite_report import build_report, render_markdown
+
+DEFAULT_MARKDOWN = DEFAULT_SQLITE_MARKDOWN
+DEFAULT_OUTPUT = DEFAULT_SQLITE_OUTPUT
+
+
+def resolve_path(repo_root: Path, value: str | Path) -> Path:
+    return resolve_repo_path(repo_root, value)
 
 def main() -> int:
     parser = argparse.ArgumentParser()

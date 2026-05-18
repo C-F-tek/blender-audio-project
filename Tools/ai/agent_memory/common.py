@@ -7,14 +7,19 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 SCHEMA_VERSION = 1
 DEFAULT_MAX_MEMORY_CHARS = 24000
 DEFAULT_MAX_RECORD_CHARS = 4200
 MEMORY_DB_SCHEMA_VERSION = 1
+DEFAULT_OPERATIONAL_DB = "output/ai_runtime_memory/operational_context.sqlite"
+DEFAULT_PERSISTENT_DB = "indexAI/agent_memory/agent_memory.sqlite"
+DEFAULT_SQLITE_OUTPUT = "output/validation/agent_runtime_sqlite_memory.json"
+DEFAULT_SQLITE_MARKDOWN = "output/validation/agent_runtime_sqlite_memory.md"
 
 WORD_RE = re.compile(r"[A-Za-z0-9_]{3,}")
+SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_.-]+")
 STOP_WORDS = {
     "and",
     "are",
@@ -93,3 +98,42 @@ def relative_path(path: Path, repo_root: Path) -> str:
         return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
+
+def resolve_repo_path(repo_root: Path, value: str | Path) -> Path:
+    """Resolve a path against the repository root."""
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path.resolve()
+
+def is_under(path: Path, parent: Path) -> bool:
+    """Return whether path resolves under parent."""
+    try:
+        path.resolve(strict=False).relative_to(parent.resolve(strict=False))
+        return True
+    except ValueError:
+        return False
+
+def read_arg_file(repo_root: Path, value: str) -> str:
+    """Read an argument file relative to repo root."""
+    if not value:
+        return ""
+    return resolve_repo_path(repo_root, value).read_text(
+        encoding="utf-8-sig",
+        errors="replace",
+    )
+
+def safe_identifier(value: str, fallback: str) -> str:
+    """Return a stable identifier for broker and memory records."""
+    text = SAFE_ID_RE.sub("_", str(value or "").strip()).strip("._-")
+    return text[:80] or fallback
+
+def split_csv_values(values: Iterable[str]) -> list[str]:
+    """Split comma-separated CLI values while preserving first-seen order."""
+    output: list[str] = []
+    for value in values:
+        for part in str(value).split(","):
+            normalized = part.strip()
+            if normalized and normalized not in output:
+                output.append(normalized)
+    return output

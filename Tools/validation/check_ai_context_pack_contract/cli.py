@@ -388,11 +388,9 @@ def validate_ai_context_packs(
 
 
 def main() -> int:
-    try:
-        from Tools.validation._shared.ai_context_pack_contract_cli import main as cli_main
-    except ModuleNotFoundError:
-        from Tools.validation._shared.ai_context_pack_contract_cli import main as cli_main
-    return cli_main()
+    from Tools.validation._shared.validation_contract_clis import ai_context_pack_main
+
+    return ai_context_pack_main()
 
 
 if __name__ == "__main__":

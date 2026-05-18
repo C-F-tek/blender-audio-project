@@ -6,14 +6,16 @@ import argparse
 import json
 from pathlib import Path
 
-from .routing_common import (
-    DEFAULT_BROKER_REQUEST,
-    DEFAULT_MARKDOWN,
-    DEFAULT_OUTPUT,
-    resolve_path,
-    write_json_report,
-)
+from Tools.validation._shared.report_utils import write_json_report
+
+from .common import resolve_repo_path
+from .routing_requests import DEFAULT_BROKER_REQUEST, DEFAULT_MARKDOWN, DEFAULT_OUTPUT
 from .routing_report import build_policy, render_markdown
+
+
+def resolve_path(repo_root: Path, value: str | Path) -> Path:
+    return resolve_repo_path(repo_root, value)
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()

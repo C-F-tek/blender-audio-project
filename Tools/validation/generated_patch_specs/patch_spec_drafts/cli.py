@@ -375,11 +375,9 @@ def validate_patch_spec_drafts(
 
 
 def main() -> int:
-    try:
-        from Tools.validation._shared.patch_spec_drafts_cli import main as cli_main
-    except ModuleNotFoundError:
-        from Tools.validation._shared.patch_spec_drafts_cli import main as cli_main
-    return cli_main()
+    from Tools.validation._shared.validation_contract_clis import patch_spec_drafts_main
+
+    return patch_spec_drafts_main()
 
 
 if __name__ == "__main__":

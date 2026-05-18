@@ -5,7 +5,19 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-from .routing_common import safe_id, split_values
+from .common import safe_identifier, split_csv_values
+
+DEFAULT_OUTPUT = "output/validation/agent_memory_routing_policy.json"
+DEFAULT_MARKDOWN = "output/validation/agent_memory_routing_policy.md"
+DEFAULT_BROKER_REQUEST = "output/ai_runtime_tools/agent_memory_routing_policy_tool_requests.json"
+
+
+def safe_id(value: str, fallback: str = "memory_route") -> str:
+    return safe_identifier(value, fallback)
+
+
+def split_values(values: list[str]) -> list[str]:
+    return split_csv_values(values)
 
 def default_persistent_queries(objective: str) -> list[dict[str, str]]:
     objective_lower = objective.lower()

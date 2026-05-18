@@ -284,7 +284,8 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
         "Validate full toolbox GitHub evidence bundle",
         [
             "-m",
-            "Tools.validation._shared.github_evidence_bundle_cli",
+            "Tools.validation",
+            "check_github_evidence_bundle",
             "--repo-root",
             ".",
             "--bundle",

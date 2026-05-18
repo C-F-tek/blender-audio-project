@@ -7,7 +7,15 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .sqlite_common import now_iso, safe_id
+from .common import safe_identifier, utc_now_iso
+
+
+def now_iso() -> str:
+    return utc_now_iso()
+
+
+def safe_id(value: str) -> str:
+    return safe_identifier(value, "runtime_memory")
 
 def ensure_operational_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)

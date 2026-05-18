@@ -387,11 +387,9 @@ def validate_github_evidence_bundles(repo_root: Path, paths: list[Path]) -> dict
 
 
 def main() -> int:
-    try:
-        from Tools.validation._shared.github_evidence_bundle_cli import main as cli_main
-    except ModuleNotFoundError:
-        from Tools.validation._shared.github_evidence_bundle_cli import main as cli_main
-    return cli_main()
+    from Tools.validation._shared.validation_contract_clis import github_evidence_bundle_main
+
+    return github_evidence_bundle_main()
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from Tools.tool_dispatch import ToolDispatcher
 
 TOOL_MAIN_TARGETS: dict[str, str] = {
     "agent_review_patch_plan_full_validation": "Tools.validation.agent_review.patch_plan_full_validation.cli:main",
-    "check_ai_context_pack_contract": "Tools.validation._shared.ai_context_pack_contract_cli:main",
+    "check_ai_context_pack_contract": "Tools.validation._shared.validation_contract_clis:ai_context_pack_main",
     "check_ai_dry_run_matrix_cases": "Tools.validation.pipeline.dry_run_matrix_cases.cli:main",
     "check_ai_dry_run_matrix_contract": "Tools.validation.pipeline.dry_run_matrix_contract.cli:main",
     "check_ai_dry_run_matrix_outputs": "Tools.validation.pipeline.dry_run_matrix_outputs.cli:main",
@@ -22,7 +22,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "check_github_evidence_bundle": "Tools.validation.repository_product.github_evidence_bundle.cli:main",
     "check_gpu0_companion_contract": "Tools.validation.provider_mesh.gpu0_companion_contract.cli:main",
     "check_heap_exchange_runtime_lifecycle": "Tools.validation.heap_exchange.runtime_lifecycle_check.cli:main",
-    "check_local_ai_adapter_manifest": "Tools.validation._shared.local_ai_adapter_manifest_cli:main",
+    "check_local_ai_adapter_manifest": "Tools.validation._shared.validation_contract_clis:local_ai_adapter_manifest_main",
     "check_markdown_line_limits": "Tools.validation.docs_hygiene.markdown_line_limits.cli:main",
     "check_md_code_coherence": "Tools.validation.docs_hygiene.md_code_coherence.cli:main",
     "check_npu_decode_quality_remediation": "Tools.validation.provider_mesh.npu_decode_quality_remediation.cli:main",
