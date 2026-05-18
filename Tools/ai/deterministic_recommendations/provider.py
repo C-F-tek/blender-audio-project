@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+from Tools.ai._shared.evidence_item_planning import (
+    doc_code_item_or_skip,
+    doc_code_strategy_parts,
+    doc_doc_item_or_skip,
+    doc_doc_strategy_text,
+    iter_sufficient_area_items,
+)
+
 from .common import *  # noqa: F403
 
 def provider_recommendations(
@@ -43,39 +51,39 @@ def doc_code_recommendation(
     npu_refs: list[dict[str, Any]],
     tool_refs: list[dict[str, Any]],
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
-    doc = normalize_repo_path(item.get("doc"))
-    if not doc:
-        return None, {
-            "id": f"det_doc_code_{index:03d}",
-            "reason": "doc_code item has no doc target",
-        }
-    error = target_path_error(doc, repo_root)
-    if error:
-        return None, {"id": f"det_doc_code_{index:03d}", "reason": f"{doc}: {error}"}
-
-    reference = normalize_repo_path(item.get("reference"))
-    existing_candidate = normalize_repo_path(item.get("existing_candidate"))
-    candidates = unique_strings(item.get("candidate_references"))
+    evidence_item, skip = doc_code_item_or_skip(
+        item=item,
+        index=index,
+        repo_root=repo_root,
+        id_prefix="det_doc_code",
+        target_path_error=target_path_error,
+        missing_reason="doc_code item has no doc target",
+    )
+    if skip or evidence_item is None:
+        return None, skip
     evidence_paths = compact_evidence_files(item)
-    strategy_parts = [
-        "Create a narrow manual-review patch plan for the documentation/code reference mismatch.",
-        f"Inspect `{reference}` and update `{doc}` only if the reference is stale or should point at an existing artifact.",
-    ]
-    if existing_candidate:
-        strategy_parts.append(
-            f"Prefer existing candidate `{existing_candidate}` over inventing a new runtime artifact."
-        )
-    if candidates:
-        strategy_parts.append(
-            f"Candidate references observed: {', '.join(f'`{candidate}`' for candidate in candidates[:6])}."
-        )
+    strategy_parts = doc_code_strategy_parts(
+        reference=evidence_item.reference,
+        doc=evidence_item.doc,
+        existing_candidate=evidence_item.existing_candidate,
+        candidates=evidence_item.candidates,
+        opening="Create a narrow manual-review patch plan for the documentation/code reference mismatch.",
+        inspect_template=(
+            "Inspect `{reference}` and update `{doc}` only if the reference is stale "
+            "or should point at an existing artifact."
+        ),
+        existing_template=(
+            "Prefer existing candidate `{existing_candidate}` over inventing a new runtime artifact."
+        ),
+        candidate_limit=6,
+    )
 
     return (
         {
             "id": f"det_doc_code_{index:03d}",
             "area": "doc_code",
             "status": "ready_for_patch_plan",
-            "target_files": [doc],
+            "target_files": [evidence_item.doc],
             "rationale": item.get("reason")
             or "Evidence and runtime tool reports are sufficient to build a manual-review patch plan for this doc/code reference.",
             "proposed_strategy": " ".join(strategy_parts),
@@ -106,34 +114,29 @@ def doc_doc_recommendation(
     npu_refs: list[dict[str, Any]],
     tool_refs: list[dict[str, Any]],
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
-    path = normalize_repo_path(item.get("path"))
-    if not path:
-        return None, {
-            "id": f"det_doc_doc_{index:03d}",
-            "reason": "doc_doc item has no path target",
-        }
-    error = target_path_error(path, repo_root)
-    if error:
-        return None, {"id": f"det_doc_doc_{index:03d}", "reason": f"{path}: {error}"}
-    missing_terms = (
-        [str(term) for term in item.get("missing_terms", []) if str(term).strip()]
-        if isinstance(item.get("missing_terms"), list)
-        else []
+    evidence_item, skip = doc_doc_item_or_skip(
+        item=item,
+        index=index,
+        repo_root=repo_root,
+        id_prefix="det_doc_doc",
+        target_path_error=target_path_error,
+        missing_reason="doc_doc item has no path target",
+        term_limit=10,
+        terms_fallback="the missing cross-reference terms",
     )
-    terms_text = (
-        ", ".join(f"`{term}`" for term in missing_terms[:10]) or "the missing cross-reference terms"
-    )
+    if skip or evidence_item is None:
+        return None, skip
     return (
         {
             "id": f"det_doc_doc_{index:03d}",
             "area": "doc_doc",
             "status": "ready_for_patch_plan",
-            "target_files": [path],
+            "target_files": [evidence_item.path],
             "rationale": item.get("reason")
             or "Evidence and runtime tool reports are sufficient to build a manual-review documentation cross-reference patch plan.",
-            "proposed_strategy": (
-                f"Add a compact cross-reference for {terms_text}. "
-                "Link or summarize the canonical source instead of duplicating large contract sections."
+            "proposed_strategy": doc_doc_strategy_text(
+                evidence_item.terms_text,
+                lead="Add a compact cross-reference for",
             ),
             "risk": "low",
             "validation_commands": DEFAULT_VALIDATION_COMMANDS,
@@ -164,17 +167,10 @@ def synthesize_from_evidence(
 ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
     recommendations: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
-    areas = evidence.get("areas") if isinstance(evidence.get("areas"), dict) else {}
 
-    doc_code = areas.get("doc_code") if isinstance(areas.get("doc_code"), dict) else {}
-    for index, item in enumerate(
-        doc_code.get("items", []) if isinstance(doc_code.get("items"), list) else [],
-        start=1,
-    ):
+    for index, item in iter_sufficient_area_items(evidence, "doc_code"):
         if len(recommendations) >= max_recommendations:
             break
-        if not isinstance(item, dict) or item.get("evidence_sufficient") is not True:
-            continue
         rec, skip = doc_code_recommendation(
             item=item,
             index=index,
@@ -187,15 +183,9 @@ def synthesize_from_evidence(
         if skip:
             skipped.append(skip)
 
-    doc_doc = areas.get("doc_doc") if isinstance(areas.get("doc_doc"), dict) else {}
-    for index, item in enumerate(
-        doc_doc.get("items", []) if isinstance(doc_doc.get("items"), list) else [],
-        start=1,
-    ):
+    for index, item in iter_sufficient_area_items(evidence, "doc_doc"):
         if len(recommendations) >= max_recommendations:
             break
-        if not isinstance(item, dict) or item.get("evidence_sufficient") is not True:
-            continue
         rec, skip = doc_doc_recommendation(
             item=item,
             index=index,

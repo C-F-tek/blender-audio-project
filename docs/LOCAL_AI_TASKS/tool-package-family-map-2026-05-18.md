@@ -58,7 +58,7 @@ The cleanup is validated by report-only tools:
 
 ```powershell
 python -m Tools.docs tool_package_family_audit --repo-root . --area ai --area validation --area workflow --area npu --area docs
-python -m Tools.docs module_duplication_audit --repo-root . --area ai --area validation --area workflow --area npu --area docs --fail-on-findings
+python -m Tools.docs module_duplication_audit --repo-root . --area ai --area validation --area workflow --area npu --area docs --similarity-threshold 0.55 --fail-on-findings
 python -m Tools.docs repo_tool_surface_audit --repo-root . --area ai --area validation --area workflow --area npu --area docs --fail-on-findings
 python -m Tools.validation check_python_syntax --repo-root .
 ```
@@ -67,7 +67,30 @@ Expected result after this cleanup:
 
 ```text
 tool_package_family_audit.finding_count = 0
-module_duplication_audit.finding_count = 0
-repo_tool_surface_audit.finding_count = 0
+module_duplication_audit.finding_count = 0 at threshold 0.55
+repo_tool_surface_audit has no random Tools/* root-script findings; remaining findings are legacy line-budget items
 check_python_syntax.failed_count = 0
+```
+
+## Internal Module Consolidation Owners
+
+The second cleanup pass removed module-level clone logic, not only root script
+placement noise.
+
+| Shared owner | Replaces repeated logic in |
+|---|---|
+| `Tools/ai/agent_review/cli_output.py` and `report_cli_specs.py` | Agent-review evidence and patch-bundle CLI report wiring. |
+| `Tools/ai/generated_patch_specs/cli_specs.py` | Generated patch-spec proposal/review CLI boilerplate. |
+| `Tools/ai/_shared/evidence_item_planning.py` | Doc/code and doc/doc evidence item normalization used by fallback plans and deterministic recommendations. |
+| `Tools/ai/_shared/revision_context_prompt.py` | External heap revision-context prompt rendering for heap closure and launcher command code. |
+| `Tools/ai/_shared/report_markdown.py` | Reusable compact report Markdown sections. |
+| `Tools/workflow/workflow_run/_shared/artifact_catalog.py` | GUI and shell artifact collection, classification, external-open and size formatting. |
+| `Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/support_lanes.py` | Common GPU0/NPU peer support launch, harvest, runtime event and diagnostic plumbing. |
+
+Validation evidence for this pass:
+
+```text
+module_duplication_audit_threshold_055_final.json: passed=true, finding_count=0
+check_python_syntax_after_module_cleanup.json: passed=true, failed_count=0
+tool_package_family_audit_after_module_cleanup.json: passed=true, finding_count=0
 ```

@@ -5,7 +5,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .common import DEFAULT_VALIDATION_COMMANDS, compact_evidence_files, normalize_repo_path, target_path_error, unique_strings
+from Tools.ai._shared.evidence_item_planning import (
+    doc_code_item_or_skip,
+    doc_code_strategy_parts,
+    doc_doc_item_or_skip,
+    doc_doc_strategy_text,
+    iter_sufficient_area_items,
+)
+
+from .common import DEFAULT_VALIDATION_COMMANDS, compact_evidence_files, target_path_error
 
 def plan_from_doc_code_item(
     *,
@@ -14,44 +22,38 @@ def plan_from_doc_code_item(
     repo_root: Path,
     audit_refs: list[dict[str, Any]],
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
-    doc = normalize_repo_path(item.get("doc"))
-    if not doc:
-        return None, {
-            "id": f"fallback_doc_code_{index:03d}",
-            "reason": "doc_code item has no source doc",
-        }
-    error = target_path_error(doc, repo_root)
-    if error:
-        return None, {
-            "id": f"fallback_doc_code_{index:03d}",
-            "reason": f"{doc}: {error}",
-        }
-    reference = normalize_repo_path(item.get("reference"))
-    existing_candidate = normalize_repo_path(item.get("existing_candidate"))
-    candidates = unique_strings(
-        item.get("candidate_references", [])
-        if isinstance(item.get("candidate_references"), list)
-        else []
+    evidence_item, skip = doc_code_item_or_skip(
+        item=item,
+        index=index,
+        repo_root=repo_root,
+        id_prefix="fallback_doc_code",
+        target_path_error=target_path_error,
+        missing_reason="doc_code item has no source doc",
     )
-    strategy_bits = [
-        "Patch the source Markdown only; do not create missing code/runtime files from this fallback.",
-        f"Review the referenced path `{reference}` and decide whether it is stale, intentionally future-facing, or should point to an existing artifact.",
-    ]
-    if existing_candidate:
-        strategy_bits.append(
-            f"Existing candidate `{existing_candidate}` was detected; prefer link normalization over new content."
-        )
-    if candidates:
-        strategy_bits.append(
-            f"Candidate references observed: {', '.join(f'`{candidate}`' for candidate in candidates[:8])}."
-        )
+    if skip or evidence_item is None:
+        return None, skip
+    strategy_bits = doc_code_strategy_parts(
+        reference=evidence_item.reference,
+        doc=evidence_item.doc,
+        existing_candidate=evidence_item.existing_candidate,
+        candidates=evidence_item.candidates,
+        opening="Patch the source Markdown only; do not create missing code/runtime files from this fallback.",
+        inspect_template=(
+            "Review the referenced path `{reference}` and decide whether it is stale, "
+            "intentionally future-facing, or should point to an existing artifact."
+        ),
+        existing_template=(
+            "Existing candidate `{existing_candidate}` was detected; prefer link normalization over new content."
+        ),
+        candidate_limit=8,
+    )
     return (
         {
             "id": f"fallback_doc_code_{index:03d}",
             "source": "evidence_sufficiency_fallback",
             "area": "doc_code",
             "status": "ready_for_manual_review",
-            "target_files": [doc],
+            "target_files": [evidence_item.doc],
             "rationale": item.get("reason")
             or "Evidence report marks this doc/code reference as sufficient for manual patch planning.",
             "edit_strategy": " ".join(strategy_bits),
@@ -64,9 +66,9 @@ def plan_from_doc_code_item(
             ],
             "source_evidence": {
                 "evidence_area": "doc_code",
-                "reference": reference,
-                "candidate_references": candidates,
-                "existing_candidate": existing_candidate or None,
+                "reference": evidence_item.reference,
+                "candidate_references": evidence_item.candidates,
+                "existing_candidate": evidence_item.existing_candidate or None,
                 "confidence": item.get("confidence"),
                 "evidence_files": compact_evidence_files(item),
                 "npu_audit_refs": audit_refs,
@@ -83,38 +85,30 @@ def plan_from_doc_doc_item(
     repo_root: Path,
     audit_refs: list[dict[str, Any]],
 ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
-    path = normalize_repo_path(item.get("path"))
-    if not path:
-        return None, {
-            "id": f"fallback_doc_doc_{index:03d}",
-            "reason": "doc_doc item has no target path",
-        }
-    error = target_path_error(path, repo_root)
-    if error:
-        return None, {
-            "id": f"fallback_doc_doc_{index:03d}",
-            "reason": f"{path}: {error}",
-        }
-    missing_terms = (
-        [str(term) for term in item.get("missing_terms", []) if str(term).strip()]
-        if isinstance(item.get("missing_terms"), list)
-        else []
+    evidence_item, skip = doc_doc_item_or_skip(
+        item=item,
+        index=index,
+        repo_root=repo_root,
+        id_prefix="fallback_doc_doc",
+        target_path_error=target_path_error,
+        missing_reason="doc_doc item has no target path",
+        term_limit=12,
+        terms_fallback="the missing explicit terms",
     )
-    terms_text = (
-        ", ".join(f"`{term}`" for term in missing_terms[:12]) or "the missing explicit terms"
-    )
+    if skip or evidence_item is None:
+        return None, skip
     return (
         {
             "id": f"fallback_doc_doc_{index:03d}",
             "source": "evidence_sufficiency_fallback",
             "area": "doc_doc",
             "status": "ready_for_manual_review",
-            "target_files": [path],
+            "target_files": [evidence_item.path],
             "rationale": item.get("reason")
             or "Evidence report marks this documentation cross-reference as sufficient.",
-            "edit_strategy": (
-                f"Add a small targeted cross-reference for {terms_text}. "
-                "Do not duplicate large contract sections; link or summarize the canonical location instead."
+            "edit_strategy": doc_doc_strategy_text(
+                evidence_item.terms_text,
+                lead="Add a small targeted cross-reference for",
             ),
             "risk": "low",
             "validation_commands": DEFAULT_VALIDATION_COMMANDS,
@@ -125,7 +119,7 @@ def plan_from_doc_doc_item(
             ],
             "source_evidence": {
                 "evidence_area": "doc_doc",
-                "missing_terms": missing_terms,
+                "missing_terms": evidence_item.missing_terms,
                 "confidence": item.get("confidence"),
                 "evidence_files": compact_evidence_files(item),
                 "npu_audit_refs": audit_refs,
@@ -143,15 +137,8 @@ def fallback_plans_from_evidence(
 ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
     plans: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
-    areas = evidence.get("areas", {}) if isinstance(evidence.get("areas"), dict) else {}
 
-    doc_code = areas.get("doc_code", {}) if isinstance(areas.get("doc_code"), dict) else {}
-    for index, item in enumerate(
-        doc_code.get("items", []) if isinstance(doc_code.get("items"), list) else [],
-        start=1,
-    ):
-        if not isinstance(item, dict) or not item.get("evidence_sufficient"):
-            continue
+    for index, item in iter_sufficient_area_items(evidence, "doc_code"):
         plan, skip = plan_from_doc_code_item(
             item=item, index=index, repo_root=repo_root, audit_refs=audit_refs
         )
@@ -160,13 +147,7 @@ def fallback_plans_from_evidence(
         if skip:
             skipped.append(skip)
 
-    doc_doc = areas.get("doc_doc", {}) if isinstance(areas.get("doc_doc"), dict) else {}
-    for index, item in enumerate(
-        doc_doc.get("items", []) if isinstance(doc_doc.get("items"), list) else [],
-        start=1,
-    ):
-        if not isinstance(item, dict) or not item.get("evidence_sufficient"):
-            continue
+    for index, item in iter_sufficient_area_items(evidence, "doc_doc"):
         plan, skip = plan_from_doc_doc_item(
             item=item, index=index, repo_root=repo_root, audit_refs=audit_refs
         )

@@ -1,6 +1,16 @@
 from __future__ import annotations
 
 from .common import *  # noqa: F403
+from .support_lanes import (
+    harvest_support_records,
+    launch_due_checkpoint_supports,
+    launch_support_with_record,
+    support_launch_blocked,
+    support_diagnostic_details,
+    support_response_payload,
+    support_repo_rel,
+)
+
 
 def build_gpu_command(
     args: argparse.Namespace,
@@ -74,6 +84,7 @@ def build_gpu_command(
         command.extend(["--context-root", context_root])
     return command
 
+
 def launch_gpu0_peer_support(
     *,
     args: argparse.Namespace,
@@ -85,22 +96,29 @@ def launch_gpu0_peer_support(
     warnings: list[str],
     gpu1_active: bool,
 ) -> bool:
-    if not getattr(args, "run_gpu0_peer_support_provider", False):
-        return False
-    if round_id in active_supports:
-        return False
-    if len(active_supports) >= max(1, args.max_concurrent_gpu0_peer_support):
-        return False
-    if any(record_round_id(item) == round_id for item in support_records):
+    if support_launch_blocked(
+        args=args,
+        round_id=round_id,
+        active_supports=active_supports,
+        support_records=support_records,
+        enabled_attr="run_gpu0_peer_support_provider",
+        max_concurrent_attr="max_concurrent_gpu0_peer_support",
+    ):
         return False
 
     support_json = gpu0_peer_support_output_path(args, repo_root, round_id)
     command = build_gpu0_peer_support_command(args, support_json, round_id)
-    process = run_command_async(command, repo_root)
-    active_supports[round_id] = process
-    checkpoint_rel = repo_rel(checkpoint, repo_root) if checkpoint else ""
-    support_records.append(
-        {
+    checkpoint_rel = support_repo_rel(checkpoint, repo_root)
+    correlation_id = f"{getattr(args, 'runtime_heap_stamp', '')}:gpu0-peer-support-{round_id:03d}"
+    launch_support_with_record(
+        args=args,
+        repo_root=repo_root,
+        warnings=warnings,
+        round_id=round_id,
+        active_supports=active_supports,
+        support_records=support_records,
+        command=command,
+        record={
             "round": round_id,
             "checkpoint": checkpoint_rel,
             "support_output": repo_rel(support_json, repo_root),
@@ -111,17 +129,9 @@ def launch_gpu0_peer_support(
             "launched_while_gpu1_active": bool(gpu1_active),
             "provider_execution_requested": True,
             "provider_execution_performed": False,
-        }
-    )
-    append_runtime_heap_event(
-        args=args,
-        repo_root=repo_root,
-        warnings=warnings,
-        source="orchestrator",
-        target="gpu0",
-        event_type="evidence_request",
-        round_id=round_id,
-        correlation_id=f"{getattr(args, 'runtime_heap_stamp', '')}:gpu0-peer-support-{round_id:03d}",
+        },
+        lane="gpu0",
+        correlation_id=correlation_id,
         payload={
             "summary": "GPU0 peer support launched while GPU1 primary advisory continues.",
             "round": round_id,
@@ -131,23 +141,15 @@ def launch_gpu0_peer_support(
             "direct_tool_execution": False,
             "provider_lane": "OpenVINO GPU.0",
         },
-    )
-    record_runtime_lane_diagnostic(
-        args=args,
-        repo_root=repo_root,
-        warnings=warnings,
-        lane="gpu0",
-        status="running",
-        message="GPU0 peer support subprocess launched.",
-        details={
+        diagnostic_message="GPU0 peer support subprocess launched.",
+        diagnostic_details={
             "round": round_id,
             "output": repo_rel(support_json, repo_root),
             "gpu1_active": bool(gpu1_active),
         },
-        round_id=round_id,
-        correlation_id=f"{getattr(args, 'runtime_heap_stamp', '')}:gpu0-peer-support-{round_id:03d}:diagnostic",
     )
     return True
+
 
 def launch_due_gpu0_peer_supports(
     *,
@@ -160,32 +162,23 @@ def launch_due_gpu0_peer_supports(
     warnings: list[str],
     gpu1_active: bool,
 ) -> None:
-    if not getattr(args, "run_gpu0_peer_support_provider", False):
-        return
-    checkpoints = sorted(
-        checkpoint_dir.glob("round_*.json"),
-        key=lambda path: checkpoint_round(path) or 0,
+    launch_due_checkpoint_supports(
+        args=args,
+        repo_root=repo_root,
+        checkpoint_dir=checkpoint_dir,
+        launched_rounds=launched_rounds,
+        active_supports=active_supports,
+        support_records=support_records,
+        warnings=warnings,
+        gpu1_active=gpu1_active,
+        enabled_attr="run_gpu0_peer_support_provider",
+        every_rounds=args.gpu0_peer_support_every_rounds,
+        max_concurrent_attr="max_concurrent_gpu0_peer_support",
+        should_launch=should_launch_gpu0_peer_support,
+        launch_support=launch_gpu0_peer_support,
+        checkpoint_parameter="checkpoint",
     )
-    for checkpoint in checkpoints:
-        round_id = checkpoint_round(checkpoint)
-        if round_id is None or round_id in launched_rounds:
-            continue
-        if not should_launch_gpu0_peer_support(round_id, args.gpu0_peer_support_every_rounds):
-            launched_rounds.add(round_id)
-            continue
-        if len(active_supports) >= max(1, args.max_concurrent_gpu0_peer_support):
-            return
-        if launch_gpu0_peer_support(
-            args=args,
-            repo_root=repo_root,
-            round_id=round_id,
-            checkpoint=checkpoint,
-            active_supports=active_supports,
-            support_records=support_records,
-            warnings=warnings,
-            gpu1_active=gpu1_active,
-        ):
-            launched_rounds.add(round_id)
+
 
 def harvest_finished_gpu0_peer_supports(
     *,
@@ -195,101 +188,67 @@ def harvest_finished_gpu0_peer_supports(
     support_records: list[dict[str, Any]],
     warnings: list[str],
 ) -> None:
-    for round_id, process in list(active_supports.items()):
-        if process.poll() is None:
-            continue
-        stdout, stderr = collect_stdout_stderr(process)
-        record = next(
-            (item for item in support_records if record_round_id(item) == round_id),
-            None,
-        )
-        if record is None:
-            active_supports.pop(round_id, None)
-            continue
-        record.update(
-            {
-                "finished_at": now_iso(),
-                "status": "finished",
-                "returncode": process.returncode,
-                "stdout_tail": stdout,
-                "stderr_tail": stderr,
-            }
-        )
-        record["elapsed_seconds"] = audit_elapsed_seconds(record)
-        support_path = resolve_path(repo_root, str(record.get("support_output") or ""))
-        if support_path.exists():
-            try:
-                data = read_json(support_path)
-                record.update(
-                    {
-                        "passed": data.get("passed"),
-                        "openvino_gpu0_visible": data.get("openvino_gpu0_visible"),
-                        "openvino_gpu0_workload_performed": data.get(
-                            "openvino_gpu0_workload_performed"
-                        ),
-                        "openvino_gpu0_workload_passed": data.get("openvino_gpu0_workload_passed"),
-                        "provider_execution_performed": data.get("provider_execution_performed"),
-                        "openvino_gpu0_provider_execution_performed": data.get(
-                            "openvino_gpu0_provider_execution_performed"
-                        ),
-                        "selected_device": data.get("selected_device"),
-                        "available_devices": data.get("available_devices"),
-                        "errors": data.get("errors", []),
-                        "warnings": data.get("warnings", []),
-                    }
-                )
-            except Exception as exc:  # noqa: BLE001
-                record["error"] = f"{type(exc).__name__}: {exc}"
-        else:
-            record["error"] = "gpu0_peer_support_output_missing"
-        if process.returncode not in (None, 0):
-            warnings.append(f"GPU0 peer support round {round_id}: returncode={process.returncode}")
-        diagnostic_status = (
-            "ready"
-            if process.returncode == 0
-            and (
-                record.get("provider_execution_performed") is True
-                or record.get("openvino_gpu0_provider_execution_performed") is True
-                or record.get("openvino_gpu0_workload_passed") is True
-            )
-            else "degraded"
-        )
-        record_runtime_lane_diagnostic(
-            args=args,
-            repo_root=repo_root,
-            warnings=warnings,
-            lane="gpu0",
-            status=diagnostic_status,
-            message="GPU0 peer support provider evidence completed.",
-            details={
-                "round": round_id,
-                "returncode": process.returncode,
-                "passed": record.get("passed"),
-                "output": record.get("support_output"),
-                "errors": record.get("errors", []),
-                "warnings": record.get("warnings", []),
-            },
-            round_id=round_id,
-            correlation_id=f"{getattr(args, 'runtime_heap_stamp', '')}:gpu0-peer-support-{round_id:03d}:final-diagnostic",
-        )
-        append_runtime_heap_event(
-            args=args,
-            repo_root=repo_root,
-            warnings=warnings,
-            source="gpu0",
-            target="gpu1",
-            event_type="evidence_response",
-            round_id=round_id,
-            correlation_id=f"{getattr(args, 'runtime_heap_stamp', '')}:gpu0-peer-support-{round_id:03d}",
-            payload={
-                "summary": "GPU0 peer support provider evidence completed.",
-                "round": round_id,
-                "passed": record.get("passed"),
-                "provider_execution_performed": record.get("provider_execution_performed"),
-                "openvino_gpu0_workload_passed": record.get("openvino_gpu0_workload_passed"),
-                "output": record.get("support_output"),
-                "launched_while_gpu1_active": record.get("launched_while_gpu1_active"),
-                "direct_tool_execution": False,
-            },
-        )
-        active_supports.pop(round_id, None)
+    harvest_support_records(
+        args=args,
+        repo_root=repo_root,
+        active_supports=active_supports,
+        support_records=support_records,
+        warnings=warnings,
+        output_key="support_output",
+        lane="gpu0",
+        label="GPU0 peer support",
+        correlation_prefix=f"{getattr(args, 'runtime_heap_stamp', '')}:gpu0-peer-support",
+        diagnostic_message="GPU0 peer support provider evidence completed.",
+        absorb_report=_absorb_gpu0_support_report,
+        status_builder=_gpu0_diagnostic_status,
+        diagnostic_details=lambda round_id, process, record: support_diagnostic_details(
+            round_id,
+            process,
+            record,
+            output_key="support_output",
+        ),
+        response_payload=lambda round_id, _process, record: support_response_payload(
+            round_id,
+            record,
+            summary="GPU0 peer support provider evidence completed.",
+            output_key="support_output",
+            extra_keys=("provider_execution_performed", "openvino_gpu0_workload_passed"),
+            constants={"direct_tool_execution": False},
+        ),
+    )
+
+
+def _absorb_gpu0_support_report(record: dict[str, Any], support_path: Path) -> None:
+    if not support_path.exists():
+        record["error"] = "gpu0_peer_support_output_missing"
+        return
+    try:
+        data = read_json(support_path)
+    except Exception as exc:  # noqa: BLE001
+        record["error"] = f"{type(exc).__name__}: {exc}"
+        return
+    record.update(
+        {
+            "passed": data.get("passed"),
+            "openvino_gpu0_visible": data.get("openvino_gpu0_visible"),
+            "openvino_gpu0_workload_performed": data.get("openvino_gpu0_workload_performed"),
+            "openvino_gpu0_workload_passed": data.get("openvino_gpu0_workload_passed"),
+            "provider_execution_performed": data.get("provider_execution_performed"),
+            "openvino_gpu0_provider_execution_performed": data.get(
+                "openvino_gpu0_provider_execution_performed"
+            ),
+            "selected_device": data.get("selected_device"),
+            "available_devices": data.get("available_devices"),
+            "errors": data.get("errors", []),
+            "warnings": data.get("warnings", []),
+        }
+    )
+
+
+def _gpu0_diagnostic_status(process: subprocess.Popen[str], record: dict[str, Any]) -> str:
+    ready = process.returncode == 0 and (
+        record.get("provider_execution_performed") is True
+        or record.get("openvino_gpu0_provider_execution_performed") is True
+        or record.get("openvino_gpu0_workload_passed") is True
+    )
+    return "ready" if ready else "degraded"

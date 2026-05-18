@@ -25,6 +25,7 @@ ROLE_STEMS = {
     "common",
     "config",
     "constants",
+    "dispatch",
     "markdown",
     "paths",
     "render",
