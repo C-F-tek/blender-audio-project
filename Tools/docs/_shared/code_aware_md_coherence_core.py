@@ -12,7 +12,7 @@ from typing import Any
 PS_PARAM_RE = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)")
 
 try:
-    from Tools.docs.code_aware_md_refs import (
+    from Tools.docs.docs_hygiene.code_aware_md_refs import (
         build_file_index,
         classify_missing_ref,
         collect_doc_command_refs,

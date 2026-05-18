@@ -162,9 +162,9 @@ $ContextFiles = @(
   ".\docs\LOCAL_AI_TASKS\project-complete-ai-to-ai-review-request.md",
   ".\docs\LOCAL_AI_TASKS\gpu-npu-parallel-evidence-runbook.md",
   ".\docs\LOCAL_AI_TASKS\improve-gpu-planner-nonempty-recommendations.md",
-  ".\Tools\ai\gpu_npu_parallel_orchestrator\cli.py",
-  ".\Tools\ai\gpu_deep_planning_review\cli.py",
-  ".\Tools\ai\gpu_deep_planning_supervised\cli.py",
+  ".\Tools\ai\provider_mesh\gpu_npu_parallel_orchestrator\cli.py",
+  ".\Tools\ai\provider_mesh\gpu_deep_planning_review\cli.py",
+  ".\Tools\ai\provider_mesh\gpu_deep_planning_supervised\cli.py",
   ".\Tools\ai\agent_review\patch_plan\cli.py",
   ".\output\analysis\code_interpreter_project_complete_$Stamp.md"
 )
@@ -222,7 +222,7 @@ $Reports = @(
 "REPORTS:"
 $Reports
 
-python -m Tools.ai.build_github_evidence_bundle `
+python -m Tools.ai.repository_product.github_evidence_bundle `
   --repo-root . `
   --basename project_complete_ai_to_ai_bundle_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
@@ -244,7 +244,7 @@ The bundle must include `project-complete-ai-to-ai-review-request.md`, so the ta
 ## 9. Validate the compact bundle
 
 ```powershell
-python -m Tools.validation.check_github_evidence_bundle `
+python -m Tools.validation check_github_evidence_bundle `
   --repo-root . `
   --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\project_complete_ai_to_ai_bundle_$Stamp.json" `
   --output ".\output\validation\project_complete_ai_to_ai_bundle_${Stamp}_validation.json"

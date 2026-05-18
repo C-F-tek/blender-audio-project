@@ -39,7 +39,7 @@ La catena non deve continuare fingendo prodotto quando l'apply report espone `op
 
 ## Preflight obbligatorio
 
-Il wrapper real product esegue sempre `Tools/validation/run_real_product_preflight_gate.py` prima della delega al launcher. Non esiste skip operativo per questa gate.
+Il wrapper real product esegue sempre `Tools/validation/real_product/preflight_gate/cli.py` prima della delega al launcher. Non esiste skip operativo per questa gate.
 
 Il preflight verifica almeno:
 
@@ -170,11 +170,11 @@ $Branch = "CARMINEai/heap-exchange-process-gate-$Stamp"
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\repository_change_proposals\cli.py `
+  .\Tools\ai\repository_product\repository_change_proposals\cli.py `
   .\Tools\ai\generated_patch_specs\proposal_cli.py `
   .\Tools\ai\generated_patch_specs\apply_cli.py `
-  .\Tools\validation\run_repository_change_proposals_runtime_evidence_smoke.py `
-  .\Tools\validation\run_generated_patch_specs_empty_product_smoke.py
+  .\Tools\validation\repository_product\repository_change_proposals_runtime_evidence_smoke\cli.py `
+  .\Tools\validation\generated_patch_specs\empty_product_smoke\cli.py
 
 & $RepoPy -m Tools.validation run_repository_change_proposals_runtime_evidence_smoke --repo-root .
 & $RepoPy -m Tools.validation run_generated_patch_specs_empty_product_smoke --repo-root .

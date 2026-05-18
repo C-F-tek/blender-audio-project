@@ -104,7 +104,7 @@ $Required = @(
     "WORKFLOW.md",
     "docs/README.md",
     "docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md",
-    "Tools/validation/build_markdown_inventory/cli.py",
+    "Tools/validation/docs_hygiene/markdown_inventory/cli.py",
     "Tools/validation/build_script_inventory/cli.py",
     "Tools/validation/check_docs_links/cli.py",
     "Tools/validation/check_validation_report_contract/cli.py",
@@ -116,8 +116,8 @@ foreach ($Path in $Required) { Assert-FileExists $Path }
 
 $Warnings = @()
 Add-OptionalModeWarning "validation" ".\Tools\workflow\_powershell\run_local_validation_after_refactor.ps1" ([ref]$Warnings)
-Add-OptionalModeWarning "smoke" ".\Tools\workflow\startup_check_core\cli.py" ([ref]$Warnings)
-Add-OptionalModeWarning "chunks" ".\Tools\npu\build_semantic_code_chunks\cli.py" ([ref]$Warnings)
+Add-OptionalModeWarning "smoke" ".\Tools\workflow\workflow_run\startup_check_core\cli.py" ([ref]$Warnings)
+Add-OptionalModeWarning "chunks" ".\Tools\npu\provider_mesh\semantic_code_chunks\cli.py" ([ref]$Warnings)
 Add-OptionalModeWarning "context_pack" ".\Tools\ai\ai_context_pack\cli.py" ([ref]$Warnings)
 Add-OptionalModeWarning "agent_state" ".\Tools\ai\agent_context\state_packet\cli.py" ([ref]$Warnings)
 

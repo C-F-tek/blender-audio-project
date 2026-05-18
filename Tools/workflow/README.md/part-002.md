@@ -190,8 +190,8 @@ Required route:
 
 Static gate:
 
-- `Tools/validation/check_real_product_runtime_mesh_contract.py`
-- `Tools/validation/run_real_product_runtime_mesh_contract_smoke.py`
+- `Tools/validation/real_product/runtime_mesh_contract/cli.py`
+- `Tools/validation/real_product/runtime_mesh_contract_smoke/cli.py`
 
 The gate is deterministic. It does not run providers, does not apply patches, does not run Blender/FFmpeg and does not write source products. Its job is to fail early when the real product profile stops wiring one of the intrinsic project capabilities into the final review-PR path.
 <!-- IA-CARMINE-REAL-PRODUCT-RUNTIME-MESH-END -->

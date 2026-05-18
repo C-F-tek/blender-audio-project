@@ -29,7 +29,7 @@ from Tools.ai.heap_provider_budget_governor import (
     clamp_loop_iterations,
 )
 from Tools.ai.heap_provider_invocation_contract import build_heap_provider_invocation_contract
-from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
+from Tools.ai.provider_mesh.runtime.python_runtime import command_env, resolve_child_python
 from Tools.ai.provider_runtime_blackboard import (
     ProviderRuntimeHeap,
     record_lane_diagnostic,

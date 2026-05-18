@@ -145,7 +145,7 @@ Current product path:
 ```text
 build_task_patch_suggestion_report.py
 apply_patch_suggestion_bundle.py
-check_patch_suggestion_product_separation.py
+python -m Tools.validation check_patch_suggestion_product_separation
 agent_review_prepare_pr.py
 ```
 

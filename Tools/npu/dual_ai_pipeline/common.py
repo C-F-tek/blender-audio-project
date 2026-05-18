@@ -8,25 +8,25 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from Tools.npu.build_ai_service_packet import build_ai_service_packet
-from Tools.npu.build_ai_service_packet import slugify as packet_slugify
-from Tools.npu.build_blender_manual_context import build_manual_context
-from Tools.npu.build_npu_code_context import main as build_code_context
-from Tools.npu.music_context import build_music_context
-from Tools.npu._shared.npu_runtime import (
+from Tools.npu.provider_mesh.ai_service_packet import build_ai_service_packet
+from Tools.npu.provider_mesh.ai_service_packet import slugify as packet_slugify
+from Tools.npu.provider_mesh.blender_manual_context import build_manual_context
+from Tools.npu.provider_mesh.npu_code_context import main as build_code_context
+from Tools.npu.provider_mesh.music_context import build_music_context
+from Tools.npu.provider_mesh._shared.npu_runtime import (
     DEFAULT_MODEL_DIR,
     DEFAULT_NPU_PYTHON,
     npu_preflight,
     write_npu_preflight_report,
 )
-from Tools.npu._shared.ollama_runtime import OllamaModelManager, parse_json_response
-from Tools.npu.project_ai_index import (
+from Tools.npu.provider_mesh._shared.ollama_runtime import OllamaModelManager, parse_json_response
+from Tools.npu.provider_mesh.project_ai_index import (
     PROJECT_INDEX_MD,
     PROJECT_MANIFEST_JSON,
     build_project_ai_index,
 )
-from Tools.npu.run_ollama_music_agent import build_prompt as build_music_prompt
-from Tools.npu.run_ollama_music_agent import markdown_from_insights
+from Tools.npu.provider_mesh.ollama_music_agent import build_prompt as build_music_prompt
+from Tools.npu.provider_mesh.ollama_music_agent import markdown_from_insights
 
 try:
     from pipeline.artifact_paths import (

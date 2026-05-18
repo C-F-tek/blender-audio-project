@@ -11,7 +11,7 @@ try:
     )
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ModuleNotFoundError:
-    from Tools.validation.check_patch_spec_drafts import (
+    from Tools.validation.generated_patch_specs.patch_spec_drafts import (
         resolve_repo_path,
         split_path_values,
         validate_patch_spec_drafts,

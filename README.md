@@ -220,7 +220,7 @@ Tools/ai/build_repository_change_proposals.py
 Tools/ai/generated_patch_specs/proposal_cli.py
 Tools/ai/generated_patch_specs/apply_cli.py
 Tools/ai/agent_review/review_pr_cli.py
-Tools/validation/check_review_pr_final_product_contract.py
+Tools/validation/repository_product/review_pr_final_product_contract/cli.py
 ```
 
 Metadata-only patch drafts are not enough for a successful review-PR product. `operation_count=0` under generated patch-spec apply is a hard failure.

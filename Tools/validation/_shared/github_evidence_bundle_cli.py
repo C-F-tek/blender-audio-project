@@ -11,7 +11,7 @@ try:
     )
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ModuleNotFoundError:
-    from Tools.validation._shared.github_evidence_bundle_cli import (
+    from Tools.validation.repository_product.github_evidence_bundle import (
         default_bundle_paths,
         split_path_values,
         validate_github_evidence_bundles,

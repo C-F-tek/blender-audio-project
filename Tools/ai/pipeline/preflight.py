@@ -11,10 +11,10 @@ from typing import Any
 from .artifact_contracts import file_meta, planned_outputs, rel
 
 WAVE_ENTRYPOINT_FILES = [
-    "Tools/workflow/audio_analysis/analyze_cli.py",
-    "Tools/workflow/audio_analysis/analyzer.py",
-    "Tools/workflow/audio_analysis/summary_cli.py",
-    "Tools/workflow/audio_analysis/summary.py",
+    "Tools/workflow/workflow_run/audio_analysis/analyze_cli.py",
+    "Tools/workflow/workflow_run/audio_analysis/analyzer.py",
+    "Tools/workflow/workflow_run/audio_analysis/summary_cli.py",
+    "Tools/workflow/workflow_run/audio_analysis/summary.py",
 ]
 
 

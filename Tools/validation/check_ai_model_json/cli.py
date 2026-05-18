@@ -25,7 +25,7 @@ def import_model_json(repo_root: Path) -> dict[str, Any]:
         repair_common_model_json,
         strip_markdown_json_fence,
     )
-    from Tools.npu._shared.ollama_runtime import parse_json_response, strip_json_fence  # type: ignore
+    from Tools.npu.provider_mesh._shared.ollama_runtime import parse_json_response, strip_json_fence  # type: ignore
 
     return {
         "ModelJsonParseError": ModelJsonParseError,

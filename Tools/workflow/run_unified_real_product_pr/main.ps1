@@ -60,7 +60,7 @@ if (-not (Test-Path -LiteralPath $Launcher -PathType Leaf)) {
     Stop-RealProductLauncher -Code "unified_launcher_missing" -Message "Unified launcher missing: $Launcher" -Root $ResolvedRepoRoot -StampValue $Stamp -DetailPath $Launcher
 }
 
-$PreflightGate = Join-Path $ResolvedRepoRoot "Tools/validation/run_real_product_preflight_gate/cli.py"
+$PreflightGate = Join-Path $ResolvedRepoRoot "Tools/validation/real_product/preflight_gate/cli.py"
 if (-not (Test-Path -LiteralPath $PreflightGate -PathType Leaf)) {
     Stop-RealProductLauncher -Code "mandatory_preflight_missing" -Message "Mandatory real product preflight gate missing: $PreflightGate" -Root $ResolvedRepoRoot -StampValue $Stamp -DetailPath $PreflightGate
 }
@@ -230,7 +230,7 @@ if ($LauncherExitCode -ne 0) {
 }
 
 if ($ValidateFinalReviewPrProduct -and -not $DryRun) {
-    $FinalProductContract = Join-Path $ResolvedRepoRoot "Tools/validation/check_review_pr_final_product_contract/cli.py"
+    $FinalProductContract = Join-Path $ResolvedRepoRoot "Tools/validation/repository_product/review_pr_final_product_contract/cli.py"
     if (-not (Test-Path -LiteralPath $FinalProductContract -PathType Leaf)) {
         Stop-RealProductLauncher -Code "final_product_contract_missing" -Message "Review PR final product contract missing: $FinalProductContract" -Root $ResolvedRepoRoot -StampValue $Stamp -DetailPath $FinalProductContract
     }

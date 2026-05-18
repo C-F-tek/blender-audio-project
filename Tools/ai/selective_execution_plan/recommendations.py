@@ -149,7 +149,7 @@ def build_recommendations(
             [
                 "docs/LOCAL_AI_WORKFLOW.md",
                 "docs/JSON_SCHEMAS.md",
-                "Tools/validation/check_github_evidence_bundle/cli.py",
+                "Tools/validation/repository_product/github_evidence_bundle/cli.py",
             ],
             blocked=provider.get("provider_execution_seen") is not True,
         )
@@ -161,7 +161,7 @@ def build_recommendations(
             "After this report-only planner is validated, a future tool can convert recommended_patch_specs into draft patch specs.",
             [
                 "Tools/ai/generated_patch_specs/proposal_cli.py",
-                "Tools/validation/check_patch_spec_drafts/cli.py",
+                "Tools/validation/generated_patch_specs/patch_spec_drafts/cli.py",
             ],
             blocked=context.get("passed") is not True or dry_run.get("passed") is not True,
         )

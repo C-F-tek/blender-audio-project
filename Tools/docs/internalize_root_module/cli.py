@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 
-from Tools.docs.repo_tool_surface_audit import git_visible_files, repo_root_from
+from Tools.docs.docs_hygiene.repo_tool_surface_audit import git_visible_files, repo_root_from
 
 TEXT_SUFFIXES = {".py", ".ps1", ".json", ".yml", ".yaml", ".toml", ".md"}
 SKIP_PREFIXES = (

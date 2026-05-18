@@ -28,7 +28,7 @@ target_files, validation_commands and stop_conditions list types
 ## Added smoke
 
 ```text
-Tools/validation/run_gpu_planner_json_contract_smoke.py
+Tools/validation/provider_mesh/gpu_planner_json_contract_smoke/cli.py
 ```
 
 Smoke cases:
@@ -78,8 +78,8 @@ replace local duplicated GPU parse/classification code with gpu_planner_json_con
 Target files:
 
 ```text
-Tools/ai/gpu_deep_planning_review/cli.py
-Tools/ai/gpu_deep_planning_supervised/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
 ```
 
 ## Guardrails

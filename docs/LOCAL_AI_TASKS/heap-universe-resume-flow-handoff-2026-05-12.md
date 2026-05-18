@@ -146,7 +146,7 @@ Correzione:
 - `candidate_block_concrete_enough()` forza `false` se uno di questi marker e' presente;
 - la propagazione simboli e' bloccata se il candidato non e' concreto.
 
-### 3. `Tools/validation/run_external_heap_revision_context_applicability_smoke.py`
+### 3. `Tools/validation/external_heap/revision_context_applicability_smoke/cli.py`
 
 Nuovo smoke offline, senza provider e senza source writes.
 
@@ -175,10 +175,10 @@ Compilazione/import:
 & $RepoPy -m py_compile `
   .\Tools\ai\provider_runtime_blackboard\cli.py `
   -m Tools.ai build_external_heap_revision_context `
-  .\Tools\ai\run_external_heap_postrun_package.py `
+  .\Tools\ai\external_heap\postrun_package.py `
   .\Tools\ai\heap_context_closure\cli.py `
   .\Tools\ai\heap_runtime\completeness_gate\cli.py `
-  .\Tools\validation\run_external_heap_revision_context_applicability_smoke.py
+  .\Tools\validation\external_heap\revision_context_applicability_smoke\cli.py
 
 & $RepoPy -c "import Tools.ai.build_external_heap_revision_context as m; print('revision_context_import_ok')"
 & $RepoPy -c "from Tools.ai.provider_runtime_heap import normalize_lane, normalize_event_type; print(normalize_lane('context_memory')); print(normalize_event_type('startup_task_file_context'))"

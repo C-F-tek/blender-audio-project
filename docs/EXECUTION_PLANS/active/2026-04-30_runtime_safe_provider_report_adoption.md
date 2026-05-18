@@ -50,15 +50,15 @@ hand-edit generated indexes
 ## Target files
 
 ```text
-Tools/npu/build_provider_result_report.py
+Tools/npu/provider_mesh/provider_result_report.py
 Tools/npu/pipeline/providers.py
 Tools/npu/pipeline/reports.py
 Tools/validation/check_provider_result_parsing.py
-Tools/validation/npu_pipeline_modules_check/cli.py
+Tools/validation/pipeline/npu_pipeline_modules_check/cli.py
 Tools/npu/pipeline/README.md
 docs/JSON_SCHEMAS.md
-Tools/ai/repository_change_proposals/cli.py
-Tools/ai/repository_update_suggestions/cli.py
+Tools/ai/repository_product/repository_change_proposals/cli.py
+Tools/ai/repository_product/repository_update_suggestions/cli.py
 ```
 
 ## Validation

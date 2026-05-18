@@ -46,7 +46,7 @@ REQUIRED_TOKENS = {
     "post_validation_packet_reuse": "run_post_validation_ai_packet.ps1",
     "shared_toolbox_bundle_reuse": "shared_toolbox_bundle",
     "heap_runtime_product_reuse": "build_heap_runtime_product_package",
-    "patch_notes_quality_product": "build_patch_notes_quality_product.py",
+    "patch_notes_quality_product": "build_patch_notes_quality_product",
     "task_markdown_input": "TaskMarkdown",
     "github_evidence_bundle_reuse": "build_github_evidence_bundle",
     "bundle_validation_reuse": "check_github_evidence_bundle",

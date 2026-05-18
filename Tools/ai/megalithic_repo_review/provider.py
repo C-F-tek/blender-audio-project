@@ -28,7 +28,7 @@ def maybe_run_ollama(
 ) -> dict[str, Any]:
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.npu._shared.ollama_runtime import OllamaSession
+    from Tools.npu.provider_mesh._shared.ollama_runtime import OllamaSession
 
     try:
         with OllamaSession(model=model, shutdown_server=False, unload_model=True) as session:

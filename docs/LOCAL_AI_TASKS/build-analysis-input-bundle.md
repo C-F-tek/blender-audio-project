@@ -39,13 +39,13 @@ native code patch-plan summaries
 Primary bundle builder:
 
 ```text
-Tools/ai/build_github_evidence_bundle.py
+Tools/ai/repository_product/github_evidence_bundle.py
 ```
 
 Code patch-plan enrichment post-processor:
 
 ```text
-Tools/ai/enrich_github_evidence_bundle_code_plan.py
+Tools/ai/repository_product/github_evidence_bundle_code_plan_enrichment.py
 ```
 
 Relevant bundle options:

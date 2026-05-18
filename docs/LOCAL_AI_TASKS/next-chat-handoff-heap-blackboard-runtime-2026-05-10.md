@@ -38,8 +38,8 @@ Commit locali gia' pushati dall'utente durante la sessione:
 File modificati in queste patch:
 
 - `Tools/ai/heap_runtime/completeness_gate/cli.py`
-- `Tools/ai/build_npu_micro_task_companion_report.py`
-- `Tools/npu/_shared/npu_runtime.py`
+- `Tools/ai/provider_mesh/npu_micro_task_companion_report.py`
+- `Tools/npu/provider_mesh/_shared/npu_runtime.py`
 
 ## Evidenze runtime importanti
 
@@ -413,8 +413,8 @@ Obiettivi patch:
 python -m py_compile `
   .\Tools\ai\heap_runtime\completeness_gate\cli.py `
   .\Tools\ai\heap_context_closure\cli.py `
-  .\Tools\ai\build_npu_micro_task_companion_report.py `
-  .\Tools\npu\_shared\npu_runtime.py
+  .\Tools\ai\provider_mesh\npu_micro_task_companion_report.py `
+  .\Tools\npu\provider_mesh\_shared\npu_runtime.py
 ```
 
 ### NPU reale

@@ -147,9 +147,9 @@ Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_parallel_ai_provider_multistep.ps1
 Tools/workflow/run_post_validation_ai_packet.ps1
 Tools/validation/check_selected_semantic_chunks.py
-Tools/validation/check_repository_change_proposals.py
-Tools/validation/check_patch_spec_drafts.py
-Tools/validation/check_github_evidence_bundle.py
+Tools/validation/repository_product/repository_change_proposals/cli.py
+Tools/validation/generated_patch_specs/patch_spec_drafts/cli.py
+Tools/validation/repository_product/github_evidence_bundle/cli.py
 ```
 
 ## Complexity escalation requirement

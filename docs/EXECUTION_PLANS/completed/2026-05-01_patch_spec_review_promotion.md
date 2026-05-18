@@ -45,7 +45,7 @@ python -m Tools.workflow run_parallel_ai_provider_multistep -Profile npu -RunOll
 ## Result
 
 - Added `Tools/ai/generated_patch_specs/review_cli.py` for non-mutating promotion from `proposal_patch_spec_draft` plus `patch_spec_replacement_plan` to `reviewed_patch_spec`.
-- Added `Tools/validation/reviewed_patch_specs_check/cli.py` to validate reviewed specs and rerun mandatory dry-run.
+- Added `Tools/validation/generated_patch_specs/reviewed_patch_specs_check/cli.py` to validate reviewed specs and rerun mandatory dry-run.
 - Added deterministic fixtures proving one concrete replacement without modifying the target file.
 - Produced compact GPU/NPU evidence at `docs/LOCAL_VALIDATION_EVIDENCE/patch_spec_review_promotion_gpu_npu_multistep_evidence.json`.
 - Confirmed Ollama/GPU primary advisory execution and NPU probe/decode-smoke execution; old NPU workload output remains excluded from advisory context.

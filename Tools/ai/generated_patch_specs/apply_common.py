@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from Tools.ai.patch_suggestion_bundle.common import (
+from Tools.ai.patch_product.patch_suggestion_bundle.common import (
     PatchOperation,
     current_branch,
     git_status_short,
@@ -22,8 +22,8 @@ from Tools.ai.patch_suggestion_bundle.common import (
     unique_in_order,
     unsafe_git_status_short,
 )
-from Tools.ai.patch_suggestion_bundle.git_branch import create_review_branch
-from Tools.ai.patch_suggestion_bundle.operations import apply_operation, normalize_operation
+from Tools.ai.patch_product.patch_suggestion_bundle.git_branch import create_review_branch
+from Tools.ai.patch_product.patch_suggestion_bundle.operations import apply_operation, normalize_operation
 from Tools.validation._shared.report_utils import (
     resolve_output_path,
     write_json_report,

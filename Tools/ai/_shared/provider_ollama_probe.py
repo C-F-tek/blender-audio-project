@@ -25,7 +25,7 @@ def run_ollama_probe(
         ollama_tool_call_tool_names,
         parse_json_contract,
     )
-    from Tools.npu._shared.ollama_runtime import (  # noqa: PLC0415
+    from Tools.npu.provider_mesh._shared.ollama_runtime import (  # noqa: PLC0415
         OllamaSession,
         choose_model,
         is_server_ready,

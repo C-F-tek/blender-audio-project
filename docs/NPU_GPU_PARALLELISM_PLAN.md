@@ -77,7 +77,7 @@ python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json 
 Dry-run matrix:
 
 ```powershell
-python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 ## Hardware policy

@@ -27,7 +27,7 @@ Tools/validation/check_ai_model_json.py
 Runtime migration completed:
 
 ```text
-Tools/npu/_shared/ollama_runtime.py::parse_json_response()
+Tools/npu/provider_mesh/_shared/ollama_runtime.py::parse_json_response()
 ```
 
 The runtime wrapper delegates to `Tools.ai._shared.model_json.parse_model_json_object()` while preserving legacy `json.JSONDecodeError` behavior for existing callers.
@@ -61,5 +61,5 @@ Further caller migration is deferred. Future migrations should inspect one model
 
 - 2026-04-29: Reviewed current JSON helpers and confirmed the gap is model-output parsing, not normal JSON file IO.
 - 2026-04-29: Implemented additive parser and validator.
-- 2026-04-29: Delegated `Tools/npu/_shared/ollama_runtime.py::parse_json_response()` to the reusable parser while preserving legacy failure type.
+- 2026-04-29: Delegated `Tools/npu/provider_mesh/_shared/ollama_runtime.py::parse_json_response()` to the reusable parser while preserving legacy failure type.
 - 2026-04-30: Moved from `active/` to `completed/` during execution-plan status cleanup.

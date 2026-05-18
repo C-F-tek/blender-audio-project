@@ -173,7 +173,7 @@ def build_step_specs(args: argparse.Namespace) -> list[tuple[str, list[str], dic
             "megalithic_pr_draft",
             [
                 py,
-                "Tools/ai/build_megalithic_review_pr_draft/cli.py",
+                "Tools/ai/repository_product/megalithic_review_pr_draft/cli.py",
                 "--review",
                 refined_json,
                 "--proposals",

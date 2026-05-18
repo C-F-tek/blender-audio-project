@@ -35,13 +35,13 @@ def main() -> int:
     )
     anchors = read("Tools/ai/_shared/heap_source_anchors.py")
     contract_text = gate + "\n" + anchors
-    provider_probe = read("Tools/ai/run_local_provider_probe/cli.py")
+    provider_probe = read("Tools/ai/provider_mesh/local_provider_probe/cli.py")
     revision = "\n".join(
         [
-            read("Tools/ai/external_heap_revision_context/common.py"),
-            read("Tools/ai/external_heap_revision_context/applicability.py"),
-            read("Tools/ai/external_heap_revision_context/tasks.py"),
-            read("Tools/ai/external_heap_revision_context/report.py"),
+            read("Tools/ai/external_heap/revision_context/common.py"),
+            read("Tools/ai/external_heap/revision_context/applicability.py"),
+            read("Tools/ai/external_heap/revision_context/tasks.py"),
+            read("Tools/ai/external_heap/revision_context/report.py"),
         ]
     )
 

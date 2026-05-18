@@ -52,7 +52,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     for needle in (
         '"Tools/ai/heap_final_proposals/cli.py"',
         '"Tools/ai/_shared/heap_proposal_gate.py"',
-        '"Tools/ai/agent_runtime_tool_broker/cli.py"',
+        '"Tools/ai/runtime_tool/agent_broker/cli.py"',
     ):
         check_absent(
             gate,

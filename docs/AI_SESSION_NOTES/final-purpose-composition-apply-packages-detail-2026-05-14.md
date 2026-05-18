@@ -106,8 +106,8 @@ Files:
 
 - `Tools/ai/_shared/heap_code_execution_tool_core.py`
 - `Tools/ai/heap_runtime/code_execution_tool/cli.py`
-- `Tools/validation/run_heap_code_execution_tool_smoke.py`
-- `Tools/ai/agent_runtime_tool_broker.py`
+- `Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py`
+- `Tools/ai/runtime_tool/agent_broker.py`
 - `Tools/ai/heap_runtime/completeness_gate/cli.py`
 
 Implementation detail:

@@ -22,7 +22,9 @@ def run_patch_notes_quality_product(ctx: WorkflowContext) -> None:
         "bundle_md",
     )
     args = [
-        "Tools/ai/build_patch_notes_quality_product/cli.py",
+        "-m",
+        "Tools.ai",
+        "build_patch_notes_quality_product",
         "--repo-root",
         ".",
         "--stamp",

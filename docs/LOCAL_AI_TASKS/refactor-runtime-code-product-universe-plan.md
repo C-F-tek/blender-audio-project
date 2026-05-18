@@ -69,12 +69,12 @@ Flusso visto:
 - `Tools/ai/heap_runtime/code_execution_tool/cli.py`
 - `Tools/ai/_shared/heap_code_execution_tool_core.py`
 - `Tools/ai/heap_runtime/virtual_dev_environment/cli.py`
-- `Tools/ai/agent_runtime_tool_broker.py`
+- `Tools/ai/runtime_tool/agent_broker.py`
 - `Tools/ai/heap_runtime/completeness_gate/cli.py`
 - `Tools/ai/_shared/heap_final_code_product.py`
 - `Tools/ai/assemble_heap_final_readable_product.py`
 - `Tools/validation/run_runtime_file_refs_smoke.py`
-- `Tools/validation/run_runtime_universe_smoke.py`
+- `Tools/validation/runtime_universe/runtime_universe_smoke/cli.py`
 - `Tools/validation/run_patch_candidate_synthesis_smoke.py`
 
 ## Rischi

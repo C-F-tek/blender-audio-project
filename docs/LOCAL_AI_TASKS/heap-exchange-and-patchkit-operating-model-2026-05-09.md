@@ -21,8 +21,8 @@ Primary files:
 Tools/workflow/run_unified_local_ai_refactor.ps1
 python -m Tools.ai heap_exchange_runtime_entry
 python -m Tools.ai heap_exchange_runtime_exit
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
-Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
+Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/ai/patchkit/apply_patch_bundle.py
 Tools/ai/patchkit/filesystem.py
 Tools/ai/patchkit/anchors.py
@@ -253,8 +253,8 @@ Heap/exchange lifecycle:
 python -m py_compile `
   python -m Tools.ai heap_exchange_runtime_entry `
   python -m Tools.ai heap_exchange_runtime_exit `
-  .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
-  .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
+  .\Tools\validation\heap_exchange\runtime_lifecycle_check\cli.py `
+  .\Tools\validation\heap_exchange\runtime_lifecycle_smoke\cli.py
 
 python -m Tools.validation run_heap_exchange_runtime_lifecycle_smoke `
   --repo-root .

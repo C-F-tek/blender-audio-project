@@ -16,7 +16,7 @@ The goal is not to force the GPU planner to invent recommendations. The goal is 
 ## Tool
 
 ```text
-Tools/ai/build_gpu_repair_failure_recommendation.py
+Tools/ai/provider_mesh/gpu_repair_failure_recommendation.py
 ```
 
 ## Inputs

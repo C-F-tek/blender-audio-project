@@ -264,7 +264,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
         artifact_paths.append(line_csv)
     args = [
         "-m",
-        "Tools.ai.build_github_evidence_bundle",
+        "Tools.ai.repository_product.github_evidence_bundle",
         "--repo-root",
         ".",
         "--basename",

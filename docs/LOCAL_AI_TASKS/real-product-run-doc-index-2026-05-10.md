@@ -20,14 +20,14 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 |---|---|
 | Entrata unica real product | `python -m Tools.ai run` |
 | Universo heap/exchange | `python -m Tools.workflow run_unified_local_ai_refactor` |
-| Preflight obbligatorio | `Tools/validation/run_real_product_preflight_gate.py` |
-| GPU0 workload osservabile | `Tools/ai/build_openvino_gpu0_workload_report.py` |
-| NPU micro peer diagnostic/report lane | `Tools/ai/build_npu_micro_task_companion_report.py` |
+| Preflight obbligatorio | `Tools/validation/real_product/preflight_gate/cli.py` |
+| GPU0 workload osservabile | `Tools/ai/provider_mesh/openvino_gpu0_workload_report.py` |
+| NPU micro peer diagnostic/report lane | `Tools/ai/provider_mesh/npu_micro_task_companion_report.py` |
 | Empty generated product fail-fast | `Tools/ai/generated_patch_specs/apply_cli.py` |
-| Runtime evidence proposal feed | `Tools/ai/repository_change_proposals/cli.py` |
+| Runtime evidence proposal feed | `Tools/ai/repository_product/repository_change_proposals/cli.py` |
 | Concrete ops into patch specs | `Tools/ai/generated_patch_specs/proposal_cli.py` |
-| Runtime evidence proposal smoke | `Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py` |
-| Empty product smoke | `Tools/validation/run_generated_patch_specs_empty_product_smoke.py` |
+| Runtime evidence proposal smoke | `Tools/validation/repository_product/repository_change_proposals_runtime_evidence_smoke/cli.py` |
+| Empty product smoke | `Tools/validation/generated_patch_specs/empty_product_smoke/cli.py` |
 | Markdown line-budget policy | `Tools/validation/check_file_line_limits.py` |
 
 ## Dottrina sintetica corrente

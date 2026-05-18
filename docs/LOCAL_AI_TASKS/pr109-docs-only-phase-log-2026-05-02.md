@@ -56,7 +56,7 @@ head: codex/design-code-patch-plan-lane
 ## Remaining local-only blocker
 
 ```text
-Tools/ai/build_github_evidence_bundle.py wiring must be done locally by copying the replacement-ready orchestrator over it.
+Tools/ai/repository_product/github_evidence_bundle.py wiring must be done locally by copying the replacement-ready orchestrator over it.
 ```
 
 ## Next safe docs-only checks

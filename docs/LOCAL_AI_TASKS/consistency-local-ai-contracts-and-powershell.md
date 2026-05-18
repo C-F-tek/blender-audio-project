@@ -58,10 +58,10 @@ Secondary files to reference when needed:
 
 ```text
 Tools/validation/README.md
-Tools/ai/build_github_evidence_bundle.py
-Tools/ai/repository_update_suggestions/cli.py
-Tools/ai/repository_change_proposals/cli.py
-Tools/validation/check_repository_change_proposals.py
+Tools/ai/repository_product/github_evidence_bundle.py
+Tools/ai/repository_product/repository_update_suggestions/cli.py
+Tools/ai/repository_product/repository_change_proposals/cli.py
+Tools/validation/repository_product/repository_change_proposals/cli.py
 docs/LOCAL_VALIDATION_EVIDENCE/issue62_multistep_heavy_work_evidence.md
 docs/LOCAL_VALIDATION_EVIDENCE/issue62_multistep_provider_evidence.md
 ```

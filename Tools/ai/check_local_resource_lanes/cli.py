@@ -50,7 +50,7 @@ def check_npu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
-        from Tools.npu._shared.npu_runtime import (  # noqa: PLC0415
+        from Tools.npu.provider_mesh._shared.npu_runtime import (  # noqa: PLC0415
             DEFAULT_MODEL_DIR,
             DEFAULT_NPU_PYTHON,
             npu_preflight,
@@ -95,7 +95,7 @@ def check_gpu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
-        from Tools.npu._shared.npu_runtime import (  # noqa: PLC0415
+        from Tools.npu.provider_mesh._shared.npu_runtime import (  # noqa: PLC0415
             DEFAULT_NPU_PYTHON,
             _parse_last_json_line,
             _run_python,
@@ -147,7 +147,7 @@ def check_ollama_lane(
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
-        from Tools.npu._shared.ollama_runtime import (  # noqa: PLC0415
+        from Tools.npu.provider_mesh._shared.ollama_runtime import (  # noqa: PLC0415
             DEFAULT_BASE_URL,
             OllamaSession,
             choose_model,

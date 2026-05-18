@@ -7,7 +7,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from Tools.docs.repo_tool_surface_audit import git_visible_files
+from Tools.docs.docs_hygiene.repo_tool_surface_audit import git_visible_files
 
 TEXT_SUFFIXES = {".py", ".ps1", ".md", ".txt", ".json", ".yml", ".yaml", ".toml"}
 CODE_REFERENCE_SUFFIXES = {".py", ".ps1", ".json", ".yml", ".yaml", ".toml"}

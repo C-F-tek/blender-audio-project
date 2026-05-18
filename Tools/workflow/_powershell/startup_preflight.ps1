@@ -171,7 +171,7 @@ function Invoke-SpaziotempoStartupCheck {
         Write-Host "=== Startup service check ==="
     }
 
-    $startupCheckModule = Join-Path $Project "Tools\workflow\startup_check_core\cli.py"
+    $startupCheckModule = Join-Path $Project "Tools\workflow\workflow_run\startup_check_core\cli.py"
     if (Test-Path -LiteralPath $startupCheckModule) {
         $candidatePythons = @()
         if (-not [string]::IsNullOrWhiteSpace($Python)) {
@@ -221,7 +221,7 @@ function Invoke-SpaziotempoStartupCheck {
         $checks = Add-SpaziotempoCheck -Checks $checks -Status "MISS" -Name "Project" -Detail "Missing: $Project"
     }
 
-    $workflowScript = Join-Path $Project "Tools\workflow\workflow_core\__init__.py"
+    $workflowScript = Join-Path $Project "Tools\workflow\workflow_run\workflow_core\__init__.py"
     if (Test-Path -LiteralPath $workflowScript) {
         $checks = Add-SpaziotempoCheck -Checks $checks -Status "OK" -Name "Workflow runtime" -Detail $workflowScript
     } else {

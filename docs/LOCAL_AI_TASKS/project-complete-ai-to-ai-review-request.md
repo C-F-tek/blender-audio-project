@@ -33,13 +33,13 @@ docs/LOCAL_AI_TASKS/improve-gpu-planner-nonempty-recommendations.md
 docs/PROJECT_STATUS_POINT.md
 docs/AGENT_REVIEW_CODE_PATCH_PLAN.md
 docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md
-Tools/ai/gpu_npu_parallel_orchestrator/cli.py
-Tools/ai/gpu_deep_planning_review/cli.py
-Tools/ai/gpu_deep_planning_supervised/cli.py
+Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
 Tools/ai/agent_review/patch_plan/cli.py
-Tools/ai/build_github_evidence_bundle.py
+Tools/ai/repository_product/github_evidence_bundle.py
 Tools/validation/agent_review/patch_plan_smoke/cli.py
-Tools/validation/check_github_evidence_bundle.py
+Tools/validation/repository_product/github_evidence_bundle/cli.py
 ```
 
 If instructions conflict, stop and report the conflict instead of continuing.

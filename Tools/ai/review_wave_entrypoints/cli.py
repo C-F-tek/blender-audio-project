@@ -17,10 +17,10 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_TARGETS = [
-    "Tools/workflow/audio_analysis/analyzer.py",
-    "Tools/workflow/audio_analysis/analyze_cli.py",
-    "Tools/workflow/audio_analysis/summary.py",
-    "Tools/workflow/audio_analysis/summary_cli.py",
+    "Tools/workflow/workflow_run/audio_analysis/analyzer.py",
+    "Tools/workflow/workflow_run/audio_analysis/analyze_cli.py",
+    "Tools/workflow/workflow_run/audio_analysis/summary.py",
+    "Tools/workflow/workflow_run/audio_analysis/summary_cli.py",
 ]
 
 
@@ -82,13 +82,13 @@ def literal_contains(text: str, token: str) -> bool:
 
 def target_role(path: Path) -> str:
     normalized = path.as_posix()
-    if normalized.endswith("Tools/workflow/audio_analysis/analyzer.py"):
+    if normalized.endswith("Tools/workflow/workflow_run/audio_analysis/analyzer.py"):
         return "analyze_impl"
-    if normalized.endswith("Tools/workflow/audio_analysis/analyze_cli.py"):
+    if normalized.endswith("Tools/workflow/workflow_run/audio_analysis/analyze_cli.py"):
         return "analyze_cli"
-    if normalized.endswith("Tools/workflow/audio_analysis/summary.py"):
+    if normalized.endswith("Tools/workflow/workflow_run/audio_analysis/summary.py"):
         return "summary_impl"
-    if normalized.endswith("Tools/workflow/audio_analysis/summary_cli.py"):
+    if normalized.endswith("Tools/workflow/workflow_run/audio_analysis/summary_cli.py"):
         return "summary_cli"
     return "generic"
 

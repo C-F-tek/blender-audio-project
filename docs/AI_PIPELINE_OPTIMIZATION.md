@@ -122,7 +122,7 @@ python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json 
 Dry-run matrix:
 
 ```powershell
-python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 ## Outputs
@@ -166,7 +166,7 @@ After pipeline changes:
 ```powershell
 python -m Tools.validation check_python_syntax --repo-root .
 python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 The pipeline is additive and can be bypassed by simply not running these tools.

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.docs.markdown_split_tool_guide import write_root_tool_guide
+    from Tools.docs.docs_hygiene.markdown_split_tool_guide import write_root_tool_guide
     from Tools.docs._shared.markdown_splits_refactor_core import (
         DEFAULT_MAX_LINES,
         DEFAULT_SCOPES,

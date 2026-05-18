@@ -29,7 +29,7 @@ def main() -> int:
             read("Tools/ai/heap_gate/provider_refinement.py"),
         ]
     )
-    revision = read("Tools/ai/external_heap_revision_context/tasks.py")
+    revision = read("Tools/ai/external_heap/revision_context/tasks.py")
 
     require(
         "tratta candidate_response_preview come esempio negativo" in revision,

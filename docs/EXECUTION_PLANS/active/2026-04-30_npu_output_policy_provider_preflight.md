@@ -20,8 +20,8 @@ Tools/npu/pipeline/artifact_paths.py
 Tools/npu/pipeline/providers.py
 Tools/npu/pipeline/__init__.py
 Tools/npu/run_dual_ai_pipeline.py
-Tools/validation/npu_pipeline_modules_check/cli.py
-Tools/validation/test_npu_pipeline_helpers.py
+Tools/validation/pipeline/npu_pipeline_modules_check/cli.py
+Tools/validation/pipeline/test_npu_pipeline_helpers/cli.py
 Tools/npu/pipeline/README.md
 docs/TECH_DEBT_TRACKER.md
 docs/MODULE_MAP.md

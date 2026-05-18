@@ -13,9 +13,9 @@ from Tools.ai._shared.heap_source_anchors import (
     real_source_file_candidates,
     response_file_reference_quality,
 )
-from Tools.ai.patch_plan_generator import write_patch_plan_event
+from Tools.ai.patch_product.patch_plan_generator import write_patch_plan_event
 from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, record_lane_diagnostic
-from Tools.ai.gpu_npu_parallel_orchestrator import runtime_state_gate
+from Tools.ai.provider_mesh.gpu_npu_parallel_orchestrator import runtime_state_gate
 from Tools.ai.heap_runtime.completeness_gate import runtime_state_lane_gate
 from Tools.ai.validation_step import write_validation_event
 

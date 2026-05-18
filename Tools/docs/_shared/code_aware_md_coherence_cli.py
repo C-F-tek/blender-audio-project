@@ -12,7 +12,7 @@ try:
         repo_root_from,
         summarize,
     )
-    from Tools.docs.code_aware_md_coherence_render import render_markdown
+    from Tools.docs.docs_hygiene.code_aware_md_coherence_render import render_markdown
 except ModuleNotFoundError:  # pragma: no cover - direct script fallback
     from Tools.docs._shared.code_aware_md_coherence_core import (
         analyze_markdown,

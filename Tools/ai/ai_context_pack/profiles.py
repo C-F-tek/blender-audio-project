@@ -54,7 +54,7 @@ PROFILES: dict[str, dict[str, Any]] = {
             {"path": "docs/JSON_SCHEMAS.md", "role": "schema_notes"},
             {"path": "tools/validation/README.md", "role": "validation_commands"},
             {
-                "path": "Tools/ai/repository_change_proposals/cli.py",
+                "path": "Tools/ai/repository_product/repository_change_proposals/cli.py",
                 "role": "proposal_builder",
             },
             {
@@ -102,11 +102,11 @@ PROFILES: dict[str, dict[str, Any]] = {
                 "role": "lane_routing",
             },
             {
-                "path": "Tools/ai/repository_update_suggestions/cli.py",
+                "path": "Tools/ai/repository_product/repository_update_suggestions/cli.py",
                 "role": "advisory_packet",
             },
             {
-                "path": "tools/ai/build_github_evidence_bundle.py",
+                "path": "tools/ai/repository_product/github_evidence_bundle.py",
                 "role": "evidence_builder",
             },
             {"path": "tools/validation/README.md", "role": "validation_commands"},
@@ -132,9 +132,9 @@ PROFILES: dict[str, dict[str, Any]] = {
         "required_files": [
             {"path": "docs/LOCAL_AI_WORKFLOW.md", "role": "ai_workflow"},
             {"path": "docs/DATA_FLOW.md", "role": "data_flow"},
-            {"path": "tools/ai/run_local_provider_probe.py", "role": "provider_probe"},
+            {"path": "tools/ai/provider_mesh/local_provider_probe.py", "role": "provider_probe"},
             {
-                "path": "tools/ai/run_npu_decode_smoke_diagnostic.py",
+                "path": "tools/ai/provider_mesh/npu_decode_smoke_diagnostic.py",
                 "role": "npu_decode_smoke",
             },
             {
@@ -177,7 +177,7 @@ PROFILES: dict[str, dict[str, Any]] = {
                 "role": "machine_readable_status",
             },
             {
-                "path": "Tools/ai/pipeline_dry_run_matrix/cli.py",
+                "path": "Tools/ai/pipeline/dry_run_matrix/cli.py",
                 "role": "dry_run_matrix",
             },
             {

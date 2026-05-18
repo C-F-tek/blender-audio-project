@@ -139,8 +139,8 @@ Do not apply patch-note ledger entries directly.
 ```text
 Tools/validation/README.md
 docs/LOCAL_AI_TASKS/validator-smoke-cycle-map-2026-05-07.md
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
-Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
+Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/validation/run_patchkit_smoke.py
 ```
 

@@ -198,23 +198,23 @@ Metadata-only mode must keep provider execution disabled.
 | `check_json_artifacts.py` | Checks JSON parseability; accepts UTF-8 with or without BOM and skips very large files by default. | No |
 | `check_docs_links.py` | Validates repository-local Markdown links and ignores external URLs. | No |
 | `check_execution_plan_status.py` | Ensures terminal execution plans are not left under `docs/EXECUTION_PLANS/active/`. | No |
-| `check_ai_pipeline_modules.py` | Imports modular AI pipeline code and validates representative planning/report helpers. | No |
-| `npu_pipeline_modules_check.py` | Imports app-agnostic NPU pipeline helpers and validates representative contract, provider-planning and boundary helpers. | No |
-| `check_npu_pipeline_helper_tests.py` | Runs deterministic `unittest` coverage for app-agnostic NPU helper modules and emits a JSON validation report. | No |
-| `test_npu_pipeline_helpers.py` | Unit test module used by `check_npu_pipeline_helper_tests.py`. | No |
+| `python -m Tools.validation check_ai_pipeline_modules` | Imports modular AI pipeline code and validates representative planning/report helpers. | No |
+| `python -m Tools.validation npu_pipeline_modules_check` | Imports app-agnostic NPU pipeline helpers and validates representative contract, provider-planning and boundary helpers. | No |
+| `python -m Tools.validation check_npu_pipeline_helper_tests` | Runs deterministic `unittest` coverage for app-agnostic NPU helper modules and emits a JSON validation report. | No |
+| `python -m Tools.validation test_npu_pipeline_helpers` | Unit test module used by `python -m Tools.validation check_npu_pipeline_helper_tests`. | No |
 | `check_ai_model_json.py` | Validates deterministic parsing of JSON-like model output and legacy wrapper behavior. | No |
-| `check_ai_dry_run_matrix_cases.py` | Validates dry-run matrix case definitions without executing the matrix. | No |
-| `check_ai_dry_run_matrix_outputs.py` | Validates generated dry-run matrix outputs against per-case reports. | No |
-| `check_ai_dry_run_matrix_contract.py` | Validates the machine-readable dry-run matrix report contract. | No |
-| `check_dry_run_matrix_evidence_bundle.py` | Validates compact Git-trackable dry-run matrix evidence bundles. | No |
-| `check_ai_pipeline_report_contract.py` | Validates one schema-v6 AI pipeline report, including dry-run-only semantics when requested. | No |
+| `python -m Tools.validation check_ai_dry_run_matrix_cases` | Validates dry-run matrix case definitions without executing the matrix. | No |
+| `python -m Tools.validation check_ai_dry_run_matrix_outputs` | Validates generated dry-run matrix outputs against per-case reports. | No |
+| `python -m Tools.validation check_ai_dry_run_matrix_contract` | Validates the machine-readable dry-run matrix report contract. | No |
+| `python -m Tools.validation check_dry_run_matrix_evidence_bundle` | Validates compact Git-trackable dry-run matrix evidence bundles. | No |
+| `python -m Tools.validation check_ai_pipeline_report_contract` | Validates one schema-v6 AI pipeline report, including dry-run-only semantics when requested. | No |
 | `check_github_evidence_bundle.py` | Validates Git-trackable AI/provider evidence bundle shape and decision fields without reading ignored `output/` contents. | No |
 | `check_selective_execution_plan.py` | Validates report-only selective execution plan recommendations, local-only command sets and patch-spec candidate boundaries. | No |
 | `check_selected_semantic_chunks.py` | Validates selected semantic chunk bundles and can emit compact selected-chunks evidence. | No |
 | `check_repository_change_proposals.py` | Validates manual-review repository proposal reports and their code/Markdown/JSON suggestion descriptors. | No |
 | `check_full_context_golden_proposals.py` | Validates semantic coverage of full-context golden proposal families beyond the generic repository proposal schema. | No |
-| `check_patch_spec_drafts.py` | Validates proposal-derived draft patch specs under `output/patch_specs/` and rejects queued or concrete replacements. | No |
-| `reviewed_patch_specs_check.py` | Validates reviewed patch specs and reruns dry-run without writing source files. | No |
+| `python -m Tools.validation check_patch_spec_drafts` | Validates proposal-derived draft patch specs under `output/patch_specs/` and rejects queued or concrete replacements. | No |
+| `python -m Tools.validation reviewed_patch_specs_check` | Validates reviewed patch specs and reruns dry-run without writing source files. | No |
 | `check_ai_context_pack_contract.py` | Validates AI context packs and compact context-pack evidence without executing providers. | No |
 | `check_validation_report_contract.py` | Validates generated reports in `output/validation/` for common root fields. | No |
 | `check_refactor_status_consistency.py` | Checks that AI pipeline status markers and docs agree. | No |

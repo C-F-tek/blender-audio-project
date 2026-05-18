@@ -61,7 +61,7 @@ Requirements:
 
 Additional requirements:
 
-    safe for `Tools/ai/agent_runtime_tool_broker.py`
+    safe for `Tools/ai/runtime_tool/agent_broker.py`
     no free shell
     no provider execution unless explicitly designated diagnostic and safe
     no patch application
@@ -88,8 +88,8 @@ Additional requirements:
 
 Examples:
 
-    Tools/workflow/audio_analysis/analyze_cli.py
-    Tools/workflow/audio_analysis/summary_cli.py
+    Tools/workflow/workflow_run/audio_analysis/analyze_cli.py
+    Tools/workflow/workflow_run/audio_analysis/summary_cli.py
     Scripting/v61b/main_v61b.py
     Scripting/v61b/encode_image_sequence_v61b.py
     Scripting/v61b/encode_ffmpeg_v61b.py
@@ -115,7 +115,7 @@ Examples:
     Tools/validation/check_python_syntax.py
     Tools/validation/build_python_line_count_csv.py
     Tools/validation/check_validation_report_contract.py
-    Tools/validation/build_markdown_inventory.py
+    Tools/validation/docs_hygiene/markdown_inventory/cli.py
     Tools/validation/check_docs_links.py
 
 Placement:
@@ -132,10 +132,10 @@ Promotion:
 
 Examples:
 
-    Tools/ai/run_local_provider_probe.py
+    Tools/ai/provider_mesh/local_provider_probe.py
     Tools/ai/check_local_resource_lanes.py
-    Tools/validation/check_ai_workload_report_quality.py
-    Tools/validation/run_orchestrator_gpu_runtime_tool_routing_smoke.py
+    Tools/validation/ai_workload/report_quality/cli.py
+    Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py
 
 Placement:
 
@@ -282,7 +282,7 @@ Update one or more:
 
 ### H. Broker insertion only if safe
 
-To add to `Tools/ai/agent_runtime_tool_broker.py`:
+To add to `Tools/ai/runtime_tool/agent_broker.py`:
 
     1. add builder function;
     2. add ToolSpec entry;
@@ -346,14 +346,14 @@ ToolSpec pattern:
 Validation after the concrete file exists:
 
 ```text
-python -m py_compile <tracked validation tool> Tools/ai/agent_runtime_tool_broker.py
+python -m py_compile <tracked validation tool> Tools/ai/runtime_tool/agent_broker.py
 ```
 
 ## Example: promoting the workflow audio analyzer
 
 Path:
 
-    Tools/workflow/audio_analysis/analyze_cli.py
+    Tools/workflow/workflow_run/audio_analysis/analyze_cli.py
 
 Placement:
 

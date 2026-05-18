@@ -61,18 +61,18 @@ promotion requires evidence, manual review and explicit future command
 ## Required tools
 
 ```text
-Tools/ai/agent_runtime_tool_broker.py
+Tools/ai/runtime_tool/agent_broker.py
 python -m Tools.ai agent_runtime_sqlite_memory
 python -m Tools.ai agent_memory_routing_policy
 Tools/ai/agent_context/memory_inventory/cli.py
 Tools/ai/agent_context/agnostic_tool_inventory/cli.py
 Tools/ai/agent_context/transient_request_context/cli.py
-Tools/ai/code_interpreter_report/cli.py
-Tools/ai/build_github_evidence_bundle.py
+Tools/ai/code_product/interpreter_report/cli.py
+Tools/ai/repository_product/github_evidence_bundle.py
 Tools/validation/build_python_line_count_csv.py
 Tools/validation/check_python_syntax.py
 Tools/validation/check_validation_report_contract.py
-Tools/validation/run_agent_runtime_tool_broker_smoke.py
+Tools/validation/runtime_tool/agent_runtime_tool_broker_smoke/cli.py
 Tools/validation/run_agent_memory_routing_policy_smoke.py
 ```
 

@@ -170,29 +170,29 @@ run_unified_real_product_pr.ps1
   -> python -m Tools.ai heap_exchange_runtime_entry
   -> official adapter/provider/patch-spec lanes
   -> python -m Tools.ai heap_exchange_runtime_exit
-  -> Tools/validation/check_heap_exchange_runtime_lifecycle.py
-  -> Tools/ai/repository_change_proposals/cli.py
+  -> Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
+  -> Tools/ai/repository_product/repository_change_proposals/cli.py
   -> Tools/ai/generated_patch_specs/proposal_cli.py
   -> Tools/ai/generated_patch_specs/apply_cli.py
   -> Tools/ai/agent_review/review_pr_cli.py
-  -> Tools/validation/check_review_pr_final_product_contract.py
+  -> Tools/validation/repository_product/review_pr_final_product_contract/cli.py
 ```
 
 Legacy deterministic suggestion bridge remains available:
 
 ```text
-Tools/ai/build_task_patch_suggestion_report.py
-Tools/ai/patch_suggestion_bundle/cli.py
-Tools/validation/check_patch_suggestion_product_separation.py
+Tools/ai/patch_product/task_patch_suggestion_report.py
+Tools/ai/patch_product/patch_suggestion_bundle/cli.py
+Tools/validation/patch_product/product_separation/cli.py
 ```
 
 Focused chain smoke:
 
 ```text
-Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/validation/run_patchkit_smoke.py
-Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py
-Tools/validation/run_generated_patch_specs_empty_product_smoke.py
+Tools/validation/repository_product/repository_change_proposals_runtime_evidence_smoke/cli.py
+Tools/validation/generated_patch_specs/empty_product_smoke/cli.py
 ```
 
 Current limitations and hard gates:

@@ -85,7 +85,7 @@ Before reading the runtime ZIP, code/docs inspection suggests one safe candidate
 
 ```text
 centralize report/telemetry helper functions in Tools/validation/_shared/report_utils.py
-reuse them from Tools/ai/runtime_tool_usage_telemetry/cli.py
+reuse them from Tools/ai/runtime_tool/usage_telemetry/cli.py
 reuse them from Tools/ai/full_toolbox_telemetry_summary/cli.py
 then evaluate Tools/ai/shared_toolbox_bundle/cli.py separately
 ```

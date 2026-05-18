@@ -66,9 +66,9 @@ def ollama_tool_call_selection_prompt(prompt: str, provider_delta: str) -> str:
 
 def broker_tool_schemas(tool_names: list[str] | tuple[str, ...] | None = None) -> list[dict[str, Any]]:
     try:
-        from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS
+        from Tools.ai.runtime_tool.broker.registry import TOOL_SPECS
     except ImportError:  # pragma: no cover
-        from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS  # type: ignore
+        from Tools.ai.runtime_tool.broker.registry import TOOL_SPECS  # type: ignore
 
     allowed = set(tool_names or [])
     schemas: list[dict[str, Any]] = []

@@ -20,7 +20,7 @@ try:
         run_npu_micro_task,
     )
 except ModuleNotFoundError:
-    from Tools.ai.build_npu_micro_task_companion_report import (
+    from Tools.ai.provider_mesh.npu_micro_task_companion_report import (
         build_npu_role_response,
         resolve_project_python,
         run_npu_device_workload,

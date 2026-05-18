@@ -31,7 +31,7 @@ warnings where applicable
 | `check_generated_python_policy.py` | yes | yes | yes | yes | yes | rule-level | Good reference for future generated Python adapters. |
 | `check_generated_artifact_path_policy.py` | expected | expected | expected | expected | expected | expected | Confirm in local/source review before code change. |
 | `check_generated_blender_script_policy.py` | expected | expected | expected | expected | expected | expected | Should remain composed over generic Python policy. |
-| `check_ai_dry_run_matrix_contract.py` | expected | expected | expected | expected | expected | expected | Contract validator should preserve forward compatibility. |
+| `python -m Tools.validation check_ai_dry_run_matrix_contract` | expected | expected | expected | expected | expected | expected | Contract validator should preserve forward compatibility. |
 | `check_agent_memory/policy.py` | expected | expected | expected | expected | not confirmed | not confirmed | Requires source review before alignment. |
 
 ## Implemented in PR #34

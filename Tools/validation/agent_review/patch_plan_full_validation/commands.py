@@ -78,7 +78,7 @@ def build_commands(
             "build_github_evidence_bundle",
             [
                 sys.executable,
-                "Tools/ai/build_github_evidence_bundle/cli.py",
+                "Tools/ai/repository_product/github_evidence_bundle/cli.py",
                 "--repo-root",
                 ".",
                 "--basename",
@@ -104,7 +104,7 @@ def build_commands(
             "check_github_evidence_bundle",
             [
                 sys.executable,
-                "Tools/validation/check_github_evidence_bundle/cli.py",
+                "Tools/validation/repository_product/github_evidence_bundle/cli.py",
                 "--repo-root",
                 ".",
                 "--bundle",

@@ -44,7 +44,7 @@ def main() -> int:
                 {
                     "function": {
                         "name": "run_heap_code_execution_matrix",
-                        "arguments": {"target_file": ["Tools/ai/run_local_provider_probe/cli.py"]},
+                        "arguments": {"target_file": ["Tools/ai/provider_mesh/local_provider_probe/cli.py"]},
                     }
                 }
             ]
@@ -74,12 +74,12 @@ def main() -> int:
 
     live_ollama: dict[str, object] = {"requested": bool(args.run_live_ollama)}
     if args.run_live_ollama:
-        from Tools.ai.run_local_provider_probe import run_ollama_probe
+        from Tools.ai.provider_mesh.local_provider_probe import run_ollama_probe
 
         live_ollama = run_ollama_probe(
             repo_root,
             "qwen3-coder:latest",
-            "TARGET_FILES Tools/ai/run_local_provider_probe/cli.py forced concrete delta required. "
+            "TARGET_FILES Tools/ai/provider_mesh/local_provider_probe/cli.py forced concrete delta required. "
             "Use a native tool call to run_heap_code_execution_matrix.",
             max_new_tokens=96,
         )

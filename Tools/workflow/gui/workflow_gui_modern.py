@@ -193,7 +193,9 @@ class ModernWorkflowGui(LegacyWorkflowGui):
     def ai_artifact_pipeline_command(self, dry_run: bool) -> list[str]:
         command = [
             str(wf.python_executable()),
-            str(wf.PROJECT_DIR / "Tools" / "ai" / "run_parallel_artifact_pipeline.py"),
+            "-m",
+            "Tools.ai",
+            "run_parallel_artifact_pipeline",
             "--repo-root",
             str(wf.PROJECT_DIR),
             "--analysis-json",

@@ -46,8 +46,8 @@ Even then, the operator must keep generated media out of Git and report the prod
 
 These are project tools or application tools, not broker-safe tools by default:
 
-    Tools/workflow/audio_analysis/analyze_cli.py
-    Tools/workflow/audio_analysis/summary_cli.py
+    Tools/workflow/workflow_run/audio_analysis/analyze_cli.py
+    Tools/workflow/workflow_run/audio_analysis/summary_cli.py
     Scripting/v61b/main_v61b.py
     Scripting/v61b/encode_image_sequence_v61b.py
     Scripting/v61b/encode_ffmpeg_v61b.py

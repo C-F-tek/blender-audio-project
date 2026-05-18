@@ -3,7 +3,7 @@
 
 This adapter keeps provider lanes conversational through the shared heap while
 preserving the existing rule: tools are executed only by
-tools/ai/agent_runtime_tool_broker.py.
+``python -m Tools.ai agent_runtime_tool_broker``.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ repo_root_for_import = Path(__file__).resolve().parents[3]
 if str(repo_root_for_import) not in sys.path:
     sys.path.insert(0, str(repo_root_for_import))
 
-from Tools.ai.provider_mesh_runtime.python_runtime import command_env, resolve_child_python
+from Tools.ai.provider_mesh.runtime.python_runtime import command_env, resolve_child_python
 from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict
 
 DEFAULT_OUTPUT = "output/validation/provider_runtime_broker_bridge_{stamp}.json"
@@ -112,7 +112,9 @@ def run_broker(
 ) -> tuple[int, str, str]:
     command = [
         resolve_child_python(repo_root),
-        "tools/ai/agent_runtime_tool_broker.py",
+        "-m",
+        "Tools.ai",
+        "agent_runtime_tool_broker",
         "--repo-root",
         ".",
         "--request-file",

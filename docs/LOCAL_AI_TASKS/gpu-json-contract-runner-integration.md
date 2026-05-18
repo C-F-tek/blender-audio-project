@@ -7,8 +7,8 @@ Plan and validation notes for integrating `Tools.ai._shared.gpu_planner_json_con
 Target runners:
 
 ```text
-Tools/ai/gpu_deep_planning_review/cli.py
-Tools/ai/gpu_deep_planning_supervised/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
 ```
 
 ## Current safe bridge
@@ -16,7 +16,7 @@ Tools/ai/gpu_deep_planning_supervised/cli.py
 Before changing the long-running provider path, use:
 
 ```text
-Tools/ai/replay_gpu_planner_json_contract.py
+Tools/ai/provider_mesh/gpu_planner_json_contract_replay.py
 ```
 
 This replays already captured GPU planner raw responses through the contract helper.

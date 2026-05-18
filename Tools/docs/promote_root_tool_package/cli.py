@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from Tools.docs.repo_tool_surface_audit import repo_root_from
+from Tools.docs.docs_hygiene.repo_tool_surface_audit import repo_root_from
 
 from .references import (
     candidate_tools,

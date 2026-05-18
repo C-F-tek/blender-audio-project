@@ -164,7 +164,7 @@ def main() -> int:
 
     broker_cmd = [
         sys.executable,
-        "Tools/ai/agent_runtime_tool_broker/cli.py",
+        "Tools/ai/runtime_tool/agent_broker/cli.py",
         "--repo-root",
         ".",
         "--request-file",

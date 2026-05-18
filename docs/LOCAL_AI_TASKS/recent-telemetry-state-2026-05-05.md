@@ -161,7 +161,7 @@ The current 143844 refactor/reuse runtime bundle must be inspected separately be
 
 Both 073332 and 081141 telemetry summaries include the operational opinion that NPU should remain sampled/advisory and that GPU timing was inferred.
 
-A later smoke validation in PR #187 established that `Tools/ai/gpu_npu_run_sync_analysis/cli.py` now prefers real `rounds[*].elapsed_seconds` samples when present.
+A later smoke validation in PR #187 established that `Tools/ai/provider_mesh/gpu_npu_run_sync_analysis/cli.py` now prefers real `rounds[*].elapsed_seconds` samples when present.
 
 Documentation implication:
 

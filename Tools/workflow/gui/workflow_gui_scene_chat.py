@@ -8,7 +8,7 @@ import traceback
 from pathlib import Path
 from tkinter import messagebox, ttk
 
-from Tools.workflow._shared.scene_brief import (
+from Tools.workflow.workflow_run._shared.scene_brief import (
     append_scene_message,
     clear_scene_chat_history,
     generate_scene_chat_reply,

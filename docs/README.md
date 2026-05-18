@@ -54,6 +54,7 @@ LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 | Project status | `PROJECT_STATUS_POINT.md` |
 | AI task map | `LOCAL_AI_TASKS/README.md` |
 | Tooling index | `../Tools/ai/README.md`, `../Tools/workflow/README.md`, `../Tools/validation/README.md` |
+| Tool package family map | `LOCAL_AI_TASKS/tool-package-family-map-2026-05-18.md` |
 
 ## Policy
 

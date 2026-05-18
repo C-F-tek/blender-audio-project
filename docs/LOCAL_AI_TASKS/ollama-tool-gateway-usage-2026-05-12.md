@@ -9,7 +9,7 @@ The gateway lets an Ollama model use controlled memory and file-reading tools wi
 ## Added script
 
 ```text
-Tools/ai/ollama_tool_gateway/
+Tools/ai/provider_mesh/ollama_tool_gateway/
 ```
 
 ## Purpose
@@ -86,13 +86,13 @@ These files are local runtime artifacts and must not be committed.
 python -m Tools.ai ollama_tool_gateway `
   --repo-root . `
   --model qwen3.5:cloud `
-  --task "Usa file_search e file_read per controllare Tools/ai/agent_runtime_tool_broker.py e python -m Tools.ai agent_runtime_sqlite_memory. Spiega come usarli per dare memoria dinamica a Ollama."
+  --task "Usa file_search e file_read per controllare Tools/ai/runtime_tool/agent_broker.py e python -m Tools.ai agent_runtime_sqlite_memory. Spiega come usarli per dare memoria dinamica a Ollama."
 ```
 
 ## Validation
 
 ```powershell
-python -m py_compile .\Tools\ai\ollama_tool_gateway\cli.py -m Tools.ai common
+python -m py_compile .\Tools\ai\provider_mesh\ollama_tool_gateway\cli.py -m Tools.ai common
 python -m Tools.ai ollama_tool_gateway --help
 ```
 

@@ -47,7 +47,7 @@ function Invoke-LocalAiArtifactReset {
         (Get-Date).AddSeconds(1)
     }
 
-    $ResetTool = Join-Path $Root "Tools/workflow/run_local_ai_artifact_reset/cli.py"
+    $ResetTool = Join-Path $Root "Tools/workflow/workflow_run/local_ai_artifact_reset/cli.py"
     if (-not (Test-Path -LiteralPath $ResetTool -PathType Leaf)) {
         Stop-RealProductLauncher -Code "bounded_reset_tool_missing" -Message "Bounded pre-run reset helper missing: $ResetTool" -Root $Root -StampValue $Stamp -DetailPath $ResetTool
     }

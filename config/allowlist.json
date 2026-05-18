@@ -3,8 +3,8 @@
   "Tools/ai/run_heap_runtime_completeness_gate/cli.py",
   "Tools/ai/run_heap_runtime_context_closure/cli.py",
   "Tools/ai/_shared/heap_proposal_gate.py",
-  "Tools/ai/agent_runtime_tool_broker/cli.py",
-  "Tools/ai/run_external_heap_postrun_package/cli.py",
+  "Tools/ai/runtime_tool/agent_broker/cli.py",
+  "Tools/ai/external_heap/postrun_package/cli.py",
   "Tools/ai/assemble_heap_final_readable_product/cli.py",
   "Tools/ai/analyze_code_product_artifact.py",
   "Tools/ai/code_product_artifact_apply.py",
@@ -18,10 +18,10 @@
   "Tools/ai/operator_product_launcher.py",
   "Tools/validation/test_composer_decision/cli.py",
   "Tools/validation/run_code_product_artifact_intake_smoke/cli.py",
-  "Tools/validation/run_operator_product_launcher_smoke/cli.py",
+  "Tools/validation/workflow_run/operator_product_launcher_smoke/cli.py",
   "Tools/validation/test_proposal_gate/cli.py",
   "Tools/validation/run_heap_final_readable_product_smoke/cli.py",
-  "Tools/validation/run_heap_virtual_dev_environment_smoke/cli.py",
-  "Tools/validation/run_heap_code_execution_tool_smoke/cli.py",
-  "Tools/validation/run_heap_runtime_completeness_gate_smoke/cli.py"
+  "Tools/validation/heap_runtime/virtual_dev_environment_smoke/cli.py",
+  "Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py",
+  "Tools/validation/heap_runtime/completeness_gate_smoke/cli.py"
 ]

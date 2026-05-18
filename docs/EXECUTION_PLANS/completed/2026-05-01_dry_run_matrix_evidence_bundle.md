@@ -29,8 +29,8 @@ Make the AI pipeline dry-run matrix reviewable from GitHub by producing a compac
 ## Files likely touched
 
 ```text
-Tools/ai/build_dry_run_matrix_evidence_bundle.py
-Tools/validation/check_dry_run_matrix_evidence_bundle.py
+Tools/ai/pipeline/dry_run_matrix/evidence_cli.py
+Tools/validation/pipeline/dry_run_matrix_evidence_bundle/cli.py
 Tools/validation/README.md
 docs/AI_ARTIFACT_SCHEMAS.md
 docs/JSON_SCHEMAS.md
@@ -44,7 +44,7 @@ docs/EXECUTION_PLANS/active/2026-04-30_dry_run_matrix_contract_followups.md
 ```powershell
 python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
 python -m Tools.validation check_ai_dry_run_matrix_cases --repo-root . --output .\output\validation\ai_dry_run_matrix_cases.json
-python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
 python -m Tools.validation check_ai_dry_run_matrix_contract --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python -m Tools.validation check_ai_dry_run_matrix_outputs --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
 python -m Tools.validation check_generated_artifact_path_policy --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy_from_matrix.json

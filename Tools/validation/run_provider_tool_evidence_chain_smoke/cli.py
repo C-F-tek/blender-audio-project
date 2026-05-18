@@ -114,7 +114,7 @@ def main() -> int:
         result = subprocess.run(
             [
                 sys.executable,
-                str(source_repo / "Tools/validation/unified_chain_contract/cli.py"),
+                str(source_repo / "Tools/validation/runtime_universe/unified_chain_contract/cli.py"),
                 "--repo-root",
                 str(repo),
                 "--stamp",

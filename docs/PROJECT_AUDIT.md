@@ -70,9 +70,9 @@ It contains:
 
 | Area | Role |
 |---|---|
-| `Tools/workflow/audio_analysis/analyze_cli.py` | Audio-analysis entry point. |
-| `Tools/workflow/audio_analysis/summary_cli.py` | Compact track-summary builder. |
-| `Tools/workflow/scene_spec/cli.py` | Scene-spec normalization and defaulting. |
+| `Tools/workflow/workflow_run/audio_analysis/analyze_cli.py` | Audio-analysis entry point. |
+| `Tools/workflow/workflow_run/audio_analysis/summary_cli.py` | Compact track-summary builder. |
+| `Tools/workflow/workflow_run/scene_spec/cli.py` | Scene-spec normalization and defaulting. |
 | `Scripting/v61b/` | Main quality reference for complex Blender package structure. |
 | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Large generated/refined package and strong extraction candidate. |
 | `Scripting/_template_audio_reactive_package/` | Template for future generated packages. |
@@ -182,7 +182,7 @@ Current AI workflow should remain owner-aligned:
 Tools/workflow/run_unified_local_ai_refactor.ps1
 python -m Tools.ai heap_exchange_runtime_entry
 python -m Tools.ai heap_exchange_runtime_exit
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
 Tools/ai/patchkit/apply_patch_bundle.py
 Tools/ai/agent_review/review_pr_cli.py
 ```
@@ -198,7 +198,7 @@ Tools/validation/check_python_syntax.py
 Tools/validation/check_package_structure.py
 Tools/validation/check_json_artifacts.py
 Tools/validation/check_docs_links.py
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
 Tools/validation/run_patchkit_smoke.py
 ```
 

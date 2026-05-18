@@ -45,15 +45,15 @@ docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/README.md
-Tools/ai/agent_runtime_tool_broker.py
+Tools/ai/runtime_tool/agent_broker.py
 Tools/ai/shared_toolbox_bundle/cli.py
-Tools/ai/runtime_tool_usage_telemetry/cli.py
+Tools/ai/runtime_tool/usage_telemetry/cli.py
 Tools/validation/**
 Tools/workflow/**
 Tools/npu/**
 Scripting/v61b/**
-Tools/workflow/audio_analysis/analyze_cli.py
-Tools/workflow/audio_analysis/summary_cli.py
+Tools/workflow/workflow_run/audio_analysis/analyze_cli.py
+Tools/workflow/workflow_run/audio_analysis/summary_cli.py
 ```
 
 ## Required taxonomy

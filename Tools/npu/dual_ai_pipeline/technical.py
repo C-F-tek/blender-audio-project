@@ -34,7 +34,7 @@ def deterministic_technical_notes(
                 "Scripting/v61b/fog_dynamics.py",
                 "Scripting/v61b/physics_setup.py",
                 "Scripting/v61b/scene_tuning_panel.py",
-                "Tools/workflow/workflow_core/__init__.py",
+                "Tools/workflow/workflow_run/workflow_core/__init__.py",
                 "Tools/npu/dual_ai_pipeline/cli.py",
             )
         )

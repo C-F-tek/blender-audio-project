@@ -30,7 +30,7 @@ MODULAR_PIPELINE_STATUS = PipelineRefactorStatus(
     external_behavior="intended_compatible_with_schema_v6_cli_and_report",
     local_validation_required=True,
     schema_version=6,
-    entrypoint="Tools/ai/run_parallel_artifact_pipeline/cli.py",
+    entrypoint="Tools/ai/pipeline/artifact_runner/cli.py",
     modules=(
         "Tools/ai/pipeline/defaults.py",
         "Tools/ai/pipeline/models.py",
@@ -47,6 +47,9 @@ MODULAR_PIPELINE_STATUS = PipelineRefactorStatus(
         "Tools/ai/pipeline/guardrail_models.py",
         "Tools/ai/pipeline/remediation.py",
         "Tools/ai/pipeline/refactor_status.py",
+        "Tools/ai/pipeline/artifact_runner/cli.py",
+        "Tools/ai/pipeline/dry_run_matrix/cli.py",
+        "Tools/ai/pipeline/dry_run_matrix/evidence_cli.py",
     ),
     validation_commands=(
         "python -m Tools.validation check_python_syntax --repo-root .",

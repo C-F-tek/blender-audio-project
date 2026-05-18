@@ -5,7 +5,7 @@
 `Tools/ai/pipeline/` contains the modular implementation behind the AI artifact pipeline entrypoint:
 
 ```text
-Tools/ai/run_parallel_artifact_pipeline.py
+python -m Tools.ai run_parallel_artifact_pipeline
 ```
 
 This package is an implementation lane inside the wider unified local-AI workflow. It is not the primary operator entrypoint.
@@ -61,6 +61,8 @@ It must not directly run Blender, FFmpeg, provider jobs or patch application unl
 | `guardrail_models.py` | Typed remediation queue/pass-result normalization. |
 | `remediation.py` | Guardrail action queue loading and auto-safe remediation pass execution. |
 | `refactor_status.py` | Machine-readable refactor status marker. |
+| `artifact_runner/` | Packaged public runner CLI. |
+| `dry_run_matrix/` | Packaged dry-run matrix, case definitions and compact evidence builder. |
 
 ## Full-run handoff rule
 

@@ -120,7 +120,7 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
             name="megalithic_pr_draft",
             command=[
                 py,
-                "Tools/ai/build_megalithic_review_pr_draft/cli.py",
+                "Tools/ai/repository_product/megalithic_review_pr_draft/cli.py",
                 "--review",
                 refined_json,
                 "--proposals",

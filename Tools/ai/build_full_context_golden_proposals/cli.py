@@ -244,7 +244,7 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Standardizing it reduces missed audit artifacts."
             ),
             target_files=[
-                "Tools/ai/build_github_evidence_bundle/cli.py",
+                "Tools/ai/repository_product/github_evidence_bundle/cli.py",
                 "docs/LOCAL_AI_WORKFLOW.md",
             ],
             change_type="validator",
@@ -264,7 +264,7 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Do not execute providers from evidence bundling.",
             ],
             suggestion_outputs=[
-                suggestion("Tools/ai/build_github_evidence_bundle/cli.py"),
+                suggestion("Tools/ai/repository_product/github_evidence_bundle/cli.py"),
                 suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
             ],
         ),
@@ -278,8 +278,8 @@ def build_proposals() -> list[dict[str, Any]]:
                 "A report-only helper can rank candidate chunks/docs and emit a bounded context request for validation before Ollama/GPU advisory reasoning."
             ),
             target_files=[
-                "Tools/npu/npu_knowledge_broker_packet/cli.py",
-                "Tools/validation/check_npu_knowledge_broker_packet/cli.py",
+                "Tools/npu/provider_mesh/npu_knowledge_broker_packet/cli.py",
+                "Tools/validation/provider_mesh/npu_knowledge_broker_packet/cli.py",
                 "docs/LOCAL_AI_WORKFLOW.md",
             ],
             change_type="knowledge_broker",
@@ -301,8 +301,8 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Do not apply or generate direct source patches from NPU output.",
             ],
             suggestion_outputs=[
-                suggestion("Tools/npu/npu_knowledge_broker_packet/cli.py"),
-                suggestion("Tools/validation/check_npu_knowledge_broker_packet/cli.py"),
+                suggestion("Tools/npu/provider_mesh/npu_knowledge_broker_packet/cli.py"),
+                suggestion("Tools/validation/provider_mesh/npu_knowledge_broker_packet/cli.py"),
                 suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
             ],
         ),

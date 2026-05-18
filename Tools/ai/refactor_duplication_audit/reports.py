@@ -37,7 +37,7 @@ def collect_report_status(
 def verify_layering(repo_root: Path) -> dict[str, Any]:
     files = {
         "builder": repo_root / "Tools/ai/shared_toolbox_bundle/cli.py",
-        "bundle": repo_root / "tools/ai/build_github_evidence_bundle.py",
+        "bundle": repo_root / "tools/ai/repository_product/github_evidence_bundle.py",
         "artifacts": repo_root / "tools/ai/github_evidence_bundle_artifacts.py",
         "validator": repo_root / "tools/validation/check_github_evidence_bundle.py",
         "smoke": repo_root / "tools/validation/run_shared_toolbox_ai_to_ai_bundle_smoke.py",
@@ -46,7 +46,7 @@ def verify_layering(repo_root: Path) -> dict[str, Any]:
     checks = {
         "layering_preserved": all(path.exists() for path in files.values()),
         "builder_delegates_to_common_bundle": "build_bundle" in content["builder"]
-        and "Tools.ai.build_github_evidence_bundle" in content["builder"],
+        and "Tools.ai.repository_product.github_evidence_bundle" in content["builder"],
         "chunking_in_common_evidence_layer": "artifact_chunk_index" in content["artifacts"]
         or "build_artifact_chunk_index" in content["artifacts"],
         "validator_reused": "validate_github_evidence_bundles" in content["builder"]

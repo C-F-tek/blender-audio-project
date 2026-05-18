@@ -29,7 +29,7 @@ P6 NPU knowledge-broker / context-oracle prototype
 Provider semantics:
 The generator is deterministic and report-only. It does not execute providers, apply patches or mutate source.
 Current validators:
-Tools/validation/check_repository_change_proposals.py
+Tools/validation/repository_product/repository_change_proposals/cli.py
 Tools/validation/check_full_context_golden_proposals.py
 Notes:
 The full-context validator catches semantic insufficiency even when the generic proposal schema passes.

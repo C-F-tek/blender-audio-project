@@ -8,7 +8,7 @@ from typing import Any
 try:
     from build_external_heap_block_pointer_manifest import build_report
 except ModuleNotFoundError:
-    from Tools.ai.build_external_heap_block_pointer_manifest import build_report
+    from Tools.ai.external_heap.block_pointer_manifest import build_report
 
 
 def render_markdown(report: dict[str, Any]) -> str:

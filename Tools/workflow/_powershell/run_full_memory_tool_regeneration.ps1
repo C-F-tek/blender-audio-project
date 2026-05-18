@@ -341,7 +341,7 @@ Add-ExistingPath -List $Artifacts -Path $WorkflowMd
 
 if (-not $SkipBundle) {
     $BundleArgs = @(
-        "-m", "Tools.ai.build_github_evidence_bundle",
+        "-m", "Tools.ai.repository_product.github_evidence_bundle",
         "--repo-root", ".",
         "--basename", $BundleBase,
         "--output-dir", $EvidenceDir,

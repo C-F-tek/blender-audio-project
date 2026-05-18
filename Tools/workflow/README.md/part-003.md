@@ -12,8 +12,8 @@ Sorgente indice: [`README.md`](README.md)
 
 Before launching a real product run, execute the deterministic preflight gate:
 
-- `Tools/validation/run_real_product_preflight_gate.py`
-- `Tools/validation/run_real_product_preflight_gate_smoke.py`
+- `Tools/validation/real_product/preflight_gate/cli.py`
+- `Tools/validation/real_product/preflight_gate_smoke/cli.py`
 
 The preflight gate runs profile, intrinsic capability, runtime mesh, OpenVINO peer topology, review PR args, review PR readiness, full product PR chain, runtime evidence correlation, launcher wiring, manifest correlation schema and review PR final product smokes. It does not execute providers, does not apply patches, does not run Blender/FFmpeg and does not write source products.
 
@@ -23,7 +23,7 @@ It is the safe static readiness gate before entering the dynamic heap/exchange r
 <!-- IA-CARMINE-MANDATORY-PREFLIGHT-BEGIN -->
 ## Mandatory real product preflight
 
-The real product wrapper always runs `Tools/validation/run_real_product_preflight_gate.py` before delegating to the heap/exchange launcher.
+The real product wrapper always runs `Tools/validation/real_product/preflight_gate/cli.py` before delegating to the heap/exchange launcher.
 
 There is no skip switch for this gate. A failed preflight stops the run before provider activity, patch application, Blender/FFmpeg execution or review-PR preparation.
 
@@ -96,7 +96,7 @@ This remains static and report-only. It does not execute providers, does not app
 
 When `runtime_evidence_correlation_requested` is true, the final unified manifest must expose the produced correlation artifact in `phase_reports.runtime_evidence_correlation` and must include the JSON report in `report_files`.
 
-The smoke `Tools/validation/run_unified_manifest_runtime_evidence_correlation_smoke.py` validates three cases:
+The smoke `Tools/validation/runtime_universe/unified_manifest_runtime_evidence_correlation_smoke/cli.py` validates three cases:
 
 1. requested and report declared: pass;
 2. requested and report missing: fail;
@@ -108,14 +108,14 @@ This prevents downstream tooling from relying on implicit path guesses for the f
 <!-- IA-CARMINE-REVIEW-PR-FINAL-PRODUCT-CONTRACT-BEGIN -->
 ## Review PR final product contract
 
-`Tools/validation/check_review_pr_final_product_contract.py` validates the output of `agent_review_prepare_pr.py`.
+`Tools/validation/repository_product/review_pr_final_product_contract/cli.py` validates the output of `agent_review_prepare_pr.py`.
 
 It distinguishes two modes:
 
 1. local review branch product: product commit and safe include paths are required;
 2. remote PR product: push, GitHub PR creation and PR URL are also required.
 
-The smoke `Tools/validation/run_review_pr_final_product_contract_smoke.py` covers local-product pass, remote-product pass and missing-remote-PR fail. The check is report-only and does not create branches, commits, pushes or PRs during preflight.
+The smoke `Tools/validation/repository_product/review_pr_final_product_contract_smoke/cli.py` covers local-product pass, remote-product pass and missing-remote-PR fail. The check is report-only and does not create branches, commits, pushes or PRs during preflight.
 <!-- IA-CARMINE-REVIEW-PR-FINAL-PRODUCT-CONTRACT-END -->
 
 <!-- IA-CARMINE-REAL-PRODUCT-SINGLE-ENTRY-EXIT-BEGIN -->
@@ -135,13 +135,13 @@ When `-CreatePr` is used, final product validation automatically runs in remote 
 <!-- IA-CARMINE-RUNTIME-PEER-EVIDENCE-FEED-BEGIN -->
 ## Runtime peer evidence feed into proposals
 
-`Tools/ai/repository_change_proposals/cli.py` reads current-stamp heap/exchange, GPU0, NPU, runtime-correlation and generated patch-spec apply reports when available.
+`Tools/ai/repository_product/repository_change_proposals/cli.py` reads current-stamp heap/exchange, GPU0, NPU, runtime-correlation and generated patch-spec apply reports when available.
 
 If those reports prove that the runtime mesh existed but generated patch specs were metadata-only, the expected product proposal is `P-RUNTIME-PEER-EVIDENCE-FEED`. The fallback `P-NEXT-NPU-OBSERVABILITY` remains a backlog/default proposal and must not be treated as successful final product when runtime peer evidence exists.
 
 `Tools/ai/generated_patch_specs/proposal_cli.py` can carry reviewed `concrete_operations` into generated patch specs. Allowed operations remain deterministic and reviewable: `replace_once`, `append_once`, `insert_after_once`, `insert_before_once`, `write_file`.
 
-`Tools/validation/run_repository_change_proposals_runtime_evidence_smoke.py` covers the complete route: runtime evidence -> proposal -> patch spec -> generated patch apply.
+`Tools/validation/repository_product/repository_change_proposals_runtime_evidence_smoke/cli.py` covers the complete route: runtime evidence -> proposal -> patch spec -> generated patch apply.
 <!-- IA-CARMINE-RUNTIME-PEER-EVIDENCE-FEED-END -->
 
 ## Operator Heap/Universe Run Surface

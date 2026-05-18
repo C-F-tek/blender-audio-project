@@ -136,7 +136,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         [
             sys.executable,
             "-m",
-            "Tools.ai.code_product_artifact_intake",
+            "Tools.ai.code_product.artifact_intake",
             "--repo-root",
             str(fixture),
             "--code-product",
@@ -154,7 +154,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         [
             sys.executable,
             "-m",
-            "Tools.ai.code_product_artifact_intake",
+            "Tools.ai.code_product.artifact_intake",
             "--repo-root",
             str(fixture),
             "--code-product",
@@ -170,7 +170,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         [
             sys.executable,
             "-m",
-            "Tools.ai.code_product_artifact_intake",
+            "Tools.ai.code_product.artifact_intake",
             "--repo-root",
             str(fixture),
             "--code-product",
@@ -186,7 +186,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         [
             sys.executable,
             "-m",
-            "Tools.ai.code_product_artifact_intake",
+            "Tools.ai.code_product.artifact_intake",
             "--repo-root",
             str(fixture),
             "--code-product",

@@ -124,7 +124,7 @@ def analyze_code_product(
     command = [
         resolve_project_python(repo_root),
         "-m",
-        "Tools.ai.code_product_artifact_intake",
+        "Tools.ai.code_product.artifact_intake",
         "--repo-root",
         str(repo_root),
         "--code-product",

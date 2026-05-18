@@ -23,7 +23,7 @@ Status:
 
 ```text
 primary active PR
-local wiring still pending for Tools/ai/build_github_evidence_bundle.py
+local wiring still pending for Tools/ai/repository_product/github_evidence_bundle.py
 fresh compact evidence required before merge
 ```
 

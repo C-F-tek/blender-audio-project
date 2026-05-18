@@ -12,7 +12,7 @@ Wire app-agnostic context-summary helpers and generated support-file write-plann
 
 ```text
 Tools/npu/run_dual_ai_pipeline.py
-Tools/validation/npu_pipeline_modules_check/cli.py
+Tools/validation/pipeline/npu_pipeline_modules_check/cli.py
 Tools/npu/pipeline/README.md
 docs/EXECUTION_PLANS/completed/2026-04-30_npu_runtime_context_artifact_wiring.md
 docs/TECH_DEBT_TRACKER.md

@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from Tools.docs.repo_tool_surface_audit import repo_root_from
+from Tools.docs.docs_hygiene.repo_tool_surface_audit import repo_root_from
 
 ROOT_ALLOWLIST = {"__init__.py", "__main__.py", "dispatch.py", "README.md"}
 CODE_SUFFIXES = {".py", ".ps1"}

@@ -117,7 +117,7 @@ def lifecycle_block() -> str:
 $HeapExchangeLifecycleJson = Join-Path $OutputDir ("validation/heap_exchange_runtime_lifecycle_{0}.json" -f $DataStamp)
 $HeapExchangeLifecycleMd = Join-Path $OutputDir ("validation/heap_exchange_runtime_lifecycle_{0}.md" -f $DataStamp)
 $HeapExchangeLifecycleArgs = @(
-    "Tools/validation/check_heap_exchange_runtime_lifecycle/cli.py",
+    "Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--runtime-entry", $HeapExchangeEntryJson,
@@ -292,7 +292,7 @@ def validate_policy(text_lf: str) -> list[str]:
         "Validate heap/exchange runtime lifecycle",
         "Tools/ai/heap_exchange/runtime_entry/cli.py",
         "Tools/ai/heap_exchange/runtime_exit/cli.py",
-        "Tools/validation/check_heap_exchange_runtime_lifecycle/cli.py",
+        "Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py",
     ):
         if token not in text_lf:
             errors.append(f"missing required lifecycle token: {token}")

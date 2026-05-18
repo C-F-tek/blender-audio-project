@@ -26,7 +26,9 @@ class RuntimeGateProviderCommandsMixin:
                 "output": gpu0_json,
                 "command": [
                     self.child_python(),
-                    "tools/ai/build_openvino_gpu0_workload_report.py",
+                    "-m",
+                    "Tools.ai",
+                    "build_openvino_gpu0_workload_report",
                     "--repo-root",
                     ".",
                     "--iterations",
@@ -52,7 +54,9 @@ class RuntimeGateProviderCommandsMixin:
                 "output": npu_json,
                 "command": [
                     self.child_python(),
-                    "tools/ai/build_npu_micro_task_companion_report.py",
+                    "-m",
+                    "Tools.ai",
+                    "build_npu_micro_task_companion_report",
                     "--repo-root",
                     ".",
                     "--task-file",
@@ -91,7 +95,9 @@ class RuntimeGateProviderCommandsMixin:
                 "output": gpu1_json,
                 "command": [
                     self.child_python(),
-                    "tools/ai/run_local_provider_probe.py",
+                    "-m",
+                    "Tools.ai",
+                    "run_local_provider_probe",
                     "--repo-root",
                     ".",
                     "--run-ollama",

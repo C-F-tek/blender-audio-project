@@ -24,8 +24,8 @@ def main() -> int:
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
-    gpu0 = repo / "Tools/ai/build_openvino_gpu0_workload_report/cli.py"
-    npu = repo / "Tools/ai/build_npu_micro_task_companion_report/cli.py"
+    gpu0 = repo / "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py"
+    npu = repo / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py"
     gpu0_text = read_text(gpu0)
     npu_text = read_text(npu)
 

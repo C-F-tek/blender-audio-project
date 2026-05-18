@@ -35,7 +35,7 @@ PR: #109
 branch: codex/design-code-patch-plan-lane
 audit note: docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md
 module execution note: docs/LOCAL_AI_TASKS/pr109-pythonpath-module-execution-note-2026-05-02.md
-wired orchestrator: Tools/ai/build_github_evidence_bundle.py
+wired orchestrator: Tools/ai/repository_product/github_evidence_bundle.py
 ```
 
 PR #110 / `codex/refactor-workspace-109` is scratch-only and must not be merged.

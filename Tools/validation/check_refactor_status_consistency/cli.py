@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 EXPECTED_STATUS = "modular_schedule_complete_pending_local_validation"
-EXPECTED_ENTRYPOINT = "Tools/ai/run_parallel_artifact_pipeline/cli.py"
+EXPECTED_ENTRYPOINT = "Tools/ai/pipeline/artifact_runner/cli.py"
 EXPECTED_STATUS_FILE = "Tools/ai/pipeline/refactor_status.py"
 EXPECTED_DOCS = (
     "docs/AI_PIPELINE_REFACTOR_STATUS.md",
@@ -40,6 +40,9 @@ EXPECTED_MODULES = (
     "Tools/ai/pipeline/guardrail_models.py",
     "Tools/ai/pipeline/remediation.py",
     "Tools/ai/pipeline/refactor_status.py",
+    "Tools/ai/pipeline/artifact_runner/cli.py",
+    "Tools/ai/pipeline/dry_run_matrix/cli.py",
+    "Tools/ai/pipeline/dry_run_matrix/evidence_cli.py",
 )
 
 

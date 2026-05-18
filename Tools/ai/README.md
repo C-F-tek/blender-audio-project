@@ -64,8 +64,8 @@ Canonical docs and tools:
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 python -m Tools.ai heap_exchange_runtime_entry
 python -m Tools.ai heap_exchange_runtime_exit
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
-Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
+Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/ai/patchkit/apply_patch_bundle.py
 Tools/validation/run_patchkit_smoke.py
 ```
@@ -105,7 +105,7 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 
 | Area | Role |
 |---|---|
-| `pipeline/` | Modular AI artifact pipeline implementation behind `run_parallel_artifact_pipeline.py`. |
+| `pipeline/` | Modular AI artifact pipeline, runner CLI and dry-run matrix implementation behind `python -m Tools.ai run_parallel_artifact_pipeline` and `python -m Tools.ai pipeline_dry_run_matrix`. |
 | `patchkit/` | Reusable controlled patch-bundle runner, filesystem/anchor/PowerShell/report helpers and deterministic validators. |
 | `patch_suggestion_bundle/` | Deterministic patch suggestion discovery, classification and apply implementation. |
 | `patch_notes_quality_product/` | Manual-review patch-note product/ledger support. |

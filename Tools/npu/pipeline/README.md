@@ -97,13 +97,13 @@ provider behavior changes
 
 | File | Classification | Notes |
 |---|---|---|
-| `Tools/npu/_shared/ollama_runtime.py` | runtime-adjacent helper | Do not imply execution unless called by an explicit provider command. |
-| `Tools/npu/_shared/npu_runtime.py` | runtime-adjacent helper | Keep separate from planned provider descriptors. |
+| `Tools/npu/provider_mesh/_shared/ollama_runtime.py` | runtime-adjacent helper | Do not imply execution unless called by an explicit provider command. |
+| `Tools/npu/provider_mesh/_shared/npu_runtime.py` | runtime-adjacent helper | Keep separate from planned provider descriptors. |
 | `Tools/npu/run_npu_review.py` | explicit local diagnostic/review helper | Not the unified launcher. |
 | `Tools/npu/run_npu_context.ps1` | explicit local context/review wrapper | Useful local helper; not canonical full 0-to-10 path. |
-| `Tools/npu/build_provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces; bundle/telemetry visibility required when promoted. |
-| `Tools/ai/npu_gpu_deep_review_auditor/cli.py` | diagnostic/support lane | Not primary advisory proof by itself. |
-| `Tools/ai/gpu_npu_parallel_orchestrator/cli.py` | provider orchestration lane | Prefer unified launcher; verify current caller before changing behavior. |
+| `Tools/npu/provider_mesh/provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces; bundle/telemetry visibility required when promoted. |
+| `Tools/ai/provider_mesh/npu_gpu_deep_review_auditor/cli.py` | diagnostic/support lane | Not primary advisory proof by itself. |
+| `Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py` | provider orchestration lane | Prefer unified launcher; verify current caller before changing behavior. |
 
 Policy:
 

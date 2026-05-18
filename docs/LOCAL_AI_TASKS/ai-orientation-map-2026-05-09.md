@@ -79,8 +79,8 @@ Do not reduce heap/exchange to a static chain. The run must provide context, evi
 | Unified local AI run | `Tools/workflow/run_unified_local_ai_refactor.ps1` |
 | Heap/exchange runtime entry | `python -m Tools.ai heap_exchange_runtime_entry` |
 | Heap/exchange runtime exit | `python -m Tools.ai heap_exchange_runtime_exit` |
-| Heap/exchange lifecycle validation | `Tools/validation/check_heap_exchange_runtime_lifecycle.py` |
-| Heap/exchange smoke | `Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py` |
+| Heap/exchange lifecycle validation | `Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py` |
+| Heap/exchange smoke | `Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py` |
 | Reusable patch bundle apply | `Tools/ai/patchkit/apply_patch_bundle.py` |
 | Patchkit filesystem/encoding/newlines | `Tools/ai/patchkit/filesystem.py` |
 | Patchkit anchors/text ops | `Tools/ai/patchkit/anchors.py` |
@@ -91,10 +91,10 @@ Do not reduce heap/exchange to a static chain. The run must provide context, evi
 | Context pack | `Tools/ai/ai_context_pack/cli.py` |
 | Agent state packet | `Tools/ai/agent_context/state_packet/cli.py` |
 | Script/tool inventory | `Tools/validation/build_script_inventory.py` |
-| Markdown inventory | `Tools/validation/build_markdown_inventory.py` |
+| Markdown inventory | `Tools/validation/docs_hygiene/markdown_inventory/cli.py` |
 | JSON/report contracts | `Tools/validation/check_validation_report_contracts.py` |
-| Patch suggestion product | `Tools/ai/build_task_patch_suggestion_report.py` |
-| Legacy patch suggestion apply | `Tools/ai/patch_suggestion_bundle/cli.py` |
+| Patch suggestion product | `Tools/ai/patch_product/task_patch_suggestion_report.py` |
+| Legacy patch suggestion apply | `Tools/ai/patch_product/patch_suggestion_bundle/cli.py` |
 
 Before creating a new script, check this table and the target package README.
 
@@ -190,8 +190,8 @@ Heap/exchange lifecycle:
 python -m py_compile `
   python -m Tools.ai heap_exchange_runtime_entry `
   python -m Tools.ai heap_exchange_runtime_exit `
-  .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
-  .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
+  .\Tools\validation\heap_exchange\runtime_lifecycle_check\cli.py `
+  .\Tools\validation\heap_exchange\runtime_lifecycle_smoke\cli.py
 
 python -m Tools.validation run_heap_exchange_runtime_lifecycle_smoke `
   --repo-root .

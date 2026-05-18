@@ -62,7 +62,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Keep activation provider-free by default and preserve explicit-only provider and manual-review macro-patch flags.",
     ),
     CodeContractSpec(
-        path="Tools/validation/check_ai_workload_report_quality/cli.py",
+        path="Tools/validation/ai_workload/report_quality/cli.py",
         contract="ai_workload_quality_gate_report_contract",
         owner_lane="cpu_validation",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),
@@ -100,7 +100,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Ensure known workload reports fail closed when the quality report is missing or unreadable.",
     ),
     CodeContractSpec(
-        path="Tools/ai/repository_update_suggestions/cli.py",
+        path="Tools/ai/repository_product/repository_update_suggestions/cli.py",
         contract="packet_builder_quality_approved_context_only",
         owner_lane="cpu_packet_builder",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),
@@ -119,7 +119,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Keep workload report content filtered by quality routing before it is read into packets.",
     ),
     CodeContractSpec(
-        path="Tools/ai/repository_change_proposals/cli.py",
+        path="Tools/ai/repository_product/repository_change_proposals/cli.py",
         contract="repository_proposals_quality_gate_evidence",
         owner_lane="cpu_proposal_builder",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),
@@ -138,7 +138,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Keep proposal evidence tied to the workload quality report decision and keep proposals manual-review-only.",
     ),
     CodeContractSpec(
-        path="Tools/npu/npu_review_runner/cli.py",
+        path="Tools/npu/provider_mesh/npu_review_runner/cli.py",
         contract="npu_review_metadata_sidecar",
         owner_lane="npu_explicit_provider_tool",
         consumed_by_lanes=("cpu", "npu"),

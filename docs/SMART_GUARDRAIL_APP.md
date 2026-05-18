@@ -18,8 +18,8 @@ It acts as a lightweight control app around the workflow:
 
 `Tools/ai/review_wave_entrypoints.py` reviews:
 
-- `Tools/workflow/audio_analysis/analyze_cli.py`;
-- `Tools/workflow/audio_analysis/summary_cli.py`.
+- `Tools/workflow/workflow_run/audio_analysis/analyze_cli.py`;
+- `Tools/workflow/workflow_run/audio_analysis/summary_cli.py`.
 
 It emits:
 
@@ -40,7 +40,7 @@ This does not modify the reviewed files.
 
 ## Guardrail remediation requests
 
-`Tools/npu/npu_guardrail_service.py` now emits structured requests, including:
+`Tools/npu/provider_mesh/npu_guardrail_service.py` now emits structured requests, including:
 
 | action_type | Meaning |
 |---|---|
@@ -59,7 +59,7 @@ output/ai_pipeline/npu_guardrail_action_queue.json
 
 ## Multi-pass behavior
 
-`Tools/ai/run_parallel_artifact_pipeline.py` can consume the action queue and repeat only auto-safe stages:
+`python -m Tools.ai run_parallel_artifact_pipeline` can consume the action queue and repeat only auto-safe stages:
 
 - `enrich_intermediates`;
 - `smart_context_generation`;

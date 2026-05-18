@@ -18,7 +18,7 @@ Le patch non toccano `compose_external_heap_block_response.py`, non cambiano il 
 File coinvolto:
 
 ```text
-Tools/ai/run_external_heap_postrun_package.py
+Tools/ai/external_heap/postrun_package.py
 ```
 
 Il selettore automatico della run usava la directory piu' recente con nome:
@@ -29,7 +29,7 @@ output/validation/heap_context_closure_*
 
 Questo era troppo permissivo.
 
-Dopo l'introduzione dello smoke `Tools/validation/run_heap_runtime_launcher_command_smoke.py`, puo' esistere una fixture locale:
+Dopo l'introduzione dello smoke `Tools/validation/heap_runtime/launcher_command_smoke/cli.py`, puo' esistere una fixture locale:
 
 ```text
 output/validation/heap_context_closure_smoke_revision_context/external_heap_revision_context.json
@@ -77,8 +77,8 @@ Se `--run-dir` viene passato esplicitamente, il report usa:
 File coinvolti:
 
 ```text
-Tools/ai/heap_runtime_launcher_command/cli.py
-Tools/validation/run_heap_runtime_launcher_command_smoke.py
+Tools/ai/heap_runtime/launcher_command/cli.py
+Tools/validation/heap_runtime/launcher_command_smoke/cli.py
 ```
 
 Il command builder usava:
@@ -108,7 +108,7 @@ Il JSON command passa a:
 
 quando il profilo usa `revision_context_mode = auto_latest` senza `--revision-context` esplicito.
 
-Lo smoke `run_heap_runtime_launcher_command_smoke.py` e' stato aggiornato: ora passa la fixture con `--revision-context`, quindi testa l'injection esplicita senza dipendere dall'auto-latest. Il report smoke passa a:
+Lo smoke `python -m Tools.validation run_heap_runtime_launcher_command_smoke` e' stato aggiornato: ora passa la fixture con `--revision-context`, quindi testa l'injection esplicita senza dipendere dall'auto-latest. Il report smoke passa a:
 
 ```json
 "schema_version": 2,
@@ -143,9 +143,9 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:PYTHONPATH = (Resolve-Path .).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\run_external_heap_postrun_package.py `
-  .\Tools\ai\heap_runtime_launcher_command\cli.py `
-  .\Tools\validation\run_heap_runtime_launcher_command_smoke.py
+  .\Tools\ai\external_heap\postrun_package.py `
+  .\Tools\ai\heap_runtime\launcher_command\cli.py `
+  .\Tools\validation\heap_runtime\launcher_command_smoke\cli.py
 ```
 
 Dopo una run reale heap:

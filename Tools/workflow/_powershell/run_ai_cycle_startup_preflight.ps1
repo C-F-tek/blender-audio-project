@@ -160,7 +160,7 @@ if ($null -ne $LineCountReport -and $LineCountReport.csv_written) {
 
 if (Test-Path $LineCountCsv) {
     Invoke-RepoPython -Label "Full Python line-count Markdown inventory" -ArgsList @(
-        "-m", "Tools.validation.build_full_python_line_count_markdown",
+        "-m", "Tools.validation.docs_hygiene.full_python_line_count_markdown",
         "--repo-root", ".",
         "--stamp", $Stamp,
         "--csv", $LineCountCsv,

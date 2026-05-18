@@ -101,9 +101,12 @@ class RuntimeGateProviderPromptMixin:
         """Move run_local_provider_probe --prompt payload into --prompt-file."""
         normalized = [str(part) for part in command]
         script_hit = any(
-            part.replace("\\", "/").endswith("tools/ai/run_local_provider_probe.py")
+            part.replace("\\", "/").endswith("Tools/ai/provider_mesh/local_provider_probe/cli.py")
+            or part.replace("\\", "/").endswith(
+                "tools/ai/provider_mesh/local_provider_probe/cli.py"
+            )
             for part in normalized
-        )
+        ) or ("Tools.ai" in normalized and "run_local_provider_probe" in normalized)
         if not script_hit or "--prompt" not in normalized:
             return normalized, ""
 

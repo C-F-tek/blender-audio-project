@@ -39,8 +39,8 @@ PREFLIGHT_FILES = [
     "Tools/ai/operator_product_core/profiles.py",
     "Tools/ai/heap_context_closure/cli.py",
     "Tools/ai/assemble_heap_final_readable_product/cli.py",
-    "Tools/ai/code_product_artifact_intake/cli.py",
-    "Tools/ai/code_product_artifact_intake/analyzer.py",
+    "Tools/ai/code_product/artifact_intake/cli.py",
+    "Tools/ai/code_product/artifact_intake/analyzer.py",
 ]
 
 

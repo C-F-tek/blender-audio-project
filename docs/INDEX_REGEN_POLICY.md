@@ -56,7 +56,7 @@ If the project application provides its own index-generation process, the applic
 
 Regenerate the indexes after changes to any of these areas:
 
-- audio/scene workflow tools, such as `Tools/workflow/audio_analysis/analyze_cli.py`, `Tools/workflow/audio_analysis/summary_cli.py`, `Tools/workflow/scene_spec/cli.py`;
+- audio/scene workflow tools, such as `Tools/workflow/workflow_run/audio_analysis/analyze_cli.py`, `Tools/workflow/workflow_run/audio_analysis/summary_cli.py`, `Tools/workflow/workflow_run/scene_spec/cli.py`;
 - any folder under `Scripting/`;
 - any folder under `Tools/`;
 - `Tools/npu/pipeline/` helper package modules or README;
@@ -98,7 +98,7 @@ python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\ou
 python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python -m Tools.validation check_npu_pipeline_docs --repo-root . --output .\output\validation\npu_pipeline_docs.json
-python -m Tools.ai run_pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
 python -m Tools.validation check_package_structure --repo-root .
 python -m Tools.validation check_json_artifacts --repo-root .
 ```

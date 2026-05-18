@@ -79,7 +79,7 @@ Scope:
 
     Tools/workflow/run_agent_review_full_toolbox_decision_loop.ps1
     Tools/workflow/run_unified_local_ai_refactor.ps1
-    Tools/ai/runtime_tool_usage_telemetry/cli.py only if needed
+    Tools/ai/runtime_tool/usage_telemetry/cli.py only if needed
 
 Do not touch provider logic in the same patch unless evidence proves same failure path.
 

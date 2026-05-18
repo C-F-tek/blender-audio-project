@@ -39,12 +39,12 @@ if ($PrepareReviewPr) {
 foreach ($warning in $Warnings) { Write-Warning $warning }
 
 $PhaseStatus.baseline_compile = Invoke-Checked "Baseline compile validation/inventory tools" {
-    Invoke-Python @("-m", "py_compile", ".\Tools\validation\build_markdown_inventory\cli.py", ".\Tools\validation\build_script_inventory\cli.py", ".\Tools\validation\check_validation_report_contract\cli.py")
+    Invoke-Python @("-m", "py_compile", ".\Tools\validation\docs_hygiene\markdown_inventory\cli.py", ".\Tools\validation\build_script_inventory\cli.py", ".\Tools\validation\check_validation_report_contract\cli.py")
 }
 
 if (Test-ModeEnabled "smoke") {
     $PhaseStatus.git_diff_check_initial = Invoke-Checked "Initial git diff --check" { git diff --check } -SoftFail:$ContinueOnValidationError
-    if (Test-Path .\Tools\workflow\startup_check_core\cli.py) {
+    if (Test-Path .\Tools\workflow\workflow_run\startup_check_core\cli.py) {
         $StartupCheck = "$ValidationDir/startup_check_${ModeName}_$Stamp.json"
         $PhaseStatus.startup_check = Invoke-Checked "Startup smoke check" {
             Invoke-Python @("-m", "Tools.workflow", "startup_check", "--repo-root", ".", "--output", $StartupCheck)
@@ -255,7 +255,7 @@ if (($UsePrimaryAdvisoryProvider -or $RunMultistepProviderWorkflow) -and ($RunOl
 # IA-CARMINE-REAL-PRODUCT-LIVE-PROVIDER-GATE-END
 
 if ($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality)) {
-    Assert-FileExists ".\Tools\validation\check_ai_workload_report_quality\cli.py"
+    Assert-FileExists ".\Tools\validation\ai_workload\report_quality\cli.py"
     $PhaseStatus.workload_quality = Invoke-Checked "Build AI workload quality routing report" {
         Invoke-Python @("-m", "Tools.validation", "check_ai_workload_report_quality", "--repo-root", ".", "--report-dir", $AiPacketsDir, "--output", $WorkloadQualityReport)
     } -SoftFail:$ContinueOnValidationError

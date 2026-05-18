@@ -283,7 +283,7 @@ Esistono:
 
 ```text
 python -m Tools.ai heap_exchange_closure_audit
-Tools/validation/run_heap_exchange_closure_audit_smoke.py
+Tools/validation/heap_exchange/closure_audit_smoke/cli.py
 ```
 
 Questi provano la disponibilita' di una deterministic/script audit lane prima della closure. Il launcher context closure invece esegue startup reload, heap gate, reconciliation e composer.
@@ -338,7 +338,7 @@ Tools/ai/heap_runtime/completeness_gate/cli.py
 Tools/ai/heap_context_closure/cli.py
 Tools/ai/heap_context_memory_reload/cli.py
 Tools/ai/heap_final_proposals/cli.py
-Tools/validation/run_heap_runtime_completeness_gate_smoke.py
+Tools/validation/heap_runtime/completeness_gate_smoke/cli.py
 Tools/validation/run_heap_startup_context_ingestion_smoke.py
 ```
 

@@ -19,8 +19,8 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS
-    from Tools.ai.build_github_evidence_bundle import build_bundle
+    from Tools.ai.runtime_tool.broker.registry import TOOL_SPECS
+    from Tools.ai.repository_product.github_evidence_bundle import build_bundle
     from Tools.ai._shared.github_evidence_bundle_artifacts import (
         DEFAULT_CHUNK_LINES,
         DEFAULT_RECURSIVE_MAX_FILES,
@@ -40,8 +40,8 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[2]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.runtime_tool_broker.registry import TOOL_SPECS
-    from Tools.ai.build_github_evidence_bundle import build_bundle
+    from Tools.ai.runtime_tool.broker.registry import TOOL_SPECS
+    from Tools.ai.repository_product.github_evidence_bundle import build_bundle
     from Tools.ai._shared.github_evidence_bundle_artifacts import (
         DEFAULT_CHUNK_LINES,
         DEFAULT_RECURSIVE_MAX_FILES,

@@ -148,7 +148,7 @@ def run_broker_smoke(repo_root: Path, reports: dict[str, Path], stamp: str) -> d
     write_json(request_file, request)
     command = [
         sys.executable,
-        "Tools/ai/agent_runtime_tool_broker/cli.py",
+        "Tools/ai/runtime_tool/agent_broker/cli.py",
         "--repo-root",
         ".",
         "--request-file",
