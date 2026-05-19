@@ -7,6 +7,7 @@ This is the compact navigation entrypoint for AI and operator context.
 | File | Role |
 | --- | --- |
 | `docs/CONTEXT_COVERAGE_STATUS.md` | Tracks which context files are complete-enough, partial, stub or deferred. |
+| `docs/DISPATCHER_CONTEXT_COVERAGE.md` | Tracks dispatcher-driven tool-family coverage and known gaps. |
 
 ## Root contracts
 
