@@ -16,6 +16,8 @@ This file tracks whether context documentation is complete, partial or only a na
 
 ```text
 CONTEXT_INDEX.md
+-> docs/CONTEXT_COVERAGE_STATUS.md
+-> docs/DISPATCHER_CONTEXT_COVERAGE.md
 -> Tools/CONTEXT_INDEX.md or docs/CONTEXT_INDEX.md or Scripting/CONTEXT_INDEX.md
 -> area CONTEXT_INDEX.md
 -> nearest TOOL_CONTEXT.md
@@ -27,6 +29,7 @@ CONTEXT_INDEX.md
 | Area/family | File | Status |
 | --- | --- | --- |
 | Root index | `CONTEXT_INDEX.md` | complete-enough |
+| Dispatcher coverage map | `docs/DISPATCHER_CONTEXT_COVERAGE.md` | complete-enough |
 | Tools global index | `Tools/CONTEXT_INDEX.md` | complete-enough |
 | Tools overview | `Tools/TOOL_CONTEXT.md` | partial |
 | Tools/ai overview | `Tools/ai/TOOL_CONTEXT.md` | partial |
