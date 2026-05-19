@@ -14,7 +14,7 @@ Use this index to find the nearest validation context before adding or changing 
 | Generated artifacts | `Tools/validation/generated_artifacts/TOOL_CONTEXT.md` |
 | Generated patch specs | `Tools/validation/generated_patch_specs/TOOL_CONTEXT.md` |
 | Heap exchange | `Tools/validation/heap_exchange/TOOL_CONTEXT.md` |
-| Heap final proposals | `Tools/validation/heap_final_proposals/TOOL_CONTEXT.md` |
+| Heap final proposals | see `docs/CONTEXT_COVERAGE_STATUS.md` (`stub-missing`) |
 | Heap provider | `Tools/validation/heap_provider/TOOL_CONTEXT.md` |
 | Heap runtime | `Tools/validation/heap_runtime/TOOL_CONTEXT.md` |
 | Legacy Blender | `Tools/validation/legacy_blender/TOOL_CONTEXT.md` |
