@@ -24,7 +24,9 @@ def resolve_script_dir():
     candidates.append(Path.home() / "blender" / "blender-audio-project" / "Scripting" / "v61b")
 
     for candidate in candidates:
-        if (candidate / "config.py").exists() and (candidate / "encode_image_sequence_v61b.py").exists():
+        if (candidate / "config.py").exists() and (
+            candidate / "encode_image_sequence_v61b.py"
+        ).exists():
             return candidate
 
     return candidates[-1]
@@ -38,7 +40,6 @@ if str(SCRIPT_DIR) not in sys.path:
 sys.modules.pop("config", None)
 
 import config as cfg  # noqa: E402
-
 
 ROOT = getattr(cfg, "ROOT", Path.home() / "blender")
 RENDERS_DIR = getattr(cfg, "RENDERS_DIR", ROOT / "renders")
@@ -82,7 +83,11 @@ ENCODE_SEQUENCE_SWITCH_TO_SEQUENCER = getattr(
 
 def extract_frame_number(path):
     stem = path.stem
-    tail = stem[len(OUTPUT_IMAGE_SEQUENCE_PREFIX):] if stem.startswith(OUTPUT_IMAGE_SEQUENCE_PREFIX) else stem
+    tail = (
+        stem[len(OUTPUT_IMAGE_SEQUENCE_PREFIX) :]
+        if stem.startswith(OUTPUT_IMAGE_SEQUENCE_PREFIX)
+        else stem
+    )
     match = re.search(r"(\d+)$", tail)
     return int(match.group(1)) if match else None
 
@@ -190,11 +195,11 @@ def force_visible_sequencer(scene, editor):
     try:
         area = bpy.context.area
         if area is not None:
-            area.type = 'SEQUENCE_EDITOR'
+            area.type = "SEQUENCE_EDITOR"
             space = area.spaces.active
             for attr, value in [
-                ("view_type", 'SEQUENCER_PREVIEW'),
-                ("display_mode", 'SEQUENCER_PREVIEW'),
+                ("view_type", "SEQUENCER_PREVIEW"),
+                ("display_mode", "SEQUENCER_PREVIEW"),
             ]:
                 try:
                     if hasattr(space, attr):
@@ -207,9 +212,9 @@ def force_visible_sequencer(scene, editor):
     try:
         screen = bpy.context.screen
         for area in screen.areas:
-            if area.type != 'SEQUENCE_EDITOR':
+            if area.type != "SEQUENCE_EDITOR":
                 continue
-            region = next((r for r in area.regions if r.type == 'WINDOW'), None)
+            region = next((r for r in area.regions if r.type == "WINDOW"), None)
             if region is None:
                 continue
             with bpy.context.temp_override(area=area, region=region, scene=scene):
@@ -291,28 +296,28 @@ def configure_video_output(scene, frame_count):
     scene.render.use_sequencer = True
 
     try:
-        scene.render.image_settings.media_type = 'VIDEO'
+        scene.render.image_settings.media_type = "VIDEO"
     except Exception:
         pass
     try:
-        scene.render.image_settings.file_format = 'FFMPEG'
-        scene.render.image_settings.color_mode = 'RGB'
+        scene.render.image_settings.file_format = "FFMPEG"
+        scene.render.image_settings.color_mode = "RGB"
     except Exception:
         pass
 
-    scene.render.ffmpeg.format = 'MPEG4'
-    scene.render.ffmpeg.codec = 'H264'
-    scene.render.ffmpeg.audio_codec = 'AAC'
+    scene.render.ffmpeg.format = "MPEG4"
+    scene.render.ffmpeg.codec = "H264"
+    scene.render.ffmpeg.audio_codec = "AAC"
     scene.render.ffmpeg.audio_bitrate = AUDIO_BITRATE
 
-    for crf in ('PERC_LOSSLESS', 'HIGH'):
+    for crf in ("PERC_LOSSLESS", "HIGH"):
         try:
             scene.render.ffmpeg.constant_rate_factor = crf
             break
         except Exception:
             pass
     try:
-        scene.render.ffmpeg.ffmpeg_preset = 'GOOD'
+        scene.render.ffmpeg.ffmpeg_preset = "GOOD"
     except Exception:
         pass
     try:

@@ -36,25 +36,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ap.add_argument("--build-chunks", action="store_true")
     ap.add_argument("--build-music-summary", action="store_true")
-    ap.add_argument(
-        "--smart-context", dest="smart_context", action="store_true", default=True
-    )
+    ap.add_argument("--smart-context", dest="smart_context", action="store_true", default=True)
     ap.add_argument("--no-smart-context", dest="smart_context", action="store_false")
     ap.add_argument("--smart-task", default=DEFAULT_SMART_TASK)
-    ap.add_argument(
-        "--smart-max-packet-chars", type=int, default=DEFAULT_SMART_MAX_PACKET_CHARS
-    )
-    ap.add_argument(
-        "--smart-max-capsule-chars", type=int, default=DEFAULT_SMART_MAX_CAPSULE_CHARS
-    )
+    ap.add_argument("--smart-max-packet-chars", type=int, default=DEFAULT_SMART_MAX_PACKET_CHARS)
+    ap.add_argument("--smart-max-capsule-chars", type=int, default=DEFAULT_SMART_MAX_CAPSULE_CHARS)
     ap.add_argument(
         "--agent-state-packet",
         help="Optional prebuilt agent state packet JSON to expose in reports without changing pipeline behavior.",
     )
     ap.add_argument("--use-npu", action="store_true")
-    ap.add_argument(
-        "--npu-guardrail", dest="npu_guardrail", action="store_true", default=True
-    )
+    ap.add_argument("--npu-guardrail", dest="npu_guardrail", action="store_true", default=True)
     ap.add_argument("--no-npu-guardrail", dest="npu_guardrail", action="store_false")
     ap.add_argument("--npu-workers", type=int, default=DEFAULT_NPU_WORKERS)
     ap.add_argument(
@@ -68,9 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="guardrail_auto_remediate",
         action="store_false",
     )
-    ap.add_argument(
-        "--guardrail-max-passes", type=int, default=DEFAULT_GUARDRAIL_MAX_PASSES
-    )
+    ap.add_argument("--guardrail-max-passes", type=int, default=DEFAULT_GUARDRAIL_MAX_PASSES)
     ap.add_argument(
         "--gpu-command", help="External command with placeholders {brief} and {output}."
     )

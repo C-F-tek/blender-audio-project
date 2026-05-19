@@ -4,6 +4,7 @@ This module is package-agnostic and intentionally does not import ``bpy``.
 It can be used by Blender scripts, normal Python tools, validation utilities,
 and future AI-generated packages.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -120,7 +121,9 @@ def get_profile(name: str) -> EncodeProfile:
         return PROFILES[name]
     except KeyError as exc:
         available = ", ".join(list_profiles())
-        raise ValueError(f"Unknown encode profile: {name}. Available profiles: {available}") from exc
+        raise ValueError(
+            f"Unknown encode profile: {name}. Available profiles: {available}"
+        ) from exc
 
 
 def profile_to_args(profile: EncodeProfile) -> list[str]:

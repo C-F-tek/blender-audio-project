@@ -65,8 +65,7 @@ function Invoke-LocalAiTaskPipelineValidation {
 
     if ($RunMultistepProviderWorkflow) {
         $MultistepArgs = @(
-            "-NoProfile", "-ExecutionPolicy", "Bypass",
-            "-File", ".\Tools\workflow\run_parallel_ai_provider_multistep.ps1",
+            "-m", "Tools.workflow", "run_parallel_ai_provider_multistep",
             "-RepoRoot", ".",
             "-Profile", $Profile,
             "-OutputDir", $PipelineRel,
@@ -83,12 +82,11 @@ function Invoke-LocalAiTaskPipelineValidation {
         if ($UsePrimaryAdvisoryProvider) { $MultistepArgs += "-UsePrimaryAdvisoryProvider" }
         if ($Model -ne "") { $MultistepArgs += @("-Model", $Model) }
 
-        Invoke-CommandChecked -Label "Run explicit multistep provider workflow" -Block { powershell.exe @MultistepArgs }
+        Invoke-CommandChecked -Label "Run explicit multistep provider workflow" -Block { & $PythonExe @MultistepArgs }
     }
 
     $PacketArgs = @(
-        "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-File", ".\Tools\workflow\run_post_validation_ai_packet.ps1",
+        "-m", "Tools.workflow", "run_post_validation_ai_packet",
         "-RepoRoot", ".",
         "-Profile", $Profile,
         "-OutputDir", $PipelineRel,
@@ -102,7 +100,7 @@ function Invoke-LocalAiTaskPipelineValidation {
     if ($RequireConcreteProposalBuild) { $PacketArgs += "-RequireConcreteProposals" }
     if ($Model -ne "") { $PacketArgs += @("-Model", $Model) }
 
-    Invoke-CommandChecked -Label "Build advisory packet and repository proposals" -Block { powershell.exe @PacketArgs }
+    Invoke-CommandChecked -Label "Build advisory packet and repository proposals" -Block { & $PythonExe @PacketArgs }
 
     $ProposalPath = Join-Path $PipelineDir "$ProposalBasename.json"
     $ProposalRel = Get-RepoRelativePath $RepoRootPath $ProposalPath
@@ -112,7 +110,7 @@ function Invoke-LocalAiTaskPipelineValidation {
 
     if (Test-Path -LiteralPath $ProposalPath -PathType Leaf) {
         Invoke-CommandChecked -Label "Validate repository change proposals" -Block {
-            & $PythonExe .\Tools\validation\check_repository_change_proposals.py --repo-root . --proposal $ProposalRel --output $ProposalValidationOutput
+            & $PythonExe -m Tools.validation check_repository_change_proposals --repo-root . --proposal $ProposalRel --output $ProposalValidationOutput
         }
     }
     else {
@@ -133,7 +131,7 @@ function Invoke-LocalAiTaskPipelineValidation {
         else {
             # IA-CARMINE-STRICT-REAL-PRODUCT-PATCH-SPECS-BEGIN
             $PatchSpecArgs = @(
-                ".\Tools\ai\build_patch_specs_from_proposals.py",
+                "-m", "Tools.ai", "generated_patch_specs_from_proposals",
                 "--repo-root", ".",
                 "--proposal", $ProposalRel,
                 "--output-dir", "output\patch_specs",
@@ -151,7 +149,7 @@ function Invoke-LocalAiTaskPipelineValidation {
                 & $PythonExe @PatchSpecArgs
             }
             Invoke-CommandChecked -Label "Validate draft patch specs" -Block {
-                & $PythonExe .\Tools\validation\check_patch_spec_drafts.py --repo-root . --manifest $PatchManifest --output "output/validation/${Basename}_patch_spec_drafts.json"
+                & $PythonExe -m Tools.validation check_patch_spec_drafts --repo-root . --manifest $PatchManifest --output "output/validation/${Basename}_patch_spec_drafts.json"
             }
         }
     }

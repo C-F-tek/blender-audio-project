@@ -15,7 +15,7 @@ implemented, locally validated and completed.
 Implemented helper:
 
 ```text
-Tools/ai/model_json.py
+Tools/ai/_shared/model_json.py
 ```
 
 Implemented validator:
@@ -27,10 +27,10 @@ Tools/validation/check_ai_model_json.py
 Runtime migration completed:
 
 ```text
-Tools/npu/ollama_runtime.py::parse_json_response()
+Tools/npu/provider_mesh/_shared/ollama_runtime.py::parse_json_response()
 ```
 
-The runtime wrapper delegates to `Tools.ai.model_json.parse_model_json_object()` while preserving legacy `json.JSONDecodeError` behavior for existing callers.
+The runtime wrapper delegates to `Tools.ai._shared.model_json.parse_model_json_object()` while preserving legacy `json.JSONDecodeError` behavior for existing callers.
 
 ## Scope kept separate
 
@@ -39,7 +39,7 @@ clean project JSON file IO
 raw model-output JSON-like parsing
 ```
 
-`Scripting/shared/json_io.py` remains the helper for trusted project files and generated artifacts. `Tools/ai/model_json.py` handles model-output parsing.
+`Scripting/shared/json_io.py` remains the helper for trusted project files and generated artifacts. `Tools/ai/_shared/model_json.py` handles model-output parsing.
 
 ## Validation summary
 
@@ -61,5 +61,5 @@ Further caller migration is deferred. Future migrations should inspect one model
 
 - 2026-04-29: Reviewed current JSON helpers and confirmed the gap is model-output parsing, not normal JSON file IO.
 - 2026-04-29: Implemented additive parser and validator.
-- 2026-04-29: Delegated `Tools/npu/ollama_runtime.py::parse_json_response()` to the reusable parser while preserving legacy failure type.
+- 2026-04-29: Delegated `Tools/npu/provider_mesh/_shared/ollama_runtime.py::parse_json_response()` to the reusable parser while preserving legacy failure type.
 - 2026-04-30: Moved from `active/` to `completed/` during execution-plan status cleanup.

@@ -30,10 +30,10 @@ changing existing schema-v6 field meanings
 ## Files likely touched
 
 ```text
-Tools/validation/ai_pipeline_report_contracts.py
-Tools/validation/check_ai_pipeline_report_contract.py
-Tools/validation/check_ai_dry_run_matrix_contract.py
-Tools/validation/check_ai_pipeline_modules.py
+Tools/validation/_shared/ai_pipeline_report_contracts.py
+Tools/validation/pipeline/ai_pipeline_report_contract/cli.py
+Tools/validation/pipeline/dry_run_matrix_contract/cli.py
+Tools/validation/pipeline/ai_pipeline_modules/cli.py
 Tools/validation/README.md
 Tools/workflow/run_local_validation_after_refactor.ps1
 docs/AI_ARTIFACT_SCHEMAS.md
@@ -44,14 +44,14 @@ docs/QUALITY_GATE.md
 ## Validation commands
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 1
-python .\Tools\validation\check_ai_pipeline_report_contract.py --repo-root . --report .\output\ai_pipeline\dry_run_matrix\base\ai_pipeline_dry_run_report.json --require-dry-run --output .\output\validation\ai_pipeline_report_contract.json
-python .\Tools\validation\check_ai_dry_run_matrix_contract.py --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
-python .\Tools\validation\check_ai_dry_run_matrix_outputs.py --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
-python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 1
+python -m Tools.validation check_ai_pipeline_report_contract --repo-root . --report .\output\ai_pipeline\dry_run_matrix\base\ai_pipeline_dry_run_report.json --require-dry-run --output .\output\validation\ai_pipeline_report_contract.json
+python -m Tools.validation check_ai_dry_run_matrix_contract --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
+python -m Tools.validation check_ai_dry_run_matrix_outputs --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
+python -m Tools.validation check_json_artifacts --repo-root . --output .\output\validation\json_artifacts.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 ```
 
 ## Risk level
@@ -63,7 +63,7 @@ The risk is schema over-tightening. Mitigation: preserve unknown future fields, 
 ## Progress log
 
 - 2026-04-30: Started after PR #37 merged; scope limited to core validation/report contracts.
-- 2026-04-30: Added reusable schema-v6 report contract helper and a direct `check_ai_pipeline_report_contract.py` validator.
+- 2026-04-30: Added reusable schema-v6 report contract helper and a direct `python -m Tools.validation check_ai_pipeline_report_contract` validator.
 - 2026-04-30: Wired matrix contract validation to validate referenced per-case dry-run reports.
 - 2026-04-30: Local runner passed with `-MatrixWorkers 12 -RepeatCases 2`; 23 validation steps passed and 80 dry-run cases were checked.
 

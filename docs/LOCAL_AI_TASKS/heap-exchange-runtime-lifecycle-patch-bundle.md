@@ -8,7 +8,7 @@ The run remains code-driven and reuse-first:
 
 - reuses `unified_run_observer.ps1` and `ai_public_events.jsonl`;
 - reuses generated patch specs and the existing review-PR bridge;
-- reuses `check_unified_chain_contract.py` for final product envelope validation;
+- reuses `unified_chain_contract.py` for final product envelope validation;
 - adds entry/exit lifecycle artifacts so the heap/exchange layer is present while provider/GPU/NPU/runtime lanes operate.
 
 ## Runtime model
@@ -27,10 +27,10 @@ The lifecycle does not prescribe internal reasoning or lane order.
 ## Added tools
 
 ```text
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
-Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
+Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/ai/patch_unified_heap_exchange_lifecycle_wiring.py
 ```
 
@@ -43,11 +43,11 @@ git fetch origin
 git switch codex/heap-exchange-runtime-lifecycle
 git pull --ff-only origin codex/heap-exchange-runtime-lifecycle
 
-python .\Tools\ai\patch_unified_heap_exchange_lifecycle_wiring.py `
+python -m Tools.ai patch_unified_heap_exchange_lifecycle_wiring `
   --repo-root . `
   --dry-run
 
-python .\Tools\ai\patch_unified_heap_exchange_lifecycle_wiring.py `
+python -m Tools.ai patch_unified_heap_exchange_lifecycle_wiring `
   --repo-root .
 ```
 
@@ -55,13 +55,13 @@ python .\Tools\ai\patch_unified_heap_exchange_lifecycle_wiring.py `
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\build_heap_exchange_runtime_entry.py `
-  .\Tools\ai\build_heap_exchange_runtime_exit.py `
+  python -m Tools.ai heap_exchange_runtime_entry `
+  python -m Tools.ai heap_exchange_runtime_exit `
   .\Tools\ai\patch_unified_heap_exchange_lifecycle_wiring.py `
-  .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
-  .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
+  .\Tools\validation\heap_exchange\runtime_lifecycle_check\cli.py `
+  .\Tools\validation\heap_exchange\runtime_lifecycle_smoke\cli.py
 
-python .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py `
+python -m Tools.validation run_heap_exchange_runtime_lifecycle_smoke `
   --repo-root .
 
 $PsPath = "Tools/workflow/run_unified_local_ai_refactor.ps1"
@@ -114,11 +114,11 @@ Do not commit runtime outputs.
 Allowed product files for this PR:
 
 ```text
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
 Tools/ai/patch_unified_heap_exchange_lifecycle_wiring.py
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
-Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
+Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/workflow/run_unified_local_ai_refactor.ps1
 ```
 

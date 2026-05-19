@@ -56,7 +56,7 @@ Contiene:
 - comandi di validazione;
 - rigenerazione di `external_heap_revision_context.json` dalla run buona;
 - resume command da lanciare dopo;
-- smoke dedicato `Tools/validation/run_external_heap_revision_context_applicability_smoke.py`.
+- smoke dedicato `Tools/validation/external_heap/revision_context_applicability_smoke/cli.py`.
 
 ## Vincoli rispettati
 
@@ -70,7 +70,7 @@ Il nuovo layer opera intorno al gate, non dentro il gate. Eccezione tecnica amme
 
 ## Profili launcher attuali
 
-Il file `Tools/ai/heap_runtime_launcher_profiles.json` espone solo questi profili:
+Il file `Tools/ai/run/profiles/heap_runtime_launcher_profiles.json` espone solo questi profili:
 
 - `fast_external_heap`
 - `balanced_external_heap`
@@ -82,7 +82,7 @@ Il file `Tools/ai/heap_runtime_launcher_profiles.json` espone solo questi profil
 
 ## File code-driven coinvolti
 
-### `Tools/ai/heap_runtime_launcher_profiles.json`
+### `Tools/ai/run/profiles/heap_runtime_launcher_profiles.json`
 
 Schema corrente: `schema_version = 3`.
 
@@ -119,7 +119,7 @@ Campi importanti:
 
 I profili operativi usano `revision_context_mode = auto_latest`. Il profilo `dry_packaging_external_heap` usa `revision_context_mode = off` per evitare che un dry-run di packaging consumi automaticamente task di revisione precedenti.
 
-### `Tools/ai/provider_runtime_heap.py`
+### `Tools/ai/provider_runtime_blackboard/cli.py`
 
 Heap append-only JSONL usato come blackboard runtime.
 
@@ -147,26 +147,26 @@ unsupported provider lane: 'context_memory'
 unsupported runtime heap event type: 'startup_task_file_context'
 ```
 
-### `Tools/ai/build_heap_runtime_launcher_command.py`
+### `Tools/ai/heap_runtime/launcher_command/cli.py`
 
 Questo tool non esegue il runtime heap. Genera comandi PowerShell reviewabili.
 
 Funzioni correnti:
 
 - legge `heap_runtime_launcher_profiles.json`;
-- materializza CLI args supportati da `run_heap_runtime_context_closure.py`;
+- materializza CLI args supportati da `python -m Tools.ai heap_context_closure`;
 - preserva metadati esterni non ancora CLI-bound;
 - cerca il latest `output/validation/heap_context_closure_*/external_heap_revision_context.json` quando il profilo usa `revision_context_mode = auto_latest`;
 - inietta un riassunto bounded del revision context direttamente dentro `--request`;
 - espone nel report JSON `revision_context_requires_concrete_rewrite`, `revision_context_priority_next_action` e `revision_context_candidate_applicability_summary`;
 - genera il comando run principale;
 - genera comandi debug step-by-step per block pointer manifest e revision context;
-- genera `postrun_package_command` per `run_external_heap_postrun_package.py`;
+- genera `postrun_package_command` per `python -m Tools.ai external_heap_postrun_package`;
 - puo' stampare il comando post-run con `--include-postrun-package-command`.
 
 Nota architetturale: il feed del revision context avviene nel testo `--request`, non tramite modifica del gate.
 
-### `Tools/ai/build_external_heap_block_pointer_manifest.py`
+### `Tools/ai/external_heap/block_pointer_manifest.py`
 
 Produce `external_heap_block_pointer_manifest.json/md` a partire da una run directory.
 
@@ -192,7 +192,7 @@ Stato attuale:
 - se `--max-blocks` limita i blocchi esposti, il manifest conserva `source_block_count`, `all_roles_present` e il provider execution calcolato sui blocchi sorgente completi;
 - i proposal block separano `candidate_response_preview`, `diagnostic_preview` e `preview_source`.
 
-### `Tools/ai/build_external_heap_revision_context.py`
+### `python -m Tools.ai build_external_heap_revision_context`
 
 Produce `external_heap_revision_context.json/md` da:
 
@@ -241,7 +241,7 @@ candidate_applicability_summary.symbol_propagation_skipped_task_count = 3
 candidate_applicability_summary.flag_counts = bare_pass=3, comment_only_function_stub=3, unresolved_angle_bracket_token=3
 ```
 
-### `Tools/ai/compose_external_heap_block_response.py`
+### `python -m Tools.ai compose_external_heap_block_response`
 
 Produce `external_heap_primary_long_response.md/json`.
 
@@ -258,7 +258,7 @@ Comportamento:
 - copia MD/JSON nella cartella Documents del composer quando possibile;
 - aggiorna `DOWNLOADS.txt` del composer.
 
-### `Tools/ai/normalize_heap_final_causality.py`
+### `python -m Tools.ai normalize_heap_final_causality`
 
 Separa due concetti che prima potevano essere ambigui:
 
@@ -274,16 +274,16 @@ Caso valido osservato:
 
 La normalizzazione conserva `provider_execution_performed` quando presente nel composer/report sorgente.
 
-### `Tools/ai/run_external_heap_postrun_package.py`
+### `Tools/ai/external_heap/postrun_package.py`
 
 Orchestratore esterno post-run.
 
 Non sostituisce il vecchio composer e non modifica il gate. Automatizza la sequenza esterna per una run `heap_context_closure_*` esistente:
 
-1. `normalize_heap_final_causality.py`
-2. `build_external_heap_block_pointer_manifest.py`
-3. `compose_external_heap_block_response.py`
-4. `build_external_heap_revision_context.py`
+1. `python -m Tools.ai normalize_heap_final_causality`
+2. `python -m Tools.ai build_external_heap_block_pointer_manifest`
+3. `python -m Tools.ai compose_external_heap_block_response`
+4. `python -m Tools.ai build_external_heap_revision_context`
 
 Output principale:
 
@@ -299,7 +299,7 @@ Campi/garanzie:
 - `source_writes_performed = false`;
 - default su latest `output/validation/heap_context_closure_*` se `--run-dir` non viene passato.
 
-### `Tools/validation/run_heap_runtime_launcher_command_smoke.py`
+### `Tools/validation/heap_runtime/launcher_command_smoke/cli.py`
 
 Smoke dedicato alla generazione comando heap esterno.
 
@@ -316,12 +316,12 @@ Valida:
 - esposizione di `requires_concrete_rewrite` e `priority_next_action` nel report;
 - injection della priorita' rewrite nel request;
 - injection di `symbol_propagation_skipped` e `candidate_not_concrete_enough` nel request;
-- target corretto per `run_heap_runtime_context_closure.py`;
-- target corretto per `run_external_heap_postrun_package.py`.
+- target corretto per `python -m Tools.ai heap_context_closure`;
+- target corretto per `python -m Tools.ai external_heap_postrun_package`.
 
 Lo smoke crea una fixture sotto `output/validation/heap_context_closure_smoke_revision_context/external_heap_revision_context.json`. Questa e' un output artifact, non una source write. Lo smoke marca `source_writes_performed = false` e usa `output_artifact_writes_performed` per indicare la fixture.
 
-### `Tools/validation/run_external_heap_revision_context_applicability_smoke.py`
+### `Tools/validation/external_heap/revision_context_applicability_smoke/cli.py`
 
 Smoke offline aggiunto per impedire regressioni nella classificazione dei proposal block.
 
@@ -345,14 +345,14 @@ candidate_concrete_enough = false
 
 ### Cold run manuale reale
 
-Per testare l'universo completo non basta stampare il command builder. Serve eseguire direttamente `run_heap_runtime_context_closure.py` o copiare/eseguire il comando prodotto dal builder.
+Per testare l'universo completo non basta stampare il command builder. Serve eseguire direttamente `python -m Tools.ai heap_context_closure` o copiare/eseguire il comando prodotto dal builder.
 
 Esempio cold run:
 
 ```powershell
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py `
+& $RepoPy -m Tools.ai heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $Stamp `
@@ -380,7 +380,7 @@ $NextStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $RunDir = "C:\Users\carmi\blender\blender-audio-project\output\validation\heap_context_closure_20260512-144115"
 $RevisionContext = Join-Path $RunDir "external_heap_revision_context.json"
 
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py `
+& $RepoPy -m Tools.ai heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $NextStamp `
@@ -449,12 +449,12 @@ feat(ai): bind external profile context budgets into startup preload selectors
 
 Target potenziali:
 
-- `Tools/ai/build_heap_runtime_launcher_command.py`
-- `Tools/ai/prepare_heap_context_memory_reload.py`
+- `Tools/ai/heap_runtime/launcher_command/cli.py`
+- `Tools/ai/heap_context_memory_reload/cli.py`
 
 ### 3. Post-run package non e' ancora invocato automaticamente dal launcher core
 
-La sequenza post-run e' ora automatizzabile con `run_external_heap_postrun_package.py` e il command builder genera `postrun_package_command`, ma `run_heap_runtime_context_closure.py` non lo invoca automaticamente.
+La sequenza post-run e' ora automatizzabile con `python -m Tools.ai external_heap_postrun_package` e il command builder genera `postrun_package_command`, ma `python -m Tools.ai heap_context_closure` non lo invoca automaticamente.
 
 Possibile patch futura:
 
@@ -464,7 +464,7 @@ feat(ai): let heap closure launcher optionally run external postrun package
 
 Target potenziale:
 
-- `Tools/ai/run_heap_runtime_context_closure.py`
+- `Tools/ai/heap_context_closure/cli.py`
 
 Vincolo: mantenere opzionale e non sostituire il vecchio composer.
 
@@ -480,21 +480,21 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:PYTHONPATH = (Resolve-Path .).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\provider_runtime_heap.py `
-  .\Tools\ai\build_heap_runtime_launcher_command.py `
-  .\Tools\ai\normalize_heap_final_causality.py `
-  .\Tools\ai\build_external_heap_block_pointer_manifest.py `
-  .\Tools\ai\compose_external_heap_block_response.py `
-  .\Tools\ai\build_external_heap_revision_context.py `
-  .\Tools\ai\run_external_heap_postrun_package.py `
-  .\Tools\validation\run_heap_runtime_launcher_command_smoke.py `
-  .\Tools\validation\run_external_heap_revision_context_applicability_smoke.py
+  .\Tools\ai\provider_runtime_blackboard\cli.py `
+  .\Tools\ai\heap_runtime\launcher_command\cli.py `
+  .\Tools\ai\python -m Tools.ai normalize_heap_final_causality `
+  .\Tools\ai\external_heap\block_pointer_manifest.py `
+  .\Tools\ai\python -m Tools.ai compose_external_heap_block_response `
+  -m Tools.ai build_external_heap_revision_context `
+  .\Tools\ai\external_heap\postrun_package.py `
+  .\Tools\validation\heap_runtime\launcher_command_smoke\cli.py `
+  .\Tools\validation\external_heap\revision_context_applicability_smoke\cli.py
 ```
 
 Smoke command builder:
 
 ```powershell
-& $RepoPy .\Tools\validation\run_heap_runtime_launcher_command_smoke.py `
+& $RepoPy -m Tools.validation run_heap_runtime_launcher_command_smoke `
   --repo-root . `
   --output .\output\validation\heap_runtime_launcher_command_smoke.json `
   --markdown-output .\output\validation\heap_runtime_launcher_command_smoke.md
@@ -503,7 +503,7 @@ Smoke command builder:
 Smoke revision applicability:
 
 ```powershell
-& $RepoPy .\Tools\validation\run_external_heap_revision_context_applicability_smoke.py `
+& $RepoPy -m Tools.validation run_external_heap_revision_context_applicability_smoke `
   --output .\output\validation\external_heap_revision_context_applicability_smoke.json
 ```
 

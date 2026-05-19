@@ -40,7 +40,7 @@ The repository has evolved from a Blender scripting workspace into a structured 
 
 It contains:
 
-- root audio-analysis and scene-spec tooling;
+- workflow-owned audio-analysis and scene-spec tooling;
 - a mature reference Blender workflow under `Scripting/v61b/`;
 - at least one large generated/refined Blender package under `Scripting/`;
 - shared-utility policy under `Scripting/shared/`;
@@ -70,9 +70,9 @@ It contains:
 
 | Area | Role |
 |---|---|
-| `analyze_wav.py` | Audio-analysis entry point. |
-| `build_track_summary.py` | Compact track-summary builder. |
-| `normalize_scene_spec.py` | Scene-spec normalization and defaulting. |
+| `Tools/workflow/workflow_run/audio_analysis/analyze_cli.py` | Audio-analysis entry point. |
+| `Tools/workflow/workflow_run/audio_analysis/summary_cli.py` | Compact track-summary builder. |
+| `Tools/workflow/workflow_run/scene_spec/cli.py` | Scene-spec normalization and defaulting. |
 | `Scripting/v61b/` | Main quality reference for complex Blender package structure. |
 | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Large generated/refined package and strong extraction candidate. |
 | `Scripting/_template_audio_reactive_package/` | Template for future generated packages. |
@@ -124,9 +124,9 @@ Some workflow and application scripts are large enough to make testing, reuse an
 
 Recommended solution: split orchestration, prompts, providers, validators and artifact writing into focused modules when touching those areas.
 
-### 3. Root tools are still script-shaped
+### 3. Audio/scene workflow tools need service-shaped ownership
 
-`analyze_wav.py`, `build_track_summary.py` and `normalize_scene_spec.py` contain reusable logic but are not yet cleanly separated into importable service modules plus CLI wrappers.
+The audio analysis, track summary and scene-spec tools now live under `Tools/workflow/`; keep reusable logic in importable modules and keep only thin CLI wrappers public.
 
 ### 4. Encoding logic should become shared
 
@@ -180,11 +180,11 @@ Current AI workflow should remain owner-aligned:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
 Tools/ai/patchkit/apply_patch_bundle.py
-Tools/ai/prepare_review_pr.py
+Tools/ai/agent_review/review_pr_cli.py
 ```
 
 Do not resurrect older monolithic flows as primary entrypoints.
@@ -194,11 +194,11 @@ Do not resurrect older monolithic flows as primary entrypoints.
 Existing lightweight validation helpers should be extended with docs-link, schema, lifecycle and patchkit checks:
 
 ```text
-Tools/validation/check_python_syntax.py
+python -m Tools.validation check_python_syntax
 Tools/validation/check_package_structure.py
 Tools/validation/check_json_artifacts.py
 Tools/validation/check_docs_links.py
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
 Tools/validation/run_patchkit_smoke.py
 ```
 

@@ -172,16 +172,12 @@ def execute_remediation_loop(
         signature = plan.signature()
         if not plan.requests:
             passes.append(
-                GuardrailPassResult(
-                    pass_index, "no_auto_safe_requests", plan, []
-                ).to_dict()
+                GuardrailPassResult(pass_index, "no_auto_safe_requests", plan, []).to_dict()
             )
             break
         if signature in seen_signatures:
             passes.append(
-                GuardrailPassResult(
-                    pass_index, "repeated_plan_stopped", plan, []
-                ).to_dict()
+                GuardrailPassResult(pass_index, "repeated_plan_stopped", plan, []).to_dict()
             )
             break
         seen_signatures.add(signature)
@@ -202,12 +198,7 @@ def execute_remediation_loop(
             results.append(res)
             if res["returncode"] and not args.continue_on_error:
                 break
-        passes.append(
-            GuardrailPassResult(pass_index, "executed", plan, step_results).to_dict()
-        )
-        if (
-            any(item["returncode"] for item in step_results)
-            and not args.continue_on_error
-        ):
+        passes.append(GuardrailPassResult(pass_index, "executed", plan, step_results).to_dict())
+        if any(item["returncode"] for item in step_results) and not args.continue_on_error:
             break
     return {"enabled": True, "max_passes": args.guardrail_max_passes, "passes": passes}

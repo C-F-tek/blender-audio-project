@@ -12,7 +12,7 @@ Wire app-agnostic context-summary helpers and generated support-file write-plann
 
 ```text
 Tools/npu/run_dual_ai_pipeline.py
-Tools/validation/check_npu_pipeline_modules.py
+Tools/validation/pipeline/npu_pipeline_modules_check/cli.py
 Tools/npu/pipeline/README.md
 docs/EXECUTION_PLANS/completed/2026-04-30_npu_runtime_context_artifact_wiring.md
 docs/TECH_DEBT_TRACKER.md
@@ -35,10 +35,10 @@ hand-edited generated indexes
 ## Validation commands
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
+python -m Tools.workflow run_npu_pipeline_helper_validation
+python -m Tools.workflow run_local_validation_after_refactor -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python -m Tools.npu build_project_ai_index
+python -m Tools.npu build_npu_code_context
 git status
 git diff --stat
 ```

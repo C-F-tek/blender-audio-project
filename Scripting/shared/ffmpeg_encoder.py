@@ -4,14 +4,15 @@ This module is package-agnostic and intentionally does not import ``bpy``.
 It builds commands and optionally executes them, but it does not know anything
 about Blender scenes or artistic package behavior.
 """
+
 from __future__ import annotations
 
 import shlex
 import shutil
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
 
 try:
     from .render_profiles import EncodeProfile, profile_to_args
@@ -57,7 +58,9 @@ def validate_encode_job(job: EncodeJob) -> None:
     if not job.input_pattern:
         raise ValueError("input_pattern is required")
     if "%" not in job.input_pattern:
-        raise ValueError(f"input_pattern should contain an FFmpeg frame pattern: {job.input_pattern}")
+        raise ValueError(
+            f"input_pattern should contain an FFmpeg frame pattern: {job.input_pattern}"
+        )
     if not job.audio_path.expanduser().is_file():
         raise FileNotFoundError(f"Audio file not found: {job.audio_path}")
     job.output_path.expanduser().resolve().parent.mkdir(parents=True, exist_ok=True)
@@ -105,7 +108,7 @@ def format_command(command: Sequence[str], *, shell: str = "powershell") -> str:
     for part in command:
         if not part:
             parts.append('""')
-        elif any(char.isspace() for char in part) or any(char in part for char in ('&', '(', ')')):
+        elif any(char.isspace() for char in part) or any(char in part for char in ("&", "(", ")")):
             parts.append('"' + part.replace('"', '`"') + '"')
         else:
             parts.append(part)

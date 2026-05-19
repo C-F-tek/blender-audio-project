@@ -2,13 +2,29 @@
 
 Utilities for local Git automation used by the project application.
 
-## auto_push_generated_data.ps1
+## Canonical entrypoint
+
+Use the module dispatcher from the repository root:
+
+```powershell
+python -m Tools.git <tool> [native PowerShell args...]
+```
+
+Available tools:
+
+```powershell
+python -m Tools.git --list
+```
+
+The `.ps1` files under `_powershell/` are implementation files. Do not call
+them directly from operator docs or automation.
+
+## auto_push_generated_data
 
 Script intended to be called after the local app regenerates technical data such as:
 
 - `indexAI/` project indexes;
-- `Tools/npu/*.json` manifests;
-- `Tools/npu/*.md` generated context files;
+- local NPU context artifacts, which are generated under ignored paths and not source-tracked;
 - optional `output/*.json`, `output/*.md`, `output/*.txt` files;
 - optional documentation updates.
 
@@ -17,31 +33,31 @@ Script intended to be called after the local app regenerates technical data such
 From repository root:
 
 ```powershell
-.\Tools\git\auto_push_generated_data.ps1
+python -m Tools.git auto_push_generated_data
 ```
 
 ## Dry run
 
 ```powershell
-.\Tools\git\auto_push_generated_data.ps1 -DryRun
+python -m Tools.git auto_push_generated_data -DryRun
 ```
 
 ## Include output JSON files
 
 ```powershell
-.\Tools\git\auto_push_generated_data.ps1 -IncludeOutputJson
+python -m Tools.git auto_push_generated_data -IncludeOutputJson
 ```
 
 ## Include documentation updates
 
 ```powershell
-.\Tools\git\auto_push_generated_data.ps1 -IncludeDocs
+python -m Tools.git auto_push_generated_data -IncludeDocs
 ```
 
 ## Include all generated allowlisted areas
 
 ```powershell
-.\Tools\git\auto_push_generated_data.ps1 -IncludeAllGenerated
+python -m Tools.git auto_push_generated_data -IncludeAllGenerated
 ```
 
 ## Pull before push
@@ -49,7 +65,7 @@ From repository root:
 Use only when the local branch is expected to fast-forward cleanly:
 
 ```powershell
-.\Tools\git\auto_push_generated_data.ps1 -PullFirst
+python -m Tools.git auto_push_generated_data -PullFirst
 ```
 
 ## Suggested app integration
@@ -57,13 +73,13 @@ Use only when the local branch is expected to fast-forward cleanly:
 After the application regenerates indexes or technical JSON files, it can call:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\git\auto_push_generated_data.ps1 -IncludeOutputJson
+python -m Tools.git auto_push_generated_data -IncludeOutputJson
 ```
 
 or, if only `indexAI/` and `Tools/npu/` were updated:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\git\auto_push_generated_data.ps1
+python -m Tools.git auto_push_generated_data
 ```
 
 ## Safety notes

@@ -20,9 +20,7 @@ def write_json_report(path: str | Path, payload: PipelineReport | dict) -> Path:
     output = Path(path).expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     data = payload.to_dict() if isinstance(payload, PipelineReport) else payload
-    output.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return output
 
 

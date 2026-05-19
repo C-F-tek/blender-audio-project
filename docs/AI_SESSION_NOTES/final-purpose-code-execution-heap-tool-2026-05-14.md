@@ -11,14 +11,14 @@ provider text.
 
 New:
 
-- `Tools/ai/heap_code_execution_tool_core.py`
-- `Tools/ai/run_heap_code_execution_tool.py`
-- `Tools/validation/run_heap_code_execution_tool_smoke.py`
+- `Tools/ai/_shared/heap_code_execution_tool_core.py`
+- `Tools/ai/heap_runtime/code_execution_tool/cli.py`
+- `Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py`
 
 Updated:
 
-- `Tools/ai/agent_runtime_tool_broker.py`
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/runtime_tool/agent_broker.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 
 ## Runtime Capability
 
@@ -79,13 +79,13 @@ Validated locally:
 
 ```powershell
 & $RepoPy -m py_compile `
-  .\Tools\ai\run_heap_code_execution_tool.py `
-  .\Tools\ai\heap_code_execution_tool_core.py `
-  .\Tools\validation\run_heap_code_execution_tool_smoke.py `
-  .\Tools\ai\agent_runtime_tool_broker.py `
-  .\Tools\ai\run_heap_runtime_completeness_gate.py
+  .\Tools\ai\heap_runtime\code_execution_tool\cli.py `
+  .\Tools\ai\_shared\heap_code_execution_tool_core.py `
+  .\Tools\validation\heap_runtime\code_execution_tool_smoke\cli.py `
+  .\Tools\ai\runtime_tool\agent_broker.py `
+  .\Tools\ai\heap_runtime\completeness_gate\cli.py
 
-& $RepoPy .\Tools\validation\run_heap_code_execution_tool_smoke.py `
+& $RepoPy -m Tools.validation run_heap_code_execution_tool_smoke `
   --repo-root . `
   --output output/validation/heap_code_execution_tool_smoke_after_split_20260514.json `
   --markdown-output output/validation/heap_code_execution_tool_smoke_after_split_20260514.md
@@ -102,9 +102,9 @@ Observed:
 
 ## Line Counts
 
-- `Tools/ai/run_heap_code_execution_tool.py`: 208 lines.
-- `Tools/ai/heap_code_execution_tool_core.py`: 317 lines.
-- `Tools/validation/run_heap_code_execution_tool_smoke.py`: 224 lines.
+- `Tools/ai/heap_runtime/code_execution_tool/cli.py`: 208 lines.
+- `Tools/ai/_shared/heap_code_execution_tool_core.py`: 317 lines.
+- `Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py`: 224 lines.
 
 All new files are under the 400-line maintained script target.
 

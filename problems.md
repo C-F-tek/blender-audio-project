@@ -66,14 +66,14 @@ Move these documents into the first-read block:
 
 ## Closed problems
 
-### P-003 — `prepare_review_pr.py` draft PR support was documented as not implemented
+### P-003 — `agent_review_prepare_pr.py` draft PR support was documented as not implemented
 
 Status: closed in PR #251 documentation follow-up.
 
 Code-driven finding:
 
 ```text
-Tools/ai/prepare_review_pr.py supports --draft-pr.
+Tools/ai/agent_review/review_pr_cli.py supports --draft-pr.
 validate_pr_flags() enforces --draft-pr requires --create-pr.
 create_github_pr() appends --draft to gh pr create when args.draft_pr is true.
 ```
@@ -100,6 +100,6 @@ docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md
 Outcome:
 
 ```text
-Patch/product docs now route current product work through heap/exchange entry/exit, lifecycle validation, patchkit or deterministic patch suggestion bridge, and prepare_review_pr.py.
+Patch/product docs now route current product work through heap/exchange entry/exit, lifecycle validation, patchkit or deterministic patch suggestion bridge, and agent_review_prepare_pr.py.
 Historical ledger docs are classified as reference/ledger workflows, not primary product paths.
 ```

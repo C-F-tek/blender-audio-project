@@ -11,14 +11,14 @@ Vincolo operativo confermato: non modificare il formato o il contenuto dell'outp
 - `external_heap_revision_context.json/md`
 - package Documents del vecchio composer
 
-Le patch non toccano `compose_external_heap_block_response.py`, non cambiano il long response e non modificano il gate.
+Le patch non toccano `python -m Tools.ai compose_external_heap_block_response`, non cambiano il long response e non modificano il gate.
 
 ## Bug 1 — selezione run post-run troppo permissiva
 
 File coinvolto:
 
 ```text
-Tools/ai/run_external_heap_postrun_package.py
+Tools/ai/external_heap/postrun_package.py
 ```
 
 Il selettore automatico della run usava la directory piu' recente con nome:
@@ -29,7 +29,7 @@ output/validation/heap_context_closure_*
 
 Questo era troppo permissivo.
 
-Dopo l'introduzione dello smoke `Tools/validation/run_heap_runtime_launcher_command_smoke.py`, puo' esistere una fixture locale:
+Dopo l'introduzione dello smoke `Tools/validation/heap_runtime/launcher_command_smoke/cli.py`, puo' esistere una fixture locale:
 
 ```text
 output/validation/heap_context_closure_smoke_revision_context/external_heap_revision_context.json
@@ -41,7 +41,7 @@ Questa fixture serve solo per verificare l'injection del revision context nel co
 heap_final_proposal_composer.json
 ```
 
-Rischio: `run_external_heap_postrun_package.py`, senza `--run-dir`, poteva selezionare la fixture smoke come latest run e fallire per composer mancante.
+Rischio: `python -m Tools.ai external_heap_postrun_package`, senza `--run-dir`, poteva selezionare la fixture smoke come latest run e fallire per composer mancante.
 
 ### Fix applicato
 
@@ -77,8 +77,8 @@ Se `--run-dir` viene passato esplicitamente, il report usa:
 File coinvolti:
 
 ```text
-Tools/ai/build_heap_runtime_launcher_command.py
-Tools/validation/run_heap_runtime_launcher_command_smoke.py
+Tools/ai/heap_runtime/launcher_command/cli.py
+Tools/validation/heap_runtime/launcher_command_smoke/cli.py
 ```
 
 Il command builder usava:
@@ -108,7 +108,7 @@ Il JSON command passa a:
 
 quando il profilo usa `revision_context_mode = auto_latest` senza `--revision-context` esplicito.
 
-Lo smoke `run_heap_runtime_launcher_command_smoke.py` e' stato aggiornato: ora passa la fixture con `--revision-context`, quindi testa l'injection esplicita senza dipendere dall'auto-latest. Il report smoke passa a:
+Lo smoke `python -m Tools.validation run_heap_runtime_launcher_command_smoke` e' stato aggiornato: ora passa la fixture con `--revision-context`, quindi testa l'injection esplicita senza dipendere dall'auto-latest. Il report smoke passa a:
 
 ```json
 "schema_version": 2,
@@ -143,15 +143,15 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:PYTHONPATH = (Resolve-Path .).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\run_external_heap_postrun_package.py `
-  .\Tools\ai\build_heap_runtime_launcher_command.py `
-  .\Tools\validation\run_heap_runtime_launcher_command_smoke.py
+  .\Tools\ai\external_heap\postrun_package.py `
+  .\Tools\ai\heap_runtime\launcher_command\cli.py `
+  .\Tools\validation\heap_runtime\launcher_command_smoke\cli.py
 ```
 
 Dopo una run reale heap:
 
 ```powershell
-& $RepoPy .\Tools\ai\run_external_heap_postrun_package.py `
+& $RepoPy -m Tools.ai external_heap_postrun_package `
   --repo-root . `
   --include-rejected-history `
   --include-peer-blocks
@@ -188,7 +188,7 @@ run_dir_selection_policy : latest_complete_heap_context_closure_with_composer_js
 Controllo command builder:
 
 ```powershell
-& $RepoPy .\Tools\ai\build_heap_runtime_launcher_command.py `
+& $RepoPy -m Tools.ai build_heap_runtime_launcher_command `
   --repo-root . `
   --profile balanced_external_heap `
   --include-postrun-package-command `
@@ -216,7 +216,7 @@ revision_context_selection_policy : latest_complete_heap_context_closure_with_co
 Smoke:
 
 ```powershell
-& $RepoPy .\Tools\validation\run_heap_runtime_launcher_command_smoke.py `
+& $RepoPy -m Tools.validation run_heap_runtime_launcher_command_smoke `
   --repo-root . `
   --output .\output\validation\heap_runtime_launcher_command_smoke.json `
   --markdown-output .\output\validation\heap_runtime_launcher_command_smoke.md

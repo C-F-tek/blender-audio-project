@@ -41,7 +41,9 @@ def build_migration_readiness_report(
     }
 
 
-def default_runtime_wiring_readiness(*, local_validation_passed: bool, indexes_regenerated: bool) -> dict[str, Any]:
+def default_runtime_wiring_readiness(
+    *, local_validation_passed: bool, indexes_regenerated: bool
+) -> dict[str, Any]:
     """Return the default gate for wiring helpers into the legacy runtime file."""
 
     checks = [
@@ -62,7 +64,7 @@ def default_runtime_wiring_readiness(*, local_validation_passed: bool, indexes_r
         ),
     ]
     return build_migration_readiness_report(
-        target_file="Tools/npu/run_dual_ai_pipeline.py",
+        target_file="Tools/npu/dual_ai_pipeline/cli.py",
         checks=checks,
         allowed_to_modify_runtime=False,
     )

@@ -26,9 +26,7 @@ def insert_before_marker(
     if index < 0:
         raise ValueError(f"marker not found: {marker}")
     replacement = content.strip("\n") + "\n"
-    return TextChange(
-        True, text[:index] + replacement + text[index:], "insert_before_marker"
-    )
+    return TextChange(True, text[:index] + replacement + text[index:], "insert_before_marker")
 
 
 def insert_after_marker(
@@ -56,6 +54,4 @@ def replace_once(text: str, old: str, new: str) -> TextChange:
 def append_once(text: str, content: str, *, idempotency_marker: str = "") -> TextChange:
     if idempotency_marker and idempotency_marker in text:
         return TextChange(False, text, "idempotency marker already present")
-    return TextChange(
-        True, text.rstrip("\n") + "\n\n" + content.strip("\n") + "\n", "append_once"
-    )
+    return TextChange(True, text.rstrip("\n") + "\n\n" + content.strip("\n") + "\n", "append_once")

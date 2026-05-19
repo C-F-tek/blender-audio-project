@@ -57,11 +57,7 @@ def insert_after_invoke_checked(
     end = find_invoke_checked_block_end(lines, label)
     if end is None:
         raise ValueError(f"Invoke-Checked block not found or unterminated: {label}")
-    new_lines = (
-        lines[: end + 1]
-        + ["", *content.strip("\n").splitlines(), ""]
-        + lines[end + 1 :]
-    )
+    new_lines = lines[: end + 1] + ["", *content.strip("\n").splitlines(), ""] + lines[end + 1 :]
     return True, "\n".join(new_lines) + "\n", "insert_after_invoke_checked"
 
 

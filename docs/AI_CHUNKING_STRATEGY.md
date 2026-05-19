@@ -12,13 +12,13 @@ indexAI/code_chunks/semantic_code_chunks_manifest.json
 ## Command
 
 ```powershell
-py .\Tools\npu\build_semantic_code_chunks.py --repo-root .
+py -m Tools.npu build_semantic_code_chunks --repo-root .
 ```
 
 Dry run:
 
 ```powershell
-py .\Tools\npu\build_semantic_code_chunks.py --repo-root . --dry-run
+py -m Tools.npu build_semantic_code_chunks --repo-root . --dry-run
 ```
 
 ## Chunk fields

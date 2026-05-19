@@ -48,11 +48,7 @@ def resolve_path(repo_root: Path, value: str) -> Path:
 def safe_rel(path: Path, repo_root: Path) -> str:
     """Return a repo-relative path when possible."""
     try:
-        return (
-            path.resolve(strict=False)
-            .relative_to(repo_root.resolve(strict=False))
-            .as_posix()
-        )
+        return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
 
@@ -62,9 +58,7 @@ def quote_identifier(name: str) -> str:
     return '"' + str(name).replace('"', '""') + '"'
 
 
-def read_sqlite_metadata(
-    memory_db: Path, repo_root: Path, *, max_tables: int
-) -> dict[str, Any]:
+def read_sqlite_metadata(memory_db: Path, repo_root: Path, *, max_tables: int) -> dict[str, Any]:
     """Inspect a SQLite memory DB in read-only mode."""
     meta: dict[str, Any] = {
         "path": safe_rel(memory_db, repo_root),
@@ -398,9 +392,7 @@ def main() -> int:
     markdown_output = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output.write_text(render_markdown(report), encoding="utf-8")
 
     print(

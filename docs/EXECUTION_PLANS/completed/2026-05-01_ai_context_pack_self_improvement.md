@@ -30,13 +30,13 @@ Create the first non-invasive prototype for the repository helping work on itsel
 ## Validation Plan
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\ai\build_ai_context_pack.py --repo-root . --profile project_self_improvement
-python .\Tools\validation\check_ai_context_pack_contract.py --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json
-python .\Tools\validation\check_json_artifacts.py --repo-root . --output .\output\validation\json_artifacts.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.ai build_ai_context_pack --repo-root . --profile project_self_improvement
+python -m Tools.validation check_ai_context_pack_contract --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json
+python -m Tools.validation check_json_artifacts --repo-root . --output .\output\validation\json_artifacts.json
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
+python -m Tools.validation check_execution_plan_status --repo-root . --output .\output\validation\execution_plan_status.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 ```
 
 ## Exit Criteria

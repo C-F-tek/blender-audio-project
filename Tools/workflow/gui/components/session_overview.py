@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import tkinter as tk
+from pathlib import Path
 from tkinter import ttk
 from typing import Any
 
@@ -84,10 +84,16 @@ class SessionOverviewFrame(ttk.Frame):
         self.summary_grid = ttk.Frame(summary)
         self.summary_grid.pack(fill="x", padx=8, pady=8)
         self.summary_values: dict[str, ttk.Label] = {}
-        for index, label in enumerate(("WAV", "Last operation", "Creative", "Technical", "Chat", "Script tokens")):
-            ttk.Label(self.summary_grid, text=label, style="MetricName.TLabel").grid(row=index // 2, column=(index % 2) * 2, sticky="w", padx=(0, 8), pady=3)
+        for index, label in enumerate(
+            ("WAV", "Last operation", "Creative", "Technical", "Chat", "Script tokens")
+        ):
+            ttk.Label(self.summary_grid, text=label, style="MetricName.TLabel").grid(
+                row=index // 2, column=(index % 2) * 2, sticky="w", padx=(0, 8), pady=3
+            )
             value = ttk.Label(self.summary_grid, text="-", wraplength=520)
-            value.grid(row=index // 2, column=(index % 2) * 2 + 1, sticky="ew", padx=(0, 18), pady=3)
+            value.grid(
+                row=index // 2, column=(index % 2) * 2 + 1, sticky="ew", padx=(0, 18), pady=3
+            )
             self.summary_values[label] = value
         self.summary_grid.columnconfigure(1, weight=1)
         self.summary_grid.columnconfigure(3, weight=1)
@@ -118,11 +124,24 @@ class SessionOverviewFrame(ttk.Frame):
 
         detail_toolbar = ttk.Frame(detail_frame)
         detail_toolbar.pack(fill="x", pady=(8, 5))
-        ttk.Button(detail_toolbar, text="Open selected", command=self.open_selected).pack(side="left")
-        ttk.Button(detail_toolbar, text="Open folder", command=self.open_selected_folder).pack(side="left", padx=(8, 0))
-        ttk.Button(detail_toolbar, text="Copy path", command=self.copy_selected_path).pack(side="left", padx=(8, 0))
+        ttk.Button(detail_toolbar, text="Open selected", command=self.open_selected).pack(
+            side="left"
+        )
+        ttk.Button(detail_toolbar, text="Open folder", command=self.open_selected_folder).pack(
+            side="left", padx=(8, 0)
+        )
+        ttk.Button(detail_toolbar, text="Copy path", command=self.copy_selected_path).pack(
+            side="left", padx=(8, 0)
+        )
 
-        self.detail = tk.Text(detail_frame, wrap="word", height=8, borderwidth=1, relief="solid", **text_widget_colors(self))
+        self.detail = tk.Text(
+            detail_frame,
+            wrap="word",
+            height=8,
+            borderwidth=1,
+            relief="solid",
+            **text_widget_colors(self),
+        )
         self.detail.pack(fill="both", expand=True)
 
     def configure_headings(self) -> None:
@@ -192,10 +211,14 @@ class SessionOverviewFrame(ttk.Frame):
             else:
                 type_name = suffix or "path"
             size = file_size(path_text) if path_text else 0
-            rows.append({"key": key, "path": path_text, "exists": exists, "type": type_name, "size": size})
+            rows.append(
+                {"key": key, "path": path_text, "exists": exists, "type": type_name, "size": size}
+            )
         self.rows = rows
         self.apply_filter()
-        self.write_detail("Seleziona un output per vedere dettagli. Doppio click per aprire file/cartella.")
+        self.write_detail(
+            "Seleziona un output per vedere dettagli. Doppio click per aprire file/cartella."
+        )
 
     def apply_filter(self) -> None:
         query = self.search_var.get().strip().lower()
@@ -247,7 +270,9 @@ class SessionOverviewFrame(ttk.Frame):
             suffix = self.selected_path.suffix.lower()
             if suffix in {".json", ".md", ".txt", ".py", ".log", ".jsonl", ".csv"}:
                 try:
-                    preview = self.selected_path.read_text(encoding="utf-8", errors="replace")[:20000]
+                    preview = self.selected_path.read_text(encoding="utf-8", errors="replace")[
+                        :20000
+                    ]
                     text.extend(["", "Preview:", preview])
                 except Exception as exc:
                     text.append(f"Preview error: {exc}")

@@ -28,16 +28,13 @@ def lane_counts(lanes: Any) -> dict[str, int]:
     if not isinstance(lanes, dict):
         return {}
     return {
-        str(lane): len(steps) if isinstance(steps, list) else 0
-        for lane, steps in lanes.items()
+        str(lane): len(steps) if isinstance(steps, list) else 0 for lane, steps in lanes.items()
     }
 
 
 def case_status(result: dict[str, Any]) -> str:
     """Return a human-readable status for one matrix case."""
-    return bool_icon(
-        result.get("returncode") == 0 and result.get("report_passed") is True
-    )
+    return bool_icon(result.get("returncode") == 0 and result.get("report_passed") is True)
 
 
 def render_dry_run_matrix_markdown(report: dict[str, Any]) -> str:
@@ -106,9 +103,7 @@ def render_dry_run_matrix_markdown(report: dict[str, Any]) -> str:
 
     lines.append("## Notes\n")
     lines.append("- This report is generated from dry-run invocations only.\n")
-    lines.append(
-        "- NPU, GPU, Blender and FFmpeg workloads are not executed by the matrix.\n"
-    )
+    lines.append("- NPU, GPU, Blender and FFmpeg workloads are not executed by the matrix.\n")
     lines.append(
         "- Inspect individual JSON reports for `summary`, `schedule`, `lanes` and `guardrail_remediation_loop`.\n"
     )

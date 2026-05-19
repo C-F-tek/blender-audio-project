@@ -1,11 +1,12 @@
+import logging
 import sys
 import time
 from pathlib import Path
+
 import bpy
-import logging
 
 # Configurazione del logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 SCRIPT_DIR = None
 
@@ -27,34 +28,35 @@ from reload_utils import reload_known_modules
 
 reload_known_modules()
 
+from animation import animate_scene
+from asset_setup import create_primary_asset, create_scene_core, create_secondary_asset
+from atmosphere_setup import (
+    create_atmosphere_cube,
+    create_energy_ribbons,
+    create_energy_rings,
+    create_hero_aura,
+    create_mist_particles,
+    create_variants,
+)
+from camera_setup import create_camera_rig
+from io_utils import add_audio_strip, ensure_inputs_exist, load_json
+from physics_setup import create_physics_accents
+from render_setup import configure_render, configure_scene_physics
+from scene_utils import clear_scene
+from spaziotempo.core.collections import classify_scene_objects, compact_structure_summary
+from world_setup import configure_world, create_area_lights, create_floor_and_backdrop
+
 from config import (
     ANALYSIS_JSON_PATH,
     AUDIO_PATH,
-    OUTPUT_MP4,
-    OUTPUT_IMAGE_SEQUENCE_DIR,
-    OUTPUT_IMAGE_SEQUENCE_PREFIX,
-    RENDER_OUTPUT_MODE,
     CLEAR_SCENE,
     CLEAR_SEQUENCER,
     FPS_OVERRIDE,
+    OUTPUT_IMAGE_SEQUENCE_DIR,
+    OUTPUT_IMAGE_SEQUENCE_PREFIX,
+    OUTPUT_MP4,
+    RENDER_OUTPUT_MODE,
 )
-from scene_utils import clear_scene
-from io_utils import load_json, ensure_inputs_exist, add_audio_strip
-from render_setup import configure_scene_physics, configure_render
-from world_setup import configure_world, create_floor_and_backdrop, create_area_lights
-from camera_setup import create_camera_rig
-from asset_setup import create_scene_core, create_primary_asset, create_secondary_asset
-from atmosphere_setup import (
-    create_hero_aura,
-    create_energy_rings,
-    create_energy_ribbons,
-    create_variants,
-    create_atmosphere_cube,
-    create_mist_particles,
-)
-from physics_setup import create_physics_accents
-from animation import animate_scene
-from spaziotempo.core.collections import classify_scene_objects, compact_structure_summary
 
 
 def register_tuning_panel():
@@ -62,7 +64,9 @@ def register_tuning_panel():
         import scene_tuning_panel
 
         scene_tuning_panel.register()
-        logging.info("Pannello di tuning Spaziotempo registrato. Aprire il pannello laterale con N > Spaziotempo.")
+        logging.info(
+            "Pannello di tuning Spaziotempo registrato. Aprire il pannello laterale con N > Spaziotempo."
+        )
     except Exception as exc:
         logging.warning(f"Impossibile registrare il pannello di tuning: {exc}")
 
@@ -78,11 +82,15 @@ def classify_project_structure(scene):
         return None
 
 
-def print_summary(scene, analysis_file, hero_asset, secondary_asset, audio_file, fps, frame_count, elapsed):
+def print_summary(
+    scene, analysis_file, hero_asset, secondary_asset, audio_file, fps, frame_count, elapsed
+):
     logging.info("=" * 68)
     logging.info("SPAZIOTEMPOREC HERO + SECONDARY ASSET VISUAL READY")
     logging.info(f"Engine: {scene.render.engine}")
-    logging.info(f"Resolution: {scene.render.resolution_x}x{scene.render.resolution_y} @ {scene.render.resolution_percentage}%")
+    logging.info(
+        f"Resolution: {scene.render.resolution_x}x{scene.render.resolution_y} @ {scene.render.resolution_percentage}%"
+    )
     logging.info(f"FPS: {fps}")
     logging.info(f"Frames: {frame_count}")
     logging.info(f"Analysis JSON: {analysis_file}")
@@ -95,7 +103,9 @@ def print_summary(scene, analysis_file, hero_asset, secondary_asset, audio_file,
     if str(RENDER_OUTPUT_MODE).upper() == "IMAGE_SEQUENCE":
         logging.info(f"Frames:        {OUTPUT_IMAGE_SEQUENCE_DIR}")
         logging.info(f"Prefix:        {OUTPUT_IMAGE_SEQUENCE_PREFIX}")
-        logging.info(f"Encode MP4:    eseguire encode_image_sequence_v61b.py dopo il Render Animation")
+        logging.info(
+            "Encode MP4:    eseguire encode_image_sequence_v61b.py dopo il Render Animation"
+        )
     else:
         logging.info(f"MP4:           {scene.render.filepath}")
     logging.info(f"Elapsed:       {elapsed:.2f}s")
@@ -193,7 +203,9 @@ def main():
 
     elapsed = time.time() - t0
     register_tuning_panel()
-    print_summary(scene, analysis_file, hero_asset, secondary_asset, audio_file, fps, frame_count, elapsed)
+    print_summary(
+        scene, analysis_file, hero_asset, secondary_asset, audio_file, fps, frame_count, elapsed
+    )
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ The application remains responsible for generating indexes, JSON summaries, AI c
 After generation, the app can call:
 
 ```text
-Tools/git/auto_push_generated_artifacts.ps1
+python -m Tools.git auto_push_generated_artifacts
 ```
 
 The script stages selected generated-artifact paths, creates a commit only if changes exist, and pushes the current branch.
@@ -17,7 +17,7 @@ The script stages selected generated-artifact paths, creates a commit only if ch
 ## Script path
 
 ```text
-Tools/git/auto_push_generated_artifacts.ps1
+python -m Tools.git auto_push_generated_artifacts
 ```
 
 ## Basic usage
@@ -25,31 +25,31 @@ Tools/git/auto_push_generated_artifacts.ps1
 From the repository root:
 
 ```powershell
-.\Tools\git\auto_push_generated_artifacts.ps1
+python -m Tools.git auto_push_generated_artifacts
 ```
 
 With explicit path:
 
 ```powershell
-.\Tools\git\auto_push_generated_artifacts.ps1 -RepoPath "C:\Users\carmi\blender\blender-audio-project"
+python -m Tools.git auto_push_generated_artifacts -RepoPath "C:\Users\carmi\blender\blender-audio-project"
 ```
 
 With custom message:
 
 ```powershell
-.\Tools\git\auto_push_generated_artifacts.ps1 -Message "chore: update app-generated indexes and contexts"
+python -m Tools.git auto_push_generated_artifacts -Message "chore: update app-generated indexes and contexts"
 ```
 
 Dry run:
 
 ```powershell
-.\Tools\git\auto_push_generated_artifacts.ps1 -DryRun
+python -m Tools.git auto_push_generated_artifacts -DryRun
 ```
 
 Commit without push:
 
 ```powershell
-.\Tools\git\auto_push_generated_artifacts.ps1 -NoPush
+python -m Tools.git auto_push_generated_artifacts -NoPush
 ```
 
 ## Default staged paths
@@ -63,11 +63,6 @@ output/*_music_context.json
 output/*_analysis_ai_context.json
 output/*_dual_ai_scene_plan.json
 output/*_ai_implementation_draft.json
-Tools/npu/*_manifest.json
-Tools/npu/*_context.md
-Tools/npu/*_index.md
-Tools/npu/*_technical_notes.md
-Tools/npu/*_implementation_notes.md
 Tools/npu/npu_preflight_report.json
 ```
 
@@ -78,7 +73,7 @@ Full frame-by-frame analysis JSON files are excluded by default because they may
 To include them explicitly:
 
 ```powershell
-.\Tools\git\auto_push_generated_artifacts.ps1 -IncludeFullAnalysisJson
+python -m Tools.git auto_push_generated_artifacts -IncludeFullAnalysisJson
 ```
 
 This adds:
@@ -95,7 +90,7 @@ Recommended app flow:
 ```text
 1. Regenerate technical artifacts from the app.
 2. Validate generated files.
-3. Call Tools/git/auto_push_generated_artifacts.ps1.
+3. Call `python -m Tools.git auto_push_generated_artifacts`.
 4. Review GitHub commit if needed.
 ```
 
@@ -105,7 +100,7 @@ Example from PowerShell:
 # App regeneration step here
 # App-owned regeneration command goes here; no tracked repository script is implied.
 
-.\Tools\git\auto_push_generated_artifacts.ps1 `
+python -m Tools.git auto_push_generated_artifacts `
   -RepoPath "C:\Users\carmi\blender\blender-audio-project" `
   -Message "chore: update generated AI indexes and technical context"
 ```
@@ -126,8 +121,8 @@ The script:
 The app can pass a custom set of paths:
 
 ```powershell
-.\Tools\git\auto_push_generated_artifacts.ps1 `
-  -Paths @("indexAI", "output/*_track_summary.json", "Tools/npu/npu_code_manifest.json")
+python -m Tools.git auto_push_generated_artifacts `
+  -Paths @("indexAI", "output/*_track_summary.json")
 ```
 
 ## AI rule

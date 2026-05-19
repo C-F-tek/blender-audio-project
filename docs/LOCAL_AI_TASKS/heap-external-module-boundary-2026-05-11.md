@@ -39,18 +39,18 @@ heap sperimentale che forza modifiche nel gate stabile
 La patch corrente non deve introdurre modifiche in:
 
 ```text
-Tools/ai/run_heap_runtime_completeness_gate.py
+Tools/ai/heap_runtime/completeness_gate/cli.py
 ```
 
 Se manca un campo, un riferimento, una memoria o un artifact utile, la correzione deve stare in uno di questi layer:
 
 ```text
-Tools/ai/prepare_heap_context_memory_reload.py
+Tools/ai/heap_context_memory_reload/cli.py
 Tools/ai/reconcile_heap_report_with_startup_reload.py
-Tools/ai/run_heap_runtime_context_closure.py
-Tools/ai/compose_heap_final_proposals.py
-Tools/ai/provider_runtime_heap.py
-Tools/ai/agent_runtime_sqlite_memory.py
+Tools/ai/heap_context_closure/cli.py
+Tools/ai/heap_final_proposals/cli.py
+Tools/ai/provider_runtime_blackboard/cli.py
+python -m Tools.ai agent_runtime_sqlite_memory
 ```
 
 oppure in un nuovo adapter esterno, per esempio:
@@ -63,7 +63,7 @@ Tools/ai/heap_external_analysis_adapter.py
 
 La PR #297 rispetta il vincolo per i fix gia' applicati:
 
-- non modifica `run_heap_runtime_completeness_gate.py`;
+- non modifica `python -m Tools.ai run_heap_runtime_completeness_gate`;
 - corregge il reconciler per accettare startup degradato con artifact utili;
 - corregge il launcher per passare `--allow-degraded-startup` al reconciler quando opportuno;
 - migliora la raccolta artifact refs senza richiedere cambi al gate.
@@ -100,13 +100,13 @@ Da correggere fuori dal gate.
 Target consigliato:
 
 ```text
-Tools/ai/prepare_heap_context_memory_reload.py
+Tools/ai/heap_context_memory_reload/cli.py
 ```
 
 L'heap/preload deve scrivere un record operativo nella scratch memory sotto `output/**`, usando:
 
 ```text
-Tools/ai/agent_runtime_sqlite_memory.py --action remember --scope operational
+python -m Tools.ai agent_runtime_sqlite_memory --action remember --scope operational
 ```
 
 Contenuto consigliato:
@@ -128,7 +128,7 @@ Da correggere fuori dal gate.
 Target consigliato:
 
 ```text
-Tools/ai/compose_heap_final_proposals.py
+Tools/ai/heap_final_proposals/cli.py
 ```
 
 Il composer deve distinguere:

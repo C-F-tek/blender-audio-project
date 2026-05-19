@@ -104,25 +104,25 @@ parallel_lanes
 ## Entry point
 
 ```powershell
-python .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate
+python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate
 ```
 
 Dry run:
 
 ```powershell
-python .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run
+python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run
 ```
 
 Dry run with report file:
 
 ```powershell
-python .\Tools\ai\run_parallel_artifact_pipeline.py --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
+python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
 ```
 
 Dry-run matrix:
 
 ```powershell
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 ## Outputs
@@ -164,9 +164,9 @@ Current priority order:
 After pipeline changes:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
+python -m Tools.validation check_python_syntax --repo-root .
+python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 The pipeline is additive and can be bypassed by simply not running these tools.

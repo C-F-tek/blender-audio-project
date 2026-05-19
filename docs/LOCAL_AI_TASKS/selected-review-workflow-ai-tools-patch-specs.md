@@ -65,14 +65,14 @@ Tools/workflow/run_local_ai_markdown_task.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_parallel_ai_provider_multistep.ps1
 Tools/workflow/run_post_validation_ai_packet.ps1
-Tools/ai/build_github_evidence_bundle.py
-Tools/ai/build_ai_context_pack.py
-Tools/ai/build_selective_execution_plan.py
-Tools/ai/build_repository_change_proposals.py
-Tools/ai/build_patch_specs_from_proposals.py
-Tools/ai/promote_patch_spec_draft.py
-Tools/ai/suggest_repository_updates.py
-Tools/ai/workload_quality.py
+Tools/ai/repository_product/github_evidence_bundle.py
+Tools/ai/agent_context/ai_context_pack/cli.py
+Tools/ai/runtime_universe/selective_execution_plan/cli.py
+Tools/ai/repository_product/repository_change_proposals/cli.py
+Tools/ai/generated_patch_specs/proposal_cli.py
+Tools/ai/generated_patch_specs/review_cli.py
+Tools/ai/repository_product/repository_update_suggestions/cli.py
+Tools/ai/_shared/workload_quality.py
 ```
 
 Reference docs:
@@ -166,10 +166,10 @@ Do not propose changes to Blender runtime or artistic scene generation.
 Run through the project-owned local wrapper and adapter:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\selected-review-workflow-ai-tools-patch-specs.md `
   -TaskBranch codex/selected-review-workflow-ai-tools `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename selected_review_workflow_ai_tools -ProposalBasename selected_review_workflow_ai_tools_proposals -EvidenceBasename selected_review_workflow_ai_tools_evidence -MultistepBasename selected_review_workflow_ai_tools_multistep -MultistepProposalBasename selected_review_workflow_ai_tools_multistep_proposals -MultistepEvidenceBasename selected_review_workflow_ai_tools_multistep_evidence'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename selected_review_workflow_ai_tools -ProposalBasename selected_review_workflow_ai_tools_proposals -EvidenceBasename selected_review_workflow_ai_tools_evidence -MultistepBasename selected_review_workflow_ai_tools_multistep -MultistepProposalBasename selected_review_workflow_ai_tools_multistep_proposals -MultistepEvidenceBasename selected_review_workflow_ai_tools_multistep_evidence'
 ```
 
 ## Optional proposal-only first pass
@@ -177,10 +177,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
 For a first pass without provider execution:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\selected-review-workflow-ai-tools-patch-specs.md `
   -TaskBranch codex/selected-review-workflow-ai-tools `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile docs -Basename selected_review_workflow_ai_tools_report_only -ProposalBasename selected_review_workflow_ai_tools_report_only_proposals'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile docs -Basename selected_review_workflow_ai_tools_report_only -ProposalBasename selected_review_workflow_ai_tools_report_only_proposals'
 ```
 
 ## Required validation after run
@@ -188,21 +188,21 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
 Run:
 
 ```powershell
-python .\Tools\validation\check_repository_change_proposals.py `
+python -m Tools.validation check_repository_change_proposals `
   --repo-root . `
   --proposal .\output\local_ai_runs\<actual-run-dir>\pipeline\selected_review_workflow_ai_tools_proposals.json `
   --output .\output\validation\selected_review_workflow_ai_tools_proposals_contract.json
 
-python .\Tools\validation\check_patch_spec_drafts.py `
+python -m Tools.validation check_patch_spec_drafts `
   --repo-root . `
   --manifest .\output\patch_specs\selected_review_workflow_ai_tools_patch_specs_manifest.json `
   --output .\output\validation\selected_review_workflow_ai_tools_patch_spec_drafts.json
 
-python .\Tools\validation\check_github_evidence_bundle.py `
+python -m Tools.validation check_github_evidence_bundle `
   --repo-root . `
   --output .\output\validation\github_evidence_bundle.json
 
-python .\Tools\validation\check_validation_report_contract.py `
+python -m Tools.validation check_validation_report_contract `
   --repo-root . `
   --output .\output\validation\validation_report_contract.json
 

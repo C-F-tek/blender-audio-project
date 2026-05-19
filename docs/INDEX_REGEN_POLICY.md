@@ -32,22 +32,22 @@ indexAI/project_code_chunks/
 The project code generator script is:
 
 ```text
-Tools/npu/build_project_ai_index.py
+python -m Tools.npu build_project_ai_index
 ```
 
 The NPU-focused code context files are:
 
 ```text
-Tools/npu/npu_code_context.md
-Tools/npu/npu_code_index.md
-Tools/npu/npu_code_manifest.json
+Tools/npu/context_artifacts/npu_code_context.md        # generated, ignored
+Tools/npu/context_artifacts/npu_code_index.md          # generated, ignored
+Tools/npu/context_artifacts/npu_code_manifest.json     # generated, ignored
 Tools/npu/npu_code_chunks/
 ```
 
 The NPU context generator script is:
 
 ```text
-Tools/npu/build_npu_code_context.py
+python -m Tools.npu build_npu_code_context
 ```
 
 If the project application provides its own index-generation process, the application workflow is authoritative.
@@ -56,7 +56,7 @@ If the project application provides its own index-generation process, the applic
 
 Regenerate the indexes after changes to any of these areas:
 
-- root Python tools, such as `analyze_wav.py`, `build_track_summary.py`, `normalize_scene_spec.py`;
+- audio/scene workflow tools, such as `Tools/workflow/workflow_run/audio_analysis/analyze_cli.py`, `Tools/workflow/workflow_run/audio_analysis/summary_cli.py`, `Tools/workflow/workflow_run/scene_spec/cli.py`;
 - any folder under `Scripting/`;
 - any folder under `Tools/`;
 - `Tools/npu/pipeline/` helper package modules or README;
@@ -87,26 +87,26 @@ Before committing regenerated indexes after a structural refactor, run the small
 For NPU helper package changes:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
+python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 ```
 
 For broader source or workflow changes:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root .
-python .\Tools\validation\check_ai_pipeline_modules.py --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
-python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
-python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
-python .\Tools\ai\run_pipeline_dry_run_matrix.py --repo-root . --continue-on-error
-python .\Tools\validation\check_package_structure.py --repo-root .
-python .\Tools\validation\check_json_artifacts.py --repo-root .
+python -m Tools.validation check_python_syntax --repo-root .
+python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
+python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+python -m Tools.validation check_npu_pipeline_docs --repo-root . --output .\output\validation\npu_pipeline_docs.json
+python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m Tools.validation check_package_structure --repo-root .
+python -m Tools.validation check_json_artifacts --repo-root .
 ```
 
 For docs-only changes, the AI pipeline matrix can be skipped if no `Tools/ai/` files changed, but run documentation link checks when local execution is available:
 
 ```powershell
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
 ```
 
 ## Local/app regeneration
@@ -120,14 +120,14 @@ Run the index regeneration from the project application.
 Fallback local commands from the repository root:
 
 ```powershell
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
+python -m Tools.npu build_project_ai_index
+python -m Tools.npu build_npu_code_context
 ```
 
 Force project index rebuild when needed:
 
 ```powershell
-python .\Tools\npu\build_project_ai_index.py --force
+python -m Tools.npu build_project_ai_index --force
 ```
 
 ## Auto-push after app regeneration
@@ -135,19 +135,19 @@ python .\Tools\npu\build_project_ai_index.py --force
 After the application regenerates indexes or technical JSON files, it can automatically commit and push the generated data by calling:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\git\auto_push_generated_artifacts.ps1
+python -m Tools.git auto_push_generated_artifacts
 ```
 
 For a first integration test, use:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\git\auto_push_generated_artifacts.ps1 -DryRun
+python -m Tools.git auto_push_generated_artifacts -DryRun
 ```
 
 To include full frame-by-frame analysis JSON files explicitly:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\git\auto_push_generated_artifacts.ps1 -IncludeFullAnalysisJson
+python -m Tools.git auto_push_generated_artifacts -IncludeFullAnalysisJson
 ```
 
 Full analysis JSON files are excluded by default because they may be large and should not be committed accidentally.
@@ -161,9 +161,9 @@ indexAI/project_code_index.md
 indexAI/project_code_manifest.json
 indexAI/project_code_chunks/
 indexAI/README.md
-Tools/npu/npu_code_context.md
-Tools/npu/npu_code_index.md
-Tools/npu/npu_code_manifest.json
+Tools/npu/context_artifacts/npu_code_context.md        # generated, ignored
+Tools/npu/context_artifacts/npu_code_index.md          # generated, ignored
+Tools/npu/context_artifacts/npu_code_manifest.json     # generated, ignored
 Tools/npu/npu_code_chunks/
 ```
 
@@ -178,13 +178,12 @@ git status
 git diff --stat
 ```
 
-If only generated AI/NPU indexes changed, commit the standard tracked files:
+If only generated AI indexes changed, commit the standard tracked files. NPU
+`Tools/npu/context_artifacts/` outputs are generated local context and are
+ignored by Git.
 
 ```powershell
-git add Tools/npu/npu_code_context.md `
-        Tools/npu/npu_code_index.md `
-        Tools/npu/npu_code_manifest.json `
-        indexAI/project_code_index.md `
+git add indexAI/project_code_index.md `
         indexAI/project_code_manifest.json
 
 git commit -m "chore: regenerate ai and npu indexes"
@@ -207,7 +206,7 @@ If chunk files are tracked and changed, inspect them before adding.
 Preferred automated local push when appropriate:
 
 ```powershell
-.\Tools\git\auto_push_generated_artifacts.ps1
+python -m Tools.git auto_push_generated_artifacts
 ```
 
 ## GitHub Actions policy
@@ -229,6 +228,6 @@ Indexes are generated by the app/local workflow because the application may appl
 
 ## Current policy
 
-Indexes must be rebuilt by the project app/local maintainer workflow whenever structural or workflow-relevant changes are made. After regeneration, the app may call `Tools/git/auto_push_generated_artifacts.ps1` to push generated technical data automatically.
+Indexes must be rebuilt by the project app/local maintainer workflow whenever structural or workflow-relevant changes are made. After regeneration, the app may call `python -m Tools.git auto_push_generated_artifacts` to push generated technical data automatically.
 
 For the current modular AI artifact pipeline and NPU helper package work, use `docs/GITHUB_LOCAL_VALIDATION_WORKFLOW.md` as the operational checklist.

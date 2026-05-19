@@ -139,7 +139,7 @@ compact bundle remains required
 Use:
 
 ```powershell
-python .\Tools\ai\analyze_gpu_npu_run_sync.py `
+python -m Tools.ai analyze_gpu_npu_run_sync `
   --repo-root . `
   --orchestrator ".\output\ai_pipeline\project_complete_<STAMP>_orchestrator.json" `
   --output ".\output\analysis\gpu_npu_run_sync_<STAMP>.json" `

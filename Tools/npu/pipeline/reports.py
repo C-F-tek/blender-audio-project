@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-
 COMMON_VALIDATION_REPORT_KEYS = (
     "schema_version",
     "kind",
@@ -71,7 +70,9 @@ def validation_report_has_common_keys(report: dict[str, Any]) -> bool:
     return all(key in report for key in COMMON_VALIDATION_REPORT_KEYS)
 
 
-def build_helper_boundary_report(*, package_name: str, modules: list[str], checks: dict[str, Any]) -> dict[str, Any]:
+def build_helper_boundary_report(
+    *, package_name: str, modules: list[str], checks: dict[str, Any]
+) -> dict[str, Any]:
     """Build a deterministic report for the app-agnostic helper boundary."""
 
     return {

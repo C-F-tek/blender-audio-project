@@ -31,13 +31,13 @@ When `-BuildEvidence` is selected, the pipeline adapter builds a compact evidenc
 The bundle is generated with the existing evidence builder:
 
 ```text
-Tools/ai/build_github_evidence_bundle.py
+Tools/ai/repository_product/github_evidence_bundle.py
 ```
 
 and validated with:
 
 ```text
-Tools/validation/check_github_evidence_bundle.py
+Tools/validation/repository_product/github_evidence_bundle/cli.py
 ```
 
 No new independent bundle builder is introduced.
@@ -119,7 +119,7 @@ When `-BuildEvidence` is selected, telemetry JSON is included as a report and te
 ```powershell
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
+python -m Tools.workflow run_local_ai_task_via_pipeline `
   -PromptFile .\AGENTS.md `
   -TaskFile .\docs\LOCAL_AI_TASKS\current-operational-state-2026-05-05.md `
   -RunDir ".\output\local_ai_runs\md_task_review_bundle_smoke_$Stamp" `
@@ -166,6 +166,6 @@ The runner passes:
 --no-auto-discover-selected-chunks-evidence
 ```
 
-to `Tools.ai.build_github_evidence_bundle` and adds selected-chunks evidence explicitly only when the current run produced it.
+to `Tools.ai.repository_product.github_evidence_bundle` and adds selected-chunks evidence explicitly only when the current run produced it.
 
 This prevents a docs-only smoke without `-BuildSelectedChunksEvidence` from reporting stale `full_context_golden_*selected_chunks_evidence.json` as if it belonged to the current run.

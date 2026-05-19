@@ -168,7 +168,7 @@ def apply_runtime_profile_to_scene(scene, profile):
         if hasattr(eevee, "volumetric_samples"):
             eevee.volumetric_samples = volumetric_samples
         if hasattr(eevee, "volumetric_tile_size"):
-            eevee.volumetric_tile_size = '8'
+            eevee.volumetric_tile_size = "8"
         if hasattr(eevee, "use_bloom"):
             eevee.use_bloom = True
         if hasattr(eevee, "bloom_intensity"):

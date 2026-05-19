@@ -69,7 +69,7 @@ if ([string]::IsNullOrWhiteSpace($AiPacketsDir)) {
 The quality gate reads the run folder:
 
 ```powershell
-python .\Tools\validation\check_ai_workload_report_quality.py `
+python -m Tools.validation check_ai_workload_report_quality `
   --repo-root . `
   --report-dir $AiPacketsDir `
   --output .\output\validation\ai_workload_report_quality.json

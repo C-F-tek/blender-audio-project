@@ -19,10 +19,10 @@ Primary files:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
-Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
+Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/ai/patchkit/apply_patch_bundle.py
 Tools/ai/patchkit/filesystem.py
 Tools/ai/patchkit/anchors.py
@@ -164,12 +164,12 @@ patch_specs/<bundle>/fragments/*.py
 Apply with the reusable runner:
 
 ```powershell
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -251,12 +251,12 @@ Heap/exchange lifecycle:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\build_heap_exchange_runtime_entry.py `
-  .\Tools\ai\build_heap_exchange_runtime_exit.py `
-  .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
-  .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
+  python -m Tools.ai heap_exchange_runtime_entry `
+  python -m Tools.ai heap_exchange_runtime_exit `
+  .\Tools\validation\heap_exchange\runtime_lifecycle_check\cli.py `
+  .\Tools\validation\heap_exchange\runtime_lifecycle_smoke\cli.py
 
-python .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py `
+python -m Tools.validation run_heap_exchange_runtime_lifecycle_smoke `
   --repo-root .
 ```
 
@@ -271,7 +271,7 @@ python -m py_compile `
   .\Tools\ai\patchkit\apply_patch_bundle.py `
   .\Tools\validation\run_patchkit_smoke.py
 
-python .\Tools\validation\run_patchkit_smoke.py `
+python -m Tools.validation run_patchkit_smoke `
   --repo-root .
 
 git diff --check
@@ -315,7 +315,7 @@ A standalone heap universe lane now exists as an incubation path for the core he
 Current owner path:
 
 ```text
-Tools/ai/run_heap_runtime_context_closure.py
+Tools/ai/heap_context_closure/cli.py
 ```
 
 Dedicated operating note:

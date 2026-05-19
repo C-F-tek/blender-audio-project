@@ -105,7 +105,9 @@ def classify_scene_objects(scene=None, include_reserved=True):
     for obj in scene.objects:
         layer_key = classify_object(obj)
         if layer_key not in collections:
-            collections[layer_key] = ensure_project_collections(scene, include_reserved=True)[layer_key]
+            collections[layer_key] = ensure_project_collections(scene, include_reserved=True)[
+                layer_key
+            ]
             counts.setdefault(layer_key, 0)
 
         spec = LAYER_SPECS[layer_key]

@@ -1,7 +1,7 @@
 if ($BuildEvidence) {
     $ManifestRel = Get-RepoRelativePath $RepoRootPath $ManifestPath
     $EvidenceArgs = @(
-        "-m", "Tools.ai.build_github_evidence_bundle",
+        "-m", "Tools.ai.repository_product.github_evidence_bundle",
         "--repo-root", ".",
         "--basename", $EvidenceBasename,
         "--no-auto-discover-selected-chunks-evidence"
@@ -49,7 +49,7 @@ if ($BuildEvidence) {
         & $PipelinePythonExe @EvidenceArgs
     }
     Invoke-CommandChecked -Label "Validate task-scoped compact GitHub evidence bundle" -Block {
-        & $PipelinePythonExe -m Tools.validation.check_github_evidence_bundle `
+        & $PipelinePythonExe -m Tools.validation check_github_evidence_bundle `
             --repo-root . `
             --bundle $EvidenceJson `
             --output $EvidenceValidationOutput

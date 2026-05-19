@@ -34,13 +34,13 @@ Before planning, editing, validating, opening a PR or suggesting changes, the ag
 | Repository | `C-F-tek/blender-audio-project` |
 | Main language | Python |
 | Active architecture | Shared runtime heap / blackboard, provider-lane orchestration, broker execution, semantic tools registry, deterministic CPU validators, telemetry/evidence workflows |
-| Operator product entrypoint | `Tools/workflow/run_unified_real_product_pr.ps1` |
-| Dynamic heap/exchange launcher | `Tools/workflow/run_unified_local_ai_refactor.ps1` |
+| Operator product entrypoint | `python -m Tools.ai run` |
+| Dynamic heap/exchange launcher | `python -m Tools.workflow run_unified_local_ai_refactor` |
 | Primary provider lane | `GPU1 / Ollama / RTX 5080 -> primary advisory planner/worker` |
 | Secondary provider lane | `GPU0 / OpenVINO -> observable support workload and peer evidence lane` |
 | Micro peer lane | `NPU / OpenVINO -> peer micro diagnostic/report lane until compute-provider behavior is validated` |
 | Current source-write boundary | `Tools/ai/patchkit/apply_patch_bundle.py` for reviewed patchkit bundles when operations can express the change |
-| Current generated-product boundary | generated patch specs plus `Tools/ai/apply_generated_patch_specs_for_review_pr.py` for concrete review PR operations |
+| Current generated-product boundary | generated patch specs plus `Tools/ai/generated_patch_specs/apply_cli.py` for concrete review PR operations |
 | Legacy domain | Blender audio-reactive scene automation |
 
 The repository name is historical. Do not infer that Blender/audio is the current architectural boundary.
@@ -99,12 +99,12 @@ For real product, full toolbox, refactor, provider or run-unica local AI runs, t
 
 ```text
 Operator product path:
-  Tools/workflow/run_unified_real_product_pr.ps1
+  python -m Tools.ai run
   docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
   docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 
 Dynamic launcher / diagnostic path:
-  Tools/workflow/run_unified_local_ai_refactor.ps1
+  python -m Tools.workflow run_unified_local_ai_refactor
   docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
   docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 ```
@@ -149,10 +149,10 @@ run git diff before staging
 For structural Markdown hygiene, use the repository tool instead of manual splitting:
 
 ~~~powershell
-python .\Tools\docs\refactor_markdown_splits.py --repo-root . --migrate-legacy-splits --split-monolithic
+python -m Tools.docs refactor_markdown_splits --repo-root . --migrate-legacy-splits --split-monolithic
 ~~~
 
-Do not manually split, rewrite or delete Markdown trees when `Tools/docs/refactor_markdown_splits.py`, `Tools/docs/build_repo_hygiene_plan.py`, PatchKit, or validators can express the change safely.
+Do not manually split, rewrite or delete Markdown trees when `python -m Tools.docs refactor_markdown_splits`, `python -m Tools.docs build_repo_hygiene_plan`, PatchKit, or validators can express the change safely.
 
 Markdown cleanup rules:
 
@@ -167,8 +167,8 @@ Current compact operational state:
 
 ```text
 Baseline: master after PR #296 merge and subsequent docs alignment commits
-Product wrapper: Tools/workflow/run_unified_real_product_pr.ps1
-Dynamic launcher: Tools/workflow/run_unified_local_ai_refactor.ps1
+Product wrapper: python -m Tools.ai run
+Dynamic launcher: python -m Tools.workflow run_unified_local_ai_refactor
 Current run index: docs/LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
 Current runbook: docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 Current operating model: docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
@@ -183,7 +183,7 @@ Markdown line-budget triage: docs/LOCAL_AI_TASKS/md-line-budget-triage-2026-05-1
 Docs bridge: docs/LOCAL_AI_TASKS/current-operational-state-2026-05-05.md
 Main runtime architecture: docs/MAIN_RUNTIME_ARCHITECTURE.md
 Patchkit boundary: Tools/ai/patchkit/apply_patch_bundle.py
-Generated product boundary: Tools/ai/apply_generated_patch_specs_for_review_pr.py
+Generated product boundary: Tools/ai/generated_patch_specs/apply_cli.py
 Current mode: code-driven, docs-first updates unless source changes are explicitly scoped
 Review posture: no destructive actions, force-push, deploy, permission/secret changes or protected-branch merge unless explicitly requested
 ```
@@ -272,12 +272,12 @@ patch_specs/<bundle>/fragments/*.py
 Standard apply path:
 
 ```powershell
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -308,12 +308,12 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
 
-& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+& $RepoPy -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+& $RepoPy -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```

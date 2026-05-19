@@ -80,8 +80,8 @@ Get-ChildItem .\Tools -Recurse -File |
 ## Validation for a design-only PR
 
 ```powershell
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 git diff --check
 git status --short
 ```
@@ -102,8 +102,8 @@ No source implementation is required for this task.
 A later implementation PR may add:
 
 ```text
-Tools/ai/build_agent_review_code_patch_plan.py
-Tools/validation/run_agent_review_code_patch_plan_smoke.py
+Tools/ai/agent_review/code_patch_plan_cli.py
+Tools/validation/agent_review/code_patch_plan_smoke/cli.py
 docs/JSON_SCHEMAS.md update
 Tools/validation/README.md update
 ```

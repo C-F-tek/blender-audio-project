@@ -6,8 +6,8 @@ Questo documento fotografa la struttura reale dopo la chiusura della catena PR #
 
 Entrata e uscita sono invece rigide:
 
-- entrata unica: `Tools/workflow/run_unified_real_product_pr.ps1`;
-- centro dinamico: `Tools/workflow/run_unified_local_ai_refactor.ps1`;
+- entrata unica: `python -m Tools.ai run`;
+- centro dinamico: `python -m Tools.workflow run_unified_local_ai_refactor`;
 - uscita unica: review PR product validato da final product contract.
 
 ## Catena reale corrente
@@ -32,14 +32,14 @@ Ordine concettuale:
 16. heap/exchange runtime exit product;
 17. final chain contract;
 18. runtime evidence correlation;
-19. `prepare_review_pr.py`;
+19. `agent_review_prepare_pr.py`;
 20. draft PR finale.
 
 La catena non deve continuare fingendo prodotto quando l'apply report espone `operation_count=0` o solo draft metadata-only. Dopo #295, le generated patch specs metadata-only falliscono in modo esplicito se `--apply` è richiesto. Dopo #296, il proposal builder può leggere evidenza runtime current-stamp e generare `P-RUNTIME-PEER-EVIDENCE-FEED` con operazioni concrete reviewable.
 
 ## Preflight obbligatorio
 
-Il wrapper real product esegue sempre `Tools/validation/run_real_product_preflight_gate.py` prima della delega al launcher. Non esiste skip operativo per questa gate.
+Il wrapper real product esegue sempre `Tools/validation/real_product/preflight_gate/cli.py` prima della delega al launcher. Non esiste skip operativo per questa gate.
 
 Il preflight verifica almeno:
 
@@ -72,7 +72,7 @@ Regola attuale:
 - task Markdown sotto `output/local_ai_task_inputs/` è entry contract, non sorgente obbligatoria di patch;
 - se non contiene fence patch-suggestion, può passare come `deferred_to_runtime_product=true`;
 - una patch-spec metadata-only non è prodotto reale;
-- con `--apply`, `apply_generated_patch_specs_for_review_pr.py` deve fallire se non trova operazioni concrete allowlisted;
+- con `--apply`, `generated_patch_specs_apply.py` deve fallire se non trova operazioni concrete allowlisted;
 - operazioni concrete ammesse: `replace_once`, `append_once`, `insert_after_once`, `insert_before_once`, `write_file`;
 - target vietati: `output/**`, `indexAI/**`, `docs/LOCAL_VALIDATION_EVIDENCE/**`, `renders/**`, database/runtime artifact.
 
@@ -131,8 +131,7 @@ ollama show qwen2.5-coder:14b | Out-Host
 $Stamp = "heap_exchange_process_gate_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 $Branch = "CARMINEai/heap-exchange-process-gate-$Stamp"
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass `
-  -File ".\Tools\workflow\run_unified_real_product_pr.ps1" `
+& $RepoPy -m Tools.ai run `
   -RepoRoot "." `
   -ProcessGateTask `
   -TaskBranch $Branch `
@@ -171,14 +170,14 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\build_repository_change_proposals.py `
-  .\Tools\ai\build_patch_specs_from_proposals.py `
-  .\Tools\ai\apply_generated_patch_specs_for_review_pr.py `
-  .\Tools\validation\run_repository_change_proposals_runtime_evidence_smoke.py `
-  .\Tools\validation\run_generated_patch_specs_empty_product_smoke.py
+  .\Tools\ai\repository_product\repository_change_proposals\cli.py `
+  .\Tools\ai\generated_patch_specs\proposal_cli.py `
+  .\Tools\ai\generated_patch_specs\apply_cli.py `
+  .\Tools\validation\repository_product\repository_change_proposals_runtime_evidence_smoke\cli.py `
+  .\Tools\validation\generated_patch_specs\empty_product_smoke\cli.py
 
-& $RepoPy .\Tools\validation\run_repository_change_proposals_runtime_evidence_smoke.py --repo-root .
-& $RepoPy .\Tools\validation\run_generated_patch_specs_empty_product_smoke.py --repo-root .
+& $RepoPy -m Tools.validation run_repository_change_proposals_runtime_evidence_smoke --repo-root .
+& $RepoPy -m Tools.validation run_generated_patch_specs_empty_product_smoke --repo-root .
 
 git diff --check
 ~~~
@@ -191,7 +190,7 @@ git diff --check
 - runtime evidence correlation viene emessa dopo final chain contract;
 - generated patch specs non restano metadata-only;
 - apply report ha `operation_count > 0` e `changed_count > 0`;
-- `prepare_review_pr.py` crea commit di prodotto e draft PR;
+- `agent_review_prepare_pr.py` crea commit di prodotto e draft PR;
 - il prodotto finale non include `output/**`, `indexAI/code_chunks/**`, database o artifact runtime.
 
 ## Segnali di blocco da trattare domani
@@ -208,7 +207,7 @@ git diff --check
 A new standalone heap universe lane is being incubated outside the full run.
 
 ```text
-Tools/ai/run_heap_runtime_context_closure.py
+Tools/ai/heap_context_closure/cli.py
 ```
 
 Purpose:

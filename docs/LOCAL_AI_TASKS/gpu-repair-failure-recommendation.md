@@ -16,7 +16,7 @@ The goal is not to force the GPU planner to invent recommendations. The goal is 
 ## Tool
 
 ```text
-Tools/ai/build_gpu_repair_failure_recommendation.py
+Tools/ai/provider_mesh/gpu_repair_failure_recommendation.py
 ```
 
 ## Inputs
@@ -36,7 +36,7 @@ output/ai_pipeline/project_complete_<STAMP>_parallel_gpu.json
 ## Command
 
 ```powershell
-python .\Tools\ai\build_gpu_repair_failure_recommendation.py `
+python -m Tools.ai build_gpu_repair_failure_recommendation `
   --repo-root . `
   --orchestrator ".\output\ai_pipeline\project_complete_<STAMP>_orchestrator.json" `
   --gpu-report ".\output\ai_pipeline\project_complete_<STAMP>_parallel_gpu.json" `
@@ -53,7 +53,7 @@ kind: gpu_repair_failure_recommendation
 recommendation_count: 1
 recommendations[0].id: gpu_repair_failure_001
 recommendations[0].status: ready_for_manual_review
-recommended_next_layer: build_agent_review_patch_plan.py
+recommended_next_layer: python -m Tools.ai agent_review_patch_plan
 ```
 
 Guardrails stay report-only:
@@ -96,7 +96,7 @@ Likely contributing causes to inspect in future work:
 prompt too large or too mixed between instructions, evidence and file previews
 model returning prose or partially fenced JSON instead of one strict JSON object
 model output truncation or malformed escaping in long recommendation fields
-local parser not reusing the shared Tools.ai.model_json helper everywhere
+local parser not reusing the shared Tools.ai._shared.model_json helper everywhere
 post-validation packet currently reporting Ollama used=false in the included evidence, which may hide provider-path expectations for that stage
 ```
 
@@ -105,7 +105,7 @@ post-validation packet currently reporting Ollama used=false in the included evi
 Small safe follow-ups:
 
 ```text
-reuse Tools.ai.model_json.parse_model_json_object in GPU planner parsing paths
+reuse Tools.ai._shared.model_json.parse_model_json_object in GPU planner parsing paths
 add explicit JSON-only prompt footer with a minimal schema example
 record first parse error, repair attempt count and raw response preview hash per failed round
 emit gpu_repair_failure_recommendation as an input to the compact evidence bundle

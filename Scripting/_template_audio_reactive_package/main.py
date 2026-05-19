@@ -18,13 +18,14 @@ PACKAGE_DIR = Path(__file__).resolve().parent
 if str(PACKAGE_DIR) not in sys.path:
     sys.path.insert(0, str(PACKAGE_DIR))
 
-import config as cfg  # noqa: E402
 from audio_mapping import controls_from_summary  # noqa: E402
 from camera import create_camera  # noqa: E402
 from lighting import create_lighting  # noqa: E402
 from materials import assign_materials, create_materials  # noqa: E402
 from render_settings import apply_render_settings  # noqa: E402
 from scene_objects import create_scene_objects  # noqa: E402
+
+import config as cfg  # noqa: E402
 
 
 def load_json_if_exists(path):

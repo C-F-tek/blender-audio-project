@@ -37,8 +37,7 @@ def run_step(
             list(step.command),
             cwd=str(cwd),
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=False,
         )
         return PipelineResult(
@@ -94,10 +93,7 @@ def run_parallel(
 
     workers = max_workers or len(pending)
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {
-            pool.submit(run_step, step, cwd=cwd, dry_run=dry_run): step
-            for step in pending
-        }
+        futures = {pool.submit(run_step, step, cwd=cwd, dry_run=dry_run): step for step in pending}
         return [future.result() for future in as_completed(futures)]
 
 

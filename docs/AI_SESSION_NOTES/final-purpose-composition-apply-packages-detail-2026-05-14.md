@@ -11,8 +11,8 @@ Status: implemented in the current working tree.
 
 Files:
 
-- `Tools/ai/compose_heap_final_proposals.py`
-- `Tools/ai/heap_proposal_gate.py`
+- `Tools/ai/heap_final_proposals/cli.py`
+- `Tools/ai/_shared/heap_proposal_gate.py`
 - `Tools/validation/test_proposal_gate.py`
 
 Implementation detail:
@@ -37,7 +37,7 @@ Status: now implemented in the working tree.
 
 Files:
 
-- `Tools/ai/run_heap_runtime_context_closure.py`
+- `Tools/ai/heap_context_closure/cli.py`
 - `docs/LOCAL_AI_RUN_BOOTSTRAP.md/README.md`
 - `docs/LOCAL_AI_RUN_BOOTSTRAP.md/part-001.md`
 - `docs/LOCAL_AI_RUN_BOOTSTRAP.md/_ia_carmine_md_split_manifest.json`
@@ -62,7 +62,7 @@ Status: implemented as a narrow prompt and loop hardening edit.
 
 File:
 
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 
 Implementation detail:
 
@@ -84,7 +84,7 @@ Status: partly implemented; deeper fixture coverage remains.
 
 Target:
 
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 - A focused validator under `Tools/validation/`.
 
 Needed next work:
@@ -104,11 +104,11 @@ Status: implemented and validated.
 
 Files:
 
-- `Tools/ai/heap_code_execution_tool_core.py`
-- `Tools/ai/run_heap_code_execution_tool.py`
-- `Tools/validation/run_heap_code_execution_tool_smoke.py`
-- `Tools/ai/agent_runtime_tool_broker.py`
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/_shared/heap_code_execution_tool_core.py`
+- `Tools/ai/heap_runtime/code_execution_tool/cli.py`
+- `Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py`
+- `Tools/ai/runtime_tool/agent_broker.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 
 Implementation detail:
 
@@ -133,7 +133,7 @@ Targets:
 
 - `Tools/ai/heap_final_package_writer.py`
 - `Tools/ai/heap_final_report_collectors.py`
-- `Tools/ai/compose_heap_final_proposals.py`
+- `Tools/ai/heap_final_proposals/cli.py`
 
 Needed next work:
 

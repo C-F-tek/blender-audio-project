@@ -48,9 +48,7 @@ def empty_failed_report(repo: Path, out: Path, dry_run: bool, pf: dict) -> dict:
     }
 
 
-def agent_state_packet_report(
-    repo: Path, args: argparse.Namespace, pf: dict
-) -> dict[str, Any]:
+def agent_state_packet_report(repo: Path, args: argparse.Namespace, pf: dict) -> dict[str, Any]:
     """Return report metadata for the optional agent state packet touchpoint."""
     raw = getattr(args, "agent_state_packet", None)
     meta = dict(pf.get("agent_state_packet") or {})
@@ -61,9 +59,7 @@ def agent_state_packet_report(
     meta.setdefault("exists", Path(raw).resolve().exists())
     meta["source"] = "cli"
     try:
-        meta["repo_relative_path"] = (
-            Path(raw).resolve().relative_to(repo.resolve()).as_posix()
-        )
+        meta["repo_relative_path"] = Path(raw).resolve().relative_to(repo.resolve()).as_posix()
     except ValueError:
         meta["repo_relative_path"] = str(Path(raw).resolve())
     return meta
@@ -99,9 +95,7 @@ def build_report(
         "wave_entrypoint_review": {
             "enabled": args.review_wave_entrypoints,
             "report": (
-                str(out / "wave_entrypoint_review.json")
-                if args.review_wave_entrypoints
-                else None
+                str(out / "wave_entrypoint_review.json") if args.review_wave_entrypoints else None
             ),
         },
         "smart_context": {
@@ -120,9 +114,7 @@ def build_report(
     }
 
 
-def write_report_if_requested(
-    out: Path, args: argparse.Namespace, report: dict
-) -> None:
+def write_report_if_requested(out: Path, args: argparse.Namespace, report: dict) -> None:
     """Write final or dry-run report when requested by the invocation mode."""
     if not args.dry_run:
         target = out / RUN_REPORT_NAME
@@ -130,6 +122,4 @@ def write_report_if_requested(
         target = out / DRY_RUN_REPORT_NAME
     else:
         return
-    target.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    target.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

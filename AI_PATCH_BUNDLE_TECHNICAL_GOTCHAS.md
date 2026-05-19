@@ -145,7 +145,7 @@ Observed input examples:
 
 ```text
 M Tools/ai/build_repository_consistency_map.py
- M Tools/validation/run_repository_consistency_map_smoke.py
+ M Tools/validation/repository_product/repository_consistency_map_smoke/cli.py
 ```
 
 The runner used a fixed slice and turned one path into:
@@ -187,7 +187,7 @@ Observed result:
 
 ```text
 M Tools/ai/build_repository_consistency_map.py
-M Tools/validation/run_repository_consistency_map_smoke.py
+M Tools/validation/repository_product/repository_consistency_map_smoke/cli.py
 ```
 
 Then the incremental fix initially refused to run because it expected a clean tree.

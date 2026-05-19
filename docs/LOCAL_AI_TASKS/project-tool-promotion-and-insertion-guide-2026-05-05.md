@@ -61,7 +61,7 @@ Requirements:
 
 Additional requirements:
 
-    safe for `Tools/ai/agent_runtime_tool_broker.py`
+    safe for `Tools/ai/runtime_tool/agent_broker.py`
     no free shell
     no provider execution unless explicitly designated diagnostic and safe
     no patch application
@@ -88,8 +88,8 @@ Additional requirements:
 
 Examples:
 
-    analyze_wav.py
-    build_track_summary.py
+    Tools/workflow/workflow_run/audio_analysis/analyze_cli.py
+    Tools/workflow/workflow_run/audio_analysis/summary_cli.py
     Scripting/v61b/main_v61b.py
     Scripting/v61b/encode_image_sequence_v61b.py
     Scripting/v61b/encode_ffmpeg_v61b.py
@@ -112,10 +112,10 @@ Reason:
 
 Examples:
 
-    Tools/validation/check_python_syntax.py
+    python -m Tools.validation check_python_syntax
     Tools/validation/build_python_line_count_csv.py
-    Tools/validation/check_validation_report_contract.py
-    Tools/validation/build_markdown_inventory.py
+    python -m Tools.validation check_validation_report_contract
+    Tools/validation/docs_hygiene/markdown_inventory/cli.py
     Tools/validation/check_docs_links.py
 
 Placement:
@@ -132,10 +132,10 @@ Promotion:
 
 Examples:
 
-    Tools/ai/run_local_provider_probe.py
+    Tools/ai/provider_mesh/local_provider_probe.py
     Tools/ai/check_local_resource_lanes.py
-    Tools/validation/check_ai_workload_report_quality.py
-    Tools/validation/run_orchestrator_gpu_runtime_tool_routing_smoke.py
+    Tools/validation/ai_workload/report_quality/cli.py
+    Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py
 
 Placement:
 
@@ -151,10 +151,10 @@ Promotion:
 
 Examples:
 
-    Tools/ai/build_agent_review_patch_plan.py
-    Tools/ai/build_agent_review_code_patch_plan.py
-    Tools/ai/build_code_edit_proposal_from_plan.py
-    Tools/ai/build_code_patch_artifact_pack.py
+    Tools/ai/agent_review/patch_plan/cli.py
+    Tools/ai/agent_review/code_patch_plan_cli.py
+    Tools/ai/code_product/edit_proposal_from_plan/cli.py
+    Tools/ai/code_product/patch_artifact_pack/cli.py
 
 Placement:
 
@@ -170,10 +170,10 @@ Promotion:
 
 Examples:
 
-    Tools/workflow/workflow_shell_with_push.py
-    Tools/workflow/git_auto_push.py
-    Tools/git/auto_push_generated_data.ps1
-    Tools/git/auto_push_generated_artifacts.ps1
+    python -m Tools.workflow workflow_shell_with_push
+    python -m Tools.workflow git_auto_push
+    python -m Tools.git auto_push_generated_data
+    python -m Tools.git auto_push_generated_artifacts
 
 Placement:
 
@@ -198,7 +198,7 @@ Preferred paths:
     Tools/npu/<tool>.py              NPU/provider-specific tooling
     Scripting/v61b/<tool>.py         Blender/audio runtime helpers
 
-Root-level tools are allowed only when they are user-facing canonical entrypoints, such as `analyze_wav.py`.
+Do not add new root-level tool entrypoints; user-facing tools should live under `Tools/workflow/`, `Tools/ai/`, `Tools/validation/`, `Tools/npu/` or `Scripting/` according to ownership.
 
 ### B. Define CLI contract
 
@@ -264,7 +264,7 @@ At minimum:
 
 If the tool emits JSON reports, validate with:
 
-    python .\Tools\validation\check_validation_report_contract.py --repo-root . --report-file <report> --output <contract-report>
+    python -m Tools.validation check_validation_report_contract --repo-root . --report-file <report> --output <contract-report>
 
 If it becomes workflow-critical, add a smoke under:
 
@@ -282,7 +282,7 @@ Update one or more:
 
 ### H. Broker insertion only if safe
 
-To add to `Tools/ai/agent_runtime_tool_broker.py`:
+To add to `Tools/ai/runtime_tool/agent_broker.py`:
 
     1. add builder function;
     2. add ToolSpec entry;
@@ -346,14 +346,14 @@ ToolSpec pattern:
 Validation after the concrete file exists:
 
 ```text
-python -m py_compile <tracked validation tool> Tools/ai/agent_runtime_tool_broker.py
+python -m py_compile <tracked validation tool> Tools/ai/runtime_tool/agent_broker.py
 ```
 
-## Example: promoting root audio analyzer
+## Example: promoting the workflow audio analyzer
 
 Path:
 
-    analyze_wav.py
+    Tools/workflow/workflow_run/audio_analysis/analyze_cli.py
 
 Placement:
 

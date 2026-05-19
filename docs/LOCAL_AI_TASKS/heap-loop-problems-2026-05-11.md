@@ -34,9 +34,9 @@ Questa modifica e' document-only. Non esegue provider, non applica patch, non sc
 
 ### Evidenza code-driven
 
-`Tools/ai/run_heap_runtime_context_closure.py` costruisce `startup_context_memory_reload/heap_startup_input_ready_context.md` tramite `Tools/ai/prepare_heap_context_memory_reload.py` e lo passa a `Tools/ai/run_heap_runtime_completeness_gate.py` con `--task-file` quando il file esiste.
+`Tools/ai/heap_context_closure/cli.py` costruisce `startup_context_memory_reload/heap_startup_input_ready_context.md` tramite `Tools/ai/heap_context_memory_reload/cli.py` e lo passa a `Tools/ai/heap_runtime/completeness_gate/cli.py` con `--task-file` quando il file esiste.
 
-`Tools/ai/run_heap_runtime_completeness_gate.py` contiene funzioni per lifecycle reload:
+`Tools/ai/heap_runtime/completeness_gate/cli.py` contiene funzioni per lifecycle reload:
 
 ```text
 publish_startup_memory_context_reload_events()
@@ -95,13 +95,13 @@ semantic chunk refs
 context pack refs/degraded status
 ```
 
-Se il test fallisce, patchare `run_heap_runtime_completeness_gate.py` per invocare esplicitamente il lifecycle reload in fase init e appendere gli artifact refs come `fact`/`evidence_response` o `telemetry_signal`.
+Se il test fallisce, patchare `python -m Tools.ai run_heap_runtime_completeness_gate` per invocare esplicitamente il lifecycle reload in fase init e appendere gli artifact refs come `fact`/`evidence_response` o `telemetry_signal`.
 
 ## Finding 2 — `build_ai_context_pack.py`: il failure non e' spiegabile solo con truncation
 
 ### Evidenza code-driven
 
-`Tools/ai/build_ai_context_pack.py` imposta `entry["truncated"] = True` quando un file supera il budget, ma la truncation viene registrata come warning. Il pack fallisce (`passed=false`, return code `2`) quando un required file e' mancante, non incluso, o viola policy.
+`Tools/ai/agent_context/ai_context_pack/cli.py` imposta `entry["truncated"] = True` quando un file supera il budget, ma la truncation viene registrata come warning. Il pack fallisce (`passed=false`, return code `2`) quando un required file e' mancante, non incluso, o viola policy.
 
 Evidenza storica gia' versionata:
 
@@ -126,7 +126,7 @@ forbidden path
 
 ### Azione consigliata
 
-In `Tools/ai/prepare_heap_context_memory_reload.py`, quando `ai_context_pack_reload` e' degradato, estrarre e riportare nel manifest almeno:
+In `Tools/ai/heap_context_memory_reload/cli.py`, quando `ai_context_pack_reload` e' degradato, estrarre e riportare nel manifest almeno:
 
 ```text
 errors
@@ -235,7 +235,7 @@ almeno nel JSON finale e nel TXT/MD operatore.
 
 ### Evidenza code-driven
 
-`Tools/ai/provider_runtime_heap.py` applica `compact_payload(..., max_chars=8000)`. Questo e' un guardrail corretto, ma se si tenta di inserire contenuto lungo direttamente nell'evento heap, l'evento diventa preview/truncated.
+`Tools/ai/provider_runtime_blackboard/cli.py` applica `compact_payload(..., max_chars=8000)`. Questo e' un guardrail corretto, ma se si tenta di inserire contenuto lungo direttamente nell'evento heap, l'evento diventa preview/truncated.
 
 ### Impatto
 
@@ -258,7 +258,7 @@ Non dumpare integralmente context pack o documenti lunghi dentro singoli eventi 
 
 ### Evidenza code-driven
 
-`Tools/ai/prepare_heap_context_memory_reload.py` implementa una selezione deterministica locale `collect_semantic_code_chunks()`. Il broker espone gia' il tool allowlisted:
+`Tools/ai/heap_context_memory_reload/cli.py` implementa una selezione deterministica locale `collect_semantic_code_chunks()`. Il broker espone gia' il tool allowlisted:
 
 ```text
 select_semantic_code_chunks
@@ -282,8 +282,8 @@ Scelta consigliata:
 Esistono:
 
 ```text
-Tools/ai/build_heap_exchange_closure_audit.py
-Tools/validation/run_heap_exchange_closure_audit_smoke.py
+python -m Tools.ai heap_exchange_closure_audit
+Tools/validation/heap_exchange/closure_audit_smoke/cli.py
 ```
 
 Questi provano la disponibilita' di una deterministic/script audit lane prima della closure. Il launcher context closure invece esegue startup reload, heap gate, reconciliation e composer.
@@ -334,26 +334,26 @@ task-file e manifest diventati conoscenza heap consumabile dalle lanes
 ## Prossimi target patch consigliati
 
 ```text
-Tools/ai/run_heap_runtime_completeness_gate.py
-Tools/ai/run_heap_runtime_context_closure.py
-Tools/ai/prepare_heap_context_memory_reload.py
-Tools/ai/compose_heap_final_proposals.py
-Tools/validation/run_heap_runtime_completeness_gate_smoke.py
+Tools/ai/heap_runtime/completeness_gate/cli.py
+Tools/ai/heap_context_closure/cli.py
+Tools/ai/heap_context_memory_reload/cli.py
+Tools/ai/heap_final_proposals/cli.py
+Tools/validation/heap_runtime/completeness_gate_smoke/cli.py
 Tools/validation/run_heap_startup_context_ingestion_smoke.py
 ```
 
 ## Validazione suggerita dopo la prossima patch codice
 
 ```powershell
-python -m py_compile .\Tools\ai\run_heap_runtime_completeness_gate.py
-python -m py_compile .\Tools\ai\run_heap_runtime_context_closure.py
-python -m py_compile .\Tools\ai\prepare_heap_context_memory_reload.py
-python -m py_compile .\Tools\ai\compose_heap_final_proposals.py
+python -m py_compile .\Tools\ai\heap_runtime\completeness_gate\cli.py
+python -m py_compile .\Tools\ai\heap_context_closure\cli.py
+python -m py_compile .\Tools\ai\heap_context_memory_reload\cli.py
+python -m py_compile .\Tools\ai\heap_final_proposals\cli.py
 python -m py_compile .\Tools\validation\run_heap_startup_context_ingestion_smoke.py
 
-python .\Tools\validation\run_heap_startup_context_ingestion_smoke.py --repo-root . --output .\output\validation\heap_startup_context_ingestion_smoke.json
-python .\Tools\validation\run_heap_runtime_completeness_gate_smoke.py --repo-root . --output .\output\validation\heap_runtime_completeness_gate_smoke.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation run_heap_startup_context_ingestion_smoke --repo-root . --output .\output\validation\heap_startup_context_ingestion_smoke.json
+python -m Tools.validation run_heap_runtime_completeness_gate_smoke --repo-root . --output .\output\validation\heap_runtime_completeness_gate_smoke.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 
 git diff --check
 git status --short

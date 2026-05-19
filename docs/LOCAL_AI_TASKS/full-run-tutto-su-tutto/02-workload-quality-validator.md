@@ -1,6 +1,6 @@
 # Workload quality validator
 
-`Tools/validation/check_ai_workload_report_quality.py` valida report workload
+`Tools/validation/ai_workload/report_quality/cli.py` valida report workload
 testuali.
 
 ## Input supportati

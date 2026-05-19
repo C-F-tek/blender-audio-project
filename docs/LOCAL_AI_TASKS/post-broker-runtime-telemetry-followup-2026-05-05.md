@@ -78,7 +78,7 @@ Primary targets:
 
 Secondary target only if needed:
 
-    Tools/ai/build_runtime_tool_usage_telemetry.py
+    Tools/ai/runtime_tool/usage_telemetry/cli.py
 
 Required investigation commands:
 
@@ -152,8 +152,8 @@ Future rule:
 
 Likely targets:
 
-    Tools/ai/build_agent_review_patch_plan.py
-    Tools/ai/build_deterministic_recommendations.py
+    Tools/ai/agent_review/patch_plan/cli.py
+    Tools/ai/deterministic_recommendations/cli.py
     repository consistency mapper configuration if present
 
 ### P2 — hardware/resource note
@@ -211,7 +211,7 @@ Patch objective:
 
 Validation:
 
-    python -m py_compile .\Tools\ai\build_runtime_tool_usage_telemetry.py .\Tools\ai\agent_runtime_tool_broker.py
+    python -m py_compile .\Tools\ai\runtime_tool\usage_telemetry\cli.py -m Tools.ai agent_runtime_tool_broker
 
     powershell -NoProfile -ExecutionPolicy Bypass -Command '$p=(Resolve-Path ".\Tools\workflow\run_agent_review_full_toolbox_decision_loop.ps1").Path; $t=$null; $e=$null; [System.Management.Automation.Language.Parser]::ParseFile($p,[ref]$t,[ref]$e)|Out-Null; $e'
 

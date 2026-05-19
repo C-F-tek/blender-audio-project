@@ -3,11 +3,11 @@
 The helpers in this module intentionally avoid importing ``bpy``. They can be
 used by normal Python tools, AI/NPU pipeline scripts, and Blender packages.
 """
+
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
-
 
 PROJECT_MARKERS = (
     "pyproject.toml",
@@ -34,7 +34,9 @@ def resolve_path(value: str | Path, base: str | Path | None = None) -> Path:
     return (root / path).resolve()
 
 
-def find_project_root(start: str | Path | None = None, markers: Iterable[str] = PROJECT_MARKERS) -> Path:
+def find_project_root(
+    start: str | Path | None = None, markers: Iterable[str] = PROJECT_MARKERS
+) -> Path:
     """Find the repository root by walking upward from ``start``.
 
     The first parent containing at least one marker is returned.

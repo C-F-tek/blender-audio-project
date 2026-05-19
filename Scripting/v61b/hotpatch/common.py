@@ -12,7 +12,11 @@ def cfg_value(name, default):
 
 ANALYSIS_JSON_PATH = cfg_value(
     "ANALYSIS_JSON_PATH",
-    Path.home() / "blender" / "blender-audio-project" / "output" / "Feel The Light-Luca Vera_Master_analysis.json",
+    Path.home()
+    / "blender"
+    / "blender-audio-project"
+    / "output"
+    / "Feel The Light-Luca Vera_Master_analysis.json",
 )
 OUTPUT_MP4 = cfg_value(
     "OUTPUT_MP4",

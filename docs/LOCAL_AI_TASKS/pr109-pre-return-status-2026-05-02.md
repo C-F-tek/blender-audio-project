@@ -31,7 +31,7 @@ updated open PR triage after closing stale PRs
 added open issue triage note
 added pre-return status snapshot
 cleaned code-quality unused imports
-wired Tools/ai/build_github_evidence_bundle.py locally from the replacement-ready orchestrator
+wired Tools/ai/repository_product/github_evidence_bundle.py locally from the replacement-ready orchestrator
 pushed post-wiring compact evidence bundle
 added Python module execution note for PYTHONPATH and python -m usage
 ```
@@ -55,8 +55,8 @@ Completed locally and pushed:
 
 ```text
 commit: 6b9e583 refactor(ai): wire github evidence bundle orchestrator
-source: Tools/ai/github_evidence_bundle_build_github_evidence_bundle_ready.py
-target: Tools/ai/build_github_evidence_bundle.py
+source: Tools/ai/repository_product/github_evidence_bundle_ready.py
+target: Tools/ai/repository_product/github_evidence_bundle.py
 ```
 
 ## Post-wiring evidence
@@ -90,8 +90,8 @@ For modularized `Tools.*` entry points, use repository-root `PYTHONPATH` and pre
 
 ```powershell
 $env:PYTHONPATH = (Get-Location).Path
-python -m Tools.ai.build_github_evidence_bundle --help
-python -m Tools.validation.check_github_evidence_bundle --help
+python -m Tools.ai.repository_product.github_evidence_bundle --help
+python -m Tools.validation check_github_evidence_bundle --help
 ```
 
 ## Final local state before merge request

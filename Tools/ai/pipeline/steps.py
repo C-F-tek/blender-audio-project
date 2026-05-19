@@ -23,14 +23,13 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
     py = sys.executable
     track_slug = slugify(args.track_stem)
 
-    def script(path: str) -> str:
-        return str((repo / path).resolve())
-
     commands: dict[str, list[str]] = {}
     if args.review_wave_entrypoints:
         commands["review_wave_entrypoints"] = [
             py,
-            script("Tools/ai/review_wave_entrypoints.py"),
+            "-m",
+            "Tools.ai",
+            "review_wave_entrypoints",
             "--repo-root",
             str(repo),
             "--output",
@@ -39,14 +38,18 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
     if args.build_chunks:
         commands["build_semantic_code_chunks"] = [
             py,
-            script("Tools/npu/build_semantic_code_chunks.py"),
+            "-m",
+            "Tools.npu",
+            "build_semantic_code_chunks",
             "--repo-root",
             str(repo),
         ]
     if args.build_music_summary:
         commands["build_music_intermediates"] = [
             py,
-            script("Tools/ai/build_music_intermediates.py"),
+            "-m",
+            "Tools.ai",
+            "build_music_intermediates",
             "--analysis-json",
             str(Path(args.analysis_json).resolve()),
             "--output-dir",
@@ -55,7 +58,9 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
     if args.smart_context:
         commands["build_smart_ai_context"] = [
             py,
-            script("Tools/workflow/smart_ai_context.py"),
+            "-m",
+            "Tools.workflow",
+            "smart_ai_context",
             "--repo-root",
             str(repo),
             "--track-stem",
@@ -72,7 +77,9 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
     if args.use_npu:
         commands["npu_artifact_review"] = [
             py,
-            script("Tools/npu/run_npu_artifact_reviewer.py"),
+            "-m",
+            "Tools.npu",
+            "run_npu_artifact_reviewer",
             "--input",
             str(out),
             "--output",
@@ -88,7 +95,9 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
         )
         commands["npu_guardrail"] = [
             py,
-            script("Tools/npu/npu_guardrail_service.py"),
+            "-m",
+            "Tools.npu",
+            "npu_guardrail_service",
             "--input",
             str(guardrail_input),
             "--output",
@@ -97,7 +106,9 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
     if args.validate:
         commands["validate_ai_artifacts"] = [
             py,
-            script("Tools/ai/validate_ai_artifacts.py"),
+            "-m",
+            "Tools.ai",
+            "validate_ai_artifacts",
             "--repo-root",
             str(repo),
             "--artifact-dir",
@@ -109,9 +120,7 @@ def build_step_commands(repo: Path, out: Path, args: Any) -> dict[str, list[str]
     return commands
 
 
-def build_serial_steps(
-    commands: dict[str, list[str]], track_slug: str
-) -> list[PipelineStep]:
+def build_serial_steps(commands: dict[str, list[str]], track_slug: str) -> list[PipelineStep]:
     """Build ordered CPU-side pipeline steps."""
     serial: list[PipelineStep] = []
     if "review_wave_entrypoints" in commands:
@@ -150,10 +159,7 @@ def build_serial_steps(
                 "build_smart_ai_context",
                 "CPU",
                 "Build hierarchical capsules and ranked smart context packet for central AI.",
-                [
-                    item.format(track_slug=track_slug)
-                    for item in EXPECTED_SMART_CONTEXT_ARTIFACTS
-                ],
+                [item.format(track_slug=track_slug) for item in EXPECTED_SMART_CONTEXT_ARTIFACTS],
                 commands["build_smart_ai_context"],
             )
         )

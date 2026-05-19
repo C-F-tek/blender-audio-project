@@ -3,6 +3,7 @@
 The executable scene script contains the same FINAL_YOUTUBE/YOUTUBE_RENDER_PROFILES
 block inline so it can run standalone in Blender Text Editor.
 """
+
 from pathlib import Path
 
 FINAL_YOUTUBE = "2K_INTERMEDIATE"

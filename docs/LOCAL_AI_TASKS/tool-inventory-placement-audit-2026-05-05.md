@@ -29,7 +29,7 @@ Do not promote a file only because it is executable-looking. Do not exclude a fi
       Stable, documented, reusable tool with CLI contract, JSON/MD output, validation and guardrails.
 
     BROKER_TOOL
-      Safe report-only tool allowed in `Tools/ai/agent_runtime_tool_broker.py`.
+      Safe report-only tool allowed in `Tools/ai/runtime_tool/agent_broker.py`.
 
     FULL_RUN_EVIDENCE
       Tool should feed full-run evidence, production bundle or handoff artifacts.
@@ -80,7 +80,7 @@ Do not promote a file only because it is executable-looking. Do not exclude a fi
 
 ## Runtime broker allowlist — installed tools
 
-Primary source: `Tools/ai/agent_runtime_tool_broker.py`.
+Primary source: `Tools/ai/runtime_tool/agent_broker.py`.
 
 | Tool | Current level | Placement | Notes |
 |---|---:|---|---|
@@ -101,61 +101,59 @@ These are good candidates for documented project-tool status, but not necessaril
 
 | Path | Proposed level | Placement | Action |
 |---|---:|---|---|
-| `analyze_wav.py` | 2 | BLENDER_AUDIO_PIPELINE | Root audio analyzer; document as canonical audio analysis entrypoint, not broker. |
-| `build_track_summary.py` | 2 | BLENDER_AUDIO_PIPELINE / FULL_RUN_EVIDENCE | Root track-summary builder; document near audio workflow. |
+| `Tools/workflow/workflow_run/audio_analysis/analyze_cli.py` | 2 | BLENDER_AUDIO_PIPELINE | Workflow audio analyzer; document as canonical audio analysis entrypoint, not broker. |
+| `Tools/workflow/workflow_run/audio_analysis/summary_cli.py` | 2 | BLENDER_AUDIO_PIPELINE / FULL_RUN_EVIDENCE | Workflow track-summary builder; document near audio workflow. |
 | `Scripting/v61b/main_v61b.py` | 2 | BLENDER_AUDIO_PIPELINE | Main Blender scene runner; manual/runtime only. |
 | `Scripting/v61b/encode_image_sequence_v61b.py` | 2 | BLENDER_AUDIO_PIPELINE | Encoding helper; never brokered because FFmpeg/runtime side effects. |
 | `Scripting/v61b/encode_ffmpeg_v61b.py` | 2 | BLENDER_AUDIO_PIPELINE | FFmpeg encode lane; manual/runtime only. |
 | `Scripting/v61b/hot_update_scene_v61b.py` | 1 | BLENDER_AUDIO_PIPELINE | Candidate hot-update script; document as manual Blender-side utility. |
 | `Scripting/v61b/scene_tuning_panel.py` | 1 | LOCAL_UI_OR_MANUAL | UI/tuning panel; manual only. |
 | `Scripting/_template_audio_reactive_package/main.py` | 1 | GENERATED_OR_CANDIDATE / TEMPLATE | Template package entrypoint; document as scaffold. |
-| `Tools/npu/generated_blender_script_candidate.py` | 0 | GENERATED_OR_CANDIDATE | Must pass generated script policy before promotion. |
-| `Tools/npu/generated_blender_script_candidate_FristNear.py` | 0 | GENERATED_OR_CANDIDATE | Same; likely typo/name cleanup candidate. |
 
 ## High-value validation/provider tools to document as project tools
 
 | Path | Proposed level | Placement | Action |
 |---|---:|---|---|
-| `Tools/workflow/startup_check.py` | 2 | CORE_BOOTSTRAP | Promote as project startup diagnostic tool. |
-| `Tools/workflow/startup_preflight.ps1` | 2 | CORE_BOOTSTRAP | Wrapper; document after `startup_check.py`. |
-| `Tools/workflow/ai_runtime_diagnostics.py` | 2 | PROVIDER_DIAGNOSTIC | Good preflight diagnostics candidate. |
-| `Tools/ai/run_local_provider_probe.py` | 2 | PROVIDER_DIAGNOSTIC | Canonical provider probe. |
+| `python -m Tools.workflow startup_check` | 2 | CORE_BOOTSTRAP | Promote as project startup diagnostic tool. |
+| `Tools/workflow/startup_preflight.ps1` | 2 | CORE_BOOTSTRAP | Wrapper; document after `python -m Tools.workflow startup_check`. |
+| `Tools/workflow/workflow_run/ai_runtime_diagnostics.py` | 2 | PROVIDER_DIAGNOSTIC | Good preflight diagnostics candidate. |
+| `Tools/ai/provider_mesh/local_provider_probe.py` | 2 | PROVIDER_DIAGNOSTIC | Canonical provider probe. |
 | `Tools/ai/check_local_resource_lanes.py` | 2 | PROVIDER_DIAGNOSTIC | Local resource-lane checker. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | 2 | PROVIDER_DIAGNOSTIC | Workload quality routing report. |
-| `Tools/validation/check_ai_workload_report_quality.py` | 2 | PROVIDER_DIAGNOSTIC / VALIDATION | Already important; document as quality gate. |
-| `Tools/validation/run_orchestrator_gpu_runtime_tool_routing_smoke.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Important for broker telemetry follow-up. |
-| `Tools/validation/run_npu_runtime_tool_execution_smoke.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime execution smoke. |
-| `Tools/validation/run_npu_runtime_tool_context_smoke.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime context smoke. |
-| `Tools/validation/run_npu_runtime_tool_fallback_smoke.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime fallback smoke. |
-| `Tools/validation/run_npu_tool_request_contract_smoke.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Tool-request contract smoke. |
+| `Tools/validation/ai_workload/report_quality/cli.py` | 2 | PROVIDER_DIAGNOSTIC / VALIDATION | Already important; document as quality gate. |
+| `Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Important for broker telemetry follow-up. |
+| `Tools/validation/runtime_tool/npu_runtime_tool_execution_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime execution smoke. |
+| `Tools/validation/runtime_tool/npu_runtime_tool_context_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime context smoke. |
+| `Tools/validation/runtime_tool/npu_runtime_tool_fallback_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime fallback smoke. |
+| `Tools/validation/provider_mesh/npu_tool_request_contract_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Tool-request contract smoke. |
 
 ## Patch-plan/code-edit project-tool candidates
 
 | Path | Proposed level | Placement | Action |
 |---|---:|---|---|
-| `Tools/ai/build_agent_review_patch_plan.py` | 2 | PATCH_PLAN_SUPPORT | Canonical patch-plan builder. |
-| `Tools/ai/build_agent_review_code_patch_plan.py` | 2 | PATCH_PLAN_SUPPORT | Code patch-plan lane. |
-| `Tools/ai/build_code_edit_proposal_from_plan.py` | 2 | PATCH_PLAN_SUPPORT | Converts plan to code edit proposal. |
-| `Tools/ai/build_code_patch_artifact_pack.py` | 2 | PATCH_PLAN_SUPPORT / FULL_RUN_EVIDENCE | Artifact pack builder. |
-| `Tools/ai/build_code_patch_docs_followup.py` | 2 | PATCH_PLAN_SUPPORT / DOCS_MAINTENANCE | Docs follow-up builder. |
+| `Tools/ai/agent_review/patch_plan/cli.py` | 2 | PATCH_PLAN_SUPPORT | Canonical patch-plan builder. |
+| `Tools/ai/agent_review/code_patch_plan_cli.py` | 2 | PATCH_PLAN_SUPPORT | Code patch-plan lane. |
+| `Tools/ai/code_product/edit_proposal_from_plan/cli.py` | 2 | PATCH_PLAN_SUPPORT | Converts plan to code edit proposal. |
+| `Tools/ai/code_product/patch_artifact_pack/cli.py` | 2 | PATCH_PLAN_SUPPORT / FULL_RUN_EVIDENCE | Artifact pack builder. |
+| `Tools/ai/code_product/patch_docs_followup/cli.py` | 2 | PATCH_PLAN_SUPPORT / DOCS_MAINTENANCE | Docs follow-up builder. |
 | `Tools/ai/merge_ai_candidates.py` | 2 | PATCH_PLAN_SUPPORT | Candidate merge helper; review safety before broker. |
 | `Tools/validation/run_code_edit_proposal_smoke.py` | 2 | VALIDATION | Smoke for code-edit proposal. |
-| `Tools/validation/run_agent_review_code_patch_plan_smoke.py` | 2 | VALIDATION | Smoke for code patch plan. |
-| `Tools/validation/run_agent_review_patch_plan_smoke.py` | 2 | VALIDATION | Smoke for patch-plan builder. |
-| `Tools/validation/run_agent_review_patch_plan_full_validation.py` | 2 | VALIDATION | Full patch-plan validation. |
+| `Tools/validation/agent_review/code_patch_plan_smoke/cli.py` | 2 | VALIDATION | Smoke for code patch plan. |
+| `Tools/validation/agent_review/patch_plan_smoke/cli.py` | 2 | VALIDATION | Smoke for patch-plan builder. |
+| `Tools/validation/agent_review/patch_plan_full_validation/cli.py` | 2 | VALIDATION | Full patch-plan validation. |
 
 ## Docs/project awareness tools
 
 | Path | Proposed level | Placement | Action |
 |---|---:|---|---|
-| `Tools/validation/build_markdown_inventory.py` | 2 | DOCS_MAINTENANCE / FULL_RUN_EVIDENCE | Canonical markdown inventory. |
+| `Tools/validation/docs_hygiene/markdown_inventory/cli.py` | 2 | DOCS_MAINTENANCE / FULL_RUN_EVIDENCE | Canonical markdown inventory. |
 | `Tools/validation/check_docs_links.py` | 2 | DOCS_MAINTENANCE / VALIDATION | Canonical docs link checker. |
 | `Tools/validation/build_script_inventory.py` | 2 | FULL_RUN_EVIDENCE | Script/tool inventory. |
-| `Tools/workflow/project_awareness.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Project-awareness helper. |
-| `Tools/workflow/smart_ai_context.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Context helper. |
-| `Tools/workflow/artifact_consult.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Artifact consult helper. |
-| `Tools/workflow/asset_inventory.py` | 1 | FULL_RUN_EVIDENCE / BLENDER_AUDIO_PIPELINE | Asset inventory candidate. |
-| `Tools/workflow/scene_brief.py` | 1 | BLENDER_AUDIO_PIPELINE / PATCH_PLAN_SUPPORT | Scene-brief candidate. |
+| `Tools/workflow/workflow_run/_shared/project_awareness.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Project-awareness helper. |
+| `python -m Tools.workflow smart_ai_context` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Context helper. |
+| `Tools/workflow/workflow_run/_shared/artifact_consult.py` | 1 | FULL_RUN_EVIDENCE / CONTEXT | Artifact consult helper. |
+| `Tools/workflow/workflow_run/_shared/asset_inventory.py` | 1 | FULL_RUN_EVIDENCE / BLENDER_AUDIO_PIPELINE | Asset inventory candidate. |
+| `Tools/workflow/workflow_run/_shared/scene_brief.py` | 1 | BLENDER_AUDIO_PIPELINE / PATCH_PLAN_SUPPORT | Scene-brief candidate. |
 
 ## Manual-only or unsafe-to-broker tools
 
@@ -163,9 +161,9 @@ These may be useful, but must not be auto-brokered or included in unattended ful
 
 | Path | Placement | Reason |
 |---|---|---|
-| `Tools/workflow/workflow_shell.py` | LOCAL_UI_OR_MANUAL | Interactive shell/wrapper. |
-| `Tools/workflow/workflow_shell_with_push.py` | GIT_WRITE_TOOL | Push-capable; manual only. |
-| `Tools/workflow/git_auto_push.py` | GIT_WRITE_TOOL | Git mutation. |
+| `python -m Tools.workflow workflow_shell` | LOCAL_UI_OR_MANUAL | Interactive shell/wrapper. |
+| `python -m Tools.workflow workflow_shell_with_push` | GIT_WRITE_TOOL | Push-capable; manual only. |
+| `Tools/workflow/workflow_run/git_auto_push.py` | GIT_WRITE_TOOL | Git mutation. |
 | `Tools/git/auto_push_generated_data.ps1` | GIT_WRITE_TOOL | Git mutation. |
 | `Tools/git/auto_push_generated_artifacts.ps1` | GIT_WRITE_TOOL | Git mutation. |
 | `Tools/workflow/gui/workflow_gui_modern.py` | LOCAL_UI_OR_MANUAL | GUI. |
@@ -177,11 +175,11 @@ These should be documented as internal components, not promoted directly unless 
 
     Tools/ai/pipeline/*.py
     Tools/npu/pipeline/*.py
-    Tools/ai/workload_quality.py
-    Tools/ai/schema_repair_context.py
-    Tools/ai/agent_memory_policy.py
-    Tools/ai/agent_memory_routing_policy.py
-    Tools/validation/report_utils.py
+    Tools/ai/_shared/workload_quality.py
+    Tools/ai/schema_repair/
+    Tools/ai/agent_memory/policy.py
+    python -m Tools.ai agent_memory_routing_policy
+    Tools/validation/_shared/report_utils.py
 
 ## Immediate recommendations
 
@@ -219,17 +217,17 @@ The registry should include:
 
 Prioritize:
 
-    Tools/workflow/startup_check.py
-    Tools/ai/run_local_provider_probe.py
-    Tools/validation/check_ai_workload_report_quality.py
-    Tools/validation/run_orchestrator_gpu_runtime_tool_routing_smoke.py
+    python -m Tools.workflow startup_check
+    Tools/ai/provider_mesh/local_provider_probe.py
+    Tools/validation/ai_workload/report_quality/cli.py
+    Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py
 
 ### P2 — document audio/Blender root entrypoints as project tools, not broker tools
 
 Prioritize:
 
-    analyze_wav.py
-    build_track_summary.py
+    Tools/workflow/workflow_run/audio_analysis/analyze_cli.py
+    Tools/workflow/workflow_run/audio_analysis/summary_cli.py
     Scripting/v61b/main_v61b.py
     Scripting/v61b/encode_image_sequence_v61b.py
     Scripting/v61b/encode_ffmpeg_v61b.py

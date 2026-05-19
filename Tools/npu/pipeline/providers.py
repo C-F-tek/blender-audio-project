@@ -63,7 +63,9 @@ class ProviderParsedResult:
             "ok": self.ok,
             "text_chars": len(self.text),
             "json_ok": self.json_ok,
-            "parsed_json_type": type(self.parsed_json).__name__ if self.parsed_json is not None else None,
+            "parsed_json_type": type(self.parsed_json).__name__
+            if self.parsed_json is not None
+            else None,
             "error": self.error,
             "metadata": self.metadata or {},
         }
@@ -131,7 +133,15 @@ def _extract_usage(raw: Any) -> dict[str, Any]:
     if isinstance(usage, dict):
         return dict(usage)
     out: dict[str, Any] = {}
-    for key in ("prompt_eval_count", "eval_count", "total_duration", "load_duration", "prompt_tokens", "completion_tokens", "total_tokens"):
+    for key in (
+        "prompt_eval_count",
+        "eval_count",
+        "total_duration",
+        "load_duration",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+    ):
         if key in raw:
             out[key] = raw[key]
     return out
@@ -276,7 +286,9 @@ def normalize_provider_preflight_report(
     }
 
 
-def planned_provider_result(request: ProviderRequest, *, reason: str = "planned-only") -> ProviderResult:
+def planned_provider_result(
+    request: ProviderRequest, *, reason: str = "planned-only"
+) -> ProviderResult:
     """Return a deterministic non-executed provider result envelope."""
 
     validation = validate_provider_request(request)

@@ -4,19 +4,19 @@
 
 Questo documento registra la procedura corretta, verificata dalla run locale `heap_context_closure_20260511-192953`, per eseguire una run heap completa e poi il post-run package esterno.
 
-Correzione operativa importante: `Tools/ai/build_heap_runtime_launcher_command.py` non lancia la run. E' solo un command builder reviewabile.
+Correzione operativa importante: `Tools/ai/heap_runtime/launcher_command/cli.py` non lancia la run. E' solo un command builder reviewabile.
 
-La run vera e' `Tools/ai/run_heap_runtime_context_closure.py`.
+La run vera e' `Tools/ai/heap_context_closure/cli.py`.
 
-Il post-run vero e' `Tools/ai/run_external_heap_postrun_package.py`.
+Il post-run vero e' `Tools/ai/external_heap/postrun_package.py`.
 
 ## Flusso corretto
 
 ```text
 1. definire richiesta operativa
-2. lanciare direttamente run_heap_runtime_context_closure.py
+2. lanciare direttamente python -m Tools.ai heap_context_closure
 3. attendere fine run
-4. lanciare run_external_heap_postrun_package.py
+4. lanciare python -m Tools.ai external_heap_postrun_package
 5. leggere launcher/composer/provider/pointer/revision/long-response
 ```
 
@@ -25,7 +25,7 @@ Il post-run vero e' `Tools/ai/run_external_heap_postrun_package.py`.
 Non considerare questo comando una run:
 
 ```powershell
-& $RepoPy .\Tools\ai\build_heap_runtime_launcher_command.py `
+& $RepoPy -m Tools.ai build_heap_runtime_launcher_command `
   --repo-root . `
   --profile balanced_external_heap `
   --request $DebugRequest `
@@ -66,7 +66,7 @@ Regole:
 - se il prodotto non e' accettabile, blocca con reason concreta
 "@
 
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py `
+& $RepoPy -m Tools.ai heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --request $DebugRequest `
@@ -88,7 +88,7 @@ Regole:
 Eseguire solo dopo la fine della run:
 
 ```powershell
-& $RepoPy .\Tools\ai\run_external_heap_postrun_package.py `
+& $RepoPy -m Tools.ai external_heap_postrun_package `
   --repo-root . `
   --include-rejected-history `
   --include-peer-blocks
@@ -242,6 +242,6 @@ Interpretazione iniziale:
 
 ## Nota sul command builder
 
-`Tools/ai/build_heap_runtime_launcher_command.py` resta utile per produrre una stringa comando reviewabile e per ispezionare profili/revision context, ma non e' il comando da usare come run effettiva.
+`Tools/ai/heap_runtime/launcher_command/cli.py` resta utile per produrre una stringa comando reviewabile e per ispezionare profili/revision context, ma non e' il comando da usare come run effettiva.
 
-Per run reali preferire il comando diretto su `run_heap_runtime_context_closure.py` finche' non verra' introdotto un launcher esecutivo separato.
+Per run reali preferire il comando diretto su `python -m Tools.ai heap_context_closure` finche' non verra' introdotto un launcher esecutivo separato.

@@ -45,8 +45,8 @@ generic generated-file policy engine
 Concrete files:
 
 ```text
-Tools/validation/generated_file_policy.py
-Tools/validation/generated_python_policy.py
+Tools/validation/_shared/generated_file_policy.py
+Tools/validation/_shared/generated_python_policy.py
 Tools/validation/check_generated_python_policy.py
 Tools/validation/check_generated_blender_script_policy.py
 ```

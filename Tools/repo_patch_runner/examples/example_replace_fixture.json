@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "description": "Example dry-run patch against a contained fixture file",
+  "operations": [
+    {
+      "path": "Tools/repo_patch_runner/examples/example_fixture.txt",
+      "replacements": [
+        {
+          "type": "exact",
+          "old": "status = before",
+          "new": "status = after",
+          "count": 1
+        }
+      ],
+      "require_contains_before": [
+        "status = before"
+      ],
+      "require_contains_after": [
+        "status = after"
+      ],
+      "forbid_contains_after": [
+        "status = missing"
+      ]
+    }
+  ]
+}

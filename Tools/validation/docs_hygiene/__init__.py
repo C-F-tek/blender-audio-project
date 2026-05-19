@@ -1,0 +1,1 @@
+"""Documentation hygiene validation package."""

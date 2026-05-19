@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime
 import re
 import tkinter as tk
+from dataclasses import dataclass
+from datetime import datetime
 from tkinter import ttk
 
 from components.st_theme import text_widget_colors
@@ -62,10 +62,16 @@ class LiveOutputPanel(ttk.Frame):
         header = ttk.Frame(self)
         header.pack(fill="x", pady=(0, 8))
         ttk.Label(header, text="Live Output", style="Header.TLabel").pack(side="left")
-        ttk.Label(header, text="Esecuzione pipeline in tempo reale", style="SubHeader.TLabel").pack(side="left", padx=(14, 0))
+        ttk.Label(header, text="Esecuzione pipeline in tempo reale", style="SubHeader.TLabel").pack(
+            side="left", padx=(14, 0)
+        )
         ttk.Button(header, text="Clear", command=self.clear).pack(side="right")
-        ttk.Checkbutton(header, text="Auto-scroll", variable=self.auto_scroll).pack(side="right", padx=(0, 10))
-        ttk.Checkbutton(header, text="Debug", variable=self.show_debug, command=self.rebuild_event_tree).pack(side="right", padx=(0, 10))
+        ttk.Checkbutton(header, text="Auto-scroll", variable=self.auto_scroll).pack(
+            side="right", padx=(0, 10)
+        )
+        ttk.Checkbutton(
+            header, text="Debug", variable=self.show_debug, command=self.rebuild_event_tree
+        ).pack(side="right", padx=(0, 10))
 
         self.metric_frame = ttk.Frame(self, style="Panel.TFrame")
         self.metric_frame.pack(fill="x", pady=(0, 8))
@@ -106,7 +112,9 @@ class LiveOutputPanel(ttk.Frame):
         self.event_tree.configure(yscrollcommand=event_scroll.set)
         event_scroll.pack(side="right", fill="y")
 
-        self.raw_text = tk.Text(raw_frame, wrap="word", borderwidth=1, relief="solid", **text_widget_colors(self))
+        self.raw_text = tk.Text(
+            raw_frame, wrap="word", borderwidth=1, relief="solid", **text_widget_colors(self)
+        )
         self.raw_text.pack(fill="both", expand=True, side="left")
         raw_scroll = ttk.Scrollbar(raw_frame, orient="vertical", command=self.raw_text.yview)
         self.raw_text.configure(yscrollcommand=raw_scroll.set)
@@ -179,4 +187,6 @@ class LiveOutputPanel(ttk.Frame):
         for event in self.events:
             if event.kind == "debug" and not self.show_debug.get():
                 continue
-            self.event_tree.insert("", "end", values=(event.time, event.kind.upper(), event.message))
+            self.event_tree.insert(
+                "", "end", values=(event.time, event.kind.upper(), event.message)
+            )

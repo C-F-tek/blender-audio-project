@@ -1,9 +1,11 @@
 """UTF-8 JSON helpers for scripts, packages, and AI pipeline artifacts."""
+
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 try:
     from .path_utils import ensure_parent_dir, resolve_path

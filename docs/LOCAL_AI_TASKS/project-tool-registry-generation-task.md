@@ -45,15 +45,15 @@ docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
 docs/LOCAL_AI_TASKS/project-tool-promotion-and-insertion-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/README.md
-Tools/ai/agent_runtime_tool_broker.py
-Tools/ai/build_shared_toolbox_ai_to_ai_bundle.py
-Tools/ai/build_runtime_tool_usage_telemetry.py
+Tools/ai/runtime_tool/agent_broker.py
+Tools/ai/agent_context/shared_toolbox_bundle/cli.py
+Tools/ai/runtime_tool/usage_telemetry/cli.py
 Tools/validation/**
 Tools/workflow/**
 Tools/npu/**
 Scripting/v61b/**
-analyze_wav.py
-build_track_summary.py
+Tools/workflow/workflow_run/audio_analysis/analyze_cli.py
+Tools/workflow/workflow_run/audio_analysis/summary_cli.py
 ```
 
 ## Required taxonomy
@@ -124,7 +124,7 @@ Do not create other source or documentation files for this task.
 
 ```text
 project-tool-registry.md exists
-project-tool-registry.md has entries for Tools/ai, Tools/validation, Tools/workflow, Tools/npu, root audio tools, Scripting/v61b
+project-tool-registry.md has entries for Tools/ai, Tools/validation, Tools/workflow, Tools/npu, workflow audio tools, Scripting/v61b
 patch_application_performed = false
 source_writes_performed = false except generated reports/evidence
 patch_plan target is docs/LOCAL_AI_TASKS/project-tool-registry.md

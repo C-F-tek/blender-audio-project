@@ -17,7 +17,7 @@ patch_specs/<bundle>/bundle.json
 patch_specs/<bundle>/fragments/*.py
 patch_specs/<bundle>/fragments/*.ps1
 Tools/ai/patchkit/apply_patch_bundle.py
-Tools/ai/apply_generated_patch_specs_for_review_pr.py
+Tools/ai/generated_patch_specs/apply_cli.py
 ```
 
 Patch notes, proposal ledgers and generated summaries are review inputs only.
@@ -31,12 +31,12 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
 
-& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+& $RepoPy -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-& $RepoPy .\Tools\ai\patchkit\apply_patch_bundle.py `
+& $RepoPy -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```

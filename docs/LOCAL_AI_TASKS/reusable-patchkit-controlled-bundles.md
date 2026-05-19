@@ -14,12 +14,12 @@ patch_specs/<bundle>/fragments/*
 and apply it through the reusable OOB runner:
 
 ```powershell
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -92,7 +92,7 @@ python -m py_compile `
   .\Tools\ai\patchkit\apply_patch_bundle.py `
   .\Tools\validation\run_patchkit_smoke.py
 
-python .\Tools\validation\run_patchkit_smoke.py `
+python -m Tools.validation run_patchkit_smoke `
   --repo-root .
 
 git diff --check

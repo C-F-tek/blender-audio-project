@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
-
 
 DEFAULT_TRACK_STEM = "Feel The Light-Luca Vera_Master"
 
@@ -21,6 +21,11 @@ DEFAULT_PREFERRED_REFERENCE_FILES = (
     "Scripting/v61b/render_setup.py",
     "Scripting/v61b/hot_update_scene_v61b.py",
 )
+
+
+def slugify_track_stem(value: str, max_len: int = 72) -> str:
+    slug = re.sub(r"[^A-Za-z0-9]+", "_", value).strip("_").lower()
+    return slug[:max_len] or "track"
 
 
 @dataclass(frozen=True)
@@ -63,11 +68,12 @@ class DualPipelinePaths:
 
     @property
     def implementation_script(self) -> Path:
-        return self.tools_dir / "generated_blender_script_candidate.py"
+        slug = slugify_track_stem(self.track_stem)
+        return self.repo_root / "indexAI" / "scene_scripts" / f"{slug}_scene_builder_candidate.py"
 
     @property
     def implementation_notes(self) -> Path:
-        return self.tools_dir / "generated_implementation_notes.md"
+        return self.tools_dir / "context_artifacts" / "generated_implementation_notes.md"
 
 
 @dataclass(frozen=True)
@@ -92,7 +98,7 @@ class NpuPipelineConfig:
         allowed_artifact_prefixes: Iterable[str] = DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
         preferred_reference_files: Iterable[str] = DEFAULT_PREFERRED_REFERENCE_FILES,
         include_manual_index: bool = False,
-    ) -> "NpuPipelineConfig":
+    ) -> NpuPipelineConfig:
         analysis_path = Path(analysis_ai_context) if analysis_ai_context else None
         paths = DualPipelinePaths(
             repo_root=Path(repo_root),

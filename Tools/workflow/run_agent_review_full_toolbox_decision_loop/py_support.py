@@ -1,4 +1,5 @@
 """Support helpers for the Python full-toolbox decision-loop engine."""
+
 from __future__ import annotations
 
 import csv
@@ -54,7 +55,9 @@ def add_existing(items: list[str], path: str | Path | None) -> None:
 
 def git_output(repo_root: Path, *args: str) -> str:
     try:
-        return subprocess.check_output(["git", *args], cwd=repo_root, text=True, stderr=subprocess.DEVNULL).strip()
+        return subprocess.check_output(
+            ["git", *args], cwd=repo_root, text=True, stderr=subprocess.DEVNULL
+        ).strip()
     except (OSError, subprocess.SubprocessError):
         return ""
 
@@ -170,9 +173,17 @@ class WorkflowContext:
                 script_parts.append(quote_ps(value))
 
         command_text = "$ErrorActionPreference = 'Stop'; " + " ".join(script_parts)
-        command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command_text]
+        command = [
+            "powershell.exe",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            command_text,
+        ]
         return self.run(label, command)
         # IA-CARMINE-PS-SPLAT-ARRAY-SAFE-END
+
 
 def build_paths(stamp: str, evidence_dir: str) -> dict[str, str]:
     s = compact_artifact_stamp(stamp)
@@ -304,16 +315,16 @@ def add_runtime_paths(p: dict[str, str], stamp: str, evidence_dir: str) -> None:
             "heap_from_peer_md": f"output/validation/provider_runtime_heap_from_peer_reports_{s}.md",
             "heap_telemetry_json": f"{evidence_dir}/provider_runtime_heap_telemetry_{s}.json",
             "heap_telemetry_md": f"{evidence_dir}/provider_runtime_heap_telemetry_{s}.md",
-            "heap_init_json": f"output/validation/provider_runtime_heap_live_signals_init_{s}.json",
-            "heap_init_md": f"output/validation/provider_runtime_heap_live_signals_init_{s}.md",
-            "heap_gpu1_request_json": f"output/validation/provider_runtime_heap_live_signals_gpu1_request_{s}.json",
-            "heap_gpu1_request_md": f"output/validation/provider_runtime_heap_live_signals_gpu1_request_{s}.md",
-            "heap_broker_json": f"output/validation/provider_runtime_heap_live_signals_broker_results_{s}.json",
-            "heap_broker_md": f"output/validation/provider_runtime_heap_live_signals_broker_results_{s}.md",
-            "heap_npu_json": f"output/validation/provider_runtime_heap_live_signals_npu_support_{s}.json",
-            "heap_npu_md": f"output/validation/provider_runtime_heap_live_signals_npu_support_{s}.md",
-            "heap_catalog_json": f"output/validation/provider_runtime_heap_live_signals_tool_catalog_complete_{s}.json",
-            "heap_catalog_md": f"output/validation/provider_runtime_heap_live_signals_tool_catalog_complete_{s}.md",
+            "heap_init_json": f"output/validation/provider_runtime_live_signals_init_{s}.json",
+            "heap_init_md": f"output/validation/provider_runtime_live_signals_init_{s}.md",
+            "heap_gpu1_request_json": f"output/validation/provider_runtime_live_signals_gpu1_request_{s}.json",
+            "heap_gpu1_request_md": f"output/validation/provider_runtime_live_signals_gpu1_request_{s}.md",
+            "heap_broker_json": f"output/validation/provider_runtime_live_signals_broker_results_{s}.json",
+            "heap_broker_md": f"output/validation/provider_runtime_live_signals_broker_results_{s}.md",
+            "heap_npu_json": f"output/validation/provider_runtime_live_signals_npu_support_{s}.json",
+            "heap_npu_md": f"output/validation/provider_runtime_live_signals_npu_support_{s}.md",
+            "heap_catalog_json": f"output/validation/provider_runtime_live_signals_tool_catalog_complete_{s}.json",
+            "heap_catalog_md": f"output/validation/provider_runtime_live_signals_tool_catalog_complete_{s}.md",
             "final_product_dir": final_dir,
             "final_product_json": f"output/validation/heap_runtime_product_{s}.json",
             "final_product_manifest": f"{final_dir}/heap_runtime_product_manifest.json",

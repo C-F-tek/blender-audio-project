@@ -10,13 +10,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from tools.ai.patchkit.anchors import (
+from Tools.ai.patchkit.anchors import (
     append_once,
     insert_after_marker,
     insert_before_marker,
     replace_once,
 )
-from tools.ai.patchkit.filesystem import (
+from Tools.ai.patchkit.filesystem import (
     LoadedText,
     backup_file,
     load_text,
@@ -24,12 +24,12 @@ from tools.ai.patchkit.filesystem import (
     repo_path,
     write_text_preserved,
 )
-from tools.ai.patchkit.powershell import (
+from Tools.ai.patchkit.powershell import (
     assert_no_naked_throw,
     insert_after_invoke_checked,
     run_parser,
 )
-from tools.ai.patchkit.reports import write_json, write_markdown
+from Tools.ai.patchkit.reports import write_json, write_markdown
 
 DENIED_DELETE_PREFIXES = (
     "output/",
@@ -63,9 +63,7 @@ def read_fragment(bundle_dir: Path, op: dict[str, Any]) -> str:
     return path.read_text(encoding="utf-8-sig")
 
 
-def apply_operation(
-    text: str, op: dict[str, Any], bundle_dir: Path
-) -> tuple[bool, str, str]:
+def apply_operation(text: str, op: dict[str, Any], bundle_dir: Path) -> tuple[bool, str, str]:
     operation = str(op.get("operation") or "")
     marker = str(op.get("marker") or "")
     idempotency_marker = str(op.get("idempotency_marker") or marker or "")
@@ -142,9 +140,7 @@ def run_python_compile(repo_root: Path, files: list[str]) -> tuple[bool, str]:
     if not files:
         return True, ""
     command = [sys.executable, "-m", "py_compile", *files]
-    result = subprocess.run(
-        command, cwd=repo_root, capture_output=True, text=True, check=False
-    )
+    result = subprocess.run(command, cwd=repo_root, capture_output=True, text=True, check=False)
     return result.returncode == 0, result.stdout + result.stderr
 
 
@@ -177,9 +173,7 @@ def line_count(path: Path) -> int:
     return len(path.read_text(encoding="utf-8-sig").splitlines())
 
 
-def apply_bundle(
-    repo_root: Path, bundle_path: Path, *, dry_run: bool
-) -> dict[str, Any]:
+def apply_bundle(repo_root: Path, bundle_path: Path, *, dry_run: bool) -> dict[str, Any]:
     bundle = load_bundle(bundle_path)
     bundle_dir = bundle_path.parent
     results: list[dict[str, Any]] = []
@@ -224,9 +218,7 @@ def apply_bundle(
                 loaded = load_text(target)
                 loaded_by_target[target] = loaded
                 text_by_target[target] = loaded.text_lf
-            changed, patched, reason = apply_operation(
-                text_by_target[target], op, bundle_dir
-            )
+            changed, patched, reason = apply_operation(text_by_target[target], op, bundle_dir)
             if changed:
                 changed_count += 1
                 touched.add(target)
@@ -271,14 +263,10 @@ def apply_bundle(
                             }
                         )
                         if not ok:
-                            errors.append(
-                                f"PowerShell parser failed for {rel(repo_root, target)}"
-                            )
+                            errors.append(f"PowerShell parser failed for {rel(repo_root, target)}")
             elif validator == "python_compile":
                 files = [
-                    rel(repo_root, path)
-                    for path in sorted(touched)
-                    if path.suffix.lower() == ".py"
+                    rel(repo_root, path) for path in sorted(touched) if path.suffix.lower() == ".py"
                 ]
                 ok, output = run_python_compile(repo_root, files)
                 validator_results.append(
@@ -336,12 +324,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--bundle", required=True)
-    parser.add_argument(
-        "--output", default="output/validation/patchkit_apply_report.json"
-    )
-    parser.add_argument(
-        "--markdown-output", default="output/validation/patchkit_apply_report.md"
-    )
+    parser.add_argument("--output", default="output/validation/patchkit_apply_report.json")
+    parser.add_argument("--markdown-output", default="output/validation/patchkit_apply_report.md")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 

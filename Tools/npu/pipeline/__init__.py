@@ -6,8 +6,8 @@ selected helpers in one group at a time.
 
 from .artifact_paths import (
     dual_ai_legacy_runtime_output_paths,
-    is_allowed_legacy_runtime_output_path,
     is_allowed_generated_artifact_path,
+    is_allowed_legacy_runtime_output_path,
     normalize_repo_relative_path,
     repo_relative_path,
     validate_generated_artifact_paths,

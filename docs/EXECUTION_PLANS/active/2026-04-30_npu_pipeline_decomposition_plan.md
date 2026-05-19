@@ -74,10 +74,10 @@ do not edit generated indexes
 Validation required locally before merge:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.workflow run_local_validation_after_refactor -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python -m Tools.npu build_project_ai_index
+python -m Tools.npu build_npu_code_context
 git status
 git diff --stat
 ```
@@ -110,10 +110,10 @@ Keeping the existing orchestrator untouched in this phase avoids partial runtime
 Validation required locally before merge:
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.workflow run_local_validation_after_refactor -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python -m Tools.npu build_project_ai_index
+python -m Tools.npu build_npu_code_context
 git status
 git diff --stat
 ```
@@ -158,14 +158,14 @@ It prepares multiple pure-helper improvements plus focused validators, then wait
 Validation required before merge:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_npu_pipeline_helper_validation.ps1
-python .\Tools\validation\check_npu_pipeline_modules.py --repo-root . --output .\output\validation\npu_pipeline_modules.json
-python .\Tools\validation\check_npu_pipeline_helper_tests.py --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
-python .\Tools\validation\check_npu_pipeline_docs.py --repo-root . --output .\output\validation\npu_pipeline_docs.json
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-powershell.exe -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_validation_after_refactor.ps1 -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
+python -m Tools.workflow run_npu_pipeline_helper_validation
+python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
+python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
+python -m Tools.validation check_npu_pipeline_docs --repo-root . --output .\output\validation\npu_pipeline_docs.json
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.workflow run_local_validation_after_refactor -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2
+python -m Tools.npu build_project_ai_index
+python -m Tools.npu build_npu_code_context
 git status
 git diff --stat
 ```
@@ -178,7 +178,7 @@ git diff --stat
 | `context_builder.py` | Build compact project/music/context inputs | Should reuse existing context builders where possible. |
 | `prompts.py` | Prompt templates and prompt assembly helpers | Keep prompts versioned and testable as strings. |
 | `providers.py` | Ollama/NPU/provider adapters | Keep provider-specific failures isolated. |
-| `validators.py` | Validate model outputs, required JSON keys and generated artifact destinations | Reuse `Tools/ai/model_json.py` and generated artifact path policy. |
+| `validators.py` | Validate model outputs, required JSON keys and generated artifact destinations | Reuse `Tools/ai/_shared/model_json.py` and generated artifact path policy. |
 | `artifact_writer.py` | Write generated JSON/Markdown/script artifacts | Keep writes inside allowed generated destinations. |
 | `runner.py` | Orchestrate the staged flow and preserve CLI behavior | Should remain thin after split. |
 | `io_utils.py` | UTF-8 text and JSON-object read/write helpers | Pure helpers; no provider, Blender or model loading. |
@@ -215,9 +215,9 @@ Do not wait for a large split to add a useful core helper. Add it when it reduce
 ## Validation required later
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\npu\build_project_ai_index.py
-python .\Tools\npu\build_npu_code_context.py
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.npu build_project_ai_index
+python -m Tools.npu build_npu_code_context
 ```
 
 If deterministic NPU pipeline dry-runs exist by then, add them to the local validation block.

@@ -9,7 +9,7 @@ The immediate goal is to reduce ambiguous GPU planner failures by classifying mo
 ## Added helper
 
 ```text
-Tools/ai/gpu_planner_json_contract.py
+Tools/ai/_shared/gpu_planner_json_contract.py
 ```
 
 The helper is report-only and does not run providers.
@@ -28,7 +28,7 @@ target_files, validation_commands and stop_conditions list types
 ## Added smoke
 
 ```text
-Tools/validation/run_gpu_planner_json_contract_smoke.py
+Tools/validation/provider_mesh/gpu_planner_json_contract_smoke/cli.py
 ```
 
 Smoke cases:
@@ -78,8 +78,8 @@ replace local duplicated GPU parse/classification code with gpu_planner_json_con
 Target files:
 
 ```text
-Tools/ai/run_agent_gpu_deep_planning_review.py
-Tools/ai/run_agent_gpu_deep_planning_supervised.py
+Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
 ```
 
 ## Guardrails

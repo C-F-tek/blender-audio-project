@@ -58,10 +58,10 @@ Secondary files to reference when needed:
 
 ```text
 Tools/validation/README.md
-Tools/ai/build_github_evidence_bundle.py
-Tools/ai/suggest_repository_updates.py
-Tools/ai/build_repository_change_proposals.py
-Tools/validation/check_repository_change_proposals.py
+Tools/ai/repository_product/github_evidence_bundle.py
+Tools/ai/repository_product/repository_update_suggestions/cli.py
+Tools/ai/repository_product/repository_change_proposals/cli.py
+Tools/validation/repository_product/repository_change_proposals/cli.py
 docs/LOCAL_VALIDATION_EVIDENCE/issue62_multistep_heavy_work_evidence.md
 docs/LOCAL_VALIDATION_EVIDENCE/issue62_multistep_provider_evidence.md
 ```
@@ -121,10 +121,10 @@ The local AI must mark every proposed change as manual-review only.
 Run through the project-owned local wrapper and adapter:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\consistency-local-ai-contracts-and-powershell.md `
   -TaskBranch codex/consistency-local-ai-contracts `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -Basename consistency_local_ai_contracts -ProposalBasename consistency_local_ai_contracts_proposals -EvidenceBasename consistency_local_ai_contracts_evidence -MultistepBasename consistency_local_ai_contracts_multistep -MultistepProposalBasename consistency_local_ai_contracts_multistep_proposals -MultistepEvidenceBasename consistency_local_ai_contracts_multistep_evidence'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -Basename consistency_local_ai_contracts -ProposalBasename consistency_local_ai_contracts_proposals -EvidenceBasename consistency_local_ai_contracts_evidence -MultistepBasename consistency_local_ai_contracts_multistep -MultistepProposalBasename consistency_local_ai_contracts_multistep_proposals -MultistepEvidenceBasename consistency_local_ai_contracts_multistep_evidence'
 ```
 
 ## Optional report-only first pass
@@ -132,10 +132,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
 For a lighter first pass without provider execution:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_markdown_task.ps1 `
+python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\consistency-local-ai-contracts-and-powershell.md `
   -TaskBranch codex/consistency-local-ai-contracts `
-  -RunnerCommand 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile docs -Basename consistency_local_ai_contracts_report_only -ProposalBasename consistency_local_ai_contracts_report_only_proposals'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile docs -Basename consistency_local_ai_contracts_report_only -ProposalBasename consistency_local_ai_contracts_report_only_proposals'
 ```
 
 ## Required validation after run
@@ -143,16 +143,16 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tools\workflow\run_loc
 Run:
 
 ```powershell
-python .\Tools\validation\check_repository_change_proposals.py `
+python -m Tools.validation check_repository_change_proposals `
   --repo-root . `
   --proposal .\output\local_ai_runs\<actual-run-dir>\pipeline\consistency_local_ai_contracts_proposals.json `
   --output .\output\validation\consistency_local_ai_contracts_proposals_contract.json
 
-python .\Tools\validation\check_github_evidence_bundle.py `
+python -m Tools.validation check_github_evidence_bundle `
   --repo-root . `
   --output .\output\validation\github_evidence_bundle.json
 
-python .\Tools\validation\check_validation_report_contract.py `
+python -m Tools.validation check_validation_report_contract `
   --repo-root . `
   --output .\output\validation\validation_report_contract.json
 

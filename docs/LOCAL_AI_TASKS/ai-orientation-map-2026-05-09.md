@@ -77,24 +77,24 @@ Do not reduce heap/exchange to a static chain. The run must provide context, evi
 | Responsibility | Code owner |
 |---|---|
 | Unified local AI run | `Tools/workflow/run_unified_local_ai_refactor.ps1` |
-| Heap/exchange runtime entry | `Tools/ai/build_heap_exchange_runtime_entry.py` |
-| Heap/exchange runtime exit | `Tools/ai/build_heap_exchange_runtime_exit.py` |
-| Heap/exchange lifecycle validation | `Tools/validation/check_heap_exchange_runtime_lifecycle.py` |
-| Heap/exchange smoke | `Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py` |
+| Heap/exchange runtime entry | `python -m Tools.ai heap_exchange_runtime_entry` |
+| Heap/exchange runtime exit | `python -m Tools.ai heap_exchange_runtime_exit` |
+| Heap/exchange lifecycle validation | `Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py` |
+| Heap/exchange smoke | `Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py` |
 | Reusable patch bundle apply | `Tools/ai/patchkit/apply_patch_bundle.py` |
 | Patchkit filesystem/encoding/newlines | `Tools/ai/patchkit/filesystem.py` |
 | Patchkit anchors/text ops | `Tools/ai/patchkit/anchors.py` |
 | Patchkit PowerShell helpers | `Tools/ai/patchkit/powershell.py` |
 | Patchkit reports | `Tools/ai/patchkit/reports.py` |
 | Patchkit smoke | `Tools/validation/run_patchkit_smoke.py` |
-| Review PR preparation | `Tools/ai/prepare_review_pr.py` |
-| Context pack | `Tools/ai/build_ai_context_pack.py` |
-| Agent state packet | `Tools/ai/build_agent_state_packet.py` |
+| Review PR preparation | `Tools/ai/agent_review/review_pr_cli.py` |
+| Context pack | `Tools/ai/agent_context/ai_context_pack/cli.py` |
+| Agent state packet | `Tools/ai/agent_context/state_packet/cli.py` |
 | Script/tool inventory | `Tools/validation/build_script_inventory.py` |
-| Markdown inventory | `Tools/validation/build_markdown_inventory.py` |
+| Markdown inventory | `Tools/validation/docs_hygiene/markdown_inventory/cli.py` |
 | JSON/report contracts | `Tools/validation/check_validation_report_contracts.py` |
-| Patch suggestion product | `Tools/ai/build_task_patch_suggestion_report.py` |
-| Legacy patch suggestion apply | `Tools/ai/apply_patch_suggestion_bundle.py` |
+| Patch suggestion product | `Tools/ai/patch_product/task_patch_suggestion_report.py` |
+| Legacy patch suggestion apply | `Tools/ai/patch_product/patch_suggestion_bundle/cli.py` |
 
 Before creating a new script, check this table and the target package README.
 
@@ -125,12 +125,12 @@ Do not create a new one-off patcher if patchkit operations can express the chang
 ## Patchkit command pattern
 
 ```powershell
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -188,12 +188,12 @@ Heap/exchange lifecycle:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\build_heap_exchange_runtime_entry.py `
-  .\Tools\ai\build_heap_exchange_runtime_exit.py `
-  .\Tools\validation\check_heap_exchange_runtime_lifecycle.py `
-  .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py
+  python -m Tools.ai heap_exchange_runtime_entry `
+  python -m Tools.ai heap_exchange_runtime_exit `
+  .\Tools\validation\heap_exchange\runtime_lifecycle_check\cli.py `
+  .\Tools\validation\heap_exchange\runtime_lifecycle_smoke\cli.py
 
-python .\Tools\validation\run_heap_exchange_runtime_lifecycle_smoke.py `
+python -m Tools.validation run_heap_exchange_runtime_lifecycle_smoke `
   --repo-root .
 ```
 
@@ -208,7 +208,7 @@ python -m py_compile `
   .\Tools\ai\patchkit\apply_patch_bundle.py `
   .\Tools\validation\run_patchkit_smoke.py
 
-python .\Tools\validation\run_patchkit_smoke.py `
+python -m Tools.validation run_patchkit_smoke `
   --repo-root .
 
 git diff --check
@@ -217,8 +217,8 @@ git diff --check
 Docs-only:
 
 ```powershell
-python .\Tools\validation\check_docs_links.py --repo-root . --output output/validation/docs_links.json
-python .\Tools\validation\check_file_line_limits.py --repo-root . --output output/validation/file_line_limits.json
+python -m Tools.validation check_docs_links --repo-root . --output output/validation/docs_links.json
+python -m Tools.validation check_file_line_limits --repo-root . --output output/validation/file_line_limits.json
 git diff --check
 ```
 

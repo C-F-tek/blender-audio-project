@@ -41,7 +41,7 @@ Conclusion:
 
 File:
 
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 
 Change:
 
@@ -103,7 +103,7 @@ Validation commands completed after Run 2:
 - `Tools/validation/test_proposal_gate.py` passed.
 - `Tools/validation/check_docs_links.py` passed with `file_count=758`,
   `failed_count=0`, `broken_link_count=0`.
-- `Tools/validation/build_markdown_inventory.py` passed with
+- `Tools/validation/docs_hygiene/markdown_inventory/cli.py` passed with
   `markdown_count=757`.
 - `Tools/validation/check_file_line_limits.py` passed in advisory mode with
   `checked_file_count=1351`, `violation_count=164`,
@@ -114,11 +114,11 @@ Validation commands completed after Run 2:
 
 Resulting line counts for touched code/script files:
 
-- `Tools/ai/compose_heap_final_proposals.py`: 1147 lines.
-- `Tools/ai/heap_proposal_gate.py`: 275 lines.
+- `Tools/ai/heap_final_proposals/cli.py`: 1147 lines.
+- `Tools/ai/_shared/heap_proposal_gate.py`: 275 lines.
 - `Tools/validation/test_proposal_gate.py`: 149 lines.
-- `Tools/ai/run_heap_runtime_context_closure.py`: 945 lines.
-- `Tools/ai/run_heap_runtime_completeness_gate.py`: 4914 lines.
+- `Tools/ai/heap_context_closure/cli.py`: 945 lines.
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`: 4914 lines.
 
 Line-count risk:
 
@@ -196,7 +196,7 @@ Matrix result:
 - concrete code proposal count: `8`;
 - all eight targets were marked `developed_change_present`;
 - validation commands included compile, `test_proposal_gate.py`,
-  `run_heap_code_execution_tool_smoke.py`, and `git diff --check`.
+  `python -m Tools.validation run_heap_code_execution_tool_smoke`, and `git diff --check`.
 
 Final provider proposal status remains:
 

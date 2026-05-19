@@ -9,7 +9,7 @@ Sorgente indice: [`README.md`](README.md)
 - [Parte successiva](part-002.md)
 
 ```powershell
-python .\Tools\validation\run_agent_review_patch_plan_smoke.py `
+python -m Tools.validation run_agent_review_patch_plan_smoke `
   --repo-root . `
   --orchestrator .\output\ai_pipeline\gpu_planner_nonempty_diagnostics_orchestrator.json `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `

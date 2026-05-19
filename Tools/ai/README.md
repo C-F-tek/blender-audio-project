@@ -62,10 +62,10 @@ Canonical docs and tools:
 
 ```text
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
-Tools/ai/build_heap_exchange_runtime_entry.py
-Tools/ai/build_heap_exchange_runtime_exit.py
-Tools/validation/check_heap_exchange_runtime_lifecycle.py
-Tools/validation/run_heap_exchange_runtime_lifecycle_smoke.py
+python -m Tools.ai heap_exchange_runtime_entry
+python -m Tools.ai heap_exchange_runtime_exit
+Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
+Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/ai/patchkit/apply_patch_bundle.py
 Tools/validation/run_patchkit_smoke.py
 ```
@@ -80,8 +80,8 @@ Do not create a new script when one of these already owns the responsibility.
 | GPU1/Ollama planner worker | `run_agent_gpu_deep_planning_supervised.py` |
 | GPU0 peer worker | `run_gpu0_peer_companion_worker.py` |
 | AI peer exchange packet | `build_ai_peer_exchange_packet.py` |
-| Heap/exchange runtime entry | `build_heap_exchange_runtime_entry.py` |
-| Heap/exchange runtime exit | `build_heap_exchange_runtime_exit.py` |
+| Heap/exchange runtime entry | `python -m Tools.ai heap_exchange_runtime_entry` |
+| Heap/exchange runtime exit | `python -m Tools.ai heap_exchange_runtime_exit` |
 | Runtime tool execution | `agent_runtime_tool_broker.py` |
 | Runtime tool telemetry | `build_runtime_tool_usage_telemetry.py` |
 | Full toolbox telemetry summary | `build_full_toolbox_run_telemetry_summary.py` |
@@ -90,9 +90,9 @@ Do not create a new script when one of these already owns the responsibility.
 | Task patch suggestion report | `build_task_patch_suggestion_report.py` |
 | Deterministic patchkit application | `patchkit/apply_patch_bundle.py` |
 | Patch suggestion dry-run/apply | `apply_patch_suggestion_bundle.py` and `patch_suggestion_bundle/cli.py` |
-| Review PR preparation | `prepare_review_pr.py` |
+| Review PR preparation | `agent_review_prepare_pr.py` |
 | Context pack | `build_ai_context_pack.py` |
-| Agent state packet | `build_agent_state_packet.py` |
+| Agent state packet | `python -m Tools.ai build_agent_state_packet` |
 | Semantic chunk selection | `select_semantic_code_chunks.py` |
 
 Full owner map:
@@ -105,7 +105,7 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 
 | Area | Role |
 |---|---|
-| `pipeline/` | Modular AI artifact pipeline implementation behind `run_parallel_artifact_pipeline.py`. |
+| `pipeline/` | Modular AI artifact pipeline, runner CLI and dry-run matrix implementation behind `python -m Tools.ai run_parallel_artifact_pipeline` and `python -m Tools.ai pipeline_dry_run_matrix`. |
 | `patchkit/` | Reusable controlled patch-bundle runner, filesystem/anchor/PowerShell/report helpers and deterministic validators. |
 | `patch_suggestion_bundle/` | Deterministic patch suggestion discovery, classification and apply implementation. |
 | `patch_notes_quality_product/` | Manual-review patch-note product/ledger support. |
@@ -117,14 +117,14 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | Tool family | Examples | Notes |
 |---|---|---|
 | Context and chunks | `build_ai_context_pack.py`, `select_semantic_code_chunks.py` | Provider-free context evidence. |
-| Agent state and memory | `build_agent_state_packet.py`, `review_agent_memory.py`, `agent_runtime_sqlite_memory.py` | SQLite outputs are local/private and must not be committed. |
+| Agent state and memory | `python -m Tools.ai build_agent_state_packet`, `review_agent_memory.py`, `python -m Tools.ai agent_runtime_sqlite_memory` | SQLite outputs are local/private and must not be committed. |
 | AI peer exchange | `build_ai_peer_exchange_packet.py`, `run_gpu0_peer_companion_worker.py`, `run_npu_gpu_deep_review_auditor.py` | GPU1 output to GPU0/NPU peer response and broker evidence. |
-| Heap/exchange lifecycle | `build_heap_exchange_runtime_entry.py`, `build_heap_exchange_runtime_exit.py` | Dynamic center boundary: entry state, lane availability, public exchange events and deterministic exit product. |
+| Heap/exchange lifecycle | `python -m Tools.ai heap_exchange_runtime_entry`, `python -m Tools.ai heap_exchange_runtime_exit` | Dynamic center boundary: entry state, lane availability, public exchange events and deterministic exit product. |
 | Workload routing | `build_workload_quality_lane_routing.py` | Keeps unusable provider output out of advisory context. |
 | Deterministic recommendations | `build_deterministic_recommendations.py` | Supports degraded-provider recovery without hallucinated provider success. |
-| Patch planning/spec support | `build_agent_review_patch_plan.py`, `build_patch_specs_from_proposals.py`, `promote_patch_spec_draft.py` | Review-only unless explicit apply is authorized separately. |
+| Patch planning/spec support | `python -m Tools.ai agent_review_patch_plan`, `generated_patch_specs_from_proposals.py`, `generated_patch_specs_promote_draft.py` | Review-only unless explicit apply is authorized separately. |
 | Patchkit bundles | `patchkit/apply_patch_bundle.py`, `patchkit/*` | Preferred OOB application path for future core patch bundles. |
-| Patch suggestion product | `build_task_patch_suggestion_report.py`, `apply_patch_suggestion_bundle.py`, `prepare_review_pr.py` | Markdown/task suggestion product, deterministic apply, review PR preparation. |
+| Patch suggestion product | `build_task_patch_suggestion_report.py`, `apply_patch_suggestion_bundle.py`, `agent_review_prepare_pr.py` | Markdown/task suggestion product, deterministic apply, review PR preparation. |
 | Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Broker-measured tool calls and normalized status. |
 | Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
 | Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
@@ -145,12 +145,12 @@ patch_specs/<bundle>/fragments/*.py
 Apply it with:
 
 ```powershell
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python .\Tools\ai\patchkit\apply_patch_bundle.py `
+python -m Tools.ai apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -194,9 +194,9 @@ apply_patch_suggestion_bundle.py can dry-run or apply deterministic operations o
 patchkit/apply_patch_bundle.py is preferred for new reviewed core patch bundles.
 patch_suggestion_bundle/common.py owns the reusable operation model and report path normalization used by the final phase.
 patch_suggestion_bundle/product.py exposes product/supplemental totals separately from capped published review-item lists.
-prepare_review_pr.py requires explicit --include-path / launcher ReviewPrIncludePath.
-prepare_review_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
-prepare_review_pr.py does not create PRs as draft yet.
+agent_review_prepare_pr.py requires explicit --include-path / launcher ReviewPrIncludePath.
+agent_review_prepare_pr.py can auto-discover include paths from apply reports with `--auto-include-from-apply-report` plus `--apply-report`.
+agent_review_prepare_pr.py does not create PRs as draft yet.
 ```
 
 Use the final-phase runbook:
@@ -277,7 +277,7 @@ execute providers outside selected provider/full-run lanes
 run Blender, FFmpeg, audio playback or media generation
 convert patch notes directly into source writes without review
 bypass agent_runtime_tool_broker.py for provider-requested tools
-bypass prepare_review_pr.py for review PR staging/commit/push/create
+bypass agent_review_prepare_pr.py for review PR staging/commit/push/create
 bypass patchkit for long/delicate future patch bundles when patchkit operations can express the change
 ```
 
@@ -295,7 +295,7 @@ Existing oversized files -> technical debt to refactor progressively, not blind 
 Validator:
 
 ```text
-Tools/validation/check_file_line_limits.py
+python -m Tools.validation check_file_line_limits
 ```
 
 ## Related docs
@@ -322,7 +322,7 @@ The standalone heap incubation lane is owned from `Tools/ai/`, not from the work
 Primary standalone path:
 
 ```text
-Tools/ai/run_heap_runtime_context_closure.py
+Tools/ai/heap_context_closure/cli.py
 ```
 
 Tool surface map:
@@ -335,14 +335,17 @@ Relevant owners:
 
 | Surface | Owner |
 |---|---|
-| Strict startup launcher | `run_heap_runtime_context_closure.py` |
-| Context/memory preload | `prepare_heap_context_memory_reload.py` |
+| Canonical non-GUI run | `python -m Tools.ai run` |
+| GUI view | `python -m Tools.ai operator_product_gui` |
+| Strict startup launcher | internal `heap_context_closure` tool |
+| Context/memory preload | `python -m Tools.ai heap_context_memory_reload` |
 | Required docs initialization | `ensure_ai_context_required_files.py` |
 | Startup-to-heap reconciliation | `reconcile_heap_report_with_startup_reload.py` |
-| Heap universe / provider loop | `run_heap_runtime_completeness_gate.py` |
-| Final assembly | `compose_heap_final_proposals.py` |
-| SQLite operational memory | `agent_runtime_sqlite_memory.py` |
-| Tool catalog | `build_agent_agnostic_tool_inventory.py` |
+| Heap universe / provider loop | `python -m Tools.ai run_heap_runtime_completeness_gate` |
+| Final assembly | `python -m Tools.ai heap_final_proposals` |
+| SQLite operational memory | `python -m Tools.ai agent_runtime_sqlite_memory` |
+| Tool catalog | `python -m Tools.ai build_agent_agnostic_tool_inventory` |
 | Runtime broker | `agent_runtime_tool_broker.py` |
+| Operator product app | `run/`, `operator_product_view/`, `operator_product_core/` |
 
 Do not promote this lane into the full run until same-heap GPU1/GPU0/NPU participation, refinement artifacts and final package semantics are validator-backed.

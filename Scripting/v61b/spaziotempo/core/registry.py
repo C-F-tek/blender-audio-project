@@ -7,7 +7,6 @@ and decide where future features should live.
 
 from dataclasses import dataclass
 
-
 PROJECT_ROOT_COLLECTION = "ST_Project_Spaziotempo"
 STRUCTURE_VERSION = "2026-04-layered-v1"
 

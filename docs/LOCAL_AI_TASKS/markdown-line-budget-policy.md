@@ -42,7 +42,7 @@ These locations may contain generated evidence or runtime artifacts. They are no
 Dry-run:
 
 ```powershell
-python .\Tools\docs\split_large_markdown.py `
+python -m Tools.docs split_large_markdown `
   --repo-root . `
   --max-lines 500
 ```
@@ -50,7 +50,7 @@ python .\Tools\docs\split_large_markdown.py `
 Apply:
 
 ```powershell
-python .\Tools\docs\split_large_markdown.py `
+python -m Tools.docs split_large_markdown `
   --repo-root . `
   --max-lines 500 `
   --apply
@@ -59,7 +59,7 @@ python .\Tools\docs\split_large_markdown.py `
 Validation:
 
 ```powershell
-python .\Tools\validation\check_markdown_line_limits.py `
+python -m Tools.validation check_markdown_line_limits `
   --repo-root . `
   --max-lines 500
 ```

@@ -1,6 +1,6 @@
 # Patch specs
 
-Questa cartella contiene gli spec JSON usati da `Tools/repo_patch_runner/apply_repo_mods.py`.
+Questa cartella contiene gli spec JSON usati da `python -m Tools.repo_patch_runner apply_repo_mods`.
 
 ## Flusso automatico GitHub Actions
 
@@ -13,8 +13,8 @@ patch_specs/inbox/<nome_patch>.json
 2. La GitHub Action `.github/workflows/apply_repo_mods.yml` esegue:
 
 ```text
-python Tools/repo_patch_runner/apply_repo_mods.py --spec <spec> --dry-run
-python Tools/repo_patch_runner/apply_repo_mods.py --spec <spec> --write --no-backup --show-diff
+python -m Tools.repo_patch_runner apply_repo_mods --spec <spec> --dry-run
+python -m Tools.repo_patch_runner apply_repo_mods --spec <spec> --write --no-backup --show-diff
 ```
 
 3. Se la patch riesce:

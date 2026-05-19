@@ -77,9 +77,9 @@ can be handled after current PR stack is stable, or as a separate small docs-onl
 Suggested local validation from issue:
 
 ```powershell
-python .\Tools\validation\check_execution_plan_status.py --repo-root . --output .\output\validation\execution_plan_status.json
-python .\Tools\validation\check_docs_links.py --repo-root . --output .\output\validation\docs_links.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation check_execution_plan_status --repo-root . --output .\output\validation\execution_plan_status.json
+python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 git diff --check
 ```
 

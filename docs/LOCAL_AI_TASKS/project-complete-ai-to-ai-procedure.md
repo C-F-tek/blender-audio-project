@@ -58,7 +58,7 @@ The local AI run must use the Markdown request as the task input. Do not rely on
 ## 2. Run NPU/provider preflight
 
 ```powershell
-python .\Tools\ai\check_npu_provider_environment.py `
+python -m Tools.ai check_npu_provider_environment `
   --repo-root . `
   --output ".\output\validation\npu_provider_environment_project_complete_$Stamp.json" `
   --markdown-output ".\output\validation\npu_provider_environment_project_complete_$Stamp.md"
@@ -71,11 +71,11 @@ Get-Content ".\output\validation\npu_provider_environment_project_complete_$Stam
 ## 3. Run project-only static gates
 
 ```powershell
-python -m Tools.validation.check_python_syntax `
+python -m Tools.validation.docs_hygiene.check_python_syntax `
   --repo-root . `
   --output ".\output\validation\python_syntax_project_complete_$Stamp.json"
 
-python -m Tools.ai.build_code_interpreter_report `
+python -m Tools.ai build_code_interpreter_report `
   --repo-root . `
   --input Tools/ai `
   --input Tools/validation `
@@ -99,7 +99,7 @@ renders/**
 ## 4. Run the official GPU/NPU AI-to-AI orchestrator
 
 ```powershell
-python .\Tools\ai\run_agent_gpu_npu_parallel_orchestrator.py `
+python -m Tools.ai run_agent_gpu_npu_parallel_orchestrator `
   --repo-root . `
   --budget-minutes 30 `
   --max-rounds 24 `
@@ -162,10 +162,10 @@ $ContextFiles = @(
   ".\docs\LOCAL_AI_TASKS\project-complete-ai-to-ai-review-request.md",
   ".\docs\LOCAL_AI_TASKS\gpu-npu-parallel-evidence-runbook.md",
   ".\docs\LOCAL_AI_TASKS\improve-gpu-planner-nonempty-recommendations.md",
-  ".\Tools\ai\run_agent_gpu_npu_parallel_orchestrator.py",
-  ".\Tools\ai\run_agent_gpu_deep_planning_review.py",
-  ".\Tools\ai\run_agent_gpu_deep_planning_supervised.py",
-  ".\Tools\ai\build_agent_review_patch_plan.py",
+  ".\Tools\ai\provider_mesh\gpu_npu_parallel_orchestrator\cli.py",
+  ".\Tools\ai\provider_mesh\gpu_deep_planning_review\cli.py",
+  ".\Tools\ai\provider_mesh\gpu_deep_planning_supervised\cli.py",
+  ".\Tools\ai\agent_review\patch_plan\cli.py",
   ".\output\analysis\code_interpreter_project_complete_$Stamp.md"
 )
 
@@ -188,14 +188,14 @@ $params = @{
 ## 7. Run fallback manual-review patch-plan and smoke validation
 
 ```powershell
-python .\Tools\ai\build_agent_review_patch_plan.py `
+python -m Tools.ai agent_review_patch_plan `
   --repo-root . `
   --orchestrator ".\output\ai_pipeline\project_complete_${Stamp}_orchestrator.json" `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `
   --output ".\output\patch_specs\agent_review_patch_plan_project_complete_$Stamp.json" `
   --markdown-output ".\output\patch_specs\agent_review_patch_plan_project_complete_$Stamp.md"
 
-python .\Tools\validation\run_agent_review_patch_plan_smoke.py `
+python -m Tools.validation run_agent_review_patch_plan_smoke `
   --repo-root . `
   --orchestrator ".\output\ai_pipeline\project_complete_${Stamp}_orchestrator.json" `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `
@@ -222,7 +222,7 @@ $Reports = @(
 "REPORTS:"
 $Reports
 
-python -m Tools.ai.build_github_evidence_bundle `
+python -m Tools.ai.repository_product.github_evidence_bundle `
   --repo-root . `
   --basename project_complete_ai_to_ai_bundle_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
@@ -244,7 +244,7 @@ The bundle must include `project-complete-ai-to-ai-review-request.md`, so the ta
 ## 9. Validate the compact bundle
 
 ```powershell
-python -m Tools.validation.check_github_evidence_bundle `
+python -m Tools.validation check_github_evidence_bundle `
   --repo-root . `
   --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\project_complete_ai_to_ai_bundle_$Stamp.json" `
   --output ".\output\validation\project_complete_ai_to_ai_bundle_${Stamp}_validation.json"

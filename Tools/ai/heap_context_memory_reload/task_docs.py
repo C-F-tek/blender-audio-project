@@ -1,0 +1,163 @@
+"""Task Markdown and operational-memory note builders."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from Tools.ai.heap_context_memory_reload.common import read_text
+
+
+def build_context_loaded_block(artifacts: dict[str, str]) -> list[str]:
+    key_labels = (
+        ("tool_catalog_json", "tool catalog"),
+        ("shared_memory_json", "memory inventory"),
+        ("operational_memory_status_json", "operational memory status"),
+        ("operational_memory_search_json", "operational memory search"),
+        ("shared_context_json", "transient request context"),
+        ("ai_context_pack_json", "AI context pack"),
+        ("semantic_code_chunks_json", "semantic chunks"),
+        ("semantic_evidence_chunks_json", "semantic evidence chunks"),
+        ("repo_docs_map_json", "repo docs map"),
+    )
+    lines = ["CONTEXT LOADED INTO HEAP:"]
+    for key, label in key_labels:
+        value = artifacts.get(key, "")
+        lines.append(f"- {label}: `{value or 'not_available'}`")
+    return lines
+
+
+def build_task_markdown(
+    *,
+    repo_root: Path,
+    request: str,
+    stamp: str,
+    context_files: list[str],
+    artifacts: dict[str, str],
+    commands: list[dict[str, Any]],
+    warnings: list[str],
+    startup_reload_degraded: bool,
+    degraded_requirements: list[str],
+    blocking_requirements: list[str],
+) -> str:
+    lines: list[str] = [
+        "# Heap Startup Input-Ready Context",
+        "",
+        f"- Stamp: `{stamp}`",
+        "- Source: `prepare_heap_context_memory_reload.py`",
+        "- Mode: `tool_owned_pre_provider_reload`",
+        f"- Startup reload degraded: `{startup_reload_degraded}`",
+        f"- Degraded requirements: `{degraded_requirements}`",
+        f"- Blocking requirements: `{blocking_requirements}`",
+        "- Provider execution performed: `False`",
+        "- Patch application performed: `False`",
+        "- Source writes performed: `False`",
+        "",
+        "## Operator request",
+        "",
+        request.strip() or "(empty)",
+        "",
+        "## Reload contract for heap providers",
+        "",
+        "- Before GPU1 planning, consume this task file as startup heap context.",
+        "- Treat listed artifacts as the current source of knowledge for repo, docs, tool catalog and memory inventory.",
+        "- If startup_reload_degraded is true, continue but carry the degradation as a fact in the heap.",
+        "- Do not answer from a single token window: write proposal chunks and let the final composer assemble them.",
+        "- GPU0 must refine or reject generic/stub chunks using source anchors and quality diagnosis.",
+        "- NPU must contribute bounded audit/workload evidence when enabled.",
+        "- Advisory context-pack failures do not block heap startup when useful artifacts exist.",
+        "",
+        "## Context loaded into heap",
+        "",
+        *build_context_loaded_block(artifacts),
+        "",
+        "## Startup artifacts",
+        "",
+    ]
+    lines.extend(f"- `{name}`: `{value}`" for name, value in artifacts.items() if value)
+    lines.extend(["", "## Startup tool executions", ""])
+    for item in commands:
+        lines.append(
+            "- "
+            + f"name=`{item.get('name')}` "
+            + f"required=`{item.get('required')}` "
+            + f"passed=`{item.get('passed')}` "
+            + f"effective_passed=`{item.get('effective_passed')}` "
+            + f"degraded=`{item.get('degraded')}` "
+            + f"rc=`{item.get('returncode')}` "
+            + f"artifacts=`{item.get('useful_artifact_paths')}`"
+        )
+    if warnings:
+        lines.extend(["", "## Startup warnings", ""])
+        lines.extend(f"- {warning}" for warning in warnings)
+    lines.extend(["", "## Canonical context files loaded", ""])
+    lines.extend(f"- `{rel_path}`" for rel_path in context_files)
+    lines.extend(["", "## Context previews", ""])
+    for rel_path in context_files:
+        text = read_text(repo_root / rel_path, max_chars=2500)
+        if text:
+            lines.extend([f"### `{rel_path}`", "", "```text", text, "```", ""])
+    return "\n".join(lines)
+
+
+def append_artifact_ref(refs: list[str], value: Any) -> None:
+    if not isinstance(value, str) or not value.strip():
+        return
+    normalized = value.replace("\\", "/")
+    if normalized not in refs:
+        refs.append(normalized)
+
+
+def collect_startup_artifact_refs(
+    artifacts: dict[str, str], commands: list[dict[str, Any]]
+) -> list[str]:
+    refs: list[str] = []
+    for value in artifacts.values():
+        append_artifact_ref(refs, value)
+    for execution in commands:
+        if not isinstance(execution, dict):
+            continue
+        for key in ("useful_artifact_paths", "existing_artifact_paths", "artifact_paths"):
+            for value in execution.get(key) or []:
+                append_artifact_ref(refs, value)
+        for summary in execution.get("artifact_summaries") or []:
+            if isinstance(summary, dict):
+                append_artifact_ref(refs, summary.get("path"))
+        for artifact in execution.get("artifacts") or []:
+            append_artifact_ref(refs, artifact.get("path") if isinstance(artifact, dict) else artifact)
+    return refs
+
+
+def build_operational_memory_write_content(
+    *,
+    stamp: str,
+    request: str,
+    startup_reload_degraded: bool,
+    degraded_requirements: list[str],
+    blocking_requirements: list[str],
+    artifacts: dict[str, str],
+    commands: list[dict[str, Any]],
+) -> str:
+    payload = {
+        "schema_version": 1,
+        "kind": "heap_startup_operational_memory_note",
+        "stamp": stamp,
+        "request_preview": request[:1200],
+        "startup_reload_degraded": startup_reload_degraded,
+        "degraded_requirements": degraded_requirements,
+        "blocking_requirements": blocking_requirements,
+        "artifact_refs": collect_startup_artifact_refs(artifacts, commands)[:80],
+        "tool_execution_summary": [
+            {
+                "name": item.get("name"),
+                "requirement": item.get("requirement"),
+                "passed": item.get("passed"),
+                "effective_passed": item.get("effective_passed"),
+                "degraded": item.get("degraded"),
+                "useful_artifact_paths": item.get("useful_artifact_paths", []),
+            }
+            for item in commands
+        ],
+    }
+    return json.dumps(payload, indent=2, ensure_ascii=False)

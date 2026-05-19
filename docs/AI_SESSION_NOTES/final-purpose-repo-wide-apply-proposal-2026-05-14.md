@@ -63,8 +63,8 @@ Reason:
 
 Working tree at the first decision point:
 
-- Modified: `Tools/ai/compose_heap_final_proposals.py`.
-- Untracked candidate: `Tools/ai/heap_proposal_gate.py`.
+- Modified: `Tools/ai/heap_final_proposals/cli.py`.
+- Untracked candidate: `Tools/ai/_shared/heap_proposal_gate.py`.
 - Untracked candidate: `Tools/validation/test_proposal_gate.py`.
 - Untracked note: `docs/AI_SESSION_NOTES/final-purpose-coding-modifications-2026-05-14.md`.
 - Untracked local toolbox: `.claude-tools/repo_toolbox.py`.
@@ -123,8 +123,8 @@ Status: already implemented in the current working tree, not committed.
 
 Files:
 
-- `Tools/ai/compose_heap_final_proposals.py`
-- `Tools/ai/heap_proposal_gate.py`
+- `Tools/ai/heap_final_proposals/cli.py`
+- `Tools/ai/_shared/heap_proposal_gate.py`
 - `Tools/validation/test_proposal_gate.py`
 
 Problem:
@@ -138,7 +138,7 @@ Problem:
 
 Concrete implementation:
 
-- Extracted deterministic proposal gating to `Tools/ai/heap_proposal_gate.py`.
+- Extracted deterministic proposal gating to `Tools/ai/_shared/heap_proposal_gate.py`.
 - Composer now loads raw proposal chunks, gates them, renders an
   `Operator decision` Markdown section, and writes `OPERATOR_DECISION.txt` into
   the Documents package.
@@ -159,15 +159,15 @@ Acceptance criteria:
 Validation already performed:
 
 ```powershell
-& $RepoPy -m py_compile .\Tools\ai\compose_heap_final_proposals.py .\Tools\ai\heap_proposal_gate.py .\Tools\validation\test_proposal_gate.py
-& $RepoPy .\Tools\validation\test_proposal_gate.py
+& $RepoPy -m py_compile .\Tools\ai\heap_final_proposals\cli.py -m Tools.ai heap_proposal_gate .\Tools\validation\test_proposal_gate.py
+& $RepoPy -m Tools.validation test_proposal_gate
 git diff --check
 ```
 
 Line counts:
 
-- `Tools/ai/compose_heap_final_proposals.py`: 1147 lines, still oversized.
-- `Tools/ai/heap_proposal_gate.py`: 275 lines.
+- `Tools/ai/heap_final_proposals/cli.py`: 1147 lines, still oversized.
+- `Tools/ai/_shared/heap_proposal_gate.py`: 275 lines.
 - `Tools/validation/test_proposal_gate.py`: 149 lines.
 
 Risk:
@@ -184,7 +184,7 @@ Status: proposed next, not yet applied.
 
 Target:
 
-- `Tools/ai/run_heap_runtime_context_closure.py`
+- `Tools/ai/heap_context_closure/cli.py`
 
 Problem:
 
@@ -235,7 +235,7 @@ Status: proposed, apply after A and B.
 
 Targets:
 
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 - Existing or new focused smoke under `Tools/validation/`.
 
 Problem:
@@ -268,9 +268,9 @@ Status: backlog, not first patch.
 
 High-risk oversized owners:
 
-- `Tools/ai/run_heap_runtime_completeness_gate.py`: 4785 lines.
-- `Tools/ai/compose_heap_final_proposals.py`: 1147 lines after Package A.
-- `Tools/ai/run_heap_runtime_context_closure.py`: 908 lines.
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`: 4785 lines.
+- `Tools/ai/heap_final_proposals/cli.py`: 1147 lines after Package A.
+- `Tools/ai/heap_context_closure/cli.py`: 908 lines.
 - Multiple `Tools/ai/*`, `Tools/workflow/*`, and `Tools/validation/*` files
   remain over the 400-line script policy.
 
@@ -283,7 +283,7 @@ Concrete composer split:
 Concrete runtime split:
 
 - Split prompt construction, provider revision state, peer evidence absorption,
-  and final report writing out of `run_heap_runtime_completeness_gate.py`.
+  and final report writing out of `python -m Tools.ai run_heap_runtime_completeness_gate`.
 - Keep behavior stable and validate after each small extraction.
 
 Acceptance:
@@ -357,16 +357,16 @@ Validation matrix for Packages A and B:
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
-& $RepoPy -m py_compile .\Tools\ai\compose_heap_final_proposals.py .\Tools\ai\heap_proposal_gate.py .\Tools\validation\test_proposal_gate.py .\Tools\ai\run_heap_runtime_context_closure.py
-& $RepoPy .\Tools\validation\test_proposal_gate.py
-& $RepoPy .\Tools\validation\check_docs_links.py --repo-root . --output output/validation/docs_links_after_final_purpose_apply.json
+& $RepoPy -m py_compile .\Tools\ai\heap_final_proposals\cli.py -m Tools.ai heap_proposal_gate .\Tools\validation\test_proposal_gate.py -m Tools.ai run_heap_runtime_context_closure
+& $RepoPy -m Tools.validation test_proposal_gate
+& $RepoPy -m Tools.validation check_docs_links --repo-root . --output output/validation/docs_links_after_final_purpose_apply.json
 git diff --check
 ```
 
 Optional provider smoke after Package C:
 
 ```powershell
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py --repo-root . --python-exe $RepoPy --request-file .\docs\AI_SESSION_NOTES\final-purpose-repo-wide-apply-proposal-2026-05-14.md --budget-minutes 3 --max-iterations 1 --max-provider-revisions 1 --no-documents --timeout-seconds 180
+& $RepoPy -m Tools.ai run_heap_runtime_context_closure --repo-root . --python-exe $RepoPy --request-file .\docs\AI_SESSION_NOTES\final-purpose-repo-wide-apply-proposal-2026-05-14.md --budget-minutes 3 --max-iterations 1 --max-provider-revisions 1 --no-documents --timeout-seconds 180
 ```
 
 ## Non-Goals For The First Apply

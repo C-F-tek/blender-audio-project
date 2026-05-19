@@ -72,7 +72,7 @@ Reason the heap product was not accepted as the final coding answer:
 
 ### 1. Composer Operator Gate
 
-Target: `Tools/ai/compose_heap_final_proposals.py`.
+Target: `Tools/ai/heap_final_proposals/cli.py`.
 
 Problem found:
 
@@ -87,7 +87,7 @@ Problem found:
 
 Concrete change:
 
-- Composer now imports proposal gate helpers from `Tools/ai/heap_proposal_gate.py`.
+- Composer now imports proposal gate helpers from `Tools/ai/_shared/heap_proposal_gate.py`.
 - Proposal loading preserves `response_file_reference_quality`.
 - Raw proposals are passed through deterministic operator gating.
 - The final JSON includes `operator_decision`.
@@ -103,7 +103,7 @@ Acceptance:
 
 Line count after change:
 
-- `Tools/ai/compose_heap_final_proposals.py`: 1147 lines.
+- `Tools/ai/heap_final_proposals/cli.py`: 1147 lines.
 
 Residual risk:
 
@@ -113,7 +113,7 @@ Residual risk:
 
 ### 2. Proposal Gate Helper
 
-Target: `Tools/ai/heap_proposal_gate.py`.
+Target: `Tools/ai/_shared/heap_proposal_gate.py`.
 
 Concrete change:
 
@@ -136,7 +136,7 @@ Acceptance:
 
 Line count:
 
-- `Tools/ai/heap_proposal_gate.py`: 275 lines.
+- `Tools/ai/_shared/heap_proposal_gate.py`: 275 lines.
 
 ### 3. Proposal Gate Smoke
 
@@ -152,7 +152,7 @@ Concrete change:
 
 Acceptance:
 
-- `python Tools/validation/test_proposal_gate.py` passes.
+- `python -m Tools.validation test_proposal_gate` passes.
 
 Line count:
 
@@ -167,8 +167,8 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
 & $RepoPy -c "import sys; print(sys.executable); import numpy, openvino; from openvino import Core; c=Core(); print(c.available_devices)"
-& $RepoPy -m py_compile .\Tools\ai\compose_heap_final_proposals.py .\Tools\ai\heap_proposal_gate.py .\Tools\validation\test_proposal_gate.py
-& $RepoPy .\Tools\validation\test_proposal_gate.py
+& $RepoPy -m py_compile .\Tools\ai\heap_final_proposals\cli.py -m Tools.ai heap_proposal_gate .\Tools\validation\test_proposal_gate.py
+& $RepoPy -m Tools.validation test_proposal_gate
 git diff --check
 ```
 
@@ -187,8 +187,8 @@ Observed:
 
 Commit scope when ready:
 
-- `Tools/ai/compose_heap_final_proposals.py`
-- `Tools/ai/heap_proposal_gate.py`
+- `Tools/ai/heap_final_proposals/cli.py`
+- `Tools/ai/_shared/heap_proposal_gate.py`
 - `Tools/validation/test_proposal_gate.py`
 - this note, if the final-purpose artifact should be tracked.
 
@@ -204,7 +204,7 @@ Do not include:
 
 Target:
 
-- `Tools/ai/run_heap_runtime_context_closure.py`
+- `Tools/ai/heap_context_closure/cli.py`
 
 Reason:
 
@@ -221,15 +221,15 @@ Concrete change:
 Validation:
 
 ```powershell
-& $RepoPy -m py_compile .\Tools\ai\run_heap_runtime_context_closure.py
-& $RepoPy .\Tools\ai\run_heap_runtime_context_closure.py --repo-root . --python-exe $RepoPy --request-file .\path\to\request.md --skip-preflight --skip-startup-reload --no-documents --timeout-seconds 60
+& $RepoPy -m py_compile .\Tools\ai\heap_context_closure\cli.py
+& $RepoPy -m Tools.ai run_heap_runtime_context_closure --repo-root . --python-exe $RepoPy --request-file .\path\to\request.md --skip-preflight --skip-startup-reload --no-documents --timeout-seconds 60
 ```
 
 ### P1 - Stop GPU1 from recycling fake sample paths
 
 Target:
 
-- `Tools/ai/run_heap_runtime_completeness_gate.py`
+- `Tools/ai/heap_runtime/completeness_gate/cli.py`
 
 Observed failure:
 
@@ -242,8 +242,8 @@ Concrete change:
 
 - In `gpu1_provider_prompt()` or the revision feedback path, add a compact
   current-run target block containing only actual candidate paths:
-  `Tools/ai/compose_heap_final_proposals.py`,
-  `Tools/ai/heap_proposal_gate.py`,
+  `Tools/ai/heap_final_proposals/cli.py`,
+  `Tools/ai/_shared/heap_proposal_gate.py`,
   `Tools/validation/test_proposal_gate.py`.
 - If GPU1 emits any path containing `...`, angle-bracket placeholders, or
   `real_existing_file.py`, force the next provider prompt to require
@@ -255,8 +255,8 @@ Concrete change:
 Validation:
 
 ```powershell
-& $RepoPy -m py_compile .\Tools\ai\run_heap_runtime_completeness_gate.py
-& $RepoPy .\Tools\validation\run_heap_source_allowlist_contract_smoke.py --repo-root .
+& $RepoPy -m py_compile .\Tools\ai\heap_runtime\completeness_gate\cli.py
+& $RepoPy -m Tools.validation run_heap_source_allowlist_contract_smoke --repo-root .
 ```
 
 ### P2 - Decide the `.claude-tools` boundary
@@ -282,7 +282,7 @@ Concrete choices:
 
 Target:
 
-- `Tools/ai/compose_heap_final_proposals.py`
+- `Tools/ai/heap_final_proposals/cli.py`
 
 Reason:
 
@@ -298,8 +298,8 @@ Concrete next splits:
 Validation:
 
 ```powershell
-& $RepoPy -m py_compile .\Tools\ai\compose_heap_final_proposals.py .\Tools\ai\heap_final_package_writer.py .\Tools\ai\heap_final_report_collectors.py
-& $RepoPy .\Tools\validation\test_proposal_gate.py
+& $RepoPy -m py_compile .\Tools\ai\heap_final_proposals\cli.py -m Tools.ai heap_final_package_writer .\Tools\ai\heap_final_report_collectors.py
+& $RepoPy -m Tools.validation test_proposal_gate
 git diff --check
 ```
 

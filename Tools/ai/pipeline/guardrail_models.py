@@ -64,9 +64,7 @@ class GuardrailPlan:
     def from_queue(cls, raw_queue: Any) -> GuardrailPlan:
         items = raw_queue if isinstance(raw_queue, list) else []
         normalized = [GuardrailRequest.from_mapping(item) for item in items]
-        return cls(
-            tuple(item for item in normalized if item is not None and item.auto_safe)
-        )
+        return cls(tuple(item for item in normalized if item is not None and item.auto_safe))
 
     def signature(self) -> str:
         import json

@@ -21,7 +21,7 @@ python "$Dest02\run_patch_bundle.py" --apply-doc-split
 ## Validazione
 
 ```powershell
-python .\Tools\validation\check_markdown_line_limits.py --repo-root . --max-lines 400
+python -m Tools.validation check_markdown_line_limits --repo-root . --max-lines 400
 git diff --check
 git status --short
 ```

@@ -32,10 +32,10 @@ Current external heap adapters:
 - `Tools/ai/heap_runtime_launcher_profiles.json`
 - `Tools/ai/build_heap_runtime_launcher_command.py`
 - `Tools/ai/normalize_heap_final_causality.py`
-- `Tools/ai/build_external_heap_block_pointer_manifest.py`
+- `Tools/ai/external_heap/block_pointer_manifest.py`
 - `Tools/ai/compose_external_heap_block_response.py`
-- `Tools/ai/build_external_heap_revision_context.py`
-- `Tools/ai/run_external_heap_postrun_package.py`
+- `python -m Tools.ai build_external_heap_revision_context`
+- `Tools/ai/external_heap/postrun_package.py`
 
 The external layer models long AI work as persistent blocks rather than a single provider response window. Blocks may carry navigation and refinement pointers:
 
@@ -54,7 +54,7 @@ Runtime intent:
 
 The revision context feed is currently performed by `build_heap_runtime_launcher_command.py`: operational profiles use `revision_context_mode = auto_latest`, load the latest `external_heap_revision_context.json` when present, and inject a bounded task summary into the generated `--request`. This keeps the gate unchanged while allowing the next run to consume previous pointer tasks.
 
-The standard operator path is to generate the run command through `build_heap_runtime_launcher_command.py`, execute the generated `command`, then execute the generated `postrun_package_command`. The post-run package command calls `Tools/ai/run_external_heap_postrun_package.py` and runs the external sequence in order for the latest or selected `heap_context_closure_*` run:
+The standard operator path is to generate the run command through `build_heap_runtime_launcher_command.py`, execute the generated `command`, then execute the generated `postrun_package_command`. The post-run package command calls `Tools/ai/external_heap/postrun_package.py` and runs the external sequence in order for the latest or selected `heap_context_closure_*` run:
 
 1. causality normalization;
 2. block pointer manifest generation;

@@ -10,11 +10,11 @@ docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md
 docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
-Tools/ai/run_agent_gpu_deep_planning_review.py
-Tools/ai/run_agent_gpu_deep_planning_supervised.py
-Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py
-Tools/ai/build_agent_review_patch_plan.py
-Tools/validation/run_agent_review_patch_plan_smoke.py
+Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
+Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py
+Tools/ai/agent_review/patch_plan/cli.py
+Tools/validation/agent_review/patch_plan_smoke/cli.py
 ```
 
 ## Problem statement
@@ -75,11 +75,11 @@ Do not edit output/** or generated indexes as source.
 ## Candidate target files
 
 ```text
-Tools/ai/run_agent_gpu_deep_planning_review.py
-Tools/ai/run_agent_gpu_deep_planning_supervised.py
-Tools/ai/run_agent_gpu_npu_parallel_orchestrator.py
-Tools/validation/run_agent_review_patch_plan_smoke.py
-Tools/validation/run_agent_review_patch_plan_full_validation.py
+Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
+Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
+Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py
+Tools/validation/agent_review/patch_plan_smoke/cli.py
+Tools/validation/agent_review/patch_plan_full_validation/cli.py
 docs/JSON_SCHEMAS.md
 Tools/validation/README.md
 ```
@@ -105,9 +105,9 @@ stop conditions
 ## Validation commands after future implementation
 
 ```powershell
-python .\Tools\validation\check_python_syntax.py --repo-root . --output .\output\validation\python_syntax.json
-python .\Tools\validation\check_validation_report_contract.py --repo-root . --output .\output\validation\validation_report_contract.json
-python .\Tools\validation\run_agent_review_patch_plan_smoke.py --repo-root . --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json --min-patch-plans 12 --expect-fallback --output .\output\validation\agent_review_patch_plan_smoke.json --markdown-output .\output\validation\agent_review_patch_plan_smoke.md
+python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
+python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
+python -m Tools.validation run_agent_review_patch_plan_smoke --repo-root . --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json --min-patch-plans 12 --expect-fallback --output .\output\validation\agent_review_patch_plan_smoke.json --markdown-output .\output\validation\agent_review_patch_plan_smoke.md
 git diff --check
 git status --short
 ```
