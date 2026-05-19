@@ -37,10 +37,12 @@ CONTEXT_INDEX.md
 | Tools/ai external heap | `Tools/ai/external_heap/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai generated patch specs | `Tools/ai/generated_patch_specs/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai heap context memory reload | `Tools/ai/heap_context_memory_reload/TOOL_CONTEXT.md` | complete-enough |
+| Tools/ai heap exchange | `Tools/ai/heap_exchange/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai heap gate | `Tools/ai/heap_gate/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai heap runtime | `Tools/ai/heap_runtime/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai operator product core | `Tools/ai/operator_product_core/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai patch product | `Tools/ai/patch_product/TOOL_CONTEXT.md` | complete-enough |
+| Tools/ai pipeline | `Tools/ai/pipeline/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai provider mesh | `Tools/ai/provider_mesh/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai provider runtime blackboard | `Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai repository product | `Tools/ai/repository_product/TOOL_CONTEXT.md` | stub |
@@ -50,10 +52,13 @@ CONTEXT_INDEX.md
 | Tools/validation family index | `Tools/validation/CONTEXT_INDEX.md` | complete-enough |
 | Tools/validation agent context | `Tools/validation/agent_context/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation agent memory | `Tools/validation/agent_memory/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation agent review | `Tools/validation/agent_review/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation code product | `Tools/validation/code_product/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation deterministic recommendations | `Tools/validation/deterministic_recommendations/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation docs hygiene | `Tools/validation/docs_hygiene/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation generated artifacts | `Tools/validation/generated_artifacts/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation generated patch specs | `Tools/validation/generated_patch_specs/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation heap provider | `Tools/validation/heap_provider/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation heap runtime | `Tools/validation/heap_runtime/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation patch product | `Tools/validation/patch_product/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation pipeline | `Tools/validation/pipeline/TOOL_CONTEXT.md` | complete-enough |
