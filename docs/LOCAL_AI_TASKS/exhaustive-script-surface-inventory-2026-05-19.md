@@ -43,6 +43,31 @@ test* or */test*    -> test_or_fixture
 other               -> script
 ```
 
+## Inventory result from local run
+
+Local checkout result reported by operator:
+
+```text
+kind: script_inventory
+passed: True
+script_count: 1479
+syntax_warning_count: 0
+```
+
+Category counts:
+
+```text
+ai_tool: 652
+validator: 450
+workflow_runner: 148
+npu_or_provider_tool: 96
+blender_application_script: 78
+script: 50
+git_helper: 5
+```
+
+This confirms that area-level context files are not sufficient by themselves. The next pass must be driven by the generated JSON/CSV inventory.
+
 ## Why this is required
 
 Manual GitHub search and area-level documentation are not enough. They miss:
