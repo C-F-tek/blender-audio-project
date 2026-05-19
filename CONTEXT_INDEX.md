@@ -2,6 +2,12 @@
 
 This is the compact navigation entrypoint for AI and operator context.
 
+## Core model
+
+| File | Role |
+| --- | --- |
+| `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | Current compact model for controlled input, shared heap/exchange, cooperating lanes, evidence and deterministic exit product. |
+
 ## Coverage status
 
 | File | Role |
