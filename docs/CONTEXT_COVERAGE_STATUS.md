@@ -18,6 +18,7 @@ This file tracks whether context documentation is complete, partial or only a na
 CONTEXT_INDEX.md
 -> docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 -> docs/STANDALONE_HEAP_SURFACE_MODEL.md
+-> docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 -> docs/REAL_PRODUCT_RUN_MODEL.md
 -> docs/COMPACT_EVIDENCE_MODEL.md
 -> docs/CONTEXT_COVERAGE_STATUS.md
@@ -34,6 +35,7 @@ CONTEXT_INDEX.md
 | --- | --- | --- |
 | Heap/exchange useful model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | complete-enough |
 | Standalone heap surface model | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | complete-enough |
+| Provider lanes unified mind model | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | complete-enough |
 | Real product run model | `docs/REAL_PRODUCT_RUN_MODEL.md` | complete-enough |
 | Compact evidence model | `docs/COMPACT_EVIDENCE_MODEL.md` | complete-enough |
 
