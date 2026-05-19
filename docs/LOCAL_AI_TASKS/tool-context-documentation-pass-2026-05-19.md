@@ -8,7 +8,7 @@ No PR is currently open, so this pass is applied directly to `master` by operato
 
 ## Root contract
 
-`CHATGPT.md` has been restored at repository root as the canonical ChatGPT/GPT operating contract for IA-Carmine.
+`CHATGPT.md` is the canonical ChatGPT/GPT operating contract for IA-Carmine.
 
 `CHATGPT/README.md` remains advisory historical handoff material.
 
@@ -35,31 +35,6 @@ Tools/ai/runtime_tool/TOOL_CONTEXT.md
 Tools/ai/runtime_universe/TOOL_CONTEXT.md
 Tools/ai/code_product/TOOL_CONTEXT.md
 Tools/ai/patch_product/TOOL_CONTEXT.md
-```
-
-## Principles captured
-
-- Use dispatcher invocation: `python -m Tools.<area> <tool>`.
-- Prefer package-owned CLIs over scattered root scripts.
-- Context builders do not produce patch targets by themselves.
-- Provider output is evidence, not product.
-- Matrix/lab/diff evidence is the source of code product applicability.
-- Runtime artifacts and databases remain out of Git.
-- Root `CHATGPT.md` is the current operating contract.
-
-## First pass status
-
-```text
-[x] Root ChatGPT operating contract restored.
-[x] Top-level Tools context index created.
-[x] Top-level tool areas documented.
-[x] Core Tools/ai families documented.
-[x] Current task recorded in LOCAL_AI_TASKS.
-```
-
-## Next documentation targets
-
-```text
 Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md
 Tools/ai/external_heap/TOOL_CONTEXT.md
 Tools/ai/repository_product/TOOL_CONTEXT.md
@@ -71,6 +46,27 @@ Tools/validation/runtime_universe/TOOL_CONTEXT.md
 Tools/validation/provider_mesh/TOOL_CONTEXT.md
 Tools/workflow/workflow_run/TOOL_CONTEXT.md
 Tools/npu/provider_mesh/TOOL_CONTEXT.md
+```
+
+## Status
+
+```text
+[x] Root contract restored.
+[x] Top-level Tools areas documented.
+[x] Core Tools/ai families documented.
+[x] Second-level Tools/ai families documented.
+[x] Second-level Tools/validation families documented.
+[x] Workflow and NPU package contexts documented.
+```
+
+## Remaining candidates
+
+```text
+more granular package-level contexts under Tools/ai where useful
+more granular validation contexts where useful
+docs/PACKAGE_CREATION_WORKFLOW.md alignment check
+docs/PROJECT_AUDIT.md alignment check
+root-level standalone file audit if new root scripts appear
 ```
 
 ## Git hygiene
