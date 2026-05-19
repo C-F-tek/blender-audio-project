@@ -84,7 +84,10 @@ CONTEXT_INDEX.md
 | Tools/npu PowerShell wrappers | `Tools/npu/_powershell/TOOL_CONTEXT.md` | complete-enough |
 | Tools/npu dual AI pipeline | `Tools/npu/dual_ai_pipeline/TOOL_CONTEXT.md` | complete-enough |
 | Tools/npu provider mesh | `Tools/npu/provider_mesh/TOOL_CONTEXT.md` | complete-enough |
-| Tools/docs | `Tools/docs/TOOL_CONTEXT.md` | complete-enough |
+| Tools/docs overview | `Tools/docs/TOOL_CONTEXT.md` | complete-enough |
+| Tools/docs family index | `Tools/docs/CONTEXT_INDEX.md` | complete-enough |
+| Tools/docs docs hygiene | `Tools/docs/docs_hygiene/TOOL_CONTEXT.md` | complete-enough |
+| Tools/docs shared helpers | `Tools/docs/_shared/TOOL_CONTEXT.md` | stub-missing |
 | Tools/git | `Tools/git/TOOL_CONTEXT.md` | complete-enough |
 | Tools/repo_patch_runner | `Tools/repo_patch_runner/TOOL_CONTEXT.md` | complete-enough |
 
@@ -117,9 +120,10 @@ CONTEXT_INDEX.md
 ## Known gaps
 
 - `Tools/ai/repository_product/TOOL_CONTEXT.md` is a stub and should be expanded later from local editing if needed.
+- `Tools/docs/_shared/TOOL_CONTEXT.md` could not be created through the remote editor and remains a known stub-missing item.
 - Area overview files can remain partial because family indexes now provide direct navigation.
 - Do not claim all 1479 scripts are individually documented. Current strategy documents macro-families and links to dispatch/source files.
 
 ## Rule
 
-If a family is marked `stub` or `partial`, inspect the source files and dispatcher before making code changes.
+If a family is marked `stub`, `stub-missing`, or `partial`, inspect the source files and dispatcher before making code changes.
