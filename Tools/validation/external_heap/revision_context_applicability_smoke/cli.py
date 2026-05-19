@@ -20,6 +20,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+CORE_RUNTIME_GUARD = True
+
 try:
     from Tools.ai.external_heap.revision_context import build_report
 except ImportError:  # pragma: no cover
@@ -136,6 +138,106 @@ function Invoke-HeapEntry {
     return pointer, composer, causality
 
 
+def build_concrete_propagation_fixture() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    previous_preview = """# HEAP_DELTA_PROPOSAL
+
+TARGET_FILES:
+- Tools/ai/heap_gate/provider_context.py
+
+PATCH_SKETCH:
+```python
+def existing_context_anchor(value):
+    return value
+```
+"""
+    current_preview = """# HEAP_DELTA_PROPOSAL
+
+CURRENT_POINTER:
+- previous_block_id=proposal_previous
+- refines_block_id=proposal_previous
+- resume_from_block_id=proposal_current
+
+TARGET_FILES:
+- Tools/ai/heap_gate/provider_context.py
+
+PATCH_SKETCH:
+```python
+import json
+from pathlib import Path
+
+class RuntimeUniverseContract:
+    def describe(self):
+        return "heap-pointer-contract"
+
+def propagate_runtime_universe_contract(value):
+    return json.dumps({"value": value})
+
+runtime_universe_contract = RuntimeUniverseContract()
+```
+"""
+    pointer = {
+        "protocol": "external_heap_block_pointer_v1",
+        "pointer_product_contract": {
+            "product_contract": True,
+            "decision_recovery": True,
+            "supports_forward_navigation": True,
+            "supports_backrefinement": True,
+            "supports_resume": True,
+            "provider_execution_is_separate_guardrail": True,
+        },
+        "provider_execution_performed": True,
+        "block_count": 4,
+        "source_block_count": 4,
+        "roles_present": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
+        "all_roles_present": ["gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"],
+        "blocks": [
+            {
+                "block_type": "proposal_chunk",
+                "block_id": "proposal_previous",
+                "step_index": 0,
+                "role": "gpu1_planner",
+                "source_path": "output/validation/smoke/team_context/proposal_iterations/heap_proposal_revision_000.json",
+                "previous_block_id": "",
+                "next_block_id": "proposal_current",
+                "refines_block_id": "",
+                "resume_from_block_id": "proposal_previous",
+                "quality_passed": False,
+                "accepted": False,
+                "preview": previous_preview,
+                "candidate_response_preview": previous_preview,
+            },
+            {
+                "block_type": "proposal_chunk",
+                "block_id": "proposal_current",
+                "step_index": 1,
+                "role": "gpu1_planner",
+                "source_path": "output/validation/smoke/team_context/proposal_iterations/heap_proposal_revision_001.json",
+                "previous_block_id": "proposal_previous",
+                "next_block_id": "",
+                "refines_block_id": "proposal_previous",
+                "resume_from_block_id": "proposal_current",
+                "quality_passed": False,
+                "accepted": False,
+                "preview": current_preview,
+                "candidate_response_preview": current_preview,
+            },
+            {"block_type": "peer_review", "block_id": "gpu0_review_current", "step_index": 2, "role": "gpu0_reviewer_refiner"},
+            {"block_type": "peer_audit", "block_id": "npu_audit_current", "step_index": 3, "role": "npu_auditor"},
+        ],
+    }
+    composer = {
+        "product_status": "blocked_with_reason",
+        "rejected_proposals": [
+            {
+                "name": "heap_proposal_revision_001.json",
+                "reason": "needs symbol propagation before final rewrite",
+            }
+        ],
+    }
+    causality = {"causal_chain_passed": True, "product_acceptance_status": "blocked"}
+    return pointer, composer, causality
+
+
 def run_smoke() -> dict[str, Any]:
     pointer, composer, causality = build_fixture()
     report = build_report(pointer, composer, causality)
@@ -147,6 +249,23 @@ def run_smoke() -> dict[str, Any]:
     ]
     first_task = rewrite_tasks[0] if rewrite_tasks else {}
     flags = set(first_task.get("candidate_applicability_flags") or [])
+    concrete_pointer, concrete_composer, concrete_causality = build_concrete_propagation_fixture()
+    concrete_report = build_report(concrete_pointer, concrete_composer, concrete_causality)
+    propagation_tasks = [
+        task
+        for task in concrete_report.get("tasks", [])
+        if isinstance(task, dict) and task.get("task_type") == "backpropagate_symbol_contract"
+    ]
+    propagation = propagation_tasks[0] if propagation_tasks else {}
+    concrete_peer_tasks = [
+        task
+        for task in concrete_report.get("tasks", [])
+        if isinstance(task, dict)
+        and task.get("target_block_id") == "proposal_current"
+        and task.get("role") in {"gpu0_reviewer_refiner", "npu_auditor"}
+    ]
+    symbols = propagation.get("discovered_symbols") if isinstance(propagation, dict) else {}
+    symbols = symbols if isinstance(symbols, dict) else {}
 
     required_flags = {
         "bare_pass",
@@ -191,6 +310,29 @@ def run_smoke() -> dict[str, Any]:
             "name": "no_patch_application",
             "passed": report.get("patch_application_performed") is False,
         },
+        {
+            "name": "concrete_symbol_propagation_task",
+            "passed": bool(propagation)
+            and propagation.get("source_block_id") == "proposal_current"
+            and propagation.get("target_block_id") == "proposal_previous"
+            and propagation.get("resume_from_block_id") == "proposal_current",
+        },
+        {
+            "name": "concrete_symbols_extracted",
+            "passed": "import json" in (symbols.get("imports") or [])
+            and "RuntimeUniverseContract" in (symbols.get("classes") or [])
+            and "propagate_runtime_universe_contract" in (symbols.get("defs") or []),
+        },
+        {
+            "name": "gpu0_npu_parallel_tasks_for_current_block",
+            "passed": {task.get("role") for task in concrete_peer_tasks}
+            == {"gpu0_reviewer_refiner", "npu_auditor"},
+        },
+        {
+            "name": "concrete_revision_can_resume",
+            "passed": concrete_report.get("can_resume_universe") is True
+            and concrete_report.get("resume_from_block_id") == "proposal_current",
+        },
     ]
     passed = all(item["passed"] for item in checks)
     return {
@@ -203,6 +345,8 @@ def run_smoke() -> dict[str, Any]:
         "checks": checks,
         "candidate_applicability_summary": summary,
         "rewrite_task": first_task,
+        "concrete_propagation_task": propagation,
+        "concrete_revision_task_count": concrete_report.get("parallel_task_count"),
         "errors": [] if passed else [item["name"] for item in checks if not item["passed"]],
         "warnings": [],
     }
@@ -214,6 +358,7 @@ def main() -> int:
         "--output",
         default="output/validation/external_heap_revision_context_applicability_smoke.json",
     )
+    parser.add_argument("--repo-root", default=".")
     args = parser.parse_args()
 
     report = run_smoke()

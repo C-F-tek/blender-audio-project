@@ -2,5 +2,6 @@
 
 from .cli import main
 from .builder import build_pack
+from .profiles import PROFILES
 
-__all__ = ["build_pack", "main"]
+__all__ = ["PROFILES", "build_pack", "main"]

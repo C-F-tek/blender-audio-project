@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from .common import *  # noqa: F403
+from argparse import Namespace
+
+from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
+from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
 
 def run_runtime_tool_broker_for_round(
     *,
@@ -45,7 +49,6 @@ def run_runtime_tool_broker_for_round(
     output_root = resolve_path(repo_root, args.runtime_tool_output_dir)
     round_dir = output_root / f"round_{round_index:03d}"
     round_dir.mkdir(parents=True, exist_ok=True)
-    request_file = round_dir / f"round_{round_index:03d}_tool_requests.json"
     broker_output = round_dir / f"round_{round_index:03d}_runtime_tool_broker.json"
     broker_markdown = round_dir / f"round_{round_index:03d}_runtime_tool_broker.md"
     request_packet = {
@@ -62,37 +65,42 @@ def run_runtime_tool_broker_for_round(
             "manual_review_required": True,
         },
     }
-    write_json(request_file, request_packet)
-    command = [
-        sys.executable,
-        "-m",
-        "Tools.ai",
-        "agent_runtime_tool_broker",
-        "--repo-root",
-        ".",
-        "--request-file",
-        str(request_file),
-        "--tool-output-dir",
-        str(round_dir),
-        "--timeout-seconds",
-        str(args.runtime_tool_timeout_seconds),
-        "--output",
-        str(broker_output),
-        "--markdown-output",
-        str(broker_markdown),
-    ]
-    returncode, stdout, stderr, error = run_command(
-        command, repo_root, args.runtime_tool_timeout_seconds + 30
-    )
+    command = ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"]
     broker_report: dict[str, Any] = {}
+    stdout = ""
+    stderr = ""
+    error = ""
+    returncode = 0
+    try:
+        broker_args = Namespace(
+            repo_root=str(repo_root),
+            request_data=request_packet,
+            request_file="",
+            request_json="",
+            tool_output_dir=str(round_dir),
+            stamp=f"round_{round_index:03d}",
+            timeout_seconds=args.runtime_tool_timeout_seconds,
+            dry_run=False,
+        )
+        broker_report = build_broker_report(broker_args)
+        write_json(broker_output, broker_report)
+        broker_markdown.write_text(render_broker_markdown(broker_report), encoding="utf-8")
+        returncode = 0 if broker_report.get("passed") else 2
+        stdout = json.dumps(
+            {
+                "passed": broker_report.get("passed"),
+                "tool_request_count": broker_report.get("tool_request_count"),
+                "tool_execution_count": broker_report.get("tool_execution_count"),
+                "blocked_tool_count": broker_report.get("blocked_tool_count"),
+                "failed_tool_count": broker_report.get("failed_tool_count"),
+                "request_transport": broker_report.get("request_transport"),
+            },
+            ensure_ascii=False,
+        )
+    except Exception as exc:  # noqa: BLE001
+        returncode = 1
+        error = f"{type(exc).__name__}: {exc}"
     broker_output_exists = broker_output.exists()
-    if broker_output_exists:
-        try:
-            broker_report = read_json(broker_output)
-        except Exception as exc:  # noqa: BLE001
-            error = f"{error or ''} {type(exc).__name__}: {exc}".strip()
-    elif not error:
-        error = "runtime_tool_broker_output_missing"
 
     return {
         "enabled": True,
@@ -105,7 +113,8 @@ def run_runtime_tool_broker_for_round(
         "stdout_tail": stdout,
         "stderr_tail": stderr,
         "error": error or "",
-        "request_file": repo_rel(request_file, repo_root),
+        "request_file": "",
+        "request_transport": "in_memory",
         "broker_output": repo_rel(broker_output, repo_root),
         "broker_markdown": repo_rel(broker_markdown, repo_root),
         "broker_output_exists": broker_output_exists,

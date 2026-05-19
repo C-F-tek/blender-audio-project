@@ -28,10 +28,21 @@ def load_request(path: Path) -> tuple[dict[str, object] | None, str | None]:
     return data, None
 
 
+def load_request_json(text: str) -> tuple[dict[str, object] | None, str | None]:
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        return None, f"invalid request JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}"
+    if not isinstance(data, dict):
+        return None, "request JSON root must be an object"
+    return data, None
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--request-file", required=True)
+    parser.add_argument("--request-file", default="")
+    parser.add_argument("--request-json", default="")
     parser.add_argument("--output", default="output/validation/agent_runtime_debug_lab.json")
     parser.add_argument("--markdown-output", default="output/validation/agent_runtime_debug_lab.md")
     parser.add_argument("--timeout-seconds", type=int, default=300)
@@ -42,11 +53,15 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
-    request_path = Path(args.request_file)
-    if not request_path.is_absolute():
-        request_path = repo_root / request_path
-
-    request, load_error = load_request(request_path)
+    if args.request_json:
+        request, load_error = load_request_json(args.request_json)
+    elif args.request_file:
+        request_path = Path(args.request_file)
+        if not request_path.is_absolute():
+            request_path = repo_root / request_path
+        request, load_error = load_request(request_path)
+    else:
+        request, load_error = None, "--request-json or --request-file is required"
     if load_error:
         report = {
             "schema_version": 1,

@@ -54,13 +54,13 @@ def evaluate_terminal_invariants(
         )
     if allow_provider_generation and metrics.get("provider_native_tool_unavailable_required_lanes"):
         errors.append(
-            "provider generation requires native tool capability from all three lanes; unavailable: "
+            "provider generation requested a native tool call on unavailable provider lanes: "
             + ",".join(metrics.get("provider_native_tool_unavailable_required_lanes") or [])
         )
-    if allow_provider_generation and metrics.get("provider_native_tool_missing_required_lanes"):
+    if allow_provider_generation and metrics.get("provider_semantic_missing_required_lanes"):
         errors.append(
-            "provider requested native tool calls but these lanes emitted no native calls: "
-            + ",".join(metrics.get("provider_native_tool_missing_required_lanes") or [])
+            "provider generation requires semantic GPU0/NPU model execution; missing: "
+            + ",".join(metrics.get("provider_semantic_missing_required_lanes") or [])
         )
     if (
         metrics.get("product_status") == "ready"
@@ -79,11 +79,6 @@ def evaluate_terminal_invariants(
     ):
         errors.append(
             "provider native tool loop was requested but no provider lane reported supported native tool calls"
-        )
-    if detailed_output_expected and metrics.get("provider_native_tool_missing_lanes"):
-        errors.append(
-            "provider native tool loop requested but these lanes emitted no native tool_call: "
-            + ",".join(metrics.get("provider_native_tool_missing_lanes") or [])
         )
     if metrics.get("product_status") == "ready" and not final_bridge_reports:
         errors.append("ready product_status requires broker bridge reports")

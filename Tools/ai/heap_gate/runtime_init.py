@@ -30,6 +30,7 @@ from Tools.ai.heap_gate.runtime_common import (
     repo_rel,
     resolve_child_python,
 )
+from Tools.ai.heap_gate.target_planner import filter_source_candidates_for_request
 
 
 class RuntimeGateInitMixin:
@@ -162,7 +163,14 @@ class RuntimeGateInitMixin:
 
     def runtime_universe_prompt_summary(self, limit: int = 24) -> str:
         summary = self.repo_runtime_universe.summary()
-        sources = "\n".join(f"- {item}" for item in self.code_execution_matrix_targets()[:limit])
+        sources = "\n".join(
+            f"- {item}"
+            for item in filter_source_candidates_for_request(
+                self.repo_runtime_universe.source_index,
+                self.request_text(),
+                limit=limit,
+            )
+        )
         tools = "\n".join(
             f"- {item.get('name')} args={item.get('allowed_args')}"
             for item in self.repo_runtime_universe.tool_catalog[:limit]

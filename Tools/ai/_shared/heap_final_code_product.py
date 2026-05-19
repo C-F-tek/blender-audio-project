@@ -41,6 +41,13 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def read_text_file(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8-sig", errors="replace")
+    except Exception:
+        return ""
+
+
 def repo_root_from_run_dir(run_dir: Path) -> Path:
     for path in [run_dir, *run_dir.parents]:
         if (path / "AGENTS.md").exists() or (path / ".git").exists():
@@ -71,16 +78,6 @@ def first_json_report(run_dir: Path, values: list[Any]) -> tuple[str, dict[str, 
         if payload:
             return text, payload
     return "", {}
-
-
-def truncate_code(text: str, limit: int = 1800) -> str:
-    body = str(text or "").strip()
-    if len(body) <= limit:
-        return body
-    return (
-        body[:limit].rstrip()
-        + "\n...[code product excerpt truncated; full file/diff in workspace and matrix report]"
-    )
 
 
 def item_has_code_product(item: dict[str, Any]) -> bool:
@@ -123,6 +120,14 @@ def diff_hunk_count(payload: str) -> int:
 
 
 def full_code_or_patch(matrix: dict[str, Any], item: dict[str, Any]) -> str:
+    diff_ref = str(item.get("diff_path") or "").strip()
+    if diff_ref:
+        diff_path = Path(diff_ref)
+        if not diff_path.is_absolute():
+            diff_path = matrix_repo_root(matrix) / diff_path
+        diff_text = read_text_file(diff_path)
+        if diff_text.strip():
+            return diff_text.rstrip()
     return str(item.get("code_or_patch_sketch") or "").rstrip()
 
 
@@ -194,14 +199,14 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
     lines = [
         "## Code product",
         "",
-        "Questi sono gli estratti di prodotto codice usciti dalla matrice deterministica. Per i file modificati sono diff excerpt; per i file nuovi sono new-file excerpt. I chunk GPU1 respinti non sono inclusi qui come prodotto.",
-        "Il patch/code completo disponibile nella matrix viene pubblicato anche come `CODE_PRODUCT_FULL_PATCH.md` nel pacchetto Documents della run.",
+        "Questi sono i diff/code completi usciti dalla matrice deterministica. I chunk GPU1 respinti non sono inclusi qui come prodotto.",
+        "Lo stesso patch/code completo viene pubblicato anche come `CODE_PRODUCT_FULL_PATCH.md` nel pacchetto Documents della run.",
         "",
     ]
     product_items = full_code_product_items(matrix)
     for data in product_items:
         target = str(data.get("target_file") or "")
-        sketch = truncate_code(full_code_or_patch(matrix, data))
+        sketch = full_code_or_patch(matrix, data)
         if not target or not sketch:
             continue
         lines.extend(

@@ -8,64 +8,36 @@ from Tools.ai.heap_gate.runtime_common import (
     Any,
     Path,
     append_unique,
-    hashlib,
-    read_json,
     repo_rel,
     safe_int,
+)
+from Tools.ai.heap_gate.startup_manifest_context import (
+    compact_manifest_context,
+    compact_task_file_context,
+    load_startup_manifest,
+    resolve_startup_task_file_path,
 )
 
 
 class RuntimeGateStartupContextMixin:
     def startup_task_file_path(self) -> Path | None:
-        task_file = str(getattr(self.args, "task_file", "") or "").strip()
-        if not task_file:
-            return None
-        task_file_path = Path(task_file)
-        if not task_file_path.is_absolute():
-            task_file_path = self.repo_root / task_file_path
-        return task_file_path.resolve(strict=False)
+        return resolve_startup_task_file_path(self.repo_root, self.args)
 
     def startup_task_file_context(self, max_preview_chars: int = 12000) -> dict[str, Any]:
-        """Read the startup task file as active heap input.
+        """Return startup context for heap ingestion.
 
-        The task file is not a diagnostic pointer: prepare_heap_context_memory_reload.py
-        writes the current repo/docs/memory/tool context there before provider work.
-        The gate must read it and publish a bounded fact/event so GPU1/GPU0/NPU
-        operate over the same dynamic universe rather than only seeing a path.
+        The structured startup manifest is the primary runtime data plane. The
+        human-readable heap task file remains an artifact reference and is read
+        only as a bounded legacy fallback when no manifest is available.
         """
-        task_file_path = self.startup_task_file_path()
-        if task_file_path is None:
-            return {
-                "loaded": False,
-                "task_file": "",
-                "reason": "task_file argument missing",
-            }
-        rel_path = repo_rel(self.repo_root, task_file_path)
-        if not task_file_path.is_file():
-            return {
-                "loaded": False,
-                "task_file": rel_path,
-                "reason": "task file missing",
-            }
-        try:
-            task_file_text = task_file_path.read_text(encoding="utf-8-sig", errors="replace")
-        except Exception as exc:  # noqa: BLE001 - context ingestion must not crash the gate.
-            return {
-                "loaded": False,
-                "task_file": rel_path,
-                "reason": f"task file unreadable: {type(exc).__name__}: {exc}",
-            }
-        digest = hashlib.sha256(task_file_text.encode("utf-8", errors="replace")).hexdigest()
-        preview = task_file_text[: max(0, int(max_preview_chars))]
-        return {
-            "loaded": True,
-            "task_file": rel_path,
-            "sha256": digest,
-            "char_count": len(task_file_text),
-            "preview": preview,
-            "preview_truncated": len(task_file_text) > len(preview),
-            "source": "startup_task_file",
-        }
+        manifest_context = compact_manifest_context(self.repo_root, self.args)
+        if manifest_context.get("loaded"):
+            return manifest_context
+        return compact_task_file_context(
+            self.repo_root,
+            self.args,
+            max_preview_chars=max_preview_chars,
+        )
 
     def publish_startup_task_file_context(self) -> None:
         context = self.startup_task_file_context()
@@ -75,22 +47,24 @@ class RuntimeGateStartupContextMixin:
             return
         fact = {
             "id": "startup_task_file_context_loaded",
-            "kind": "startup_task_file_context",
+            "kind": str(context.get("source") or "startup_task_file_context"),
             "source": "heap_context_memory_reload",
             "status": "available",
             "task_file": context.get("task_file"),
-            "sha256": context.get("sha256"),
-            "char_count": context.get("char_count"),
+            "startup_manifest": context.get("startup_manifest"),
+            "sha256": context.get("startup_manifest_sha256") or context.get("sha256"),
+            "char_count": context.get("manifest_json_chars") or context.get("char_count"),
             "preview_truncated": context.get("preview_truncated"),
         }
         evidence = {
             "id": "shared_evidence_startup_task_file_context",
             "requirement": "shared_context_chunks",
-            "kind": "startup_task_file_context",
-            "source": "startup_task_file",
+            "kind": str(context.get("source") or "startup_task_file_context"),
+            "source": "startup_manifest",
             "status": "available",
             "task_file": context.get("task_file"),
-            "sha256": context.get("sha256"),
+            "startup_manifest": context.get("startup_manifest"),
+            "sha256": context.get("startup_manifest_sha256") or context.get("sha256"),
         }
         append_unique(self.state["facts"], fact)
         append_unique(self.state["shared_evidence"], evidence)
@@ -114,13 +88,16 @@ class RuntimeGateStartupContextMixin:
             {
                 "kind": "startup_task_file_context",
                 "lane": "context_memory",
-                "phase": "startup_task_file_loaded",
+                "phase": "startup_manifest_loaded",
                 "task_file": context.get("task_file"),
-                "sha256": context.get("sha256"),
-                "char_count": context.get("char_count"),
+                "startup_manifest": context.get("startup_manifest"),
+                "sha256": context.get("startup_manifest_sha256") or context.get("sha256"),
+                "char_count": context.get("manifest_json_chars") or context.get("char_count"),
                 "preview": context.get("preview"),
                 "preview_truncated": context.get("preview_truncated"),
-                "summary": "startup task-file content loaded into heap before provider teamwork",
+                "summary": (
+                    "startup manifest loaded into heap; heap task file kept as artifact reference"
+                ),
             }
         )
 
@@ -133,14 +110,7 @@ class RuntimeGateStartupContextMixin:
         Seeding passed startup requirements into the heap prevents the provider
         universe from being blocked by re-running already completed context tools.
         """
-        task_path = self.startup_task_file_path()
-        if task_path is None:
-            return None, {}
-        manifest_path = task_path.parent / "heap_context_memory_reload_manifest.json"
-        payload = read_json(manifest_path)
-        if not payload:
-            return manifest_path, {}
-        return manifest_path, payload
+        return load_startup_manifest(self.repo_root, self.args)
 
     def startup_execution_artifact_outputs(self, execution: dict[str, Any]) -> dict[str, Any]:
         refs: list[str] = []

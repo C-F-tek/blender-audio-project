@@ -2,15 +2,77 @@
 
 from __future__ import annotations
 
+from hashlib import sha256
+
 from Tools.ai.heap_gate.runtime_common import Any, repo_rel
+from Tools.ai.heap_gate.target_planner import request_focus_text
+
+
+def bounded_text(value: str, limit: int = 1200) -> str:
+    text = " ".join(str(value or "").split())
+    return text[:limit]
+
+
+def request_query(request: str, objective: str) -> str:
+    return bounded_text(request_focus_text(request), 1200) or bounded_text(objective, 400)
+
+
+def request_memory_content(request: str, objective: str, stamp: str) -> str:
+    digest = sha256(request.encode("utf-8", errors="replace")).hexdigest() if request else ""
+    preview = bounded_text(request, 1000)
+    return (
+        f"request_sha256={digest}; request_preview={preview}; "
+        f"objective={bounded_text(objective, 400)}; stamp={stamp}"
+    )
 
 
 def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
     context_dir = owner.runtime_context_dir()
     request = owner.request_text()
-    query = request or owner.args.objective
-    memory_content = f"request={request}; objective={owner.args.objective}; stamp={owner.stamp}"
-    return [
+    query = request_query(request, owner.args.objective)
+    memory_content = request_memory_content(request, owner.args.objective, owner.stamp)
+    source_targets = owner.real_source_file_candidates(limit=32)
+    startup_text_files: list[str] = []
+    operator_request_file = str(getattr(owner.args, "request_file", "") or "").strip()
+    if operator_request_file:
+        startup_text_files.append(operator_request_file)
+    try:
+        manifest_path, manifest = owner.startup_manifest_from_task_file()
+    except Exception:  # noqa: BLE001 - runtime plan construction must stay non-fatal.
+        manifest_path, manifest = None, {}
+    if manifest_path:
+        startup_text_files.append(repo_rel(owner.repo_root, manifest_path))
+    artifacts = manifest.get("artifacts") if isinstance(manifest, dict) else {}
+    if isinstance(artifacts, dict):
+        for key in (
+            "tool_catalog_json",
+            "shared_memory_json",
+            "operational_memory_search_json",
+            "semantic_code_chunks_json",
+            "semantic_evidence_chunks_json",
+            "ai_context_pack_json",
+            "shared_context_json",
+            "repo_docs_map_json",
+        ):
+            value = str(artifacts.get(key) or "").strip()
+            if value:
+                startup_text_files.append(value)
+    runtime_file_ref_args: dict[str, Any] = {
+        "text_file": startup_text_files,
+        "target_file": source_targets,
+        "provenance": "startup_context",
+        "strict_patchable_targets": owner.implementation_output_required(),
+    }
+    runtime_ref_text = []
+    if not operator_request_file:
+        if query:
+            runtime_ref_text.append(query)
+        objective = bounded_text(owner.args.objective, 400)
+        if objective:
+            runtime_ref_text.append(objective)
+    if runtime_ref_text:
+        runtime_file_ref_args["text"] = runtime_ref_text
+    plan = [
         {
             "stage": 1,
             "requirement": "tool_catalog",
@@ -26,6 +88,22 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "tool": "build_agent_memory_inventory",
             "args": {"objective": owner.args.objective},
             "reason": "load read-only shared memory state into heap-visible evidence",
+        },
+        {
+            "stage": 1,
+            "requirement": "persistent_memory_status",
+            "id": "persistent-memory-status",
+            "tool": "runtime_sqlite_memory",
+            "args": {"action": "status", "scope": "persistent"},
+            "reason": "inspect durable SQLite memory state before current-cycle planning",
+        },
+        {
+            "stage": 1,
+            "requirement": "persistent_memory_search",
+            "id": "persistent-memory-search",
+            "tool": "runtime_sqlite_memory",
+            "args": {"action": "search", "scope": "persistent", "query": query, "limit": 8},
+            "reason": "search durable SQLite/FTS memory for prior decisions, targets and blocked products",
         },
         {
             "stage": 1,
@@ -60,7 +138,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
                 "memory_note": [
                     "heap runtime completeness gate must prove tool, memory, context, chunks and validation evidence before product signal",
                     "budget/iterations define convergence and prevent endless repository loops",
-                    f"user_request={request}",
+                    f"user_request_focus={query}",
                 ],
                 "raw_file": ["AGENTS.md", "README.md", *owner.historical_tool_context_files()],
             },
@@ -102,6 +180,49 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "reason": "assemble bounded final context pack from stable historical context builder",
         },
         {
+            "stage": 2,
+            "requirement": "python_line_count_evidence",
+            "id": "python-line-count-evidence",
+            "tool": "build_python_line_count_csv",
+            "args": {"exclude_dir": ["output", "indexAI/code_chunks", "renders"]},
+            "reason": "broker existing line-budget evidence so it can be chunked and referenced by the heap",
+            "nonblocking": True,
+        },
+        {
+            "stage": 2,
+            "requirement": "python_syntax_evidence",
+            "id": "python-syntax-evidence",
+            "tool": "check_python_syntax",
+            "args": {},
+            "reason": "broker existing syntax evidence as runtime context, not as standalone product proof",
+            "nonblocking": True,
+        },
+        {
+            "stage": 2,
+            "requirement": "code_interpreter_evidence",
+            "id": "code-interpreter-evidence",
+            "tool": "build_code_interpreter_report",
+            "args": {"input": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
+            "reason": "broker existing static interpretation evidence for later memory/chunk consumption",
+            "nonblocking": True,
+        },
+        {
+            "stage": 3,
+            "requirement": "tool_evidence_memory_write",
+            "id": "tool-evidence-memory-write",
+            "tool": "runtime_sqlite_memory",
+            "args": {
+                "action": "remember",
+                "scope": "operational",
+                "summary": "brokered evidence refs",
+                "content": "pending brokered evidence refs",
+                "role": "heap_runtime_evidence_index",
+                "tag": ["heap", "broker_evidence", "tool_refs"],
+            },
+            "reason": "write brokered evidence refs into operational SQLite scratch memory for the current run",
+            "nonblocking": True,
+        },
+        {
             "stage": 3,
             "requirement": "semantic_evidence_chunks",
             "id": "semantic-evidence-chunk-manifest",
@@ -111,13 +232,41 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
         },
         {
             "stage": 3,
+            "requirement": "runtime_file_refs",
+            "id": "runtime-file-ref-resolution",
+            "tool": "runtime_file_refs",
+            "args": runtime_file_ref_args,
+            "reason": "resolve operator/startup/provider-visible file refs before provider synthesis and matrix/lab consumption",
+        },
+        {
+            "stage": 3,
             "requirement": "validation_evidence",
             "id": "planner-json-contract-validation",
             "tool": "run_gpu_planner_json_contract_smoke",
             "args": {},
             "reason": "prove validation tool evidence is consumed before arbiter decision",
         },
-        *owner.virtual_dev_environment_plan_items(context_dir, request),
-        *owner.code_execution_matrix_plan_items(context_dir, request),
-        *owner.runtime_debug_lab_plan_items(context_dir, request),
+        {
+            "stage": 3,
+            "requirement": "validation_report_contract_evidence",
+            "id": "validation-report-contract-evidence",
+            "tool": "check_validation_report_contract",
+            "args": {},
+            "reason": "broker validation-report contract evidence for generated reports without making it the run product",
+            "nonblocking": True,
+        },
+        {
+            "stage": 3,
+            "requirement": "refactor_duplication_audit_evidence",
+            "id": "refactor-duplication-audit-evidence",
+            "tool": "refactor_duplication_audit",
+            "args": {"root": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
+            "reason": "broker existing duplication/refactor evidence for provider and matrix context",
+            "nonblocking": True,
+        },
     ]
+    if getattr(owner, "provider_reports", []):
+        plan.extend(owner.virtual_dev_environment_plan_items(context_dir, request))
+        plan.extend(owner.code_execution_matrix_plan_items(context_dir, request))
+        plan.extend(owner.runtime_debug_lab_plan_items(context_dir, request))
+    return plan

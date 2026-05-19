@@ -12,8 +12,14 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai._shared.process_tree import terminate_process_tree
+    from Tools.validation.heap_runtime.completeness_gate_contract import validate_contract_only
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:  # pragma: no cover
+    from Tools.ai._shared.process_tree import terminate_process_tree  # type: ignore
+    from Tools.validation.heap_runtime.completeness_gate_contract import (  # type: ignore
+        validate_contract_only,
+    )
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
@@ -55,9 +61,6 @@ def run_gate(
     )
     run_dir.mkdir(parents=True, exist_ok=True)
     output = run_dir / "heap_runtime_completeness_gate_report.json"
-    request_file = run_dir / "operator_request.md"
-    if request_text.strip():
-        request_file.write_text(request_text.strip() + "\n", encoding="utf-8")
     child_python, env = provider_child_python_and_env(repo_root)
     command = [
         child_python,
@@ -80,16 +83,27 @@ def run_gate(
         provider_model,
     ]
     if request_text.strip():
-        command.extend(["--request-file", request_file.as_posix()])
-    completed = subprocess.run(
+        command.extend(["--request", request_text.strip()])
+    process = subprocess.Popen(
         command,
         cwd=repo_root,
         env=env,
-        capture_output=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
-        check=False,
-        timeout=timeout_seconds * max(2, max_iterations),
     )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout_seconds * max(2, max_iterations))
+        completed = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+    except subprocess.TimeoutExpired:
+        terminate_process_tree(process)
+        stdout, stderr = process.communicate()
+        completed = subprocess.CompletedProcess(
+            command,
+            124,
+            stdout or "",
+            (stderr or "") + "\nheap runtime smoke timeout",
+        )
     return completed, read_json(output), run_dir
 
 
@@ -244,10 +258,42 @@ def main() -> int:
     )
     parser.add_argument("--timeout-seconds", type=int, default=240)
     parser.add_argument("--provider-model", default="qwen2.5-coder:14b")
+    parser.add_argument("--contract-only", action="store_true")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     stamp = now_stamp()
+    if args.contract_only:
+        errors = validate_contract_only(repo_root)
+        contract_run = {
+            "label": "contract_only",
+            "passed": not errors,
+            "run_dir": "",
+            "returncode": 0 if not errors else 2,
+            "metrics": {"provider_execution_performed": False, "provider_lane_count": 0},
+            "errors": errors,
+        }
+        report = {
+            "schema_version": 1,
+            "kind": "heap_runtime_completeness_gate_smoke",
+            "mode": "contract_only",
+            "generated_at": datetime.now().isoformat(timespec="seconds"),
+            "repo_root": repo_root.as_posix(),
+            "passed": not errors,
+            "runs": [contract_run],
+            "provider_execution_performed": False,
+            "patch_application_performed": False,
+            "source_writes_performed": False,
+            "errors": errors,
+            "warnings": [],
+        }
+        output = resolve_output_path(repo_root, args.output)
+        markdown = resolve_output_path(repo_root, args.markdown_output)
+        write_json_report(report, output)
+        write_text_report(render_markdown(report), markdown)
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0 if report["passed"] else 2
+
     request_text = complete_smoke_request(repo_root)
     runs: list[dict[str, Any]] = []
     errors: list[str] = []

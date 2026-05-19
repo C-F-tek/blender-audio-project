@@ -76,10 +76,11 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
         if self._code_execution_matrix_targets_cache is not None:
             return list(self._code_execution_matrix_targets_cache)
         planner = RuntimeTargetPlanner(self.repo_root, self.repo_runtime_universe)
+        changed_count = len(planner.changed_source_candidates())
         plan = planner.plan(
             request_text=self.request_text(),
             explicit_candidates=self.real_source_file_candidates(limit=80),
-            limit=max(1, min(32, int(self.args.files_per_round) * 4)),
+            limit=max(1, min(64, max(changed_count, int(self.args.files_per_round) * 4))),
         )
         self._code_execution_matrix_targets_cache = [item.path for item in plan]
         return list(self._code_execution_matrix_targets_cache)
@@ -99,8 +100,24 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
         )
         return self.implementation_output_required() or any(hint in text for hint in hints)
 
+    def provider_revision_evidence_ready(self, events: list[dict[str, Any]]) -> bool:
+        """Delay provider rewrites until matrix/lab evidence has entered the heap."""
+        if self.virtual_dev_environment_required() and not self.virtual_dev_environment_passed(
+            events
+        ):
+            return False
+        if self.code_execution_matrix_required() and not self.code_execution_matrix_passed(events):
+            return False
+        if self.runtime_debug_lab_required() and not self.runtime_debug_lab_passed(events):
+            return False
+        return True
+
     def virtual_dev_environment_targets(self) -> list[str]:
-        return self.code_execution_matrix_targets()
+        return [
+            path
+            for path in self.code_execution_matrix_targets()
+            if path.replace("\\", "/").endswith(("/cli.py", "/__main__.py"))
+        ]
 
     def virtual_dev_environment_plan_items(
         self, context_dir: Path, request: str
@@ -135,6 +152,13 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
             return []
         matrix_dir = context_dir / "code_execution_matrix"
         matrix_dir.mkdir(parents=True, exist_ok=True)
+        targets = self.code_execution_matrix_targets()
+        evidence_reports = [*self.provider_refs(), *self.proposal_iteration_artifacts()]
+        request_args = (
+            {"operator_request_file": str(getattr(self.args, "request_file", "") or "")}
+            if str(getattr(self.args, "request_file", "") or "").strip()
+            else {"operator_request": request}
+        )
         return [
             {
                 "stage": 4,
@@ -142,7 +166,7 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
                 "id": "heap-code-execution-matrix",
                 "tool": "run_heap_code_execution_matrix",
                 "args": {
-                    "target_file": self.code_execution_matrix_targets(),
+                    "target_file": targets,
                     "validation_script": [
                         "Tools/validation/heap_final_proposals/test_proposal_gate/cli.py",
                         "Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py",
@@ -152,10 +176,11 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
                     "timeout_seconds": min(max(int(self.args.timeout_seconds), 120), 600),
                     "tail_chars": 5000,
                     "max_diff_chars": 80000,
-                    "operator_request": request,
+                    **request_args,
+                    "evidence_report": evidence_reports,
                     "synthesize_patch_candidates": self.patch_candidate_synthesis_required(),
                     "force_patch_candidate_synthesis": self.patch_candidate_synthesis_required(),
-                    "max_patch_candidates": min(5, max(1, int(self.args.files_per_round))),
+                    "max_patch_candidates": min(64, max(1, len(targets))),
                 },
                 "reason": "execute concrete compile/test/diff evidence for heap coding proposals before product acceptance",
             }
@@ -177,9 +202,8 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
         ]
         return [path for path in candidates if (self.repo_root / path).exists()]
 
-    def write_runtime_debug_lab_request(self) -> tuple[str, str, str]:
+    def build_runtime_debug_lab_request(self) -> tuple[dict[str, Any], str, str]:
         lab_dir = self.runtime_debug_lab_dir()
-        request_path = lab_dir / f"agent_runtime_debug_lab_request_{self.stamp}.json"
         report_path = lab_dir / f"agent_runtime_debug_lab_{self.stamp}.json"
         markdown_path = lab_dir / f"agent_runtime_debug_lab_{self.stamp}.md"
         source_paths = self.runtime_debug_lab_source_paths()
@@ -205,11 +229,8 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
                 },
             ],
         }
-        request_path.write_text(
-            json.dumps(request, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-        )
         return (
-            repo_rel(self.repo_root, request_path),
+            request,
             repo_rel(self.repo_root, report_path),
             repo_rel(self.repo_root, markdown_path),
         )
@@ -217,7 +238,7 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
     def runtime_debug_lab_plan_items(self, context_dir: Path, request: str) -> list[dict[str, Any]]:
         if not self.runtime_debug_lab_required():
             return []
-        request_file, output, markdown_output = self.write_runtime_debug_lab_request()
+        request_json, output, markdown_output = self.build_runtime_debug_lab_request()
         return [
             {
                 "stage": 4,
@@ -225,7 +246,7 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
                 "id": "runtime-debug-lab-execution",
                 "tool": "agent_runtime_debug_lab",
                 "args": {
-                    "request_file": request_file,
+                    "request_json": request_json,
                     "output": output,
                     "markdown_output": markdown_output,
                     "timeout_seconds": min(max(int(self.args.timeout_seconds), 60), 600),

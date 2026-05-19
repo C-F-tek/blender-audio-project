@@ -114,6 +114,7 @@ class RuntimeGateLoopStepsMixin:
                 "target": plan_item["tool"],
                 "requirement": plan_item["requirement"],
                 "reason": plan_item["reason"],
+                "lane": str(plan_item.get("lane") or "gpu1_planner"),
                 "budget_ref": "provider_budget_governor_loaded",
                 "round": round_id,
             }
@@ -132,7 +133,12 @@ class RuntimeGateLoopStepsMixin:
                 "args": plan_item.get("args") or {},
                 "reason": plan_item["reason"],
                 "requirement": plan_item["requirement"],
+                "lane": str(plan_item.get("lane") or "gpu1_planner"),
+                "proposal_block_id": str(plan_item.get("proposal_block_id") or ""),
+                "provider_block_id": str(plan_item.get("provider_block_id") or ""),
             }
+            if plan_item.get("nonblocking"):
+                tool_request["nonblocking"] = True
             append_unique(self.state["tool_requests"], tool_request)
             self.publish(
                 "gpu1",
@@ -171,7 +177,9 @@ class RuntimeGateLoopStepsMixin:
         )
         command = [
             self.child_python(),
-            "python -m Tools.ai provider_runtime_broker_bridge",
+            "-m",
+            "Tools.ai",
+            "provider_runtime_broker_bridge",
             "--repo-root",
             ".",
             "--stamp",
@@ -185,7 +193,7 @@ class RuntimeGateLoopStepsMixin:
             "--bridge-dir",
             self.path_arg(self.args.bridge_dir, DEFAULT_BRIDGE_DIR),
             "--timeout-seconds",
-            str(self.args.timeout_seconds),
+            str(min(max(int(self.args.timeout_seconds), 60), 900)),
             "--max-requests",
             "0",
             "--output",
@@ -200,7 +208,7 @@ class RuntimeGateLoopStepsMixin:
             capture_output=True,
             text=True,
             check=False,
-            timeout=self.args.timeout_seconds + 30,
+            timeout=min(max(int(self.args.timeout_seconds), 60), 900) + 30,
         )
         report = read_json(bridge_json)
         self.bridge_reports.append(repo_rel(self.repo_root, bridge_json))
@@ -292,7 +300,7 @@ class RuntimeGateLoopStepsMixin:
         refinement_possible = (
             self.detailed_output_expected()
             and self.provider_reports
-            and self.provider_revision_count < int(getattr(self.args, "max_provider_revisions", 0))
+            and self.provider_revision_count < self.effective_max_provider_revisions()
             and self.proposal_cycle_requires_refinement(self.response_text(), events)
         )
         if not ready and not budget_exhausted and refinement_possible:
@@ -367,13 +375,10 @@ class RuntimeGateLoopStepsMixin:
             "quality_output_signals": self.quality_output_signals(final_response_text, events),
             "quality_output_passed": self.quality_output_passed(final_response_text, events),
             "historical_tool_context_refs": self.historical_tool_context_files(),
-            "response_file_reference_quality": self.response_file_reference_quality(
-                self.response_text()
-            ),
+            "response_file_reference_quality": self.response_file_reference_quality(self.response_text()),
             "provider_role_decisions": self.provider_role_decisions(),
             "toolused": effective_tool_execution_count > 0,
-            "shared_memory_written_and_used": "shared_memory"
-            in self.completed_requirements(events),
+            "shared_memory_written_and_used": "shared_memory" in self.completed_requirements(events),
             "gpu0_audit": self.provider_response_text("gpu0_peer"),
             "npu_audit": self.provider_response_text("npu_micro_task_auditor"),
             "reason": (
@@ -393,7 +398,6 @@ class RuntimeGateLoopStepsMixin:
             correlation_id=f"{self.stamp}:product",
             round_id=round_id,
         )
-
     def base_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
         completed = self.completed_requirements(events)
         return all(requirement in completed for requirement in BASE_REQUIREMENTS)

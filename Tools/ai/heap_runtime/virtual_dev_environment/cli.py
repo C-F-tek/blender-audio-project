@@ -7,6 +7,7 @@ import argparse
 import ast
 import hashlib
 import importlib.util
+import importlib
 import json
 import subprocess
 import sys
@@ -22,7 +23,7 @@ try:
         RuntimeRefProvenance,
     )
 except ImportError:
-    repo_root_for_import = Path(__file__).resolve().parents[3]
+    repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from Tools.ai.runtime_tool.file_refs import (  # type: ignore
@@ -104,6 +105,31 @@ def run_command(command: list[str], cwd: Path, timeout: int, tail_chars: int) ->
         }
 
 
+def package_module_name(repo_root: Path, rel: str) -> str | None:
+    if not rel.endswith(".py"):
+        return None
+    path = (repo_root / rel).resolve(strict=False)
+    try:
+        relative = path.relative_to(repo_root)
+    except ValueError:
+        return None
+    parts = list(relative.parts)
+    if not parts or parts[-1] == "__init__.py":
+        return None
+    package_dirs = [repo_root.joinpath(*parts[:index]) for index in range(1, len(parts))]
+    if not package_dirs or any(not (directory / "__init__.py").is_file() for directory in package_dirs):
+        return None
+    parts[-1] = Path(parts[-1]).stem
+    return ".".join(parts)
+
+
+def python_command_for_target(repo_root: Path, rel: str, *args: str) -> list[str]:
+    module_name = package_module_name(repo_root, rel)
+    if module_name:
+        return [sys.executable, "-m", module_name, *args]
+    return [sys.executable, rel, *args]
+
+
 def ast_probe(repo_root: Path, rel: str) -> dict[str, Any]:
     path = repo_root / rel
     try:
@@ -137,14 +163,24 @@ def import_probe(repo_root: Path, rel: str) -> dict[str, Any]:
     if not rel.endswith(".py"):
         return {"executed": False, "ok": True, "reason": "not Python"}
     path = repo_root / rel
-    module_name = "heap_vdev_" + hashlib.sha1(rel.encode("utf-8")).hexdigest()[:12]
+    package_name = package_module_name(repo_root, rel)
     try:
+        if str(repo_root) not in sys.path:
+            sys.path.insert(0, str(repo_root))
+        if package_name:
+            module = importlib.import_module(package_name)
+            names = [name for name in dir(module) if not name.startswith("_")][:80]
+            return {
+                "executed": True,
+                "ok": True,
+                "module": package_name,
+                "public_names": names,
+            }
+        module_name = "heap_vdev_" + hashlib.sha1(rel.encode("utf-8")).hexdigest()[:12]
         spec = importlib.util.spec_from_file_location(module_name, path)
         if spec is None or spec.loader is None:
             raise ImportError("module spec unavailable")
         module = importlib.util.module_from_spec(spec)
-        if str(repo_root) not in sys.path:
-            sys.path.insert(0, str(repo_root))
         old_module = sys.modules.get(module_name)
         sys.modules[module_name] = module
         try:
@@ -165,7 +201,7 @@ def help_probe(repo_root: Path, rel: str, timeout: int, tail_chars: int) -> dict
         return {"executed": False, "ok": True, "reason": "not Python"}
     return {
         "executed": True,
-        **run_command([sys.executable, rel, "--help"], repo_root, timeout, tail_chars),
+        **run_command(python_command_for_target(repo_root, rel, "--help"), repo_root, timeout, tail_chars),
     }
 
 
@@ -244,7 +280,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                 {
                     "script": rel,
                     **run_command(
-                        [sys.executable, rel], repo_root, args.timeout_seconds, args.tail_chars
+                        python_command_for_target(repo_root, rel),
+                        repo_root,
+                        args.timeout_seconds,
+                        args.tail_chars,
                     ),
                 }
             )

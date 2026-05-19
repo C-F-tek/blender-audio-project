@@ -21,8 +21,10 @@ def build_report(
     proposals = proposal_blocks(pointer)
     gpu0 = peer_blocks(pointer, "gpu0_reviewer_refiner")
     npu = peer_blocks(pointer, "npu_auditor")
+    linked_gpu0 = [block for block in gpu0 if block.get("refines_block_id")]
+    linked_npu = [block for block in npu if block.get("refines_block_id")]
     gpu1_tasks = build_gpu1_tasks(proposals, composer)
-    peer_tasks = build_peer_tasks(proposals, gpu0, npu)
+    peer_tasks = build_peer_tasks(proposals, linked_gpu0, linked_npu)
     all_tasks = gpu1_tasks + peer_tasks
     candidate_summary = candidate_applicability_summary(all_tasks)
     terminal_no_patchable = terminal_no_patchable_target_summary(proposals)
@@ -39,6 +41,8 @@ def build_report(
     )
     operational_revision_context = bool(
         proposals
+        and linked_gpu0
+        and linked_npu
         and normalize_bool(pointer.get("provider_execution_performed"))
         and normalize_bool(causality.get("causal_chain_passed"))
     )
@@ -53,7 +57,7 @@ def build_report(
         )
     if not operational_revision_context:
         warnings.append(
-            "revision context is non-operational: source run had no resumable provider/pointer blocks"
+            "revision context is non-operational: source run had no linked provider/pointer blocks"
         )
     return {
         "schema_version": 1,
@@ -80,6 +84,8 @@ def build_report(
         "all_roles_present": pointer.get("all_roles_present", pointer.get("roles_present")),
         "gpu0_block_count": len(gpu0),
         "npu_block_count": len(npu),
+        "linked_gpu0_block_count": len(linked_gpu0),
+        "linked_npu_block_count": len(linked_npu),
         "resume_from_block_id": choose_resume_block(proposals),
         "latest_block_id": latest.get("block_id", ""),
         "parallel_task_count": len(all_tasks),

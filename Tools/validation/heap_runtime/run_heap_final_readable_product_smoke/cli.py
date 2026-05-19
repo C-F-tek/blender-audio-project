@@ -11,6 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+TRUNCATED_DIFF_MARKER = "[diff " + "truncated]"
+
 
 def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -55,6 +57,91 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
         run_dir / "broker_bridge" / "tool_outputs" / "smoke_heap_virtual_dev_environment.json"
     )
     debug_lab_path = run_dir / "debug_lab" / "smoke_debug_lab.json"
+    diff_artifact = work_dir / "candidate_diffs" / "final_readable_product.diff"
+    full_diff = (
+        "diff --git a/Tools/ai/code_product/final_readable_product/cli.py "
+        "b/Tools/ai/code_product/final_readable_product/cli.py\n"
+        "@@\n"
+        "+FULL_DIFF_SENTINEL = 'present only in artifact diff'\n"
+    )
+    write_text(diff_artifact, full_diff)
+    proposal_dir = run_dir / "team_context" / "proposal_iterations"
+    provider_dir = run_dir / "provider_teamwork"
+    target = "Tools/ai/code_product/final_readable_product/cli.py"
+    proposal_1 = "smoke:proposal:001"
+    proposal_2 = "smoke:proposal:002"
+    write_json(
+        proposal_dir / "heap_proposal_revision_001.json",
+        {
+            "revision": 1,
+            "block_id": proposal_1,
+            "block_type": "proposal_chunk",
+            "previous_block_id": "",
+            "next_block_id": proposal_2,
+            "refines_block_id": "",
+            "resume_from_block_id": "",
+            "pointer_action": "STAY_FORWARD",
+            "target_files": [target],
+            "exit_decision": "PATCHABLE_TARGET",
+            "quality_passed": False,
+            "accepted": False,
+            "response_text": "TARGET_FILES:\n- "
+            + target
+            + "\nPROBLEM:\n- smoke rejected first revision\nPATCH_SKETCH_UNIFIED_DIFF:\n"
+            + full_diff,
+        },
+    )
+    write_json(
+        proposal_dir / "heap_proposal_revision_002.json",
+        {
+            "revision": 2,
+            "block_id": proposal_2,
+            "block_type": "proposal_chunk",
+            "previous_block_id": proposal_1,
+            "next_block_id": "",
+            "refines_block_id": proposal_1,
+            "resume_from_block_id": proposal_1,
+            "pointer_action": "RESUME_FORWARD",
+            "target_files": [target],
+            "exit_decision": "PATCHABLE_TARGET",
+            "gpu1_block_ref": "smoke:gpu1:002",
+            "gpu0_review_block_refs": ["smoke:gpu0:002"],
+            "npu_audit_block_refs": ["smoke:npu:002"],
+            "broker_result_refs": [repo_rel(repo_root, matrix_path)],
+            "matrix_report_refs": [repo_rel(repo_root, matrix_path)],
+            "quality_passed": True,
+            "accepted": True,
+            "response_text": "TARGET_FILES:\n- " + target + "\nPATCH_SKETCH_UNIFIED_DIFF:\n" + full_diff,
+        },
+    )
+    for lane, role, block_type, block_id, action in (
+        ("gpu1_planner", "gpu1_planner", "provider_proposal_block", "smoke:gpu1:002", "PROPOSE"),
+        ("gpu0_peer", "gpu0_reviewer_refiner", "review_refinement_block", "smoke:gpu0:002", "REFINE"),
+        ("npu_micro_task_auditor", "npu_auditor", "audit_block", "smoke:npu:002", "AUDIT"),
+    ):
+        write_json(
+            provider_dir / f"{lane}.json",
+            {
+                "lane": lane,
+                "role": role,
+                "block_type": block_type,
+                "provider_block_id": block_id,
+                "proposal_block_id": proposal_2,
+                "revision": 2,
+                "refines_block_id": proposal_2,
+                "resume_from_block_id": proposal_2,
+                "pointer_action": action,
+                "target_files": [target],
+                "decision": "accept",
+                "provider_execution_performed": True,
+                "semantic_provider_execution_performed": True,
+                "native_tool_loop_performed": True,
+                "native_tool_call_count": 1,
+                "selected_model": "qwen3-coder:latest" if lane == "gpu1_planner" else "",
+                "workload": {"performed": True},
+                "response_text": f"{role} performed=true reviewed {proposal_2}",
+            },
+        )
     write_json(
         virtual_dev_path,
         {
@@ -108,7 +195,8 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     "implementation_status": "validated_patch_candidate",
                     "source": "patch_candidate_synthesis",
                     "git_status": "artifact patch candidate",
-                    "code_or_patch_sketch": "diff --git a/Tools/ai/code_product/final_readable_product/cli.py b/Tools/ai/code_product/final_readable_product/cli.py\n@@\n+def build_report(...):\n+    pass\n",
+                    "code_or_patch_sketch": "diff --git a/Tools/ai/code_product/final_readable_product/cli.py b/Tools/ai/code_product/final_readable_product/cli.py\n@@\n+def build_report(...):\n+    pass\n..." + TRUNCATED_DIFF_MARKER,
+                    "diff_path": str(diff_artifact),
                     "validation_commands": [
                         "python -m py_compile Tools/ai/code_product/final_readable_product/cli.py",
                         "python -m Tools.validation run_heap_final_readable_product_smoke",
@@ -144,8 +232,29 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "kind": "heap_final_proposal_composer",
             "documents_dir": str(documents_dir),
             "download_manifest_txt": str(manifest),
+            "product_status": "blocked_with_reason",
+            "quality_output_passed": False,
+            "accepted_proposal_count": 1,
+            "rejected_proposal_count": 1,
+            "proposal_count": 2,
+            "provider_report_count": 3,
+            "gpu0_review_count": 1,
+            "npu_audit_count": 1,
+            "provider_execution_performed": True,
+            "startup_manifest": {
+                "input_ready_before_heap": True,
+                "contract": {"input_ready_before_heap": True},
+                "artifacts": {"context": repo_rel(repo_root, matrix_path)},
+            },
+            "provider_reports": [{"provider_execution_performed": True}],
+            "proposals": [{"block_id": proposal_1}, {"block_id": proposal_2}],
+            "gpu0_reviews": [{"block_id": "smoke:gpu0:002"}],
+            "npu_audits": [{"block_id": "smoke:npu:002"}],
+            "blocking_issues": ["smoke keeps provider product blocked while code matrix is concrete"],
             "operator_decision": {
                 "decision": "DIAGNOSTIC_ONLY",
+                "accepted_count": 0,
+                "rejected_count": 1,
                 "accepted_proposals": [],
                 "rejected_proposals": [
                     {
@@ -191,6 +300,47 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
         run_dir / "external_heap_revision_context.json",
         {"terminal_no_patchable_target": True},
     )
+    composer_json = run_dir / "heap_final_proposal_composer.json"
+    causality_json = run_dir / "heap_final_causality_normalized.json"
+    pointer_json = run_dir / "external_heap_block_pointer_manifest.json"
+    for command in (
+        [
+            sys.executable,
+            "-m",
+            "Tools.ai",
+            "normalize_heap_final_causality",
+            "--composer-json",
+            str(composer_json),
+            "--output",
+            str(causality_json),
+        ],
+        [
+            sys.executable,
+            "-m",
+            "Tools.ai",
+            "build_external_heap_block_pointer_manifest",
+            "--repo-root",
+            ".",
+            "--run-dir",
+            str(run_dir),
+        ],
+        [
+            sys.executable,
+            "-m",
+            "Tools.ai",
+            "build_external_heap_revision_context",
+            "--pointer-manifest",
+            str(pointer_json),
+            "--composer-json",
+            str(composer_json),
+            "--causality-json",
+            str(causality_json),
+            "--output",
+            str(run_dir / "external_heap_revision_context.json"),
+            "--no-documents-copy",
+        ],
+    ):
+        subprocess.run(command, cwd=repo_root, text=True, capture_output=True, check=False)
     return run_dir, documents_dir
 
 
@@ -262,6 +412,9 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and full_code_product.exists()
         and "CODE_PRODUCT_FULL_PATCH" in code_product_body
         and "Tools/ai/code_product/final_readable_product/cli.py" in code_product_body
+        and "FULL_DIFF_SENTINEL" in code_product_body
+        and TRUNCATED_DIFF_MARKER not in code_product_body
+        and "[code product excerpt truncated" not in body
         and "Tools/ai/heap_context_closure/cli.py" not in code_product_body
         and "Tools/ai/_shared/heap_final_code_product.py" not in code_product_body
         and "Tools/ai/worktree_extra.py" not in code_product_body

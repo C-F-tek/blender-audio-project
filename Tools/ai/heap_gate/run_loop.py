@@ -26,6 +26,10 @@ class RuntimeGateRunLoopMixin:
                 self.run_bridge()
             events = self.read_events()
             self.publish_shared_evidence_facts(round_id, events)
+            if self.heap.pending_broker_requests():
+                self.run_bridge()
+                events = self.read_events()
+                self.publish_shared_evidence_facts(round_id, events)
             if self.base_requirements_complete(events) and not self.provider_reports:
                 self.run_provider_teamwork(round_id)
                 events = self.read_events()
@@ -34,13 +38,21 @@ class RuntimeGateRunLoopMixin:
                         self.run_bridge()
                     events = self.read_events()
                 self.publish_shared_evidence_facts(round_id, events)
+                if self.heap.pending_broker_requests():
+                    self.run_bridge()
+                    events = self.read_events()
+                    self.publish_shared_evidence_facts(round_id, events)
                 if self.detailed_output_expected() and self.response_text():
                     events = self.persist_current_gpu1_proposal_iteration(
                         revision=0,
                         events=events,
                         source="gpu1_initial",
                     )
-            if self.base_requirements_complete(events) and self.provider_reports:
+            if (
+                self.base_requirements_complete(events)
+                and self.provider_reports
+                and self.provider_revision_evidence_ready(events)
+            ):
                 events = self.maybe_run_provider_quality_revisions(round_id, events)
                 if self.publish_provider_native_tool_calls(round_id, events):
                     if self.heap.pending_broker_requests():
@@ -84,7 +96,14 @@ class RuntimeGateRunLoopMixin:
                     source="gpu1_final",
                 )
                 final_events = self.read_events()
-        completed = sorted(self.completed_requirements(final_events))
+        completed_all = sorted(self.completed_requirements(final_events))
+        required_order = self.required_requirements_order()
+        required_set = set(required_order)
+        completed_set = set(completed_all)
+        completed = [requirement for requirement in required_order if requirement in completed_all]
+        optional_completed = [
+            requirement for requirement in completed_all if requirement not in required_set
+        ]
         missing = self.missing_requirements(final_events)
         final_bridge_reports = self.bridge_report_refs(final_events)
         final_tool_request_count = self.effective_tool_request_count(final_events)
@@ -99,6 +118,7 @@ class RuntimeGateRunLoopMixin:
         provider_reports_by_lane = {
             str(item.get("lane") or "unknown"): item for item in self.provider_reports
         }
+        latest_provider_reports = list(provider_reports_by_lane.values())
         provider_lane_names = sorted(provider_reports_by_lane)
         missing_provider_lanes = sorted(required_provider_lanes - set(provider_lane_names))
         provider_native_tool_missing_required_lanes = sorted(
@@ -110,7 +130,21 @@ class RuntimeGateRunLoopMixin:
         provider_native_tool_unavailable_required_lanes = sorted(
             lane
             for lane in required_provider_lanes
-            if not provider_reports_by_lane.get(lane, {}).get("native_tool_loop_supported")
+            if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
+            and not provider_reports_by_lane.get(lane, {}).get("native_tool_loop_supported")
+        )
+        semantic_required_provider_lanes = (
+            {"gpu0_peer", "npu_micro_task_auditor"}
+            if self.args.allow_provider_generation
+            else set()
+        )
+        provider_semantic_missing_required_lanes = sorted(
+            lane
+            for lane in semantic_required_provider_lanes
+            if lane in provider_reports_by_lane
+            and not provider_reports_by_lane.get(lane, {}).get(
+                "semantic_provider_execution_performed"
+            )
         )
         metrics = {
             "heap_read_count": self.heap_read_count,
@@ -123,8 +157,9 @@ class RuntimeGateRunLoopMixin:
             "budget_decision": self.budget_governor.get("decision"),
             "budget_max_iterations": self.max_iterations,
             "completed_requirement_count": len(completed),
-            "required_requirement_count": len(self.required_requirements_order()),
+            "required_requirement_count": len(required_order),
             "completed_requirements": completed,
+            "optional_completed_requirements": optional_completed,
             "missing_requirements": missing,
             "request_input": self.request_text(),
             "response_text": final_response_text,
@@ -165,18 +200,25 @@ class RuntimeGateRunLoopMixin:
             "context_artifact_refs": self.broker_output_refs(final_events),
             "shared_evidence_count": len(self.state["shared_evidence"]),
             "shared_memory_evidence_count": 1 if "shared_memory" in completed else 0,
+            "persistent_memory_status_count": 1 if "persistent_memory_status" in completed else 0,
+            "persistent_memory_search_count": 1 if "persistent_memory_search" in completed else 0,
             "shared_context_chunk_evidence_count": (
                 1 if "shared_context_chunks" in completed else 0
             ),
             "semantic_code_chunk_evidence_count": (1 if "semantic_code_chunks" in completed else 0),
             "ai_context_pack_evidence_count": (1 if "ai_context_pack" in completed else 0),
             "semantic_evidence_chunk_count": (1 if "semantic_evidence_chunks" in completed else 0),
+            "runtime_file_refs_evidence_count": (1 if "runtime_file_refs" in completed else 0),
             "operational_memory_write_count": (1 if "operational_memory_write" in completed else 0),
-            "operational_memory_search_count": (
-                1 if "operational_memory_search" in completed else 0
-            ),
+            "operational_memory_search_count": 1 if "operational_memory_search" in completed else 0,
             "tool_catalog_evidence_count": 1 if "tool_catalog" in completed else 0,
             "validation_evidence_count": 1 if "validation_evidence" in completed else 0,
+            "tool_evidence_memory_write_count": 1 if "tool_evidence_memory_write" in completed_set else 0,
+            "python_line_count_evidence_count": 1 if "python_line_count_evidence" in completed_set else 0,
+            "python_syntax_evidence_count": 1 if "python_syntax_evidence" in completed_set else 0,
+            "code_interpreter_report_count": 1 if "code_interpreter_evidence" in completed_set else 0,
+            "validation_report_contract_count": 1 if "validation_report_contract_evidence" in completed_set else 0,
+            "refactor_duplication_audit_count": 1 if "refactor_duplication_audit_evidence" in completed_set else 0,
             "virtual_dev_environment_count": (1 if "virtual_dev_environment" in completed else 0),
             "code_execution_matrix_count": (1 if "code_execution_matrix" in completed else 0),
             "gpu1_provider_evidence_count": (1 if "gpu1_provider_planner" in completed else 0),
@@ -190,20 +232,20 @@ class RuntimeGateRunLoopMixin:
             "missing_provider_lanes": missing_provider_lanes,
             "provider_execution_performed": self.provider_execution_performed,
             "provider_native_tool_call_count": sum(
-                safe_int(item.get("native_tool_call_count")) for item in self.provider_reports
+                safe_int(item.get("native_tool_call_count")) for item in latest_provider_reports
             ),
             "provider_textual_tool_call_count": sum(
-                safe_int(item.get("textual_tool_call_count")) for item in self.provider_reports
+                safe_int(item.get("textual_tool_call_count")) for item in latest_provider_reports
             ),
             "provider_native_tool_loop_requested_count": sum(
-                1 for item in self.provider_reports if item.get("native_tool_loop_requested")
+                1 for item in latest_provider_reports if item.get("native_tool_loop_requested")
             ),
             "provider_native_tool_loop_supported_count": sum(
-                1 for item in self.provider_reports if item.get("native_tool_loop_supported")
+                1 for item in latest_provider_reports if item.get("native_tool_loop_supported")
             ),
             "provider_native_tool_missing_lanes": [
                 str(item.get("lane") or "unknown")
-                for item in self.provider_reports
+                for item in latest_provider_reports
                 if item.get("native_tool_loop_requested")
                 and safe_int(item.get("native_tool_call_count")) <= 0
             ],
@@ -212,6 +254,15 @@ class RuntimeGateRunLoopMixin:
             ),
             "provider_native_tool_unavailable_required_lanes": (
                 provider_native_tool_unavailable_required_lanes
+            ),
+            "semantic_required_provider_lanes": sorted(semantic_required_provider_lanes),
+            "provider_semantic_execution_count": sum(
+                1
+                for item in latest_provider_reports
+                if item.get("semantic_provider_execution_performed")
+            ),
+            "provider_semantic_missing_required_lanes": (
+                provider_semantic_missing_required_lanes
             ),
             "provider_teamwork_required": True,
             "budget_exhausted": bool(missing and (last_round >= self.max_iterations)),

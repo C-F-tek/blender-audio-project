@@ -46,6 +46,7 @@ from Tools.ai._shared.universo_utils import (
     read_request_file,
     repo_rel,
 )
+from Tools.ai._shared.process_tree import terminate_process_tree
 from Tools.validation._shared.report_utils import (
     resolve_output_path,
     write_json_report,
@@ -108,6 +109,7 @@ __all__ = [
     "safe_int",
     "source_anchors",
     "subprocess",
+    "terminate_process_tree",
     "tokenize",
     "write_json_report",
     "write_text_report",
@@ -125,12 +127,15 @@ DEFAULT_BRIDGE_MD = "output/validation/heap_runtime_completeness_gate_broker_bri
 REQUIREMENT_ORDER = (
     "tool_catalog",
     "shared_memory",
+    "persistent_memory_status",
+    "persistent_memory_search",
     "operational_memory_write",
     "operational_memory_search",
     "shared_context_chunks",
     "semantic_code_chunks",
     "ai_context_pack",
     "semantic_evidence_chunks",
+    "runtime_file_refs",
     "validation_evidence",
     "gpu0_provider_peer",
     "npu_micro_task_auditor",
@@ -140,12 +145,15 @@ REQUIREMENT_ORDER = (
 BASE_REQUIREMENTS = (
     "tool_catalog",
     "shared_memory",
+    "persistent_memory_status",
+    "persistent_memory_search",
     "operational_memory_write",
     "operational_memory_search",
     "shared_context_chunks",
     "semantic_code_chunks",
     "ai_context_pack",
     "semantic_evidence_chunks",
+    "runtime_file_refs",
     "validation_evidence",
 )
 
@@ -194,12 +202,15 @@ COMPLEX_REQUEST_HINTS = (
 MEMORY_CONTEXT_RELOAD_REQUIREMENTS = {
     "tool_catalog": "tool_catalog_reload",
     "shared_memory": "shared_memory_reload",
+    "persistent_memory_status": "persistent_memory_status_reload",
+    "persistent_memory_search": "persistent_memory_reload",
     "operational_memory_write": "operational_memory_write",
     "operational_memory_search": "operational_memory_reload",
     "shared_context_chunks": "shared_context_reload",
     "semantic_code_chunks": "semantic_code_reload",
     "ai_context_pack": "context_pack_reload",
     "semantic_evidence_chunks": "semantic_evidence_reload",
+    "runtime_file_refs": "runtime_file_refs_reload",
     "virtual_dev_environment": "virtual_dev_environment_reload",
     "code_execution_matrix": "code_execution_matrix_reload",
     "runtime_debug_lab_execution": "runtime_debug_lab_reload",

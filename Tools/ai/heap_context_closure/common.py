@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from Tools.ai._shared.process_tree import terminate_process_tree
+
 DEFAULT_REQUEST = (
     "Esegui heap runtime con proposal chunks multi-parte. "
     "Non comprimere tutto nella sola risposta GPU1: salva blocchi par1/par2/par3, "
@@ -70,33 +72,39 @@ def run_command(
     repo_root: Path,
     timeout_seconds: int | None = None,
 ) -> dict[str, Any]:
+    process: subprocess.Popen[str] | None = None
     try:
-        completed = subprocess.run(
+        process = subprocess.Popen(
             command,
             cwd=repo_root,
             text=True,
-            capture_output=True,
-            check=False,
-            timeout=timeout_seconds,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
+        stdout, stderr = process.communicate(timeout=timeout_seconds)
     except subprocess.TimeoutExpired as exc:
+        if process is not None:
+            terminate_process_tree(process)
+            stdout, stderr = process.communicate()
+        else:
+            stdout = exc.stdout if isinstance(exc.stdout, str) else ""
+            stderr = exc.stderr if isinstance(exc.stderr, str) else ""
         return {
             "command": command,
             "returncode": -9,
-            "stdout_tail": (exc.stdout or "")[-4000:] if isinstance(exc.stdout, str) else "",
-            "stderr_tail": (
-                ((exc.stderr or "")[-4000:] if isinstance(exc.stderr, str) else "")
-                + f"\nTimeoutExpired after {timeout_seconds}s"
-            ).strip(),
+            "stdout_tail": (stdout or "")[-4000:],
+            "stderr_tail": ((stderr or "")[-4000:] + f"\nTimeoutExpired after {timeout_seconds}s").strip(),
             "passed": False,
             "timeout": True,
+            "process_tree_terminated": process is not None,
         }
+    returncode = process.returncode if process is not None else 127
     return {
         "command": command,
-        "returncode": completed.returncode,
-        "stdout_tail": (completed.stdout or "")[-4000:],
-        "stderr_tail": (completed.stderr or "")[-4000:],
-        "passed": completed.returncode == 0,
+        "returncode": returncode,
+        "stdout_tail": (stdout or "")[-4000:],
+        "stderr_tail": (stderr or "")[-4000:],
+        "passed": returncode == 0,
         "timeout": False,
     }
 

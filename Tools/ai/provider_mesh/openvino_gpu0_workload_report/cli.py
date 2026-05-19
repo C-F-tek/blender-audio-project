@@ -17,16 +17,113 @@ def resolve_path(repo_root: Path, value: str) -> Path:
     return path.resolve()
 
 
+def read_json_file(path: Path) -> dict[str, Any]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception as exc:  # noqa: BLE001 - reported as provider evidence.
+        return {"_read_error": f"{type(exc).__name__}: {exc}"}
+
+
+def read_text_file(repo_root: Path, value: str) -> str:
+    return resolve_path(repo_root, value).read_text(encoding="utf-8-sig", errors="replace")
+
+
+def startup_context_preview(
+    repo_root: Path, startup_manifest: str, task_file: str, max_chars: int
+) -> tuple[str, str]:
+    manifest_path = resolve_path(repo_root, startup_manifest) if startup_manifest else None
+    if manifest_path and manifest_path.is_file():
+        payload = read_json_file(manifest_path)
+        artifacts = payload.get("artifacts") if isinstance(payload.get("artifacts"), dict) else {}
+        compact = {
+            "source": "startup_manifest",
+            "startup_manifest": str(startup_manifest),
+            "request_preview": str(payload.get("request_preview") or "")[:800],
+            "request_sha256": payload.get("request_sha256"),
+            "input_ready_before_heap": payload.get("input_ready_before_heap"),
+            "startup_reload_degraded": payload.get("startup_reload_degraded"),
+            "context_file_count": payload.get("context_file_count"),
+            "artifact_keys": sorted(str(key) for key in artifacts)[:80],
+            "task_file_mode": "artifact_reference_only_not_runtime_database",
+        }
+        return json.dumps(compact, ensure_ascii=False, indent=2)[:max_chars], "startup_manifest"
+    file_path = resolve_path(repo_root, task_file) if task_file else None
+    if file_path and file_path.is_file():
+        return file_path.read_text(encoding="utf-8", errors="replace")[:max_chars], "task_file"
+    return "", "none"
+
+
+def render_leader_peer_prompt(
+    request: str, leader_packet: dict[str, Any], direct_startup_context: str
+) -> str:
+    if not leader_packet:
+        return "\n".join(
+            part
+            for part in (
+                request,
+                "DIRECT_STARTUP_CONTEXT_FROM_CONTEXT_RELOAD:",
+                direct_startup_context[:1600],
+            )
+            if part.strip()
+        )
+    contract = leader_packet.get("same_heap_teamwork_contract")
+    contract_text = "; ".join(str(item) for item in contract[:5]) if isinstance(contract, list) else ""
+    propagation = leader_packet.get("propagation_contract")
+    propagation_text = "; ".join(str(item) for item in propagation[:5]) if isinstance(propagation, list) else ""
+    pointer = leader_packet.get("pointer_contract") if isinstance(leader_packet.get("pointer_contract"), dict) else {}
+    universe = leader_packet.get("runtime_universe") if isinstance(leader_packet.get("runtime_universe"), dict) else {}
+    universe_summary = universe.get("summary") if isinstance(universe.get("summary"), dict) else {}
+    startup_plane = leader_packet.get("startup_context_plane")
+    startup_artifacts = leader_packet.get("startup_artifacts")
+    startup_keys = (
+        ", ".join(sorted(str(key) for key in startup_artifacts.keys())[:10])
+        if isinstance(startup_artifacts, dict)
+        else ""
+    )
+    return "\n".join(
+        part
+        for part in (
+            "GPU0 peer lane. Consume the GPU1 primary advisor leader packet.",
+            f"OPERATOR_REQUEST: {request}",
+            f"GPU1_LEADER_ROLE: {leader_packet.get('role')}",
+            f"SAME_HEAP_TEAMWORK_CONTRACT: {contract_text}",
+            f"HEAP_UNIVERSE_SUMMARY: {universe_summary}",
+            f"STARTUP_CONTEXT_PLANE: {startup_plane}",
+            f"DIRECT_STARTUP_CONTEXT_FROM_CONTEXT_RELOAD: {direct_startup_context[:1600]}",
+            f"STARTUP_ARTIFACT_KEYS: {startup_keys}",
+            f"POINTER_CONTRACT: {pointer}",
+            f"PROPAGATION_CONTRACT: {propagation_text}",
+            f"SOURCE_PATH_ALLOWLIST_CONTRACT: {str(leader_packet.get('source_allowlist_contract') or '')[:1200]}",
+            f"GPU1_REVISION_FEEDBACK: {str(leader_packet.get('revision_feedback') or '')[:700]}",
+        )
+        if part.strip()
+    )
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     lines = [
         "# OpenVINO GPU.0 observable support workload",
         "",
         f"- Passed: `{report.get('passed')}`",
         f"- Provider execution performed: `{report.get('provider_execution_performed')}`",
+        f"- Device workload execution performed: `{report.get('device_workload_execution_performed')}`",
+        f"- Semantic provider required: `{report.get('semantic_provider_required')}`",
+        f"- Semantic provider execution performed: `{report.get('semantic_provider_execution_performed')}`",
+        f"- Semantic provider model loaded: `{report.get('semantic_provider_model_loaded')}`",
+        f"- Semantic provider classification: `{report.get('semantic_provider_classification')}`",
         f"- Production support: `{report.get('production_support')}`",
         f"- Iterations: `{report.get('iterations')}`",
         f"- Minimum seconds: `{report.get('min_seconds')}`",
         f"- Requested role: `{report.get('requested_role')}`",
+        f"- Startup manifest: `{report.get('startup_manifest')}`",
+        f"- Startup context source: `{report.get('startup_context_source')}`",
+        f"- Startup context consumed: `{report.get('startup_context_consumed')}`",
+        f"- Leader packet consumed: `{report.get('leader_packet_consumed')}`",
+        f"- Leader packet: `{report.get('leader_packet')}`",
+        f"- Leader packet heap universe contract: `{report.get('leader_packet_heap_universe_contract')}`",
+        f"- Leader packet pointer contract: `{report.get('leader_packet_pointer_contract')}`",
+        f"- Leader packet startup artifacts: `{report.get('leader_packet_startup_artifacts_count')}`",
+        f"- Leader packet broker tool evidence: `{report.get('leader_packet_broker_tool_evidence_count')}`",
         f"- GPU.0 visible: `{report.get('openvino_gpu0_visible')}`",
         f"- GPU.0 probe performed: `{report.get('openvino_gpu0_probe_performed')}`",
         f"- GPU.0 workload performed: `{report.get('openvino_gpu0_workload_performed')}`",
@@ -144,10 +241,16 @@ def main() -> int:
         default="",
         help="Optional heap request observed by GPU.0 peer lane.",
     )
+    parser.add_argument("--request-file", default="")
+    parser.add_argument("--startup-manifest", default="")
+    parser.add_argument("--task-file", default="")
+    parser.add_argument("--max-context-chars", type=int, default=4000)
     parser.add_argument("--production-support", action="store_true", default=True)
     parser.add_argument("--allow-non-observable", action="store_true")
     parser.add_argument("--tool-loop-timeout-seconds", type=float, default=30.0)
     parser.add_argument("--tool-loop-max-new-tokens", type=int, default=128)
+    parser.add_argument("--require-semantic-provider", action="store_true")
+    parser.add_argument("--leader-packet", default="", help="GPU1 primary advisor leader packet.")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -161,7 +264,41 @@ def main() -> int:
     report["iterations"] = int(args.iterations)
     report["min_seconds"] = float(args.min_seconds)
     report["requested_role"] = str(args.role)
-    report["request_input"] = str(args.request or "").strip()
+    request_input = read_text_file(repo_root, args.request_file) if args.request_file else str(args.request or "").strip()
+    report["request_input"] = request_input
+    report["request_file"] = str(args.request_file or "")
+    report["request_transport"] = "operator_request_file" if args.request_file else "inline_cli"
+    startup_context, startup_context_source = startup_context_preview(
+        repo_root, args.startup_manifest, args.task_file, args.max_context_chars
+    )
+    report["startup_manifest"] = str(args.startup_manifest or "")
+    report["task_file"] = str(args.task_file or "")
+    report["startup_context_source"] = startup_context_source
+    report["startup_context_consumed"] = startup_context_source == "startup_manifest"
+    report["startup_context_preview_chars"] = len(startup_context)
+    leader_packet_path = resolve_path(repo_root, args.leader_packet) if args.leader_packet else None
+    leader_packet = read_json_file(leader_packet_path) if leader_packet_path else {}
+    report["leader_packet"] = str(args.leader_packet or "")
+    report["leader_packet_required"] = bool(args.leader_packet)
+    report["leader_packet_kind"] = str(leader_packet.get("kind") or "")
+    report["leader_packet_role"] = str(leader_packet.get("role") or "")
+    report["leader_packet_heap_universe_contract"] = bool(leader_packet.get("heap_universe_contract"))
+    report["leader_packet_pointer_contract"] = bool(leader_packet.get("pointer_contract"))
+    report["leader_packet_startup_artifacts_count"] = len(leader_packet.get("startup_artifacts") or {})
+    report["leader_packet_broker_tool_evidence_count"] = len(
+        leader_packet.get("broker_tool_evidence") or []
+    )
+    report["leader_packet_error"] = str(leader_packet.get("_read_error") or "")
+    report["leader_packet_consumed"] = bool(
+        leader_packet
+        and not leader_packet.get("_read_error")
+        and leader_packet.get("role") == "gpu1_primary_advisory_leader"
+        and leader_packet.get("heap_universe_contract")
+        and leader_packet.get("pointer_contract")
+    )
+    if leader_packet.get("_read_error"):
+        report.setdefault("errors", []).append(f"leader packet unreadable: {leader_packet['_read_error']}")
+        report["passed"] = False
     report["openvino_gpu0_observable_workload_required"] = not bool(args.allow_non_observable)
     report["openvino_gpu0_observable_workload_passed"] = bool(
         report.get("openvino_gpu0_workload_performed")
@@ -183,8 +320,11 @@ def main() -> int:
         report["passed"] = False
     tool_loop = openvino_tool_loop_report(
         repo_root=repo_root,
-        prompt=report["request_input"]
-        or "Call the broker tool needed to validate a heap code product.",
+        prompt=render_leader_peer_prompt(
+            report["request_input"] or "Call the broker tool needed to validate a heap code product.",
+            leader_packet,
+            startup_context,
+        ),
         timeout_seconds=args.tool_loop_timeout_seconds,
         max_new_tokens=args.tool_loop_max_new_tokens,
         device="GPU.0",
@@ -196,6 +336,28 @@ def main() -> int:
     report["native_tool_loop_performed"] = bool(tool_loop.get("native_tool_loop_performed"))
     report["native_tool_call_count"] = int(tool_loop.get("native_tool_call_count") or 0)
     report["tool_calls"] = tool_loop.get("tool_calls") or []
+    report["device_workload_execution_performed"] = bool(
+        report.get("openvino_gpu0_workload_performed")
+        or report.get("openvino_gpu0_probe_performed")
+    )
+    report["semantic_provider_required"] = bool(args.require_semantic_provider)
+    report["semantic_provider_model_dir"] = str(tool_loop.get("model_dir") or "")
+    report["semantic_provider_model_dir_source"] = str(tool_loop.get("model_dir_source") or "")
+    report["semantic_provider_classification"] = str(tool_loop.get("classification") or "")
+    report["semantic_provider_model_discovered"] = bool(
+        report["semantic_provider_model_dir"]
+        and report["semantic_provider_model_dir_source"] != "missing"
+    )
+    report["semantic_child_failed"] = bool(
+        report["semantic_provider_model_discovered"]
+        and not tool_loop.get("native_tool_loop_performed")
+        and str(tool_loop.get("classification") or "").endswith("_error")
+    )
+    report["semantic_provider_model_loaded"] = bool(tool_loop.get("native_tool_loop_performed"))
+    report["semantic_provider_execution_performed"] = bool(
+        tool_loop.get("native_tool_loop_supported")
+        and tool_loop.get("native_tool_loop_performed")
+    )
     if (
         report["native_tool_loop_requested"]
         and report["native_tool_call_count"] <= 0
@@ -203,6 +365,24 @@ def main() -> int:
     ):
         report.setdefault("errors", []).append(
             str(tool_loop.get("classification") or "openvino_native_tool_call_missing")
+        )
+        report["passed"] = False
+    if report["semantic_provider_required"] and not report["semantic_provider_execution_performed"]:
+        if report["semantic_provider_model_discovered"]:
+            report.setdefault("errors", []).append(
+                "GPU.0 semantic provider model was discovered but the OpenVINO child "
+                f"tool loop failed: {report['semantic_provider_classification']}."
+            )
+        else:
+            report.setdefault("errors", []).append(
+                "GPU.0 semantic provider model was not discovered/executed; configure a valid "
+                "OpenVINO GenAI model dir via IA_CARMINE_GPU0_COMPANION_MODEL_DIR or "
+                "IA_CARMINE_OPENVINO_TOOL_MODEL_DIR."
+            )
+        report["passed"] = False
+    if report["leader_packet_required"] and not report["leader_packet_consumed"]:
+        report.setdefault("errors", []).append(
+            "GPU.0 peer did not consume a valid GPU1 primary advisor leader packet."
         )
         report["passed"] = False
     report.update(build_gpu0_peer_response(report))

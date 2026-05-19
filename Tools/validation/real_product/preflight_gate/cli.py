@@ -11,8 +11,10 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai._shared.process_tree import terminate_process_tree
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
+    from Tools.ai._shared.process_tree import terminate_process_tree  # type: ignore
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
@@ -42,22 +44,37 @@ def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> d
         str(output),
     ]
 
-    if name == "full_product_pr_chain":
+    process_timeout = timeout_seconds
+    if name in {"full_product_pr_chain", "heap_runtime_completeness_gate"}:
         command.extend(["--timeout-seconds", str(timeout_seconds)])
+    if name == "heap_runtime_completeness_gate":
+        command.append("--contract-only")
 
     env = dict(os.environ)
     env["PYTHONPATH"] = str(repo_root)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
 
-    result = subprocess.run(
-        command,
-        cwd=repo_root,
-        env=env,
-        text=True,
-        capture_output=True,
-        check=False,
-        timeout=timeout_seconds,
-    )
+    process: subprocess.Popen[str] | None = None
+    timed_out = False
+    try:
+        process = subprocess.Popen(
+            command,
+            cwd=repo_root,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        stdout, stderr = process.communicate(timeout=process_timeout)
+        returncode = process.returncode
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        if process is not None:
+            terminate_process_tree(process)
+            stdout, stderr = process.communicate()
+        else:
+            stdout, stderr = "", ""
+        returncode = -9
 
     report: dict[str, Any] = {}
     if output.exists():
@@ -73,14 +90,17 @@ def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> d
         "name": name,
         "script": script,
         "output": output.as_posix(),
-        "returncode": result.returncode,
-        "passed": result.returncode == 0 and report.get("passed") is True,
+        "returncode": returncode,
+        "passed": returncode == 0 and report.get("passed") is True,
+        "timeout": timed_out,
+        "process_tree_terminated": timed_out and process is not None,
+        "process_timeout_seconds": process_timeout,
         "report_passed": report.get("passed"),
         "report_kind": report.get("kind"),
         "report_errors": report.get("errors") or [],
         "report_warnings": report.get("warnings") or [],
-        "stdout": stream(result.stdout),
-        "stderr": stream(result.stderr),
+        "stdout": stream(stdout or ""),
+        "stderr": stream(stderr or ""),
     }
 
 

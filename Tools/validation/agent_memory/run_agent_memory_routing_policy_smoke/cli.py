@@ -7,9 +7,13 @@ import argparse
 import json
 import subprocess
 import sys
+from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
+from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
 
 
 def stamp() -> str:
@@ -73,6 +77,10 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
             errors.append(f"{key} must be false")
     if policy.get("guardrails", {}).get("automatic_persistent_promotion_allowed") is not False:
         errors.append("automatic persistent promotion must be disabled")
+    if policy.get("broker_request_transport") != "in_memory":
+        errors.append("broker request transport must be in_memory")
+    if not isinstance(policy.get("broker_request_packet"), dict):
+        errors.append("policy must expose an in-memory broker request packet")
     return errors
 
 
@@ -98,6 +106,8 @@ def validate_broker(broker: dict[str, Any]) -> list[str]:
         errors.append(
             "operational sqlite write should be true because policy writes one scratch note"
         )
+    if broker.get("request_transport") != "in_memory":
+        errors.append("broker request transport must be in_memory")
     return errors
 
 
@@ -115,10 +125,6 @@ def main() -> int:
     )
     policy_md = resolve_path(
         repo_root, f"output/validation/agent_memory_routing_policy_smoke_{run_stamp}.md"
-    )
-    broker_request = resolve_path(
-        repo_root,
-        f"output/ai_runtime_tools/agent_memory_routing_policy_smoke_{run_stamp}_tool_requests.json",
     )
     broker_output = resolve_path(
         repo_root, f"output/validation/agent_memory_routing_policy_broker_smoke_{run_stamp}.json"
@@ -152,8 +158,6 @@ def main() -> int:
         "Smoke: operational scratch memory stores current planner working context only.",
         "--promotion-candidate",
         "Potential durable lesson: runtime tools should be brokered through allowlists.",
-        "--broker-request-output",
-        str(broker_request),
         "--output",
         str(policy_output),
         "--markdown-output",
@@ -162,24 +166,42 @@ def main() -> int:
     policy_code, policy_stdout, policy_stderr = run_command(repo_root, policy_cmd)
     policy_report = read_json(policy_output) if policy_output.exists() else {}
 
-    broker_cmd = [
-        sys.executable,
-        "Tools/ai/runtime_tool/agent_broker/cli.py",
-        "--repo-root",
-        ".",
-        "--request-file",
-        str(broker_request),
-        "--tool-output-dir",
-        f"output/ai_runtime_tools/memory_routing_policy_smoke_{run_stamp}",
-        "--timeout-seconds",
-        "300",
-        "--output",
-        str(broker_output),
-        "--markdown-output",
-        str(broker_md),
-    ]
-    broker_code, broker_stdout, broker_stderr = run_command(repo_root, broker_cmd)
-    broker_report = read_json(broker_output) if broker_output.exists() else {}
+    broker_report: dict[str, Any] = {}
+    broker_stdout = ""
+    broker_stderr = ""
+    broker_code = 0
+    broker_packet = (
+        policy_report.get("broker_request_packet")
+        if isinstance(policy_report.get("broker_request_packet"), dict)
+        else {}
+    )
+    try:
+        broker_args = Namespace(
+            repo_root=str(repo_root),
+            request_data=broker_packet,
+            request_file="",
+            request_json="",
+            tool_output_dir=f"output/ai_runtime_tools/memory_routing_policy_smoke_{run_stamp}",
+            stamp=run_stamp,
+            timeout_seconds=300,
+            dry_run=False,
+        )
+        broker_report = build_broker_report(broker_args)
+        write_json(broker_output, broker_report)
+        broker_md.parent.mkdir(parents=True, exist_ok=True)
+        broker_md.write_text(render_broker_markdown(broker_report), encoding="utf-8")
+        broker_code = 0 if broker_report.get("passed") else 2
+        broker_stdout = json.dumps(
+            {
+                "passed": broker_report.get("passed"),
+                "request_transport": broker_report.get("request_transport"),
+                "tool_execution_count": broker_report.get("tool_execution_count"),
+            },
+            ensure_ascii=False,
+        )
+    except Exception as exc:  # noqa: BLE001
+        broker_code = 1
+        broker_stderr = f"{type(exc).__name__}: {exc}"
 
     errors = []
     if policy_code != 0:
@@ -203,7 +225,7 @@ def main() -> int:
         "sqlite_write_performed": False,
         "persistent_memory_write_performed": False,
         "policy_output": str(policy_output),
-        "broker_request": str(broker_request),
+        "broker_request_transport": policy_report.get("broker_request_transport"),
         "broker_output": str(broker_output),
         "policy_returncode": policy_code,
         "broker_returncode": broker_code,

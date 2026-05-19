@@ -45,90 +45,18 @@ def run_npu_runtime_tool_broker_for_audit(
             },
         }
 
-    output_root = resolve_path(repo_root, args.runtime_tool_output_dir)
-    round_dir = output_root / f"npu_round_{round_id:03d}"
-    round_dir.mkdir(parents=True, exist_ok=True)
-    request_file = round_dir / f"npu_round_{round_id:03d}_tool_requests.json"
-    broker_output = round_dir / f"npu_round_{round_id:03d}_runtime_tool_broker.json"
-    broker_markdown = round_dir / f"npu_round_{round_id:03d}_runtime_tool_broker.md"
-    request_packet = {
-        "schema_version": 1,
-        "kind": "npu_auditor_runtime_tool_requests",
-        "repo_root": str(repo_root),
-        "round": round_id,
-        "source_audit": audit_record.get("audit_output"),
-        "tool_requests": tool_requests,
-        "guardrails": {
-            "free_shell_allowed": False,
-            "broker_allowlist_required": True,
-            "patch_application_allowed": False,
-            "provider_execution_allowed": False,
-            "persistent_memory_write_allowed": False,
-            "manual_review_required": True,
-        },
-    }
-    write_json(request_file, request_packet)
-    command = [
-        resolve_child_python(),
-        "-m",
-        "Tools.ai",
-        "agent_runtime_tool_broker",
-        "--repo-root",
-        ".",
-        "--request-file",
-        str(request_file),
-        "--tool-output-dir",
-        str(round_dir),
-        "--timeout-seconds",
-        str(args.runtime_tool_timeout_seconds),
-        "--output",
-        str(broker_output),
-        "--markdown-output",
-        str(broker_markdown),
-    ]
-    returncode, stdout, stderr, error = run_command_sync(
-        command, repo_root, args.runtime_tool_timeout_seconds + 30
+    result = run_orchestrator_runtime_tool_broker_packet(
+        args=args,
+        repo_root=repo_root,
+        tool_requests=tool_requests,
+        request_kind="npu_auditor_runtime_tool_requests",
+        output_subdir=f"npu_round_{round_id:03d}",
+        output_prefix=f"npu_round_{round_id:03d}",
+        source="npu_auditor",
     )
-    broker_report: dict[str, Any] = {}
-    broker_output_exists = broker_output.exists()
-    if broker_output_exists:
-        try:
-            broker_report = read_json(broker_output)
-        except Exception as exc:  # noqa: BLE001
-            error = f"{error} {type(exc).__name__}: {exc}".strip()
-    elif not error:
-        error = "npu_runtime_tool_broker_output_missing"
-
-    return {
-        "enabled": True,
-        "executed": True,
-        "requested_tool_count": len(tool_requests),
-        "command": command,
-        "returncode": returncode,
-        "stdout_tail": stdout,
-        "stderr_tail": stderr,
-        "error": error,
-        "request_file": repo_rel(request_file, repo_root),
-        "broker_output": repo_rel(broker_output, repo_root),
-        "broker_markdown": repo_rel(broker_markdown, repo_root),
-        "broker_output_exists": broker_output_exists,
-        "passed": broker_report.get("passed"),
-        "tool_request_count": broker_report.get("tool_request_count", len(tool_requests)),
-        "tool_execution_count": broker_report.get("tool_execution_count", 0),
-        "blocked_tool_count": broker_report.get("blocked_tool_count", 0),
-        "failed_tool_count": broker_report.get("failed_tool_count", 0),
-        "provider_execution_performed": broker_report.get("provider_execution_performed", False),
-        "patch_application_performed": broker_report.get("patch_application_performed", False),
-        "sqlite_write_performed": broker_report.get("sqlite_write_performed", False),
-        "persistent_memory_write_performed": broker_report.get(
-            "persistent_memory_write_performed", False
-        ),
-        "operational_sqlite_write_performed": broker_report.get(
-            "operational_sqlite_write_performed", False
-        ),
-        "tool_results": broker_report.get("tool_results", [])[:8],
-        "guardrails": broker_report.get("guardrails", {}),
-    }
+    result["round"] = round_id
+    result["source_audit"] = audit_record.get("audit_output")
+    return result
 
 def build_npu_command(
     args: argparse.Namespace, repo_root: Path, checkpoint: Path, audit_json: Path

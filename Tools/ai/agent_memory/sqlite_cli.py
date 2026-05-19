@@ -68,6 +68,8 @@ def main() -> int:
                 "action": report["action"],
                 "scope": report["scope"],
                 "sqlite_write_performed": report["sqlite_write_performed"],
+                "sqlite_search_backend": report["sqlite_search_backend"],
+                "sqlite_fts5_enabled": report["sqlite_fts5_enabled"],
                 "persistent_memory_write_performed": report["persistent_memory_write_performed"],
                 "operational_sqlite_write_performed": report["operational_sqlite_write_performed"],
                 "operational_memory_clear_performed": report["operational_memory_clear_performed"],

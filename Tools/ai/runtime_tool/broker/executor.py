@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -10,17 +11,7 @@ from typing import Any
 from Tools.ai._shared.agent_runtime_tool_broker_execution import execute_command_timed
 from Tools.validation._shared.report_utils import read_json_report
 
-from .common import (
-    compact_value,
-    fixture_repo_write,
-    now_iso,
-    output_owned_artifact_write,
-    repo_rel,
-    resolve_path,
-    safe_id,
-    truthy,
-    validate_request_args,
-)
+from .common import compact_value, execute_debug_lab_in_process, fixture_repo_write, now_iso, output_owned_artifact_write, repo_rel, resolve_path, safe_id, truthy, validate_request_args
 from .registry import TOOL_SPECS
 
 def extract_tool_requests(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -38,7 +29,7 @@ def first_tool_request_source(tool_requests: list[dict[str, Any]]) -> str:
     return ""
 
 
-def infer_request_source(requests_data: dict[str, Any], request_path: Path) -> str:
+def infer_request_source(requests_data: dict[str, Any], request_path: Path | None) -> str:
     for key in ("source", "source_lane", "target_lane"):
         value = str(requests_data.get(key) or "").strip()
         if value:
@@ -56,7 +47,7 @@ def infer_request_source(requests_data: dict[str, Any], request_path: Path) -> s
     if kind == "agent_runtime_tool_requests":
         return "gpu1_primary_advisory"
 
-    path_text = request_path.as_posix().lower()
+    path_text = request_path.as_posix().lower() if request_path else ""
     if "gpu0" in path_text:
         return "gpu0_peer_companion"
     if "npu_micro" in path_text or "/npu_" in path_text:
@@ -64,6 +55,31 @@ def infer_request_source(requests_data: dict[str, Any], request_path: Path) -> s
     if "gpu1" in path_text:
         return "gpu1_primary_advisory"
     return kind or "unknown"
+
+
+def load_requests_data(
+    repo_root: Path, args: argparse.Namespace
+) -> tuple[dict[str, Any], Path | None, str, list[str]]:
+    request_data = getattr(args, "request_data", None)
+    if isinstance(request_data, dict):
+        return request_data, None, "in_memory", []
+    request_packet = getattr(args, "request_packet", None)
+    if isinstance(request_packet, dict):
+        return request_packet, None, "in_memory", []
+    if getattr(args, "request_json", ""):
+        try:
+            data = json.loads(args.request_json)
+        except json.JSONDecodeError as exc:
+            return {}, None, "inline_json", [
+                f"invalid --request-json at line {exc.lineno}, column {exc.colno}: {exc.msg}"
+            ]
+        if not isinstance(data, dict):
+            return {}, None, "inline_json", ["--request-json root must be an object"]
+        return data, None, "inline_json", []
+    if getattr(args, "request_file", ""):
+        request_path = resolve_path(repo_root, args.request_file)
+        return read_json_report(request_path), request_path, "request_file", []
+    return {}, None, "missing", ["--request-json or --request-file is required"]
 
 
 def execute_tool_request(
@@ -83,6 +99,7 @@ def execute_tool_request(
         "tool": tool_name,
         "reason": str(request.get("reason") or ""),
         "requirement": str(request.get("requirement") or ""),
+        "nonblocking": truthy(request.get("nonblocking")) or truthy(request.get("optional")),
         "requested": True,
         "executed": False,
         "blocked": False,
@@ -146,7 +163,15 @@ def execute_tool_request(
         base_result["status"] = "dry_run"
         return base_result
 
-    timed = execute_command_timed(command, repo_root, timeout_seconds)
+    if tool_name == "agent_runtime_debug_lab" and command[:1] == ["in_process"]:
+        timed = execute_debug_lab_in_process(
+            repo_root=repo_root,
+            request_args=request_args,
+            outputs=outputs,
+            timeout_seconds=timeout_seconds,
+        )
+    else:
+        timed = execute_command_timed(command, repo_root, timeout_seconds)
     base_result["executed"] = True
     base_result["returncode"] = timed.returncode
     base_result["started_at"] = timed.started_at
@@ -169,15 +194,9 @@ def execute_tool_request(
                 "passed": report_data.get("passed"),
                 "target_count": report_data.get("target_count"),
                 "verified_target_count": report_data.get("verified_target_count"),
-                "concrete_code_proposal_count": report_data.get(
-                    "concrete_code_proposal_count"
-                ),
-                "patch_candidate_synthesis_requested": report_data.get(
-                    "patch_candidate_synthesis_requested"
-                ),
-                "patch_candidate_synthesis_passed_count": report_data.get(
-                    "patch_candidate_synthesis_passed_count"
-                ),
+                "concrete_code_proposal_count": report_data.get("concrete_code_proposal_count"),
+                "patch_candidate_synthesis_requested": report_data.get("patch_candidate_synthesis_requested"),
+                "patch_candidate_synthesis_passed_count": report_data.get("patch_candidate_synthesis_passed_count"),
                 "candidate_count": report_data.get("candidate_count"),
                 "tool_catalog_ref_count": report_data.get("tool_catalog_ref_count"),
                 "startup_artifact_ref_count": report_data.get("startup_artifact_ref_count"),
@@ -191,17 +210,9 @@ def execute_tool_request(
                 if isinstance(report_data.get("guardrails"), dict)
                 else {}
             )
-            source_writes = bool(
-                report_data.get("source_writes_performed")
-                or guardrails.get("source_writes_performed")
-            )
-            patch_application = bool(
-                report_data.get("patch_application_performed")
-                or guardrails.get("patch_application_performed")
-            )
-            git_write = bool(
-                report_data.get("git_write_performed") or guardrails.get("git_write_performed")
-            )
+            source_writes = bool(report_data.get("source_writes_performed") or guardrails.get("source_writes_performed"))
+            patch_application = bool(report_data.get("patch_application_performed") or guardrails.get("patch_application_performed"))
+            git_write = bool(report_data.get("git_write_performed") or guardrails.get("git_write_performed"))
             fixture_write = fixture_repo_write(repo_root, report_data, outputs)
             output_artifact_write = output_owned_artifact_write(repo_root, report_data, outputs)
             if source_writes and fixture_write:
@@ -209,9 +220,7 @@ def execute_tool_request(
                 base_result["warnings"].append(
                     "fixture/output write ignored for source-write guardrail"
                 )
-            elif (
-                source_writes and output_artifact_write and not patch_application and not git_write
-            ):
+            elif source_writes and output_artifact_write and not patch_application and not git_write:
                 source_writes = False
                 base_result["warnings"].append(
                     "output-owned artifact write ignored for source-write guardrail"
@@ -282,8 +291,7 @@ def execute_tool_request(
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    request_path = resolve_path(repo_root, args.request_file)
-    requests_data = read_json_report(request_path)
+    requests_data, request_path, request_transport, load_errors = load_requests_data(repo_root, args)
     tool_requests = extract_tool_requests(requests_data)
     request_source = infer_request_source(requests_data, request_path)
     stamp = args.stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -304,64 +312,43 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
     blocked = [item for item in results if item.get("blocked")]
     executed = [item for item in results if item.get("executed")]
-    failed = [item for item in results if item.get("errors") and not item.get("blocked")]
-    dangerous_guardrail = [
-        item
-        for item in results
-        if item.get("guardrails", {}).get("provider_execution_performed")
-        or (
-            item.get("guardrails", {}).get("patch_application_performed")
-            and not item.get("code_product_safe_apply_authorized")
-        )
-        or (
-            item.get("guardrails", {}).get("source_writes_performed")
-            and not item.get("code_product_safe_apply_authorized")
-        )
-        or (
-            item.get("guardrails", {}).get("sqlite_write_performed")
-            and not item.get("persistent_memory_write_authorized")
-        )
-        or (
-            item.get("guardrails", {}).get("persistent_memory_write_performed")
-            and not item.get("persistent_memory_write_authorized")
-        )
-        or item.get("guardrails", {}).get("blender_runtime_touched")
-        or item.get("guardrails", {}).get("git_write_performed")
-    ]
-    operational_sqlite_write_count = sum(
-        1
-        for item in results
-        if item.get("guardrails", {}).get("operational_sqlite_write_performed")
+    guardrails_for = lambda item: item.get("guardrails", {})
+    is_tool_failure = lambda item: item.get("errors") and not item.get("blocked")
+    failed = [item for item in results if is_tool_failure(item) and not item.get("nonblocking")]
+    nonblocking_failed = [item for item in results if is_tool_failure(item) and item.get("nonblocking")]
+    dangerous = lambda item: (
+        guardrails_for(item).get("provider_execution_performed")
+        or (guardrails_for(item).get("patch_application_performed") and not item.get("code_product_safe_apply_authorized"))
+        or (guardrails_for(item).get("source_writes_performed") and not item.get("code_product_safe_apply_authorized"))
+        or (guardrails_for(item).get("sqlite_write_performed") and not item.get("persistent_memory_write_authorized"))
+        or (guardrails_for(item).get("persistent_memory_write_performed") and not item.get("persistent_memory_write_authorized"))
+        or guardrails_for(item).get("blender_runtime_touched")
+        or guardrails_for(item).get("git_write_performed")
     )
-    persistent_memory_write_count = sum(
-        1 for item in results if item.get("guardrails", {}).get("persistent_memory_write_performed")
-    )
-    source_write_count = sum(
-        1 for item in results if item.get("guardrails", {}).get("source_writes_performed")
-    )
-    patch_application_count = sum(
-        1 for item in results if item.get("guardrails", {}).get("patch_application_performed")
-    )
-    operational_memory_clear_count = sum(
-        1
-        for item in results
-        if item.get("guardrails", {}).get("operational_memory_clear_performed")
-    )
+    dangerous_guardrail = [item for item in results if dangerous(item)]
+    operational_sqlite_write_count = sum(1 for item in results if guardrails_for(item).get("operational_sqlite_write_performed"))
+    persistent_memory_write_count = sum(1 for item in results if guardrails_for(item).get("persistent_memory_write_performed"))
+    source_write_count = sum(1 for item in results if guardrails_for(item).get("source_writes_performed"))
+    patch_application_count = sum(1 for item in results if guardrails_for(item).get("patch_application_performed"))
+    operational_memory_clear_count = sum(1 for item in results if guardrails_for(item).get("operational_memory_clear_performed"))
 
     return {
         "schema_version": 1,
         "kind": "agent_runtime_tool_broker",
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
-        "request_file": repo_rel(request_path, repo_root),
+        "request_file": repo_rel(request_path, repo_root) if request_path else "",
+        "request_transport": request_transport,
         "request_kind": requests_data.get("kind"),
         "source": request_source,
         "source_classification": request_source,
         "tool_output_dir": repo_rel(out_dir, repo_root),
-        "passed": not failed and not dangerous_guardrail,
-        "errors": [f"{item.get('id')}: {err}" for item in failed for err in item.get("errors", [])]
+        "passed": not load_errors and not failed and not dangerous_guardrail,
+        "errors": load_errors
+        + [f"{item.get('id')}: {err}" for item in failed for err in item.get("errors", [])]
         + [f"{item.get('id')}: guardrail violation" for item in dangerous_guardrail],
-        "warnings": [f"{item.get('id')}: blocked {item.get('errors')}" for item in blocked],
+        "warnings": [f"{item.get('id')}: blocked {item.get('errors')}" for item in blocked]
+        + [f"{item.get('id')}: nonblocking failed {item.get('errors')}" for item in nonblocking_failed],
         "provider_execution_performed": False,
         "patch_application_performed": patch_application_count > 0,
         "source_writes_performed": source_write_count > 0,
@@ -378,6 +365,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "tool_execution_count": len(executed),
         "blocked_tool_count": len(blocked),
         "failed_tool_count": len(failed),
+        "nonblocking_failed_tool_count": len(nonblocking_failed),
         "allowlisted_tools": sorted(TOOL_SPECS),
         "tool_results": results,
         "guardrails": {

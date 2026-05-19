@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from Tools.ai.heap_gate.runtime_common import COMPLEX_REQUEST_HINTS, Any, source_anchors
+from Tools.ai.heap_gate.target_planner import filter_source_candidates_for_request
 
 
 class RuntimeGateSourceRefsMixin:
@@ -74,13 +75,31 @@ class RuntimeGateSourceRefsMixin:
     def collect_source_candidates_from_json(self, data: Any, out: list[str]) -> None:
         source_anchors.collect_source_candidates_from_json(self.repo_root, data, out)
 
-    def request_source_file_candidates(self, limit: int = 24) -> list[str]:
-        """Return explicit existing source paths from operator/startup input first."""
+    def _request_source_candidate_texts(self) -> list[str]:
         texts = [self.request_text()]
         startup_context = self.startup_task_file_context(max_preview_chars=20000)
         if startup_context.get("loaded"):
-            texts.append(str(startup_context.get("preview") or ""))
-        return source_anchors.request_source_file_candidates(self.repo_root, texts, limit=limit)
+            texts.append(
+                str(startup_context.get("request_preview") or startup_context.get("preview") or "")
+            )
+        return texts
+
+    def request_source_file_candidates(self, limit: int = 24) -> list[str]:
+        """Return verified source candidates from request text and runtime universe."""
+        texts = self._request_source_candidate_texts()
+        candidates = source_anchors.request_source_file_candidates(
+            self.repo_root,
+            texts,
+            limit=max(limit, 64),
+        )
+        for rel_path in self.repo_runtime_universe.source_index:
+            if rel_path.endswith(".py") and rel_path not in candidates:
+                candidates.append(rel_path)
+        return filter_source_candidates_for_request(
+            candidates,
+            self.request_text(),
+            limit=limit,
+        )
 
     def real_source_file_candidates(
         self, events: list[dict[str, Any]] | None = None, limit: int = 24
@@ -92,23 +111,34 @@ class RuntimeGateSourceRefsMixin:
             for item in self.matrix_patch_candidate_evidence(events, limit=limit)
             if item.get("target_file")
         ]
-        texts = [self.request_text()]
-        startup_context = self.startup_task_file_context(max_preview_chars=20000)
-        if startup_context.get("loaded"):
-            texts.append(str(startup_context.get("preview") or ""))
-        candidates = source_anchors.real_source_file_candidates(
-            repo_root=self.repo_root,
-            request_texts=texts,
-            broker_output_refs=self.broker_output_refs(events),
-            limit=limit,
+        texts = self._request_source_candidate_texts()
+        candidates = source_anchors.request_source_file_candidates(
+            self.repo_root,
+            texts,
+            limit=max(limit, 64),
         )
+        for ref in self.broker_output_refs(events):
+            if not str(ref).endswith(".json"):
+                continue
+            data = source_anchors.read_json_file(self.repo_root / ref)
+            if data:
+                source_anchors.collect_source_candidates_from_json(
+                    self.repo_root, data, candidates
+                )
+            if len(candidates) >= limit * 3:
+                break
+        for rel_path in self.repo_runtime_universe.source_index:
+            if rel_path.endswith(".py") and rel_path not in candidates:
+                candidates.append(rel_path)
         merged: list[str] = []
         for item in [*matrix_targets, *candidates]:
             if item and item not in merged:
                 merged.append(item)
-            if len(merged) >= limit:
-                break
-        return merged
+        return filter_source_candidates_for_request(
+            merged,
+            self.request_text(),
+            limit=limit,
+        )
 
     def source_ref_alias_matches(self, rel_path: str, limit: int = 20) -> list[str]:
         return source_anchors.source_ref_alias_matches(self.repo_root, rel_path, limit=limit)

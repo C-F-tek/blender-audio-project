@@ -53,6 +53,7 @@ def main() -> int:
         ai_events = observer / "ai_public_events.jsonl"
         capability = repo / f"output/validation/runtime_tool_capability_manifest_{STAMP}.json"
         usage = repo / f"output/validation/full_toolbox_run_telemetry_summary_{STAMP}.json"
+        product = repo / f"output/validation/patch_suggestion_product_separation_{STAMP}.json"
         output = repo / "output/validation/unified_chain_contract.json"
 
         write_json(
@@ -108,13 +109,25 @@ def main() -> int:
                 "tool_usage": [{"tool": "repo_search"}, {"tool": "validator"}],
             },
         )
+        write_json(
+            product,
+            {
+                "schema_version": 1,
+                "kind": "patch_suggestion_product_separation",
+                "passed": True,
+                "patch_product_status": "product_facing_patch_suggestions_ready",
+                "ready_for_patch_suggestion_review": True,
+            },
+        )
 
         env = dict(os.environ)
         env["PYTHONPATH"] = str(source_repo)
         result = subprocess.run(
             [
                 sys.executable,
-                str(source_repo / "Tools/validation/runtime_universe/unified_chain_contract/cli.py"),
+                "-m",
+                "Tools.validation",
+                "unified_chain_contract",
                 "--repo-root",
                 str(repo),
                 "--stamp",
@@ -131,6 +144,8 @@ def main() -> int:
                 str(capability),
                 "--tool-usage-telemetry",
                 str(usage),
+                "--product-separation-report",
+                str(product),
                 "--require-ai-exchange",
                 "--require-provider-tool-evidence",
                 "--output",

@@ -72,8 +72,13 @@ def main() -> int:
     if not source_values:
         errors.append("no source files provided")
     sources: list[dict[str, Any]] = []
+    seen_sources: set[Path] = set()
     for raw in source_values:
         path = resolve_output_path(repo_root, raw)
+        if path in seen_sources:
+            warnings.append(f"duplicate source skipped: {repo_rel(repo_root, path)}")
+            continue
+        seen_sources.add(path)
         if not path.exists() or not path.is_file():
             warnings.append(f"missing source skipped: {repo_rel(repo_root, path)}")
             continue

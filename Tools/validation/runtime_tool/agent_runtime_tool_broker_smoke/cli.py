@@ -5,11 +5,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
-import sys
+from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
+from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
 
 
 def now_stamp() -> str:
@@ -33,30 +35,35 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 def run_broker(
-    repo_root: Path, request_file: Path, output: Path, markdown: Path, stamp: str, dry_run: bool
+    repo_root: Path, request_data: dict[str, Any], output: Path, markdown: Path, stamp: str, dry_run: bool
 ) -> tuple[int, str, str]:
-    command = [
-        sys.executable,
-        "Tools/ai/runtime_tool/agent_broker/cli.py",
-        "--repo-root",
-        ".",
-        "--request-file",
-        str(request_file),
-        "--tool-output-dir",
-        f"output/ai_runtime_tools/broker_smoke_{stamp}",
-        "--stamp",
-        stamp,
-        "--timeout-seconds",
-        "240",
-        "--output",
-        str(output),
-        "--markdown-output",
-        str(markdown),
-    ]
-    if dry_run:
-        command.append("--dry-run")
-    completed = subprocess.run(command, cwd=repo_root, text=True, capture_output=True, check=False)
-    return completed.returncode, completed.stdout[-12000:], completed.stderr[-12000:]
+    try:
+        broker_args = Namespace(
+            repo_root=str(repo_root),
+            request_data=request_data,
+            request_file="",
+            request_json="",
+            tool_output_dir=f"output/ai_runtime_tools/broker_smoke_{stamp}",
+            stamp=stamp,
+            timeout_seconds=240,
+            dry_run=dry_run,
+        )
+        report = build_broker_report(broker_args)
+        write_json(output, report)
+        markdown.parent.mkdir(parents=True, exist_ok=True)
+        markdown.write_text(render_broker_markdown(report), encoding="utf-8")
+        stdout = json.dumps(
+            {
+                "passed": report.get("passed"),
+                "request_transport": report.get("request_transport"),
+                "tool_execution_count": report.get("tool_execution_count"),
+                "blocked_tool_count": report.get("blocked_tool_count"),
+            },
+            ensure_ascii=False,
+        )
+        return 0 if report.get("passed") else 2, stdout, ""
+    except Exception as exc:  # noqa: BLE001
+        return 1, "", f"{type(exc).__name__}: {exc}"
 
 
 def build_smoke_request() -> dict[str, Any]:
@@ -159,6 +166,8 @@ def validate_report(report: dict[str, Any], *, dry_run: bool) -> list[str]:
         errors.append(
             "operational_sqlite_write_performed should be true after operational remember"
         )
+    if report.get("request_transport") != "in_memory":
+        errors.append("request_transport must be in_memory")
     if report.get("sqlite_write_performed") is not False:
         errors.append("protected sqlite_write_performed must remain false")
     if report.get("persistent_memory_write_performed") is not False:
@@ -176,9 +185,6 @@ def main() -> int:
 
     repo_root = Path(args.repo_root).resolve()
     stamp = now_stamp()
-    request_file = resolve_path(
-        repo_root, f"output/validation/agent_runtime_tool_broker_smoke_request_{stamp}.json"
-    )
     broker_output = resolve_path(
         repo_root, f"output/validation/agent_runtime_tool_broker_smoke_{stamp}.json"
     )
@@ -195,9 +201,9 @@ def main() -> int:
         or f"output/validation/agent_runtime_tool_broker_smoke_result_{stamp}.md",
     )
 
-    write_json(request_file, build_smoke_request())
+    request_data = build_smoke_request()
     returncode, stdout, stderr = run_broker(
-        repo_root, request_file, broker_output, broker_markdown, stamp, args.dry_run
+        repo_root, request_data, broker_output, broker_markdown, stamp, args.dry_run
     )
     broker_report = read_json(broker_output) if broker_output.exists() else {}
     errors = validate_report(broker_report, dry_run=args.dry_run)
@@ -221,7 +227,8 @@ def main() -> int:
         "persistent_memory_write_performed": False,
         "blender_runtime_execution_performed": False,
         "dry_run": bool(args.dry_run),
-        "request_file": str(request_file),
+        "request_file": "",
+        "request_transport": broker_report.get("request_transport"),
         "broker_output": str(broker_output),
         "broker_markdown": str(broker_markdown),
         "broker_returncode": returncode,

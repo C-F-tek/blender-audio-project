@@ -40,7 +40,7 @@ def run_launcher(args: Any) -> int:
     summary = build_launcher_summary(args, state)
     write_json(state["run_dir"] / "heap_runtime_context_closure_launcher.json", summary)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
-    return 0 if summary["launcher_packaging_succeeded"] else 2
+    return 0 if summary["launcher_passed"] else 2
 
 
 def _prepare_state(args: Any) -> dict[str, Any]:
@@ -67,7 +67,7 @@ def _prepare_state(args: Any) -> dict[str, Any]:
         "run_dir": run_dir,
         "report_file": run_dir / "heap_runtime_completeness_gate_report.json",
         "markdown_file": run_dir / "heap_runtime_completeness_gate_report.md",
-        "heap_request_file": run_dir / "heap_operator_request.md",
+        "heap_request_file": "",
         "startup_dir": startup_dir,
         "startup_manifest": startup_dir / "heap_context_memory_reload_manifest.json",
         "startup_task_file": startup_dir / "heap_startup_input_ready_context.md",
@@ -107,7 +107,9 @@ def _write_heap_request(args: Any, state: dict[str, Any]) -> None:
         revision_context_max_tasks=args.revision_context_max_tasks,
     )
     state["heap_request"] = heap_request
-    state["heap_request_file"].write_text(heap_request, encoding="utf-8")
+    state["request_transport"] = "inline_cli"
+    if state.get("operator_request_file"):
+        state["request_transport"] = "operator_request_file"
 
 
 def _empty_result(passed: bool = True, returncode: int | None = 0) -> dict[str, Any]:
@@ -204,7 +206,9 @@ def _run_startup(args: Any, state: dict[str, Any]) -> None:
 
 def _run_heap(args: Any, state: dict[str, Any]) -> None:
     command = heap_command(args, state)
-    if state["startup_task_file"].exists():
+    if state["startup_manifest"].exists():
+        command.extend(["--startup-manifest", str(state["startup_manifest"])])
+    elif state["startup_task_file"].exists():
         command.extend(["--task-file", str(state["startup_task_file"])])
     if getattr(args, "allow_provider_generation", False):
         command.extend(["--allow-provider-generation", "--operator-intent"])

@@ -3,15 +3,15 @@
 
 This adapter keeps provider lanes conversational through the shared heap while
 preserving the existing rule: tools are executed only by
-``python -m Tools.ai agent_runtime_tool_broker``.
+the runtime broker executor.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
+from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -20,8 +20,11 @@ repo_root_for_import = Path(__file__).resolve().parents[3]
 if str(repo_root_for_import) not in sys.path:
     sys.path.insert(0, str(repo_root_for_import))
 
-from Tools.ai.provider_mesh.runtime.python_runtime import command_env, resolve_child_python
 from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict
+from Tools.ai.provider_runtime_blackboard.common import resolve_output_path
+from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
+from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
+from Tools.validation._shared.report_utils import write_json_report, write_text_report
 
 DEFAULT_OUTPUT = "output/validation/provider_runtime_broker_bridge_{stamp}.json"
 DEFAULT_MARKDOWN = "output/validation/provider_runtime_broker_bridge_{stamp}.md"
@@ -59,7 +62,14 @@ def event_to_tool_request(event: dict[str, Any], index: int) -> dict[str, Any]:
         "args": safe_dict(payload.get("args")),
         "reason": str(payload.get("reason") or "Provider runtime heap broker request."),
         "requirement": str(payload.get("requirement") or ""),
+        "nonblocking": bool(payload.get("nonblocking") or payload.get("optional")),
         "source": str(event.get("source") or "provider_runtime_blackboard"),
+        "lane": str(payload.get("lane") or payload.get("owner") or event.get("source") or ""),
+        "revision": payload.get("revision"),
+        "provider_native_tool_call": bool(payload.get("provider_native_tool_call")),
+        "provider_report": str(payload.get("provider_report") or ""),
+        "provider_block_id": str(payload.get("provider_block_id") or ""),
+        "proposal_block_id": str(payload.get("proposal_block_id") or ""),
         "heap_event": {
             "source": event.get("source"),
             "target": event.get("target"),
@@ -71,7 +81,7 @@ def event_to_tool_request(event: dict[str, Any], index: int) -> dict[str, Any]:
 
 
 def build_request_packet(
-    repo_root: Path, stamp: str, pending: list[dict[str, Any]], request_file: Path
+    repo_root: Path, stamp: str, pending: list[dict[str, Any]]
 ) -> dict[str, Any]:
     tool_requests = [
         event_to_tool_request(event, index) for index, event in enumerate(pending, start=1)
@@ -92,10 +102,6 @@ def build_request_packet(
             "source_writes_performed": False,
         },
     }
-    request_file.parent.mkdir(parents=True, exist_ok=True)
-    request_file.write_text(
-        json.dumps(packet, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
     return packet
 
 
@@ -103,44 +109,37 @@ def run_broker(
     *,
     repo_root: Path,
     stamp: str,
-    request_file: Path,
+    request_packet: dict[str, Any],
     tool_output_dir: Path,
     broker_output: Path,
     broker_markdown: Path,
     timeout_seconds: int,
     dry_run: bool,
-) -> tuple[int, str, str]:
-    command = [
-        resolve_child_python(repo_root),
-        "-m",
-        "Tools.ai",
-        "agent_runtime_tool_broker",
-        "--repo-root",
-        ".",
-        "--request-file",
-        repo_rel(repo_root, request_file),
-        "--tool-output-dir",
-        repo_rel(repo_root, tool_output_dir),
-        "--stamp",
-        stamp,
-        "--timeout-seconds",
-        str(timeout_seconds),
-        "--output",
-        repo_rel(repo_root, broker_output),
-        "--markdown-output",
-        repo_rel(repo_root, broker_markdown),
-    ]
-    if dry_run:
-        command.append("--dry-run")
-    completed = subprocess.run(
-        command,
-        cwd=repo_root,
-        env=command_env(repo_root),
-        text=True,
-        capture_output=True,
-        check=False,
+) -> tuple[int, str, str, dict[str, Any]]:
+    broker_args = Namespace(
+        repo_root=str(repo_root),
+        request_data=request_packet,
+        request_file="",
+        request_json="",
+        tool_output_dir=repo_rel(repo_root, tool_output_dir),
+        stamp=stamp,
+        timeout_seconds=timeout_seconds,
+        dry_run=dry_run,
     )
-    return completed.returncode, completed.stdout[-12000:], completed.stderr[-12000:]
+    broker_report = build_broker_report(broker_args)
+    write_json_report(broker_report, broker_output)
+    write_text_report(render_broker_markdown(broker_report), broker_markdown)
+    stdout_tail = json.dumps(
+        {
+            "passed": broker_report.get("passed"),
+            "tool_request_count": broker_report.get("tool_request_count"),
+            "tool_execution_count": broker_report.get("tool_execution_count"),
+            "blocked_tool_count": broker_report.get("blocked_tool_count"),
+            "failed_tool_count": broker_report.get("failed_tool_count"),
+        },
+        ensure_ascii=False,
+    )
+    return 0 if broker_report.get("passed") else 2, stdout_tail, "", broker_report
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -204,6 +203,17 @@ def request_correlations_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     return mapping
 
 
+def request_payloads_by_id(broker_report: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    mapping: dict[str, dict[str, Any]] = {}
+    for request in broker_report.get("tool_requests", []):
+        if not isinstance(request, dict):
+            continue
+        request_id = str(request.get("id") or request.get("request_id") or "")
+        if request_id:
+            mapping[request_id] = request
+    return mapping
+
+
 def mapped_request_value(mapping: dict[str, str], result_id: str, default: str = "") -> str:
     if result_id in mapping:
         return mapping[result_id]
@@ -220,6 +230,7 @@ def append_broker_results(
     source_by_request_id = request_sources_by_id(broker_report)
     correlation_by_request_id = request_correlations_by_id(broker_report)
     requirement_by_request_id = request_requirements_by_id(broker_report)
+    payload_by_request_id = request_payloads_by_id(broker_report)
     for result in broker_report.get("tool_results", []):
         if not isinstance(result, dict):
             continue
@@ -232,6 +243,7 @@ def append_broker_results(
             result.get("requirement")
             or mapped_request_value(requirement_by_request_id, result_id, "")
         )
+        request_payload = payload_by_request_id.get(result_id, {})
         event = heap.append_event(
             source="broker",
             target=target_lane,
@@ -243,10 +255,18 @@ def append_broker_results(
                 "target_lane": target_lane,
                 "tool": result.get("tool"),
                 "requirement": requirement,
+                "lane": request_payload.get("lane"),
+                "revision": request_payload.get("revision"),
+                "provider_native_tool_call": request_payload.get("provider_native_tool_call"),
+                "provider_report": request_payload.get("provider_report"),
+                "provider_block_id": request_payload.get("provider_block_id"),
+                "proposal_block_id": request_payload.get("proposal_block_id"),
                 "executed": result.get("executed"),
                 "blocked": result.get("blocked"),
                 "returncode": result.get("returncode"),
                 "outputs": result.get("outputs"),
+                "summary": result.get("summary"),
+                "guardrails": result.get("guardrails"),
                 "errors": result.get("errors", []),
                 "warnings": result.get("warnings", []),
                 "broker_report": broker_report.get("output") or "",
@@ -266,12 +286,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         pending = pending[: args.max_requests]
 
     bridge_dir = resolve_output_path(repo_root, args.bridge_dir.format(stamp=args.stamp))
-    request_file = bridge_dir / "broker_requests_from_heap.json"
     broker_output = bridge_dir / "agent_runtime_tool_broker.json"
     broker_markdown = bridge_dir / "agent_runtime_tool_broker.md"
     tool_output_dir = bridge_dir / "tool_outputs"
 
-    packet = build_request_packet(repo_root, args.stamp, pending, request_file)
+    packet = build_request_packet(repo_root, args.stamp, pending)
     returncode = 0
     stdout_tail = ""
     stderr_tail = ""
@@ -279,17 +298,16 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     broker_result_events: list[dict[str, Any]] = []
 
     if pending:
-        returncode, stdout_tail, stderr_tail = run_broker(
+        returncode, stdout_tail, stderr_tail, broker_report = run_broker(
             repo_root=repo_root,
             stamp=args.stamp,
-            request_file=request_file,
+            request_packet=packet,
             tool_output_dir=tool_output_dir,
             broker_output=broker_output,
             broker_markdown=broker_markdown,
             timeout_seconds=args.timeout_seconds,
             dry_run=args.dry_run,
         )
-        broker_report = read_json(broker_output)
         if broker_report:
             broker_report["output"] = repo_rel(repo_root, broker_output)
             # The broker output may not echo the original request packet. Keep
@@ -316,7 +334,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "dry_run": bool(args.dry_run),
         "pending_broker_request_count": len(pending),
         "broker_result_event_count": len(broker_result_events),
-        "request_packet": repo_rel(repo_root, request_file),
+        "request_packet": "",
+        "request_transport": "in_memory",
         "broker_report": repo_rel(repo_root, broker_output),
         "broker_markdown": repo_rel(repo_root, broker_markdown),
         "tool_output_dir": repo_rel(repo_root, tool_output_dir),

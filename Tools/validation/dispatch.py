@@ -176,6 +176,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_refactor_duplication_audit_smoke": "Tools.validation.docs_hygiene.run_refactor_duplication_audit_smoke.cli:main",
     "run_runtime_evidence_correlation_smoke": "Tools.validation.runtime_universe.run_runtime_evidence_correlation_smoke.cli:main",
     "run_runtime_file_refs_smoke": "Tools.validation.runtime_tool.run_runtime_file_refs_smoke.cli:main",
+    "check_runtime_tool_broker_dispatch_alignment": "Tools.validation.runtime_tool.broker_dispatch_alignment.cli:main",
     "run_runtime_hardcode_guard_smoke": "Tools.validation.runtime_universe.run_runtime_hardcode_guard_smoke.cli:main",
     "run_runtime_sqlite_persistent_write_smoke": "Tools.validation.agent_memory.run_runtime_sqlite_persistent_write_smoke.cli:main",
     "run_shared_toolbox_ai_to_ai_bundle_smoke": "Tools.validation.agent_context.run_shared_toolbox_ai_to_ai_bundle_smoke.cli:main",

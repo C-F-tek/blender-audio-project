@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import ast
-import difflib
 import json
 import subprocess
 import sys
@@ -24,7 +23,7 @@ try:
         report_level_errors,
         report_level_warnings,
     )
-    from Tools.ai.code_product.synthesis_patterns import candidate_transforms
+    from Tools.ai.patch_product.candidate_synthesis.evidence_diff import build_evidence_candidates
     from Tools.validation._shared.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
@@ -40,7 +39,9 @@ except ImportError:
         report_level_errors,
         report_level_warnings,
     )
-    from Tools.ai.code_product.synthesis_patterns import candidate_transforms  # type: ignore
+    from Tools.ai.patch_product.candidate_synthesis.evidence_diff import (  # type: ignore
+        build_evidence_candidates,
+    )
     from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
 
 
@@ -80,25 +81,9 @@ def read_matrix_targets(path: Path) -> list[str]:
     return targets
 
 
-def unified_diff(rel_path: str, before: str, after: str) -> str:
-    lines = list(
-        difflib.unified_diff(
-            before.splitlines(),
-            after.splitlines(),
-            fromfile=f"a/{rel_path}",
-            tofile=f"b/{rel_path}",
-            lineterm="",
-        )
-    )
-    body = "\n".join(lines)
-    if not body.endswith("\n"):
-        body += "\n"
-    return f"diff --git a/{rel_path} b/{rel_path}\n{body}"
-
-
-def git_apply_check(repo_root: Path, diff_path: Path, timeout: int) -> dict[str, Any]:
+def git_apply_cached_check(repo_root: Path, diff_path: Path, timeout: int) -> dict[str, Any]:
     completed = subprocess.run(
-        ["git", "apply", "--check", "--ignore-whitespace", str(diff_path)],
+        ["git", "apply", "--check", "--cached", "--ignore-whitespace", str(diff_path)],
         cwd=repo_root,
         text=True,
         capture_output=True,
@@ -106,11 +91,84 @@ def git_apply_check(repo_root: Path, diff_path: Path, timeout: int) -> dict[str,
         timeout=timeout,
     )
     return {
-        "command": ["git", "apply", "--check", "--ignore-whitespace", str(diff_path)],
+        "command": [
+            "git",
+            "apply",
+            "--check",
+            "--cached",
+            "--ignore-whitespace",
+            str(diff_path),
+        ],
         "returncode": completed.returncode,
         "passed": completed.returncode == 0,
         "stdout_tail": (completed.stdout or "")[-2000:],
         "stderr_tail": (completed.stderr or "")[-2000:],
+    }
+
+
+def validation_commands_for_diff(rel_path: str, diff_path: Path, cached: bool) -> list[str]:
+    mode = "--cached " if cached else ""
+    commands = [f"git apply --check {mode}--ignore-whitespace {diff_path}"]
+    if rel_path.endswith(".py"):
+        commands.append(f"python -m py_compile {rel_path}")
+    commands.append("git diff --check")
+    return commands
+
+
+def worktree_diff(repo_root: Path, rel_path: str) -> str:
+    completed = subprocess.run(
+        ["git", "diff", "--", rel_path],
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return completed.stdout or ""
+
+
+def build_worktree_candidate(
+    repo_root: Path,
+    candidate_dir: Path,
+    rel_path: str,
+    patched_text: str,
+    candidate_index: int,
+    timeout: int,
+) -> dict[str, Any] | None:
+    diff_text = worktree_diff(repo_root, rel_path)
+    if not diff_text.strip():
+        return None
+    safe_name = rel_path.replace("/", "__").replace("\\", "__")
+    diff_path = candidate_dir / f"{candidate_index:03d}_{safe_name}.diff"
+    diff_path.write_text(diff_text, encoding="utf-8")
+    check = git_apply_cached_check(repo_root, diff_path, max(30, timeout))
+    semantic_check = semantic_patch_check(rel_path, patched_text)
+    passed = check.get("passed") is True and semantic_check.get("passed") is True
+    return {
+        "target_file": rel_path,
+        "reason": "validate current worktree diff captured by code execution matrix",
+        "pattern_id": "validated_current_worktree_diff",
+        "evidence": [
+            "target resolved against local filesystem",
+            "candidate copied from current git diff for the verified target",
+            "applicability checked against git index with git apply --check --cached",
+        ],
+        "unified_diff": diff_text,
+        "diff_path": str(diff_path),
+        "validation_commands": validation_commands_for_diff(rel_path, diff_path, cached=True),
+        "applicability_check": check,
+        "semantic_check": semantic_check,
+        "passed": passed,
+        "errors": []
+        if passed
+        else [
+            item
+            for item in (
+                check.get("stderr_tail"),
+                *(semantic_check.get("errors") or []),
+            )
+            if item
+        ],
+        "warnings": [],
     }
 
 
@@ -142,63 +200,40 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     candidate_dir.mkdir(parents=True, exist_ok=True)
     candidates: list[dict[str, Any]] = []
     warnings: list[str] = []
+    evidence_reports = split_values(args.evidence_report)
+    if evidence_reports:
+        evidence_candidates, evidence_warnings = build_evidence_candidates(
+            repo_root=repo_root,
+            candidate_dir=candidate_dir,
+            refs=refs,
+            evidence_reports=evidence_reports,
+            start_index=1,
+            max_candidates=max(1, int(args.max_candidates)),
+            timeout=max(30, int(args.timeout_seconds)),
+        )
+        candidates.extend(evidence_candidates)
+        warnings.extend(evidence_warnings)
     for ref in refs:
         if len(candidates) >= max(1, int(args.max_candidates)):
             break
-        if not ref.patchable or not ref.repo_relative.endswith(".py"):
+        if not ref.patchable:
             continue
         path = repo_root / ref.repo_relative
         before = path.read_text(encoding="utf-8-sig", errors="replace")
-        transforms = candidate_transforms(ref.repo_relative, before, str(args.operator_request or ""))
-        if not transforms:
-            continue
-        transform = transforms[0]
-        after = transform.updated_text
-        reason = transform.reason
-        if after == before:
-            continue
-        semantic_check = semantic_patch_check(ref.repo_relative, after)
-        diff_text = unified_diff(ref.repo_relative, before, after)
-        safe_name = ref.repo_relative.replace("/", "__").replace("\\", "__")
-        diff_path = candidate_dir / f"{len(candidates)+1:03d}_{safe_name}.diff"
-        diff_path.write_text(diff_text, encoding="utf-8")
-        check = git_apply_check(repo_root, diff_path, max(30, int(args.timeout_seconds)))
-        passed = check.get("passed") is True and semantic_check.get("passed") is True
-        candidates.append(
-            {
-                "target_file": ref.repo_relative,
-                "reason": reason,
-                "pattern_id": transform.pattern_id,
-                "evidence": [
-                    "target resolved against local filesystem",
-                    "candidate generated from current file contents",
-                    "applicability checked with git apply --check",
-                ],
-                "unified_diff": diff_text,
-                "diff_path": str(diff_path),
-                "validation_commands": [
-                    f"git apply --check --ignore-whitespace {diff_path}",
-                    f"python -m py_compile {ref.repo_relative}",
-                    "git diff --check",
-                ],
-                "applicability_check": check,
-                "semantic_check": semantic_check,
-                "passed": passed,
-                "errors": []
-                if passed
-                else [
-                    item
-                    for item in (
-                        check.get("stderr_tail"),
-                        *(semantic_check.get("errors") or []),
-                    )
-                    if item
-                ],
-                "warnings": [],
-            }
+        worktree_candidate = build_worktree_candidate(
+            repo_root,
+            candidate_dir,
+            ref.repo_relative,
+            before,
+            len(candidates) + 1,
+            max(30, int(args.timeout_seconds)),
         )
+        if worktree_candidate:
+            candidates.append(worktree_candidate)
     if not candidates:
-        warnings.append("no validated patch candidate pattern matched verified targets")
+        warnings.append(
+            "no validated evidence/worktree unified diff matched verified targets"
+        )
     warnings.extend(report_level_warnings(candidates))
     return {
         "schema_version": 1,
@@ -206,6 +241,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
         "operator_request": str(args.operator_request or ""),
+        "evidence_reports": evidence_reports,
         "passed": candidate_report_passed(candidates),
         "target_ref_count": len(refs),
         "candidate_count": len(candidates),
@@ -261,6 +297,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--operator-request", default="")
     parser.add_argument("--operator-request-file", default="")
+    parser.add_argument("--evidence-report", action="append", default=[])
     parser.add_argument("--matrix-report", default="")
     parser.add_argument("--target-file", action="append", default=[])
     parser.add_argument("--candidate-dir", default="output/validation/patch_candidates")

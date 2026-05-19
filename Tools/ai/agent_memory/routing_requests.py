@@ -9,7 +9,7 @@ from .common import safe_identifier, split_csv_values
 
 DEFAULT_OUTPUT = "output/validation/agent_memory_routing_policy.json"
 DEFAULT_MARKDOWN = "output/validation/agent_memory_routing_policy.md"
-DEFAULT_BROKER_REQUEST = "output/ai_runtime_tools/agent_memory_routing_policy_tool_requests.json"
+DEFAULT_BROKER_REQUEST = ""
 
 
 def safe_id(value: str, fallback: str = "memory_route") -> str:

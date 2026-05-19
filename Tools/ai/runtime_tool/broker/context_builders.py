@@ -28,7 +28,9 @@ def build_ai_context_pack_tool(
     )
     command = [
         resolve_child_python(repo_root),
-        "Tools/ai/agent_context/ai_context_pack/cli.py",
+        "-m",
+        "Tools.ai",
+        "ai_context_pack",
         "--repo-root",
         ".",
         "--profile",
@@ -74,7 +76,9 @@ def build_semantic_evidence_chunk_manifest(
     )
     command = [
         resolve_child_python(repo_root),
-        "Tools/ai/agent_context/semantic_evidence_chunks/cli.py",
+        "-m",
+        "Tools.ai",
+        "semantic_evidence_chunks",
         "--repo-root",
         ".",
         "--basename",
@@ -107,8 +111,7 @@ def run_agent_runtime_debug_lab(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, str]]:
     request_file = str(args.get("request_file") or "").strip()
-    if not request_file:
-        request_file = str(out_dir / f"{request_id}_agent_runtime_debug_lab_request.json")
+    request_json = args.get("request_json")
     report = resolve_path(
         repo_root,
         str(args.get("output") or out_dir / f"{request_id}_agent_runtime_debug_lab.json"),
@@ -124,13 +127,15 @@ def run_agent_runtime_debug_lab(
         "agent_runtime_debug_lab",
         "--repo-root",
         ".",
-        "--request-file",
-        request_file,
         "--output",
         repo_rel(report, repo_root),
         "--markdown-output",
         repo_rel(markdown, repo_root),
     ]
+    if request_json is not None:
+        command = ["in_process", "Tools.ai.runtime_tool.agent_runtime_debug_lab.runner.run_request"]
+    elif request_file:
+        command.extend(["--request-file", request_file])
     if args.get("timeout_seconds") is not None:
         command.extend(["--timeout-seconds", str(args.get("timeout_seconds"))])
     if args.get("tail_chars") is not None:
@@ -139,6 +144,7 @@ def run_agent_runtime_debug_lab(
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),
         "request_file": request_file,
+        "request_transport": "in_memory" if request_json is not None else "request_file",
     }
 
 

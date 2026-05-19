@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import subprocess
 import sys
@@ -60,6 +61,40 @@ def read_json(path: Path) -> dict[str, object]:
     return data if isinstance(data, dict) else {}
 
 
+def unified_diff(rel_path: str, before: str, after: str) -> str:
+    body = "\n".join(
+        difflib.unified_diff(
+            before.splitlines(),
+            after.splitlines(),
+            fromfile=f"a/{rel_path}",
+            tofile=f"b/{rel_path}",
+            lineterm="",
+        )
+    )
+    return f"diff --git a/{rel_path} b/{rel_path}\n{body}\n"
+
+
+def write_evidence_report(path: Path, rel_path: str, before: str) -> None:
+    after = before.replace(
+        "return text, \"\"",
+        "return text.replace(\"//\", \"/\"), \"\"",
+        1,
+    )
+    report = {
+        "kind": "provider_proposal_fixture",
+        "target_files": [rel_path],
+        "response_text": (
+            "TARGET_FILES\n"
+            f"- {rel_path}\n\n"
+            "PATCH_SKETCH_UNIFIED_DIFF\n"
+            "```diff\n"
+            f"{unified_diff(rel_path, before, after)}"
+            "```\n"
+        ),
+    }
+    write_text(path, json.dumps(report, indent=2, ensure_ascii=False))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
@@ -74,15 +109,21 @@ def main() -> int:
     before = target.read_text(encoding="utf-8")
     candidate_json = fixture_repo / "output" / "validation" / "patch_candidate_synthesis.json"
     candidate_md = candidate_json.with_suffix(".md")
+    evidence_json = fixture_repo / "output" / "validation" / "provider_evidence.json"
+    write_evidence_report(evidence_json, "Tools/ai/fixture_tool.py", before)
     command = [
         sys.executable,
-        str(repo_root / "Tools" / "ai" / "synthesize_patch_candidates.py"),
+        "-m",
+        "Tools.ai",
+        "synthesize_patch_candidates",
         "--repo-root",
         str(fixture_repo),
         "--target-file",
         "Tools/ai/fixture_tool.py",
         "--operator-request",
-        "refactor duplicated path resolver into runtime file refs",
+        "extract provider unified diff for verified target",
+        "--evidence-report",
+        str(evidence_json),
         "--output",
         str(candidate_json),
         "--markdown-output",
@@ -106,6 +147,8 @@ def main() -> int:
         errors.append("patch synthesis command failed")
     if int(data.get("patch_candidate_synthesis_passed_count") or 0) <= 0:
         errors.append("no validated candidate produced")
+    if int(data.get("candidate_count") or 0) != 1:
+        errors.append("provider evidence diff should produce exactly one candidate")
     if before != after:
         errors.append("source file was modified by synthesis")
     if "```diff" not in md_body:

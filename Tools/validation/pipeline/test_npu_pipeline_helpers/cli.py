@@ -365,3 +365,9 @@ class NpuPipelineHelperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def main() -> int:
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(NpuPipelineHelperTests)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    return 0 if result.wasSuccessful() else 2

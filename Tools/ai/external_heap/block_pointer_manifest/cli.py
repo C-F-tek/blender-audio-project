@@ -154,7 +154,7 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             max_block_chars,
         )
         preview = candidate_preview or diagnostic_preview
-        block_id = stable_id(
+        block_id = str(data.get("block_id") or "").strip() or stable_id(
             "proposal", f"{repo_rel(repo_root, path)}:{data.get('revision')}:{index}"
         )
         block = {
@@ -165,12 +165,19 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             "revision": data.get("revision"),
             "source_path": repo_rel(repo_root, path),
             "markdown_path": repo_rel(repo_root, md_path) if md_path.exists() else "",
-            "previous_block_id": previous_id,
-            "next_block_id": "",
-            "refines_block_id": (
-                previous_id if data.get("quality_passed") is not True and previous_id else ""
+            "previous_block_id": str(data.get("previous_block_id") or previous_id),
+            "next_block_id": str(data.get("next_block_id") or ""),
+            "refines_block_id": str(
+                data.get("refines_block_id")
+                or (previous_id if data.get("quality_passed") is not True and previous_id else "")
             ),
-            "resume_from_block_id": previous_id,
+            "resume_from_block_id": str(data.get("resume_from_block_id") or previous_id),
+            "pointer_action": data.get("pointer_action"),
+            "target_files": data.get("target_files") if isinstance(data.get("target_files"), list) else [],
+            "exit_decision": data.get("exit_decision"),
+            "gpu1_block_ref": data.get("gpu1_block_ref"),
+            "gpu0_review_block_refs": data.get("gpu0_review_block_refs") if isinstance(data.get("gpu0_review_block_refs"), list) else [],
+            "npu_audit_block_refs": data.get("npu_audit_block_refs") if isinstance(data.get("npu_audit_block_refs"), list) else [],
             "quality_passed": data.get("quality_passed"),
             "accepted": data.get("quality_passed") is True,
             "sha256": (
@@ -208,6 +215,15 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
     provider_files = sorted(provider_dir.glob("*.json")) if provider_dir.exists() else []
     for index, path in enumerate(provider_files, start=1):
         data = read_json(path)
+        if str(data.get("kind") or "") in {
+            "provider_launch_manifest",
+            "provider_teamwork_leader_packet",
+        }:
+            continue
+        if path.name.startswith("provider_launch_manifest") or path.name.startswith(
+            "provider_teamwork_leader_packet"
+        ):
+            continue
         lane = str(
             data.get("lane")
             or data.get("role")
@@ -224,12 +240,17 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
         else:
             role = "gpu1_planner"
             block_type = "provider_evidence_block"
+        role = str(data.get("role") or role)
+        block_type = str(data.get("block_type") or block_type)
         text = str(data.get("response_text") or "")
         if not text:
             text = json.dumps(data, indent=2, ensure_ascii=False)
         if max_block_chars > 0 and len(text) > max_block_chars:
             text = text[:max_block_chars] + "\n...[truncated]\n"
-        block_id = stable_id("provider", f"{repo_rel(repo_root, path)}:{role}:{index}")
+        block_id = str(data.get("provider_block_id") or data.get("block_id") or "").strip()
+        if not block_id:
+            block_id = stable_id("provider", f"{repo_rel(repo_root, path)}:{role}:{index}")
+        proposal_block_id = str(data.get("proposal_block_id") or "")
         provider_execution = provider_execution_evidence(data, text)
         append_block(
             blocks,
@@ -239,10 +260,15 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
                 "role": role,
                 "step_index": index,
                 "source_path": repo_rel(repo_root, path),
-                "previous_block_id": "",
-                "next_block_id": "",
-                "refines_block_id": "",
-                "resume_from_block_id": "",
+                "proposal_block_id": proposal_block_id,
+                "previous_block_id": str(data.get("previous_block_id") or ""),
+                "next_block_id": str(data.get("next_block_id") or ""),
+                "refines_block_id": str(data.get("refines_block_id") or proposal_block_id),
+                "resume_from_block_id": str(data.get("resume_from_block_id") or proposal_block_id),
+                "pointer_action": data.get("pointer_action"),
+                "target_files": data.get("target_files") if isinstance(data.get("target_files"), list) else [],
+                "decision": data.get("decision"),
+                "exit_decision": data.get("exit_decision"),
                 "quality_passed": data.get("passed"),
                 "provider_execution_performed": provider_execution,
                 "sha256": (
@@ -303,9 +329,9 @@ def build_pointer_edges(blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
 def build_report(
     repo_root: Path, run_dir: Path, max_block_chars: int, max_blocks: int
 ) -> dict[str, Any]:
-    all_blocks = proposal_blocks(repo_root, run_dir, max_block_chars) + provider_blocks(
-        repo_root, run_dir, max_block_chars
-    )
+    source_proposals = proposal_blocks(repo_root, run_dir, max_block_chars)
+    source_providers = provider_blocks(repo_root, run_dir, max_block_chars)
+    all_blocks = source_proposals + source_providers
     blocks = all_blocks[:max_blocks] if max_blocks > 0 else all_blocks
     edges = build_pointer_edges(blocks)
     roles_present = sorted({str(block.get("role")) for block in blocks if block.get("role")})
@@ -324,6 +350,26 @@ def build_report(
         for block in all_blocks
         if block.get("block_type") == "proposal_chunk" and block.get("accepted") is not True
     ]
+    provider_mode_observed = bool(source_providers)
+    provider_roles = {str(block.get("role") or "") for block in source_providers}
+    unlinked_peer_blocks = [
+        block.get("block_id")
+        for block in source_providers
+        if block.get("role") in {"gpu0_reviewer_refiner", "npu_auditor"}
+        and not block.get("refines_block_id")
+    ]
+    errors: list[str] = []
+    warnings: list[str] = []
+    if not source_proposals:
+        errors.append("proposal_block_count is zero")
+    if source_proposals and not edges:
+        errors.append("edge_count is zero")
+    if provider_mode_observed:
+        missing_roles = sorted(set(DEFAULT_ROLES) - provider_roles)
+        if missing_roles:
+            errors.append(f"provider roles missing from graph: {missing_roles}")
+        if unlinked_peer_blocks:
+            errors.append(f"provider peer blocks lack refines edge: {unlinked_peer_blocks}")
     return {
         "schema_version": 1,
         "kind": "external_heap_block_pointer_manifest",
@@ -331,7 +377,7 @@ def build_report(
         "repo_root": repo_root.as_posix(),
         "run_dir": repo_rel(repo_root, run_dir),
         "protocol": "external_heap_block_pointer_v1",
-        "passed": True,
+        "passed": not errors,
         "pointer_product_contract": POINTER_PRODUCT_CONTRACT,
         "pointer_contract_role": "product_graph_decision_recovery_and_long_response_composition",
         "provider_execution_semantics": "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
@@ -356,8 +402,10 @@ def build_report(
         ),
         "patch_application_performed": False,
         "source_writes_performed": False,
-        "errors": [],
-        "warnings": [],
+        "provider_mode_observed": provider_mode_observed,
+        "unlinked_peer_blocks": unlinked_peer_blocks,
+        "errors": errors,
+        "warnings": warnings,
     }
 
 

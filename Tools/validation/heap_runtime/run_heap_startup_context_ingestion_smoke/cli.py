@@ -37,9 +37,14 @@ except ImportError:  # pragma: no cover
 
 
 SOURCE_FILES = {
-    "launcher": "Tools/ai/heap_context_closure/cli.py",
+    "launcher": "Tools/ai/heap_context_closure/launcher.py",
     "gate": "Tools/ai/heap_runtime/completeness_gate/cli.py",
+    "gate_startup": "Tools/ai/heap_gate/startup_context.py",
+    "gate_startup_manifest": "Tools/ai/heap_gate/startup_manifest_context.py",
+    "gate_loop": "Tools/ai/heap_gate/loop_steps.py",
     "preload": "Tools/ai/heap_context_memory_reload/cli.py",
+    "preload_runner": "Tools/ai/heap_context_memory_reload/runner.py",
+    "preload_memory_write": "Tools/ai/heap_context_memory_reload/memory_write.py",
     "reconciler": "Tools/ai/heap_context_memory_reload/reconcile_report/cli.py",
     "composer": "Tools/ai/heap_final_proposals/cli.py",
 }
@@ -143,44 +148,53 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 
     launcher = sources.get("launcher", "")
     gate = sources.get("gate", "")
+    gate_startup = sources.get("gate_startup", "")
+    gate_startup_manifest = sources.get("gate_startup_manifest", "")
+    gate_loop = sources.get("gate_loop", "")
     preload = sources.get("preload", "")
+    preload_runner = sources.get("preload_runner", "")
+    preload_memory_write = sources.get("preload_memory_write", "")
     reconciler = sources.get("reconciler", "")
     composer = sources.get("composer", "")
 
     bool_check(
         checks,
-        check_id="launcher_passes_startup_task_file",
-        passed="--task-file" in launcher and "startup_task_file" in launcher,
+        check_id="launcher_passes_startup_manifest_primary",
+        passed=(
+            "--startup-manifest" in launcher
+            and "startup_manifest" in launcher
+            and "elif state[\"startup_task_file\"].exists()" in launcher
+        ),
         severity="critical",
-        evidence="launcher should pass heap_startup_input_ready_context.md into python -m Tools.ai run_heap_runtime_completeness_gate",
-        recommendation="Keep --task-file forwarding in python -m Tools.ai heap_context_closure.",
+        evidence="launcher should pass heap_context_memory_reload_manifest.json as primary gate input and keep task-file only as fallback",
+        recommendation="Forward --startup-manifest from heap_context_closure; do not use heap_startup_input_ready_context.md as the primary gate data plane.",
     )
 
     bool_check(
         checks,
-        check_id="gate_declares_task_file_argument",
-        passed="--task-file" in gate,
+        check_id="gate_declares_startup_manifest_argument",
+        passed="--startup-manifest" in gate and "--task-file" in gate,
         severity="critical",
-        evidence="gate parser must accept --task-file if launcher passes it",
-        recommendation="Add parser.add_argument('--task-file', ...) to python -m Tools.ai run_heap_runtime_completeness_gate if absent.",
+        evidence="gate parser must accept structured startup manifest plus legacy task-file fallback",
+        recommendation="Add parser.add_argument('--startup-manifest', ...) and keep --task-file as bounded legacy fallback.",
     )
 
     task_file_read = bool(
-        re.search(r"task_file[^\n]{0,120}read_text\s*\(", gate)
-        or re.search(r"read_text\s*\([^\n]{0,120}task_file", gate)
-        or re.search(r"Path\([^\n]{0,80}task_file[^\n]{0,160}\)\.read_text\s*\(", gate)
+        "compact_manifest_context" in gate_startup
+        and "compact_task_file_context" in gate_startup
+        and "artifact_reference_only_not_ingested" in gate_startup_manifest
     )
     bool_check(
         checks,
-        check_id="gate_reads_task_file_content",
+        check_id="gate_ingests_startup_manifest_not_md_database",
         passed=task_file_read,
         severity="critical",
-        evidence="passing a task-file path is not enough; gate should read it and emit heap facts/events from it",
-        recommendation="Read task-file content during gate startup and append a bounded heap fact/telemetry event with path, hash, preview, and artifact refs.",
+        evidence="gate should ingest structured startup manifest/artifact refs and treat readable task MD as an artifact reference",
+        recommendation="Use startup manifest context for heap facts/events; read task-file only as bounded fallback when no manifest exists.",
     )
 
-    lifecycle_defined = "def publish_startup_memory_context_reload_events" in gate
-    lifecycle_call_count = def_body_call_count(gate, "publish_startup_memory_context_reload_events")
+    lifecycle_defined = "def publish_startup_memory_context_reload_events" in gate_startup
+    lifecycle_call_count = def_body_call_count(gate_loop, "publish_startup_memory_context_reload_events")
     bool_check(
         checks,
         check_id="startup_reload_lifecycle_invoked",
@@ -193,7 +207,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     bool_check(
         checks,
         check_id="memory_context_reload_payload_emitted",
-        passed="memory_context_reload" in gate and "append_heap_exchange_event" in gate,
+        passed="memory_context_reload" in gate_startup and "append_heap_exchange_event" in gate_startup,
         severity="critical",
         evidence="gate should emit reload lifecycle as heap events/facts, not only report fields",
         recommendation="Emit payload.kind='memory_context_reload' as stable fact/telemetry_signal before provider rounds.",
@@ -202,20 +216,20 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     bool_check(
         checks,
         check_id="startup_artifact_refs_named_in_gate",
-        passed="artifact_refs" in gate
-        or "context_artifact_refs" in gate
-        or "startup_manifest" in gate,
+        passed="artifact_refs" in gate_startup
+        or "context_artifact_refs" in gate_startup
+        or "startup_manifest" in gate_startup,
         severity="critical",
         evidence="provider lanes need startup artifact refs available from heap state",
         recommendation="Propagate startup manifest/task-file/artifact refs into heap events and provider context.",
     )
 
     startup_publish_positions = [
-        first_position(gate, "self.publish_startup_task_file_context()"),
-        first_position(gate, "self.publish_startup_memory_context_reload_events()"),
-        first_position(gate, "self.publish_startup_manifest_evidence()"),
+        first_position(gate_loop, "self.publish_startup_task_file_context()"),
+        first_position(gate_loop, "self.publish_startup_memory_context_reload_events()"),
+        first_position(gate_loop, "self.publish_startup_manifest_evidence()"),
     ]
-    first_snapshot_position = first_position(gate, "self.heap.write_snapshot()")
+    first_snapshot_position = first_position(gate_loop, "self.heap.write_snapshot()")
     startup_before_snapshot = all(
         position < first_snapshot_position for position in startup_publish_positions
     )
@@ -255,9 +269,12 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     )
 
     operational_write_signal = bool(
-        "operational_memory_write" in preload
-        and "runtime_sqlite_memory" in preload
-        and "remember" in preload
+        "run_operational_memory_write(state)" in preload_runner
+        and "operational_memory_write" in preload_memory_write
+        and "agent_runtime_sqlite_memory" in preload_memory_write
+        and "remember" in preload_memory_write
+        and "--scope" in preload_memory_write
+        and "operational" in preload_memory_write
     )
     bool_check(
         checks,

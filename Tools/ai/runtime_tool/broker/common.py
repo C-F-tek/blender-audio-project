@@ -8,7 +8,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from time import perf_counter
 from typing import Any
+
+from Tools.ai._shared.agent_runtime_tool_broker_execution import TimedCommandResult
 
 DEFAULT_OUTPUT = "output/validation/agent_runtime_tool_broker.json"
 DEFAULT_MARKDOWN = "output/validation/agent_runtime_tool_broker.md"
@@ -25,6 +28,76 @@ class ToolSpec:
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+def execute_debug_lab_in_process(
+    *,
+    repo_root: Path,
+    request_args: dict[str, Any],
+    outputs: dict[str, str],
+    timeout_seconds: int,
+) -> TimedCommandResult:
+    started_at = now_iso()
+    started = perf_counter()
+    request = request_args.get("request_json")
+    if not isinstance(request, dict):
+        return TimedCommandResult(
+            returncode=2,
+            stdout_tail="",
+            stderr_tail="",
+            error="agent_runtime_debug_lab in-process execution requires request_json object",
+            started_at=started_at,
+            finished_at=now_iso(),
+            elapsed_seconds=round(max(0.0, perf_counter() - started), 3),
+        )
+    try:
+        from Tools.ai.runtime_tool.agent_runtime_debug_lab.reporting import (
+            render_markdown as render_debug_lab_markdown,
+            write_reports as write_debug_lab_reports,
+        )
+        from Tools.ai.runtime_tool.agent_runtime_debug_lab.runner import run_request
+
+        report = run_request(
+            repo_root=repo_root,
+            request=request,
+            timeout_seconds=timeout_seconds,
+            tail_chars=int(request_args.get("tail_chars") or 4000),
+        )
+        write_debug_lab_reports(
+            repo_root=repo_root,
+            output=outputs["json_report"],
+            markdown_output=outputs["markdown_report"],
+            report=report,
+            markdown=render_debug_lab_markdown(report),
+        )
+        stdout_tail = json.dumps(
+            {
+                "passed": report.get("passed"),
+                "operation_count": report.get("operation_count"),
+                "failed_count": report.get("failed_count"),
+                "request_transport": "in_memory",
+            },
+            ensure_ascii=False,
+        )
+        return TimedCommandResult(
+            returncode=0 if report.get("passed") is True else 2,
+            stdout_tail=stdout_tail[-12000:],
+            stderr_tail="",
+            error="",
+            started_at=started_at,
+            finished_at=now_iso(),
+            elapsed_seconds=round(max(0.0, perf_counter() - started), 3),
+        )
+    except Exception as exc:  # noqa: BLE001
+        return TimedCommandResult(
+            returncode=1,
+            stdout_tail="",
+            stderr_tail="",
+            error=f"{type(exc).__name__}: {exc}",
+            started_at=started_at,
+            finished_at=now_iso(),
+            elapsed_seconds=round(max(0.0, perf_counter() - started), 3),
+        )
 
 
 def resolve_path(repo_root: Path, value: str | Path) -> Path:

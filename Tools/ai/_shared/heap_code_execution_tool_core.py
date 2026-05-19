@@ -190,6 +190,45 @@ def run_debug_lab(
     return completed.returncode, completed.stdout[-tail_chars:], completed.stderr[-tail_chars:]
 
 
+def run_debug_lab_request(
+    repo_root: Path,
+    request: dict[str, Any],
+    report_path: Path,
+    markdown_path: Path,
+    timeout_seconds: int,
+    tail_chars: int,
+) -> tuple[int, str, str]:
+    from Tools.ai.runtime_tool.agent_runtime_debug_lab.reporting import (
+        render_markdown as render_debug_lab_markdown,
+        write_reports as write_debug_lab_reports,
+    )
+    from Tools.ai.runtime_tool.agent_runtime_debug_lab.runner import run_request
+
+    report = run_request(
+        repo_root=repo_root,
+        request=request,
+        timeout_seconds=max(1, int(timeout_seconds)),
+        tail_chars=max(256, int(tail_chars)),
+    )
+    write_debug_lab_reports(
+        repo_root=repo_root,
+        output=repo_rel(repo_root, report_path),
+        markdown_output=repo_rel(repo_root, markdown_path),
+        report=report,
+        markdown=render_debug_lab_markdown(report),
+    )
+    stdout = json.dumps(
+        {
+            "passed": report.get("passed"),
+            "operation_count": report.get("operation_count"),
+            "failed_count": report.get("failed_count"),
+            "request_transport": "in_memory",
+        },
+        ensure_ascii=False,
+    )
+    return 0 if report.get("passed") is True else 2, stdout[-tail_chars:], ""
+
+
 def read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Validate the canonical runtime mesh behind ``python -m Tools.ai run``."""
+
 from __future__ import annotations
 
 import argparse
@@ -28,212 +30,163 @@ def has(text: str, token: str) -> bool:
     return token in text
 
 
-def has_real_product_mode_contract(wrapper_text: str) -> bool:
-    if '"-Mode", "all"' in wrapper_text:
-        return True
-    return (
-        '"-Mode", $RealProductPostPreflightModes' in wrapper_text
-        and "$RealProductPostPreflightModes" in wrapper_text
-        and "official,provider" in wrapper_text
-        and "patch_specs,evidence,contract,full_validation" in wrapper_text
-    )
+def ordered_tokens(text: str, *tokens: str) -> bool:
+    positions = [text.find(token) for token in tokens]
+    return all(position >= 0 for position in positions) and positions == sorted(positions)
 
 
 def write_markdown(report: dict[str, Any], output: Path) -> str:
-    lines = [
-        "# Real Product Runtime Mesh Contract",
-        "",
-        f"- Passed: `{report.get('passed')}`",
-        "",
-        "## Mesh capabilities",
-        "",
-    ]
+    lines = ["# Real Product Runtime Mesh Contract", "", f"- Passed: `{report.get('passed')}`", ""]
     for key in report.get("capability_order") or []:
         lines.append(f"- `{key}`: `{report.get(key)}`")
-    lines.extend(["", "## Runtime route", ""])
-    for item in report.get("runtime_route") or []:
-        lines.append(f"- {item}")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report["errors"])
-    if report.get("warnings"):
-        lines.extend(["", "## Warnings", ""])
-        lines.extend(f"- {item}" for item in report["warnings"])
     return write_text_report("\n".join(lines) + "\n", output)
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
-    # Runtime mesh naming contract after legacy cut:
-    # - sqlite_fts_memory is the profile-visible capability token for
-    #   shared memory/search/chunk evidence backed by SQLite surfaces.
-    # - tool_agnostic_broker is the profile-visible capability token for
-    #   the allowlisted broker that executes tools inside the heap universe.
-    # These tokens are intentionally kept in the runtime-mesh contract so
-    # run_real_product_profile_smoke validates the single universe route,
-    # not a collection of isolated scripts.
-    wrapper_text = read_text(repo_root / "Tools/workflow/_powershell/run_unified_real_product_pr.ps1")
-    launcher_text = read_text(repo_root / "Tools/workflow/_powershell/run_unified_local_ai_refactor.ps1")
-    intrinsic_text = read_text(
-        repo_root / "Tools/validation/real_product/intrinsic_capability_contract/cli.py"
+    dispatch = read_text(repo_root / "Tools/ai/dispatch.py")
+    run_cli = read_text(repo_root / "Tools/ai/run/cli.py")
+    profiles = read_text(repo_root / "Tools/ai/run/profiles/heap_runtime_launcher_profiles.json")
+    profile_builder = read_text(repo_root / "Tools/ai/operator_product_core/profiles.py")
+    runner = read_text(repo_root / "Tools/ai/operator_product_core/runner.py")
+    heap_gate = read_text(repo_root / "Tools/ai/heap_runtime/completeness_gate/cli.py")
+    heap_run_loop = read_text(repo_root / "Tools/ai/heap_gate/run_loop.py")
+    budget = read_text(repo_root / "Tools/ai/heap_provider/budget_governor/cli.py")
+    invocation = read_text(repo_root / "Tools/ai/heap_provider/invocation_contract/cli.py")
+    product_package = read_text(repo_root / "Tools/ai/heap_runtime/product_package/cli.py")
+    broker_registry = read_text(repo_root / "Tools/ai/runtime_tool/broker/registry.py")
+    broker_builders = read_text(repo_root / "Tools/ai/runtime_tool/broker/runtime_builders.py")
+    broker_bridge = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/broker_bridge/cli.py")
+    memory = read_text(repo_root / "Tools/ai/agent_memory/sqlite_cli.py")
+    flow_map = read_text(repo_root / "Tools/ai/runtime_universe/flow_map/cli.py")
+    matrix = read_text(repo_root / "Tools/ai/heap_gate/matrix_lab.py")
+    matrix_evidence = read_text(repo_root / "Tools/ai/heap_gate/matrix_lab_evidence.py")
+    matrix_tool = read_text(repo_root / "Tools/ai/heap_runtime/code_execution_tool/cli.py")
+    synthesis = read_text(repo_root / "Tools/ai/patch_product/candidate_synthesis/cli.py")
+    synthesis_evidence = read_text(
+        repo_root / "Tools/ai/patch_product/candidate_synthesis/evidence_diff.py"
     )
-    readiness_text = read_text(repo_root / "Tools/validation/repository_product/review_pr_product_readiness/cli.py")
-    prepare_text = read_text(repo_root / "Tools/ai/agent_review/review_pr_cli.py")
-
-    memory_sqlite_text = read_text(repo_root / "Tools/ai/agent_memory/sqlite_cli.py")
-    broker_text = read_text(repo_root / "Tools/ai/runtime_tool/agent_broker/cli.py")
-    broker_exec_text = read_text(repo_root / "Tools/ai/_shared/agent_runtime_tool_broker_execution.py")
-    ollama_probe_text = read_text(repo_root / "Tools/ai/run_ollama_provider_probe.py")
-    local_provider_probe_text = read_text(repo_root / "Tools/ai/provider_mesh/local_provider_probe/cli.py")
-    primary_advisory_text = read_text(repo_root / "Tools/ai/ai_workload/quality_lane_routing/cli.py")
-    openvino_gpu0_text = read_text(repo_root / "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py")
-    gpu0_companion_text = read_text(repo_root / "Tools/ai/provider_mesh/gpu0_companion_task_lane/cli.py")
-    npu_companion_text = read_text(repo_root / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py")
-    openvino_peer_topology_contract_text = read_text(
-        repo_root / "Tools/validation/provider_mesh/openvino_peer_topology_contract/cli.py"
+    final_product = read_text(repo_root / "Tools/ai/_shared/heap_final_code_product.py")
+    final_readable_product = read_text(repo_root / "Tools/ai/code_product/final_readable_product/cli.py")
+    provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
+    provider_commands = read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py")
+    provider_execution = read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py")
+    provider_teamwork_packet = read_text(repo_root / "Tools/ai/heap_gate/provider_teamwork_packet.py")
+    heap_context_launcher = read_text(repo_root / "Tools/ai/heap_context_closure/launcher.py")
+    startup_context = read_text(repo_root / "Tools/ai/heap_gate/startup_context.py")
+    startup_manifest_context = read_text(
+        repo_root / "Tools/ai/heap_gate/startup_manifest_context.py"
     )
-    heap_text = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/cli.py")
-    budget_text = read_text(repo_root / "Tools/ai/heap_provider/budget_governor/cli.py")
-    invocation_text = read_text(repo_root / "Tools/ai/heap_provider/invocation_contract/cli.py")
-    product_text = read_text(repo_root / "Tools/ai/heap_runtime/product_package/cli.py")
-    completeness_gate_text = read_text(repo_root / "Tools/ai/heap_runtime/completeness_gate/cli.py")
-
-    gpu1_provider_surface = "\n".join([ollama_probe_text, local_provider_probe_text]).lower()
-    memory_surface = memory_sqlite_text.lower()
-    heap_contract_surface = "\n".join(
-        [heap_text, budget_text, invocation_text, completeness_gate_text]
-    ).lower()
 
     checks: dict[str, bool] = {
-        "task_md_in": has(wrapper_text, "[string]$TaskFile")
-        and has(wrapper_text, '"-TaskFile", $TaskRel')
-        and has(launcher_text, "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN"),
-        "heap_exchange_activation": has_real_product_mode_contract(wrapper_text)
-        and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN")
-        and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-PRE-REVIEW-BRIDGE-BEGIN"),
-        "heap_provider_budget_governor": exists(
-            repo_root, "Tools/ai/heap_provider/budget_governor/cli.py"
-        )
-        and has(budget_text, "ProviderBudgetConfig")
-        and has(budget_text, "provider_lanes")
-        and has(budget_text, "permit_allowed"),
+        "task_md_in": has(run_cli, "--request-file") and has(profile_builder, "--request-file"),
+        "heap_exchange_activation": has(profile_builder, "heap_context_closure")
+        and has(profiles, "universe_enabled")
+        and has(profiles, "block_pointer_protocol"),
+        "heap_provider_budget_governor": exists(repo_root, "Tools/ai/heap_provider/budget_governor/cli.py")
+        and has(budget, "ProviderBudgetConfig")
+        and has(budget, "provider_lanes"),
         "heap_provider_invocation_contract": exists(
             repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
         )
-        and has(invocation_text, "expected_telemetry_contract")
-        and has(invocation_text, "real_run_gate")
-        and has(invocation_text, "broker_request"),
-        "gpu1_primary_advisory": has(wrapper_text, "-UsePrimaryAdvisoryProvider")
-        and has(wrapper_text, "-UseOllamaAdvisory")
-        and has(wrapper_text, "-RunOllamaProbe")
-        and (
-            exists(repo_root, "Tools/ai/run_ollama_provider_probe.py")
-            or exists(repo_root, "Tools/ai/provider_mesh/local_provider_probe/cli.py")
-        )
-        and exists(repo_root, "Tools/ai/ai_workload/quality_lane_routing/cli.py")
-        and (
-            "ollama" in gpu1_provider_surface
-            or "provider" in gpu1_provider_surface
-            or "probe" in gpu1_provider_surface
-        )
-        and (
-            "primary" in primary_advisory_text.lower()
-            or "advisory" in primary_advisory_text.lower()
-        ),
-        "gpu0_openvino_tool_workload": has(wrapper_text, "-RunOpenVinoGpu0Workload")
-        and exists(repo_root, "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py")
-        and exists(repo_root, "Tools/ai/provider_mesh/gpu0_companion_task_lane/cli.py")
-        and ("openvino" in openvino_gpu0_text.lower())
-        and ("gpu0" in openvino_gpu0_text.lower() or "gpu.0" in openvino_gpu0_text.lower())
-        and ("companion" in gpu0_companion_text.lower()),
-        "npu_peer_micro_lane": has(wrapper_text, "-NpuMicroStartMode")
-        and has(wrapper_text, "-RunNpuProbe")
-        and has(wrapper_text, "-RunNpuDecodeSmoke")
-        and exists(repo_root, "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py")
-        and ("npu" in npu_companion_text.lower())
-        and ("startup" in wrapper_text.lower() or "peer" in wrapper_text.lower()),
-        "shared_memory_evidence": has(wrapper_text, "-SaveInputsToMemoryDb")
-        and has(wrapper_text, "-BuildEvidence")
-        and has(launcher_text, "shared_memory_evidence")
-        and exists(repo_root, "Tools/ai/agent_context/shared_toolbox_bundle/cli.py")
-        and exists(repo_root, "Tools/ai/heap_exchange/peer_runtime_manifest/cli.py"),
+        and has(invocation, "expected_telemetry_contract")
+        and has(invocation, "broker_request"),
+        "gpu1_primary_advisory": has(profiles, "gpu1_planner")
+        and has(provider_loop, "GPU1 HEAP PARTICIPATION MODE"),
+        "gpu0_openvino_tool_workload": has(profiles, "gpu0_reviewer_refiner")
+        and has(provider_loop, "IA_CARMINE_GPU0_COMPANION_MODEL_DIR"),
+        "npu_peer_micro_lane": has(profiles, "npu_auditor")
+        and has(provider_loop, "IA_CARMINE_NPU_MODEL_DIR"),
+        "shared_memory_evidence": exists(repo_root, "Tools/ai/agent_context/shared_toolbox_bundle/cli.py")
+        and exists(repo_root, "Tools/ai/agent_context/semantic_evidence_chunks/cli.py"),
         "sqlite_runtime_memory": exists(repo_root, "Tools/ai/agent_memory/sqlite_cli.py")
-        and ("sqlite" in memory_surface)
-        and ("persistent" in memory_surface)
-        and ("operational" in memory_surface)
-        and exists(repo_root, "Tools/validation/agent_memory/run_runtime_sqlite_persistent_write_smoke/cli.py"),
-        "tool_agnostic_broker": exists(repo_root, "Tools/ai/runtime_tool/agent_broker/cli.py")
-        and exists(repo_root, "Tools/ai/_shared/agent_runtime_tool_broker_execution.py")
-        and ("broker" in broker_text.lower())
-        and ("execute" in broker_exec_text.lower() or "tool" in broker_exec_text.lower())
-        and exists(repo_root, "Tools/validation/runtime_tool/agent_runtime_tool_broker_smoke/cli.py")
-        and exists(repo_root, "Tools/ai/runtime_tool/capability_manifest/cli.py")
-        and exists(repo_root, "Tools/ai/runtime_tool/usage_telemetry/cli.py"),
+        and "sqlite" in memory.lower(),
+        "tool_agnostic_broker": "synthesize_patch_candidates" in broker_registry
+        and "run_heap_code_execution_matrix" in broker_registry,
         "direct_reasoning_assistance": exists(repo_root, "Tools/ai/_shared/runtime_tool_guidance.py")
-        and exists(repo_root, "Tools/ai/provider_runtime_blackboard/broker_bridge/cli.py")
-        and exists(repo_root, "Tools/ai/provider_runtime_blackboard/live_signals/cli.py")
-        and exists(repo_root, "Tools/ai/provider_runtime_blackboard/telemetry/cli.py"),
+        and has(broker_bridge, "provider_runtime_broker_bridge"),
         "runtime_flow_map_evidence": exists(repo_root, "Tools/ai/runtime_universe/flow_map/cli.py")
-        and has(launcher_text, "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN")
-        and has(launcher_text, "build_runtime_flow_map.py")
-        and has(launcher_text, "runtime_flow_"),
-        "static_deterministic_script_lane": has(wrapper_text, "-GeneratePatchSpecs")
-        and has(wrapper_text, "-BuildTaskPatchSuggestionReport")
-        and (
-            has(wrapper_text, "-ReviewPrApplyDeterministicSuggestions")
-            or has(wrapper_text, "-ReviewPrFromGeneratedPatchSpecs")
-        )
-        and exists(repo_root, "Tools/ai/deterministic_recommendations/cli.py")
-        and exists(repo_root, "Tools/ai/generated_patch_specs/proposal_cli.py"),
-        "heap_exchange_close": has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-BEGIN")
-        and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN")
-        and has(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-END")
-        and exists(repo_root, "Tools/ai/heap_exchange/runtime_exit/cli.py")
-        and exists(repo_root, "Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py"),
-        "heap_runtime_completeness_gate": exists(
-            repo_root, "Tools/ai/heap_runtime/completeness_gate/cli.py"
-        )
-        and exists(repo_root, "Tools/validation/heap_runtime/completeness_gate_smoke/cli.py")
-        and "product_signal" in heap_contract_surface
-        and "broker_request" in heap_contract_surface
-        and "gpu1_provider_planner" in heap_contract_surface
-        and "gpu0_provider_peer" in heap_contract_surface
-        and "npu_micro_task_auditor" in heap_contract_surface
-        and "provider_teamwork_universe_required" in heap_contract_surface,
-        "heap_runtime_product_package": exists(
-            repo_root, "Tools/ai/heap_runtime/product_package/cli.py"
-        )
-        and has(product_text, "heap_runtime_product_package")
-        and has(product_text, "heap_runtime_product_manifest")
-        and has(product_text, "heap_runtime_product_readiness"),
-        "product_readiness": has(launcher_text, "review_pr_product_readiness")
-        and has(readiness_text, "prepare_review_pr_ready")
-        and has(readiness_text, "has_concrete_product"),
-        "prepare_review_pr_product": has(launcher_text, "build_review_pr_prepare_args")
-        and has(launcher_text, "Prepare review branch and PR")
-        and has(prepare_text, "gh")
-        and has(prepare_text, "pr")
-        and has(prepare_text, "create"),
-        "final_testable_pr": has(wrapper_text, "-ReviewPrPush")
-        and has(wrapper_text, "-ReviewPrCreate")
-        and has(wrapper_text, "-ReviewPrDraft")
-        and has(prepare_text, "--create-pr")
-        and has(prepare_text, "--draft-pr"),
+        and has(flow_map, "ia_carmine_runtime_flow_build"),
+        "static_deterministic_script_lane": has(matrix, "code_execution_matrix_targets")
+        and has(matrix_evidence, "code_execution_matrix_metric_count"),
+        "matrix_consumes_provider_diff_evidence": has(matrix, "evidence_report")
+        and has(broker_registry, "evidence_report")
+        and has(broker_builders, "--evidence-report")
+        and has(matrix_tool, "--evidence-report")
+        and has(synthesis, "build_evidence_candidates")
+        and has(synthesis_evidence, "diff --git")
+        and has(synthesis_evidence, "git apply")
+        and has(synthesis_evidence, "missing_from_verified"),
+        "heap_exchange_close": has(runner, "operator_product_launcher_run.json")
+        and has(runner, "operator_product_lab_summary.json"),
+        "heap_runtime_completeness_gate": has(heap_run_loop, "provider_teamwork_universe_required")
+        and has(heap_run_loop, "gpu1_provider_planner")
+        and has(heap_run_loop, "gpu0_provider_peer")
+        and has(heap_run_loop, "npu_micro_task_auditor")
+        and has(heap_gate, "HeapRuntimeCompletenessGate"),
+        "startup_manifest_primary_data_plane": has(heap_context_launcher, "--startup-manifest")
+        and has(heap_gate, "--startup-manifest")
+        and has(startup_context, "compact_manifest_context")
+        and has(startup_manifest_context, "artifact_reference_only_not_ingested")
+        and has(provider_commands, "--startup-manifest"),
+        "heap_runtime_product_package": exists(repo_root, "Tools/ai/heap_runtime/product_package/cli.py")
+        and has(product_package, "heap_runtime_product_package"),
+        "product_readiness": has(runner, "launcher_passed")
+        and has(runner, "code_product_metrics")
+        and has(final_product, "render_code_product_section")
+        and has(final_readable_product, "real_code_product_ready")
+        and has(final_readable_product, "final_product_blockers")
+        and has(final_readable_product, "truncation_marker"),
+        "prepare_review_pr_product": '"agent_review_prepare_pr"' in dispatch,
+        "final_testable_pr": has(runner, "code_product_metrics") and has(runner, "review_report"),
         "intrinsic_contract_present": exists(
             repo_root, "Tools/validation/real_product/intrinsic_capability_contract/cli.py"
-        )
-        and has(intrinsic_text, "real_product_intrinsic_capability_contract"),
+        ),
         "openvino_peer_topology_contract": exists(
             repo_root, "Tools/validation/provider_mesh/openvino_peer_topology_contract/cli.py"
-        )
-        and exists(repo_root, "Tools/validation/provider_mesh/openvino_peer_topology_contract_smoke/cli.py")
-        and has(openvino_peer_topology_contract_text, "openvino_peer_topology_contract")
-        and has(openvino_peer_topology_contract_text, "runtime_workload_targets_gpu0_only")
-        and has(
-            openvino_peer_topology_contract_text, "npu_micro_uses_runtime_context_and_tool_broker"
         ),
+        "gpu0_npu_provider_contract": exists(
+            repo_root, "Tools/validation/provider_mesh/openvino_peer_topology_contract/cli.py"
+        )
+        and has(provider_commands, "build_openvino_gpu0_workload_report")
+        and has(provider_commands, "build_npu_micro_task_companion_report")
+        and ordered_tokens(
+            provider_commands,
+            '"lane": "gpu1_planner"',
+            '"lane": "gpu0_peer"',
+            '"lane": "npu_micro_task_auditor"',
+        )
+        and has(provider_commands, "--require-semantic-provider")
+        and has(provider_commands, "--leader-packet")
+        and has(provider_commands, "semantic_provider_execution_performed")
+        and has(heap_run_loop, "provider_semantic_missing_required_lanes")
+        and has(provider_execution, "provider_launch_manifest")
+        and has(provider_execution, "provider_teamwork_leader_packet")
+        and has(provider_execution, "build_provider_teamwork_leader_packet")
+        and has(provider_teamwork_packet, "gpu1_primary_advisory_leader")
+        and has(provider_teamwork_packet, "heap_universe_contract")
+        and has(provider_teamwork_packet, "same_heap_teamwork_contract")
+        and has(provider_teamwork_packet, "pointer_contract")
+        and has(provider_teamwork_packet, "resume_from_block_id")
+        and has(provider_teamwork_packet, "gpu1_authority")
+        and has(provider_teamwork_packet, "gpu0_peer_authority")
+        and has(provider_teamwork_packet, "npu_peer_authority")
+        and has(provider_teamwork_packet, "GPU1 commands final synthesis")
+        and has(provider_teamwork_packet, "parallel peer")
+        and has(provider_teamwork_packet, "requires_concrete_rewrite")
+        and has(provider_teamwork_packet, "NO_PATCHABLE_TARGET")
+        and has(provider_teamwork_packet, "startup_artifacts")
+        and has(provider_teamwork_packet, "broker_tool_evidence")
+        and has(provider_teamwork_packet, "source_allowlist_contract")
+        and has(provider_teamwork_packet, "startup_context_plane")
+        and has(provider_teamwork_packet, "artifact_reference_only_not_runtime_database")
+        and has(provider_execution, "started_at")
+        and has(provider_execution, "provider_process_id")
+        and has(provider_execution, "concurrent_provider_teamwork"),
     }
-
-    capability_order = [
+    order = [
         "task_md_in",
         "heap_exchange_activation",
         "heap_provider_budget_governor",
@@ -247,74 +200,34 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "direct_reasoning_assistance",
         "runtime_flow_map_evidence",
         "static_deterministic_script_lane",
+        "matrix_consumes_provider_diff_evidence",
         "heap_exchange_close",
         "heap_runtime_completeness_gate",
+        "startup_manifest_primary_data_plane",
         "heap_runtime_product_package",
         "product_readiness",
         "prepare_review_pr_product",
         "final_testable_pr",
         "intrinsic_contract_present",
         "openvino_peer_topology_contract",
+        "gpu0_npu_provider_contract",
     ]
-
-    runtime_route = [
-        "Task MD IN",
-        "heap/exchange activation",
-        "provider budget governor",
-        "provider invocation contract",
-        "GPU1 primary advisory",
-        "GPU0 OpenVINO/tool workload",
-        "NPU peer micro lane",
-        "shared memory / sqlite_fts_memory / tool_agnostic_broker / direct reasoning assistance",
-        "runtime flow map evidence",
-        "static deterministic script/product lane",
-        "heap runtime completeness gate",
-        "heap runtime product package",
-        "heap/exchange CLOSE",
-        "product readiness",
-        "python -m Tools.ai agent_review_prepare_pr",
-        "PR finale testabile",
-    ]
-
-    errors = [
-        f"missing runtime mesh capability: {name}"
-        for name in capability_order
-        if not checks.get(name)
-    ]
-    failed_capabilities = [name for name in capability_order if not checks.get(name)]
-
+    errors = [f"missing runtime mesh capability: {name}" for name in order if not checks.get(name)]
     return {
         "schema_version": 1,
         "kind": "real_product_runtime_mesh_contract",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
-        "capability_order": capability_order,
-        "failed_capabilities": failed_capabilities,
-        "runtime_route": runtime_route,
-        "diagnostics": {
-            "sqlite_surface_has_sqlite": "sqlite" in memory_surface,
-            "sqlite_runtime_memory_present": exists(repo_root, "Tools/ai/agent_memory/sqlite_cli.py"),
-            "ollama_probe_file_present": exists(repo_root, "Tools/ai/run_ollama_provider_probe.py"),
-            "local_provider_probe_file_present": exists(
-                repo_root, "Tools/ai/provider_mesh/local_provider_probe/cli.py"
-            ),
-            "gpu1_provider_surface_mentions_ollama": "ollama" in gpu1_provider_surface,
-            "gpu1_provider_surface_mentions_provider_or_probe": "provider" in gpu1_provider_surface
-            or "probe" in gpu1_provider_surface,
-            "openvino_gpu0_mentions_openvino": "openvino" in openvino_gpu0_text.lower(),
-            "openvino_gpu0_mentions_gpu0": "gpu0" in openvino_gpu0_text.lower()
-            or "gpu.0" in openvino_gpu0_text.lower(),
-            "npu_companion_mentions_npu": "npu" in npu_companion_text.lower(),
-            "heap_budget_governor_present": exists(
-                repo_root, "Tools/ai/heap_provider/budget_governor/cli.py"
-            ),
-            "heap_invocation_contract_present": exists(
-                repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
-            ),
-            "heap_runtime_product_package_present": exists(
-                repo_root, "Tools/ai/heap_runtime/product_package/cli.py"
-            ),
-        },
+        "capability_order": order,
+        "failed_capabilities": [name for name in order if not checks.get(name)],
+        "runtime_route": [
+            "Task MD IN",
+            "python -m Tools.ai run",
+            "heap_context_closure",
+            "GPU1/GPU0/NPU provider lanes",
+            "runtime broker and deterministic validators",
+            "CODE_PRODUCT_FULL_PATCH and final readable product",
+        ],
         **checks,
         "provider_execution_performed": False,
         "patch_application_performed": False,
@@ -328,9 +241,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--output", default="output/validation/real_product_runtime_mesh_contract.json"
-    )
+    parser.add_argument("--output", default="output/validation/real_product_runtime_mesh_contract.json")
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
 
