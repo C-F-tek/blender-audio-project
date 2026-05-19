@@ -21,6 +21,7 @@ AI_DOCS_ENTRYPOINT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
 REAL_PRODUCT_RUN_MODEL.md
+COMPACT_EVIDENCE_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -38,6 +39,7 @@ AI_DOCS_ENTRYPOINT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
 REAL_PRODUCT_RUN_MODEL.md
+COMPACT_EVIDENCE_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -54,6 +56,7 @@ Older task/runbook files remain useful only after this path and only for their s
 | Heap/exchange useful model | `HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Standalone heap surface model | `STANDALONE_HEAP_SURFACE_MODEL.md` |
 | Real product run model | `REAL_PRODUCT_RUN_MODEL.md` |
+| Compact evidence model | `COMPACT_EVIDENCE_MODEL.md` |
 | Root context navigation | `../CONTEXT_INDEX.md` |
 | Docs navigation | `CONTEXT_INDEX.md` |
 | Context coverage | `CONTEXT_COVERAGE_STATUS.md` |
@@ -127,6 +130,22 @@ Then, only for historical/task detail:
 LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
 LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
 ```
+
+## Compact evidence selection
+
+Evidence publication decisions should first read:
+
+```text
+COMPACT_EVIDENCE_MODEL.md
+```
+
+Then inspect selected compact evidence under:
+
+```text
+docs/LOCAL_VALIDATION_EVIDENCE/
+```
+
+Do not commit raw runtime output by default.
 
 ## Policy
 
