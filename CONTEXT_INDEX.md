@@ -2,6 +2,12 @@
 
 This is the compact navigation entrypoint for AI and operator context.
 
+## Coverage status
+
+| File | Role |
+| --- | --- |
+| `docs/CONTEXT_COVERAGE_STATUS.md` | Tracks which context files are complete-enough, partial, stub or deferred. |
+
 ## Root contracts
 
 | File | Role |
