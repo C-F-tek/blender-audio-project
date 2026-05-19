@@ -19,6 +19,7 @@ Current docs-side entrypoints:
 ```text
 AI_DOCS_ENTRYPOINT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
+STANDALONE_HEAP_SURFACE_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -34,6 +35,7 @@ Read these first for active IA-Carmine runtime, provider, heap/exchange, patchki
 ../CONTEXT_INDEX.md
 AI_DOCS_ENTRYPOINT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
+STANDALONE_HEAP_SURFACE_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -48,6 +50,7 @@ Older task/runbook files remain useful only after this path and only for their s
 | Area | Document |
 |---|---|
 | Heap/exchange useful model | `HEAP_EXCHANGE_USEFUL_MODEL.md` |
+| Standalone heap surface model | `STANDALONE_HEAP_SURFACE_MODEL.md` |
 | Root context navigation | `../CONTEXT_INDEX.md` |
 | Docs navigation | `CONTEXT_INDEX.md` |
 | Context coverage | `CONTEXT_COVERAGE_STATUS.md` |
@@ -92,7 +95,13 @@ LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
 
 ## Standalone heap universe incubation
 
-Standalone heap architecture work should read:
+Standalone heap architecture work should first read:
+
+```text
+STANDALONE_HEAP_SURFACE_MODEL.md
+```
+
+Then, only for historical/task detail:
 
 ```text
 LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
