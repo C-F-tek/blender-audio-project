@@ -4,7 +4,7 @@
 
 Current `docs/` entrypoint for AI agents.
 
-This file is a routing bridge only. It points to current source-of-truth maps and must not preserve old first-read orders that predate the context-index and dispatcher-coverage layer.
+This file is a routing bridge only. It points to current source-of-truth maps and must not preserve old first-read orders that predate the context-index, dispatcher-coverage and heap/exchange useful-model layer.
 
 ## Purpose
 
@@ -26,6 +26,7 @@ For a new AI session, read in this order:
 ../AGENTS.md
 ../CHATGPT.md
 ../CONTEXT_INDEX.md
+docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/CONTEXT_COVERAGE_STATUS.md
 docs/DISPATCHER_CONTEXT_COVERAGE.md
 ../Tools/CONTEXT_INDEX.md
@@ -48,6 +49,7 @@ In this repository, `docs/` is the contract and evidence layer for:
 - reusable pipeline direction;
 - NPU/helper package boundaries;
 - generated artifact acceptance rules;
+- heap/exchange useful model;
 - heap/exchange lifecycle boundaries;
 - patchkit/source-write boundaries;
 - dispatcher-driven context navigation.
@@ -57,6 +59,7 @@ In this repository, `docs/` is the contract and evidence layer for:
 | Need | Read |
 | --- | --- |
 | Whole-repo entrypoint | `../CONTEXT_INDEX.md` |
+| Heap/exchange compact model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Context coverage status | `docs/CONTEXT_COVERAGE_STATUS.md` |
 | Dispatcher-to-family coverage | `docs/DISPATCHER_CONTEXT_COVERAGE.md` |
 | Documentation folder navigation | `docs/CONTEXT_INDEX.md` |
@@ -76,7 +79,6 @@ LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
 LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 MAIN_RUNTIME_ARCHITECTURE.md
 UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md
-AI_ONBOARDING.md
 ```
 
 Use them as task-specific background, not as the current navigation root.
@@ -85,8 +87,8 @@ Use them as task-specific background, not as the current navigation root.
 
 | Work area | Read |
 |---|---|
-| Current AI orientation | `../CONTEXT_INDEX.md`, `docs/CONTEXT_COVERAGE_STATUS.md`, `docs/DISPATCHER_CONTEXT_COVERAGE.md` |
-| Heap/exchange and patchkit | `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md`, `MAIN_RUNTIME_ARCHITECTURE.md`, `../Tools/ai/CONTEXT_INDEX.md` |
+| Current AI orientation | `../CONTEXT_INDEX.md`, `docs/HEAP_EXCHANGE_USEFUL_MODEL.md`, `docs/CONTEXT_COVERAGE_STATUS.md`, `docs/DISPATCHER_CONTEXT_COVERAGE.md` |
+| Heap/exchange and patchkit | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md`, `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md`, `MAIN_RUNTIME_ARCHITECTURE.md`, `../Tools/ai/CONTEXT_INDEX.md` |
 | Unified launcher/full run | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md`, `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md`, `../Tools/ai/run/TOOL_CONTEXT.md` |
 | Documentation staleness | `docs/CONTEXT_COVERAGE_STATUS.md`, `LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` |
 | AI pipeline orchestration | `AI_PIPELINE_ARCHITECTURE.md`, `AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md`, `../Tools/ai/pipeline/TOOL_CONTEXT.md` |
@@ -119,7 +121,7 @@ If one conflicts with current context indexes, dispatcher coverage, heap/exchang
 When entering through `docs/`, an AI agent should:
 
 1. identify the task area;
-2. read the current index/coverage files first;
+2. read the current heap/exchange useful model and index/coverage files first;
 3. open the nearest family `TOOL_CONTEXT.md`;
 4. inspect current source before proposing patches;
 5. avoid destructive edits;
