@@ -46,12 +46,15 @@ CONTEXT_INDEX.md
 | Tools/ai heap runtime | `Tools/ai/heap_runtime/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai operator product core | `Tools/ai/operator_product_core/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai patch product | `Tools/ai/patch_product/TOOL_CONTEXT.md` | complete-enough |
+| Tools/ai patchkit | `Tools/ai/patchkit/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai pipeline | `Tools/ai/pipeline/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai provider mesh | `Tools/ai/provider_mesh/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai provider runtime blackboard | `Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai repository product | `Tools/ai/repository_product/TOOL_CONTEXT.md` | stub |
+| Tools/ai run command | `Tools/ai/run/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai runtime tool | `Tools/ai/runtime_tool/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai runtime universe | `Tools/ai/runtime_universe/TOOL_CONTEXT.md` | complete-enough |
+| Tools/ai runtime universe unified | `Tools/ai/runtime_universe/unified/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation overview | `Tools/validation/TOOL_CONTEXT.md` | partial |
 | Tools/validation family index | `Tools/validation/CONTEXT_INDEX.md` | complete-enough |
 | Tools/validation agent context | `Tools/validation/agent_context/TOOL_CONTEXT.md` | complete-enough |
