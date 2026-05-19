@@ -2,6 +2,12 @@
 
 This file is the compact navigation layer for repository documentation.
 
+## Coverage status
+
+| File | Role |
+| --- | --- |
+| `docs/CONTEXT_COVERAGE_STATUS.md` | Tracks complete-enough, partial, stub and deferred context files. |
+
 ## Main documentation surfaces
 
 | File | Role |
@@ -29,6 +35,7 @@ This file is the compact navigation layer for repository documentation.
 | `docs/LOCAL_AI_TASKS/non-tools-script-context-pass-2026-05-19.md` | Non-Tools context pass status. |
 | `docs/LOCAL_AI_TASKS/exhaustive-script-surface-inventory-2026-05-19.md` | Script inventory procedure and baseline. |
 | `docs/LOCAL_AI_TASKS/mapping-tool-evidence-publishing-2026-05-19.md` | Mapping evidence publishing procedure. |
+| `docs/LOCAL_AI_TASKS/context-index-navigation-pass-2026-05-20.md` | Context index navigation pass. |
 
 ## Usage
 
