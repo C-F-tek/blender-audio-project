@@ -15,6 +15,7 @@ Tools/workflow/CONTEXT_INDEX.md
 Tools/npu/CONTEXT_INDEX.md
 docs/CONTEXT_INDEX.md
 docs/CONTEXT_COVERAGE_STATUS.md
+docs/DISPATCHER_CONTEXT_COVERAGE.md
 Scripting/CONTEXT_INDEX.md
 ```
 
@@ -27,6 +28,7 @@ Expected reading flow:
 ```text
 CONTEXT_INDEX.md
 -> docs/CONTEXT_COVERAGE_STATUS.md
+-> docs/DISPATCHER_CONTEXT_COVERAGE.md
 -> nearest area CONTEXT_INDEX.md
 -> nearest TOOL_CONTEXT.md
 -> dispatcher/source file
@@ -40,6 +42,7 @@ CHATGPT.md
 CONTEXT_INDEX.md
 README.md
 docs/CONTEXT_COVERAGE_STATUS.md
+docs/DISPATCHER_CONTEXT_COVERAGE.md
 Tools/CONTEXT_INDEX.md
 docs/CONTEXT_INDEX.md
 Scripting/CONTEXT_INDEX.md
@@ -53,6 +56,7 @@ Scripting/CONTEXT_INDEX.md
 complete-enough
 partial
 stub
+stub-missing
 deferred
 ```
 
@@ -60,7 +64,7 @@ This prevents false claims that every one of the 1479 scripts is individually do
 
 ## Notes
 
-`Tools/TOOL_CONTEXT.md` and some larger operational docs could not always be updated directly through the remote editor because of platform filtering. Separate `CONTEXT_INDEX.md` files were added to avoid blocking the documentation pass.
+`Tools/TOOL_CONTEXT.md` and some larger operational docs could not always be updated directly through the remote editor because of platform filtering. Separate `CONTEXT_INDEX.md` files and dispatcher coverage docs were added to avoid blocking the documentation pass.
 
 ## Next steps
 
@@ -69,6 +73,7 @@ sync local master
 verify context index and coverage files exist locally
 continue package-level TOOL_CONTEXT.md only for families that cause recurring ambiguity
 expand Tools/ai/repository_product/TOOL_CONTEXT.md later from local editor if needed
+expand stub-missing files later from local editor if needed
 ```
 
 ## Guardrails
