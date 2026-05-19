@@ -81,6 +81,8 @@ CONTEXT_INDEX.md
 | Tools/workflow workflow_run | `Tools/workflow/workflow_run/TOOL_CONTEXT.md` | complete-enough |
 | Tools/npu overview | `Tools/npu/TOOL_CONTEXT.md` | partial |
 | Tools/npu family index | `Tools/npu/CONTEXT_INDEX.md` | complete-enough |
+| Tools/npu PowerShell wrappers | `Tools/npu/_powershell/TOOL_CONTEXT.md` | complete-enough |
+| Tools/npu dual AI pipeline | `Tools/npu/dual_ai_pipeline/TOOL_CONTEXT.md` | complete-enough |
 | Tools/npu provider mesh | `Tools/npu/provider_mesh/TOOL_CONTEXT.md` | complete-enough |
 | Tools/docs | `Tools/docs/TOOL_CONTEXT.md` | complete-enough |
 | Tools/git | `Tools/git/TOOL_CONTEXT.md` | complete-enough |
