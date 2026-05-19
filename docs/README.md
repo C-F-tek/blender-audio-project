@@ -20,6 +20,7 @@ Current docs-side entrypoints:
 AI_DOCS_ENTRYPOINT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
+PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 REAL_PRODUCT_RUN_MODEL.md
 COMPACT_EVIDENCE_MODEL.md
 CONTEXT_INDEX.md
@@ -38,6 +39,7 @@ Read these first for active IA-Carmine runtime, provider, heap/exchange, patchki
 AI_DOCS_ENTRYPOINT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
+PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 REAL_PRODUCT_RUN_MODEL.md
 COMPACT_EVIDENCE_MODEL.md
 CONTEXT_INDEX.md
@@ -55,6 +57,7 @@ Older task/runbook files remain useful only after this path and only for their s
 |---|---|
 | Heap/exchange useful model | `HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Standalone heap surface model | `STANDALONE_HEAP_SURFACE_MODEL.md` |
+| Provider lanes unified mind model | `PROVIDER_LANES_UNIFIED_MIND_MODEL.md` |
 | Real product run model | `REAL_PRODUCT_RUN_MODEL.md` |
 | Compact evidence model | `COMPACT_EVIDENCE_MODEL.md` |
 | Root context navigation | `../CONTEXT_INDEX.md` |
@@ -115,6 +118,16 @@ LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
 ```
 
 These documents are task-specific. They do not override current context indexes, dispatcher coverage or source inspection.
+
+## Provider lanes as one operational mind
+
+Provider/lane cooperation work should first read:
+
+```text
+PROVIDER_LANES_UNIFIED_MIND_MODEL.md
+```
+
+This is the current model for Ollama as main center, GPU0 as coworker/reviewer lane, and NPU as micro-lane/microtask auditor.
 
 ## Real product run classification
 
