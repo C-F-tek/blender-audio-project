@@ -20,6 +20,7 @@ Current docs-side entrypoints:
 AI_DOCS_ENTRYPOINT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
+REAL_PRODUCT_RUN_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -36,6 +37,7 @@ Read these first for active IA-Carmine runtime, provider, heap/exchange, patchki
 AI_DOCS_ENTRYPOINT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
+REAL_PRODUCT_RUN_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -51,6 +53,7 @@ Older task/runbook files remain useful only after this path and only for their s
 |---|---|
 | Heap/exchange useful model | `HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Standalone heap surface model | `STANDALONE_HEAP_SURFACE_MODEL.md` |
+| Real product run model | `REAL_PRODUCT_RUN_MODEL.md` |
 | Root context navigation | `../CONTEXT_INDEX.md` |
 | Docs navigation | `CONTEXT_INDEX.md` |
 | Context coverage | `CONTEXT_COVERAGE_STATUS.md` |
@@ -109,6 +112,21 @@ LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
 ```
 
 These documents are task-specific. They do not override current context indexes, dispatcher coverage or source inspection.
+
+## Real product run classification
+
+Run/product classification should first read:
+
+```text
+REAL_PRODUCT_RUN_MODEL.md
+```
+
+Then, only for historical/task detail:
+
+```text
+LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+```
 
 ## Policy
 
