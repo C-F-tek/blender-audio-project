@@ -25,6 +25,7 @@ from .runtime_builders import (
     analyze_code_product_artifact,
     run_heap_code_execution_matrix,
     run_heap_virtual_dev_environment,
+    runtime_file_refs,
     synthesize_patch_candidates,
 )
 
@@ -139,9 +140,10 @@ TOOL_SPECS: dict[str, ToolSpec] = {
     ),
     "agent_runtime_debug_lab": ToolSpec(
         name="agent_runtime_debug_lab",
-        description="Run the controlled report-only Python debug lab with an allowlisted request file.",
+        description="Run the controlled report-only Python debug lab with an in-memory or allowlisted request.",
         allowed_args=(
             "request_file",
+            "request_json",
             "output",
             "markdown_output",
             "timeout_seconds",
@@ -180,6 +182,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "max_diff_chars",
             "operator_request",
             "operator_request_file",
+            "evidence_report",
             "synthesize_patch_candidates",
             "force_patch_candidate_synthesis",
             "max_patch_candidates",
@@ -194,6 +197,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "target_file",
             "operator_request",
             "operator_request_file",
+            "evidence_report",
             "matrix_report",
             "max_candidates",
             "timeout_seconds",
@@ -212,6 +216,19 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "help_probe",
         ),
         builder=run_heap_virtual_dev_environment,
+    ),
+    "runtime_file_refs": ToolSpec(
+        name="runtime_file_refs",
+        description="Resolve provider/operator file refs into local patchable targets, validation refs and rejected artifact refs.",
+        allowed_args=(
+            "text",
+            "text_file",
+            "target_file",
+            "validation_script",
+            "provenance",
+            "strict_patchable_targets",
+        ),
+        builder=runtime_file_refs,
     ),
     "analyze_code_product_artifact": ToolSpec(
         name="analyze_code_product_artifact",

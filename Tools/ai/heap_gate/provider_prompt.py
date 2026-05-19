@@ -21,9 +21,9 @@ class RuntimeGateProviderPromptMixin:
         """Build a bounded digest of startup context artifacts for GPU1.
 
         The startup reload already creates tool catalog, memory inventory,
-        operational memory search, transient context, semantic chunks and the
-        heap task file. This digest turns those refs into active GPU1 context
-        without treating the whole universe as one unbounded argv string.
+        operational memory search, transient context and semantic chunks. This
+        digest turns structured artifact refs into active GPU1 context without
+        treating the readable heap task file as the runtime data plane.
         """
         manifest_path, manifest = self.startup_manifest_from_task_file()
         if not manifest:
@@ -31,7 +31,6 @@ class RuntimeGateProviderPromptMixin:
 
         artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
         preferred_keys = (
-            "heap_task_file",
             "shared_context_markdown",
             "shared_memory_markdown",
             "operational_memory_search_markdown",

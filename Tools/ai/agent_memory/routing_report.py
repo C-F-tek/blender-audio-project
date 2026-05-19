@@ -7,8 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from Tools.validation._shared.report_utils import write_json_report
-
 from .common import relative_path, resolve_repo_path
 from .routing_requests import (
     build_discovery_tool_requests,
@@ -30,7 +28,6 @@ def repo_rel(path: Path, repo_root: Path) -> str:
 
 def build_policy(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    broker_request_path = resolve_path(repo_root, args.broker_request_output)
     memory_requests = build_memory_tool_requests(args)
     discovery_requests = build_discovery_tool_requests(args)
     tool_requests = memory_requests + discovery_requests
@@ -51,8 +48,6 @@ def build_policy(args: argparse.Namespace) -> dict[str, Any]:
             "automatic_promotion_allowed": False,
         },
     }
-    broker_request_path.parent.mkdir(parents=True, exist_ok=True)
-    write_json_report(broker_request, broker_request_path)
 
     persistent_count = sum(
         1
@@ -90,7 +85,9 @@ def build_policy(args: argparse.Namespace) -> dict[str, Any]:
         "sqlite_write_performed": False,
         "persistent_memory_write_performed": False,
         "operational_sqlite_write_performed": False,
-        "broker_request_written": repo_rel(broker_request_path, repo_root),
+        "broker_request_artifact": "",
+        "broker_request_transport": "in_memory",
+        "broker_request_packet": broker_request,
         "memory_plan": {
             "persistent_read_only": True,
             "persistent_query_count": persistent_count,
@@ -137,7 +134,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     for key in (
         "passed",
         "profile",
-        "broker_request_written",
+        "broker_request_transport",
         "provider_execution_performed",
         "patch_application_performed",
         "sqlite_write_performed",

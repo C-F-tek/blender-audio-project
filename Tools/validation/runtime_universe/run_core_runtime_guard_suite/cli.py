@@ -27,8 +27,8 @@ except ImportError:
 def discover_core_steps(repo_root: Path) -> list[tuple[str, str]]:
     steps: list[tuple[str, str]] = []
     validation_dir = repo_root / "Tools" / "validation"
-    for path in sorted(validation_dir.glob("run_*_smoke.py")):
-        if path.name == Path(__file__).name:
+    for path in sorted(validation_dir.rglob("cli.py")):
+        if path.resolve(strict=False) == Path(__file__).resolve(strict=False):
             continue
         try:
             text = path.read_text(encoding="utf-8-sig", errors="replace")
@@ -36,7 +36,7 @@ def discover_core_steps(repo_root: Path) -> list[tuple[str, str]]:
             continue
         if "CORE_RUNTIME_GUARD = True" not in text:
             continue
-        name = path.stem.removeprefix("run_").removesuffix("_smoke")
+        name = path.parent.name.removeprefix("run_").removesuffix("_smoke")
         steps.append((name, path.relative_to(repo_root).as_posix()))
     return steps
 

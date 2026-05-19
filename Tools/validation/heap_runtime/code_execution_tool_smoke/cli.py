@@ -4,20 +4,26 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import os
 import subprocess
 import sys
+from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
+    from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
     from Tools.validation._shared.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report  # type: ignore
+    from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown  # type: ignore
     from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
 
 
@@ -53,8 +59,88 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def write_broker_request(path: Path) -> None:
-    request = {
+def run_broker_in_process(
+    *,
+    repo_root: Path,
+    request_data: dict[str, Any],
+    tool_output_dir: str,
+    output: Path,
+    markdown: Path,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    try:
+        broker_args = Namespace(
+            repo_root=str(repo_root),
+            request_data=request_data,
+            request_file="",
+            request_json="",
+            tool_output_dir=tool_output_dir,
+            stamp="heap_code_execution_tool_smoke",
+            timeout_seconds=timeout_seconds,
+            dry_run=False,
+        )
+        report = build_broker_report(broker_args)
+        write_json_report(report, output)
+        write_text_report(render_broker_markdown(report), markdown)
+        return {
+            "command": ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"],
+            "returncode": 0 if report.get("passed") else 2,
+            "stdout_tail": json.dumps(
+                {
+                    "passed": report.get("passed"),
+                    "request_transport": report.get("request_transport"),
+                    "tool_execution_count": report.get("tool_execution_count"),
+                },
+                ensure_ascii=False,
+            ),
+            "stderr_tail": "",
+            "ok": bool(report.get("passed")),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "command": ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"],
+            "returncode": 1,
+            "stdout_tail": "",
+            "stderr_tail": f"{type(exc).__name__}: {exc}",
+            "ok": False,
+        }
+
+
+def unified_diff(rel_path: str, before: str, after: str) -> str:
+    body = "\n".join(
+        difflib.unified_diff(
+            before.splitlines(),
+            after.splitlines(),
+            fromfile=f"a/{rel_path}",
+            tofile=f"b/{rel_path}",
+            lineterm="",
+        )
+    )
+    return f"diff --git a/{rel_path} b/{rel_path}\n{body}\n"
+
+
+def write_evidence_report(repo_root: Path, path: Path) -> None:
+    rel_path = "Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py"
+    before = (repo_root / rel_path).read_text(encoding="utf-8-sig", errors="replace")
+    after = before + "\n# heap_code_execution_tool_smoke evidence-only patch candidate\n"
+    report = {
+        "kind": "provider_proposal_fixture",
+        "target_files": [rel_path],
+        "response_text": (
+            "TARGET_FILES\n"
+            f"- {rel_path}\n\n"
+            "PATCH_SKETCH_UNIFIED_DIFF\n"
+            "```diff\n"
+            f"{unified_diff(rel_path, before, after)}"
+            "```\n"
+        ),
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def build_broker_request(evidence_report: Path) -> dict[str, Any]:
+    return {
         "schema_version": 1,
         "kind": "agent_runtime_tool_requests",
         "source": "heap_code_execution_tool_smoke",
@@ -74,14 +160,13 @@ def write_broker_request(path: Path) -> None:
                     "timeout_seconds": 300,
                     "max_diff_chars": 1000,
                     "operator_request": "refactor duplicated path resolver into runtime file refs",
+                    "evidence_report": [str(evidence_report)],
                     "synthesize_patch_candidates": True,
                     "max_patch_candidates": 1,
                 },
             }
         ],
     }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(request, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -110,21 +195,17 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     direct_md = (
         repo_root / f"output/validation/heap_code_execution_tool_smoke_direct_{run_stamp}.md"
     )
-    direct_request = (
-        repo_root
-        / f"output/validation/heap_code_execution_tool_smoke_direct_request_{run_stamp}.json"
-    )
-    broker_request = (
-        repo_root
-        / f"output/validation/heap_code_execution_tool_smoke_broker_request_{run_stamp}.json"
-    )
     broker_output = (
         repo_root / f"output/validation/heap_code_execution_tool_smoke_broker_{run_stamp}.json"
     )
     broker_md = (
         repo_root / f"output/validation/heap_code_execution_tool_smoke_broker_{run_stamp}.md"
     )
-    write_broker_request(broker_request)
+    evidence_report = (
+        repo_root / f"output/validation/heap_code_execution_tool_smoke_evidence_{run_stamp}.json"
+    )
+    write_evidence_report(repo_root, evidence_report)
+    broker_request = build_broker_request(evidence_report)
 
     direct = run(
         [
@@ -140,8 +221,6 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py",
             "--validation-script",
             "Tools/validation/heap_final_proposals/test_proposal_gate/cli.py",
-            "--request-output",
-            str(direct_request),
             "--output",
             str(direct_output),
             "--markdown-output",
@@ -152,6 +231,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "1000",
             "--operator-request",
             "refactor duplicated path resolver into runtime file refs",
+            "--evidence-report",
+            str(evidence_report),
             "--synthesize-patch-candidates",
             "--max-patch-candidates",
             "1",
@@ -159,25 +240,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         repo_root,
         args.timeout_seconds,
     )
-    broker = run(
-        [
-            sys.executable,
-            "Tools/ai/runtime_tool/agent_broker/cli.py",
-            "--repo-root",
-            ".",
-            "--request-file",
-            str(broker_request),
-            "--tool-output-dir",
-            f"output/ai_runtime_tools/heap_code_execution_tool_smoke_{run_stamp}",
-            "--output",
-            str(broker_output),
-            "--markdown-output",
-            str(broker_md),
-            "--timeout-seconds",
-            "360",
-        ],
-        repo_root,
-        args.timeout_seconds,
+    broker = run_broker_in_process(
+        repo_root=repo_root,
+        request_data=broker_request,
+        tool_output_dir=f"output/ai_runtime_tools/heap_code_execution_tool_smoke_{run_stamp}",
+        output=broker_output,
+        markdown=broker_md,
+        timeout_seconds=360,
     )
     direct_data = read_json(direct_output)
     broker_data = read_json(broker_output)
@@ -203,6 +272,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         errors.append("broker allowlist does not expose synthesize_patch_candidates")
     if broker_data.get("tool_execution_count") != 1:
         errors.append("broker should execute exactly one code execution matrix tool")
+    if broker_data.get("request_transport") != "in_memory":
+        errors.append("broker request transport must be in_memory")
     for key in (
         "provider_execution_performed",
         "patch_application_performed",

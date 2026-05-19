@@ -9,8 +9,10 @@ import sys
 from pathlib import Path
 
 try:
+    from Tools.ai._shared.process_tree import terminate_process_tree
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ImportError:
+    from Tools.ai._shared.process_tree import terminate_process_tree  # type: ignore
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report  # type: ignore
 
 
@@ -38,25 +40,38 @@ def main() -> int:
     env["PYTHONPATH"] = str(repo_root)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
 
-    result = subprocess.run(
-        [
-            sys.executable,
-            str(repo_root / "Tools/validation/real_product/preflight_gate/cli.py"),
-            "--repo-root",
-            str(repo_root),
-            "--output",
-            str(preflight_json),
-            "--markdown-output",
-            str(preflight_md),
-            "--timeout-seconds",
-            str(args.timeout_seconds),
-        ],
+    command = [
+        sys.executable,
+        str(repo_root / "Tools/validation/real_product/preflight_gate/cli.py"),
+        "--repo-root",
+        str(repo_root),
+        "--output",
+        str(preflight_json),
+        "--markdown-output",
+        str(preflight_md),
+        "--timeout-seconds",
+        str(args.timeout_seconds),
+    ]
+    process = subprocess.Popen(
+        command,
         cwd=repo_root,
         env=env,
         text=True,
-        capture_output=True,
-        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
+    try:
+        stdout, stderr = process.communicate(timeout=args.timeout_seconds + 30)
+        result = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+    except subprocess.TimeoutExpired:
+        terminate_process_tree(process)
+        stdout, stderr = process.communicate()
+        result = subprocess.CompletedProcess(
+            command,
+            124,
+            stdout or "",
+            (stderr or "") + "\npreflight gate smoke timeout",
+        )
 
     report = (
         json.loads(preflight_json.read_text(encoding="utf-8-sig"))
@@ -86,11 +101,20 @@ def main() -> int:
 
     expected_steps = {
         "real_product_profile",
+        "core_runtime_guard_suite",
+        "real_product_single_entry_exit",
         "intrinsic_capability_contract",
         "runtime_mesh_contract",
+        "openvino_peer_topology",
         "review_pr_prepare_args",
         "review_pr_product_readiness",
-        "full_product_pr_chain",
+        "heap_provider_budget_governor",
+        "heap_provider_invocation_contract",
+        "heap_runtime_completeness_gate",
+        "runtime_evidence_correlation",
+        "runtime_evidence_correlation_launcher_wiring",
+        "manifest_runtime_evidence_correlation_schema",
+        "review_pr_final_product_contract",
     }
     observed_steps = {str(step.get("name")) for step in report.get("steps") or []}
     require(expected_steps.issubset(observed_steps), errors, "preflight missing expected steps")

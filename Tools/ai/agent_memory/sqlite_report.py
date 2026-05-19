@@ -62,17 +62,19 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     operational_write = False
     operational_clear = False
     persistent_write = False
+    def memory_status() -> dict[str, Any]:
+        return (
+            operational_status(operational_db)
+            if memory_scope == "operational"
+            else persistent_status(persistent_db)
+        )
 
     if memory_scope == "operational" and not operational_db_allowed:
         errors.append("operational database must be under output/**")
     else:
         try:
             if operation == "status":
-                result = (
-                    operational_status(operational_db)
-                    if memory_scope == "operational"
-                    else persistent_status(persistent_db)
-                )
+                result = memory_status()
             elif operation == "remember":
                 if memory_scope == "operational":
                     result = remember_operational(
@@ -87,6 +89,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                         },
                     )
                     operational_write = True
+                    result.update(memory_status())
                 elif memory_scope == "persistent":
                     if not args.allow_persistent_write or args.confirm != "persistent_write":
                         raise ValueError(
@@ -105,11 +108,15 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                         },
                     )
                     persistent_write = True
+                    result.update(memory_status())
                 else:
                     raise ValueError(f"unsupported memory scope for remember: {memory_scope}")
             elif operation == "search":
+                status = memory_status()
                 result = {
                     "query": args.query,
+                    "sqlite_search_backend": status.get("sqlite_search_backend"),
+                    "sqlite_fts5_enabled": status.get("sqlite_fts5_enabled"),
                     "records": (
                         search_operational(operational_db, args.query, args.limit)
                         if memory_scope == "operational"
@@ -122,10 +129,17 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                 result = clear_operational(operational_db, args.confirm)
                 operational_write = True
                 operational_clear = True
+                result.update(memory_status())
             else:
                 raise ValueError(f"unsupported action: {operation}")
         except Exception as exc:  # noqa: BLE001 - report-only tool result.
             errors.append(f"{type(exc).__name__}: {exc}")
+
+    backend = "unknown"
+    fts5_enabled = False
+    if isinstance(result, dict):
+        backend = str(result.get("sqlite_search_backend", backend))
+        fts5_enabled = bool(result.get("sqlite_fts5_enabled", False))
 
     return {
         "schema_version": 1,
@@ -144,6 +158,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "persistent_sqlite_write_performed": persistent_write,
         "operational_memory_write_performed": operational_write,
         "operational_memory_clear_performed": operational_clear,
+        "sqlite_search_backend": backend,
+        "sqlite_fts5_enabled": fts5_enabled,
         "action": operation,
         "scope": memory_scope,
         "operational_database": repo_rel(operational_db, repo_root),
@@ -158,6 +174,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                 args.allow_persistent_write and args.confirm == "persistent_write"
             ),
             "sqlite_write_performed": persistent_write,
+            "sqlite_search_backend": backend,
+            "sqlite_fts5_enabled": fts5_enabled,
             "operational_sqlite_write_performed": operational_write,
             "operational_memory_clear_performed": operational_clear,
             "operational_database_must_be_under_output": True,
@@ -183,6 +201,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         "persistent_memory_write_performed",
         "operational_sqlite_write_performed",
         "operational_memory_clear_performed",
+        "sqlite_search_backend",
+        "sqlite_fts5_enabled",
     ):
         lines.append(f"- {key}: `{report.get(key)}`")
     lines.append("")

@@ -126,6 +126,32 @@ class RuntimeGateProviderContextMixin:
             )
         return lines
 
+    def broker_tool_catalog_summary(self, max_items: int = 24) -> str:
+        try:
+            from Tools.ai.runtime_tool.broker.registry import TOOL_SPECS
+        except Exception:  # noqa: BLE001 - provider context must stay report-only.
+            return ""
+        priority = (
+            "run_heap_code_execution_matrix",
+            "run_heap_virtual_dev_environment",
+            "synthesize_patch_candidates",
+            "runtime_sqlite_memory",
+            "runtime_file_refs",
+            "select_semantic_code_chunks",
+            "semantic_evidence_chunks",
+            "ai_context_pack",
+            "agent_runtime_debug_lab",
+            "analyze_code_product_artifact",
+        )
+        names = [name for name in priority if name in TOOL_SPECS]
+        names.extend(name for name in sorted(TOOL_SPECS) if name not in names)
+        lines = ["AVAILABLE_BROKER_TOOLS_FOR_NATIVE_TOOL_CALLS:"]
+        for name in names[: max(1, int(max_items))]:
+            spec = TOOL_SPECS[name]
+            args = ", ".join(spec.allowed_args) if spec.allowed_args else "none"
+            lines.append(f"- {name}: {spec.description}; args={args}")
+        return "\n".join(lines)
+
     def quality_output_signals(self, text: str, events: list[dict[str, Any]]) -> dict[str, Any]:
         lowered = text.lower()
         tool_names = [str(item.get("tool") or "") for item in self.tool_evidence_summary(events)]
@@ -276,6 +302,7 @@ class RuntimeGateProviderContextMixin:
             "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         )
         team_context = self.team_context_summary()
+        tool_catalog = self.broker_tool_catalog_summary()
         source_candidates = (
             "\n".join(f"- {item}" for item in self.real_source_file_candidates(limit=32))
             or "- nessun candidato sorgente verificato disponibile"
@@ -289,19 +316,23 @@ class RuntimeGateProviderContextMixin:
         return (
             "Sei GPU1 planner finale e leader operativo nel runtime heap IA-Carmine. "
             "Non rispondere come lista generica: consuma le evidenze brokerate, memoria SQLite/FTS, chunk semantici, context pack e contributi GPU0/NPU già presenti nell'heap. "
+            "Come leader puoi saltare avanti/indietro nel pointer graph: usa previous_block_id e refines_block_id per propagare import, variabili, classi, schema field, CLI flag e contratti verso blocchi precedenti, poi riprendi con resume_from_block_id. "
+            "GPU0 e NPU sono peer paralleli: possono saltare su previous_block_id/refines_block_id/resume_from_block_id per review, audit e refinement tasks; tu GPU1 resti leader/comando e integri i loro veto nella sintesi finale. "
+            "Quando crei PROPAGATION_TASKS comanda GPU0/NPU a rivalutare in parallelo i blocchi impattati; se requires_concrete_rewrite=true devi prima riscrivere i candidati non concreti e non propagare simboli da sketch/stub. "
             "Per richieste di refactor/OOB lavora su file esistenti: copia TARGET_FILES verbatim dalla SOURCE_PATH_ALLOWLIST_CONTRACT; nuovi file sono ammessi solo se la richiesta operatore li chiede esplicitamente. "
             "Non applicare patch, non inventare file esistenti, non inventare risultati. "
             "Per richieste complesse usa sezioni: interpretazione richiesta; tool/evidence usate; contributo GPU0; contributo NPU; indagine su file reali; output operativo dettagliato; limiti; prossima azione verificabile. "
             f"Richiesta utente: {request}\n"
             f"Contributi peer heap:\n{peer_context}\n"
             f"Memoria/chunk/context pack condivisi:\n{team_context}\n"
+            f"{tool_catalog}\n"
             f"{runtime_universe_summary}\n"
             f"{matrix_feedback}\n"
             f"File sorgente reali candidati verificati nel repository/context:\n{source_candidates}\n"
             f"{source_allowlist_contract}\n"
             f"Feedback qualitativo heap da eventuale giro precedente:\n{revision_feedback}\n"
             "Regola: rispondi come sintesi GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati, non gli artifact output/validation. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
-            "Per richieste implementative devi produrre un blocco operativo, non consigli generici. Usa sezioni TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, CODE_OR_PATCH_SKETCH, VALIDATION_COMMANDS, RISKS, EXIT_DECISION. TARGET_FILES deve essere copiato esattamente da Allowed source paths; non citare path non allowlisted nemmeno in PROBLEM/EVIDENCE/PATCH_SKETCH.\n"
+            "Per richieste implementative devi produrre un blocco operativo, non consigli generici. Usa sezioni TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, PATCH_SKETCH_UNIFIED_DIFF, VALIDATION_COMMANDS, RISKS, EXIT_DECISION. PATCH_SKETCH_UNIFIED_DIFF deve essere un blocco ```diff con diff --git a/<path> b/<path> su path allowlisted; se non hai un target verificato usa EXIT_DECISION=NO_PATCHABLE_TARGET. TARGET_FILES deve essere copiato esattamente da Allowed source paths; non citare path non allowlisted nemmeno in PROBLEM/EVIDENCE/PATCH_SKETCH_UNIFIED_DIFF. La tua proposta e' evidenza: il code product sara' valido solo se matrix/synthesis estrae e valida il diff.\n"
             "Risposta finale completa e chiusa:"
         )
 

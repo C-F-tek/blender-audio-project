@@ -20,7 +20,7 @@ try:
         render_markdown,
         repo_rel,
         resolve_path,
-        run_debug_lab,
+        run_debug_lab_request,
         split_values,
         validate_target,
         validate_validation_script,
@@ -49,7 +49,7 @@ except ImportError:
         render_markdown,
         repo_rel,
         resolve_path,
-        run_debug_lab,
+        run_debug_lab_request,
         split_values,
         validate_target,
         validate_validation_script,
@@ -160,7 +160,6 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     )
     output = resolve_path(repo_root, args.output)
     resolve_path(repo_root, args.markdown_output)
-    request_path = resolve_path(repo_root, args.request_output)
     default_debug_report, default_debug_markdown = default_debug_lab_paths(repo_root, output)
     debug_report = (
         resolve_path(repo_root, args.debug_lab_output)
@@ -173,18 +172,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         else default_debug_markdown
     )
     request = build_debug_lab_request(target_files, validation_scripts, validation_args)
-    request_path.parent.mkdir(parents=True, exist_ok=True)
-    request_path.write_text(
-        json.dumps(request, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
 
     debug_lab_returncode: int | None = None
     debug_stdout = ""
     debug_stderr = ""
     if not errors and not args.no_execute:
-        debug_lab_returncode, debug_stdout, debug_stderr = run_debug_lab(
+        debug_lab_returncode, debug_stdout, debug_stderr = run_debug_lab_request(
             repo_root,
-            request_path,
+            request,
             debug_report,
             debug_markdown,
             max(1, int(args.timeout_seconds)),
@@ -217,6 +212,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             repo_root=str(repo_root),
             operator_request=str(args.operator_request or ""),
             operator_request_file=str(args.operator_request_file or ""),
+            evidence_report=list(args.evidence_report or []),
             matrix_report="",
             target_file=target_files,
             candidate_dir=str(patch_dir),
@@ -228,10 +224,16 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         patch_report = build_patch_candidate_report(patch_args)
         write_json_report(patch_report, patch_report_path)
         write_text_report(render_patch_candidate_markdown(patch_report), patch_markdown_path)
+        candidate_items = candidate_proposal_items(patch_report)
+        candidate_by_target = {str(item.get("target_file") or ""): item for item in candidate_items}
+        concrete_proposals = [
+            candidate_by_target.get(str(item.get("target_file") or ""), item)
+            for item in concrete_proposals
+        ]
         concrete_targets = {str(item.get("target_file") or "") for item in concrete_proposals}
         concrete_proposals.extend(
             item
-            for item in candidate_proposal_items(patch_report)
+            for item in candidate_items
             if str(item.get("target_file") or "") not in concrete_targets
         )
     return {
@@ -245,7 +247,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "target_count": len(target_files),
         "verified_target_count": len(verified_targets),
         "validation_script_count": len(validation_scripts),
-        "request_file": repo_rel(repo_root, request_path),
+        "request_file": "",
+        "request_transport": "in_memory",
         "debug_lab_report": repo_rel(repo_root, debug_report),
         "debug_lab_markdown": repo_rel(repo_root, debug_markdown),
         "debug_lab_returncode": debug_lab_returncode,
@@ -261,6 +264,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "patch_candidate_synthesis_report": repo_rel(repo_root, patch_report_path)
         if patch_report
         else "",
+        "patch_candidate_synthesis_evidence_reports": list(args.evidence_report or []),
         "patch_candidate_synthesis_markdown": repo_rel(repo_root, patch_markdown_path)
         if patch_report
         else "",
@@ -304,6 +308,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-diff-chars", type=int, default=3500)
     parser.add_argument("--operator-request", default="")
     parser.add_argument("--operator-request-file", default="")
+    parser.add_argument("--evidence-report", action="append", default=[])
     parser.add_argument("--synthesize-patch-candidates", action="store_true")
     parser.add_argument("--force-patch-candidate-synthesis", action="store_true")
     parser.add_argument("--max-patch-candidates", type=int, default=3)

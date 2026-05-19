@@ -16,7 +16,9 @@ def build_python_line_count_csv(
     csv_output = out_dir / f"{request_id}_python_line_count.csv"
     command = [
         resolve_child_python(repo_root),
-        "tools/validation/build_python_line_count_csv.py",
+        "-m",
+        "Tools.validation",
+        "build_python_line_count_csv",
         "--repo-root",
         ".",
         "--csv-output",
@@ -67,7 +69,9 @@ def build_agent_agnostic_tool_inventory(
     report, markdown = base_outputs(out_dir, request_id, "agent_agnostic_tool_inventory")
     command = [
         resolve_child_python(repo_root),
-        "Tools/ai/agent_context/agnostic_tool_inventory/cli.py",
+        "-m",
+        "Tools.ai",
+        "build_agent_agnostic_tool_inventory",
         "--repo-root",
         ".",
         "--output",
@@ -89,7 +93,9 @@ def build_agent_transient_request_context(
     report, markdown = base_outputs(out_dir, request_id, "agent_transient_request_context")
     command = [
         resolve_child_python(repo_root),
-        "Tools/ai/agent_context/transient_request_context/cli.py",
+        "-m",
+        "Tools.ai",
+        "build_agent_transient_request_context",
         "--repo-root",
         ".",
         "--objective",
@@ -117,7 +123,9 @@ def check_python_syntax(
     report = out_dir / f"{request_id}_python_syntax.json"
     command = [
         resolve_child_python(repo_root),
-        "tools/validation/check_python_syntax.py",
+        "-m",
+        "Tools.validation",
+        "check_python_syntax",
         "--repo-root",
         ".",
         "--output",
@@ -132,7 +140,9 @@ def check_validation_report_contract(
     report = out_dir / f"{request_id}_validation_report_contract.json"
     command = [
         resolve_child_python(repo_root),
-        "tools/validation/check_validation_report_contract.py",
+        "-m",
+        "Tools.validation",
+        "check_validation_report_contract",
         "--repo-root",
         ".",
         "--report-dir",
@@ -151,7 +161,9 @@ def run_gpu_planner_json_contract_smoke(
     report, markdown = base_outputs(out_dir, request_id, "gpu_planner_json_contract_smoke")
     command = [
         resolve_child_python(repo_root),
-        "tools/validation/run_gpu_planner_json_contract_smoke.py",
+        "-m",
+        "Tools.validation",
+        "run_gpu_planner_json_contract_smoke",
         "--repo-root",
         ".",
         "--output",
@@ -171,7 +183,9 @@ def build_code_interpreter_report(
     report, markdown = base_outputs(out_dir, request_id, "code_interpreter_report")
     command = [
         resolve_child_python(repo_root),
-        "Tools/ai/code_product/interpreter_report/cli.py",
+        "-m",
+        "Tools.ai",
+        "build_code_interpreter_report",
         "--repo-root",
         ".",
         "--output",
@@ -234,7 +248,9 @@ def build_semantic_code_chunk_selection(
     report, markdown = base_outputs(out_dir, request_id, "selected_semantic_code_chunks")
     command = [
         resolve_child_python(repo_root),
-        "tools/ai/select_semantic_code_chunks.py",
+        "-m",
+        "Tools.ai",
+        "select_semantic_code_chunks",
         "--repo-root",
         ".",
         "--query",

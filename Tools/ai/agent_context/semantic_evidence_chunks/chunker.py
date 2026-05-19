@@ -35,7 +35,8 @@ def chunk_one_source(
     source_sha = sha256_file(source_path)
     suffix_slug = source_path.suffix.lower().lstrip(".") or "txt"
     sha_slug = (source_sha or "nosha")[:12]
-    source_slug = slugify(f"{Path(rel).stem}_{suffix_slug}_{sha_slug}", "source")
+    stem_slug = slugify(Path(rel).stem, "source")[:58]
+    source_slug = slugify(f"{stem_slug}_{suffix_slug}_{sha_slug}", "source")
     chunk_entries: list[dict[str, Any]] = []
     language_hint = source_path.suffix.lower().lstrip(".") or "text"
     pending_files: list[str] = []

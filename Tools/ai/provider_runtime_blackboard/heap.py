@@ -26,6 +26,7 @@ from .common import (
 )
 from .render import render_markdown
 
+@dataclass
 class ProviderRuntimeHeap:
     repo_root: Path
     stamp: str

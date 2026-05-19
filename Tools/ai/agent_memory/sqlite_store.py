@@ -9,6 +9,9 @@ from typing import Any
 
 from .common import safe_identifier, utc_now_iso
 
+OPERATIONAL_FTS_TABLE = "operational_memory_records_fts"
+PERSISTENT_FTS_TABLE = "memory_records_fts"
+
 
 def now_iso() -> str:
     return utc_now_iso()
@@ -16,6 +19,40 @@ def now_iso() -> str:
 
 def safe_id(value: str) -> str:
     return safe_identifier(value, "runtime_memory")
+
+
+def table_exists(conn: sqlite3.Connection, table_name: str) -> bool:
+    row = conn.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", (table_name,)).fetchone()
+    return bool(row and row[0])
+
+
+def ensure_fts_table(conn: sqlite3.Connection, table_name: str, extra_column: str) -> bool:
+    try:
+        conn.execute(
+            f"CREATE VIRTUAL TABLE IF NOT EXISTS {table_name} "
+            f"USING fts5(record_id UNINDEXED, summary, content, tags_json, {extra_column})"
+        )
+    except sqlite3.OperationalError as exc:
+        if "fts5" in str(exc).lower():
+            return False
+        raise
+    return True
+
+
+def quote_fts_query(query: str) -> str:
+    return '"' + query.replace('"', '""') + '"'
+
+
+def upsert_fts_record(conn: sqlite3.Connection, table_name: str, extra_column: str, extra_value: str, record_id: str, summary: str, content: str, tags: list[str]) -> None:
+    if not table_exists(conn, table_name):
+        return
+    conn.execute(f"DELETE FROM {table_name} WHERE record_id = ?", (record_id,))
+    conn.execute(
+        f"INSERT INTO {table_name} (record_id, summary, content, tags_json, {extra_column}) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (record_id, summary or content[:180], content, json.dumps(tags), extra_value),
+    )
+
 
 def ensure_operational_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -56,6 +93,11 @@ def ensure_operational_db(db_path: Path) -> None:
         conn.execute(
             "INSERT OR REPLACE INTO operational_memory_meta(key, value) VALUES('memory_class', 'operational_context')"
         )
+        fts_enabled = ensure_fts_table(conn, OPERATIONAL_FTS_TABLE, "role")
+        conn.execute(
+            "INSERT OR REPLACE INTO operational_memory_meta(key, value) VALUES('sqlite_fts5_enabled', ?)",
+            ("true" if fts_enabled else "false",),
+        )
 
 def operational_status(db_path: Path) -> dict[str, Any]:
     ensure_operational_db(db_path)
@@ -68,10 +110,13 @@ def operational_status(db_path: Path) -> dict[str, Any]:
         role_rows = conn.execute(
             "SELECT role, count(*) AS count FROM operational_memory_records GROUP BY role ORDER BY count DESC, role"
         ).fetchall()
+        fts_enabled = table_exists(conn, OPERATIONAL_FTS_TABLE)
     return {
         "record_count": row_count,
         "kind_counts": {str(row["kind"]): int(row["count"]) for row in kind_rows},
         "role_counts": {str(row["role"]): int(row["count"]) for row in role_rows},
+        "sqlite_search_backend": "fts5" if fts_enabled else "like",
+        "sqlite_fts5_enabled": fts_enabled,
     }
 
 def persistent_status(db_path: Path) -> dict[str, Any]:
@@ -81,9 +126,12 @@ def persistent_status(db_path: Path) -> dict[str, Any]:
             "opened_read_only": False,
             "record_count": 0,
             "tables": [],
+            "sqlite_search_backend": "missing",
+            "sqlite_fts5_enabled": False,
         }
     tables: list[dict[str, Any]] = []
     record_count = 0
+    fts_enabled = False
     uri = f"file:{db_path.as_posix()}?mode=ro"
     with sqlite3.connect(uri, uri=True) as conn:
         conn.row_factory = sqlite3.Row
@@ -101,11 +149,14 @@ def persistent_status(db_path: Path) -> dict[str, Any]:
             tables.append({"name": table_name, "row_count": count})
         if any(item["name"] == "memory_records" for item in tables):
             record_count = conn.execute("SELECT count(*) FROM memory_records").fetchone()[0]
+        fts_enabled = any(item["name"] == PERSISTENT_FTS_TABLE for item in tables)
     return {
         "exists": True,
         "opened_read_only": True,
         "record_count": record_count,
         "tables": tables,
+        "sqlite_search_backend": "fts5" if fts_enabled else "like",
+        "sqlite_fts5_enabled": fts_enabled,
     }
 
 def ensure_persistent_db(db_path: Path) -> None:
@@ -131,6 +182,7 @@ def ensure_persistent_db(db_path: Path) -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_memory_records_source ON memory_records(source)"
         )
+        ensure_fts_table(conn, PERSISTENT_FTS_TABLE, "source")
 
 def remember_operational(
     db_path: Path,
@@ -168,6 +220,7 @@ def remember_operational(
                 json.dumps(metadata, ensure_ascii=False),
             ),
         )
+        upsert_fts_record(conn, OPERATIONAL_FTS_TABLE, "role", role, record_id, summary, content, tags)
     return {"record_id": record_id, "created_at": timestamp}
 
 def remember_persistent(
@@ -206,6 +259,7 @@ def remember_persistent(
                 json.dumps(metadata, ensure_ascii=False),
             ),
         )
+        upsert_fts_record(conn, PERSISTENT_FTS_TABLE, "source", source, record_id, summary, content, tags)
     return {
         "record_id": record_id,
         "created_at": timestamp,
@@ -217,7 +271,21 @@ def search_operational(db_path: Path, query: str, limit: int) -> list[dict[str, 
     pattern = f"%{query}%"
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        if query:
+        if query and table_exists(conn, OPERATIONAL_FTS_TABLE):
+            rows = conn.execute(
+                f"""
+                SELECT r.record_id, r.created_at, r.updated_at, r.kind, r.scope, r.role,
+                       r.summary, r.content, r.tags_json, r.metadata_json
+                FROM {OPERATIONAL_FTS_TABLE}
+                JOIN operational_memory_records AS r
+                  ON r.record_id = {OPERATIONAL_FTS_TABLE}.record_id
+                WHERE {OPERATIONAL_FTS_TABLE} MATCH ?
+                ORDER BY bm25({OPERATIONAL_FTS_TABLE}), r.updated_at DESC
+                LIMIT ?
+                """,
+                (quote_fts_query(query), int(limit)),
+            ).fetchall()
+        elif query:
             rows = conn.execute(
                 """
                 SELECT record_id, created_at, updated_at, kind, scope, role, summary, content, tags_json, metadata_json
@@ -252,7 +320,21 @@ def search_persistent(db_path: Path, query: str, limit: int) -> list[dict[str, A
         ).fetchone()[0]
         if not has_memory_records:
             return []
-        if query:
+        if query and table_exists(conn, PERSISTENT_FTS_TABLE):
+            rows = conn.execute(
+                f"""
+                SELECT r.record_id, r.created_at, r.updated_at, r.kind, r.scope, r.source,
+                       r.summary, r.content, r.tags_json, r.metadata_json
+                FROM {PERSISTENT_FTS_TABLE}
+                JOIN memory_records AS r
+                  ON r.record_id = {PERSISTENT_FTS_TABLE}.record_id
+                WHERE {PERSISTENT_FTS_TABLE} MATCH ?
+                ORDER BY bm25({PERSISTENT_FTS_TABLE}), COALESCE(r.updated_at, r.created_at) DESC
+                LIMIT ?
+                """,
+                (quote_fts_query(query), int(limit)),
+            ).fetchall()
+        elif query:
             rows = conn.execute(
                 """
                 SELECT record_id, created_at, updated_at, kind, scope, source, summary, content, tags_json, metadata_json
@@ -310,4 +392,6 @@ def clear_operational(db_path: Path, confirm: str) -> dict[str, Any]:
     before = operational_status(db_path)["record_count"]
     with sqlite3.connect(db_path) as conn:
         conn.execute("DELETE FROM operational_memory_records")
+        if table_exists(conn, OPERATIONAL_FTS_TABLE):
+            conn.execute(f"DELETE FROM {OPERATIONAL_FTS_TABLE}")
     return {"cleared": before, "remaining": operational_status(db_path)["record_count"]}

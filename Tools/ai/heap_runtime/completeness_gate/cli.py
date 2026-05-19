@@ -139,7 +139,16 @@ def parse_args() -> argparse.Namespace:
             "repo .venv resolver; no system env fallback."
         ),
     )
-    parser.add_argument("--task-file", default="")
+    parser.add_argument(
+        "--startup-manifest",
+        default="",
+        help="Structured startup context/memory reload manifest. Preferred over --task-file.",
+    )
+    parser.add_argument(
+        "--task-file",
+        default="",
+        help="Legacy readable startup artifact fallback; not the primary runtime data plane.",
+    )
     parser.add_argument(
         "--tool",
         default="run_gpu_planner_json_contract_smoke",
@@ -178,7 +187,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--operator-intent", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=240)
-    parser.add_argument("--provider-model", default="")
+    parser.add_argument("--provider-model", default="qwen3-coder:latest")
     parser.add_argument("--gpu0-iterations", type=int, default=16)
     parser.add_argument("--gpu0-min-seconds", type=float, default=0.1)
     parser.add_argument("--max-degraded-lanes", type=int, default=0)

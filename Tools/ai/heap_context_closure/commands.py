@@ -5,6 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 
+def request_args(state: dict[str, Any]) -> list[str]:
+    request_file = str(state.get("operator_request_file") or "").strip()
+    if request_file:
+        return ["--request-file", request_file]
+    return ["--request", str(state.get("heap_request") or "")]
+
+
 def startup_command(args: Any, state: dict[str, Any]) -> list[str]:
     return [
         state["project_python"],
@@ -13,8 +20,7 @@ def startup_command(args: Any, state: dict[str, Any]) -> list[str]:
         "heap_context_memory_reload",
         "--repo-root",
         ".",
-        "--request-file",
-        str(state["heap_request_file"]),
+        *request_args(state),
         "--stamp",
         state["stamp"],
         "--python-exe",
@@ -40,8 +46,7 @@ def heap_command(args: Any, state: dict[str, Any]) -> list[str]:
         "run_heap_runtime_completeness_gate",
         "--repo-root",
         ".",
-        "--request-file",
-        str(state["heap_request_file"]),
+        *request_args(state),
         "--budget-minutes",
         str(args.budget_minutes),
         "--max-iterations",
@@ -54,6 +59,26 @@ def heap_command(args: Any, state: dict[str, Any]) -> list[str]:
         str(args.max_rounds),
         "--max-provider-revisions",
         str(args.max_provider_revisions),
+        "--provider-model",
+        str(args.provider_model),
+        "--ollama-num-ctx",
+        str(args.ollama_num_ctx),
+        "--max-new-tokens",
+        str(args.max_new_tokens),
+        "--keep-alive",
+        str(args.keep_alive),
+        "--gpu0-iterations",
+        str(args.gpu0_iterations),
+        "--gpu0-min-seconds",
+        str(args.gpu0_min_seconds),
+        "--npu-micro-timeout-seconds",
+        str(args.npu_micro_timeout_seconds),
+        "--npu-max-context-chars",
+        str(args.npu_max_context_chars),
+        "--npu-max-prompt-chars",
+        str(args.npu_max_prompt_chars),
+        "--npu-max-new-tokens",
+        str(args.npu_max_new_tokens),
         "--timeout-seconds",
         str(args.timeout_seconds),
         "--allow-npu-device-workload",

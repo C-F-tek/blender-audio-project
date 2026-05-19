@@ -49,7 +49,7 @@ def main() -> int:
                 "passed": report["passed"],
                 "output": str(output),
                 "markdown": str(markdown),
-                "broker_request": report["broker_request_written"],
+                "broker_request_transport": report["broker_request_transport"],
                 "tool_request_count": report["memory_plan"]["tool_request_count"],
                 "persistent_query_count": report["memory_plan"]["persistent_query_count"],
                 "operational_query_or_write_count": report["memory_plan"][

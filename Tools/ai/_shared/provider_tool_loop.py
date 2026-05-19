@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import subprocess
@@ -8,6 +9,11 @@ import time
 from pathlib import Path
 from typing import Any
 
+from Tools.ai._shared.openvino_model_discovery import (
+    discover_openvino_tool_model_dir,
+    run_openvino_tool_loop_child_payload,
+)
+from Tools.ai.provider_mesh.runtime.python_runtime import command_env
 def heap_patch_prompt_required(prompt: str) -> bool:
     text = (prompt or "").lower()
     markers = ("heap chunk/composer contract", "startup_context_digest_for_gpu1", "external heap revision context", "target_files", "forced concrete delta required", "proposal chunks")
@@ -18,18 +24,11 @@ def build_heap_patch_proposal_prompt(prompt: str) -> str:
         return prompt
     return (
         "IA-CARMINE GPU1 HEAP PARTICIPATION MODE.\n"
-        "You are the GPU1 planner/worker inside the existing heap/pointer/veto loop. "
-        "Do not collapse the run into a tool-only or JSON-only answer.\n"
-        "Use startup artifacts, memory, source anchors, tool catalog, prior vetoes "
-        "and pointer context as evidence.\n"
-        "First write the normal heap proposal/revision text. Keep the original "
-        "HEAP_POINTER_DELTA_PROTOCOL semantics alive: reason over the universe, "
-        "choose or reject targets, expose uncertainty, and preserve veto/pointer "
-        "continuity. A second provider-native tool-call turn will follow and must "
-        "validate or enrich this same proposal; it is not the proposal itself.\n"
-        "For Ollama the second turn uses /api/chat tools and message.tool_calls. "
-        "For OpenVINO lanes the equivalent structured tool-call report is attached "
-        "to the provider evidence. JSON text alone is never a real tool call.\n\n"
+        "You are the GPU1 planner/worker inside the existing heap/pointer/veto loop. Do not collapse the run into a tool-only or JSON-only answer.\n"
+        "Use startup artifacts, memory, source anchors, tool catalog, prior vetoes and pointer context as evidence.\n"
+        "First write the normal heap proposal/revision text. Keep HEAP_POINTER_DELTA_PROTOCOL alive: reason over the universe, choose/reject targets, expose uncertainty and preserve veto/pointer continuity.\n"
+        "A second provider-native tool-call turn will follow and must validate or enrich this same proposal; it is not the proposal itself.\n"
+        "Ollama uses /api/chat tools and message.tool_calls. OpenVINO lanes attach the equivalent structured tool-call report to provider evidence. Tool calls are extra broker actions, not a replacement for heap text.\n\n"
         "BEGIN_HEAP_CONTEXT_AND_POINTERS\n"
         f"{prompt.rstrip()}\n"
         "END_HEAP_CONTEXT_AND_POINTERS\n\n"
@@ -46,7 +45,12 @@ def build_heap_patch_proposal_prompt(prompt: str) -> str:
     )
 
 def ollama_tool_call_tool_names() -> list[str]:
-    return ["run_heap_code_execution_matrix", "run_heap_virtual_dev_environment", "synthesize_patch_candidates"]
+    return [
+        "build_agent_agnostic_tool_inventory", "build_agent_memory_inventory", "build_agent_transient_request_context",
+        "runtime_sqlite_memory", "select_semantic_code_chunks", "semantic_evidence_chunks",
+        "ai_context_pack", "agent_runtime_debug_lab", "run_heap_code_execution_matrix",
+        "run_heap_virtual_dev_environment", "synthesize_patch_candidates", "analyze_code_product_artifact",
+    ]
 def prompt_explicitly_requires_tool_call(prompt: str) -> bool:
     markers = ("must call", "devi chiamare", "use a native tool call", "by calling run_heap", "calling run_heap", "call run_heap")
     return any(marker in (prompt or "").lower() for marker in markers)
@@ -56,15 +60,25 @@ def ollama_tool_call_fallback_prompt() -> str:
         "otherwise answer NO_TOOL_NEEDED with the reason. Matrix, lab and patch synthesis are available, with broker-enriched args. "
         "This is a continuation of the provider heap delta, not a replacement."
     )
-
 def ollama_tool_call_selection_prompt(prompt: str, provider_delta: str) -> str:
+    tool_relevant = heap_patch_prompt_required(prompt) or prompt_explicitly_requires_tool_call(prompt)
+    tools_available = ", ".join(ollama_tool_call_tool_names())
+    decision_rule = (
+        "Keep heap proposal text as primary. For code product, matrix, lab, patch synthesis, runtime refs or memory gaps, choose one broker tool through message.tool_calls. "
+        "Use NO_TOOL_NEEDED only when current heap/matrix evidence already proves no broker action can improve the delta."
+        if tool_relevant
+        else "If yes, call one tool through message.tool_calls; otherwise answer NO_TOOL_NEEDED with reason."
+    )
     return (
         "IA-Carmine provider continuation. You already produced heap delta content. Decide if that same delta needs a broker tool now. "
-        "If yes, call one tool through message.tool_calls; otherwise answer NO_TOOL_NEEDED with reason. Do not replace the heap delta with tool-only output. "
-        f"Broker enriches args.\n\nCURRENT_OPERATOR_CONTEXT:\n{(prompt or '')[:3500]}\n\nPROVIDER_HEAP_DELTA_ALREADY_EMITTED:\n{(provider_delta or '')[:1800]}"
+        f"{decision_rule} Do not replace the heap delta with tool-only output. "
+        f"Broker enriches args. Available broker tools: {tools_available}.\n\nCURRENT_OPERATOR_CONTEXT:\n{(prompt or '')[:3500]}\n\nPROVIDER_HEAP_DELTA_ALREADY_EMITTED:\n{(provider_delta or '')[:1800]}"
     )
-
-def broker_tool_schemas(tool_names: list[str] | tuple[str, ...] | None = None) -> list[dict[str, Any]]:
+def broker_tool_schemas(
+    tool_names: list[str] | tuple[str, ...] | None = None,
+    *,
+    compact: bool = False,
+) -> list[dict[str, Any]]:
     try:
         from Tools.ai.runtime_tool.broker.registry import TOOL_SPECS
     except ImportError:  # pragma: no cover
@@ -80,10 +94,12 @@ def broker_tool_schemas(tool_names: list[str] | tuple[str, ...] | None = None) -
                 "type": "function",
                 "function": {
                     "name": name,
-                    "description": spec.description,
+                    "description": "IA-Carmine broker tool." if compact else spec.description,
                     "parameters": {
                         "type": "object",
-                        "properties": {
+                        "properties": {}
+                        if compact
+                        else {
                             arg: {
                                 "type": ["string", "number", "boolean", "array", "object"],
                                 "description": f"Broker-validated argument `{arg}`.",
@@ -96,7 +112,6 @@ def broker_tool_schemas(tool_names: list[str] | tuple[str, ...] | None = None) -
             }
         )
     return schemas
-
 def normalize_ollama_tool_calls(chat_response: dict[str, Any]) -> list[dict[str, Any]]:
     message = chat_response.get("message") if isinstance(chat_response, dict) else {}
     if not isinstance(message, dict):
@@ -132,7 +147,6 @@ def normalize_ollama_tool_calls(chat_response: dict[str, Any]) -> list[dict[str,
             }
         )
     return normalized
-
 def parse_json_contract(text: str) -> dict[str, Any]:
     candidate = (text or "").strip()
     if candidate.startswith("```"):
@@ -144,18 +158,6 @@ def parse_json_contract(text: str) -> dict[str, Any]:
     except Exception:
         return {}
     return parsed if isinstance(parsed, dict) else {}
-
-def discover_openvino_tool_model_dir(repo_root: Path) -> tuple[str, str]:
-    explicit = (
-        os.environ.get("IA_CARMINE_OPENVINO_TOOL_MODEL_DIR", "").strip()
-        or os.environ.get("IA_CARMINE_GPU0_COMPANION_MODEL_DIR", "").strip()
-        or os.environ.get("SPAZIOTEMPO_NPU_MODEL_DIR", "").strip()
-        or os.environ.get("IA_CARMINE_NPU_MODEL_DIR", "").strip()
-    )
-    if explicit:
-        return str(Path(explicit).expanduser()), "environment"
-    return "", "missing"
-
 def resolve_provider_python(repo_root: Path, python_exe: str | None = None) -> Path:
     if python_exe:
         return Path(python_exe).expanduser().resolve()
@@ -166,6 +168,24 @@ def resolve_provider_python(repo_root: Path, python_exe: str | None = None) -> P
     if repo_python.is_file():
         return repo_python.resolve()
     return Path(sys.executable).resolve()
+
+
+def _openvino_tool_loop_child_main() -> int:
+    try:
+        payload = json.loads(sys.stdin.read() or "{}")
+        if not isinstance(payload, dict):
+            payload = {}
+        result = run_openvino_tool_loop_child_payload(payload)
+    except Exception as exc:  # noqa: BLE001 - child errors are normalized JSON evidence.
+        result = {
+            "performed": False,
+            "supported": False,
+            "classification": "openvino_tool_loop_child_error",
+            "errors": [f"{type(exc).__name__}: {exc}"],
+        }
+    print(json.dumps(result, ensure_ascii=False))
+    return 0
+
 
 def openvino_tool_loop_report(
     *,
@@ -222,8 +242,15 @@ def openvino_tool_loop_report(
 
     runner = resolve_provider_python(repo_root, python_exe)
     if not tool_names:
-        tool_names = ollama_tool_call_tool_names()
-    tools_json = json.dumps(broker_tool_schemas(tool_names), ensure_ascii=False)
+        tool_names = (
+            ["run_heap_code_execution_matrix", "semantic_evidence_chunks"]
+            if device == "NPU"
+            else ollama_tool_call_tool_names()
+        )
+    tools_json = json.dumps(
+        broker_tool_schemas(tool_names, compact=device == "NPU"),
+        ensure_ascii=False,
+    )
     force_tool_call = prompt_explicitly_requires_tool_call(prompt)
     structured_schema_json = json.dumps(
         {
@@ -257,69 +284,33 @@ def openvino_tool_loop_report(
         "Args may be empty because the broker enriches resolved targets and output paths.\n\nTASK:\n"
         + (prompt or "")
     )[: max(160, prompt_limit)]
-    child = "\n".join(
-        [
-            "import json, sys",
-            "from pathlib import Path",
-            "import openvino as ov",
-            "import openvino_genai as genai",
-            f"model_dir = {str(Path(model_dir).expanduser())!r}",
-            f"device = {device!r}",
-            f"dialogue_prompt = {dialogue_prompt[:12000]!r}",
-            f"tool_prompt = {tool_prompt[:12000]!r}",
-            f"tools = json.loads({tools_json!r})",
-            f"structured_schema = {structured_schema_json!r}",
-            f"force_tool_call = {force_tool_call!r}",
-            "core = ov.Core()",
-            "devices = list(core.available_devices)",
-            "if device not in devices:",
-            "    print(json.dumps({'performed': False, 'supported': False, 'classification': 'openvino_tool_loop_device_unavailable', 'devices': devices, 'errors': [f'{device} not available']})); raise SystemExit(0)",
-            "history = genai.ChatHistory()",
-            "history.set_tools(tools)",
-            "history.append({'role': 'user', 'content': tool_prompt})",
-            "if device == 'NPU':",
-            "    pipe = genai.LLMPipeline(model_dir, device, MAX_PROMPT_LEN=2048, MIN_RESPONSE_LEN=8)",
-            "else:",
-            "    pipe = genai.LLMPipeline(model_dir, device)",
-            "tokenizer = pipe.get_tokenizer()",
-            "reflection_text = str(pipe.generate(dialogue_prompt, max_new_tokens="
-            f"max(16, min(160, {int(max_new_tokens)})))).strip()",
-            "rendered = tokenizer.apply_chat_template(history, True, tools=tools)",
-            f"text = str(pipe.generate(rendered, max_new_tokens={int(max_new_tokens)})).strip()",
-            "parsed = {}",
-            "for parser_cls in (getattr(genai, 'Llama3JsonToolParser', None), getattr(genai, 'Llama3PythonicToolParser', None)):",
-            "    if parser_cls is None:",
-            "        continue",
-            "    try:",
-            "        parsed = parser_cls().parse({'role': 'assistant', 'content': text}) or {}",
-            "        if parsed:",
-            "            break",
-            "    except Exception:",
-            "        pass",
-            "structured_text = ''",
-            "structured_call = {}",
-            "if not parsed:",
-            "    try:",
-            "        cfg = genai.GenerationConfig()",
-            "        cfg.max_new_tokens = 96",
-            "        soc = genai.StructuredOutputConfig()",
-            "        soc.json_schema = structured_schema",
-            "        cfg.structured_output_config = soc",
-            "        prefix = 'Return decision=call_tool and choose a broker tool for this task: ' if force_tool_call else 'Return one IA-Carmine broker tool decision JSON object for this task: '",
-            "        structured_prompt = prefix + tool_prompt[:300]",
-            "        structured_text = str(pipe.generate(structured_prompt, generation_config=cfg)).strip()",
-            "        structured_call = json.loads(structured_text)",
-            "    except Exception as exc:",
-            "        structured_call = {'_structured_error': type(exc).__name__ + ': ' + str(exc)}",
-            "print(json.dumps({'performed': True, 'supported': True, 'classification': 'openvino_genai_tool_loop_executed', 'devices': devices, 'provider_heap_delta_text': reflection_text, 'response_text': text, 'parsed': parsed, 'structured_text': structured_text, 'structured_call': structured_call}, ensure_ascii=False))",
-        ]
-    )
+    child_payload = {
+        "model_dir": str(Path(model_dir).expanduser()),
+        "device": device,
+        "dialogue_prompt": dialogue_prompt[:12000],
+        "tool_prompt": tool_prompt[:12000],
+        "tools": json.loads(tools_json),
+        "structured_schema": structured_schema_json,
+        "force_tool_call": force_tool_call,
+        "max_new_tokens": int(max_new_tokens),
+    }
+    child_env = command_env(repo_root)
+    child_env["PYTHONIOENCODING"] = "utf-8"
     try:
         completed = subprocess.run(
-            [str(runner), "-c", child],
+            [
+                str(runner),
+                "-m",
+                "Tools.ai._shared.provider_tool_loop",
+                "--openvino-tool-loop-child",
+            ],
             cwd=str(repo_root),
+            input=json.dumps(child_payload, ensure_ascii=False),
             text=True,
+            encoding="utf-8",
+            errors="replace",
             capture_output=True,
+            env=child_env,
             timeout=max(1, int(timeout_seconds)),
             check=False,
         )
@@ -342,11 +333,15 @@ def openvino_tool_loop_report(
     report["returncode"] = completed.returncode
     report["stdout_tail"] = (completed.stdout or "")[-2000:]
     report["stderr_tail"] = (completed.stderr or "")[-2000:]
+    report["child_payload_model_dir"] = child_payload.get("model_dir")
+    report["child_payload_device"] = child_payload.get("device")
     report["native_tool_loop_performed"] = bool(payload.get("performed"))
     report["native_tool_loop_supported"] = bool(payload.get("supported"))
     default_classification = "openvino_tool_loop_execution_failed" if completed.returncode != 0 else "openvino_tool_loop_unparseable"
     report["classification"] = str(payload.get("classification") or default_classification)
     report["available_devices"] = payload.get("devices") or []
+    if payload.get("errors"):
+        report["errors"].extend(str(item) for item in payload.get("errors") or [])
     report["provider_heap_delta_text"] = str(payload.get("provider_heap_delta_text") or "")
     report["response_text"] = str(payload.get("provider_heap_delta_text") or payload.get("response_text") or "")
     parsed = payload.get("parsed") if isinstance(payload.get("parsed"), dict) else {}
@@ -354,11 +349,11 @@ def openvino_tool_loop_report(
     structured_call = payload.get("structured_call") if isinstance(payload.get("structured_call"), dict) else {}
     report["structured_tool_call_text"] = str(payload.get("structured_text") or "")
     report["structured_tool_call_payload"] = structured_call
-    if structured_call.get("_structured_error") and "call_tool" in report["structured_tool_call_text"]:
-        selected_tool = next((name for name in tool_names if name in report["structured_tool_call_text"]), "")
-        if selected_tool:
-            structured_call = {"decision": "call_tool", "tool": selected_tool, "args": {}, "reason": "openvino_structured_output_salvaged"}; report["structured_tool_call_payload"] = structured_call
-    structured_decision = str(structured_call.get("decision") or "").strip()
+    structured_decision = str(structured_call.get("decision") or "").strip() or ("call_tool" if "call_tool" in report["structured_tool_call_text"] else "")
+    if structured_decision == "call_tool" and not structured_call.get("tool"):
+        haystack = " ".join((report["structured_tool_call_text"], str(payload.get("response_text") or ""), str(payload.get("provider_heap_delta_text") or "")))
+        selected_tool = next((name for name in tool_names if name in haystack), "") or "run_heap_code_execution_matrix"
+        structured_call = {"decision": "call_tool", "tool": selected_tool, "args": {}, "reason": "openvino_text_tool_name_salvaged"}; report["structured_tool_call_payload"] = structured_call
     if not structured_decision and structured_call.get("tool"):
         structured_decision = "call_tool"
     if not tool_calls and structured_decision == "call_tool" and structured_call.get("tool"):
@@ -396,3 +391,17 @@ def openvino_tool_loop_report(
         report["errors"].append(report["stderr_tail"] or report["stdout_tail"])
     report["elapsed_sec"] = round(time.perf_counter() - started, 4)
     return report
+
+
+def _main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--openvino-tool-loop-child", action="store_true")
+    args = parser.parse_args()
+    if args.openvino_tool_loop_child:
+        return _openvino_tool_loop_child_main()
+    parser.error("No provider_tool_loop command selected.")
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(_main())

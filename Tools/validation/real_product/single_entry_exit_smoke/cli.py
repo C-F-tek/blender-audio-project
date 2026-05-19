@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Verify the canonical run has one CLI entry and one GUI view over the same core."""
+
 from __future__ import annotations
 
 import argparse
@@ -22,66 +24,59 @@ def require(condition: bool, errors: list[str], message: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--output", default="output/validation/real_product_single_entry_exit_smoke.json"
-    )
+    parser.add_argument("--output", default="output/validation/real_product_single_entry_exit_smoke.json")
     args = parser.parse_args()
 
-    repo_root = Path(args.repo_root).resolve()
-    wrapper = read_text(repo_root / "Tools/workflow/_powershell/run_unified_real_product_pr.ps1")
-    preflight = read_text(repo_root / "Tools/validation/real_product/preflight_gate/cli.py")
-    readme = read_text(repo_root / "Tools/workflow/README.md")
+    repo = Path(args.repo_root).resolve()
+    dispatch = read_text(repo / "Tools/ai/dispatch.py")
+    run_cli = read_text(repo / "Tools/ai/run/cli.py")
+    controller = read_text(repo / "Tools/ai/operator_product_core/controller.py")
+    runner = read_text(repo / "Tools/ai/operator_product_core/runner.py")
+    gui = read_text(repo / "Tools/ai/operator_product_core/view/cli.py")
+    preflight = read_text(repo / "Tools/validation/real_product/preflight_gate/cli.py")
 
     checks = {
-        "task_file_optional": '[string]$TaskFile = ""' in wrapper,
-        "process_gate_task_switch": "[switch]$ProcessGateTask" in wrapper,
-        "process_gate_task_generator": "function New-HeapExchangeProcessGateTask" in wrapper,
-        "process_gate_task_under_output": "output/local_ai_task_inputs" in wrapper,
-        "single_wrapper_launches_unified_launcher": "run_unified_local_ai_refactor.ps1" in wrapper,
-        "final_product_validation_switch": "[switch]$ValidateFinalReviewPrProduct" in wrapper,
-        "create_pr_implies_final_validation": "if ($CreatePr) { $ValidateFinalReviewPrProduct = $true }"
-        in wrapper,
-        "final_product_contract_invoked": "check_review_pr_final_product_contract.py" in wrapper,
-        "remote_pr_contract_required_when_create_pr": "--require-remote-pr" in wrapper
-        and "if ($CreatePr)" in wrapper,
-        "single_exit_after_contract": "Review PR final product contract passed" in wrapper
-        and "exit 0" in wrapper,
-        "preflight_validates_single_entry_exit": "run_real_product_single_entry_exit_smoke.py"
-        in preflight,
-        "readme_documents_single_entry_exit": "REAL-PRODUCT-SINGLE-ENTRY-EXIT" in readme,
+        "single_non_gui_entrypoint": '"run": "Tools.ai.run.cli:main"' in dispatch,
+        "single_gui_view_entrypoint": '"operator_product_gui": "Tools.ai.operator_product_core.view.cli:main"'
+        in dispatch,
+        "run_mentions_canonical_command": "python -m Tools.ai run" in run_cli,
+        "run_builds_launcher_config": "LauncherConfig" in run_cli and "build_config" in run_cli,
+        "run_calls_shared_controller": "OperatorProductController(config)" in run_cli,
+        "gui_calls_shared_controller": "OperatorProductController(self.config())" in gui,
+        "controller_owns_model_control": "run_operator_lab" in controller
+        and "analyze_code_product" in controller,
+        "runner_produces_exit_summary": "operator_product_lab_summary.json" in runner
+        and "operator_product_lab_summary.md" in runner,
+        "runner_requires_code_product": "CODE_PRODUCT_FULL_PATCH was not produced" in runner,
+        "runner_validates_code_product": "code_product_review.json" in runner
+        and "Tools.ai.code_product.artifact_intake" in runner,
+        "safe_apply_not_default": "apply_safe: bool = False" in controller and "apply_safe" in run_cli,
+        "preflight_contains_this_gate": "single_entry_exit" in preflight,
     }
 
     errors: list[str] = []
     for name, passed in checks.items():
         require(passed, errors, f"single entry/exit check failed: {name}")
 
-    launcher_pos = wrapper.find("& powershell.exe @script:LauncherArgs")
-    contract_pos = wrapper.find("check_review_pr_final_product_contract.py")
-    require(launcher_pos >= 0, errors, "launcher invocation missing")
-    require(
-        contract_pos > launcher_pos,
-        errors,
-        "final product contract must run after unified launcher",
-    )
+    controller_pos = run_cli.find("OperatorProductController(config)")
+    run_pos = run_cli.find("controller.run")
+    require(controller_pos >= 0, errors, "controller construction missing in run entrypoint")
+    require(run_pos > controller_pos, errors, "run must execute through shared controller")
 
     report = {
         "schema_version": 1,
         "kind": "real_product_single_entry_exit_smoke",
-        "repo_root": repo_root.as_posix(),
+        "repo_root": repo.as_posix(),
         "passed": not errors,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
         "checks": checks,
-        "positions": {
-            "launcher_invocation": launcher_pos,
-            "final_product_contract": contract_pos,
-        },
+        "positions": {"controller": controller_pos, "run_call": run_pos},
         "errors": errors,
         "warnings": [],
     }
-
-    output = resolve_output_path(repo_root, args.output)
+    output = resolve_output_path(repo, args.output)
     print(write_json_report(report, output), end="")
     return 0 if report["passed"] else 2
 

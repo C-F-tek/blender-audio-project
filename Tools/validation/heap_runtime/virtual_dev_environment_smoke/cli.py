@@ -7,9 +7,20 @@ import argparse
 import json
 import subprocess
 import sys
+from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+try:
+    from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
+    from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
+except ImportError:
+    repo_root_for_import = Path(__file__).resolve().parents[3]
+    if str(repo_root_for_import) not in sys.path:
+        sys.path.insert(0, str(repo_root_for_import))
+    from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report  # type: ignore
+    from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown  # type: ignore
 
 
 def now_stamp() -> str:
@@ -47,34 +58,79 @@ def read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def build_broker_request(path: Path) -> None:
-    write_json(
-        path,
-        {
-            "schema_version": 1,
-            "kind": "agent_runtime_tool_requests",
-            "tool_requests": [
+def run_broker_in_process(
+    *,
+    repo_root: Path,
+    request_data: dict[str, Any],
+    tool_output_dir: Path,
+    output: Path,
+    markdown: Path,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    try:
+        broker_args = Namespace(
+            repo_root=str(repo_root),
+            request_data=request_data,
+            request_file="",
+            request_json="",
+            tool_output_dir=str(tool_output_dir),
+            stamp=tool_output_dir.name,
+            timeout_seconds=timeout_seconds,
+            dry_run=False,
+        )
+        report = build_broker_report(broker_args)
+        write_json(output, report)
+        markdown.parent.mkdir(parents=True, exist_ok=True)
+        markdown.write_text(render_broker_markdown(report), encoding="utf-8")
+        return {
+            "command": ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"],
+            "returncode": 0 if report.get("passed") else 2,
+            "stdout_tail": json.dumps(
                 {
-                    "id": "virtual-dev-smoke",
-                    "tool": "run_heap_virtual_dev_environment",
-                    "requirement": "virtual_dev_environment",
-                    "reason": "verify broker-callable virtual dev environment",
-                    "args": {
-                        "target_file": [
-                            "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
-                            "Tools/ai/code_product/final_readable_product/cli.py",
-                        ],
-                        "validation_script": [
-                            "Tools/validation/heap_runtime/run_heap_final_readable_product_smoke/cli.py"
-                        ],
-                        "dynamic_import": True,
-                        "help_probe": True,
-                        "timeout_seconds": 120,
-                    },
-                }
-            ],
-        },
-    )
+                    "passed": report.get("passed"),
+                    "request_transport": report.get("request_transport"),
+                    "tool_execution_count": report.get("tool_execution_count"),
+                },
+                ensure_ascii=False,
+            ),
+            "stderr_tail": "",
+            "ok": bool(report.get("passed")),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "command": ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"],
+            "returncode": 1,
+            "stdout_tail": "",
+            "stderr_tail": f"{type(exc).__name__}: {exc}",
+            "ok": False,
+        }
+
+
+def build_broker_request() -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "kind": "agent_runtime_tool_requests",
+        "tool_requests": [
+            {
+                "id": "virtual-dev-smoke",
+                "tool": "run_heap_virtual_dev_environment",
+                "requirement": "virtual_dev_environment",
+                "reason": "verify broker-callable virtual dev environment",
+                "args": {
+                    "target_file": [
+                        "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
+                        "Tools/ai/code_product/final_readable_product/cli.py",
+                    ],
+                    "validation_script": [
+                        "Tools/validation/heap_runtime/run_heap_final_readable_product_smoke/cli.py"
+                    ],
+                    "dynamic_import": True,
+                    "help_probe": True,
+                    "timeout_seconds": 120,
+                },
+            }
+        ],
+    }
 
 
 def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
@@ -87,12 +143,6 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         / f"heap_virtual_dev_environment_smoke_direct_{stamp}.json"
     )
     direct_markdown = direct_output.with_suffix(".md")
-    broker_request = (
-        repo_root
-        / "output"
-        / "validation"
-        / f"heap_virtual_dev_environment_smoke_broker_request_{stamp}.json"
-    )
     broker_output = (
         repo_root
         / "output"
@@ -103,7 +153,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     broker_tool_dir = (
         repo_root / "output" / "ai_runtime_tools" / f"heap_virtual_dev_environment_smoke_{stamp}"
     )
-    build_broker_request(broker_request)
+    broker_request = build_broker_request()
     direct = run(
         [
             sys.executable,
@@ -126,25 +176,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         repo_root,
         args.timeout_seconds,
     )
-    broker = run(
-        [
-            sys.executable,
-            "Tools/ai/runtime_tool/agent_broker/cli.py",
-            "--repo-root",
-            ".",
-            "--request-file",
-            str(broker_request),
-            "--tool-output-dir",
-            str(broker_tool_dir),
-            "--output",
-            str(broker_output),
-            "--markdown-output",
-            str(broker_markdown),
-            "--timeout-seconds",
-            str(args.timeout_seconds),
-        ],
-        repo_root,
-        args.timeout_seconds,
+    broker = run_broker_in_process(
+        repo_root=repo_root,
+        request_data=broker_request,
+        tool_output_dir=broker_tool_dir,
+        output=broker_output,
+        markdown=broker_markdown,
+        timeout_seconds=args.timeout_seconds,
     )
     direct_report = read_json(direct_output)
     broker_report = read_json(broker_output)
@@ -154,6 +192,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and direct_report.get("passed") is True
         and broker_report.get("tool_execution_count") == 1
         and broker_report.get("failed_tool_count") == 0
+        and broker_report.get("request_transport") == "in_memory"
     )
     report = {
         "schema_version": 1,

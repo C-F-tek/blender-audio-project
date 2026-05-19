@@ -68,11 +68,35 @@ class RuntimeGateMatrixLabEvidenceMixin:
                 summaries.append(summary)
         return summaries
 
+    def code_execution_matrix_report_payloads(
+        self, events: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        reports: list[dict[str, Any]] = []
+        for payload in self.broker_results(events):
+            requirement = str(
+                payload.get("requirement")
+                or self.requirement_for_tool(str(payload.get("tool") or ""))
+            )
+            if requirement != "code_execution_matrix":
+                continue
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            report_path = self._resolve_runtime_report_ref(outputs.get("json_report"))
+            if not report_path or not report_path.is_file():
+                continue
+            matrix = read_json(report_path)
+            if isinstance(matrix, dict) and matrix:
+                reports.append(matrix)
+        return reports
+
     def code_execution_matrix_metric_count(self, events: list[dict[str, Any]], key: str) -> int:
         values = [
             safe_int(summary.get(key), default=0)
             for summary in self.code_execution_matrix_summaries(events)
         ]
+        values.extend(
+            safe_int(matrix.get(key), default=0)
+            for matrix in self.code_execution_matrix_report_payloads(events)
+        )
         return max(values) if values else 0
 
     def _resolve_runtime_report_ref(self, value: Any) -> Path | None:
@@ -167,7 +191,31 @@ class RuntimeGateMatrixLabEvidenceMixin:
     def matrix_patch_candidate_feedback(self, events: list[dict[str, Any]]) -> str:
         evidence = self.matrix_patch_candidate_evidence(events, limit=8)
         if not evidence:
-            return ""
+            reports = self.code_execution_matrix_reports(events)
+            summaries = self.code_execution_matrix_summaries(events)
+            if not reports:
+                return ""
+            lines = [
+                "BROKER/MATRIX EVIDENCE TO CONSUME IN THIS POINTER LOOP:",
+                "- Code execution matrix already ran but produced no validated patch candidate.",
+                "- The next provider revision must use the matrix target set, produce a concrete diff for an allowed target, or return EXIT_DECISION=NO_PATCHABLE_TARGET with a concrete blocker.",
+            ]
+            lines.extend(f"- matrix_report={ref}" for ref in reports[:6])
+            for summary in summaries[:3]:
+                lines.append(
+                    "- matrix_summary="
+                    + "; ".join(
+                        f"{key}={summary.get(key)}"
+                        for key in (
+                            "passed",
+                            "verified_target_count",
+                            "concrete_code_proposal_count",
+                            "patch_candidate_synthesis_passed_count",
+                        )
+                        if key in summary
+                    )
+                )
+            return "\n".join(lines)
         lines = [
             "BROKER/MATRIX EVIDENCE TO CONSUME IN THIS POINTER LOOP:",
             "- These are real broker artifacts, not prose. The next proposal revision must consume them or explicitly reject them.",

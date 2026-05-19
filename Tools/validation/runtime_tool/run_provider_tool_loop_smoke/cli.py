@@ -29,6 +29,7 @@ def main() -> int:
         normalize_ollama_tool_calls,
         openvino_tool_loop_report,
     )
+    from Tools.ai.runtime_tool.broker.runtime_builders import run_heap_code_execution_matrix
 
     schemas = broker_tool_schemas()
     errors: list[str] = []
@@ -53,6 +54,20 @@ def main() -> int:
     calls = normalize_ollama_tool_calls(fake_chat)
     if not calls or calls[0].get("tool") != "run_heap_code_execution_matrix":
         errors.append("ollama native tool_calls normalization failed")
+    command, _outputs = run_heap_code_execution_matrix(
+        repo_root,
+        repo_root / "output" / "validation" / "provider_tool_loop_smoke",
+        "validation_arg_regression",
+        {
+            "target_file": ["Tools/ai/provider_mesh/local_provider_probe/cli.py"],
+            "validation_script": ["Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py"],
+            "validation_arg": ["--validate"],
+        },
+    )
+    if "--validation-arg=--validate" not in command:
+        errors.append("broker builder must preserve leading-dash validation args")
+    if "--validation-arg" in command:
+        errors.append("broker builder emitted split leading-dash validation arg")
 
     old_tool_dir = os.environ.pop("IA_CARMINE_OPENVINO_TOOL_MODEL_DIR", None)
     old_gpu0_dir = os.environ.pop("IA_CARMINE_GPU0_COMPANION_MODEL_DIR", None)

@@ -14,6 +14,7 @@ def run_ollama_probe(
     prompt: str | None = None,
     max_new_tokens: int = 64,
     num_ctx: int | None = None,
+    keep_alive: str = "5m",
 ) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from Tools.ai._shared.provider_tool_loop import (  # noqa: PLC0415
@@ -24,6 +25,7 @@ def run_ollama_probe(
         ollama_tool_call_selection_prompt,
         ollama_tool_call_tool_names,
         parse_json_contract,
+        prompt_explicitly_requires_tool_call,
     )
     from Tools.npu.provider_mesh._shared.ollama_runtime import (  # noqa: PLC0415
         OllamaSession,
@@ -54,10 +56,17 @@ def run_ollama_probe(
     raw_chat_response: dict[str, Any] = {}
     native_tool_calls: list[dict[str, Any]] = []
     native_tool_decision_prompted = bool(prompt and prompt.strip())
-    native_tool_loop_requested = False
+    native_tool_loop_relevant = bool(
+        native_tool_decision_prompted
+        and (
+            heap_patch_prompt_required(prompt or "")
+            or prompt_explicitly_requires_tool_call(prompt or "")
+        )
+    )
     prompt_attempts: list[dict[str, Any]] = []
     with OllamaSession(
         model=selected_model,
+        keep_alive=keep_alive,
         shutdown_server=False,
         unload_model=True,
         num_ctx=num_ctx,
@@ -194,11 +203,24 @@ def run_ollama_probe(
     native_tool_loop_requested = bool(native_tool_calls)
     if native_tool_calls:
         native_classification = "ollama_native_tool_calls_emitted"
+    elif native_tool_loop_relevant:
+        native_classification = "ollama_native_tool_not_selected_for_heap_delta"
+        warnings.append(
+            "Heap/code-product provider task did not emit a native broker tool_call; text heap delta remains authoritative."
+        )
     elif native_tool_decision_prompted:
         native_classification = "ollama_native_tool_not_selected"
+    heap_delta_text_required = bool(heap_patch_prompt_required(prompt or ""))
+    if heap_delta_text_required and not response_text.strip():
+        warnings.append(
+            "Heap/code-product provider task requires normal heap proposal text in addition to tool calls."
+        )
+    passed = (not empty_output) and (parsed.ok or bool(prompt and prompt.strip()))
+    if heap_delta_text_required and not response_text.strip():
+        passed = False
     return {
         "lane": "ollama",
-        "passed": (not empty_output) and (parsed.ok or bool(prompt and prompt.strip())),
+        "passed": passed,
         "provider_execution_performed": True,
         "elapsed_sec": round(time.perf_counter() - started, 4),
         "selected_model": selected_model,
@@ -208,10 +230,13 @@ def run_ollama_probe(
         "raw_response_text": text.strip(),
         "json_contract_requested": heap_patch_prompt_required(prompt or ""),
         "json_contract_passed": bool(parsed.json_ok and isinstance(parsed_json, dict)),
+        "heap_delta_text_required": heap_delta_text_required,
+        "heap_delta_text_present": bool(response_text.strip()),
         "tool_calls": native_tool_calls,
         "textual_tool_calls": textual_tool_calls,
         "native_tool_loop_provider": "ollama",
         "native_tool_loop_requested": native_tool_loop_requested,
+        "native_tool_loop_relevant": native_tool_loop_relevant,
         "native_tool_loop_supported": True,
         "native_tool_loop_performed": bool(native_tool_decision_prompted),
         "native_tool_decision_prompted": native_tool_decision_prompted,

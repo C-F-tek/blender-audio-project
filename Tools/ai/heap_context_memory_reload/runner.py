@@ -2,25 +2,55 @@
 
 from __future__ import annotations
 
+from argparse import Namespace
 import json
 from pathlib import Path
 
-from Tools.ai.heap_context_memory_reload.builders import (
-    build_repo_docs_map,
-    collect_semantic_code_chunks,
-    write_semantic_evidence,
-)
-from Tools.ai.heap_context_memory_reload.common import read_json, repo_rel, run_tool, write_json
-from Tools.ai.heap_context_memory_reload.manifest import (
-    build_manifest,
-    build_print_payload,
-)
-from Tools.ai.heap_context_memory_reload.memory_write import (
-    build_final_task_markdown,
-    run_operational_memory_write,
-)
+from Tools.ai.agent_context.transient_request_context.cli import build_context as build_transient_context, render_markdown as render_transient_markdown
+from Tools.ai._shared.agent_memory_inventory_cli import DEFAULT_MEMORY_DB, build_inventory as build_memory_inventory, render_markdown as render_memory_inventory_markdown
+from Tools.ai.heap_context_memory_reload.builders import build_repo_docs_map, collect_semantic_code_chunks, write_semantic_evidence
+from Tools.ai.heap_context_memory_reload.common import read_json, repo_rel, run_tool, summarize_artifact, write_json
+from Tools.ai.heap_context_memory_reload.manifest import build_manifest, build_print_payload
+from Tools.ai.heap_context_memory_reload.memory_write import build_final_task_markdown, run_operational_memory_write
 from Tools.ai.heap_context_memory_reload.runner_state import ReloadRun
 from Tools.ai.heap_context_memory_reload.scanner import existing_context_files
+
+
+def record_inprocess_tool(
+    state: ReloadRun,
+    *,
+    name: str,
+    requirement: str,
+    required: bool,
+    command: list[str],
+    returncode: int,
+    stdout_tail: str,
+    stderr_tail: str,
+    artifact_paths: list[Path],
+) -> None:
+    artifacts = [summarize_artifact(path, state.repo_root) for path in artifact_paths]
+    useful_artifacts = [item["path"] for item in artifacts if item.get("useful")]
+    passed = returncode == 0
+    state.commands.append(
+        {
+            "name": name,
+            "requirement": requirement,
+            "required": required,
+            "command": command,
+            "returncode": returncode,
+            "passed": passed,
+            "effective_passed": passed or bool(useful_artifacts),
+            "degraded": (not passed) and bool(useful_artifacts),
+            "hard_failed": (not passed) and not bool(useful_artifacts),
+            "artifact_useful": bool(useful_artifacts),
+            "artifact_paths": [item["path"] for item in artifacts],
+            "existing_artifact_paths": [item["path"] for item in artifacts if item.get("exists")],
+            "useful_artifact_paths": useful_artifacts,
+            "artifact_summaries": artifacts,
+            "stdout_tail": stdout_tail[-3000:],
+            "stderr_tail": stderr_tail[-3000:],
+        }
+    )
 
 
 def run_reload(state: ReloadRun) -> int:
@@ -140,30 +170,49 @@ def _run_tool_catalog(state: ReloadRun) -> None:
 def _run_memory_inventory(state: ReloadRun) -> None:
     memory_json = state.output_dir / "startup_memory_inventory.json"
     memory_md = state.output_dir / "startup_memory_inventory.md"
-    state.commands.append(
-        run_tool(
-            [
-                state.project_python,
-                "-m",
-                "Tools.ai",
-                "build_agent_memory_inventory",
-                "--repo-root",
-                ".",
-                "--objective",
-                state.request_text or "heap startup memory reload",
-                "--max-memory-chars",
-                str(state.args.max_memory_chars),
-                "--output",
-                str(memory_json),
-                "--markdown-output",
-                str(memory_md),
-            ],
-            state.repo_root,
-            name="shared_memory_reload",
-            requirement="shared_memory",
-            required=True,
-            artifact_paths=[memory_json, memory_md],
+    command = ["in_process", "Tools.ai._shared.agent_memory_inventory_cli.build_inventory"]
+    try:
+        inventory_args = Namespace(
+            repo_root=str(state.repo_root),
+            objective=state.request_text or "heap startup memory reload",
+            memory_db=DEFAULT_MEMORY_DB,
+            memory_jsonl=[],
+            memory_db_limit=1000,
+            max_memory_chars=state.args.max_memory_chars,
+            max_preview_records=20,
+            max_policy_items=30,
+            max_sqlite_tables=40,
+            output=str(memory_json),
+            markdown_output=str(memory_md),
         )
+        report = build_memory_inventory(inventory_args)
+        write_json(memory_json, report)
+        memory_md.write_text(render_memory_inventory_markdown(report), encoding="utf-8")
+        stdout = json.dumps(
+            {
+                "passed": report.get("passed"),
+                "record_count": report.get("records", {}).get("record_count"),
+                "memory_db_exists": report.get("inputs", {}).get("memory_db_exists"),
+                "request_transport": "in_memory",
+            },
+            ensure_ascii=False,
+        )
+        returncode = 0 if report.get("passed") is True else 2
+        stderr = ""
+    except Exception as exc:  # noqa: BLE001
+        stdout = ""
+        stderr = f"{type(exc).__name__}: {exc}"
+        returncode = 1
+    record_inprocess_tool(
+        state,
+        name="shared_memory_reload",
+        requirement="shared_memory",
+        required=True,
+        command=command,
+        returncode=returncode,
+        stdout_tail=stdout,
+        stderr_tail=stderr,
+        artifact_paths=[memory_json, memory_md],
     )
     state.artifacts["shared_memory_json"] = repo_rel(state.repo_root, memory_json)
     state.artifacts["shared_memory_markdown"] = repo_rel(state.repo_root, memory_md)
@@ -224,55 +273,65 @@ def _run_memory_action(
 
 
 def _run_transient_context(state: ReloadRun) -> None:
-    startup_request_file = state.output_dir / "heap_startup_request.md"
-    startup_request_file.write_text(state.request_text or "heap startup request", encoding="utf-8")
-    raw_file_list = state.output_dir / "startup_context_raw_files.txt"
-    raw_file_list.write_text("\n".join(state.context_files) + "\n", encoding="utf-8")
-    state.artifacts["startup_context_raw_file_list"] = repo_rel(state.repo_root, raw_file_list)
+    raw_files = state.context_files[
+        : min(state.args.startup_scan_context_files, max(state.args.max_context_files, 240))
+    ]
     transient_json = state.output_dir / "startup_transient_request_context.json"
     transient_md = state.output_dir / "startup_transient_request_context.md"
-    state.commands.append(
-        run_tool(
-            [
-                state.project_python,
-                "-m",
-                "Tools.ai",
-                "build_agent_transient_request_context",
-                "--repo-root",
-                ".",
-                "--objective",
-                "heap startup context/memory reload before provider lanes",
-                "--memory-note-file",
-                str(startup_request_file),
-                "--raw-file-list",
-                str(raw_file_list),
-                "--report-file",
+    command = ["in_process", "Tools.ai.agent_context.transient_request_context.cli.build_context"]
+    try:
+        context_args = Namespace(
+            repo_root=str(state.repo_root),
+            objective="heap startup context/memory reload before provider lanes",
+            memory_note=[state.request_text or "heap startup request"],
+            memory_note_file=[],
+            raw_file=raw_files,
+            raw_file_list=[],
+            report_file=[
                 str(state.output_dir / "startup_tool_catalog.json"),
-                "--report-file",
                 str(state.output_dir / "startup_memory_inventory.json"),
-                "--report-file",
                 str(state.output_dir / "startup_operational_memory_status.json"),
-                "--report-file",
                 str(state.output_dir / "startup_operational_memory_search.json"),
-                "--max-raw-files",
-                str(min(state.args.startup_scan_context_files, max(state.args.max_context_files, 240))),
-                "--max-chars-per-file",
-                str(state.args.max_chars_per_file),
-                "--output",
-                str(transient_json),
-                "--markdown-output",
-                str(transient_md),
             ],
-            state.repo_root,
-            name="shared_context_reload",
-            requirement="shared_context_chunks",
-            required=True,
-            artifact_paths=[transient_json, transient_md],
+            max_raw_files=min(
+                state.args.startup_scan_context_files, max(state.args.max_context_files, 240)
+            ),
+            max_chars_per_file=state.args.max_chars_per_file,
+            output=str(transient_json),
+            markdown_output=str(transient_md),
         )
+        report = build_transient_context(context_args)
+        write_json(transient_json, report)
+        transient_md.write_text(render_transient_markdown(report), encoding="utf-8")
+        stdout = json.dumps(
+            {
+                "passed": report.get("passed"),
+                "memory_note_count": len(report.get("memory_notes", [])),
+                "raw_file_count": report.get("raw_context", {}).get("file_count"),
+                "request_transport": "in_memory",
+            },
+            ensure_ascii=False,
+        )
+        returncode = 0 if report.get("passed") is True else 2
+        stderr = ""
+    except Exception as exc:  # noqa: BLE001
+        stdout = ""
+        stderr = f"{type(exc).__name__}: {exc}"
+        returncode = 1
+    record_inprocess_tool(
+        state,
+        name="shared_context_reload",
+        requirement="shared_context_chunks",
+        required=True,
+        command=command,
+        returncode=returncode,
+        stdout_tail=stdout,
+        stderr_tail=stderr,
+        artifact_paths=[transient_json, transient_md],
     )
     state.artifacts["shared_context_json"] = repo_rel(state.repo_root, transient_json)
     state.artifacts["shared_context_markdown"] = repo_rel(state.repo_root, transient_md)
-    state.artifacts["startup_request_file"] = repo_rel(state.repo_root, startup_request_file)
+    state.artifacts["startup_context_raw_file_count"] = str(len(raw_files))
 
 
 def _run_ai_context_pack(state: ReloadRun) -> None:

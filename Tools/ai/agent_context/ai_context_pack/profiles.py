@@ -58,12 +58,16 @@ PROFILES: dict[str, dict[str, Any]] = {
                 "role": "proposal_builder",
             },
             {
-                "path": "tools/ai/generated_patch_specs_from_proposals.py",
+                "path": "Tools/ai/generated_patch_specs/proposal_cli.py",
                 "role": "draft_patch_spec_builder",
             },
             {
-                "path": "tools/ai/generated_patch_specs_promote_draft.py",
+                "path": "Tools/ai/generated_patch_specs/review_cli.py",
                 "role": "reviewed_patch_spec_builder",
+            },
+            {
+                "path": "Tools/ai/generated_patch_specs/apply_cli.py",
+                "role": "generated_patch_spec_apply_boundary",
             },
         ],
         "optional_files": [
@@ -98,7 +102,7 @@ PROFILES: dict[str, dict[str, Any]] = {
             {"path": "docs/LOCAL_AI_WORKFLOW.md", "role": "ai_workflow"},
             {"path": "docs/JSON_SCHEMAS.md", "role": "schema_notes"},
             {
-                "path": "tools/ai/build_workload_quality_lane_routing.py",
+                "path": "Tools/ai/ai_workload/quality_lane_routing/cli.py",
                 "role": "lane_routing",
             },
             {
@@ -106,7 +110,7 @@ PROFILES: dict[str, dict[str, Any]] = {
                 "role": "advisory_packet",
             },
             {
-                "path": "tools/ai/repository_product/github_evidence_bundle.py",
+                "path": "Tools/ai/repository_product/github_evidence_bundle/cli.py",
                 "role": "evidence_builder",
             },
             {"path": "tools/validation/README.md", "role": "validation_commands"},

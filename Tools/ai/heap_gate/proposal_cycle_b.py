@@ -367,7 +367,7 @@ class RuntimeGateProposalCycleBMixin:
             "GPU0 REVIEW REQUIRED: if the previous proposal is generic, lacks code, lacks target paths, or only says what should be done, mark it as non soddisfacente and rewrite it as an operational block.",
             "The next revision must refine the previous proposal chunk and make it more operational.",
             "Do not restart from scratch. Preserve useful decisions, add verified repo-relative paths, signatures, commands, concrete implementation steps, validation commands and patch-level code.",
-            "Use this exact structure in the next proposal: TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, CODE_OR_PATCH_SKETCH, VALIDATION_COMMANDS, RISKS, EXIT_DECISION.",
+            "Use this exact structure in the next proposal: TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, PATCH_SKETCH_UNIFIED_DIFF, VALIDATION_COMMANDS, RISKS, EXIT_DECISION. PATCH_SKETCH_UNIFIED_DIFF must be a fenced unified diff with diff --git headers for allowlisted targets, or EXIT_DECISION=NO_PATCHABLE_TARGET.",
             "The final answer is assembled from proposal_iteration artifacts at heap exit, not only from raw GPU1 context.",
         ]
         if latest:

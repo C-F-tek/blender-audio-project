@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test file-backed heap request and startup raw-file-list plumbing."""
+"""Smoke-test heap request/startup plumbing without runtime memory transport files."""
 
 from __future__ import annotations
 
@@ -51,18 +51,20 @@ def main() -> int:
     )
 
     require(
-        '"heap_request_file": run_dir / "heap_operator_request.md"' in launcher,
-        "launcher must persist augmented request to run_dir file",
+        '"request_transport"] = "inline_cli"' in launcher,
+        "launcher must not write a generated runtime request file",
         errors,
     )
     require(
-        'str(state["heap_request_file"])' in launcher,
-        "launcher must pass request file to startup reload",
+        "def request_args" in launcher
+        and '"--request-file"' in launcher
+        and '"--request"' in launcher,
+        "launcher must use operator request-file when present and inline only for small direct requests",
         errors,
     )
     require(
-        'str(state["heap_request_file"])' in launcher,
-        "launcher must pass request file to heap gate",
+        'state["heap_request_file"].write_text' not in launcher,
+        "launcher must not write heap_operator_request.md as runtime transport",
         errors,
     )
     require(
@@ -71,33 +73,34 @@ def main() -> int:
         errors,
     )
     require(
-        'startup_request_file = state.output_dir / "heap_startup_request.md"' in prepare,
-        "startup reload must materialize startup request file",
+        "build_transient_context(context_args)" in prepare
+        and 'memory_note=[state.request_text or "heap startup request"]' in prepare,
+        "startup reload must pass transient request note in memory",
         errors,
     )
     require(
-        'raw_file_list = state.output_dir / "startup_context_raw_files.txt"' in prepare,
-        "startup reload must materialize context raw-file list",
+        "raw_file=raw_files" in prepare,
+        "startup reload must pass existing raw files in memory",
         errors,
     )
     require(
-        '"--raw-file-list"' in prepare and "str(raw_file_list)" in prepare,
-        "startup reload must pass raw files by list file",
+        '"--raw-file-list"' not in prepare,
+        "startup reload must not create a raw-file-list transport file",
         errors,
     )
     require(
-        'transient_command.extend(["--raw-file", rel_path])' not in prepare,
-        "startup reload must not expand every raw-file on argv",
+        '"startup_context_raw_file_count"' in prepare,
+        "startup reload must record raw-file count without a transport file",
         errors,
     )
     require(
-        '"--memory-note-file",' in prepare,
-        "startup reload must pass transient memory note by file",
+        '"--memory-note-file",' not in prepare,
+        "startup reload must not pass transient memory note by file",
         errors,
     )
     require(
-        '"--content-file",' in prepare,
-        "startup reload must pass operational memory content by file",
+        "build_sqlite_memory_report(memory_args)" in prepare and "content=content" in prepare,
+        "startup reload must pass operational memory content in memory to SQLite memory",
         errors,
     )
     require(

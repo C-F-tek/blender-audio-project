@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the real product profile intrinsic heap/exchange capability contract."""
+"""Validate the canonical run intrinsic heap/universe capability contract."""
 
 from __future__ import annotations
 
@@ -22,150 +22,111 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig", errors="replace") if path.exists() else ""
 
 
-def check_token(text: str, token: str) -> bool:
+def has(text: str, token: str) -> bool:
     return token in text
 
 
-def has_real_product_mode_contract(wrapper_text: str) -> bool:
-    if '"-Mode", "all"' in wrapper_text:
-        return True
-    return (
-        '"-Mode", $RealProductPostPreflightModes' in wrapper_text
-        and "$RealProductPostPreflightModes" in wrapper_text
-        and "official,provider" in wrapper_text
-        and "patch_specs,evidence,contract,full_validation" in wrapper_text
-    )
+def exists(repo_root: Path, rel: str) -> bool:
+    return (repo_root / rel).exists()
 
 
 def write_markdown(report: dict[str, Any], output: Path) -> str:
-    lines = [
-        "# Real Product Intrinsic Capability Contract",
-        "",
-        f"- Passed: `{report.get('passed')}`",
-        f"- Task MD input: `{report.get('task_md_input')}`",
-        f"- Heap/exchange activation: `{report.get('heap_exchange_activation')}`",
-        f"- GPU1 primary advisory: `{report.get('gpu1_primary_advisory')}`",
-        f"- GPU0 workload: `{report.get('gpu0_openvino_workload')}`",
-        f"- NPU peer micro lane: `{report.get('npu_peer_micro_lane')}`",
-        f"- Shared memory/evidence: `{report.get('shared_memory_evidence')}`",
-        f"- Static deterministic script lane: `{report.get('static_deterministic_script_lane')}`",
-        f"- Heap/exchange close: `{report.get('heap_exchange_close')}`",
-        f"- Product readiness: `{report.get('product_readiness')}`",
-        f"- Runtime flow map evidence: `{report.get('runtime_flow_map_evidence')}`",
-        f"- agent_review_prepare_pr.py: `{report.get('agent_review_prepare_pr')}`",
-        f"- Final PR product: `{report.get('final_pr_product')}`",
-        "",
-        "## Contract order",
-        "",
-    ]
+    lines = ["# Real Product Intrinsic Capability Contract", "", f"- Passed: `{report.get('passed')}`", ""]
     for item in report.get("contract_order") or []:
-        lines.append(f"- {item}")
+        lines.append(f"- `{item}`: `{report.get(item)}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report["errors"])
-    if report.get("warnings"):
-        lines.extend(["", "## Warnings", ""])
-        lines.extend(f"- {item}" for item in report["warnings"])
     return write_text_report("\n".join(lines) + "\n", output)
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
-    wrapper = repo_root / "Tools/workflow/_powershell/run_unified_real_product_pr.ps1"
-    launcher = repo_root / "Tools/workflow/_powershell/run_unified_local_ai_refactor.ps1"
-    readiness = repo_root / "Tools/validation/repository_product/review_pr_product_readiness/cli.py"
-    args_builder = repo_root / "Tools/ai/repository_product/review_pr_prepare_args/cli.py"
-    prepare = repo_root / "Tools/ai/agent_review/review_pr_cli.py"
-
-    wrapper_text = read_text(wrapper)
-    launcher_text = read_text(launcher)
-    readiness_text = read_text(readiness)
-    args_builder_text = read_text(args_builder)
-    prepare_text = read_text(prepare)
+    dispatch = read_text(repo_root / "Tools/ai/dispatch.py")
+    run_cli = read_text(repo_root / "Tools/ai/run/cli.py")
+    profiles = read_text(repo_root / "Tools/ai/run/profiles/heap_runtime_launcher_profiles.json")
+    profile_builder = read_text(repo_root / "Tools/ai/operator_product_core/profiles.py")
+    runner = read_text(repo_root / "Tools/ai/operator_product_core/runner.py")
+    heap_closure = read_text(repo_root / "Tools/ai/heap_context_closure/launcher.py")
+    matrix_lab = read_text(repo_root / "Tools/ai/heap_gate/matrix_lab.py")
+    matrix_evidence = read_text(repo_root / "Tools/ai/heap_gate/matrix_lab_evidence.py")
+    matrix_tool = read_text(repo_root / "Tools/ai/heap_runtime/code_execution_tool/cli.py")
+    synthesis = read_text(repo_root / "Tools/ai/patch_product/candidate_synthesis/cli.py")
+    synthesis_evidence = read_text(
+        repo_root / "Tools/ai/patch_product/candidate_synthesis/evidence_diff.py"
+    )
+    final_product = read_text(repo_root / "Tools/ai/_shared/heap_final_code_product.py")
+    final_readable_product = read_text(repo_root / "Tools/ai/code_product/final_readable_product/cli.py")
+    artifact_intake = read_text(repo_root / "Tools/ai/code_product/artifact_intake/cli.py")
+    prepare = read_text(repo_root / "Tools/ai/agent_review/review_pr_cli.py")
+    provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
+    npu_report = read_text(repo_root / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py")
+    gpu0_report = read_text(repo_root / "Tools/ai/provider_mesh/gpu0_companion_task_lane/cli.py")
 
     checks: dict[str, bool] = {
-        "task_md_input": check_token(wrapper_text, "[string]$TaskFile")
-        and check_token(wrapper_text, '"-TaskFile", $TaskRel')
-        and check_token(launcher_text, "IA-CARMINE-TASK-INGRESS-CONTRACT-BEGIN"),
-        "heap_exchange_activation": has_real_product_mode_contract(wrapper_text)
-        and check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-ENTRY-ENSURE-BEGIN")
-        and check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-PRE-REVIEW-BRIDGE-BEGIN"),
-        "gpu1_primary_advisory": check_token(wrapper_text, "-UsePrimaryAdvisoryProvider")
-        and check_token(wrapper_text, "-UseOllamaAdvisory"),
-        "gpu0_openvino_workload": check_token(wrapper_text, "-RunOpenVinoGpu0Workload"),
-        "npu_peer_micro_lane": (
-            check_token(wrapper_text, '[string]$NpuMicroStartMode = "startup"')
-            or check_token(wrapper_text, '[string]$NpuMicroStartMode = "peer"')
+        "task_md_input": has(run_cli, "--request-file")
+        and has(run_cli, "Task markdown not found")
+        and has(profile_builder, "--request-file"),
+        "heap_exchange_activation": has(profile_builder, "heap_context_closure")
+        and has(heap_closure, "heap_runtime_context_closure_launcher")
+        and has(profiles, "external_heap_block_pointer_v1"),
+        "gpu1_primary_advisory": has(profiles, "gpu1_planner")
+        and has(provider_loop, "build_heap_patch_proposal_prompt"),
+        "gpu0_openvino_workload": has(profiles, "gpu0_reviewer_refiner")
+        and has(gpu0_report.lower(), "gpu0")
+        and has(provider_loop, "IA_CARMINE_GPU0_COMPANION_MODEL_DIR"),
+        "npu_peer_micro_lane": has(profiles, "npu_auditor")
+        and has(npu_report.lower(), "npu")
+        and has(provider_loop, "IA_CARMINE_NPU_MODEL_DIR"),
+        "shared_memory_evidence": exists(repo_root, "Tools/ai/agent_memory/sqlite_cli.py")
+        and exists(repo_root, "Tools/ai/agent_context/shared_toolbox_bundle/cli.py"),
+        "static_deterministic_script_lane": exists(
+            repo_root, "Tools/ai/patch_product/candidate_synthesis/cli.py"
         )
-        and check_token(wrapper_text, "-NpuMicroStartMode")
-        and check_token(wrapper_text, "-RunNpuProbe")
-        and check_token(wrapper_text, "-RunNpuDecodeSmoke"),
-        "runtime_flow_map_evidence": (repo_root / "Tools/ai/runtime_universe/flow_map/cli.py").exists()
-        and check_token(launcher_text, "IA-CARMINE-RUNTIME-FLOW-MAP-BEGIN")
-        and check_token(launcher_text, "build_runtime_flow_map.py")
-        and check_token(launcher_text, "runtime_flow_"),
-        "shared_memory_evidence": check_token(wrapper_text, "-SaveInputsToMemoryDb")
-        and check_token(wrapper_text, "-BuildEvidence")
-        and check_token(launcher_text, "shared_memory_evidence"),
-        "static_deterministic_script_lane": check_token(
-            wrapper_text, "-BuildTaskPatchSuggestionReport"
-        )
-        and check_token(wrapper_text, "-GeneratePatchSpecs")
-        and (
-            check_token(wrapper_text, "-ReviewPrApplyDeterministicSuggestions")
-            or check_token(wrapper_text, "-ReviewPrFromGeneratedPatchSpecs")
-        )
-        and check_token(args_builder_text, "require_product_input"),
-        "heap_exchange_close": check_token(
-            launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-BEGIN"
-        )
-        and check_token(
-            launcher_text, "IA-CARMINE-HEAP-EXCHANGE-RUNTIME-EXIT-AFTER-PATCH-SUGGESTION-BEGIN"
-        )
-        and check_token(launcher_text, "IA-CARMINE-HEAP-EXCHANGE-LIFECYCLE-GATE-END"),
-        "product_readiness": check_token(launcher_text, "review_pr_product_readiness")
-        and check_token(readiness_text, "prepare_review_pr_ready")
-        and check_token(readiness_text, "has_concrete_product"),
-        "agent_review_prepare_pr": check_token(launcher_text, "build_review_pr_prepare_args")
-        and check_token(launcher_text, "Prepare review branch and PR")
-        and check_token(prepare_text, "gh")
-        and check_token(prepare_text, "pr")
-        and check_token(prepare_text, "create"),
-        "final_pr_product": check_token(wrapper_text, "-ReviewPrPush")
-        and check_token(wrapper_text, "-ReviewPrCreate")
-        and check_token(wrapper_text, "-ReviewPrDraft")
-        and check_token(prepare_text, "--create-pr")
-        and check_token(prepare_text, "--draft-pr"),
+        and has(matrix_lab, "synthesize_patch_candidates")
+        and has(matrix_evidence, "patch_candidate_synthesis_passed_count"),
+        "provider_evidence_to_matrix_code_product": has(matrix_lab, "evidence_report")
+        and has(matrix_tool, "--evidence-report")
+        and has(synthesis, "build_evidence_candidates")
+        and has(synthesis_evidence, "diff --git")
+        and has(synthesis_evidence, "git apply"),
+        "heap_exchange_close": has(runner, "operator_product_launcher_run.json")
+        and has(runner, "operator_product_lab_summary.json")
+        and has(final_product, "render_code_product_section"),
+        "product_readiness": has(runner, "launcher_passed")
+        and has(runner, "CODE_PRODUCT_FULL_PATCH.md")
+        and has(runner, "code_product_metrics")
+        and has(final_readable_product, "real_code_product_ready")
+        and has(final_readable_product, "final_product_blockers")
+        and has(final_readable_product, "truncation_marker")
+        and has(artifact_intake, "--apply-safe"),
+        "agent_review_prepare_pr": '"agent_review_prepare_pr"' in dispatch
+        and has(prepare, "create")
+        and has(prepare, "draft"),
+        "final_pr_product": has(runner, "code_product_metrics")
+        and has(runner, "review_report")
+        and has(runner, "diff_git_blocks"),
     }
-
-    contract_order = [
-        "Task MD IN",
-        "heap/exchange activation",
-        "GPU1 primary advisory",
-        "GPU0 OpenVINO/tool workload",
-        "NPU peer micro lane",
-        "shared memory / evidence / static deterministic script",
-        "heap/exchange CLOSE",
-        "runtime flow map evidence",
-        "product readiness",
-        "agent_review_prepare_pr.py",
-        "PR finale testabile",
+    order = [
+        "task_md_input",
+        "heap_exchange_activation",
+        "gpu1_primary_advisory",
+        "gpu0_openvino_workload",
+        "npu_peer_micro_lane",
+        "shared_memory_evidence",
+        "static_deterministic_script_lane",
+        "provider_evidence_to_matrix_code_product",
+        "heap_exchange_close",
+        "product_readiness",
+        "agent_review_prepare_pr",
+        "final_pr_product",
     ]
-
-    errors = [
-        f"missing intrinsic capability: {name}" for name, passed in checks.items() if not passed
-    ]
-
+    errors = [f"missing intrinsic capability: {name}" for name in order if not checks.get(name)]
     return {
         "schema_version": 1,
         "kind": "real_product_intrinsic_capability_contract",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
-        "wrapper": wrapper.as_posix(),
-        "launcher": launcher.as_posix(),
-        "readiness_gate": readiness.as_posix(),
-        "args_builder": args_builder.as_posix(),
-        "agent_review_prepare_pr": prepare.as_posix(),
-        "contract_order": contract_order,
+        "contract_order": order,
         **checks,
         "provider_execution_performed": False,
         "patch_application_performed": False,
@@ -179,9 +140,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument(
-        "--output", default="output/validation/real_product_intrinsic_capability_contract.json"
-    )
+    parser.add_argument("--output", default="output/validation/real_product_intrinsic_capability_contract.json")
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
 

@@ -5,15 +5,23 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
 try:
+    from Tools.ai.runtime_tool.agent_runtime_debug_lab.reporting import (
+        render_markdown as render_debug_lab_markdown,
+        write_reports as write_debug_lab_reports,
+    )
+    from Tools.ai.runtime_tool.agent_runtime_debug_lab.runner import run_request
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
+    from Tools.ai.runtime_tool.agent_runtime_debug_lab.reporting import (  # type: ignore
+        render_markdown as render_debug_lab_markdown,
+        write_reports as write_debug_lab_reports,
+    )
+    from Tools.ai.runtime_tool.agent_runtime_debug_lab.runner import run_request  # type: ignore
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
@@ -34,14 +42,12 @@ def run(command: list[str], cwd: Path, timeout: int) -> dict[str, Any]:
     }
 
 
-def write_request(path: Path, operations: list[dict[str, Any]]) -> None:
-    request = {
+def build_request(operations: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
         "kind": "agent_runtime_debug_lab_request",
         "schema_version": 1,
         "operations": operations,
     }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(request, indent=2) + "\n", encoding="utf-8")
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -78,16 +84,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
-    request_dir = repo_root / "output/validation/agent_runtime_debug_lab_smoke_requests"
-    valid_request = request_dir / "valid_request.json"
-    invalid_request = request_dir / "invalid_request.json"
     valid_report = repo_root / "output/validation/agent_runtime_debug_lab_valid.json"
     valid_md = repo_root / "output/validation/agent_runtime_debug_lab_valid.md"
     invalid_report = repo_root / "output/validation/agent_runtime_debug_lab_invalid.json"
     invalid_md = repo_root / "output/validation/agent_runtime_debug_lab_invalid.md"
 
-    write_request(
-        valid_request,
+    valid_request = build_request(
         [
             {
                 "id": "compile_report_utils",
@@ -103,8 +105,7 @@ def main() -> int:
             {"id": "status_short", "type": "git_status_short"},
         ],
     )
-    write_request(
-        invalid_request,
+    invalid_request = build_request(
         [
             {"id": "forbid_shell", "type": "free_shell", "command": "echo unsafe"},
             {
@@ -115,66 +116,38 @@ def main() -> int:
         ],
     )
 
-    env = dict(os.environ)
-    env["PYTHONPATH"] = str(repo_root)
-    valid_cmd = [
-        sys.executable,
-        "-m",
-        "Tools.ai",
-        "agent_runtime_debug_lab",
-        "--repo-root",
-        str(repo_root),
-        "--request-file",
-        str(valid_request),
-        "--output",
-        str(valid_report),
-        "--markdown-output",
-        str(valid_md),
-    ]
-    invalid_cmd = [
-        sys.executable,
-        "-m",
-        "Tools.ai",
-        "agent_runtime_debug_lab",
-        "--repo-root",
-        str(repo_root),
-        "--request-file",
-        str(invalid_request),
-        "--output",
-        str(invalid_report),
-        "--markdown-output",
-        str(invalid_md),
-    ]
-    valid_result = subprocess.run(
-        valid_cmd,
-        cwd=repo_root,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=args.timeout_seconds,
+    valid_data = run_request(
+        repo_root=repo_root,
+        request=valid_request,
+        timeout_seconds=args.timeout_seconds,
+        tail_chars=4000,
     )
-    invalid_result = subprocess.run(
-        invalid_cmd,
-        cwd=repo_root,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=args.timeout_seconds,
+    write_debug_lab_reports(
+        repo_root=repo_root,
+        output=str(valid_report),
+        markdown_output=str(valid_md),
+        report=valid_data,
+        markdown=render_debug_lab_markdown(valid_data),
     )
+    valid_returncode = 0 if valid_data.get("passed") is True else 2
+
+    invalid_data = run_request(
+        repo_root=repo_root,
+        request=invalid_request,
+        timeout_seconds=args.timeout_seconds,
+        tail_chars=4000,
+    )
+    write_debug_lab_reports(
+        repo_root=repo_root,
+        output=str(invalid_report),
+        markdown_output=str(invalid_md),
+        report=invalid_data,
+        markdown=render_debug_lab_markdown(invalid_data),
+    )
+    invalid_returncode = 0 if invalid_data.get("passed") is True else 2
 
     errors: list[str] = []
-    valid_data = (
-        json.loads(valid_report.read_text(encoding="utf-8-sig")) if valid_report.exists() else {}
-    )
-    invalid_data = (
-        json.loads(invalid_report.read_text(encoding="utf-8-sig"))
-        if invalid_report.exists()
-        else {}
-    )
-
-    if valid_result.returncode != 0 or valid_data.get("passed") is not True:
+    if valid_returncode != 0 or valid_data.get("passed") is not True:
         errors.append("valid debug lab request did not pass")
     guardrails = valid_data.get("guardrails") or {}
     for key in (
@@ -190,7 +163,7 @@ def main() -> int:
             errors.append(f"guardrail {key} must be false")
     if guardrails.get("allowlist_enforced") is not True:
         errors.append("allowlist_enforced must be true")
-    if invalid_result.returncode == 0 or invalid_data.get("passed") is not False:
+    if invalid_returncode == 0 or invalid_data.get("passed") is not False:
         errors.append("invalid debug lab request was not rejected")
     if invalid_data.get("failed_count", 0) < 1:
         errors.append("invalid request did not report failures")
@@ -208,15 +181,17 @@ def main() -> int:
             {
                 "name": "valid_request",
                 "result": {
-                    "returncode": valid_result.returncode,
-                    "ok": valid_result.returncode == 0,
+                    "returncode": valid_returncode,
+                    "ok": valid_returncode == 0,
+                    "request_transport": "in_memory",
                 },
             },
             {
                 "name": "invalid_request",
                 "result": {
-                    "returncode": invalid_result.returncode,
-                    "ok": invalid_result.returncode != 0,
+                    "returncode": invalid_returncode,
+                    "ok": invalid_returncode != 0,
+                    "request_transport": "in_memory",
                 },
             },
         ],

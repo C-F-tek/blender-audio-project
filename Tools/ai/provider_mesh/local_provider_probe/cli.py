@@ -122,6 +122,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                     effective_prompt,
                     max_new_tokens=max(1, min(args.max_new_tokens, 4096)),
                     num_ctx=args.ollama_num_ctx,
+                    keep_alive=args.keep_alive,
                 )
             )
         except Exception as exc:  # noqa: BLE001 - report-only tool.
@@ -201,6 +202,7 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--ollama-num-ctx", type=int, default=16384)
+    parser.add_argument("--keep-alive", default="10m")
     parser.add_argument("--npu-python-exe", default="")
     parser.add_argument("--run-ollama", action="store_true")
     parser.add_argument("--run-npu", action="store_true")

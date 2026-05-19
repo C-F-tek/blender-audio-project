@@ -33,6 +33,7 @@ EVENT_TYPES = (
     "evidence_request",
     "evidence_response",
     "lane_evidence",
+    "provider_peer_block",
     "broker_request",
     "broker_result",
     "claim",
@@ -88,10 +89,59 @@ def normalize_event_type(value: str) -> str:
         )
     return event_type
 
+def compact_broker_arg_value(value: Any, *, string_limit: int = 1200) -> Any:
+    """Bound broker-request args without deleting their executable shape."""
+    if isinstance(value, str):
+        text = " ".join(value.split())
+        return text[:string_limit]
+    if isinstance(value, list):
+        compacted: list[Any] = []
+        for item in value[:32]:
+            compacted.append(compact_broker_arg_value(item, string_limit=min(string_limit, 800)))
+        return compacted
+    if isinstance(value, dict):
+        return {
+            str(key): compact_broker_arg_value(item, string_limit=min(string_limit, 800))
+            for key, item in list(value.items())[:32]
+        }
+    return value
+
+
+def compact_broker_request_payload(value: dict[str, Any], max_chars: int) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    for key in (
+        "id",
+        "request_id",
+        "tool",
+        "requirement",
+        "reason",
+        "source",
+        "nonblocking",
+        "optional",
+    ):
+        if key in value:
+            payload[key] = compact_broker_arg_value(value[key])
+    args = value.get("args") if isinstance(value.get("args"), dict) else {}
+    payload["args"] = compact_broker_arg_value(args)
+    text = json.dumps(payload, ensure_ascii=False, default=str)
+    if len(text) <= max_chars:
+        return payload
+    smaller = dict(payload)
+    smaller["payload_truncated"] = True
+    smaller["args"] = compact_broker_arg_value(args, string_limit=400)
+    return smaller
+
+
 def compact_payload(value: Any, max_chars: int = 8000) -> Any:
     text = json.dumps(value, ensure_ascii=False, default=str)
     if len(text) <= max_chars:
         return value
+    if isinstance(value, dict) and (
+        value.get("tool") is not None
+        or value.get("requirement") is not None
+        or isinstance(value.get("args"), dict)
+    ):
+        return compact_broker_request_payload(value, max_chars)
     return {
         "truncated": True,
         "max_chars": max_chars,
@@ -140,6 +190,7 @@ def tool_catalog_snapshot() -> dict[str, Any]:
         },
     }
 
+@dataclass(frozen=True)
 class RuntimeHeapPaths:
     events: Path
     snapshot: Path

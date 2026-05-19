@@ -8,6 +8,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from Tools.ai._shared.process_tree import terminate_process_tree
+
 from .io_utils import read_json_quiet, write_json, write_text
 from .markdown import render_lab_markdown, render_run_markdown
 from .models import LauncherConfig
@@ -24,21 +26,31 @@ def command_env(repo_root: Path, python_exe: str) -> dict[str, str]:
 
 
 def run_command(command: list[str], cwd: Path, timeout: int = 3600) -> dict[str, Any]:
-    completed = subprocess.run(
+    process = subprocess.Popen(
         command,
         cwd=cwd,
         env=command_env(cwd, command[0]),
         text=True,
-        capture_output=True,
-        check=False,
-        timeout=timeout,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+        returncode = process.returncode
+        timed_out = False
+    except subprocess.TimeoutExpired:
+        terminate_process_tree(process)
+        stdout, stderr = process.communicate()
+        returncode = 124
+        timed_out = True
+        stderr = (stderr or "") + f"\ncommand timeout after {timeout} seconds"
     return {
         "command": command,
-        "returncode": completed.returncode,
-        "passed": completed.returncode == 0,
-        "stdout_tail": (completed.stdout or "")[-6000:],
-        "stderr_tail": (completed.stderr or "")[-6000:],
+        "returncode": returncode,
+        "passed": returncode == 0,
+        "timeout": timed_out,
+        "stdout_tail": (stdout or "")[-6000:],
+        "stderr_tail": (stderr or "")[-6000:],
     }
 
 
@@ -56,17 +68,19 @@ def discover_code_product(run_dir: Path, summary: dict[str, Any]) -> str:
     return str(candidate) if candidate.exists() else ""
 
 
-def code_product_metrics(code_product: Path) -> dict[str, Any]:
+def code_product_metrics(code_product: Path | None) -> dict[str, Any]:
+    exists = bool(code_product and code_product.is_file())
     report: dict[str, Any] = {
-        "path": str(code_product),
-        "exists": code_product.exists(),
+        "path": str(code_product) if code_product else "",
+        "exists": exists,
         "size_bytes": 0,
         "line_count": 0,
         "diff_git_blocks": 0,
         "empty_code_product_marker": False,
         "no_applicable_marker": False,
+        "truncation_marker": False,
     }
-    if not code_product.exists():
+    if not exists or code_product is None:
         return report
     text = code_product.read_text(encoding="utf-8-sig", errors="replace")
     report.update(
@@ -74,11 +88,31 @@ def code_product_metrics(code_product: Path) -> dict[str, Any]:
             "size_bytes": code_product.stat().st_size,
             "line_count": len(re.split(r"\r?\n", text)),
             "diff_git_blocks": len(re.findall(r"diff --git", text)),
-            "empty_code_product_marker": "EMPTY CODE PRODUCT" in text,
-            "no_applicable_marker": "NO_APPLICABLE_CODE_PRODUCT" in text,
+            "empty_code_product_marker": "EMPTY CODE PRODUCT" in text
+            or "Nessun diff/code effettivo" in text,
+            "no_applicable_marker": "NO_APPLICABLE_CODE_PRODUCT" in text
+            or "NO_TARGETS_OR_CODE_PRODUCT" in text,
+            "truncation_marker": "[truncated]" in text.lower()
+            or "[diff truncated]" in text.lower()
+            or "[code product excerpt truncated" in text.lower(),
         }
     )
     return report
+
+
+def code_product_blockers(metrics: dict[str, Any]) -> list[str]:
+    blockers: list[str] = []
+    if not metrics.get("exists"):
+        return ["CODE_PRODUCT_FULL_PATCH was not produced"]
+    if int(metrics.get("diff_git_blocks") or 0) <= 0:
+        blockers.append("CODE_PRODUCT_FULL_PATCH has no real diff --git block")
+    if metrics.get("empty_code_product_marker"):
+        blockers.append("CODE_PRODUCT_FULL_PATCH declares no effective diff/code")
+    if metrics.get("no_applicable_marker"):
+        blockers.append("CODE_PRODUCT_FULL_PATCH declares no applicable code product")
+    if metrics.get("truncation_marker"):
+        blockers.append("CODE_PRODUCT_FULL_PATCH contains a truncation marker")
+    return blockers
 
 
 def run_heap(config: LauncherConfig, timeout: int = 3600) -> dict[str, Any]:
@@ -102,7 +136,7 @@ def run_heap(config: LauncherConfig, timeout: int = 3600) -> dict[str, Any]:
         "code_product": discover_code_product(run_dir, summary),
         "run_result": result,
         "launcher_summary_payload": summary,
-        "passed": bool(result.get("passed")) and bool(summary.get("launcher_packaging_succeeded")),
+        "passed": bool(result.get("passed")) and bool(summary.get("launcher_passed")),
     }
     write_json(run_dir / "operator_product_launcher_run.json", report)
     write_text(run_dir / "operator_product_launcher_run.md", render_run_markdown(report))
@@ -155,14 +189,14 @@ def run_operator_lab(
     cfg = resolve_config(config)
     run_report = run_heap(cfg, timeout=timeout)
     run_dir = run_dir_for(cfg)
-    code_product = Path(str(run_report.get("code_product") or ""))
+    code_product_raw = str(run_report.get("code_product") or "").strip()
+    code_product = Path(code_product_raw) if code_product_raw else None
     metrics = code_product_metrics(code_product)
     review_report: dict[str, Any] = {}
     safe_apply_report: dict[str, Any] = {}
     errors: list[str] = []
-    if not metrics.get("exists"):
-        errors.append("CODE_PRODUCT_FULL_PATCH was not produced")
-    else:
+    errors.extend(code_product_blockers(metrics))
+    if metrics.get("exists") and code_product is not None:
         review_report = analyze_code_product(cfg.repo_root, code_product, run_dir)
         if apply_safe:
             safe_apply_report = analyze_code_product(
@@ -184,7 +218,7 @@ def run_operator_lab(
         "request_file": str(cfg.request_file),
         "intermediate_run_dir": str(run_dir),
         "final_root": str(cfg.final_root),
-        "code_product": str(code_product) if str(code_product) else "",
+        "code_product": code_product_raw,
         "code_product_metrics": metrics,
         "run_report": run_report,
         "review_report": review_report,

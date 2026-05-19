@@ -18,76 +18,17 @@ class RuntimeGateProviderCommandsMixin:
         gpu0_md = work_dir / f"gpu0_openvino_peer_workload{suffix}.md"
         npu_json = work_dir / f"npu_micro_task_auditor{suffix}.json"
         npu_md = work_dir / f"npu_micro_task_auditor{suffix}.md"
+        leader_packet = str(getattr(self, "provider_leader_packet_path", "") or "")
+        startup_manifest = str(getattr(self.args, "startup_manifest", "") or "")
+        task_file = str(getattr(self.args, "task_file", "") or "")
+        request_file = str(getattr(self.args, "request_file", "") or "")
+        request_args = ["--request-file", request_file] if request_file else ["--request", self.request_text()]
+        startup_args = (
+            ["--startup-manifest", startup_manifest]
+            if startup_manifest
+            else (["--task-file", task_file] if task_file else [])
+        )
         return [
-            {
-                "lane": "gpu0_peer",
-                "requirement": "gpu0_provider_peer",
-                "role": "diagnostic_peer_workload",
-                "output": gpu0_json,
-                "command": [
-                    self.child_python(),
-                    "-m",
-                    "Tools.ai",
-                    "build_openvino_gpu0_workload_report",
-                    "--repo-root",
-                    ".",
-                    "--iterations",
-                    str(self.args.gpu0_iterations),
-                    "--min-seconds",
-                    str(self.args.gpu0_min_seconds),
-                    "--tool-loop-timeout-seconds",
-                    str(min(max(int(self.args.timeout_seconds // 2), 60), 180)),
-                    "--role",
-                    "heap_runtime_diagnostic_peer",
-                    "--request",
-                    self.request_text(),
-                    "--output",
-                    repo_rel(self.repo_root, gpu0_json),
-                    "--markdown-output",
-                    repo_rel(self.repo_root, gpu0_md),
-                ],
-            },
-            {
-                "lane": "npu_micro_task_auditor",
-                "requirement": "npu_micro_task_auditor",
-                "role": "npu_micro_task_auditor",
-                "output": npu_json,
-                "command": [
-                    self.child_python(),
-                    "-m",
-                    "Tools.ai",
-                    "build_npu_micro_task_companion_report",
-                    "--repo-root",
-                    ".",
-                    "--task-file",
-                    self.args.task_file,
-                    "--request",
-                    self.request_text(),
-                    "--python-exe",
-                    self.child_python(),
-                    "--timeout-seconds",
-                    str(self.args.npu_micro_timeout_seconds),
-                    "--max-context-chars",
-                    str(self.args.npu_max_context_chars),
-                    "--tool-loop-timeout-seconds",
-                    str(min(max(int(self.args.timeout_seconds // 2), 60), 180)),
-                    *(
-                        [
-                            "--run-device-workload",
-                            "--device-workload-seconds",
-                            str(self.args.npu_device_workload_seconds),
-                            "--device-workload-iterations",
-                            str(self.args.npu_device_workload_iterations),
-                        ]
-                        if self.args.allow_npu_device_workload
-                        else []
-                    ),
-                    "--output",
-                    repo_rel(self.repo_root, npu_json),
-                    "--markdown-output",
-                    repo_rel(self.repo_root, npu_md),
-                ],
-            },
             {
                 "lane": "gpu1_planner",
                 "requirement": "gpu1_provider_planner",
@@ -111,8 +52,89 @@ class RuntimeGateProviderCommandsMixin:
                     str(max(128, min(int(self.args.max_new_tokens), 4096))),
                     "--ollama-num-ctx",
                     str(max(4096, int(self.args.ollama_num_ctx))),
+                    "--keep-alive",
+                    str(self.args.keep_alive),
                     "--output",
                     repo_rel(self.repo_root, gpu1_json),
+                ],
+            },
+            {
+                "lane": "gpu0_peer",
+                "requirement": "gpu0_provider_peer",
+                "role": "diagnostic_peer_workload",
+                "output": gpu0_json,
+                "command": [
+                    self.child_python(),
+                    "-m",
+                    "Tools.ai",
+                    "build_openvino_gpu0_workload_report",
+                    "--repo-root",
+                    ".",
+                    "--iterations",
+                    str(self.args.gpu0_iterations),
+                    "--min-seconds",
+                    str(self.args.gpu0_min_seconds),
+                    "--tool-loop-timeout-seconds",
+                    str(min(max(int(self.args.timeout_seconds // 2), 60), 180)),
+                    "--require-semantic-provider",
+                    "--role",
+                    "heap_runtime_diagnostic_peer",
+                    *startup_args,
+                    *(
+                        ["--leader-packet", leader_packet]
+                        if leader_packet
+                        else []
+                    ),
+                    *request_args,
+                    "--output",
+                    repo_rel(self.repo_root, gpu0_json),
+                    "--markdown-output",
+                    repo_rel(self.repo_root, gpu0_md),
+                ],
+            },
+            {
+                "lane": "npu_micro_task_auditor",
+                "requirement": "npu_micro_task_auditor",
+                "role": "npu_micro_task_auditor",
+                "output": npu_json,
+                "command": [
+                    self.child_python(),
+                    "-m",
+                    "Tools.ai",
+                    "build_npu_micro_task_companion_report",
+                    "--repo-root",
+                    ".",
+                    *startup_args,
+                    *request_args,
+                    *(
+                        ["--leader-packet", leader_packet]
+                        if leader_packet
+                        else []
+                    ),
+                    "--python-exe",
+                    self.child_python(),
+                    "--timeout-seconds",
+                    str(self.args.npu_micro_timeout_seconds),
+                    "--max-context-chars",
+                    str(self.args.npu_max_context_chars),
+                    "--tool-loop-timeout-seconds",
+                    str(min(max(int(self.args.timeout_seconds // 2), 60), 180)),
+                    "--require-semantic-provider",
+                    *(
+                        [
+                            "--run-device-workload",
+                            "--device-workload-seconds",
+                            str(self.args.npu_device_workload_seconds),
+                            "--device-workload-iterations",
+                            str(self.args.npu_device_workload_iterations),
+                        ]
+                        if self.args.allow_npu_device_workload
+                        else []
+                    ),
+                    "--output",
+                    repo_rel(self.repo_root, npu_json),
+                    "--markdown-output",
+                    repo_rel(self.repo_root, npu_md),
                 ],
             },
         ]
@@ -164,24 +186,50 @@ class RuntimeGateProviderCommandsMixin:
             or report_data.get("npu_provider_execution_performed")
             or report_data.get("npu_device_workload_performed")
         )
-        if provider_execution:
+        device_workload_execution = bool(
+            report_data.get("device_workload_execution_performed")
+            or report_data.get("openvino_gpu0_workload_performed")
+            or report_data.get("openvino_gpu0_probe_performed")
+            or report_data.get("npu_device_workload_performed")
+        )
+        semantic_provider_execution = bool(
+            report_data.get("semantic_provider_execution_performed")
+            or report_data.get("gpu0_semantic_provider_execution_performed")
+            or report_data.get("npu_semantic_provider_execution_performed")
+        )
+        if provider_execution or semantic_provider_execution:
             self.provider_execution_performed = True
         errors = report_data.get("errors") if isinstance(report_data.get("errors"), list) else []
         warnings = (
             report_data.get("warnings") if isinstance(report_data.get("warnings"), list) else []
         )
         response_text = str(report_data.get("response_text") or "").strip()
+        selected_model = str(report_data.get("selected_model") or "").strip()
         lane_reports = report_data.get("lane_reports")
         if isinstance(lane_reports, list):
             for lane_report in lane_reports:
                 if isinstance(lane_report, dict):
                     absorb_tool_loop(lane_report)
                 if isinstance(lane_report, dict) and lane_report.get("lane") == "ollama":
+                    selected_model = str(
+                        lane_report.get("selected_model")
+                        or lane_report.get("model")
+                        or selected_model
+                    ).strip()
                     response_text = str(
                         lane_report.get("response_text")
                         or lane_report.get("text_preview")
                         or response_text
                     ).strip()
+                    if not report_data.get("target_files") and lane_report.get("target_files"):
+                        report_data["target_files"] = lane_report.get("target_files")
+                    if (
+                        not report_data.get("validation_commands")
+                        and lane_report.get("validation_commands")
+                    ):
+                        report_data["validation_commands"] = lane_report.get(
+                            "validation_commands"
+                        )
                     if response_text:
                         break
         return {
@@ -192,6 +240,13 @@ class RuntimeGateProviderCommandsMixin:
             "returncode": completed.returncode,
             "passed": completed.returncode == 0 and report_data.get("passed") is True,
             "provider_execution_performed": provider_execution,
+            "device_workload_execution_performed": device_workload_execution,
+            "semantic_provider_required": report_data.get("semantic_provider_required"),
+            "semantic_provider_execution_performed": semantic_provider_execution,
+            "semantic_provider_model_loaded": report_data.get("semantic_provider_model_loaded"),
+            "semantic_provider_classification": report_data.get(
+                "semantic_provider_classification"
+            ),
             "report_kind": report_data.get("kind"),
             "response_text": response_text,
             "tool_calls": tool_calls,
@@ -202,6 +257,11 @@ class RuntimeGateProviderCommandsMixin:
             "native_tool_call_count": len(tool_calls),
             "textual_tool_call_count": len(textual_tool_calls),
             "role_decision": report_data.get("role_decision"),
+            "selected_model": selected_model or report_data.get("selected_model"),
+            "target_files": report_data.get("target_files") or report_data.get("TARGET_FILES") or [],
+            "validation_commands": report_data.get("validation_commands")
+            or report_data.get("VALIDATION_COMMANDS")
+            or [],
             "npu_device_workload": report_data.get("npu_device_workload"),
             "npu_device_workload_requested": report_data.get("npu_device_workload_requested"),
             "npu_device_workload_performed": report_data.get("npu_device_workload_performed"),

@@ -12,6 +12,7 @@ from Tools.tool_dispatch import ToolDispatcher
 TOOL_MAIN_TARGETS: dict[str, str] = {
     "agent_memory_routing_policy": "Tools.ai.agent_memory.routing_cli:main",
     "agent_runtime_sqlite_memory": "Tools.ai.agent_memory.sqlite_cli:main",
+    "runtime_sqlite_memory": "Tools.ai.agent_memory.sqlite_cli:main",
     "gpu_npu_run_sync_analysis": "Tools.ai.provider_mesh.gpu_npu_run_sync_analysis.cli:main",
     "apply_patch_bundle": "Tools.ai.patchkit.apply_patch_bundle:main",
     "generated_patch_specs_apply": "Tools.ai.generated_patch_specs.apply_cli:main",
@@ -73,6 +74,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "gpu_npu_parallel_orchestrator": "Tools.ai.provider_mesh.gpu_npu_parallel_orchestrator.cli:main",
     "run": "Tools.ai.run.cli:main",
     "run_heap_code_execution_tool": "Tools.ai.heap_runtime.code_execution_tool.cli:main",
+    "run_heap_code_execution_matrix": "Tools.ai.heap_runtime.code_execution_tool.cli:main",
     "run_heap_runtime_completeness_gate": "Tools.ai.heap_runtime.completeness_gate.cli:main",
     "run_heap_virtual_dev_environment": "Tools.ai.heap_runtime.virtual_dev_environment.cli:main",
     "megalithic_repo_review": "Tools.ai.repository_product.megalithic_repo_review.cli:main",
@@ -116,6 +118,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_local_provider_probe": "Tools.ai.provider_mesh.local_provider_probe.cli:main",
     "run_npu_decode_smoke_diagnostic": "Tools.ai.provider_mesh.npu_decode_smoke_diagnostic.cli:main",
     "runtime_tool_broker": "Tools.ai.runtime_tool.broker.cli:main",
+    "analyze_code_product_artifact": "Tools.ai.code_product.artifact_intake.cli:main",
     "assemble_heap_final_readable_product": "Tools.ai.code_product.final_readable_product.cli:main",
     "build_full_context_golden_proposals": "Tools.ai.agent_context.full_context_golden_proposals.cli:main",
     "build_local_ai_enrichment_plan": "Tools.ai.agent_context.local_ai_enrichment_plan.cli:main",
