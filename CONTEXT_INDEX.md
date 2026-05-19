@@ -8,6 +8,7 @@ This is the compact navigation entrypoint for AI and operator context.
 | --- | --- |
 | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | Current compact model for controlled input, shared heap/exchange, cooperating lanes, evidence and deterministic exit product. |
 | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | Current compact model for deterministic heap surfaces: preload, memory, chunks, namespaces, tool catalog, broker, lanes and composer. |
+| `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | Current compact model for Ollama/main provider, GPU0 coworker lane and NPU micro-lane as one operational mind with departments. |
 | `docs/REAL_PRODUCT_RUN_MODEL.md` | Current compact model for evidence-only, blocked and real product run states. |
 | `docs/COMPACT_EVIDENCE_MODEL.md` | Current compact model for raw runtime output, selected compact evidence, AI-to-AI bundles and Git-trackable evidence. |
 
