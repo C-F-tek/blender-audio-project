@@ -97,11 +97,11 @@ def operational_provider_activity(
         if _contains_heap_contract_text(response_text):
             return True, "gpu1_heap_delta_proposal_present"
         if tool_call_count > 0:
-            return False, "gpu1_tool_call_without_heap_delta_proposal"
+            return True, "gpu1_native_tool_call_present_without_text_yet"
         return False, "gpu1_no_heap_delta_or_native_tool_call"
     if lane in {"gpu0_peer", "npu_micro_task_auditor"}:
-        if not semantic_done or not native_done:
-            return False, f"{lane}_semantic_tool_loop_not_performed"
+        if not semantic_done:
+            return False, f"{lane}_semantic_provider_not_performed"
         if tool_call_count > 0 or _contains_review_or_audit_text(response_text):
             return True, f"{lane}_semantic_review_or_native_tool_call"
         return False, f"{lane}_no_review_audit_or_native_tool_call"

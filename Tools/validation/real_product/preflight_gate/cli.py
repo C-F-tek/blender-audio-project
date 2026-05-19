@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,7 @@ def stream(text: str) -> dict[str, Any]:
 
 
 def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> dict[str, Any]:
+    started = time.time()
     output = repo_root / "output/validation" / f"real_product_preflight_{name}.json"
     command = [
         sys.executable,
@@ -95,6 +97,7 @@ def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> d
         "timeout": timed_out,
         "process_tree_terminated": timed_out and process is not None,
         "process_timeout_seconds": process_timeout,
+        "elapsed_seconds": round(max(0.0, time.time() - started), 3),
         "report_passed": report.get("passed"),
         "report_kind": report.get("kind"),
         "report_errors": report.get("errors") or [],
@@ -133,6 +136,39 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
         lines.extend(["", "## Warnings", ""])
         lines.extend(f"- {item}" for item in report["warnings"])
     return write_text_report("\n".join(lines) + "\n", output)
+
+
+def write_progress(
+    *,
+    repo_root: Path,
+    output: Path,
+    steps: list[dict[str, Any]],
+    current_step: str,
+    step_index: int,
+    step_count: int,
+) -> None:
+    report = {
+        "schema_version": 1,
+        "kind": "real_product_preflight_gate",
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "repo_root": repo_root.as_posix(),
+        "status": "running",
+        "current_step": current_step,
+        "step_index": step_index,
+        "step_count": step_count,
+        "completed_step_count": len(steps),
+        "passed": False,
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+        "blender_runtime_execution_performed": False,
+        "ffmpeg_execution_performed": False,
+        "steps": steps,
+        "failed_steps": [step for step in steps if not step.get("passed")],
+        "errors": [],
+        "warnings": [],
+    }
+    write_json_report(report, output)
 
 
 def main() -> int:
@@ -200,8 +236,19 @@ def main() -> int:
     steps: list[dict[str, Any]] = []
     errors: list[str] = []
     warnings: list[str] = []
+    output = resolve_output_path(repo_root, args.output)
+    markdown_output = resolve_output_path(repo_root, args.markdown_output)
+    step_count = len(steps_config)
 
-    for name, script in steps_config:
+    for index, (name, script) in enumerate(steps_config, start=1):
+        write_progress(
+            repo_root=repo_root,
+            output=output,
+            steps=steps,
+            current_step=name,
+            step_index=index,
+            step_count=step_count,
+        )
         script_path = repo_root / script
         if not script_path.exists():
             step = {
@@ -227,6 +274,11 @@ def main() -> int:
         "kind": "real_product_preflight_gate",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
+        "status": "completed",
+        "current_step": "",
+        "step_index": step_count,
+        "step_count": step_count,
+        "completed_step_count": len(steps),
         "passed": not failed_steps,
         "provider_execution_performed": False,
         "patch_application_performed": False,
@@ -239,8 +291,6 @@ def main() -> int:
         "warnings": warnings,
     }
 
-    output = resolve_output_path(repo_root, args.output)
-    markdown_output = resolve_output_path(repo_root, args.markdown_output)
     write_json_report(report, output)
     write_markdown(report, markdown_output)
     print(write_json_report(report), end="")

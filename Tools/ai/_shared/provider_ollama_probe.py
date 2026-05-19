@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ def run_ollama_probe(
     max_new_tokens: int = 64,
     num_ctx: int | None = None,
     keep_alive: str = "0s",
+    partial_output: str | Path | None = None,
 ) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from Tools.ai._shared.provider_tool_loop import (  # noqa: PLC0415
@@ -57,8 +59,64 @@ def run_ollama_probe(
     native_tool_calls: list[dict[str, Any]] = []
     native_tool_decision_prompted = bool(prompt and prompt.strip())
     explicit_tool_call_required = prompt_explicitly_requires_tool_call(prompt or "")
-    native_tool_loop_relevant = bool(native_tool_decision_prompted and explicit_tool_call_required)
+    native_tool_loop_relevant = bool(
+        native_tool_decision_prompted and explicit_tool_call_required
+    )
     prompt_attempts: list[dict[str, Any]] = []
+    partial_json = Path(partial_output).expanduser() if partial_output else None
+    partial_markdown = (
+        partial_json.with_name(partial_json.stem + ".partial.md") if partial_json else None
+    )
+    last_partial_write = 0.0
+
+    def write_partial(text: str, chunk: dict[str, Any]) -> None:
+        nonlocal last_partial_write
+        if partial_json is None:
+            return
+        now = time.perf_counter()
+        if not chunk.get("done") and now - last_partial_write < 1.0:
+            return
+        last_partial_write = now
+        partial_json.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "kind": "ollama_provider_partial",
+            "lane": "gpu1_planner",
+            "status": "partial",
+            "selected_model": selected_model,
+            "num_ctx": num_ctx,
+            "prompt_chars": len(prompt or ""),
+            "partial_response_chars": len(text),
+            "last_chunk_chars": len(str(chunk.get("response") or "")),
+            "done": bool(chunk.get("done")),
+            "done_reason": chunk.get("done_reason"),
+            "elapsed_sec": round(time.perf_counter() - started, 4),
+            "provider_execution_performed": True,
+            "partial_markdown_output": str(partial_markdown) if partial_markdown else "",
+        }
+        partial_json.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        if partial_markdown is not None:
+            partial_markdown.write_text(
+                "\n".join(
+                    [
+                        "# GPU1 partial provider response",
+                        "",
+                        f"- Selected model: `{selected_model}`",
+                        f"- Partial response chars: `{len(text)}`",
+                        f"- Done: `{bool(chunk.get('done'))}`",
+                        f"- Elapsed seconds: `{round(time.perf_counter() - started, 4)}`",
+                        "",
+                        "```text",
+                        text[-12000:],
+                        "```",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
     with OllamaSession(
         model=selected_model,
         keep_alive=keep_alive,
@@ -72,6 +130,7 @@ def run_ollama_probe(
                 proposal_prompt,
                 max_new_tokens=max_new_tokens,
                 temperature=0.0,
+                partial_callback=write_partial if partial_json else None,
             )
             text = (proposal_text or "").strip()
             prompt_attempts.append(
@@ -80,7 +139,7 @@ def run_ollama_probe(
                     "phase": "heap_delta",
                     "prompt_chars": len(proposal_prompt),
                     "text_chars": len(text),
-                    "text_preview": text[:120],
+                    "text_present": bool(text),
                     "max_new_tokens": max_new_tokens,
                     "native_tool_loop_requested": False,
                     "native_tool_call_count": 0,
@@ -103,14 +162,16 @@ def run_ollama_probe(
                     native_tool_calls = normalize_ollama_tool_calls(raw_chat_response)
                     for call in native_tool_calls:
                         call["semantic_task_excerpt"] = tool_prompt[:500]
-                        call["semantic_contract"] = "provider_native_tool_call_for_current_operator_task"
+                        call["semantic_contract"] = (
+                            "provider_native_tool_call_for_current_operator_task"
+                        )
                     prompt_attempts.append(
                         {
                             "attempt": index,
                             "phase": "native_tool_call",
                             "prompt_chars": len(tool_prompt),
                             "text_chars": len(candidate),
-                            "text_preview": candidate[:120],
+                            "text_present": bool(candidate.strip()),
                             "max_new_tokens": max_new_tokens,
                             "native_tool_loop_requested": True,
                             "native_tool_call_count": len(native_tool_calls),
@@ -138,7 +199,7 @@ def run_ollama_probe(
                         "phase": "probe",
                         "prompt_chars": len(probe_prompt),
                         "text_chars": len(candidate),
-                        "text_preview": candidate[:120],
+                        "text_present": bool(candidate.strip()),
                         "max_new_tokens": max_new_tokens,
                         "native_tool_loop_requested": False,
                         "native_tool_call_count": 0,
@@ -204,7 +265,7 @@ def run_ollama_probe(
         warnings.append(
             "Heap/code-product provider task did not emit a native broker tool_call; text heap delta remains authoritative."
         )
-    elif native_tool_decision_prompted and heap_patch_prompt_required(prompt or ""):
+    elif heap_patch_prompt_required(prompt or ""):
         native_classification = "ollama_native_tool_not_requested_text_delta_primary"
     elif native_tool_decision_prompted:
         native_classification = "ollama_native_tool_not_selected"
@@ -225,7 +286,7 @@ def run_ollama_probe(
         "num_ctx": num_ctx,
         "request_prompt": prompt or "",
         "response_text": response_text,
-        "raw_response_text": text.strip(),
+        "raw_response_chars": len(text.strip()),
         "json_contract_requested": heap_patch_prompt_required(prompt or ""),
         "json_contract_passed": bool(parsed.json_ok and isinstance(parsed_json, dict)),
         "heap_delta_text_required": heap_delta_text_required,
@@ -242,7 +303,11 @@ def run_ollama_probe(
         "native_tool_loop_classification": native_classification,
         "native_tool_call_count": len(native_tool_calls),
         "warnings": warnings,
-        "raw_chat_response": raw_chat_response,
+        "raw_chat_response_summary": {
+            "present": bool(raw_chat_response),
+            "native_tool_call_count": len(native_tool_calls),
+            "message_present": bool(raw_chat_response.get("message")) if raw_chat_response else False,
+        },
         "target_files": [str(item) for item in target_files if str(item).strip()],
         "validation_commands": [str(item) for item in validation_commands if str(item).strip()],
         "model_count": len(models),
@@ -255,5 +320,6 @@ def run_ollama_probe(
         ),
         "parsed_result": parsed.to_dict(),
         "prompt_attempts": prompt_attempts,
-        "text_preview": text[:200],
+        "partial_output": str(partial_json) if partial_json else "",
+        "partial_markdown_output": str(partial_markdown) if partial_markdown else "",
     }

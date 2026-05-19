@@ -8,6 +8,10 @@ from typing import Any
 
 from Tools.ai.heap_context_memory_reload.common import read_text
 
+TASK_CONTEXT_FILE_ROW_LIMIT = 240
+TASK_CONTEXT_PREVIEW_FILE_LIMIT = 16
+TASK_CONTEXT_PREVIEW_CHARS = 1200
+
 
 def build_context_loaded_block(artifacts: dict[str, str]) -> list[str]:
     key_labels = (
@@ -92,10 +96,16 @@ def build_task_markdown(
         lines.extend(["", "## Startup warnings", ""])
         lines.extend(f"- {warning}" for warning in warnings)
     lines.extend(["", "## Canonical context files loaded", ""])
-    lines.extend(f"- `{rel_path}`" for rel_path in context_files)
-    lines.extend(["", "## Context previews", ""])
-    for rel_path in context_files:
-        text = read_text(repo_root / rel_path, max_chars=2500)
+    lines.append(f"- Context file count: `{len(context_files)}`")
+    lines.append("- Full context file list: `heap_context_memory_reload_manifest.json`")
+    for rel_path in context_files[:TASK_CONTEXT_FILE_ROW_LIMIT]:
+        lines.append(f"- `{rel_path}`")
+    if len(context_files) > TASK_CONTEXT_FILE_ROW_LIMIT:
+        remaining = len(context_files) - TASK_CONTEXT_FILE_ROW_LIMIT
+        lines.append(f"- ... `{remaining}` additional refs in the startup manifest")
+    lines.extend(["", "## Bounded context previews", ""])
+    for rel_path in context_files[:TASK_CONTEXT_PREVIEW_FILE_LIMIT]:
+        text = read_text(repo_root / rel_path, max_chars=TASK_CONTEXT_PREVIEW_CHARS)
         if text:
             lines.extend([f"### `{rel_path}`", "", "```text", text, "```", ""])
     return "\n".join(lines)

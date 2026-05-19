@@ -6,7 +6,6 @@ from Tools.ai.heap_gate.runtime_common import (
     DEFAULT_BRIDGE_JSON,
     DEFAULT_BRIDGE_MD,
     PROVIDER_START_REQUIREMENTS,
-    REQUIREMENT_ORDER,
     Any,
     append_unique,
     command_env,
@@ -69,7 +68,7 @@ class RuntimeGateLoopStepsMixin:
             "id": "heap_completeness_requirements_loaded",
             "source": "heap_runtime_completeness_gate",
             "kind": "readiness_requirements",
-            "value": list(REQUIREMENT_ORDER),
+            "value": self.required_requirements_order(),
             "budget_max_iterations": self.max_iterations,
         }
         universe_refs = self.write_runtime_universe_report()

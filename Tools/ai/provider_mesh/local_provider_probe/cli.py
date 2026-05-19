@@ -115,6 +115,9 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     if args.run_ollama:
         try:
             effective_prompt = build_heap_patch_proposal_prompt(effective_prompt)
+            partial_output = Path(args.output)
+            if not partial_output.is_absolute():
+                partial_output = repo_root / partial_output
             lane_reports.append(
                 run_ollama_probe(
                     repo_root,
@@ -123,6 +126,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                     max_new_tokens=max(1, min(args.max_new_tokens, 4096)),
                     num_ctx=args.ollama_num_ctx,
                     keep_alive=args.keep_alive,
+                    partial_output=partial_output,
                 )
             )
         except Exception as exc:  # noqa: BLE001 - report-only tool.

@@ -57,11 +57,11 @@ class RuntimeGateProviderPromptMixin:
                 continue
 
             header = f"## {key}\nsource: {value}\n\n"
+            if key in {"tool_catalog_markdown", "repo_docs_map_markdown"}:
+                content = "\n".join(content.splitlines()[:80])
             budget = max(0, remaining - len(header) - 128)
             if budget <= 0:
                 break
-            if key in {"tool_catalog_markdown", "repo_docs_map_markdown"}:
-                content = "\n".join(content.splitlines()[:80])
             chunk = content[:budget]
             if len(content) > budget:
                 chunk += "\n\n...[truncated by startup_context_digest]...\n"

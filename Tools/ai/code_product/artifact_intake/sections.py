@@ -163,6 +163,8 @@ def analyze_section(repo_root: Path, output_dir: Path, item: dict[str, str]) -> 
 
 def no_worktree_diff_marker(body: str) -> bool:
     status = metadata_value(body, "Implementation status")
+    if status == "already_integrated_no_worktree_diff":
+        status = "verified_target_no_worktree_diff"
     hunks = metadata_value(body, "Diff hunks")
     normalized = body.lower()
     return (

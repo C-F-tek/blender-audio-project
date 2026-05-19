@@ -287,16 +287,6 @@ class RuntimeGateProviderContextMixin:
         request = self.request_text()
         if not request:
             return 'Return exactly this JSON object and no prose: {"ok": true, "lane": "ollama"}'
-        full_request_chars = len(request)
-        request_file = str(getattr(self.args, "request_file", "") or "").strip()
-        if full_request_chars > 12000:
-            request = "\n".join(
-                [
-                    request[:9000],
-                    f"\n...[operator_request_excerpt; full_request_file={request_file or 'inline'}; full_chars={full_request_chars}]...\n",
-                    request[-2500:],
-                ]
-            )
         peer_lines = []
         for lane in ("gpu0_peer", "npu_micro_task_auditor"):
             text = self.provider_response_text(lane)

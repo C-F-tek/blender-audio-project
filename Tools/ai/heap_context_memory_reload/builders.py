@@ -14,18 +14,31 @@ from Tools.ai.heap_context_memory_reload.common import (
 )
 from Tools.ai.heap_context_memory_reload.scanner import repo_scan_semantic_candidates
 
+STARTUP_SEMANTIC_PREVIEW_CHUNK_LIMIT = 80
+STARTUP_SEMANTIC_PREVIEW_CHARS = 1600
+STARTUP_SEMANTIC_MARKDOWN_ROW_LIMIT = 240
+STARTUP_SEMANTIC_MARKDOWN_PREVIEW_BLOCKS = 16
+STARTUP_DOCS_MAP_PREVIEW_LIMIT = 80
+STARTUP_DOCS_MAP_PREVIEW_CHARS = 1200
+STARTUP_DOCS_MAP_MARKDOWN_ROW_LIMIT = 240
+STARTUP_DOCS_MAP_MARKDOWN_PREVIEW_BLOCKS = 16
+
 
 def build_repo_docs_map(
     repo_root: Path, context_files: list[str], output_dir: Path
 ) -> dict[str, str]:
     docs = []
-    for rel_path in context_files:
+    for index, rel_path in enumerate(context_files):
         full = repo_root / rel_path
-        text = read_text(full, max_chars=1200)
+        preview_included = index < STARTUP_DOCS_MAP_PREVIEW_LIMIT
+        text = read_text(full, max_chars=STARTUP_DOCS_MAP_PREVIEW_CHARS) if preview_included else ""
         docs.append(
             {
                 "path": rel_path,
                 "size_bytes": full.stat().st_size if full.exists() else 0,
+                "preview_included": preview_included,
+                "preview_chars": len(text),
+                "sha256_scope": "preview" if text else "",
                 "sha256": sha256_text(text),
                 "preview": text,
             }
@@ -38,13 +51,51 @@ def build_repo_docs_map(
         "patch_application_performed": False,
         "source_writes_performed": False,
         "document_count": len(docs),
+        "live_artifact_policy": "all_context_paths_indexed; bounded previews only",
+        "preview_document_limit": STARTUP_DOCS_MAP_PREVIEW_LIMIT,
+        "stored_preview_chars": STARTUP_DOCS_MAP_PREVIEW_CHARS,
+        "detail_retrieval_tool": "runtime_file_refs",
         "documents": docs,
     }
     json_path = output_dir / "startup_repo_docs_map.json"
     md_path = output_dir / "startup_repo_docs_map.md"
     write_json(json_path, data)
-    lines = ["# Heap Startup Repo Docs Map", ""]
-    lines.extend(f"- `{item['path']}` size=`{item['size_bytes']}`" for item in docs)
+    lines = [
+        "# Heap Startup Repo Docs Map",
+        "",
+        f"- Document count: `{len(docs)}`",
+        f"- Preview document limit: `{STARTUP_DOCS_MAP_PREVIEW_LIMIT}`",
+        f"- Stored preview chars: `{STARTUP_DOCS_MAP_PREVIEW_CHARS}`",
+        "- Detail retrieval tool: `runtime_file_refs`",
+        "- Live artifact policy: `all_context_paths_indexed; bounded previews only`",
+        "",
+        "## Indexed document refs",
+        "",
+    ]
+    for item in docs[:STARTUP_DOCS_MAP_MARKDOWN_ROW_LIMIT]:
+        lines.append(
+            f"- `{item['path']}` size=`{item['size_bytes']}` "
+            f"preview=`{item['preview_chars']}`"
+        )
+    if len(docs) > STARTUP_DOCS_MAP_MARKDOWN_ROW_LIMIT:
+        remaining = len(docs) - STARTUP_DOCS_MAP_MARKDOWN_ROW_LIMIT
+        lines.append(f"- ... `{remaining}` additional refs in `startup_repo_docs_map.json`")
+    lines.extend(["", "## Bounded preview samples", ""])
+    for item in [doc for doc in docs if doc.get("preview")][
+        :STARTUP_DOCS_MAP_MARKDOWN_PREVIEW_BLOCKS
+    ]:
+        lines.extend(
+            [
+                f"### `{item['path']}`",
+                "",
+                f"- Size bytes: `{item['size_bytes']}`",
+                "",
+                "```text",
+                item["preview"],
+                "```",
+                "",
+            ]
+        )
     write_markdown(md_path, "\n".join(lines) + "\n")
     return {
         "repo_docs_map_json": repo_rel(repo_root, json_path),
@@ -70,16 +121,20 @@ def collect_semantic_code_chunks(
         key=lambda item: (-item[0], repo_rel(repo_root, item[1])),
     )
     chunks = []
-    for score, path in ranked[:limit]:
+    stored_preview_chars = max(1, min(preview_chars, STARTUP_SEMANTIC_PREVIEW_CHARS))
+    for index, (score, path) in enumerate(ranked[:limit]):
         rel = repo_rel(repo_root, path)
-        text = read_text(path, max_chars=max(1, preview_chars))
+        preview_included = index < STARTUP_SEMANTIC_PREVIEW_CHUNK_LIMIT
+        text = read_text(path, max_chars=stored_preview_chars) if preview_included else ""
         chunks.append(
             {
                 "path": rel,
                 "score": score,
                 "size_bytes": path.stat().st_size if path.exists() else 0,
                 "preview": text,
-                "sha256": sha256_text(text),
+                "preview_included": preview_included,
+                "preview_chars": len(text),
+                "sha256": sha256_text(text) if text else "",
             }
         )
     data = {
@@ -91,18 +146,46 @@ def collect_semantic_code_chunks(
         "source_writes_performed": False,
         "chunk_count": len(chunks),
         "selection_policy": "deterministic_path_keyword_ranker",
+        "live_artifact_policy": "all_selected_paths_indexed; bounded previews only",
+        "requested_preview_chars": preview_chars,
+        "stored_preview_chars": stored_preview_chars,
+        "preview_chunk_limit": STARTUP_SEMANTIC_PREVIEW_CHUNK_LIMIT,
+        "detail_retrieval_tool": "select_semantic_code_chunks",
         "chunks": chunks,
     }
     json_path = output_dir / "startup_semantic_code_chunks.json"
     md_path = output_dir / "startup_semantic_code_chunks.md"
     write_json(json_path, data)
-    lines = ["# Heap Startup Semantic Code Chunks", ""]
-    for item in chunks:
+    lines = [
+        "# Heap Startup Semantic Code Chunks",
+        "",
+        f"- Chunk count: `{len(chunks)}`",
+        f"- Preview chunk limit: `{STARTUP_SEMANTIC_PREVIEW_CHUNK_LIMIT}`",
+        f"- Stored preview chars: `{stored_preview_chars}`",
+        "- Detail retrieval tool: `select_semantic_code_chunks`",
+        "- Live artifact policy: `all_selected_paths_indexed; bounded previews only`",
+        "",
+        "## Indexed chunk refs",
+        "",
+    ]
+    for item in chunks[:STARTUP_SEMANTIC_MARKDOWN_ROW_LIMIT]:
+        lines.append(
+            f"- `{item['path']}` score=`{item['score']}` size=`{item['size_bytes']}` "
+            f"preview=`{item['preview_chars']}`"
+        )
+    if len(chunks) > STARTUP_SEMANTIC_MARKDOWN_ROW_LIMIT:
+        remaining = len(chunks) - STARTUP_SEMANTIC_MARKDOWN_ROW_LIMIT
+        lines.append(f"- ... `{remaining}` additional refs in `startup_semantic_code_chunks.json`")
+    lines.extend(["", "## Bounded preview samples", ""])
+    for item in [chunk for chunk in chunks if chunk.get("preview")][
+        :STARTUP_SEMANTIC_MARKDOWN_PREVIEW_BLOCKS
+    ]:
         lines.extend(
             [
                 f"## `{item['path']}`",
                 "",
                 f"- Score: `{item['score']}`",
+                f"- Size bytes: `{item['size_bytes']}`",
                 "",
                 "```text",
                 item["preview"],

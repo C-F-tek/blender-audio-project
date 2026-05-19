@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import sqlite3
 from pathlib import Path
 
 from Tools.ai.deterministic_recommendations.evidence_to_recommendation import write_recommendation_event
@@ -16,7 +17,7 @@ from Tools.ai._shared.heap_source_anchors import (
 from Tools.ai.patch_product.patch_plan_generator import write_patch_plan_event
 from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap, record_lane_diagnostic
 from Tools.ai.provider_mesh.gpu_npu_parallel_orchestrator import runtime_state_gate
-from Tools.ai.heap_runtime.completeness_gate import runtime_state_lane_gate
+from Tools.ai.heap_gate.runtime_common import runtime_state_lane_gate
 from Tools.ai.pipeline.validation_step import write_validation_event
 
 
@@ -57,6 +58,55 @@ class RuntimeStateTests(unittest.TestCase):
             self.assertEqual(payload["lane"], "npu")
             self.assertEqual(payload["status"], "ready")
             self.assertEqual(heap.runtime_state.lane_status["npu"], "ready")
+
+    def test_sqlite_sidecar_indexes_runtime_heap_events(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            heap = self.make_heap(Path(temp))
+            heap.append_event(
+                source="gpu1",
+                target="broker",
+                event_type="broker_request",
+                correlation_id="req-1",
+                payload={"request_id": "req-1", "requirement": "memory", "tool": "runtime_sqlite_memory"},
+            )
+            heap.append_event(
+                source="broker",
+                target="gpu1",
+                event_type="broker_result",
+                correlation_id="req-1",
+                payload={"request_id": "req-1", "passed": True},
+            )
+            heap.append_event(
+                source="gpu0",
+                event_type="provider_state",
+                payload={
+                    "lane": "gpu0_peer",
+                    "requirement": "gpu0_provider_peer",
+                    "status": "ready",
+                    "operational_provider_activity": False,
+                    "diagnostic_only": True,
+                },
+            )
+            db_path = heap.sqlite_index_path()
+            self.assertTrue(db_path.exists())
+            conn = sqlite3.connect(db_path)
+            try:
+                event_count = conn.execute("SELECT COUNT(*) FROM events").fetchone()[0]
+                resolved = conn.execute(
+                    "SELECT resolved FROM pending_broker_requests WHERE request_id='req-1'"
+                ).fetchone()[0]
+                provider = conn.execute(
+                    "SELECT diagnostic_only FROM provider_reports WHERE lane='gpu0_peer'"
+                ).fetchone()[0]
+                latest = conn.execute(
+                    "SELECT event_id FROM latest_event_by_type WHERE event_type='provider_state'"
+                ).fetchone()[0]
+            finally:
+                conn.close()
+            self.assertEqual(event_count, 3)
+            self.assertEqual(resolved, 1)
+            self.assertEqual(provider, 1)
+            self.assertGreater(latest, 0)
 
 
 class RuntimeGateTests(unittest.TestCase):

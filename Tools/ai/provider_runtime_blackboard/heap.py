@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .state import RuntimeState
+from .sqlite_index import index_runtime_heap_event
 from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 
 from .common import (
@@ -90,6 +91,7 @@ class ProviderRuntimeHeap:
         with self.paths.events.open("a", encoding="utf-8", newline="\n") as handle:
             handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
         self.runtime_state.apply_event(event)
+        self._index_event(event)
         return event
 
     def add_event(
@@ -145,6 +147,12 @@ class ProviderRuntimeHeap:
             if event.get("event_type") == normalized:
                 return event
         return None
+
+    def sqlite_index_path(self) -> Path:
+        return self.paths.events.with_name("runtime_heap.sqlite3")
+
+    def _index_event(self, event: dict[str, Any]) -> None:
+        index_runtime_heap_event(self.sqlite_index_path(), event)
 
     def pending_broker_requests(self) -> list[dict[str, Any]]:
         events = self.read_events()

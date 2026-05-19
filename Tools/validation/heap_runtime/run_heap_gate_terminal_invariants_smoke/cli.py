@@ -80,6 +80,21 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         provider_execution_performed=True,
         detailed_output_expected=True,
     )
+    peer_degraded = ready_metrics()
+    peer_degraded["provider_semantic_missing_required_lanes"] = [
+        "gpu0_peer",
+        "npu_micro_task_auditor",
+    ]
+    peer_degraded_errors = evaluate_terminal_invariants(
+        metrics=peer_degraded,
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
     errors: list[str] = []
     if ok_errors:
         errors.append("ready metric set produced terminal errors")
@@ -90,6 +105,8 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     for fragment in required_fragments:
         if not any(fragment in error for error in bad_errors):
             errors.append(f"missing expected terminal invariant: {fragment}")
+    if not any("semantic GPU0/NPU model execution" in error for error in peer_degraded_errors):
+        errors.append("ready metric set must reject missing GPU0/NPU semantic execution")
     if not all(error.startswith("AI STAI GIOCANDO:") for error in bad_errors):
         errors.append("terminal errors must use AI STAI GIOCANDO prefix")
     return {
@@ -101,6 +118,8 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "ready_error_count": len(ok_errors),
         "broken_error_count": len(bad_errors),
         "broken_errors": bad_errors,
+        "peer_degraded_error_count": len(peer_degraded_errors),
+        "peer_degraded_errors": peer_degraded_errors,
         "errors": errors,
         "source_writes_performed": False,
         "patch_application_performed": False,

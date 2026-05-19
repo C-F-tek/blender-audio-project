@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from Tools.ai.heap_gate.runtime_common import (
-    REQUIREMENT_ORDER,
+    BASE_REQUIREMENTS,
     Any,
     Path,
     RuntimeTargetPlanner,
@@ -257,7 +257,9 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
         ]
 
     def required_requirements_order(self) -> list[str]:
-        order = list(REQUIREMENT_ORDER)
+        order = list(BASE_REQUIREMENTS)
+        if self.args.allow_provider_generation:
+            order.append("gpu1_provider_planner")
         if self.virtual_dev_environment_required() and "virtual_dev_environment" not in order:
             order.append("virtual_dev_environment")
         if self.code_execution_matrix_required() and "code_execution_matrix" not in order:

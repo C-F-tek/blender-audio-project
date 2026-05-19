@@ -23,6 +23,8 @@ DEFAULT_REQUEST = (
 
 REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
 REVISION_CONTEXT_MARKER = "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN"
+WINDOWS_PROVIDER_STATUS_TIMEOUT_SECONDS = 1
+OLLAMA_STOP_TIMEOUT_SECONDS = 5
 
 
 def now_stamp() -> str:
@@ -219,16 +221,21 @@ def _windows_provider_process_status(pid: int, repo_root: Path) -> dict[str, Any
             capture_output=True,
             text=True,
             check=False,
-            timeout=3,
+            timeout=WINDOWS_PROVIDER_STATUS_TIMEOUT_SECONDS,
         )
         lines = [line.strip() for line in (task.stdout or "").splitlines() if line.strip()]
         if task.returncode != 0 or not lines or not lines[0].startswith('"'):
             return {"alive": False, "safe_to_terminate": False, "image_name": "", "command_line": ""}
         image_name = (lines[0].split(",", 1)[0] or "").strip().strip('"')
-    except KeyboardInterrupt:
-        raise
-    except BaseException:
-        return {"alive": False, "safe_to_terminate": False, "image_name": "", "command_line": ""}
+    except BaseException as exc:  # noqa: BLE001 - cleanup must not block termination.
+        return {
+            "alive": True,
+            "safe_to_terminate": True,
+            "image_name": "",
+            "command_line": "",
+            "status_lookup_failed": True,
+            "status_lookup_error": type(exc).__name__,
+        }
     try:
         ps = subprocess.run(
             [
@@ -240,7 +247,7 @@ def _windows_provider_process_status(pid: int, repo_root: Path) -> dict[str, Any
             capture_output=True,
             text=True,
             check=False,
-            timeout=5,
+            timeout=WINDOWS_PROVIDER_STATUS_TIMEOUT_SECONDS,
         )
         command_line = (ps.stdout or "").strip()
     except BaseException:
@@ -272,7 +279,7 @@ def _stop_ollama_model(model: str) -> bool:
             stderr=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
             check=False,
-            timeout=20,
+            timeout=OLLAMA_STOP_TIMEOUT_SECONDS,
         )
         return result.returncode == 0
     except BaseException:

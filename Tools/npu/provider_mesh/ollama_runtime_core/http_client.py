@@ -6,6 +6,7 @@ import json
 import subprocess
 import time
 import urllib.request
+from collections.abc import Iterator
 from pathlib import Path
 
 from .config import DEFAULT_BASE_URL, DEFAULT_MODELS, manifest_root
@@ -30,6 +31,33 @@ def json_request(
     with urllib.request.urlopen(request, timeout=timeout) as response:
         raw = response.read().decode("utf-8", errors="replace")
     return json.loads(raw) if raw else {}
+
+
+def stream_json_request(
+    base_url: str,
+    path: str,
+    payload: dict,
+    timeout: float = 10.0,
+) -> Iterator[dict]:
+    url = base_url.rstrip("/") + path
+    data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        for raw_line in response:
+            line = raw_line.decode("utf-8", errors="replace").strip()
+            if not line:
+                continue
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(item, dict):
+                yield item
 
 
 def is_server_ready(base_url: str = DEFAULT_BASE_URL, timeout: float = 2.0) -> bool:

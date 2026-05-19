@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import os
 import sys
@@ -30,6 +31,8 @@ def main() -> int:
         openvino_tool_loop_report,
     )
     from Tools.ai.runtime_tool.broker.runtime_builders import run_heap_code_execution_matrix
+    from Tools.npu.provider_mesh.ollama_runtime_core.session import OllamaSession
+    from Tools.ai._shared.provider_ollama_probe import run_ollama_probe
 
     schemas = broker_tool_schemas()
     errors: list[str] = []
@@ -68,6 +71,12 @@ def main() -> int:
         errors.append("broker builder must preserve leading-dash validation args")
     if "--validation-arg" in command:
         errors.append("broker builder emitted split leading-dash validation arg")
+    if "partial_callback" not in inspect.signature(OllamaSession.generate).parameters:
+        errors.append("Ollama generate must expose partial_callback for GPU1 checkpoints")
+    if "partial_output" not in inspect.signature(run_ollama_probe).parameters:
+        errors.append("run_ollama_probe must expose partial_output for GPU1 checkpoints")
+    if "partial_markdown_output" not in inspect.getsource(run_ollama_probe):
+        errors.append("GPU1 partial checkpoint must expose a human-readable markdown artifact")
 
     old_tool_dir = os.environ.pop("IA_CARMINE_OPENVINO_TOOL_MODEL_DIR", None)
     old_gpu0_dir = os.environ.pop("IA_CARMINE_GPU0_COMPANION_MODEL_DIR", None)

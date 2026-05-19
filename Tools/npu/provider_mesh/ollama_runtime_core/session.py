@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import time
+from collections.abc import Callable
 
 from .config import (
     DEFAULT_BASE_URL,
@@ -13,7 +14,7 @@ from .config import (
     find_ollama_exe,
     normalize_base_url,
 )
-from .http_client import choose_model, is_server_ready, json_request, list_models, list_models_from_disk, start_server
+from .http_client import choose_model, is_server_ready, json_request, list_models, list_models_from_disk, start_server, stream_json_request
 
 
 class OllamaSession:
@@ -81,6 +82,7 @@ class OllamaSession:
         temperature: float = 0.15,
         num_thread: int | None = None,
         response_format: str | None = None,
+        partial_callback: Callable[[str, dict], None] | None = None,
     ) -> str:
         if not self.model:
             self.start()
@@ -88,7 +90,7 @@ class OllamaSession:
         payload = {
             "model": self.model,
             "prompt": prompt,
-            "stream": False,
+            "stream": bool(partial_callback),
             "keep_alive": self.keep_alive,
             "options": {
                 "temperature": temperature,
@@ -101,7 +103,25 @@ class OllamaSession:
             payload["format"] = response_format
         start = time.perf_counter()
         try:
-            data = json_request(self.base_url, "/api/generate", payload=payload, timeout=600.0)
+            if partial_callback:
+                response_parts: list[str] = []
+                data = {}
+                for chunk in stream_json_request(
+                    self.base_url,
+                    "/api/generate",
+                    payload=payload,
+                    timeout=600.0,
+                ):
+                    data = chunk
+                    piece = str(chunk.get("response") or "")
+                    if piece:
+                        response_parts.append(piece)
+                    if piece or chunk.get("done"):
+                        partial_callback("".join(response_parts), chunk)
+                response = "".join(response_parts).strip()
+            else:
+                data = json_request(self.base_url, "/api/generate", payload=payload, timeout=600.0)
+                response = str(data.get("response", "")).strip()
         except Exception as exc:
             append_ollama_runtime_event(
                 "generate_error",
@@ -118,7 +138,6 @@ class OllamaSession:
                 },
             )
             raise
-        response = str(data.get("response", "")).strip()
         append_ollama_runtime_event(
             "generate_result",
             {
@@ -135,7 +154,6 @@ class OllamaSession:
                 "done_reason": data.get("done_reason"),
                 "prompt_eval_count": data.get("prompt_eval_count"),
                 "eval_count": data.get("eval_count"),
-                "response_preview": response[:300],
             },
         )
         return response
@@ -148,6 +166,7 @@ class OllamaSession:
         max_new_tokens: int = 900,
         temperature: float = 0.15,
         num_thread: int | None = None,
+        partial_callback: Callable[[str, dict], None] | None = None,
     ) -> dict:
         if not self.model:
             self.start()
@@ -155,7 +174,7 @@ class OllamaSession:
         payload: dict = {
             "model": self.model,
             "messages": messages,
-            "stream": False,
+            "stream": bool(partial_callback),
             "keep_alive": self.keep_alive,
             "options": {
                 "temperature": temperature,
@@ -168,7 +187,26 @@ class OllamaSession:
             payload["tools"] = tools
         start = time.perf_counter()
         try:
-            data = json_request(self.base_url, "/api/chat", payload=payload, timeout=600.0)
+            if partial_callback:
+                content_parts: list[str] = []
+                data = {}
+                for chunk in stream_json_request(
+                    self.base_url,
+                    "/api/chat",
+                    payload=payload,
+                    timeout=600.0,
+                ):
+                    data = chunk
+                    message_chunk = (
+                        chunk.get("message") if isinstance(chunk.get("message"), dict) else {}
+                    )
+                    piece = str(message_chunk.get("content") or "")
+                    if piece:
+                        content_parts.append(piece)
+                    if piece or chunk.get("done"):
+                        partial_callback("".join(content_parts), chunk)
+            else:
+                data = json_request(self.base_url, "/api/chat", payload=payload, timeout=600.0)
         except Exception as exc:
             append_ollama_runtime_event(
                 "chat_error",
