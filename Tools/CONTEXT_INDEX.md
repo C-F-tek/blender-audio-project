@@ -10,7 +10,7 @@ Use this file as the compact navigation layer for tool context files.
 | `Tools/validation` | `Tools/validation/TOOL_CONTEXT.md` | `Tools/validation/CONTEXT_INDEX.md` |
 | `Tools/workflow` | `Tools/workflow/TOOL_CONTEXT.md` | `Tools/workflow/CONTEXT_INDEX.md` |
 | `Tools/npu` | `Tools/npu/TOOL_CONTEXT.md` | `Tools/npu/CONTEXT_INDEX.md` |
-| `Tools/docs` | `Tools/docs/TOOL_CONTEXT.md` | none |
+| `Tools/docs` | `Tools/docs/TOOL_CONTEXT.md` | `Tools/docs/CONTEXT_INDEX.md` |
 | `Tools/git` | `Tools/git/TOOL_CONTEXT.md` | none |
 | `Tools/repo_patch_runner` | `Tools/repo_patch_runner/TOOL_CONTEXT.md` | none |
 
