@@ -88,8 +88,12 @@ CONTEXT_INDEX.md
 | Tools/docs family index | `Tools/docs/CONTEXT_INDEX.md` | complete-enough |
 | Tools/docs docs hygiene | `Tools/docs/docs_hygiene/TOOL_CONTEXT.md` | complete-enough |
 | Tools/docs shared helpers | `Tools/docs/_shared/TOOL_CONTEXT.md` | stub-missing |
-| Tools/git | `Tools/git/TOOL_CONTEXT.md` | complete-enough |
-| Tools/repo_patch_runner | `Tools/repo_patch_runner/TOOL_CONTEXT.md` | complete-enough |
+| Tools/git overview | `Tools/git/TOOL_CONTEXT.md` | complete-enough |
+| Tools/git family index | `Tools/git/CONTEXT_INDEX.md` | complete-enough |
+| Tools/git PowerShell wrappers | `Tools/git/_powershell/TOOL_CONTEXT.md` | complete-enough |
+| Tools/repo_patch_runner overview | `Tools/repo_patch_runner/TOOL_CONTEXT.md` | complete-enough |
+| Tools/repo_patch_runner family index | `Tools/repo_patch_runner/CONTEXT_INDEX.md` | complete-enough |
+| Tools/repo_patch_runner apply repo mods | `Tools/repo_patch_runner/apply_repo_mods/TOOL_CONTEXT.md` | complete-enough |
 
 ## Non-tool context coverage
 
