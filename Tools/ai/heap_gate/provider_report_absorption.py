@@ -65,6 +65,66 @@ def absorb_completed_provider_item(
     return True
 
 
+def refresh_peer_reports_after_provider_join(
+    gate: Any,
+    *,
+    work_dir: Path,
+    round_id: int,
+    revision: int,
+) -> None:
+    """Rebind peer reports to the final GPU1 delta after all provider lanes join."""
+    for provider_report in gate.provider_reports:
+        lane = str(provider_report.get("lane") or "")
+        if lane not in {"gpu0_peer", "npu_micro_task_auditor"}:
+            continue
+        was_operational = bool(provider_report.get("operational_provider_activity"))
+        refreshed = gate.enrich_provider_report_with_operational_peer_review(
+            dict(provider_report),
+            lane,
+            work_dir,
+            revision,
+            gate.read_events(),
+        )
+        refreshed.update(gate.provider_block_contract(lane, revision, refreshed))
+        if not refreshed.get("operational_provider_activity"):
+            refreshed["passed"] = False
+        refreshed["status"] = "ready" if refreshed.get("passed") else "degraded"
+        provider_report.clear()
+        provider_report.update(refreshed)
+        output = str(provider_report.get("output") or "")
+        if output:
+            output_path = gate.repo_root / output
+            existing = read_json(output_path)
+            merged = existing if isinstance(existing, dict) else {}
+            merged.update(provider_report)
+            write_json_report(merged, output_path)
+        if provider_report.get("operational_provider_activity") and not was_operational:
+            gate.publish(
+                provider_heap_lane(lane),
+                "provider_peer_block",
+                _provider_peer_block_payload(lane, revision, provider_report),
+                target="orchestrator",
+                correlation_id=f"{gate.stamp}:provider:{lane}:refreshed-block",
+                round_id=round_id,
+            )
+        gate.append_heap_exchange_event(
+            {
+                "kind": "provider_peer_rebound",
+                "lane": lane,
+                "round": round_id,
+                "revision": revision,
+                "provider_block_id": provider_report.get("provider_block_id"),
+                "proposal_block_id": provider_report.get("proposal_block_id"),
+                "refines_block_id": provider_report.get("refines_block_id"),
+                "resume_from_block_id": provider_report.get("resume_from_block_id"),
+                "operational_provider_activity": provider_report.get(
+                    "operational_provider_activity"
+                ),
+                "summary": "peer report rebound against final GPU1 delta before proposal iteration",
+            }
+        )
+
+
 def _completed_process(
     item: dict[str, Any],
     command: list[str],

@@ -77,28 +77,98 @@ def render_flow_markdown(payload: dict[str, Any]) -> str:
 def render_console_line(payload: dict[str, Any]) -> str:
     run_status = payload.get("run_status") if isinstance(payload.get("run_status"), dict) else {}
     providers = run_status.get("provider_lane_statuses") or []
-    lanes = ",".join(
-        f"{item.get('lane')}:{item.get('status') or item.get('passed')}"
-        for item in providers[:4]
-        if item.get("lane")
-    )
+    lanes = ",".join(_lane_details(item) for item in providers[:4] if item.get("lane"))
     return (
         "[flow] phase={phase} status={status} elapsed={elapsed}s "
-        "child={child} hint={hint} events={events} broker={broker} provider_blocks={blocks} "
+        "child={child} step={step} hint={hint} last={last} events={events} "
+        "event_mix={event_mix} broker=req:{broker_req}/res:{broker_res} provider_blocks={blocks} "
         "proposals={proposals} lanes={lanes} crlf_warnings={crlf}"
     ).format(
         phase=payload.get("phase"),
         status=payload.get("status"),
         elapsed=payload.get("elapsed_seconds"),
         child=_child_label(run_status),
+        step=_human_step(run_status, providers),
         hint=run_status.get("phase_hint", ""),
+        last=_last_event_label(run_status),
         events=run_status.get("events_count", 0),
-        broker=run_status.get("broker_result_count", 0),
+        event_mix=_event_mix(run_status.get("event_type_counts") or {}),
+        broker_req=run_status.get("broker_request_count", 0),
+        broker_res=run_status.get("broker_result_count", 0),
         blocks=run_status.get("provider_peer_block_count", 0),
         proposals=run_status.get("proposal_iteration_count", 0),
         lanes=lanes or "-",
         crlf=payload.get("crlf_warning_count", 0),
     )
+
+
+def _human_step(run_status: dict[str, Any], providers: list[dict[str, Any]]) -> str:
+    active = [
+        str(item.get("lane"))
+        for item in providers
+        if str(item.get("status") or "").strip() in {"running", "partial"}
+    ]
+    if active:
+        return "providers-active:" + ",".join(active)
+    if run_status.get("proposal_iteration_count", 0):
+        return "proposal-materialized"
+    if providers:
+        return "provider-artifacts-present"
+    if run_status.get("broker_result_count", 0) or run_status.get("broker_request_count", 0):
+        return "broker/evidence-loop"
+    hint = str(run_status.get("phase_hint") or "").strip()
+    if hint == "preflight_done":
+        return "preflight-complete"
+    if hint == "startup_reload_done":
+        return "startup-reload-complete"
+    return "boot"
+
+
+def _last_event_label(run_status: dict[str, Any]) -> str:
+    event_type = str(run_status.get("last_event_type") or "").strip()
+    source = str(run_status.get("last_event_source") or "").strip()
+    if not event_type and not source:
+        return "-"
+    return f"{event_type or '?'}/{source or '?'}"
+
+
+def _event_mix(counts: dict[str, int]) -> str:
+    items = [(key, value) for key, value in counts.items() if value]
+    if not items:
+        return "-"
+    items.sort(key=lambda item: (-item[1], item[0]))
+    return ",".join(f"{key}:{value}" for key, value in items[:6])
+
+
+def _lane_details(item: dict[str, Any]) -> str:
+    lane = str(item.get("lane") or "")
+    parts = [str(item.get("status") or item.get("passed") or "?")]
+    for label, key in (
+        ("role", "role"),
+        ("model", "selected_model"),
+        ("t", "elapsed_seconds"),
+        ("pid", "pid"),
+        ("partial", "partial_response_chars"),
+        ("done", "done"),
+        ("semantic", "semantic_provider_execution_performed"),
+        ("op", "operational_provider_activity"),
+        ("native", "native_tool_call_count"),
+        ("class", "native_tool_loop_classification"),
+    ):
+        value = item.get(key)
+        if value not in ("", None):
+            parts.append(f"{label}={_compact(value)}")
+    output = str(item.get("output") or "").replace("\\", "/").rsplit("/", 1)[-1]
+    if output:
+        parts.append(f"out={output}")
+    return f"{lane}[{','.join(parts)}]"
+
+
+def _compact(value: Any, limit: int = 32) -> str:
+    text = str(value).replace(",", "~").replace(" ", "_")
+    if len(text) <= limit:
+        return text
+    return text[: max(1, limit - 1)] + "~"
 
 
 def _event_summary(path: Path) -> tuple[dict[str, int], dict[str, Any], list[dict[str, Any]]]:
@@ -135,19 +205,43 @@ def _read_event_line(
     if key != "provider_state":
         return
     payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
-    lane = str(payload.get("lane") or event.get("source") or "").strip()
+    pending = payload.get("pending_lanes")
+    if isinstance(pending, list):
+        for item in pending:
+            if isinstance(item, dict):
+                _merge_provider_event(providers, item)
+            elif isinstance(item, str) and item.strip():
+                _merge_provider_event(providers, {"lane": item.strip(), "status": "running"})
+    source = str(event.get("source") or "").strip()
+    known_source = source in {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}
+    lane = str(payload.get("lane") or (source if known_source else "")).strip()
+    if not lane:
+        return
+    _merge_provider_event(providers, payload | {"lane": lane})
+
+
+def _merge_provider_event(providers: dict[str, dict[str, Any]], payload: dict[str, Any]) -> None:
+    lane = str(payload.get("lane") or "").strip()
     if not lane:
         return
     current = providers.get(lane, {})
     current.update(
         {
             "lane": lane,
+            "role": payload.get("role") or current.get("role"),
             "status": payload.get("status") or current.get("status"),
             "pid": payload.get("pid") or current.get("pid"),
             "started_at": payload.get("started_at") or current.get("started_at"),
             "elapsed_seconds": payload.get("elapsed_seconds") or current.get("elapsed_seconds"),
             "timeout_seconds": payload.get("timeout_seconds") or current.get("timeout_seconds"),
             "output": payload.get("output") or current.get("output"),
+            "selected_model": payload.get("selected_model") or payload.get("model") or current.get("selected_model"),
+            "partial_response_chars": payload.get("partial_response_chars") or current.get("partial_response_chars"),
+            "done": payload.get("done") if payload.get("done") is not None else current.get("done"),
+            "semantic_provider_execution_performed": payload.get("semantic_provider_execution_performed") if payload.get("semantic_provider_execution_performed") is not None else current.get("semantic_provider_execution_performed"),
+            "operational_provider_activity": payload.get("operational_provider_activity") if payload.get("operational_provider_activity") is not None else current.get("operational_provider_activity"),
+            "native_tool_call_count": payload.get("native_tool_call_count") if payload.get("native_tool_call_count") is not None else current.get("native_tool_call_count"),
+            "native_tool_loop_classification": payload.get("native_tool_loop_classification") or payload.get("classification") or current.get("native_tool_loop_classification"),
             "source": "heap_event",
         }
     )
@@ -193,9 +287,15 @@ def _provider_status(path: Path) -> list[dict[str, Any]]:
                 "lane": data.get("lane") or _lane_from_name(item.name),
                 "status": data.get("status") or ("written" if data else "pending"),
                 "passed": data.get("passed"),
+                "role": data.get("role"),
                 "selected_model": data.get("selected_model") or data.get("model"),
+                "elapsed_seconds": data.get("elapsed_seconds") or data.get("elapsed_sec"),
+                "partial_response_chars": data.get("partial_response_chars"),
+                "done": data.get("done"),
                 "semantic_provider_execution_performed": data.get("semantic_provider_execution_performed"),
+                "operational_provider_activity": data.get("operational_provider_activity"),
                 "native_tool_call_count": data.get("native_tool_call_count"),
+                "native_tool_loop_classification": data.get("native_tool_loop_classification"),
                 "output": str(item),
             }
         )

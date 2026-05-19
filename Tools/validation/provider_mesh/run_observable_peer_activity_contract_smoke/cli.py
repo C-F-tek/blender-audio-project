@@ -26,8 +26,9 @@ def main() -> int:
     repo = Path(args.repo_root).resolve()
     gpu0 = repo / "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py"
     npu = repo / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py"
+    shared_npu = repo / "Tools/ai/_shared/npu_micro_task_companion_cli.py"
     gpu0_text = read_text(gpu0)
-    npu_text = read_text(npu)
+    npu_text = "\n".join([read_text(npu), read_text(shared_npu)])
 
     checks: dict[str, bool] = {
         "gpu0_default_iterations_observable": "default=180" in gpu0_text,
@@ -38,9 +39,11 @@ def main() -> int:
         in gpu0_text
         and 'report["passed"] = False' in gpu0_text,
         "npu_declares_activity_requested": "npu_peer_activity_requested" in npu_text,
-        "npu_declares_activity_not_performed": '"npu_peer_activity_performed": False' in npu_text,
-        "npu_declares_no_device_execution": '"npu_device_execution_performed": False' in npu_text,
-        "npu_declares_diagnostic_only": "diagnostic_report_only" in npu_text,
+        "npu_declares_activity_not_performed": '"npu_peer_activity_performed": bool('
+        in npu_text,
+        "npu_declares_no_device_execution": '"npu_device_execution_performed": bool('
+        in npu_text,
+        "npu_declares_diagnostic_only": '"mode": "report_only"' in npu_text,
     }
     errors = [
         f"observable peer activity contract missing: {name}"

@@ -22,7 +22,10 @@ from Tools.ai.heap_gate.provider_process_collection import (
     collect_provider_processes,
     terminate_pending_provider_processes,
 )
-from Tools.ai.heap_gate.provider_report_absorption import absorb_completed_provider_item
+from Tools.ai.heap_gate.provider_report_absorption import (
+    absorb_completed_provider_item,
+    refresh_peer_reports_after_provider_join,
+)
 from Tools.ai.heap_gate.provider_teamwork_packet import build_provider_teamwork_leader_packet
 
 
@@ -272,3 +275,9 @@ class RuntimeGateProviderExecutionMixin:
                     self.warnings.append(
                         f"provider lane absorption failed for {item.get('lane')}: {type(exc).__name__}: {exc}"
                     )
+        refresh_peer_reports_after_provider_join(
+            self,
+            work_dir=work_dir,
+            round_id=round_id,
+            revision=revision,
+        )
