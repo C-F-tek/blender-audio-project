@@ -4,7 +4,7 @@
 
 Add compact navigation entrypoints so AI agents and operators can discover context files without relying on chat memory or manually opening every package folder.
 
-## Files added
+## Files added or linked
 
 ```text
 CONTEXT_INDEX.md
@@ -14,6 +14,7 @@ Tools/validation/CONTEXT_INDEX.md
 Tools/workflow/CONTEXT_INDEX.md
 Tools/npu/CONTEXT_INDEX.md
 docs/CONTEXT_INDEX.md
+docs/CONTEXT_COVERAGE_STATUS.md
 Scripting/CONTEXT_INDEX.md
 ```
 
@@ -25,6 +26,7 @@ Expected reading flow:
 
 ```text
 CONTEXT_INDEX.md
+-> docs/CONTEXT_COVERAGE_STATUS.md
 -> nearest area CONTEXT_INDEX.md
 -> nearest TOOL_CONTEXT.md
 -> dispatcher/source file
@@ -37,10 +39,24 @@ AGENTS.md
 CHATGPT.md
 CONTEXT_INDEX.md
 README.md
+docs/CONTEXT_COVERAGE_STATUS.md
 Tools/CONTEXT_INDEX.md
 docs/CONTEXT_INDEX.md
 Scripting/CONTEXT_INDEX.md
 ```
+
+## Status model
+
+`docs/CONTEXT_COVERAGE_STATUS.md` marks context files as:
+
+```text
+complete-enough
+partial
+stub
+deferred
+```
+
+This prevents false claims that every one of the 1479 scripts is individually documented.
 
 ## Notes
 
@@ -50,7 +66,7 @@ Scripting/CONTEXT_INDEX.md
 
 ```text
 sync local master
-verify context index files exist locally
+verify context index and coverage files exist locally
 continue package-level TOOL_CONTEXT.md only for families that cause recurring ambiguity
 expand Tools/ai/repository_product/TOOL_CONTEXT.md later from local editor if needed
 ```
