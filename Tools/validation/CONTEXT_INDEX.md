@@ -12,6 +12,7 @@ Use this index to find the nearest validation context before adding or changing 
 | Docs hygiene | `Tools/validation/docs_hygiene/TOOL_CONTEXT.md` |
 | Generated artifacts | `Tools/validation/generated_artifacts/TOOL_CONTEXT.md` |
 | Generated patch specs | `Tools/validation/generated_patch_specs/TOOL_CONTEXT.md` |
+| Heap provider | `Tools/validation/heap_provider/TOOL_CONTEXT.md` |
 | Heap runtime | `Tools/validation/heap_runtime/TOOL_CONTEXT.md` |
 | Patch product | `Tools/validation/patch_product/TOOL_CONTEXT.md` |
 | Pipeline | `Tools/validation/pipeline/TOOL_CONTEXT.md` |
