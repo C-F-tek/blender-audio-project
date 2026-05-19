@@ -30,6 +30,7 @@ CONTEXT_INDEX.md
 | Tools overview | `Tools/TOOL_CONTEXT.md` | partial |
 | Tools/ai overview | `Tools/ai/TOOL_CONTEXT.md` | partial |
 | Tools/ai family index | `Tools/ai/CONTEXT_INDEX.md` | complete-enough |
+| Tools/ai shared helpers | `Tools/ai/_shared/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai agent context | `Tools/ai/agent_context/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai agent memory | `Tools/ai/agent_memory/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai agent review | `Tools/ai/agent_review/TOOL_CONTEXT.md` | complete-enough |
