@@ -4,47 +4,51 @@
 
 Compact repository documentation index.
 
-This file exists because repository contracts and context-pack profiles treat
-`docs/README.md` as a required documentation entrypoint. It is not a replacement
-for the root contract.
+This file exists because repository contracts and context-pack profiles treat `docs/README.md` as a required documentation entrypoint. It is not a replacement for the root contracts.
 
-Canonical root contract:
-
-```text
-../AGENTS.md
-```
-
-Current docs-side entrypoint:
-
-```text
-AI_DOCS_ENTRYPOINT.md
-```
-
-## Current first-read path
-
-Read these first for active IA-Carmine runtime, provider, heap/exchange and
-patchkit work:
+Canonical root entrypoints:
 
 ```text
 ../AGENTS.md
 ../CHATGPT.md
-../CHATGPT/README.md
-README.md
-AI_DOCS_ENTRYPOINT.md
-LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
-LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
-LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
-LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
-LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
-LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
-LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
-LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+../CONTEXT_INDEX.md
 ```
+
+Current docs-side entrypoints:
+
+```text
+AI_DOCS_ENTRYPOINT.md
+CONTEXT_INDEX.md
+CONTEXT_COVERAGE_STATUS.md
+DISPATCHER_CONTEXT_COVERAGE.md
+```
+
+## Current first-read path
+
+Read these first for active IA-Carmine runtime, provider, heap/exchange, patchkit, workflow or documentation work:
+
+```text
+../AGENTS.md
+../CHATGPT.md
+../CONTEXT_INDEX.md
+AI_DOCS_ENTRYPOINT.md
+CONTEXT_INDEX.md
+CONTEXT_COVERAGE_STATUS.md
+DISPATCHER_CONTEXT_COVERAGE.md
+../Tools/CONTEXT_INDEX.md
+../Scripting/CONTEXT_INDEX.md
+```
+
+Older task/runbook files remain useful only after this path and only for their specific topic.
 
 ## Active architecture and workflow docs
 
 | Area | Document |
 |---|---|
+| Root context navigation | `../CONTEXT_INDEX.md` |
+| Docs navigation | `CONTEXT_INDEX.md` |
+| Context coverage | `CONTEXT_COVERAGE_STATUS.md` |
+| Dispatcher/family coverage | `DISPATCHER_CONTEXT_COVERAGE.md` |
 | Runtime architecture | `MAIN_RUNTIME_ARCHITECTURE.md` |
 | Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md` |
 | Local AI workflow | `LOCAL_AI_WORKFLOW.md` |
@@ -53,41 +57,47 @@ LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 | Patch-spec workflow | `PATCH_SPEC_WORKFLOW.md` |
 | Project status | `PROJECT_STATUS_POINT.md` |
 | AI task map | `LOCAL_AI_TASKS/README.md` |
-| Tooling index | `../Tools/ai/README.md`, `../Tools/workflow/README.md`, `../Tools/validation/README.md` |
+| Tooling index | `../Tools/CONTEXT_INDEX.md` |
+| Scripting index | `../Scripting/CONTEXT_INDEX.md` |
 | Tool package family map | `LOCAL_AI_TASKS/tool-package-family-map-2026-05-18.md` |
 
 ## Recent failure notes
 
-Provider-universe failures and assistant conduct failures from the 2026-05-20
-runtime repair session are recorded in:
+Provider-universe failures and assistant conduct failures from the 2026-05-20 runtime repair session are recorded in:
 
 ```text
 AI_SESSION_NOTES/provider-universe-failure-summary-2026-05-20.md
 AI_SESSION_NOTES/provider-universe-chat-failure-ledger-2026-05-20.md
 ```
 
-## Policy
+## Historical/task-specific runbooks
 
-Do not add competing first-read orders here. Keep this file as a compact index
-and route detailed instructions to the active task/runbook documents.
+Read these only when the current task concerns that area:
+
+```text
+LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md
+LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md
+LOCAL_AI_TASKS/documentation-code-alignment-audit-2026-05-10.md
+LOCAL_AI_TASKS/problems-and-hygiene-candidates-2026-05-10.md
+LOCAL_AI_TASKS/md-line-budget-triage-2026-05-10.md
+LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
+LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
+LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
+LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
+LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
+```
 
 ## Standalone heap universe incubation
 
-New local-AI architecture work should also read:
-
-```text
-LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
-```
-
-This document describes the standalone heap function that is currently separate from the full run-unica path. It is used to harden strict input, context/memory preload, SQLite/FTS5/chunk memory surfaces, GPU1/GPU0/NPU same-heap cooperation, in-heap refinement and composed output before promotion into the full product run.
-
-## Standalone heap tool surface
-
-For the new standalone heap function, read both:
+Standalone heap architecture work should read:
 
 ```text
 LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
 LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
 ```
 
-The second document maps SQLite/FTS5, chunk memory, context namespace, tool catalog, broker outputs, provider lanes and validator evidence as heap-owned surfaces.
+These documents are task-specific. They do not override current context indexes, dispatcher coverage or source inspection.
+
+## Policy
+
+Do not add competing first-read orders here. Keep this file as a compact index and route detailed instructions to active context, coverage, task or runbook documents.
