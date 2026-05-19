@@ -9,6 +9,7 @@ This file tracks whether context documentation is complete, partial or only a na
 | `complete-enough` | Enough for AI/operator orientation; expand only if confusion recurs. |
 | `partial` | Useful, but not exhaustive; inspect source before relying on it. |
 | `stub` | Exists only to make the family discoverable. Must be expanded later. |
+| `stub-missing` | The family exists but a context file could not be created in the current remote-edit pass. |
 | `deferred` | Optional/manual process; not blocking normal documentation work. |
 
 ## Required reading chain
@@ -61,19 +62,26 @@ CONTEXT_INDEX.md
 | Tools/validation agent context | `Tools/validation/agent_context/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation agent memory | `Tools/validation/agent_memory/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation agent review | `Tools/validation/agent_review/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation AI workload | `Tools/validation/ai_workload/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation code product | `Tools/validation/code_product/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation deterministic recommendations | `Tools/validation/deterministic_recommendations/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation docs hygiene | `Tools/validation/docs_hygiene/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation generated artifacts | `Tools/validation/generated_artifacts/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation generated patch specs | `Tools/validation/generated_patch_specs/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation heap exchange | `Tools/validation/heap_exchange/TOOL_CONTEXT.md` | stub |
+| Tools/validation heap final proposals | `Tools/validation/heap_final_proposals/TOOL_CONTEXT.md` | stub-missing |
 | Tools/validation heap provider | `Tools/validation/heap_provider/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation heap runtime | `Tools/validation/heap_runtime/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation legacy Blender | `Tools/validation/legacy_blender/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation patch product | `Tools/validation/patch_product/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation pipeline | `Tools/validation/pipeline/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation provider mesh | `Tools/validation/provider_mesh/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation real product | `Tools/validation/real_product/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation repository product | `Tools/validation/repository_product/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation runtime tool | `Tools/validation/runtime_tool/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation runtime universe | `Tools/validation/runtime_universe/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation schema repair | `Tools/validation/schema_repair/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation workflow run | `Tools/validation/workflow_run/TOOL_CONTEXT.md` | complete-enough |
 | Tools/workflow overview | `Tools/workflow/TOOL_CONTEXT.md` | partial |
 | Tools/workflow family index | `Tools/workflow/CONTEXT_INDEX.md` | complete-enough |
 | Tools/workflow PowerShell wrappers | `Tools/workflow/_powershell/TOOL_CONTEXT.md` | complete-enough |
@@ -125,6 +133,7 @@ CONTEXT_INDEX.md
 
 - `Tools/ai/repository_product/TOOL_CONTEXT.md` is a stub and should be expanded later from local editing if needed.
 - `Tools/docs/_shared/TOOL_CONTEXT.md` could not be created through the remote editor and remains a known stub-missing item.
+- `Tools/validation/heap_final_proposals/TOOL_CONTEXT.md` could not be created through the remote editor and remains a known stub-missing item.
 - Area overview files can remain partial because family indexes now provide direct navigation.
 - Do not claim all 1479 scripts are individually documented. Current strategy documents macro-families and links to dispatch/source files.
 
