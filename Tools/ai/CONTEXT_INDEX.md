@@ -16,6 +16,7 @@ Use this index to find the nearest `TOOL_CONTEXT.md` before working on a package
 | Heap runtime | `Tools/ai/heap_runtime/TOOL_CONTEXT.md` |
 | Operator product core | `Tools/ai/operator_product_core/TOOL_CONTEXT.md` |
 | Patch product | `Tools/ai/patch_product/TOOL_CONTEXT.md` |
+| Pipeline | `Tools/ai/pipeline/TOOL_CONTEXT.md` |
 | Provider mesh | `Tools/ai/provider_mesh/TOOL_CONTEXT.md` |
 | Provider runtime blackboard | `Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md` |
 | Repository product | `Tools/ai/repository_product/TOOL_CONTEXT.md` |
