@@ -33,6 +33,18 @@ request -> startup context/memory reload -> heap blackboard -> brokered tools
 
 For new work, prefer reusing an existing area dispatcher and package. Do not create new top-level one-off scripts when a package-owned CLI can be added under an existing area.
 
+## Mapping and evidence entrypoint
+
+When the tool surface changes, or when a context/documentation pass must be driven by current repository facts, use:
+
+```text
+docs/MAPPING_TOOL_EVIDENCE.md
+docs/LOCAL_AI_TASKS/mapping-tool-evidence-publishing-2026-05-19.md
+docs/LOCAL_AI_TASKS/exhaustive-script-surface-inventory-2026-05-19.md
+```
+
+Raw mapping outputs stay under `output/validation/mapping/`. Only compact summaries should be promoted to `docs/LOCAL_VALIDATION_EVIDENCE/`.
+
 ## Contract sources
 
 Root `CHATGPT.md` is the canonical operating contract for this repository. `CHATGPT/README.md` remains an advisory handoff folder for earlier architecture notes and should not override the root contract.
