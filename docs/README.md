@@ -18,6 +18,7 @@ Current docs-side entrypoints:
 
 ```text
 AI_DOCS_ENTRYPOINT.md
+HEAP_EXCHANGE_USEFUL_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -32,6 +33,7 @@ Read these first for active IA-Carmine runtime, provider, heap/exchange, patchki
 ../CHATGPT.md
 ../CONTEXT_INDEX.md
 AI_DOCS_ENTRYPOINT.md
+HEAP_EXCHANGE_USEFUL_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -45,6 +47,7 @@ Older task/runbook files remain useful only after this path and only for their s
 
 | Area | Document |
 |---|---|
+| Heap/exchange useful model | `HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Root context navigation | `../CONTEXT_INDEX.md` |
 | Docs navigation | `CONTEXT_INDEX.md` |
 | Context coverage | `CONTEXT_COVERAGE_STATUS.md` |
