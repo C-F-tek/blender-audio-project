@@ -20,19 +20,21 @@ That is not enough for the whole repository because important executable/semi-ex
 
 ```text
 Scripting/**
-docs/LOCAL_AI_TASKS/**
-docs/LOCAL_VALIDATION_EVIDENCE/**
-docs/AI_SESSION_NOTES/**
+docs/**
 CHATGPT/**
 config/**
 assets/**
 indexAI/**
+repository root files
 ```
 
 ## Files added in this pass
 
 ```text
+docs/ROOT_SURFACE_CONTEXT.md
 docs/SCRIPT_SURFACE_CONTEXT.md
+docs/TOOL_CONTEXT.md
+docs/EXECUTION_PLANS/TOOL_CONTEXT.md
 Scripting/TOOL_CONTEXT.md
 Scripting/v61b/TOOL_CONTEXT.md
 Scripting/shared/TOOL_CONTEXT.md
@@ -48,6 +50,7 @@ docs/AI_SESSION_NOTES/TOOL_CONTEXT.md
 
 ## Key findings captured
 
+- Root files are high-impact contracts and metadata: `AGENTS.md`, `CHATGPT.md`, `README.md`, `pyproject.toml`.
 - `Scripting/**` is product/Blender/audio/video scripting, not IA-Carmine orchestration tooling.
 - `Scripting/v61b` is the current working Blender reference package.
 - `Scripting/shared` is the target for additive, validated utility extraction.
@@ -61,6 +64,9 @@ docs/AI_SESSION_NOTES/TOOL_CONTEXT.md
 ## Completed status
 
 ```text
+[x] Root surface context added.
+[x] Docs directory context added.
+[x] Execution plan context added.
 [x] Non-Tools surface index created.
 [x] Scripting package context added.
 [x] Main Blender reference package context added.
@@ -74,10 +80,10 @@ docs/AI_SESSION_NOTES/TOOL_CONTEXT.md
 ## Remaining candidates
 
 ```text
-docs/EXECUTION_PLANS/TOOL_CONTEXT.md
 docs/PACKAGE_CREATION_WORKFLOW.md alignment check
 docs/PROJECT_AUDIT.md alignment check
 root-level standalone file audit, if any root scripts remain after package cleanup
+more granular validation/provider/workflow subpackage contexts where needed
 ```
 
 ## Guardrails
