@@ -33,9 +33,9 @@ request -> startup context/memory reload -> heap blackboard -> brokered tools
 
 For new work, prefer reusing an existing area dispatcher and package. Do not create new top-level one-off scripts when a package-owned CLI can be added under an existing area.
 
-## Known context-source conflict
+## Contract sources
 
-The operating contract references a root `CHATGPT.md`, but the current checkout does not contain that file. `CHATGPT/README.md` is present and should be treated as the available project-local ChatGPT context source until a root `CHATGPT.md` is intentionally restored or the contract is updated. Do not invent missing contract files; record the mismatch and continue only from files that exist in the checkout.
+Root `CHATGPT.md` is the canonical operating contract for this repository. `CHATGPT/README.md` remains an advisory handoff folder for earlier architecture notes and should not override the root contract.
 
 ## Safety defaults
 
