@@ -21,10 +21,20 @@ class FakeGate:
     def __init__(self, repo_root: Path) -> None:
         self.repo_root = repo_root
         self.provider_reports: list[dict[str, Any]] = []
-        self.state: dict[str, Any] = {"provider_results": [], "claims": [], "product": {"status": "not_ready"}}
+        self.state: dict[str, Any] = {
+            "provider_results": [],
+            "claims": [],
+            "decisions": [],
+            "product": {"status": "not_ready"},
+        }
         self.events: list[dict[str, Any]] = []
         self.exchange_events: list[dict[str, Any]] = []
         self.provider_leader_packet_path = ""
+        self.provider_universe_blocked_reason = ""
+        self.errors: list[str] = []
+        self.decision_count = 0
+        self.stamp = "smoke"
+        self.heap = SimpleNamespace(paths=SimpleNamespace(events=repo_root / "events.jsonl"))
 
     def summarize_provider_report(
         self,
@@ -99,6 +109,21 @@ class FakeGate:
     def response_text(self) -> str:
         return ""
 
+    def build_final_response_text(self, events: list[dict[str, Any]]) -> str:
+        return ""
+
+    def response_source(self) -> str:
+        return ""
+
+    def provider_refs(self) -> list[str]:
+        return []
+
+    def provider_response_texts(self) -> list[str]:
+        return []
+
+    def provider_role_decisions(self) -> list[str]:
+        return []
+
     def read_events(self) -> list[dict[str, Any]]:
         return list(self.events)
 
@@ -169,7 +194,7 @@ def provider_absorption_checks(repo: Path) -> dict[str, bool]:
         "spec": {
             "lane": "gpu0_peer",
             "requirement": "gpu0_provider_peer",
-            "role": "diagnostic_peer_workload",
+            "role": "gpu0_peer_reviewer_refiner",
             "output": output,
         },
         "lane": "gpu0_peer",
@@ -199,7 +224,7 @@ def provider_absorption_checks(repo: Path) -> dict[str, bool]:
         and report.get("report_passed") is True,
         "diagnostic_only_true": report.get("diagnostic_only") is True,
         "diagnostic_not_operational": report.get("operational_provider_activity") is False,
-        "diagnostic_status_ready": report.get("status") == "ready",
+        "diagnostic_status_non_operational": report.get("status") == "non_operational",
         "diagnostic_telemetry_published": "telemetry_signal" in event_types,
         "diagnostic_peer_block_not_published": "provider_peer_block" not in event_types,
         "diagnostic_product_not_blocked": gate.state["product"].get("status") == "not_ready",
@@ -237,6 +262,10 @@ def provider_requirement_checks() -> dict[str, bool]:
 
 
 def provider_stall_checks() -> dict[str, bool]:
+    from Tools.ai.heap_gate.provider_universe_abort import (
+        block_provider_universe_run,
+        provider_universe_abort_reason,
+    )
     from Tools.ai.heap_gate.provider_process_collection import (
         _materialized_provider_or_proposal_present,
         _peer_lanes_degraded_without_operational_blocks,
@@ -267,6 +296,11 @@ def provider_stall_checks() -> dict[str, bool]:
         provider_reports=[{"operational_provider_activity": True}],
         proposal_iteration_artifacts=lambda: [],
     )
+    abort_gate = FakeGate(Path.cwd())
+    reason = provider_universe_abort_reason(
+        [{"lane": "gpu0_peer", "provider_report": {"status": "non_operational"}}]
+    )
+    block_provider_universe_run(abort_gate, reason, 1, 0)
     return {
         "stall_peer_degraded_condition_detected": (
             _peer_lanes_degraded_without_operational_blocks(degraded) is True
@@ -278,6 +312,11 @@ def provider_stall_checks() -> dict[str, bool]:
             _materialized_provider_or_proposal_present(empty_gate) is False
             and _materialized_provider_or_proposal_present(proposal_gate) is True
             and _materialized_provider_or_proposal_present(provider_gate) is True
+        ),
+        "inactive_provider_universe_blocks_run": (
+            abort_gate.state["product"].get("status") == "blocked_with_reason"
+            and abort_gate.provider_universe_blocked_reason == reason
+            and bool(abort_gate.state["decisions"])
         ),
     }
 
@@ -308,7 +347,7 @@ def main() -> int:
         "npu_declares_activity_requested": "npu_peer_activity_requested" in npu_text,
         "npu_declares_activity_performed": "npu_peer_activity_performed" in npu_text,
         "npu_declares_device_execution": "npu_device_execution_performed" in npu_text,
-        "npu_declares_report_only_mode": '"mode": "report_only"' in npu_text,
+        "npu_declares_peer_micro_audit_mode": '"mode": "peer_micro_audit"' in npu_text,
     }
     checks.update(provider_contract_checks())
     checks.update(provider_absorption_checks(repo))

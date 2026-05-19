@@ -56,7 +56,12 @@ def absorb_completed_provider_item(
     provider_report["diagnostic_only"] = not bool(
         provider_report.get("operational_provider_activity")
     )
-    provider_report["status"] = "ready" if completed.returncode == 0 else "failed"
+    if completed.returncode != 0:
+        provider_report["status"] = "failed"
+    elif provider_report["diagnostic_only"]:
+        provider_report["status"] = "non_operational"
+    else:
+        provider_report["status"] = "ready"
     normalized_output = dict(report_data) if isinstance(report_data, dict) else {}
     normalized_output.update(provider_report)
     write_json_report(normalized_output, Path(spec["output"]))
@@ -189,7 +194,7 @@ def _publish_claim(
         "claim": (
             "provider lane contributed operational heap evidence"
             if operational
-            else "provider lane produced diagnostic evidence only"
+            else "provider lane produced non-operational evidence only"
         ),
         "confidence": 0.88 if operational else 0.2,
         "requirement": requirement,

@@ -20,3 +20,5 @@ Rules:
 Current notes:
 
 - 2026-05-06-gpu1-primary-gpu0-companion-peer-exchange.md
+- provider-universe-failure-summary-2026-05-20.md
+- provider-universe-chat-failure-ledger-2026-05-20.md

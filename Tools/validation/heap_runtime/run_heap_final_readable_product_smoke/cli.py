@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Smoke test the heap final readable product assembler."""
-
 from __future__ import annotations
-
 import argparse
 import json
 import subprocess
@@ -10,31 +8,20 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
 TRUNCATED_DIFF_MARKER = "[diff " + "truncated]"
-
-
 def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
-
-
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-
-
 def write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text.rstrip() + "\n", encoding="utf-8")
-
-
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
         return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
-
-
 def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     run_dir = work_dir / "heap_context_closure_smoke"
     documents_dir = work_dir / "documents"
@@ -43,27 +30,13 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     write_text(manifest, "Smoke package\n")
     fixture_repo = work_dir / "fixture_repo"
     (fixture_repo / "Tools" / "ai").mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        ["git", "init"],
-        cwd=fixture_repo,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    subprocess.run(["git", "init"], cwd=fixture_repo, text=True, capture_output=True, check=False)
     write_text(fixture_repo / "Tools" / "ai" / "worktree_extra.py", "print('extra')\n")
-
     matrix_path = run_dir / "broker_bridge" / "tool_outputs" / "smoke_heap_code_execution_tool.json"
-    virtual_dev_path = (
-        run_dir / "broker_bridge" / "tool_outputs" / "smoke_heap_virtual_dev_environment.json"
-    )
+    virtual_dev_path = run_dir / "broker_bridge" / "tool_outputs" / "smoke_heap_virtual_dev_environment.json"
     debug_lab_path = run_dir / "debug_lab" / "smoke_debug_lab.json"
     diff_artifact = work_dir / "candidate_diffs" / "final_readable_product.diff"
-    full_diff = (
-        "diff --git a/Tools/ai/code_product/final_readable_product/cli.py "
-        "b/Tools/ai/code_product/final_readable_product/cli.py\n"
-        "@@\n"
-        "+FULL_DIFF_SENTINEL = 'present only in artifact diff'\n"
-    )
+    full_diff = "diff --git a/Tools/ai/code_product/final_readable_product/cli.py b/Tools/ai/code_product/final_readable_product/cli.py\n@@\n+FULL_DIFF_SENTINEL = 'present only in artifact diff'\n"
     write_text(diff_artifact, full_diff)
     proposal_dir = run_dir / "team_context" / "proposal_iterations"
     provider_dir = run_dir / "provider_teamwork"
@@ -208,9 +181,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     "implementation_status": "developed_change_present",
                     "git_status": "M Tools/ai/heap_context_closure/cli.py",
                     "code_or_patch_sketch": "diff --git a/Tools/ai/heap_context_closure/cli.py b/Tools/ai/heap_context_closure/cli.py\n+    final_readable_product_command = [...]\n",
-                    "validation_commands": [
-                        "python -m py_compile Tools/ai/heap_context_closure/cli.py"
-                    ],
+                    "validation_commands": ["python -m py_compile Tools/ai/heap_context_closure/cli.py"],
                 },
                 {
                     "target_file": "Tools/ai/_shared/heap_final_code_product.py",
@@ -218,9 +189,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     "git_status": "",
                     "diff_hunk_count": 0,
                     "code_or_patch_sketch": "",
-                    "validation_commands": [
-                        "python -m py_compile Tools/ai/_shared/heap_final_code_product.py"
-                    ],
+                    "validation_commands": ["python -m py_compile Tools/ai/_shared/heap_final_code_product.py"],
                 },
             ],
         },
@@ -252,7 +221,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "npu_audits": [{"block_id": "smoke:npu:002"}],
             "blocking_issues": ["smoke keeps provider product blocked while code matrix is concrete"],
             "operator_decision": {
-                "decision": "DIAGNOSTIC_ONLY",
+                "decision": "BLOCKED_PROVIDER_REVIEW",
                 "accepted_count": 0,
                 "rejected_count": 1,
                 "accepted_proposals": [],
@@ -292,68 +261,21 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
         },
     )
     write_json(run_dir / "heap_context_preflight_gate.json", {"passed": True})
-    write_json(
-        run_dir / "external_heap_postrun_package.json",
-        {"passed": True, "product_acceptance_passed": False},
-    )
-    write_json(
-        run_dir / "external_heap_revision_context.json",
-        {"terminal_no_patchable_target": True},
-    )
+    write_json(run_dir / "external_heap_postrun_package.json", {"passed": True, "product_acceptance_passed": False})
+    write_json(run_dir / "external_heap_revision_context.json", {"terminal_no_patchable_target": True})
     composer_json = run_dir / "heap_final_proposal_composer.json"
     causality_json = run_dir / "heap_final_causality_normalized.json"
     pointer_json = run_dir / "external_heap_block_pointer_manifest.json"
     for command in (
-        [
-            sys.executable,
-            "-m",
-            "Tools.ai",
-            "normalize_heap_final_causality",
-            "--composer-json",
-            str(composer_json),
-            "--output",
-            str(causality_json),
-        ],
-        [
-            sys.executable,
-            "-m",
-            "Tools.ai",
-            "build_external_heap_block_pointer_manifest",
-            "--repo-root",
-            ".",
-            "--run-dir",
-            str(run_dir),
-        ],
-        [
-            sys.executable,
-            "-m",
-            "Tools.ai",
-            "build_external_heap_revision_context",
-            "--pointer-manifest",
-            str(pointer_json),
-            "--composer-json",
-            str(composer_json),
-            "--causality-json",
-            str(causality_json),
-            "--output",
-            str(run_dir / "external_heap_revision_context.json"),
-            "--no-documents-copy",
-        ],
+        [sys.executable, "-m", "Tools.ai", "normalize_heap_final_causality", "--composer-json", str(composer_json), "--output", str(causality_json)],
+        [sys.executable, "-m", "Tools.ai", "build_external_heap_block_pointer_manifest", "--repo-root", ".", "--run-dir", str(run_dir)],
+        [sys.executable, "-m", "Tools.ai", "build_external_heap_revision_context", "--pointer-manifest", str(pointer_json), "--composer-json", str(composer_json), "--causality-json", str(causality_json), "--output", str(run_dir / "external_heap_revision_context.json"), "--no-documents-copy"],
     ):
         subprocess.run(command, cwd=repo_root, text=True, capture_output=True, check=False)
     return run_dir, documents_dir
-
-
 def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    work_dir = (
-        Path(args.work_dir).resolve()
-        if args.work_dir
-        else repo_root
-        / "output"
-        / "validation"
-        / f"heap_final_readable_product_smoke_{now_stamp()}"
-    )
+    work_dir = Path(args.work_dir).resolve() if args.work_dir else repo_root / "output" / "validation" / f"heap_final_readable_product_smoke_{now_stamp()}"
     run_dir, documents_dir = build_fixture(repo_root, work_dir)
     output = run_dir / "heap_final_readable_product.json"
     markdown = run_dir / "heap_final_readable_product.md"
@@ -388,22 +310,8 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     full_code_product = documents_dir / "CODE_PRODUCT_FULL_PATCH.md"
     zip_path = Path(str(documents_dir) + ".zip")
     body = final_md.read_text(encoding="utf-8-sig") if final_md.exists() else ""
-    code_product_body = (
-        full_code_product.read_text(encoding="utf-8-sig") if full_code_product.exists() else ""
-    )
-    required_phrases = [
-        "Decisione finale",
-        "Final document status",
-        "Piano applicabile",
-        "Modifiche concrete",
-        "Sequenza di applicazione",
-        "Laboratorio operativo",
-        "Sa usarlo",
-        "Code product",
-        "Universo pointer e memoria",
-        "Perche il provider non si applica",
-        "Decisione operatore",
-    ]
+    code_product_body = full_code_product.read_text(encoding="utf-8-sig") if full_code_product.exists() else ""
+    required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Modifiche concrete", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore"]
     missing = [phrase for phrase in required_phrases if phrase not in body]
     passed = (
         completed.returncode == 0
@@ -445,8 +353,6 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     write_json(report_output, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return report
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
@@ -454,12 +360,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", default="")
     parser.add_argument("--timeout-seconds", type=int, default=90)
     return parser.parse_args()
-
-
 def main() -> int:
     report = run_smoke(parse_args())
     return 0 if report.get("passed") else 2
-
-
 if __name__ == "__main__":
     raise SystemExit(main())

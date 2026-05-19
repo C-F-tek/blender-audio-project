@@ -208,6 +208,8 @@ class RuntimeGateProviderRefinementMixin:
                 }
             )
             self.run_provider_teamwork(round_id, revision=self.provider_revision_count)
+            if self.provider_universe_blocked_reason:
+                return self.read_events()
             events = self.read_events()
             if self.publish_provider_native_tool_calls(round_id, events):
                 if self.heap.pending_broker_requests():

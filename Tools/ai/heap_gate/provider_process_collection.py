@@ -1,10 +1,7 @@
 """Non-blocking provider process collection for the heap gate."""
-
 from __future__ import annotations
-
 from collections.abc import Callable
 import time
-
 from Tools.ai.heap_gate.runtime_common import (
     Any,
     Path,
@@ -15,8 +12,10 @@ from Tools.ai.heap_gate.runtime_common import (
     subprocess,
     terminate_process_tree,
 )
-
-
+from Tools.ai.heap_gate.provider_universe_abort import (
+    block_provider_universe_run,
+    provider_universe_abort_reason,
+)
 def collect_provider_processes(
     gate: Any,
     prepared: list[dict[str, Any]],
@@ -49,6 +48,10 @@ def collect_provider_processes(
                     on_completed(stalled)
                 except Exception as exc:  # noqa: BLE001 - one lane must not block peer joins.
                     stalled["absorb_error"] = f"{type(exc).__name__}: {exc}"
+            if _terminate_pending_when_universe_inactive(
+                gate, prepared, pending, round_id, revision, timeout_seconds, on_completed
+            ):
+                return
         for item in list(pending):
             process = item.get("process")
             if process is None:
@@ -90,6 +93,10 @@ def collect_provider_processes(
                     on_completed(item)
                 except Exception as exc:  # noqa: BLE001 - one lane must not block peer joins.
                     item["absorb_error"] = f"{type(exc).__name__}: {exc}"
+            if _terminate_pending_when_universe_inactive(
+                gate, prepared, pending, round_id, revision, timeout_seconds, on_completed
+            ):
+                return
 
         if pending and now - last_heartbeat >= 10.0:
             last_heartbeat = now
@@ -128,8 +135,6 @@ def collect_provider_processes(
             )
         if pending:
             time.sleep(0.2)
-
-
 def _terminate_nonproductive_gpu1_stall(
     gate: Any,
     prepared: list[dict[str, Any]],
@@ -165,7 +170,6 @@ def _terminate_nonproductive_gpu1_stall(
         return None
     if not _peer_lanes_degraded_without_operational_blocks(prepared):
         return None
-
     reason = "gpu1_nonproductive_runtime_stall"
     try:
         terminate_process_tree(process)
@@ -205,8 +209,35 @@ def _terminate_nonproductive_gpu1_stall(
         round_id=round_id,
     )
     return gpu1
-
-
+def _terminate_pending_when_universe_inactive(
+    gate: Any,
+    prepared: list[dict[str, Any]],
+    pending: list[dict[str, Any]],
+    round_id: int,
+    revision: int,
+    timeout_seconds: int,
+    on_completed: Callable[[dict[str, Any]], None] | None,
+) -> bool:
+    reason = provider_universe_abort_reason(prepared)
+    if not reason:
+        return False
+    block_provider_universe_run(gate, reason, round_id, revision)
+    gate.append_heap_exchange_event(
+        {"kind": "provider_universe_aborted", "round": round_id, "revision": revision, "reason": reason}
+    )
+    if not pending:
+        return True
+    terminate_pending_provider_processes(gate, pending, round_id, revision, reason)
+    for item in list(pending):
+        if item.get("completed") is None:
+            continue
+        pending.remove(item)
+        if on_completed is not None:
+            try:
+                on_completed(item)
+            except Exception as exc:  # noqa: BLE001 - preserve lane termination evidence.
+                item["absorb_error"] = f"{type(exc).__name__}: {exc}"
+    return True
 def _gpu1_output_observable(gate: Any, item: dict[str, Any]) -> bool:
     output = Path(item["spec"]["output"])
     if not output.is_absolute():
@@ -238,8 +269,6 @@ def _gpu1_output_observable(gate: Any, item: dict[str, Any]) -> bool:
         return True
     calls = data.get("tool_calls")
     return isinstance(calls, list) and bool(calls)
-
-
 def _materialized_provider_or_proposal_present(gate: Any) -> bool:
     if any(
         isinstance(report, dict) and report.get("operational_provider_activity")
@@ -253,8 +282,6 @@ def _materialized_provider_or_proposal_present(gate: Any) -> bool:
         return bool(proposal_refs())
     except Exception:
         return False
-
-
 def _peer_lanes_degraded_without_operational_blocks(prepared: list[dict[str, Any]]) -> bool:
     peers = [
         item
@@ -275,8 +302,6 @@ def _peer_lanes_degraded_without_operational_blocks(prepared: list[dict[str, Any
         if getattr(completed, "returncode", 1) == 0:
             return False
     return True
-
-
 def _peer_lane_statuses(prepared: list[dict[str, Any]]) -> list[dict[str, Any]]:
     statuses: list[dict[str, Any]] = []
     for item in prepared:
@@ -303,8 +328,6 @@ def _peer_lane_statuses(prepared: list[dict[str, Any]]) -> list[dict[str, Any]]:
             }
         )
     return statuses
-
-
 def terminate_pending_provider_processes(
     gate: Any,
     prepared: list[dict[str, Any]],
@@ -343,8 +366,6 @@ def terminate_pending_provider_processes(
             )
         except BaseException:
             pass
-
-
 def _publish_lane_state(
     gate: Any,
     item: dict[str, Any],

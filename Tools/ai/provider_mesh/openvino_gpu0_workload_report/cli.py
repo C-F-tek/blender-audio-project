@@ -1,33 +1,23 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-
 import argparse
 import json
 from pathlib import Path
 from typing import Any
-
 from Tools.ai._shared.provider_tool_loop import openvino_tool_loop_report
 from Tools.ai.provider_mesh.hardware_capability.workloads import run_openvino_gpu0_tensor_test
-
-
 def resolve_path(repo_root: Path, value: str) -> Path:
     path = Path(value)
     if not path.is_absolute():
         path = repo_root / path
     return path.resolve()
-
-
 def read_json_file(path: Path) -> dict[str, Any]:
     try:
         return json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception as exc:  # noqa: BLE001 - reported as provider evidence.
         return {"_read_error": f"{type(exc).__name__}: {exc}"}
-
-
 def read_text_file(repo_root: Path, value: str) -> str:
     return resolve_path(repo_root, value).read_text(encoding="utf-8-sig", errors="replace")
-
-
 def startup_context_preview(
     repo_root: Path, startup_manifest: str, task_file: str, max_chars: int
 ) -> tuple[str, str]:
@@ -51,8 +41,6 @@ def startup_context_preview(
     if file_path and file_path.is_file():
         return file_path.read_text(encoding="utf-8", errors="replace")[:max_chars], "task_file"
     return "", "none"
-
-
 def render_leader_peer_prompt(
     request: str, leader_packet: dict[str, Any], direct_startup_context: str
 ) -> str:
@@ -98,8 +86,6 @@ def render_leader_peer_prompt(
         )
         if part.strip()
     )
-
-
 def render_markdown(report: dict[str, Any]) -> str:
     lines = [
         "# OpenVINO GPU.0 observable support workload",
@@ -161,8 +147,6 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend([f"- {item}" for item in warnings] or ["- none"])
     lines.append("")
     return "\n".join(lines)
-
-
 def classify_request(text: str) -> str:
     normalized = " ".join(str(text or "").strip().lower().split())
     if not normalized:
@@ -178,8 +162,6 @@ def classify_request(text: str) -> str:
     if any(token in normalized for token in ("patch", "modifica", "codice", "script", "repo")):
         return "repo_work_request"
     return "general_request"
-
-
 def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
     request = str(report.get("request_input") or "").strip()
     classification = classify_request(request)
@@ -193,7 +175,6 @@ def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
     preview = str(report.get("output_preview") or "").strip()
     errors = report.get("errors") if isinstance(report.get("errors"), list) else []
     warnings = report.get("warnings") if isinstance(report.get("warnings"), list) else []
-
     if not workload_ok:
         decision = "blocked_peer_evidence"
         summary = f"GPU0 peer non può contribuire: workload non osservabile; errors={len(errors)} warnings={len(warnings)}."
@@ -205,11 +186,11 @@ def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
             "Ruolo: confermare che per un saluto casuale non serve computazione grafica aggiuntiva."
         )
     elif classification in {"debug_request", "repo_work_request"}:
-        decision = "diagnostic_peer_available"
+        decision = "peer_review_refinement_available"
         summary = (
             f"GPU0 peer ha eseguito il tool OpenVINO su {device}: "
             f"iterations={iterations}, inference_seconds={infer_s:.6f}, output_preview={preview}. "
-            "Ruolo: lane diagnostica pronta a supportare analisi runtime/acceleratore, senza diventare planner primario."
+            "Ruolo: peer reviewer/refiner pronto a supportare analisi runtime/acceleratore, senza diventare planner primario."
         )
     else:
         decision = "peer_observation_available"
@@ -226,8 +207,6 @@ def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
         "tool_result_summary": summary,
         "response_text": summary,
     }
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
@@ -387,7 +366,6 @@ def main() -> int:
         report["passed"] = False
     report.update(build_gpu0_peer_response(report))
     report["repo_root"] = str(repo_root)
-
     output = resolve_path(repo_root, args.output)
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -405,7 +383,5 @@ def main() -> int:
         )
     )
     return 0 if report.get("passed") else 2
-
-
 if __name__ == "__main__":
     raise SystemExit(main())

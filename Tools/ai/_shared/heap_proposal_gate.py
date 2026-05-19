@@ -224,8 +224,8 @@ def build_operator_decision(
         decision = "BLOCKED_NO_VERIFIED_TARGET"
         reason = "Proposal artifacts exist, but every candidate was blocked by target or placeholder gates."
     else:
-        decision = "DIAGNOSTIC_ONLY"
-        reason = "Proposal artifacts exist, but none passed as concrete patchable coding work."
+        decision = "BLOCKED_PROVIDER_REVIEW"
+        reason = "Provider proposal artifacts exist, but none passed as concrete patchable coding work."
     return {
         "decision": decision,
         "reason": reason,

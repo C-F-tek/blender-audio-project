@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Assemble the run-owned final readable product for heap context closure."""
-
 from __future__ import annotations
-
 import argparse
 import json
 import sys
@@ -10,7 +8,6 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
 try:
     from Tools.ai._shared.heap_final_code_product import (
         code_product_items,
@@ -28,59 +25,39 @@ except ImportError:  # pragma: no cover
         render_full_code_product_markdown,
     )
     from Tools.ai._shared.heap_final_readable_synthesis import render_markdown  # type: ignore
-
-
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
-
-
 def read_json(path: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception:
         return {}
     return data if isinstance(data, dict) else {}
-
-
 def read_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8-sig", errors="replace")
     except Exception:
         return ""
-
-
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(data, indent=2, ensure_ascii=False, default=str) + "\n",
         encoding="utf-8",
     )
-
-
 def write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text.rstrip() + "\n", encoding="utf-8")
-
-
 def resolve_path(root: Path, value: str | Path) -> Path:
     path = Path(value)
     if not path.is_absolute():
         path = root / path
     return path.resolve(strict=False)
-
-
 def as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
-
-
 def as_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
-
-
 def truthy(value: Any) -> bool:
     return value is True or str(value).strip().lower() == "true"
-
-
 def revision_linked_count(revision: dict[str, Any], linked_key: str, fallback_key: str) -> int:
     if linked_key in revision:
         try:
@@ -91,15 +68,11 @@ def revision_linked_count(revision: dict[str, Any], linked_key: str, fallback_ke
         return int(revision.get(fallback_key) or 0)
     except (TypeError, ValueError):
         return 0
-
-
 def count_from_decision(decision: dict[str, Any], key: str, items: list[Any]) -> int:
     try:
         return max(len(items), int(decision.get(key) or 0))
     except (TypeError, ValueError):
         return len(items)
-
-
 def code_product_markdown_metrics(markdown: str) -> dict[str, Any]:
     text = str(markdown or "")
     lines = text.splitlines()
@@ -111,8 +84,6 @@ def code_product_markdown_metrics(markdown: str) -> dict[str, Any]:
         "no_applicable_marker": "NO_APPLICABLE_CODE_PRODUCT" in text,
         "truncation_marker": "[truncated]" in text.lower(),
     }
-
-
 def real_code_product_ready(
     *,
     final_document_status: str,
@@ -132,8 +103,6 @@ def real_code_product_ready(
         and not code_product_metrics.get("no_applicable_marker")
         and not code_product_metrics.get("truncation_marker")
     )
-
-
 def final_product_blockers(
     *,
     markdown_output: Path,
@@ -184,8 +153,6 @@ def final_product_blockers(
     if not code_product_ready and not blockers:
         blockers.append("real code product contract did not pass")
     return blockers
-
-
 def discover_code_matrix_reports(
     repo_root: Path, run_dir: Path, gate: dict[str, Any]
 ) -> list[Path]:
@@ -209,8 +176,6 @@ def discover_code_matrix_reports(
             deduped.append(path.resolve(strict=False))
             seen.add(key)
     return deduped
-
-
 def load_code_matrix(
     repo_root: Path, run_dir: Path, gate: dict[str, Any]
 ) -> tuple[dict[str, Any], str]:
@@ -219,8 +184,6 @@ def load_code_matrix(
         if payload.get("kind") == "heap_code_execution_tool":
             return payload, str(path)
     return {}, ""
-
-
 def append_download_manifest(manifest_path: Path, paths: list[Path]) -> None:
     if not manifest_path:
         return
@@ -236,8 +199,6 @@ def append_download_manifest(manifest_path: Path, paths: list[Path]) -> None:
             additions.append(line)
     if len(additions) > 2:
         write_text(manifest_path, "\n".join(lines + additions))
-
-
 def zip_documents_dir(documents_dir: Path, zip_path: Path) -> int:
     members: list[Path] = [
         path for path in documents_dir.rglob("*") if path.is_file() and path != zip_path
@@ -247,8 +208,6 @@ def zip_documents_dir(documents_dir: Path, zip_path: Path) -> int:
         for path in sorted(members):
             archive.write(path, path.relative_to(documents_dir).as_posix())
     return len(members)
-
-
 def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     repo_root = Path(args.repo_root).resolve()
     run_dir = resolve_path(repo_root, args.run_dir)
@@ -275,9 +234,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         matrix=matrix,
         matrix_path=matrix_path,
     )
-    full_code_product = render_full_code_product_markdown(
-        matrix, matrix_path, gate_product_status
-    )
+    full_code_product = render_full_code_product_markdown(matrix, matrix_path, gate_product_status)
     output = resolve_path(repo_root, args.output or run_dir / "heap_final_readable_product.json")
     markdown_output = resolve_path(
         repo_root, args.markdown_output or run_dir / "heap_final_readable_product.md"
@@ -289,7 +246,6 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     write_text(markdown_output, markdown)
     write_text(text_output, markdown)
     write_text(full_code_product_output, full_code_product)
-
     documents_outputs: dict[str, str] = {}
     documents_zip = ""
     zip_member_count = 0
@@ -327,7 +283,6 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
                 else Path(str(documents_dir) + ".zip")
             )
             documents_zip = str(zip_path_for_later)
-
     matrix_items = code_product_items(matrix)
     code_product_state = code_product_status(matrix, gate_product_status)
     provider_decision = str(decision.get("decision") or "")
@@ -342,6 +297,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         final_document_status = code_product_state
     elif provider_decision in {
         "DIAGNOSTIC_ONLY",
+        "BLOCKED_PROVIDER_REVIEW",
         "BLOCKED_NO_VERIFIED_TARGET",
         "NO CONCRETE PATCHABLE PROPOSAL",
     }:
@@ -423,8 +379,6 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         if documents_json_path:
             write_json(documents_json_path, report)
     return report, markdown
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
@@ -438,13 +392,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--zip-output", default="")
     parser.add_argument("--zip-documents", action="store_true")
     return parser.parse_args()
-
-
 def main() -> int:
     report, _markdown = build_report(parse_args())
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("passed") else 2
-
-
 if __name__ == "__main__":
     raise SystemExit(main())

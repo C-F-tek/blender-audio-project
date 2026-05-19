@@ -89,6 +89,7 @@ class RuntimeGateInitMixin:
         self.provider_execution_performed = False
         self.provider_revision_count = 0
         self.provider_revision_feedback = ""
+        self.provider_universe_blocked_reason = ""
         self.provider_native_tool_call_ids: set[str] = set()
         self.errors: list[str] = []
         self.warnings: list[str] = []

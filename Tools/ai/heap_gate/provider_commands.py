@@ -61,7 +61,7 @@ class RuntimeGateProviderCommandsMixin:
             {
                 "lane": "gpu0_peer",
                 "requirement": "gpu0_provider_peer",
-                "role": "diagnostic_peer_workload",
+                "role": "gpu0_peer_reviewer_refiner",
                 "output": gpu0_json,
                 "timeout_seconds": gpu0_tool_loop_timeout + 30,
                 "command": [
@@ -79,7 +79,7 @@ class RuntimeGateProviderCommandsMixin:
                     str(gpu0_tool_loop_timeout),
                     "--require-semantic-provider",
                     "--role",
-                    "heap_runtime_diagnostic_peer",
+                    "heap_runtime_peer_reviewer_refiner",
                     *startup_args,
                     *(
                         ["--leader-packet", leader_packet]

@@ -1,15 +1,6 @@
 """RuntimeGateRunLoopMixin extracted from the heap runtime completeness gate."""
 from __future__ import annotations
-from Tools.ai.heap_gate.runtime_common import (
-    Any,
-    evaluate_terminal_invariants,
-    now_iso,
-    record_lane_diagnostic,
-    repo_rel,
-    runtime_state_lane_gate,
-    safe_dict,
-    safe_int,
-)
+from Tools.ai.heap_gate.runtime_common import Any, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
 class RuntimeGateRunLoopMixin:
     def run(self) -> dict[str, Any]:
         self.bootstrap()
@@ -28,6 +19,8 @@ class RuntimeGateRunLoopMixin:
                 self.publish_shared_evidence_facts(round_id, events)
             if self.provider_start_requirements_complete(events) and not self.provider_reports:
                 self.run_provider_teamwork(round_id)
+                if self.provider_universe_blocked_reason:
+                    break
                 events = self.read_events()
                 if self.publish_provider_native_tool_calls(round_id, events):
                     if self.heap.pending_broker_requests():
@@ -50,16 +43,15 @@ class RuntimeGateRunLoopMixin:
                 and self.provider_revision_evidence_ready(events)
             ):
                 events = self.maybe_run_provider_quality_revisions(round_id, events)
+                if self.provider_universe_blocked_reason:
+                    break
                 if self.publish_provider_native_tool_calls(round_id, events):
                     if self.heap.pending_broker_requests():
                         self.run_bridge()
                     events = self.read_events()
             self.critic_step(round_id, events)
             self.arbiter_step(round_id, events)
-            if self.state["product"].get("status") in {
-                "ready",
-                "blocked_with_reason",
-            } and self.minimum_runtime_depth_satisfied(round_id):
+            if self.state["product"].get("status") in {"ready", "blocked_with_reason"} and self.minimum_runtime_depth_satisfied(round_id):
                 break
         if self.state["product"].get("status") == "not_ready":
             events = self.read_events()

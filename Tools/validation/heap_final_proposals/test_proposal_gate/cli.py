@@ -114,7 +114,7 @@ def test_similarity_loop_breaker() -> None:
         )
         payload = run_composer(run_dir, ["src/module.py"])
         decision = payload["operator_decision"]["decision"]
-        assert decision == "DIAGNOSTIC_ONLY", decision
+        assert decision == "BLOCKED_PROVIDER_REVIEW", decision
         reasons = "\n".join(payload["operator_decision"]["gate_reasons"])
         assert "repeated rejected proposal" in reasons
 

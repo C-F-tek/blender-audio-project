@@ -192,6 +192,7 @@ def render_markdown(
         )
     elif provider_decision in {
         "DIAGNOSTIC_ONLY",
+        "BLOCKED_PROVIDER_REVIEW",
         "BLOCKED_NO_VERIFIED_TARGET",
         "NO CONCRETE PATCHABLE PROPOSAL",
     }:

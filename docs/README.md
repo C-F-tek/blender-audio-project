@@ -56,6 +56,16 @@ LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 | Tooling index | `../Tools/ai/README.md`, `../Tools/workflow/README.md`, `../Tools/validation/README.md` |
 | Tool package family map | `LOCAL_AI_TASKS/tool-package-family-map-2026-05-18.md` |
 
+## Recent failure notes
+
+Provider-universe failures and assistant conduct failures from the 2026-05-20
+runtime repair session are recorded in:
+
+```text
+AI_SESSION_NOTES/provider-universe-failure-summary-2026-05-20.md
+AI_SESSION_NOTES/provider-universe-chat-failure-ledger-2026-05-20.md
+```
+
 ## Policy
 
 Do not add competing first-read orders here. Keep this file as a compact index

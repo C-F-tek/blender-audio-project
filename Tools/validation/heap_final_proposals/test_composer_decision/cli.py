@@ -104,8 +104,8 @@ def test_no_verified_target_emits_blocked() -> None:
         assert "BLOCKED_NO_VERIFIED_TARGET" in payload["operator_decision_text"]
 
 
-def test_all_rejected_gives_diagnostic_only() -> None:
-    """When proposals exist but all are rejected for quality (not fake-path), decision is DIAGNOSTIC_ONLY."""
+def test_all_rejected_gives_blocked_provider_review() -> None:
+    """When proposals exist but all are rejected for quality, decision is BLOCKED_PROVIDER_REVIEW."""
     with tempfile.TemporaryDirectory(prefix="composer-decision-") as tmp:
         run_dir = Path(tmp) / "run"
         proposal_dir = run_dir / "team_context" / "proposal_iterations"
@@ -115,7 +115,9 @@ def test_all_rejected_gives_diagnostic_only() -> None:
         write_proposal(proposal_dir, "002", "Tools/ai/heap_final_proposals/cli.py", text, False)
         payload = run_composer(run_dir, ["Tools/ai/heap_final_proposals/cli.py"])
         decision = payload["operator_decision"]["decision"]
-        assert decision == "DIAGNOSTIC_ONLY", f"Expected DIAGNOSTIC_ONLY, got {decision}"
+        assert decision == "BLOCKED_PROVIDER_REVIEW", (
+            f"Expected BLOCKED_PROVIDER_REVIEW, got {decision}"
+        )
         reasons = "\n".join(payload["operator_decision"]["gate_reasons"])
         assert "repeated rejected proposal" in reasons
 
@@ -177,7 +179,7 @@ def test_decision_file_lists_targets() -> None:
 
 def main() -> int:
     test_no_verified_target_emits_blocked()
-    test_all_rejected_gives_diagnostic_only()
+    test_all_rejected_gives_blocked_provider_review()
     test_accepted_proposal_gives_patchable()
     test_forbidden_markers_also_set_blocked()
     test_decision_file_lists_targets()
