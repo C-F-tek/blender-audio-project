@@ -58,7 +58,7 @@ Manual GitHub search and area-level documentation are not enough. They miss:
 
 ## Required local run
 
-Run from the working checkout:
+Run from the working checkout. This command is degradable: it uses `.venv` when present, then `py -3`, then `python` from PATH.
 
 ```powershell
 cd "C:\Users\carmi\ProjectsDir\blender-audio-project"
@@ -66,8 +66,22 @@ cd "C:\Users\carmi\ProjectsDir\blender-audio-project"
 git switch master
 git pull --ff-only origin master
 
-$RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
-$env:PYTHONPATH = (Resolve-Path .).Path
+$RepoRoot = (Resolve-Path .).Path
+$VenvPy = Join-Path $RepoRoot ".venv\Scripts\python.exe"
+
+if (Test-Path $VenvPy) {
+  $RepoPy = $VenvPy
+} elseif (Get-Command py -ErrorAction SilentlyContinue) {
+  $RepoPy = (py -3 -c "import sys; print(sys.executable)").Trim()
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+  $RepoPy = (Get-Command python).Source
+} else {
+  throw "Python non trovato: crea .venv oppure installa Python 3."
+}
+
+$env:PYTHONPATH = $RepoRoot
+Write-Host "RepoPy=$RepoPy" -ForegroundColor Cyan
+& $RepoPy --version
 
 & $RepoPy -m Tools.validation build_script_inventory `
   --repo-root . `
