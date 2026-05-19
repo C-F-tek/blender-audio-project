@@ -4,6 +4,7 @@ Use this index to find the nearest `TOOL_CONTEXT.md` before working on a package
 
 | Family | Context file |
 | --- | --- |
+| Shared helpers | `Tools/ai/_shared/TOOL_CONTEXT.md` |
 | Agent context | `Tools/ai/agent_context/TOOL_CONTEXT.md` |
 | Agent memory | `Tools/ai/agent_memory/TOOL_CONTEXT.md` |
 | Agent review | `Tools/ai/agent_review/TOOL_CONTEXT.md` |
