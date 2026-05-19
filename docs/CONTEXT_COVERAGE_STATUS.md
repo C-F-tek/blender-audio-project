@@ -76,6 +76,8 @@ CONTEXT_INDEX.md
 | Tools/validation runtime universe | `Tools/validation/runtime_universe/TOOL_CONTEXT.md` | complete-enough |
 | Tools/workflow overview | `Tools/workflow/TOOL_CONTEXT.md` | partial |
 | Tools/workflow family index | `Tools/workflow/CONTEXT_INDEX.md` | complete-enough |
+| Tools/workflow PowerShell wrappers | `Tools/workflow/_powershell/TOOL_CONTEXT.md` | complete-enough |
+| Tools/workflow GUI | `Tools/workflow/gui/TOOL_CONTEXT.md` | complete-enough |
 | Tools/workflow workflow_run | `Tools/workflow/workflow_run/TOOL_CONTEXT.md` | complete-enough |
 | Tools/npu overview | `Tools/npu/TOOL_CONTEXT.md` | partial |
 | Tools/npu family index | `Tools/npu/CONTEXT_INDEX.md` | complete-enough |
