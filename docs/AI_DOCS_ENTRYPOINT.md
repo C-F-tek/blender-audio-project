@@ -28,6 +28,7 @@ For a new AI session, read in this order:
 ../CONTEXT_INDEX.md
 docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/STANDALONE_HEAP_SURFACE_MODEL.md
+docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 docs/REAL_PRODUCT_RUN_MODEL.md
 docs/COMPACT_EVIDENCE_MODEL.md
 docs/CONTEXT_COVERAGE_STATUS.md
@@ -54,6 +55,7 @@ In this repository, `docs/` is the contract and evidence layer for:
 - generated artifact acceptance rules;
 - heap/exchange useful model;
 - standalone heap surface model;
+- provider lanes unified mind model;
 - real product run model;
 - compact evidence model;
 - heap/exchange lifecycle boundaries;
@@ -67,6 +69,7 @@ In this repository, `docs/` is the contract and evidence layer for:
 | Whole-repo entrypoint | `../CONTEXT_INDEX.md` |
 | Heap/exchange compact model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Standalone heap deterministic surfaces | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` |
+| Provider lanes as one operational mind | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` |
 | Real product/evidence/blocked classification | `docs/REAL_PRODUCT_RUN_MODEL.md` |
 | Raw output vs compact evidence | `docs/COMPACT_EVIDENCE_MODEL.md` |
 | Context coverage status | `docs/CONTEXT_COVERAGE_STATUS.md` |
@@ -100,7 +103,8 @@ Use them as task-specific background, not as the current navigation root.
 
 | Work area | Read |
 |---|---|
-| Current AI orientation | `../CONTEXT_INDEX.md`, `docs/HEAP_EXCHANGE_USEFUL_MODEL.md`, `docs/STANDALONE_HEAP_SURFACE_MODEL.md`, `docs/REAL_PRODUCT_RUN_MODEL.md`, `docs/COMPACT_EVIDENCE_MODEL.md`, `docs/CONTEXT_COVERAGE_STATUS.md`, `docs/DISPATCHER_CONTEXT_COVERAGE.md` |
+| Current AI orientation | `../CONTEXT_INDEX.md`, `docs/HEAP_EXCHANGE_USEFUL_MODEL.md`, `docs/STANDALONE_HEAP_SURFACE_MODEL.md`, `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md`, `docs/REAL_PRODUCT_RUN_MODEL.md`, `docs/COMPACT_EVIDENCE_MODEL.md`, `docs/CONTEXT_COVERAGE_STATUS.md`, `docs/DISPATCHER_CONTEXT_COVERAGE.md` |
+| Provider lanes / unified mind | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md`, `../Tools/ai/provider_mesh/TOOL_CONTEXT.md`, `../Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md`, `../Tools/npu/provider_mesh/TOOL_CONTEXT.md` |
 | Heap/exchange and patchkit | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md`, `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md`, `MAIN_RUNTIME_ARCHITECTURE.md`, `../Tools/ai/CONTEXT_INDEX.md` |
 | Standalone heap surfaces | `docs/STANDALONE_HEAP_SURFACE_MODEL.md`, `LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md`, `../Tools/ai/heap_runtime/TOOL_CONTEXT.md` |
 | Real product run classification | `docs/REAL_PRODUCT_RUN_MODEL.md`, `LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md`, `LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md`, `../Tools/validation/real_product/TOOL_CONTEXT.md` |
@@ -137,7 +141,7 @@ If one conflicts with current context indexes, dispatcher coverage, heap/exchang
 When entering through `docs/`, an AI agent should:
 
 1. identify the task area;
-2. read the current heap/exchange useful model, standalone heap surface model, real product run model, compact evidence model and index/coverage files first;
+2. read the current heap/exchange useful model, standalone heap surface model, provider lanes unified mind model, real product run model, compact evidence model and index/coverage files first;
 3. open the nearest family `TOOL_CONTEXT.md`;
 4. inspect current source before proposing patches;
 5. avoid destructive edits;
