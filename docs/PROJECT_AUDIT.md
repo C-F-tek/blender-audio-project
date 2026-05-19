@@ -4,28 +4,27 @@
 
 Historical repository audit snapshot.
 
-This document predates the current unified launcher, heap/exchange lifecycle and patchkit operating model. Use it for application-domain context and older refactor rationale, not as current AI/tooling architecture state.
+This document predates the current context-index, dispatcher-coverage, unified launcher, heap/exchange lifecycle and patchkit operating model. Use it for application-domain context and older refactor rationale, not as current AI/tooling architecture state.
 
 Current first-read sources:
 
 ```text
 AGENTS.md
-README.md
-WORKFLOW.md
-docs/AI_ONBOARDING.md
-docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
-docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
-docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
-docs/MODULE_MAP.md
-docs/MAIN_RUNTIME_ARCHITECTURE.md
+CHATGPT.md
+CONTEXT_INDEX.md
+docs/AI_DOCS_ENTRYPOINT.md
+docs/CONTEXT_COVERAGE_STATUS.md
+docs/DISPATCHER_CONTEXT_COVERAGE.md
+Tools/CONTEXT_INDEX.md
+Scripting/CONTEXT_INDEX.md
 ```
 
 Current code-driven caveat:
 
 ```text
-Tools/ai/ and Tools/workflow/ now own most local-AI orchestration surfaces.
-Tools/npu/ remains important for NPU/OpenVINO support, but it is not the sole AI workflow root.
-Current product paths must account for heap/exchange entry, runtime state, exit product, lifecycle validation and patchkit or deterministic patch bridge.
+Tools/ai/, Tools/validation/, Tools/workflow/, Tools/npu/, Tools/docs/, Tools/git/ and Tools/repo_patch_runner/ expose dispatcher-owned command surfaces.
+Use area CONTEXT_INDEX.md files and dispatch.py files before relying on older task/runbook guidance.
+Current product paths must account for heap/exchange entry, runtime state, exit product, lifecycle validation, patchkit/code-product boundaries and dispatcher-driven coverage.
 ```
 
 ## Audit scope
@@ -48,6 +47,9 @@ It contains:
 - AI, NPU and Ollama support tooling under `Tools/npu/`;
 - AI orchestration, context, evidence, patch and review tooling under `Tools/ai/`;
 - workflow launchers under `Tools/workflow/`;
+- validation and smoke surfaces under `Tools/validation/`;
+- documentation/tool hygiene surfaces under `Tools/docs/`;
+- Git helper and repository patch-runner surfaces under `Tools/git/` and `Tools/repo_patch_runner/`;
 - AI project indexes, manifests and patch material under `indexAI/`;
 - documentation for AI-assisted and future local-AI workflows;
 - GitHub-facing templates and patch workflow support.
@@ -56,12 +58,12 @@ It contains:
 
 | Area | Assessment | Notes |
 |---|---|---|
-| Project identity | good | Root README, docs index, AGENTS and package docs exist. |
-| AI orientation | good | Current AI orientation has moved to heap/exchange and patchkit maps. |
+| Project identity | good | Root README, docs index, AGENTS and package docs exist. Current navigation is in `CONTEXT_INDEX.md`. |
+| AI orientation | good | Current AI orientation has moved to context indexes, dispatcher coverage, heap/exchange and patchkit maps. |
 | Blender reference workflow | strong | `Scripting/v61b/` is modular and suitable as the reference model. |
 | Generated package workflow | good | Template and generated package structures exist. |
 | Shared utilities | active foundation | Initial path, JSON, image-sequence, FFmpeg and render-profile helpers exist; full migration is not complete. |
-| Local AI workflow | evolved | Earlier NPU/Ollama focus has expanded into unified launcher, provider lanes, heap/exchange and patchkit. |
+| Local AI workflow | evolved | Earlier NPU/Ollama focus has expanded into dispatcher-owned tools, unified launcher, provider lanes, heap/exchange and patchkit. |
 | JSON schemas | partial | Schema notes exist; current artifact schemas are indexed separately. |
 | Automated validation | evolving | Validation now includes launcher/report contracts, lifecycle checks and patchkit smoke in addition to earlier checks. |
 | Refactoring readiness | good | The project is ready for additive extraction, not broad rewrites. |
@@ -70,9 +72,15 @@ It contains:
 
 | Area | Role |
 |---|---|
-| `Tools/workflow/workflow_run/audio_analysis/analyze_cli.py` | Audio-analysis entry point. |
-| `Tools/workflow/workflow_run/audio_analysis/summary_cli.py` | Compact track-summary builder. |
-| `Tools/workflow/workflow_run/scene_spec/cli.py` | Scene-spec normalization and defaulting. |
+| `CONTEXT_INDEX.md` | Current root navigation entrypoint. |
+| `docs/CONTEXT_COVERAGE_STATUS.md` | Current context coverage status. |
+| `docs/DISPATCHER_CONTEXT_COVERAGE.md` | Dispatcher-driven tool-family coverage. |
+| `Tools/CONTEXT_INDEX.md` | Current global tool context index. |
+| `Tools/ai/CONTEXT_INDEX.md` | AI tool family navigation. |
+| `Tools/validation/CONTEXT_INDEX.md` | Validation family navigation. |
+| `Tools/workflow/CONTEXT_INDEX.md` | Workflow family navigation. |
+| `Tools/npu/CONTEXT_INDEX.md` | NPU family navigation. |
+| `Scripting/CONTEXT_INDEX.md` | Scripting/package navigation. |
 | `Scripting/v61b/` | Main quality reference for complex Blender package structure. |
 | `Scripting/ready_to_jazz_wow_youtube_profiles_audio_sync/` | Large generated/refined package and strong extraction candidate. |
 | `Scripting/_template_audio_reactive_package/` | Template for future generated packages. |
@@ -81,7 +89,9 @@ It contains:
 | `Tools/ai/` | Current AI orchestration, context, telemetry, evidence, heap/exchange, patchkit and review tooling. |
 | `Tools/npu/` | Local AI, NPU, context-building, review and implementation tooling. |
 | `Tools/validation/` | Validators, smokes and report-contract checks. |
-| `Tools/repo_patch_runner/` | Legacy structured patch runner tooling. |
+| `Tools/docs/` | Documentation hygiene and tool-surface audit helpers. |
+| `Tools/git/` | Explicit Git helper wrappers. |
+| `Tools/repo_patch_runner/` | Structured repository modification runner tooling. |
 | `indexAI/` | Generated code indexes, manifests, context and patch materials. |
 | `docs/` | Stable project documentation. |
 | `patch_specs/` | Structured patch specification records and patchkit bundle specs when selected. |
@@ -90,7 +100,7 @@ It contains:
 
 ### 1. Clear AI operating context
 
-AI systems have a stable reading order and operating rules through `AGENTS.md`, `docs/README.md`, `docs/MODULE_MAP.md`, `docs/DATA_FLOW.md`, `docs/QUALITY_GATE.md`, the heap/exchange operating model and the documentation panorama.
+AI systems now have stable entrypoints through `AGENTS.md`, `CHATGPT.md`, `CONTEXT_INDEX.md`, `docs/CONTEXT_COVERAGE_STATUS.md`, `docs/DISPATCHER_CONTEXT_COVERAGE.md` and the area/family context indexes.
 
 ### 2. Strong reference implementation
 
@@ -110,7 +120,7 @@ The project correctly avoids breaking working code through premature refactoring
 
 ### 6. Local AI direction is practical
 
-The repository records external AI workflow and local AI/NPU/GPU-assisted direction. Current work has expanded this into a unified launcher plus heap/exchange and patchkit product boundaries.
+The repository records external AI workflow and local AI/NPU/GPU-assisted direction. Current work has expanded this into dispatcher-owned tools, a unified launcher plus heap/exchange and patchkit product boundaries.
 
 ## Risks and gaps
 
@@ -176,31 +186,20 @@ Use it for sound-strip creation, sequencer cleanup, safe node creation and safe 
 
 ### Priority 3: keep local-AI orchestration owner-aligned
 
-Current AI workflow should remain owner-aligned:
+Current AI workflow should remain owner-aligned through dispatchers and area context indexes:
 
 ```text
-Tools/workflow/run_unified_local_ai_refactor.ps1
-python -m Tools.ai heap_exchange_runtime_entry
-python -m Tools.ai heap_exchange_runtime_exit
-Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
-Tools/ai/patchkit/apply_patch_bundle.py
-Tools/ai/agent_review/review_pr_cli.py
+python -m Tools.ai <tool>
+python -m Tools.validation <tool>
+python -m Tools.workflow <tool>
+python -m Tools.npu <tool>
 ```
 
 Do not resurrect older monolithic flows as primary entrypoints.
 
 ### Priority 4: extend validation scripts
 
-Existing lightweight validation helpers should be extended with docs-link, schema, lifecycle and patchkit checks:
-
-```text
-python -m Tools.validation check_python_syntax
-Tools/validation/check_package_structure.py
-Tools/validation/check_json_artifacts.py
-Tools/validation/check_docs_links.py
-Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
-Tools/validation/run_patchkit_smoke.py
-```
+Validation should continue to expand around docs-link, schema, lifecycle, patchkit and runtime product checks using `Tools/validation/CONTEXT_INDEX.md` as the family map.
 
 ### Priority 5: regenerate indexes after structural changes
 
