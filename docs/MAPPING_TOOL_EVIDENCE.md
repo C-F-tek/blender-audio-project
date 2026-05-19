@@ -6,6 +6,26 @@ This is the surface entrypoint for repository mapping runs and compact evidence 
 
 Use it when the repository changes enough that area-level `TOOL_CONTEXT.md` files are not sufficient, or when an AI agent must discover every script/tool family from current source instead of chat memory.
 
+## Current decision
+
+The mapping run is optional and operator-scheduled. It is not required before continuing documentation work.
+
+Reason:
+
+```text
+full mapping is slow, PowerShell-heavy and only useful when the operator explicitly wants a refreshed evidence snapshot
+```
+
+Until the operator chooses to run it, documentation work should continue from:
+
+```text
+current source files
+current dispatchers
+existing TOOL_CONTEXT.md files
+operator-provided inventory baseline
+GitHub-readable repository files
+```
+
 ## Canonical procedure
 
 Detailed task/procedure:
@@ -36,9 +56,9 @@ If this process becomes frequent, create a small maintained wrapper only after t
 
 ## Execution rule
 
-Run mapping and compact-evidence generation as one complete PowerShell block. Do not run only the summary section: variables such as `$RepoRoot`, `$Stamp`, `$RawDir`, `$EvidenceDir`, `$RunLog`, `$EvidenceJsonPath` and `$EvidenceMdPath` are created by the initialization section.
+Run mapping and compact-evidence generation only when explicitly scheduled by the operator. If a partial PowerShell state is missing variables such as `$RepoRoot`, `$Stamp`, `$RawDir`, `$EvidenceDir`, `$RunLog`, `$EvidenceJsonPath` or `$EvidenceMdPath`, stop and restart from a complete script/block later.
 
-If those variables are missing, restart from the single-shot command instead of continuing a partial shell state.
+Do not block normal documentation updates while waiting for a mapping run.
 
 ## Local raw outputs
 
@@ -52,7 +72,7 @@ Do not commit raw `output/**` by default.
 
 ## Git-trackable evidence outputs
 
-Publish only compact evidence summaries under:
+If the operator runs the mapping pass, publish only compact evidence summaries under:
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/mapping_tool_results_<stamp>.md
@@ -63,7 +83,7 @@ docs/LOCAL_VALIDATION_EVIDENCE/mapping_tool_results_latest.json
 
 ## Mapping tools
 
-Recommended mapping pass:
+Recommended mapping pass when explicitly scheduled:
 
 ```powershell
 python -m Tools.validation build_script_inventory
@@ -94,12 +114,14 @@ git_helper: 5
 
 ## Follow-up
 
-After each mapping pass:
+After a future mapping pass:
 
 1. keep raw outputs under `output/validation/mapping/`;
 2. create compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/`;
 3. commit only compact evidence and documentation updates;
 4. return to updating `TOOL_CONTEXT.md` files from the discovered gaps.
+
+Without a fresh mapping pass, continue directly with `TOOL_CONTEXT.md` and surface-document updates using current source inspection.
 
 ## Guardrails
 
