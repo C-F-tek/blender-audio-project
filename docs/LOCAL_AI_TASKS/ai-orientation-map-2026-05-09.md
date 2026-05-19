@@ -1,45 +1,62 @@
 # AI Orientation Map — 2026-05-09
 
-## Purpose
+## Status
 
-Compact orientation map for an AI agent entering the repository after the heap/exchange lifecycle and patchkit merges.
+Historical orientation map.
 
-This is not a replacement for source inspection. It is the first map to decide what to read next and which code owner to reuse.
+This document captured the repository state around the heap/exchange lifecycle and patchkit work. It remains useful for conceptual background, but it is no longer the current first-read or tool-family map.
 
-## One-sentence model
-
-IA-Carmine is a code-driven local-AI orchestration workbench where a controlled task enters a dynamic heap/exchange, runtime lanes cooperate through evidence and public events, and the final source-change product exits through deterministic validators, patchkit bundles and review PRs.
-
-## Current baseline
-
-```text
-Merged baseline: master after PR #250
-Runtime lifecycle: PR #249
-Reusable patch boundary: PR #250
-Current doc PR: #251
-```
-
-## First read path
-
-Read in this order for current work:
+Current first-read sources:
 
 ```text
 AGENTS.md
 CHATGPT.md
-CHATGPT/README.md
-docs/README.md
-docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
-docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md
-docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md
-docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
-docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
-docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
-Tools/ai/README.md
-Tools/workflow/README.md
-nearest target source file
+CONTEXT_INDEX.md
+docs/AI_DOCS_ENTRYPOINT.md
+docs/CONTEXT_COVERAGE_STATUS.md
+docs/DISPATCHER_CONTEXT_COVERAGE.md
+Tools/CONTEXT_INDEX.md
+Scripting/CONTEXT_INDEX.md
 ```
 
-## Mental model
+Before changing code, open the nearest current `TOOL_CONTEXT.md` from the area/family index and inspect the dispatcher/source file.
+
+## Purpose
+
+Compact historical orientation map for an AI agent entering the repository after the heap/exchange lifecycle and patchkit merges.
+
+This is not a replacement for source inspection, context indexes or dispatcher coverage.
+
+## One-sentence model
+
+IA-Carmine is a code-driven local-AI orchestration workbench where a controlled task enters a dynamic heap/exchange, runtime lanes cooperate through evidence and public events, and the final source-change product exits through deterministic validators, patchkit/code-product boundaries and review paths.
+
+## Historical baseline
+
+```text
+Historical baseline: master after PR #250
+Runtime lifecycle: PR #249
+Reusable patch boundary: PR #250
+Historical doc PR: #251
+```
+
+Use this baseline as history, not current branch truth.
+
+## Current navigation replacement
+
+The old first-read path has been superseded by:
+
+```text
+CONTEXT_INDEX.md
+-> docs/CONTEXT_COVERAGE_STATUS.md
+-> docs/DISPATCHER_CONTEXT_COVERAGE.md
+-> Tools/CONTEXT_INDEX.md
+-> Tools/<area>/CONTEXT_INDEX.md
+-> nearest TOOL_CONTEXT.md
+-> dispatch.py/source file
+```
+
+## Historical mental model
 
 ```text
 IN
@@ -72,88 +89,35 @@ Entry and exit are controlled. The center is dynamic.
 
 Do not reduce heap/exchange to a static chain. The run must provide context, evidence and lane registration; then the dynamic center may route/cooperate. The exit must still produce deterministic, reviewable product.
 
-## Main owner map
+## Current owner-map rule
 
-| Responsibility | Code owner |
-|---|---|
-| Unified local AI run | `Tools/workflow/run_unified_local_ai_refactor.ps1` |
-| Heap/exchange runtime entry | `python -m Tools.ai heap_exchange_runtime_entry` |
-| Heap/exchange runtime exit | `python -m Tools.ai heap_exchange_runtime_exit` |
-| Heap/exchange lifecycle validation | `Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py` |
-| Heap/exchange smoke | `Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py` |
-| Reusable patch bundle apply | `Tools/ai/patchkit/apply_patch_bundle.py` |
-| Patchkit filesystem/encoding/newlines | `Tools/ai/patchkit/filesystem.py` |
-| Patchkit anchors/text ops | `Tools/ai/patchkit/anchors.py` |
-| Patchkit PowerShell helpers | `Tools/ai/patchkit/powershell.py` |
-| Patchkit reports | `Tools/ai/patchkit/reports.py` |
-| Patchkit smoke | `Tools/validation/run_patchkit_smoke.py` |
-| Review PR preparation | `Tools/ai/agent_review/review_pr_cli.py` |
-| Context pack | `Tools/ai/agent_context/ai_context_pack/cli.py` |
-| Agent state packet | `Tools/ai/agent_context/state_packet/cli.py` |
-| Script/tool inventory | `Tools/validation/build_script_inventory.py` |
-| Markdown inventory | `Tools/validation/docs_hygiene/markdown_inventory/cli.py` |
-| JSON/report contracts | `Tools/validation/check_validation_report_contracts.py` |
-| Patch suggestion product | `Tools/ai/patch_product/task_patch_suggestion_report.py` |
-| Legacy patch suggestion apply | `Tools/ai/patch_product/patch_suggestion_bundle/cli.py` |
+Do not use this historical document as the current owner map. Use:
 
-Before creating a new script, check this table and the target package README.
+```text
+Tools/CONTEXT_INDEX.md
+Tools/ai/CONTEXT_INDEX.md
+Tools/validation/CONTEXT_INDEX.md
+Tools/workflow/CONTEXT_INDEX.md
+Tools/npu/CONTEXT_INDEX.md
+docs/DISPATCHER_CONTEXT_COVERAGE.md
+```
 
-## Current source-write rule
+Then inspect the relevant `dispatch.py` file.
 
-Preferred future source modification flow:
+## Source-write rule
+
+Preferred future source modification flow remains reviewed and evidence-driven:
 
 ```text
 read target source
-write compact patchkit bundle
-run patchkit --dry-run
-run patchkit apply
+write compact patch/code product
+run dry validation when available
 run validators
 inspect line counts
-open/update review PR
+commit only intended files
 ```
 
-Preferred bundle layout:
-
-```text
-patch_specs/<bundle>/bundle.json
-patch_specs/<bundle>/fragments/*.ps1
-patch_specs/<bundle>/fragments/*.py
-```
-
-Do not create a new one-off patcher if patchkit operations can express the change.
-
-## Patchkit command pattern
-
-```powershell
-python -m Tools.ai apply_patch_bundle `
-  --repo-root . `
-  --bundle .\patch_specs\<bundle>\bundle.json `
-  --dry-run
-
-python -m Tools.ai apply_patch_bundle `
-  --repo-root . `
-  --bundle .\patch_specs\<bundle>\bundle.json
-```
-
-Current first-class patchkit operations:
-
-```text
-insert_after_invoke_checked
-insert_before_marker
-insert_after_marker
-replace_once
-append_once
-assert_marker
-assert_no_naked_throw
-```
-
-Current first-class validators:
-
-```text
-powershell_parser
-python_compile
-git_diff_check
-```
+Do not create a new one-off patcher if existing code-product, patchkit or repo-patch-runner paths can express the change.
 
 ## Run product classification
 
@@ -167,9 +131,9 @@ runtime lanes available
 runtime state events emitted
 public exchange events emitted
 exit product exists
-concrete_operation_count > 0 when review PR product is requested
-patchkit or patch bridge produces deterministic product
-review PR product is created
+concrete_operation_count > 0 when review product is requested
+patch/code product produces deterministic product
+review product is created
 ```
 
 Valid blocked state:
@@ -177,50 +141,26 @@ Valid blocked state:
 ```text
 entry/lane/public events are good
 exit product has no concrete deterministic operation candidate
-review PR product must not pretend success
+review product must not pretend success
 ```
 
 Metadata-only patch drafts are not enough.
 
-## Validation map
+## Validation routing
 
-Heap/exchange lifecycle:
+Use the current validation family index first:
 
-```powershell
-python -m py_compile `
-  python -m Tools.ai heap_exchange_runtime_entry `
-  python -m Tools.ai heap_exchange_runtime_exit `
-  .\Tools\validation\heap_exchange\runtime_lifecycle_check\cli.py `
-  .\Tools\validation\heap_exchange\runtime_lifecycle_smoke\cli.py
-
-python -m Tools.validation run_heap_exchange_runtime_lifecycle_smoke `
-  --repo-root .
+```text
+Tools/validation/CONTEXT_INDEX.md
 ```
 
-Patchkit:
+Then run the specific dispatcher command from:
 
-```powershell
-python -m py_compile `
-  .\Tools\ai\patchkit\filesystem.py `
-  .\Tools\ai\patchkit\anchors.py `
-  .\Tools\ai\patchkit\powershell.py `
-  .\Tools\ai\patchkit\reports.py `
-  .\Tools\ai\patchkit\apply_patch_bundle.py `
-  .\Tools\validation\run_patchkit_smoke.py
-
-python -m Tools.validation run_patchkit_smoke `
-  --repo-root .
-
-git diff --check
+```text
+Tools/validation/dispatch.py
 ```
 
-Docs-only:
-
-```powershell
-python -m Tools.validation check_docs_links --repo-root . --output output/validation/docs_links.json
-python -m Tools.validation check_file_line_limits --repo-root . --output output/validation/file_line_limits.json
-git diff --check
-```
+Do not rely on old file-path invocation examples without checking the dispatcher.
 
 ## Guardrails
 
@@ -242,10 +182,13 @@ commit *.db / *.sqlite / renders/**
 ## What an AI should do when unsure
 
 ```text
-1. Read the nearest source owner.
-2. Read the newest compact task map.
-3. Prefer existing validators and patchkit.
-4. Produce evidence, not confidence language.
-5. Mark stale/obsolete docs as historical instead of following them blindly.
-6. Stop if the run exits without concrete deterministic product.
+1. Read CONTEXT_INDEX.md.
+2. Read docs/CONTEXT_COVERAGE_STATUS.md.
+3. Read docs/DISPATCHER_CONTEXT_COVERAGE.md.
+4. Open the nearest current TOOL_CONTEXT.md.
+5. Inspect dispatcher and source files.
+6. Prefer existing validators and reviewed product paths.
+7. Produce evidence, not confidence language.
+8. Mark stale/obsolete docs as historical instead of following them blindly.
+9. Stop if the run exits without concrete deterministic product.
 ```
