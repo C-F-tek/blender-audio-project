@@ -9,7 +9,7 @@ Use this document when reasoning about the heap as an explicit runtime surface r
 ## One-line model
 
 ```text
-strict request -> preload surfaces -> heap facts -> broker/provider/validator events -> composer package
+strict request -> preload surfaces -> heap facts -> exchange events -> broker/provider/validator evidence -> composer package
 ```
 
 ## Why it matters
@@ -31,8 +31,48 @@ transient request context
 broker/tool execution
 provider lane reports
 validator evidence
+exchange event stream
 final composer package
 ```
+
+Without these surfaces, the system falls back to a prompt chain. With them, another AI, validator or operator can inspect what happened.
+
+## Heap vs exchange
+
+```text
+heap = shared runtime state
+exchange = observable event flow around that state
+```
+
+The heap records facts:
+
+```text
+inputs
+constraints
+lane status
+tool outputs
+provider claims
+validation results
+candidate operations
+blocked reasons
+```
+
+The exchange records interactions:
+
+```text
+run entered
+lane registered
+tool requested
+tool completed
+tool failed
+provider reported
+validator completed
+candidate accepted
+candidate rejected
+exit product produced
+```
+
+The exchange is what prevents the heap from becoming an opaque JSON dump.
 
 ## Preload model
 
@@ -146,6 +186,41 @@ npu_micro_task_auditor
 
 Names can change. The requirement stays: lane participation must be observable in same-heap evidence.
 
+A useful lane report should answer:
+
+```text
+was execution requested?
+was execution performed?
+what input refs were used?
+what output refs were produced?
+what warnings/errors happened?
+what did the lane recommend or reject?
+```
+
+## Output classification model
+
+Heap output must be classified before it can drive source changes.
+
+```text
+diagnostic evidence
+recommendation evidence
+candidate operation
+code product
+patch product
+review product
+blocked reason
+```
+
+Rules:
+
+```text
+provider answer != product
+recommendation != product
+metadata-only draft != product
+candidate without target/diff != product
+blocked reason = valid exit state
+```
+
 ## Refinement model
 
 Rejected proposals should produce next actions, not dead ends.
@@ -181,6 +256,22 @@ download/export manifest
 ```
 
 The composer assembles; it must not invent source-change authority.
+
+## Minimal evidence questions
+
+A useful standalone heap run should answer:
+
+```text
+what entered the heap?
+which namespaces were populated?
+which lanes registered?
+which lanes produced evidence?
+which tools were requested?
+which tool requests failed?
+which validators ran?
+which proposals were accepted or rejected?
+what final product or blocked reason was produced?
+```
 
 ## Related current files
 
