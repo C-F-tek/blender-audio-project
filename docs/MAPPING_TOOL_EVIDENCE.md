@@ -20,9 +20,23 @@ Related inventory task:
 docs/LOCAL_AI_TASKS/exhaustive-script-surface-inventory-2026-05-19.md
 ```
 
+## Operator-only command policy
+
+The mapping launch block is intentionally a long manual operator command. It is not a new maintained repository tool, not a production launcher, and not something to promote into source code only because it is lengthy.
+
+Reason:
+
+```text
+mapping commands are local, occasional, environment-sensitive and evidence-oriented
+```
+
+They are useful to refresh repository maps, generate compact evidence and then return to documentation work. They are not useful as permanent application/runtime scripts inside the repo.
+
+If this process becomes frequent, create a small maintained wrapper only after the input/output contract stabilizes. Until then, keep the long command in documentation as an operator procedure.
+
 ## Execution rule
 
-Run mapping and compact-evidence generation as one complete PowerShell block or script. Do not run only the summary section: variables such as `$RepoRoot`, `$Stamp`, `$RawDir`, `$EvidenceDir`, `$RunLog`, `$EvidenceJsonPath` and `$EvidenceMdPath` are created by the initialization section.
+Run mapping and compact-evidence generation as one complete PowerShell block. Do not run only the summary section: variables such as `$RepoRoot`, `$Stamp`, `$RawDir`, `$EvidenceDir`, `$RunLog`, `$EvidenceJsonPath` and `$EvidenceMdPath` are created by the initialization section.
 
 If those variables are missing, restart from the single-shot command instead of continuing a partial shell state.
 
