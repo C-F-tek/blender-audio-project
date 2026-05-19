@@ -19,6 +19,7 @@ CONTEXT_INDEX.md
 -> docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 -> docs/STANDALONE_HEAP_SURFACE_MODEL.md
 -> docs/REAL_PRODUCT_RUN_MODEL.md
+-> docs/COMPACT_EVIDENCE_MODEL.md
 -> docs/CONTEXT_COVERAGE_STATUS.md
 -> docs/DISPATCHER_CONTEXT_COVERAGE.md
 -> Tools/CONTEXT_INDEX.md or docs/CONTEXT_INDEX.md or Scripting/CONTEXT_INDEX.md
@@ -34,6 +35,7 @@ CONTEXT_INDEX.md
 | Heap/exchange useful model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | complete-enough |
 | Standalone heap surface model | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | complete-enough |
 | Real product run model | `docs/REAL_PRODUCT_RUN_MODEL.md` | complete-enough |
+| Compact evidence model | `docs/COMPACT_EVIDENCE_MODEL.md` | complete-enough |
 
 ## Tool context coverage
 
