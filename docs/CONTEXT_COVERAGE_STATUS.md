@@ -16,6 +16,7 @@ This file tracks whether context documentation is complete, partial or only a na
 
 ```text
 CONTEXT_INDEX.md
+-> docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 -> docs/CONTEXT_COVERAGE_STATUS.md
 -> docs/DISPATCHER_CONTEXT_COVERAGE.md
 -> Tools/CONTEXT_INDEX.md or docs/CONTEXT_INDEX.md or Scripting/CONTEXT_INDEX.md
@@ -23,6 +24,12 @@ CONTEXT_INDEX.md
 -> nearest TOOL_CONTEXT.md
 -> dispatch.py/source files
 ```
+
+## Core model coverage
+
+| Area/family | File | Status |
+| --- | --- | --- |
+| Heap/exchange useful model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | complete-enough |
 
 ## Tool context coverage
 
