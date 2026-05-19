@@ -1,0 +1,159 @@
+﻿{
+    "schema_version":  1,
+    "kind":  "mapping_tool_results",
+    "stamp":  "20260519-235358",
+    "repo_root":  "C:\\Users\\carmi\\ProjectsDir\\blender-audio-project",
+    "git_branch":  "master",
+    "git_head":  "ee43a1790378a057840a1e4ae0abe5d25bec4201",
+    "git_head_short":  "ee43a179",
+    "raw_output_dir":  "output/validation/mapping/20260519-235358",
+    "provider_execution_performed":  false,
+    "patch_application_performed":  false,
+    "source_writes_performed":  false,
+    "run_log":  [
+
+                ],
+    "reports":  {
+                    "script_inventory":  {
+                                             "path":  "output/validation/mapping/20260519-235358/script_inventory.json",
+                                             "exists":  false,
+                                             "kind":  null,
+                                             "passed":  null,
+                                             "summary":  null,
+                                             "script_count":  null,
+                                             "syntax_warning_count":  null,
+                                             "category_counts":  null,
+                                             "errors":  {
+
+                                                        },
+                                             "warnings":  {
+
+                                                          }
+                                         },
+                    "tool_root_inventory":  {
+                                                "path":  "output/validation/mapping/20260519-235358/tool_root_inventory.json",
+                                                "exists":  false,
+                                                "kind":  null,
+                                                "passed":  null,
+                                                "summary":  null,
+                                                "script_count":  null,
+                                                "syntax_warning_count":  null,
+                                                "category_counts":  null,
+                                                "errors":  {
+
+                                                           },
+                                                "warnings":  {
+
+                                                             }
+                                            },
+                    "repo_tool_surface_audit":  {
+                                                    "path":  "output/validation/mapping/20260519-235358/repo_tool_surface_audit.json",
+                                                    "exists":  false,
+                                                    "kind":  null,
+                                                    "passed":  null,
+                                                    "summary":  null,
+                                                    "script_count":  null,
+                                                    "syntax_warning_count":  null,
+                                                    "category_counts":  null,
+                                                    "errors":  {
+
+                                                               },
+                                                    "warnings":  {
+
+                                                                 }
+                                                },
+                    "tool_package_family_audit":  {
+                                                      "path":  "output/validation/mapping/20260519-235358/tool_package_family_audit.json",
+                                                      "exists":  false,
+                                                      "kind":  null,
+                                                      "passed":  null,
+                                                      "summary":  null,
+                                                      "script_count":  null,
+                                                      "syntax_warning_count":  null,
+                                                      "category_counts":  null,
+                                                      "errors":  {
+
+                                                                 },
+                                                      "warnings":  {
+
+                                                                   }
+                                                  },
+                    "module_duplication_audit":  {
+                                                     "path":  "output/validation/mapping/20260519-235358/module_duplication_audit.json",
+                                                     "exists":  false,
+                                                     "kind":  null,
+                                                     "passed":  null,
+                                                     "summary":  null,
+                                                     "script_count":  null,
+                                                     "syntax_warning_count":  null,
+                                                     "category_counts":  null,
+                                                     "errors":  {
+
+                                                                },
+                                                     "warnings":  {
+
+                                                                  }
+                                                 },
+                    "markdown_inventory":  {
+                                               "path":  "output/validation/mapping/20260519-235358/markdown_inventory.json",
+                                               "exists":  false,
+                                               "kind":  null,
+                                               "passed":  null,
+                                               "summary":  null,
+                                               "script_count":  null,
+                                               "syntax_warning_count":  null,
+                                               "category_counts":  null,
+                                               "errors":  {
+
+                                                          },
+                                               "warnings":  {
+
+                                                            }
+                                           },
+                    "package_structure":  {
+                                              "path":  "output/validation/mapping/20260519-235358/package_structure.json",
+                                              "exists":  false,
+                                              "kind":  null,
+                                              "passed":  null,
+                                              "summary":  null,
+                                              "script_count":  null,
+                                              "syntax_warning_count":  null,
+                                              "category_counts":  null,
+                                              "errors":  {
+
+                                                         },
+                                              "warnings":  {
+
+                                                           }
+                                          },
+                    "python_syntax":  {
+                                          "path":  "output/validation/mapping/20260519-235358/python_syntax.json",
+                                          "exists":  false,
+                                          "kind":  null,
+                                          "passed":  null,
+                                          "summary":  null,
+                                          "script_count":  null,
+                                          "syntax_warning_count":  null,
+                                          "category_counts":  null,
+                                          "errors":  {
+
+                                                     },
+                                          "warnings":  {
+
+                                                       }
+                                      }
+                },
+    "next_documentation_targets":  [
+                                       "Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md",
+                                       "Tools/ai/external_heap/TOOL_CONTEXT.md",
+                                       "Tools/ai/repository_product/TOOL_CONTEXT.md",
+                                       "Tools/ai/agent_review/TOOL_CONTEXT.md",
+                                       "Tools/ai/generated_patch_specs/TOOL_CONTEXT.md",
+                                       "Tools/validation/heap_runtime/TOOL_CONTEXT.md",
+                                       "Tools/validation/runtime_tool/TOOL_CONTEXT.md",
+                                       "Tools/validation/runtime_universe/TOOL_CONTEXT.md",
+                                       "Tools/validation/provider_mesh/TOOL_CONTEXT.md",
+                                       "Tools/workflow/workflow_run/TOOL_CONTEXT.md",
+                                       "Tools/npu/provider_mesh/TOOL_CONTEXT.md"
+                                   ]
+}

@@ -17,7 +17,7 @@ from Tools.ai.heap_gate.provider_prompt_text import (
 
 
 class RuntimeGateProviderPromptMixin:
-    def startup_context_digest(self, max_chars: int = 36000) -> str:
+    def startup_context_digest(self, max_chars: int = 9000) -> str:
         """Build a bounded digest of startup context artifacts for GPU1.
 
         The startup reload already creates tool catalog, memory inventory,
@@ -31,7 +31,6 @@ class RuntimeGateProviderPromptMixin:
 
         artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
         preferred_keys = (
-            "shared_context_markdown",
             "shared_memory_markdown",
             "operational_memory_search_markdown",
             "tool_catalog_markdown",
@@ -40,7 +39,6 @@ class RuntimeGateProviderPromptMixin:
             "ai_context_pack_markdown",
             "ai_context_pack_evidence_markdown",
             "repo_docs_map_markdown",
-            "required_context_files_markdown",
         )
 
         sections: list[str] = []
@@ -62,6 +60,8 @@ class RuntimeGateProviderPromptMixin:
             budget = max(0, remaining - len(header) - 128)
             if budget <= 0:
                 break
+            if key in {"tool_catalog_markdown", "repo_docs_map_markdown"}:
+                content = "\n".join(content.splitlines()[:80])
             chunk = content[:budget]
             if len(content) > budget:
                 chunk += "\n\n...[truncated by startup_context_digest]...\n"

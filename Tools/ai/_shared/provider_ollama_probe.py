@@ -56,13 +56,8 @@ def run_ollama_probe(
     raw_chat_response: dict[str, Any] = {}
     native_tool_calls: list[dict[str, Any]] = []
     native_tool_decision_prompted = bool(prompt and prompt.strip())
-    native_tool_loop_relevant = bool(
-        native_tool_decision_prompted
-        and (
-            heap_patch_prompt_required(prompt or "")
-            or prompt_explicitly_requires_tool_call(prompt or "")
-        )
-    )
+    explicit_tool_call_required = prompt_explicitly_requires_tool_call(prompt or "")
+    native_tool_loop_relevant = bool(native_tool_decision_prompted and explicit_tool_call_required)
     prompt_attempts: list[dict[str, Any]] = []
     with OllamaSession(
         model=selected_model,
@@ -91,39 +86,40 @@ def run_ollama_probe(
                     "native_tool_call_count": 0,
                 }
             )
-            tool_prompts = [ollama_tool_call_selection_prompt(proposal_prompt, text)]
-            if not text:
-                tool_prompts.append(ollama_tool_call_fallback_prompt())
-            for index, tool_prompt in enumerate(tool_prompts, start=2):
-                raw_chat_response = session.chat(
-                    [{"role": "user", "content": tool_prompt}],
-                    tools=broker_tool_schemas(ollama_tool_call_tool_names()),
-                    max_new_tokens=max_new_tokens,
-                    temperature=0.0,
-                )
-                message = raw_chat_response.get("message")
-                message = message if isinstance(message, dict) else {}
-                candidate = str(message.get("content") or "")
-                native_tool_calls = normalize_ollama_tool_calls(raw_chat_response)
-                for call in native_tool_calls:
-                    call["semantic_task_excerpt"] = tool_prompt[:500]
-                    call["semantic_contract"] = "provider_native_tool_call_for_current_operator_task"
-                prompt_attempts.append(
-                    {
-                        "attempt": index,
-                        "phase": "native_tool_call",
-                        "prompt_chars": len(tool_prompt),
-                        "text_chars": len(candidate),
-                        "text_preview": candidate[:120],
-                        "max_new_tokens": max_new_tokens,
-                        "native_tool_loop_requested": True,
-                        "native_tool_call_count": len(native_tool_calls),
-                    }
-                )
-                if native_tool_calls:
-                    if not text and candidate.strip():
-                        text = candidate.strip()
-                    break
+            if native_tool_loop_relevant:
+                tool_prompts = [ollama_tool_call_selection_prompt(proposal_prompt, text)]
+                if not text:
+                    tool_prompts.append(ollama_tool_call_fallback_prompt())
+                for index, tool_prompt in enumerate(tool_prompts, start=2):
+                    raw_chat_response = session.chat(
+                        [{"role": "user", "content": tool_prompt}],
+                        tools=broker_tool_schemas(ollama_tool_call_tool_names()),
+                        max_new_tokens=max_new_tokens,
+                        temperature=0.0,
+                    )
+                    message = raw_chat_response.get("message")
+                    message = message if isinstance(message, dict) else {}
+                    candidate = str(message.get("content") or "")
+                    native_tool_calls = normalize_ollama_tool_calls(raw_chat_response)
+                    for call in native_tool_calls:
+                        call["semantic_task_excerpt"] = tool_prompt[:500]
+                        call["semantic_contract"] = "provider_native_tool_call_for_current_operator_task"
+                    prompt_attempts.append(
+                        {
+                            "attempt": index,
+                            "phase": "native_tool_call",
+                            "prompt_chars": len(tool_prompt),
+                            "text_chars": len(candidate),
+                            "text_preview": candidate[:120],
+                            "max_new_tokens": max_new_tokens,
+                            "native_tool_loop_requested": True,
+                            "native_tool_call_count": len(native_tool_calls),
+                        }
+                    )
+                    if native_tool_calls:
+                        if not text and candidate.strip():
+                            text = candidate.strip()
+                        break
         else:
             prompts = [
                 'Return exactly this JSON object and no prose: {"ok": true, "lane": "ollama"}',
@@ -208,6 +204,8 @@ def run_ollama_probe(
         warnings.append(
             "Heap/code-product provider task did not emit a native broker tool_call; text heap delta remains authoritative."
         )
+    elif native_tool_decision_prompted and heap_patch_prompt_required(prompt or ""):
+        native_classification = "ollama_native_tool_not_requested_text_delta_primary"
     elif native_tool_decision_prompted:
         native_classification = "ollama_native_tool_not_selected"
     heap_delta_text_required = bool(heap_patch_prompt_required(prompt or ""))
@@ -238,7 +236,7 @@ def run_ollama_probe(
         "native_tool_loop_requested": native_tool_loop_requested,
         "native_tool_loop_relevant": native_tool_loop_relevant,
         "native_tool_loop_supported": True,
-        "native_tool_loop_performed": bool(native_tool_decision_prompted),
+        "native_tool_loop_performed": bool(native_tool_loop_relevant),
         "native_tool_decision_prompted": native_tool_decision_prompted,
         "native_tool_decision": "call_tool" if native_tool_calls else "no_tool_needed",
         "native_tool_loop_classification": native_classification,
