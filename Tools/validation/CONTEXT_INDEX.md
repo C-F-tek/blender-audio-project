@@ -6,7 +6,9 @@ Use this index to find the nearest validation context before adding or changing 
 | --- | --- |
 | Agent context | `Tools/validation/agent_context/TOOL_CONTEXT.md` |
 | Agent memory | `Tools/validation/agent_memory/TOOL_CONTEXT.md` |
+| Agent review | `Tools/validation/agent_review/TOOL_CONTEXT.md` |
 | Code product | `Tools/validation/code_product/TOOL_CONTEXT.md` |
+| Deterministic recommendations | `Tools/validation/deterministic_recommendations/TOOL_CONTEXT.md` |
 | Docs hygiene | `Tools/validation/docs_hygiene/TOOL_CONTEXT.md` |
 | Generated artifacts | `Tools/validation/generated_artifacts/TOOL_CONTEXT.md` |
 | Generated patch specs | `Tools/validation/generated_patch_specs/TOOL_CONTEXT.md` |
