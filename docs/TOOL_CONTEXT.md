@@ -41,7 +41,20 @@ docs/SCRIPT_SURFACE_CONTEXT.md
 docs/SHARED_SCRIPTING_UTILITIES.md
 docs/LOCAL_AI_TASKS/tool-context-documentation-pass-2026-05-19.md
 docs/LOCAL_AI_TASKS/non-tools-script-context-pass-2026-05-19.md
+docs/LOCAL_AI_TASKS/exhaustive-script-surface-inventory-2026-05-19.md
+docs/LOCAL_AI_TASKS/mapping-tool-evidence-publishing-2026-05-19.md
 ```
+
+## Mapping and evidence publishing
+
+When the repository surface changes or a documentation pass needs complete coverage, use:
+
+```text
+docs/LOCAL_AI_TASKS/exhaustive-script-surface-inventory-2026-05-19.md
+docs/LOCAL_AI_TASKS/mapping-tool-evidence-publishing-2026-05-19.md
+```
+
+The first document defines the exhaustive script inventory procedure. The second defines how to run mapping tools locally and publish only compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/`.
 
 ## Relationship to code
 
