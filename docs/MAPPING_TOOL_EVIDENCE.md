@@ -20,6 +20,12 @@ Related inventory task:
 docs/LOCAL_AI_TASKS/exhaustive-script-surface-inventory-2026-05-19.md
 ```
 
+## Execution rule
+
+Run mapping and compact-evidence generation as one complete PowerShell block or script. Do not run only the summary section: variables such as `$RepoRoot`, `$Stamp`, `$RawDir`, `$EvidenceDir`, `$RunLog`, `$EvidenceJsonPath` and `$EvidenceMdPath` are created by the initialization section.
+
+If those variables are missing, restart from the single-shot command instead of continuing a partial shell state.
+
 ## Local raw outputs
 
 Raw mapping outputs stay local under:
@@ -37,6 +43,8 @@ Publish only compact evidence summaries under:
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/mapping_tool_results_<stamp>.md
 docs/LOCAL_VALIDATION_EVIDENCE/mapping_tool_results_<stamp>.json
+docs/LOCAL_VALIDATION_EVIDENCE/mapping_tool_results_latest.md
+docs/LOCAL_VALIDATION_EVIDENCE/mapping_tool_results_latest.json
 ```
 
 ## Mapping tools
