@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import os
+import signal
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from Tools.ai._shared.live_flow_monitor import run_monitored_command
 from Tools.ai._shared.process_tree import terminate_process_tree
 
 DEFAULT_REQUEST = (
@@ -71,42 +74,20 @@ def run_command(
     command: list[str],
     repo_root: Path,
     timeout_seconds: int | None = None,
+    *,
+    flow_dir: Path | None = None,
+    phase: str = "heap_context_closure_command",
 ) -> dict[str, Any]:
-    process: subprocess.Popen[str] | None = None
-    try:
-        process = subprocess.Popen(
-            command,
-            cwd=repo_root,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        stdout, stderr = process.communicate(timeout=timeout_seconds)
-    except subprocess.TimeoutExpired as exc:
-        if process is not None:
-            terminate_process_tree(process)
-            stdout, stderr = process.communicate()
-        else:
-            stdout = exc.stdout if isinstance(exc.stdout, str) else ""
-            stderr = exc.stderr if isinstance(exc.stderr, str) else ""
-        return {
-            "command": command,
-            "returncode": -9,
-            "stdout_tail": (stdout or "")[-4000:],
-            "stderr_tail": ((stderr or "")[-4000:] + f"\nTimeoutExpired after {timeout_seconds}s").strip(),
-            "passed": False,
-            "timeout": True,
-            "process_tree_terminated": process is not None,
-        }
-    returncode = process.returncode if process is not None else 127
-    return {
-        "command": command,
-        "returncode": returncode,
-        "stdout_tail": (stdout or "")[-4000:],
-        "stderr_tail": (stderr or "")[-4000:],
-        "passed": returncode == 0,
-        "timeout": False,
-    }
+    return run_monitored_command(
+        command,
+        repo_root,
+        timeout_seconds=timeout_seconds,
+        flow_dir=flow_dir,
+        status_name="heap_context_closure_live_flow",
+        phase=phase,
+        tail_chars=4000,
+        keyboard_interrupt="exit",
+    )
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -120,6 +101,182 @@ def load_json(path: Path) -> dict[str, Any]:
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+class _ProcessPidRef:
+    def __init__(self, pid: int) -> None:
+        self.pid = pid
+
+    def kill(self) -> None:
+        try:
+            os.kill(self.pid, signal.SIGTERM if os.name == "nt" else 9)
+        except BaseException:
+            pass
+
+    def terminate(self) -> None:
+        try:
+            os.kill(self.pid, signal.SIGTERM if os.name == "nt" else 15)
+        except BaseException:
+            pass
+
+
+def terminate_provider_launch_manifest_processes(
+    *,
+    run_dir: Path,
+    repo_root: Path,
+    reason: str,
+) -> dict[str, Any]:
+    """Best-effort final cleanup for provider children listed in launch manifests."""
+
+    provider_dir = run_dir / "provider_teamwork"
+    manifests = sorted(provider_dir.glob("provider_launch_manifest*.json"))
+    report: dict[str, Any] = {
+        "schema_version": 1,
+        "kind": "provider_launch_manifest_orphan_cleanup",
+        "reason": reason,
+        "run_dir": str(run_dir),
+        "manifest_count": len(manifests),
+        "checked": [],
+        "terminated": [],
+        "skipped": [],
+    }
+    for manifest in manifests:
+        payload = load_json(manifest)
+        provider_models: list[str] = []
+        for lane in payload.get("lanes") or []:
+            if not isinstance(lane, dict):
+                continue
+            provider_model = str(lane.get("provider_model") or "").strip()
+            if provider_model and provider_model not in provider_models:
+                provider_models.append(provider_model)
+            pid = _safe_pid(lane.get("pid"))
+            item = {
+                "manifest": str(manifest),
+                "lane": lane.get("lane"),
+                "requirement": lane.get("requirement"),
+                "pid": pid,
+            }
+            report["checked"].append(item)
+            if pid <= 0:
+                report["skipped"].append({**item, "reason": "missing_pid"})
+                continue
+            try:
+                status = _provider_process_status(pid, repo_root)
+            except BaseException as exc:  # noqa: BLE001 - cleanup must survive operator interrupts.
+                status = {
+                    "alive": True,
+                    "safe_to_terminate": True,
+                    "image_name": "",
+                    "command_line": "",
+                    "status_lookup_failed": True,
+                    "status_lookup_error": type(exc).__name__,
+                }
+            item.update(status)
+            if not status.get("alive"):
+                report["skipped"].append({**item, "reason": "not_alive"})
+                continue
+            if not status.get("safe_to_terminate"):
+                report["skipped"].append({**item, "reason": "pid_not_recognized_as_run_provider"})
+                continue
+            terminate_process_tree(_ProcessPidRef(pid))
+            report["terminated"].append({**item, "reason": reason})
+        for model in provider_models:
+            stopped = _stop_ollama_model(model)
+            if stopped:
+                report.setdefault("ollama_models_stopped", []).append(model)
+    report["performed"] = bool(report["checked"])
+    report["terminated_count"] = len(report["terminated"])
+    report["skipped_count"] = len(report["skipped"])
+    write_json(run_dir / "provider_orphan_cleanup.json", report)
+    return report
+
+
+def _safe_pid(value: Any) -> int:
+    try:
+        return int(value or 0)
+    except BaseException:
+        return 0
+
+
+def _provider_process_status(pid: int, repo_root: Path) -> dict[str, Any]:
+    if os.name == "nt":
+        return _windows_provider_process_status(pid, repo_root)
+    try:
+        os.kill(pid, 0)
+    except KeyboardInterrupt:
+        raise
+    except BaseException:
+        return {"alive": False, "safe_to_terminate": False, "image_name": "", "command_line": ""}
+    return {"alive": True, "safe_to_terminate": True, "image_name": "", "command_line": ""}
+
+
+def _windows_provider_process_status(pid: int, repo_root: Path) -> dict[str, Any]:
+    image_name = ""
+    command_line = ""
+    try:
+        task = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=3,
+        )
+        lines = [line.strip() for line in (task.stdout or "").splitlines() if line.strip()]
+        if task.returncode != 0 or not lines or not lines[0].startswith('"'):
+            return {"alive": False, "safe_to_terminate": False, "image_name": "", "command_line": ""}
+        image_name = (lines[0].split(",", 1)[0] or "").strip().strip('"')
+    except KeyboardInterrupt:
+        raise
+    except BaseException:
+        return {"alive": False, "safe_to_terminate": False, "image_name": "", "command_line": ""}
+    try:
+        ps = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                f"(Get-CimInstance Win32_Process -Filter \"ProcessId={pid}\").CommandLine",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+        command_line = (ps.stdout or "").strip()
+    except BaseException:
+        command_line = ""
+    normalized = command_line.lower()
+    repo = str(repo_root).lower()
+    provider_command = (
+        repo in normalized
+        or "tools.ai" in normalized
+        or "tools\\ai" in normalized
+        or "build_openvino_gpu0_workload_report" in normalized
+        or "build_npu_micro_task_companion_report" in normalized
+        or "build_local_provider_probe" in normalized
+    )
+    safe = image_name.lower().startswith("python") and (provider_command or not command_line)
+    return {
+        "alive": True,
+        "safe_to_terminate": safe,
+        "image_name": image_name,
+        "command_line": command_line[:1000],
+    }
+
+
+def _stop_ollama_model(model: str) -> bool:
+    try:
+        result = subprocess.run(
+            ["ollama", "stop", model],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
+        return result.returncode == 0
+    except BaseException:
+        return False
 
 
 def write_documents_run_manifest(

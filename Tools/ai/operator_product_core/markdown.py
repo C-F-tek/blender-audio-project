@@ -23,6 +23,13 @@ def render_run_markdown(report: dict[str, Any]) -> str:
         f"- Packaging succeeded: `{summary.get('launcher_packaging_succeeded')}`",
     ]
     result = report.get("run_result") if isinstance(report.get("run_result"), dict) else {}
+    lines.extend(
+        [
+            f"- Live flow status: `{result.get('flow_status_markdown') or ''}`",
+            f"- CRLF warnings compressed: `{result.get('crlf_warning_count') or 0}`",
+            f"- Interrupted by operator: `{result.get('keyboard_interrupt') or False}`",
+        ]
+    )
     if result.get("returncode") not in (0, None):
         lines.extend(
             ["", "## Stderr Tail", "", "```text", str(result.get("stderr_tail") or ""), "```"]

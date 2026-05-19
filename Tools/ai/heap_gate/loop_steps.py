@@ -1,11 +1,11 @@
 """RuntimeGateLoopStepsMixin extracted from the heap runtime completeness gate."""
 from __future__ import annotations
-
 from Tools.ai.heap_gate.runtime_common import (
     BASE_REQUIREMENTS,
     DEFAULT_BRIDGE_DIR,
     DEFAULT_BRIDGE_JSON,
     DEFAULT_BRIDGE_MD,
+    PROVIDER_START_REQUIREMENTS,
     REQUIREMENT_ORDER,
     Any,
     append_unique,
@@ -98,7 +98,6 @@ class RuntimeGateLoopStepsMixin:
         self.publish_startup_manifest_evidence()
         self.heap.write_snapshot()
         self.write_heap_exchange_entry()
-
     def planner_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
         if self.heap.pending_broker_requests():
             return
@@ -163,7 +162,6 @@ class RuntimeGateLoopStepsMixin:
                     "summary": f"GPU1 requested broker tool {plan_item['tool']} for {plan_item['requirement']}",
                 }
             )
-
     def run_bridge(self) -> dict[str, Any]:
         bridge_json = resolve_output_path(
             self.repo_root,
@@ -230,7 +228,6 @@ class RuntimeGateLoopStepsMixin:
             }
         )
         return report
-
     def critic_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
         broker_results = self.broker_results(events)
         if not broker_results:
@@ -266,7 +263,6 @@ class RuntimeGateLoopStepsMixin:
             correlation_id=f"{self.stamp}:validation:{round_id}",
             round_id=round_id,
         )
-
     def arbiter_step(self, round_id: int, events: list[dict[str, Any]]) -> None:
         if self.state["decisions"]:
             return
@@ -399,5 +395,6 @@ class RuntimeGateLoopStepsMixin:
             round_id=round_id,
         )
     def base_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
-        completed = self.completed_requirements(events)
-        return all(requirement in completed for requirement in BASE_REQUIREMENTS)
+        return all(req in self.completed_requirements(events) for req in BASE_REQUIREMENTS)
+    def provider_start_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
+        return all(req in self.completed_requirements(events) for req in PROVIDER_START_REQUIREMENTS)

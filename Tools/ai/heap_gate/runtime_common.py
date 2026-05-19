@@ -71,6 +71,7 @@ __all__ = [
     "PLACEHOLDER_CODE_PATTERNS",
     "PROPOSAL_ITERATION_MAX_CHARS",
     "PROPOSAL_ITERATION_SUMMARY_CHARS",
+    "PROVIDER_START_REQUIREMENTS",
     "PROVIDER_REQUIREMENTS",
     "ProviderBudgetConfig",
     "ProviderRuntimeHeap",
@@ -155,6 +156,12 @@ BASE_REQUIREMENTS = (
     "semantic_evidence_chunks",
     "runtime_file_refs",
     "validation_evidence",
+)
+
+PROVIDER_START_REQUIREMENTS = (
+    "operational_memory_write",
+    "semantic_code_chunks",
+    "runtime_file_refs",
 )
 
 PROVIDER_REQUIREMENTS = (

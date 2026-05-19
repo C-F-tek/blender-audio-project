@@ -15,6 +15,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from Tools.ai._shared.live_flow_monitor import CRLF_WARNING_RE
 from Tools.ai.operator_product_core import LauncherConfig
 from Tools.ai.operator_product_core.controller import OperatorProductController
 from Tools.ai.operator_product_core.io_utils import now_stamp
@@ -105,9 +106,32 @@ def write_process_gate_task(repo_root: Path, stamp: str) -> Path:
 
 
 def run_checked(command: list[str], *, cwd: Path) -> None:
-    completed = subprocess.run(command, cwd=cwd, text=True, check=False)
+    completed = subprocess.run(
+        command,
+        cwd=cwd,
+        text=True,
+        check=False,
+        capture_output=True,
+    )
+    suppressed = _print_filtered_output(completed.stdout or "", stream_name="stdout")
+    suppressed += _print_filtered_output(completed.stderr or "", stream_name="stderr")
+    if suppressed:
+        print(f"[preflight] compressed {suppressed} git CRLF line-ending warnings")
     if completed.returncode != 0:
         raise SystemExit(f"command failed with exit code {completed.returncode}: {command}")
+
+
+def _print_filtered_output(text: str, *, stream_name: str) -> int:
+    suppressed = 0
+    kept: list[str] = []
+    for line in text.splitlines():
+        if CRLF_WARNING_RE.match(line.strip()):
+            suppressed += 1
+        else:
+            kept.append(line)
+    if kept:
+        print("\n".join(kept))
+    return suppressed
 
 
 def git_sync(repo_root: Path, branch: str) -> None:
@@ -134,6 +158,8 @@ def parse_set_overrides(raw_values: list[str]) -> dict[str, Any]:
             raise SystemExit(f"--set key is empty: {raw}")
         if value.isdigit():
             overrides[key] = int(value)
+        elif value.lower() in {"true", "false"}:
+            overrides[key] = value.lower() == "true"
         else:
             try:
                 overrides[key] = float(value)
@@ -188,6 +214,31 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--npu-max-context-chars", dest="npu_max_context_chars", type=int)
     parser.add_argument("--npu-max-prompt-chars", dest="npu_max_prompt_chars", type=int)
     parser.add_argument("--npu-max-new-tokens", dest="npu_max_new_tokens", type=int)
+    parser.add_argument("--context-document-count", dest="context_document_count", type=int)
+    parser.add_argument(
+        "--context-document-preview-chars",
+        dest="context_document_preview_chars",
+        type=int,
+    )
+    parser.add_argument("--semantic-code-chunk-limit", dest="semantic_code_chunk_limit", type=int)
+    parser.add_argument(
+        "--semantic-code-chunk-preview-chars",
+        dest="semantic_code_chunk_preview_chars",
+        type=int,
+    )
+    parser.add_argument(
+        "--semantic-evidence-chunk-limit",
+        dest="semantic_evidence_chunk_limit",
+        type=int,
+    )
+    parser.add_argument("--memory-search-limit", dest="memory_search_limit", type=int)
+    parser.add_argument("--tool-catalog-limit", dest="tool_catalog_limit", type=int)
+    parser.add_argument(
+        "--allow-npu-device-workload",
+        dest="allow_npu_device_workload",
+        action="store_true",
+        help="Opt in to bounded NPU device workload; semantic NPU audit still runs without it.",
+    )
     parser.add_argument("--revision-context", default="auto_latest")
     parser.add_argument("--timeout-seconds", type=int, default=24000)
     parser.add_argument("--set", action="append", default=[])
@@ -226,10 +277,19 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         "npu_max_context_chars",
         "npu_max_prompt_chars",
         "npu_max_new_tokens",
+        "context_document_count",
+        "context_document_preview_chars",
+        "semantic_code_chunk_limit",
+        "semantic_code_chunk_preview_chars",
+        "semantic_evidence_chunk_limit",
+        "memory_search_limit",
+        "tool_catalog_limit",
     ):
         value = getattr(args, key, None)
         if value not in ("", None):
             overrides[key] = value
+    if args.allow_npu_device_workload:
+        overrides["allow_npu_device_workload"] = True
     return LauncherConfig(
         repo_root=repo_root,
         request_file=request_file,

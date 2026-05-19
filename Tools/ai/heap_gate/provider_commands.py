@@ -1,15 +1,11 @@
 """RuntimeGateProviderCommandsMixin extracted from the heap runtime completeness gate."""
-
 from __future__ import annotations
-
 from Tools.ai.heap_gate.runtime_common import (
     Any,
     Path,
     repo_rel,
     subprocess,
 )
-
-
 class RuntimeGateProviderCommandsMixin:
     def provider_command_specs(self, work_dir: Path, revision: int = 0) -> list[dict[str, Any]]:
         suffix = f"_revision{revision}" if revision else ""
@@ -28,12 +24,16 @@ class RuntimeGateProviderCommandsMixin:
             if startup_manifest
             else (["--task-file", task_file] if task_file else [])
         )
+        gpu1_timeout = max(60, min(int(self.args.timeout_seconds // 5), 180))
+        gpu0_tool_loop_timeout = min(max(int(self.args.timeout_seconds // 2), 60), 180)
+        npu_tool_loop_timeout = max(20, min(int(self.args.npu_micro_timeout_seconds), 90))
         return [
             {
                 "lane": "gpu1_planner",
                 "requirement": "gpu1_provider_planner",
                 "role": "primary_planner_cumulative_responder",
                 "output": gpu1_json,
+                "timeout_seconds": gpu1_timeout + 30,
                 "command": [
                     self.child_python(),
                     "-m",
@@ -47,7 +47,7 @@ class RuntimeGateProviderCommandsMixin:
                     "--prompt",
                     "__GPU1_CUMULATIVE_PROMPT__",
                     "--timeout",
-                    str(self.args.timeout_seconds),
+                    str(gpu1_timeout),
                     "--max-new-tokens",
                     str(max(128, min(int(self.args.max_new_tokens), 4096))),
                     "--ollama-num-ctx",
@@ -63,6 +63,7 @@ class RuntimeGateProviderCommandsMixin:
                 "requirement": "gpu0_provider_peer",
                 "role": "diagnostic_peer_workload",
                 "output": gpu0_json,
+                "timeout_seconds": gpu0_tool_loop_timeout + 30,
                 "command": [
                     self.child_python(),
                     "-m",
@@ -75,7 +76,7 @@ class RuntimeGateProviderCommandsMixin:
                     "--min-seconds",
                     str(self.args.gpu0_min_seconds),
                     "--tool-loop-timeout-seconds",
-                    str(min(max(int(self.args.timeout_seconds // 2), 60), 180)),
+                    str(gpu0_tool_loop_timeout),
                     "--require-semantic-provider",
                     "--role",
                     "heap_runtime_diagnostic_peer",
@@ -97,6 +98,7 @@ class RuntimeGateProviderCommandsMixin:
                 "requirement": "npu_micro_task_auditor",
                 "role": "npu_micro_task_auditor",
                 "output": npu_json,
+                "timeout_seconds": npu_tool_loop_timeout + 30,
                 "command": [
                     self.child_python(),
                     "-m",
@@ -118,7 +120,7 @@ class RuntimeGateProviderCommandsMixin:
                     "--max-context-chars",
                     str(self.args.npu_max_context_chars),
                     "--tool-loop-timeout-seconds",
-                    str(min(max(int(self.args.timeout_seconds // 2), 60), 180)),
+                    str(npu_tool_loop_timeout),
                     "--require-semantic-provider",
                     *(
                         [
@@ -138,7 +140,6 @@ class RuntimeGateProviderCommandsMixin:
                 ],
             },
         ]
-
     def summarize_provider_report(
         self,
         spec: dict[str, Any],
@@ -151,7 +152,6 @@ class RuntimeGateProviderCommandsMixin:
         native_tool_loop_requested = bool(report_data.get("native_tool_loop_requested"))
         native_tool_loop_supported = bool(report_data.get("native_tool_loop_supported"))
         native_tool_loop_performed = bool(report_data.get("native_tool_loop_performed"))
-
         def absorb_tool_loop(payload: dict[str, Any]) -> None:
             nonlocal native_tool_loop_requested
             nonlocal native_tool_loop_supported
@@ -177,7 +177,6 @@ class RuntimeGateProviderCommandsMixin:
             for call in text_calls:
                 if isinstance(call, dict):
                     textual_tool_calls.append(call)
-
         absorb_tool_loop(report_data)
         provider_execution = bool(
             report_data.get("provider_execution_performed")
@@ -271,7 +270,6 @@ class RuntimeGateProviderCommandsMixin:
             "stdout_tail": (completed.stdout or "")[-1000:],
             "stderr_tail": (completed.stderr or "")[-1000:],
         }
-
     def build_quality_failure_feedback(self, text: str, events: list[dict[str, Any]]) -> str:
         file_quality = self.response_file_reference_quality(text)
         implementation_quality = self.implementation_quality_report(text, events)
@@ -298,10 +296,8 @@ class RuntimeGateProviderCommandsMixin:
             )
             if part
         )
-
     def force_concrete_delta_feedback(self, events: list[dict[str, Any]]) -> str:
         """Force GPU1 to produce a materially different concrete block after veto loops.
-
         This is intentionally feedback-only: it does not change provider calls,
         does not apply patches and does not alter the composer format. It raises
         the in-heap contract pressure when repeated proposal chunks are rejected
@@ -310,7 +306,6 @@ class RuntimeGateProviderCommandsMixin:
         report = self.latest_proposal_iteration_report()
         if not report:
             return ""
-
         implementation = (
             report.get("implementation_quality")
             if isinstance(report.get("implementation_quality"), dict)
@@ -329,7 +324,6 @@ class RuntimeGateProviderCommandsMixin:
         veto = (
             report.get("cross_lane_veto") if isinstance(report.get("cross_lane_veto"), dict) else {}
         )
-
         def listify(value: Any) -> list[str]:
             if isinstance(value, list):
                 return [str(item) for item in value if str(item).strip()]
@@ -338,13 +332,11 @@ class RuntimeGateProviderCommandsMixin:
             if isinstance(value, str) and value.strip():
                 return [value.strip()]
             return []
-
         def parse_similarity(value: Any) -> float:
             try:
                 return float(str(value or "0").replace(",", "."))
             except ValueError:
                 return 0.0
-
         placeholder_hits = listify(implementation.get("placeholder_hits"))
         implementation_errors = listify(implementation.get("errors"))
         progress_errors = listify(progress.get("errors"))
@@ -353,7 +345,6 @@ class RuntimeGateProviderCommandsMixin:
         )
         veto_reasons = listify(veto.get("reasons"))
         similarity = parse_similarity(progress.get("similarity"))
-
         has_placeholder = bool(placeholder_hits) or any(
             marker in item.lower()
             for item in implementation_errors + veto_reasons
@@ -363,7 +354,6 @@ class RuntimeGateProviderCommandsMixin:
             "similarity=" in item.lower() for item in progress_errors + veto_reasons
         )
         vetoed = veto.get("vetoed") is True
-
         if not (has_placeholder or repeated or vetoed):
             return ""
 

@@ -143,6 +143,11 @@ def analyze_section(repo_root: Path, output_dir: Path, item: dict[str, str]) -> 
         result["errors"].append(error)
         return result
     if not payload:
+        if no_worktree_diff_marker(body):
+            result["payload_kind"] = "no_worktree_diff_marker"
+            result["status"] = "already_integrated_no_worktree_diff"
+            result["warnings"].append("verified target has no captured worktree diff")
+            return result
         result["status"] = "missing_payload"
         result["errors"].append("section has no diff code block")
         return result
@@ -154,6 +159,17 @@ def analyze_section(repo_root: Path, output_dir: Path, item: dict[str, str]) -> 
     result["status"] = "needs_manual_review"
     result["warnings"].append("unrecognized payload format")
     return result
+
+
+def no_worktree_diff_marker(body: str) -> bool:
+    status = metadata_value(body, "Implementation status")
+    hunks = metadata_value(body, "Diff hunks")
+    normalized = body.lower()
+    return (
+        status == "verified_target_no_worktree_diff"
+        and hunks == "0"
+        and "[no worktree diff captured]" in normalized
+    )
 
 
 def _base_section_result(

@@ -14,6 +14,7 @@ INTEGRATED_STATUSES = (
     "already_integrated",
     "already_integrated_with_context_drift",
     "already_integrated_truncated_dump",
+    "already_integrated_no_worktree_diff",
 )
 
 

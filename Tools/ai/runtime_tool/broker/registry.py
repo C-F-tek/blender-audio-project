@@ -51,7 +51,14 @@ TOOL_SPECS: dict[str, ToolSpec] = {
     "build_agent_transient_request_context": ToolSpec(
         name="build_agent_transient_request_context",
         description="Build request-scoped context from memory notes, raw files and reports.",
-        allowed_args=("objective", "memory_note", "raw_file", "report_file"),
+        allowed_args=(
+            "objective",
+            "memory_note",
+            "raw_file",
+            "report_file",
+            "max_raw_files",
+            "max_chars_per_file",
+        ),
         builder=build_agent_transient_request_context,
     ),
     "check_python_syntax": ToolSpec(

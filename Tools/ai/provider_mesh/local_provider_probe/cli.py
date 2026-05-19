@@ -202,7 +202,7 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--ollama-num-ctx", type=int, default=16384)
-    parser.add_argument("--keep-alive", default="10m")
+    parser.add_argument("--keep-alive", default="0s")
     parser.add_argument("--npu-python-exe", default="")
     parser.add_argument("--run-ollama", action="store_true")
     parser.add_argument("--run-npu", action="store_true")

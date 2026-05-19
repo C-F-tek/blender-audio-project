@@ -39,7 +39,7 @@ def startup_command(args: Any, state: dict[str, Any]) -> list[str]:
 
 
 def heap_command(args: Any, state: dict[str, Any]) -> list[str]:
-    return [
+    command = [
         state["project_python"],
         "-m",
         "Tools.ai",
@@ -65,6 +65,24 @@ def heap_command(args: Any, state: dict[str, Any]) -> list[str]:
         str(args.ollama_num_ctx),
         "--max-new-tokens",
         str(args.max_new_tokens),
+        "--max-context-files",
+        str(args.context_document_count),
+        "--max-chars-per-file",
+        str(args.context_document_preview_chars),
+        "--context-document-count",
+        str(args.context_document_count),
+        "--context-document-preview-chars",
+        str(args.context_document_preview_chars),
+        "--semantic-code-chunk-limit",
+        str(args.semantic_code_chunk_limit),
+        "--semantic-code-chunk-preview-chars",
+        str(args.semantic_code_chunk_preview_chars),
+        "--semantic-evidence-chunk-limit",
+        str(args.semantic_evidence_chunk_limit),
+        "--memory-search-limit",
+        str(args.memory_search_limit),
+        "--tool-catalog-limit",
+        str(args.tool_catalog_limit),
         "--keep-alive",
         str(args.keep_alive),
         "--gpu0-iterations",
@@ -81,7 +99,6 @@ def heap_command(args: Any, state: dict[str, Any]) -> list[str]:
         str(args.npu_max_new_tokens),
         "--timeout-seconds",
         str(args.timeout_seconds),
-        "--allow-npu-device-workload",
         "--npu-device-workload-seconds",
         str(args.npu_device_workload_seconds),
         "--npu-device-workload-iterations",
@@ -93,3 +110,6 @@ def heap_command(args: Any, state: dict[str, Any]) -> list[str]:
         "--markdown-output",
         str(state["markdown_file"]),
     ]
+    if getattr(args, "allow_npu_device_workload", False):
+        command.append("--allow-npu-device-workload")
+    return command

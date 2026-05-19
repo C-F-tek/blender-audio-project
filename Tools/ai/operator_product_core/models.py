@@ -34,11 +34,19 @@ CLI_VALUE_KEYS = {
     "startup_max_context_files": "--startup-max-context-files",
     "startup_scan_context_files": "--startup-scan-context-files",
     "startup_max_chars_per_file": "--startup-max-chars-per-file",
+    "context_document_count": "--context-document-count",
+    "context_document_preview_chars": "--context-document-preview-chars",
+    "semantic_code_chunk_limit": "--semantic-code-chunk-limit",
+    "semantic_code_chunk_preview_chars": "--semantic-code-chunk-preview-chars",
+    "semantic_evidence_chunk_limit": "--semantic-evidence-chunk-limit",
+    "memory_search_limit": "--memory-search-limit",
+    "tool_catalog_limit": "--tool-catalog-limit",
     "revision_context_max_tasks": "--revision-context-max-tasks",
 }
 
 CLI_FLAG_KEYS = {
     "allow_provider_generation": "--allow-provider-generation",
+    "allow_npu_device_workload": "--allow-npu-device-workload",
     "skip_startup_reload": "--skip-startup-reload",
     "strict_startup_reload": "--strict-startup-reload",
     "no_documents": "--no-documents",

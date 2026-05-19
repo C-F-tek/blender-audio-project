@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from Tools.ai.heap_gate.runtime_common import Any, now_iso, repo_rel, safe_dict
+from Tools.ai.heap_gate.runtime_common import Any, now_iso, repo_rel, safe_dict, safe_int
 
 
 def _compact_artifacts(artifacts: dict[str, Any], limit: int = 24) -> dict[str, str]:
@@ -117,7 +117,9 @@ def build_provider_teamwork_leader_packet(
             "reports": universe_refs,
         },
         "runtime_heap_refs": heap_paths,
-        "broker_tool_catalog": gate.broker_tool_catalog_summary(max_items=24),
+        "broker_tool_catalog": gate.broker_tool_catalog_summary(
+            max_items=max(1, safe_int(getattr(gate.args, "tool_catalog_limit", 24), 24))
+        ),
         "broker_tool_evidence": gate.tool_evidence_summary(events, max_items=12),
         "source_allowlist_contract": gate.render_source_allowlist_contract(limit=32),
         "verified_source_candidates": gate.real_source_file_candidates(events, limit=32),

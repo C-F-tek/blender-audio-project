@@ -117,6 +117,13 @@ def build_launcher_summary(args: Any, state: dict[str, Any]) -> dict[str, Any]:
         ),
         "heap_report": str(state["report_file"]),
         "heap_markdown": str(state["markdown_file"]),
+        "heap_context_closure_live_flow_status": _existing_path(
+            state["run_dir"] / "heap_context_closure_live_flow.json"
+        ),
+        "heap_context_closure_live_flow_markdown": _existing_path(
+            state["run_dir"] / "heap_context_closure_live_flow.md"
+        ),
+        "provider_orphan_cleanup": state.get("provider_orphan_cleanup", {}),
         "heap_returncode": heap_result["returncode"],
         "composer_returncode": composer_result["returncode"],
         "heap_passed": heap_result["passed"],

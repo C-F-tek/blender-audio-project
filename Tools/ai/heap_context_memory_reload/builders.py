@@ -53,7 +53,11 @@ def build_repo_docs_map(
 
 
 def collect_semantic_code_chunks(
-    repo_root: Path, output_dir: Path, request: str, limit: int = 48
+    repo_root: Path,
+    output_dir: Path,
+    request: str,
+    limit: int = 48,
+    preview_chars: int = 1800,
 ) -> dict[str, str]:
     keywords = [
         part.lower()
@@ -68,7 +72,7 @@ def collect_semantic_code_chunks(
     chunks = []
     for score, path in ranked[:limit]:
         rel = repo_rel(repo_root, path)
-        text = read_text(path, max_chars=1800)
+        text = read_text(path, max_chars=max(1, preview_chars))
         chunks.append(
             {
                 "path": rel,

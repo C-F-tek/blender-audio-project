@@ -134,7 +134,8 @@ def _build_context_maps(state: ReloadRun) -> None:
             state.repo_root,
             state.output_dir,
             state.request_text,
-            limit=max(12, min(state.args.max_context_files, 64)),
+            limit=max(1, state.args.max_context_files),
+            preview_chars=max(1, state.args.max_chars_per_file),
         )
     )
 
@@ -273,9 +274,8 @@ def _run_memory_action(
 
 
 def _run_transient_context(state: ReloadRun) -> None:
-    raw_files = state.context_files[
-        : min(state.args.startup_scan_context_files, max(state.args.max_context_files, 240))
-    ]
+    raw_limit = max(1, min(state.args.startup_scan_context_files, state.args.max_context_files))
+    raw_files = state.context_files[:raw_limit]
     transient_json = state.output_dir / "startup_transient_request_context.json"
     transient_md = state.output_dir / "startup_transient_request_context.md"
     command = ["in_process", "Tools.ai.agent_context.transient_request_context.cli.build_context"]
@@ -293,9 +293,7 @@ def _run_transient_context(state: ReloadRun) -> None:
                 str(state.output_dir / "startup_operational_memory_status.json"),
                 str(state.output_dir / "startup_operational_memory_search.json"),
             ],
-            max_raw_files=min(
-                state.args.startup_scan_context_files, max(state.args.max_context_files, 240)
-            ),
+            max_raw_files=raw_limit,
             max_chars_per_file=state.args.max_chars_per_file,
             output=str(transient_json),
             markdown_output=str(transient_md),

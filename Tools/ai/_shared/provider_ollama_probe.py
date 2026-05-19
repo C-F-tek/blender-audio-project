@@ -14,7 +14,7 @@ def run_ollama_probe(
     prompt: str | None = None,
     max_new_tokens: int = 64,
     num_ctx: int | None = None,
-    keep_alive: str = "5m",
+    keep_alive: str = "0s",
 ) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from Tools.ai._shared.provider_tool_loop import (  # noqa: PLC0415

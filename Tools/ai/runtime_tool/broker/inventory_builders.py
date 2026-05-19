@@ -111,6 +111,10 @@ def build_agent_transient_request_context(
         command.extend(["--raw-file", raw_file])
     for report_file in split_values(args.get("report_file")):
         command.extend(["--report-file", report_file])
+    if args.get("max_raw_files") is not None:
+        command.extend(["--max-raw-files", str(args["max_raw_files"])])
+    if args.get("max_chars_per_file") is not None:
+        command.extend(["--max-chars-per-file", str(args["max_chars_per_file"])])
     return command, {
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),

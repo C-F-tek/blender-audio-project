@@ -26,12 +26,29 @@ def request_memory_content(request: str, objective: str, stamp: str) -> str:
     )
 
 
+def positive_arg(owner: Any, name: str, default: int) -> int:
+    try:
+        value = int(getattr(owner.args, name, default) or default)
+    except (TypeError, ValueError):
+        value = default
+    return max(1, value)
+
+
 def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
     context_dir = owner.runtime_context_dir()
     request = owner.request_text()
     query = request_query(request, owner.args.objective)
     memory_content = request_memory_content(request, owner.args.objective, owner.stamp)
     source_targets = owner.real_source_file_candidates(limit=32)
+    memory_limit = positive_arg(owner, "memory_search_limit", 8)
+    context_count = positive_arg(owner, "context_document_count", owner.args.max_context_files)
+    context_preview = positive_arg(
+        owner, "context_document_preview_chars", owner.args.max_chars_per_file
+    )
+    code_chunk_limit = positive_arg(owner, "semantic_code_chunk_limit", 12)
+    code_preview = positive_arg(
+        owner, "semantic_code_chunk_preview_chars", owner.args.max_chars_per_file
+    )
     startup_text_files: list[str] = []
     operator_request_file = str(getattr(owner.args, "request_file", "") or "").strip()
     if operator_request_file:
@@ -102,7 +119,12 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "requirement": "persistent_memory_search",
             "id": "persistent-memory-search",
             "tool": "runtime_sqlite_memory",
-            "args": {"action": "search", "scope": "persistent", "query": query, "limit": 8},
+            "args": {
+                "action": "search",
+                "scope": "persistent",
+                "query": query,
+                "limit": memory_limit,
+            },
             "reason": "search durable SQLite/FTS memory for prior decisions, targets and blocked products",
         },
         {
@@ -125,7 +147,12 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "requirement": "operational_memory_search",
             "id": "operational-memory-search",
             "tool": "runtime_sqlite_memory",
-            "args": {"action": "search", "scope": "operational", "query": query, "limit": 5},
+            "args": {
+                "action": "search",
+                "scope": "operational",
+                "query": query,
+                "limit": memory_limit,
+            },
             "reason": "read request-scoped operational memory before provider synthesis",
         },
         {
@@ -141,6 +168,8 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
                     f"user_request_focus={query}",
                 ],
                 "raw_file": ["AGENTS.md", "README.md", *owner.historical_tool_context_files()],
+                "max_raw_files": context_count,
+                "max_chars_per_file": context_preview,
             },
             "reason": "materialize request-scoped shared context/chunks from repository policy and historical tool maps",
         },
@@ -153,9 +182,9 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
                 "query": query,
                 "output": repo_rel(owner.repo_root, context_dir / "selected_semantic_code_chunks.json"),
                 "markdown_output": repo_rel(owner.repo_root, context_dir / "selected_semantic_code_chunks.md"),
-                "max_chunks": 12,
-                "max_total_chars": min(int(owner.args.max_context_files) * 500, 24000),
-                "max_excerpt_chars": min(int(owner.args.max_chars_per_file), 3000),
+                "max_chunks": code_chunk_limit,
+                "max_total_chars": code_chunk_limit * code_preview,
+                "max_excerpt_chars": code_preview,
                 "path_boost": ["tools/ai", "tools/npu", "tools/workflow"],
             },
             "reason": "select bounded semantic code chunks so provider lanes share connected logical context",
@@ -171,11 +200,8 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
                 "output_dir": repo_rel(owner.repo_root, context_dir / "ai_context_pack"),
                 "evidence_dir": repo_rel(owner.repo_root, context_dir / "ai_context_pack_evidence"),
                 "evidence_basename": f"heap_runtime_context_pack_evidence_{owner.stamp}",
-                "max_total_chars": min(
-                    int(owner.args.max_context_files) * int(owner.args.max_chars_per_file),
-                    96000,
-                ),
-                "max_file_chars": int(owner.args.max_chars_per_file),
+                "max_total_chars": context_count * context_preview,
+                "max_file_chars": context_preview,
             },
             "reason": "assemble bounded final context pack from stable historical context builder",
         },
@@ -187,6 +213,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "args": {"exclude_dir": ["output", "indexAI/code_chunks", "renders"]},
             "reason": "broker existing line-budget evidence so it can be chunked and referenced by the heap",
             "nonblocking": True,
+            "post_provider": True,
         },
         {
             "stage": 2,
@@ -196,6 +223,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "args": {},
             "reason": "broker existing syntax evidence as runtime context, not as standalone product proof",
             "nonblocking": True,
+            "post_provider": True,
         },
         {
             "stage": 2,
@@ -205,6 +233,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "args": {"input": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
             "reason": "broker existing static interpretation evidence for later memory/chunk consumption",
             "nonblocking": True,
+            "post_provider": True,
         },
         {
             "stage": 3,
@@ -221,6 +250,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             },
             "reason": "write brokered evidence refs into operational SQLite scratch memory for the current run",
             "nonblocking": True,
+            "post_provider": True,
         },
         {
             "stage": 3,
@@ -245,6 +275,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "tool": "run_gpu_planner_json_contract_smoke",
             "args": {},
             "reason": "prove validation tool evidence is consumed before arbiter decision",
+            "post_provider": True,
         },
         {
             "stage": 3,
@@ -254,6 +285,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "args": {},
             "reason": "broker validation-report contract evidence for generated reports without making it the run product",
             "nonblocking": True,
+            "post_provider": True,
         },
         {
             "stage": 3,
@@ -263,6 +295,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "args": {"root": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
             "reason": "broker existing duplication/refactor evidence for provider and matrix context",
             "nonblocking": True,
+            "post_provider": True,
         },
     ]
     if getattr(owner, "provider_reports", []):

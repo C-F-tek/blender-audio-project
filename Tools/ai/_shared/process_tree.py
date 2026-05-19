@@ -22,16 +22,16 @@ def terminate_process_tree(process: Any, timeout_seconds: float = 3.0) -> None:
                 check=False,
                 timeout=timeout_seconds,
             )
-        except Exception:
+        except BaseException:
             try:
                 process.kill()
-            except Exception:
+            except BaseException:
                 pass
         return
     try:
         os.killpg(os.getpgid(pid), signal.SIGTERM)
-    except Exception:
+    except BaseException:
         try:
             process.terminate()
-        except Exception:
+        except BaseException:
             return

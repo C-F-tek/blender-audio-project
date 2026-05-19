@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import argparse
 import json
 import os
@@ -8,7 +7,6 @@ import sys
 import time
 from pathlib import Path
 from typing import Any
-
 from Tools.ai._shared.openvino_model_discovery import (
     discover_openvino_tool_model_dir,
     run_openvino_tool_loop_child_payload,
@@ -18,7 +16,6 @@ def heap_patch_prompt_required(prompt: str) -> bool:
     text = (prompt or "").lower()
     markers = ("heap chunk/composer contract", "startup_context_digest_for_gpu1", "external heap revision context", "target_files", "forced concrete delta required", "proposal chunks")
     return any(marker in text for marker in markers)
-
 def build_heap_patch_proposal_prompt(prompt: str) -> str:
     if not heap_patch_prompt_required(prompt):
         return prompt
@@ -350,10 +347,6 @@ def openvino_tool_loop_report(
     report["structured_tool_call_text"] = str(payload.get("structured_text") or "")
     report["structured_tool_call_payload"] = structured_call
     structured_decision = str(structured_call.get("decision") or "").strip() or ("call_tool" if "call_tool" in report["structured_tool_call_text"] else "")
-    if structured_decision == "call_tool" and not structured_call.get("tool"):
-        haystack = " ".join((report["structured_tool_call_text"], str(payload.get("response_text") or ""), str(payload.get("provider_heap_delta_text") or "")))
-        selected_tool = next((name for name in tool_names if name in haystack), "") or "run_heap_code_execution_matrix"
-        structured_call = {"decision": "call_tool", "tool": selected_tool, "args": {}, "reason": "openvino_text_tool_name_salvaged"}; report["structured_tool_call_payload"] = structured_call
     if not structured_decision and structured_call.get("tool"):
         structured_decision = "call_tool"
     if not tool_calls and structured_decision == "call_tool" and structured_call.get("tool"):

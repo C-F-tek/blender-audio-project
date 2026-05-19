@@ -1,7 +1,5 @@
 """RuntimeGateRunLoopMixin extracted from the heap runtime completeness gate."""
-
 from __future__ import annotations
-
 from Tools.ai.heap_gate.runtime_common import (
     Any,
     evaluate_terminal_invariants,
@@ -12,8 +10,6 @@ from Tools.ai.heap_gate.runtime_common import (
     safe_dict,
     safe_int,
 )
-
-
 class RuntimeGateRunLoopMixin:
     def run(self) -> dict[str, Any]:
         self.bootstrap()
@@ -30,7 +26,7 @@ class RuntimeGateRunLoopMixin:
                 self.run_bridge()
                 events = self.read_events()
                 self.publish_shared_evidence_facts(round_id, events)
-            if self.base_requirements_complete(events) and not self.provider_reports:
+            if self.provider_start_requirements_complete(events) and not self.provider_reports:
                 self.run_provider_teamwork(round_id)
                 events = self.read_events()
                 if self.publish_provider_native_tool_calls(round_id, events):
@@ -395,7 +391,6 @@ class RuntimeGateRunLoopMixin:
                 "source_writes_performed": False,
             },
         }
-
     def minimum_runtime_depth_satisfied(self, round_id: int) -> bool:
         min_rounds = max(1, int(getattr(self.args, "min_runtime_rounds", 1)))
         min_proposals = max(0, int(getattr(self.args, "min_proposal_iterations", 0)))

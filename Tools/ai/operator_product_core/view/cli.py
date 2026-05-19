@@ -38,6 +38,13 @@ class OperatorRunView:
         self.startup_max_context_files = tk.StringVar(value="")
         self.startup_scan_context_files = tk.StringVar(value="")
         self.startup_max_chars_per_file = tk.StringVar(value="")
+        self.context_document_count = tk.StringVar(value="")
+        self.context_document_preview_chars = tk.StringVar(value="")
+        self.semantic_code_chunk_limit = tk.StringVar(value="")
+        self.semantic_code_chunk_preview_chars = tk.StringVar(value="")
+        self.semantic_evidence_chunk_limit = tk.StringVar(value="")
+        self.memory_search_limit = tk.StringVar(value="")
+        self.tool_catalog_limit = tk.StringVar(value="")
         self.code_product = tk.StringVar(value="")
         self.last_report: dict[str, Any] = {}
         self._build()
@@ -82,19 +89,26 @@ class OperatorRunView:
             ("Context files", self.startup_max_context_files),
             ("Scan files", self.startup_scan_context_files),
             ("Chars per file", self.startup_max_chars_per_file),
+            ("Context docs", self.context_document_count),
+            ("Context preview", self.context_document_preview_chars),
+            ("Code chunks", self.semantic_code_chunk_limit),
+            ("Code preview", self.semantic_code_chunk_preview_chars),
+            ("Evidence chunks", self.semantic_evidence_chunk_limit),
+            ("Memory search", self.memory_search_limit),
+            ("Tool catalog", self.tool_catalog_limit),
         ]
         for row, (label, variable) in enumerate(profile_fields, start=7):
             ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=2)
             ttk.Entry(frame, textvariable=variable, width=18).grid(
                 row=row, column=1, sticky="w", pady=2
             )
-        ttk.Label(frame, text="Stamp").grid(row=11, column=0, sticky="w", pady=2)
+        ttk.Label(frame, text="Stamp").grid(row=18, column=0, sticky="w", pady=2)
         ttk.Entry(frame, textvariable=self.stamp, width=40).grid(
-            row=11, column=1, sticky="w", pady=2
+            row=18, column=1, sticky="w", pady=2
         )
 
         buttons = ttk.Frame(frame)
-        buttons.grid(row=12, column=0, columnspan=3, sticky="ew", pady=8)
+        buttons.grid(row=19, column=0, columnspan=3, sticky="ew", pady=8)
         ttk.Button(buttons, text="Build Command", command=self.build_command).pack(
             side="left", padx=3
         )
@@ -104,9 +118,9 @@ class OperatorRunView:
         )
         ttk.Button(buttons, text="Apply Safe", command=self.apply_safe).pack(side="left", padx=3)
         self.log = tk.Text(frame, height=24, width=110, wrap="word")
-        self.log.grid(row=13, column=0, columnspan=3, sticky="nsew")
+        self.log.grid(row=20, column=0, columnspan=3, sticky="nsew")
         frame.columnconfigure(1, weight=1)
-        frame.rowconfigure(13, weight=1)
+        frame.rowconfigure(20, weight=1)
 
     def _browse(self, variable: tk.StringVar, kind: str) -> None:
         value = filedialog.askdirectory() if kind == "dir" else filedialog.askopenfilename()
@@ -131,6 +145,13 @@ class OperatorRunView:
                 self.startup_max_context_files: profile.get("startup_max_context_files"),
                 self.startup_scan_context_files: profile.get("startup_scan_context_files"),
                 self.startup_max_chars_per_file: profile.get("startup_max_chars_per_file"),
+                self.context_document_count: profile.get("context_document_count"),
+                self.context_document_preview_chars: profile.get("context_document_preview_chars"),
+                self.semantic_code_chunk_limit: profile.get("semantic_code_chunk_limit"),
+                self.semantic_code_chunk_preview_chars: profile.get("semantic_code_chunk_preview_chars"),
+                self.semantic_evidence_chunk_limit: profile.get("semantic_evidence_chunk_limit"),
+                self.memory_search_limit: profile.get("memory_search_limit"),
+                self.tool_catalog_limit: profile.get("tool_catalog_limit"),
             }
             for variable, value in values.items():
                 variable.set("" if value in (None, "") else str(value))
@@ -152,6 +173,19 @@ class OperatorRunView:
             "startup_max_context_files": ("Context files", self.startup_max_context_files),
             "startup_scan_context_files": ("Scan files", self.startup_scan_context_files),
             "startup_max_chars_per_file": ("Chars per file", self.startup_max_chars_per_file),
+            "context_document_count": ("Context docs", self.context_document_count),
+            "context_document_preview_chars": (
+                "Context preview",
+                self.context_document_preview_chars,
+            ),
+            "semantic_code_chunk_limit": ("Code chunks", self.semantic_code_chunk_limit),
+            "semantic_code_chunk_preview_chars": (
+                "Code preview",
+                self.semantic_code_chunk_preview_chars,
+            ),
+            "semantic_evidence_chunk_limit": ("Evidence chunks", self.semantic_evidence_chunk_limit),
+            "memory_search_limit": ("Memory search", self.memory_search_limit),
+            "tool_catalog_limit": ("Tool catalog", self.tool_catalog_limit),
         }
         overrides: dict[str, int] = {}
         for key, (label, variable) in fields.items():

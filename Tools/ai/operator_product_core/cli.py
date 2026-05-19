@@ -37,6 +37,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--startup-max-context-files", type=int, default=0)
     parser.add_argument("--startup-scan-context-files", type=int, default=0)
     parser.add_argument("--startup-max-chars-per-file", type=int, default=0)
+    parser.add_argument("--context-document-count", type=int, default=0)
+    parser.add_argument("--context-document-preview-chars", type=int, default=0)
+    parser.add_argument("--semantic-code-chunk-limit", type=int, default=0)
+    parser.add_argument("--semantic-code-chunk-preview-chars", type=int, default=0)
+    parser.add_argument("--semantic-evidence-chunk-limit", type=int, default=0)
+    parser.add_argument("--memory-search-limit", type=int, default=0)
+    parser.add_argument("--tool-catalog-limit", type=int, default=0)
     return parser.parse_args()
 
 
@@ -63,6 +70,13 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
                 "startup_max_context_files": args.startup_max_context_files,
                 "startup_scan_context_files": args.startup_scan_context_files,
                 "startup_max_chars_per_file": args.startup_max_chars_per_file,
+                "context_document_count": args.context_document_count,
+                "context_document_preview_chars": args.context_document_preview_chars,
+                "semantic_code_chunk_limit": args.semantic_code_chunk_limit,
+                "semantic_code_chunk_preview_chars": args.semantic_code_chunk_preview_chars,
+                "semantic_evidence_chunk_limit": args.semantic_evidence_chunk_limit,
+                "memory_search_limit": args.memory_search_limit,
+                "tool_catalog_limit": args.tool_catalog_limit,
             }.items()
             if value
         },

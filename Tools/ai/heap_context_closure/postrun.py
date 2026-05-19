@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -49,37 +48,24 @@ def run_external_postrun_package(
         "--output",
         str(report),
     ]
-    try:
-        completed = subprocess.run(
-            command,
-            cwd=repo_root,
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=max(60, int(timeout_seconds)),
-        )
-        result.update(
-            {
-                "performed": True,
-                "passed": completed.returncode == 0,
-                "returncode": completed.returncode,
-                "report": str(report),
-                "command": command,
-                "stdout_tail": (completed.stdout or "")[-4000:],
-                "stderr_tail": (completed.stderr or "")[-4000:],
-            }
-        )
-    except Exception as exc:
-        result.update(
-            {
-                "performed": True,
-                "passed": False,
-                "returncode": -1,
-                "report": str(report),
-                "command": command,
-                "stderr_tail": f"{type(exc).__name__}: {exc}",
-            }
-        )
+    completed = run_command(
+        command,
+        repo_root,
+        timeout_seconds=max(60, int(timeout_seconds)),
+        flow_dir=run_dir,
+        phase="external_heap_postrun_package",
+    )
+    result.update(
+        {
+            "performed": True,
+            "passed": bool(completed.get("passed")),
+            "returncode": completed.get("returncode"),
+            "report": str(report),
+            "command": command,
+            "stdout_tail": completed.get("stdout_tail", ""),
+            "stderr_tail": completed.get("stderr_tail", ""),
+        }
+    )
     return result, load_json(Path(str(result.get("report") or "")))
 
 
@@ -132,7 +118,12 @@ def run_final_readable_product(
     ]
     if composer_documents_dir:
         command.extend(["--documents-dir", composer_documents_dir, "--zip-documents"])
-    completed = run_command(command, repo_root)
+    completed = run_command(
+        command,
+        repo_root,
+        flow_dir=run_dir,
+        phase="assemble_heap_final_readable_product",
+    )
     payload = load_json(final_report)
     result.update(
         {

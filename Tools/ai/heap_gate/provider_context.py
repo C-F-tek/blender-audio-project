@@ -1,15 +1,11 @@
 """RuntimeGateProviderContextMixin extracted from the heap runtime completeness gate."""
-
 from __future__ import annotations
-
 from Tools.ai.heap_gate.runtime_common import (
     Any,
     Path,
     json,
     safe_int,
 )
-
-
 class RuntimeGateProviderContextMixin:
     def provider_work_dir(self) -> Path:
         if self.output_dir:
@@ -23,10 +19,8 @@ class RuntimeGateProviderContextMixin:
             )
         path.mkdir(parents=True, exist_ok=True)
         return path
-
     def request_text(self) -> str:
         return str(getattr(self.args, "request", "") or "").strip()
-
     def provider_response_text(self, lane: str) -> str:
         for report in reversed(self.provider_reports):
             if report.get("lane") != lane:
@@ -302,13 +296,14 @@ class RuntimeGateProviderContextMixin:
             "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         )
         team_context = self.team_context_summary()
-        tool_catalog = self.broker_tool_catalog_summary()
+        tool_catalog_limit = max(1, safe_int(getattr(self.args, "tool_catalog_limit", 24), 24))
+        tool_catalog = self.broker_tool_catalog_summary(max_items=tool_catalog_limit)
         source_candidates = (
             "\n".join(f"- {item}" for item in self.real_source_file_candidates(limit=32))
             or "- nessun candidato sorgente verificato disponibile"
         )
         source_allowlist_contract = self.render_source_allowlist_contract(limit=32)
-        runtime_universe_summary = self.runtime_universe_prompt_summary(limit=24)
+        runtime_universe_summary = self.runtime_universe_prompt_summary(limit=tool_catalog_limit)
         matrix_feedback = self.matrix_patch_candidate_feedback(self.read_events())
         revision_feedback = (
             self.provider_revision_feedback or "nessun feedback correttivo precedente"

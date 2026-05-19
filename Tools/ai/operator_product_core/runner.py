@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import os
 import re
-import subprocess
 from pathlib import Path
 from typing import Any
 
-from Tools.ai._shared.process_tree import terminate_process_tree
+from Tools.ai._shared.live_flow_monitor import run_monitored_command
+from Tools.ai.heap_context_closure.common import terminate_provider_launch_manifest_processes
 
 from .io_utils import read_json_quiet, write_json, write_text
 from .markdown import render_lab_markdown, render_run_markdown
@@ -25,33 +25,25 @@ def command_env(repo_root: Path, python_exe: str) -> dict[str, str]:
     return env
 
 
-def run_command(command: list[str], cwd: Path, timeout: int = 3600) -> dict[str, Any]:
-    process = subprocess.Popen(
+def run_command(
+    command: list[str],
+    cwd: Path,
+    timeout: int = 3600,
+    *,
+    flow_dir: Path | None = None,
+    phase: str = "operator_command",
+) -> dict[str, Any]:
+    return run_monitored_command(
         command,
         cwd=cwd,
         env=command_env(cwd, command[0]),
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        timeout_seconds=timeout,
+        flow_dir=flow_dir,
+        status_name="operator_product_live_flow",
+        phase=phase,
+        tail_chars=6000,
+        keyboard_interrupt="return",
     )
-    try:
-        stdout, stderr = process.communicate(timeout=timeout)
-        returncode = process.returncode
-        timed_out = False
-    except subprocess.TimeoutExpired:
-        terminate_process_tree(process)
-        stdout, stderr = process.communicate()
-        returncode = 124
-        timed_out = True
-        stderr = (stderr or "") + f"\ncommand timeout after {timeout} seconds"
-    return {
-        "command": command,
-        "returncode": returncode,
-        "passed": returncode == 0,
-        "timeout": timed_out,
-        "stdout_tail": (stdout or "")[-6000:],
-        "stderr_tail": (stderr or "")[-6000:],
-    }
 
 
 def discover_code_product(run_dir: Path, summary: dict[str, Any]) -> str:
@@ -100,15 +92,20 @@ def code_product_metrics(code_product: Path | None) -> dict[str, Any]:
     return report
 
 
-def code_product_blockers(metrics: dict[str, Any]) -> list[str]:
+def code_product_blockers(
+    metrics: dict[str, Any],
+    review_report: dict[str, Any] | None = None,
+) -> list[str]:
+    review = review_report or {}
+    all_integrated = review.get("all_integrated") is True
     blockers: list[str] = []
     if not metrics.get("exists"):
         return ["CODE_PRODUCT_FULL_PATCH was not produced"]
-    if int(metrics.get("diff_git_blocks") or 0) <= 0:
+    if int(metrics.get("diff_git_blocks") or 0) <= 0 and not all_integrated:
         blockers.append("CODE_PRODUCT_FULL_PATCH has no real diff --git block")
-    if metrics.get("empty_code_product_marker"):
+    if metrics.get("empty_code_product_marker") and not all_integrated:
         blockers.append("CODE_PRODUCT_FULL_PATCH declares no effective diff/code")
-    if metrics.get("no_applicable_marker"):
+    if metrics.get("no_applicable_marker") and not all_integrated:
         blockers.append("CODE_PRODUCT_FULL_PATCH declares no applicable code product")
     if metrics.get("truncation_marker"):
         blockers.append("CODE_PRODUCT_FULL_PATCH contains a truncation marker")
@@ -119,9 +116,23 @@ def run_heap(config: LauncherConfig, timeout: int = 3600) -> dict[str, Any]:
     cfg = resolve_config(config)
     cfg.final_root.mkdir(parents=True, exist_ok=True)
     command = build_heap_command(cfg)
-    result = run_command(command, cfg.repo_root, timeout=timeout)
     run_dir = run_dir_for(cfg)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    result = run_command(
+        command,
+        cfg.repo_root,
+        timeout=timeout,
+        flow_dir=run_dir,
+        phase="operator_heap_context_closure",
+    )
     summary_path = run_dir / "heap_runtime_context_closure_launcher.json"
+    provider_orphan_cleanup: dict[str, Any] = {}
+    if not result.get("passed") or not summary_path.exists():
+        provider_orphan_cleanup = terminate_provider_launch_manifest_processes(
+            run_dir=run_dir,
+            repo_root=cfg.repo_root,
+            reason="operator product wrapper observed failed or incomplete heap closure",
+        )
     summary = read_json_quiet(summary_path)
     report = {
         "schema_version": 1,
@@ -135,6 +146,7 @@ def run_heap(config: LauncherConfig, timeout: int = 3600) -> dict[str, Any]:
         "launcher_summary": str(summary_path) if summary_path.exists() else "",
         "code_product": discover_code_product(run_dir, summary),
         "run_result": result,
+        "provider_orphan_cleanup": provider_orphan_cleanup,
         "launcher_summary_payload": summary,
         "passed": bool(result.get("passed")) and bool(summary.get("launcher_passed")),
     }
@@ -172,7 +184,13 @@ def analyze_code_product(
         command.append("--apply-safe")
     if require_all_integrated:
         command.append("--require-all-integrated")
-    result = run_command(command, tool_root, timeout=600)
+    result = run_command(
+        command,
+        tool_root,
+        timeout=600,
+        flow_dir=output_dir,
+        phase="operator_code_product_intake",
+    )
     payload = read_json_quiet(output)
     payload["operator_launcher_command_result"] = result
     write_json(output, payload)
@@ -195,7 +213,6 @@ def run_operator_lab(
     review_report: dict[str, Any] = {}
     safe_apply_report: dict[str, Any] = {}
     errors: list[str] = []
-    errors.extend(code_product_blockers(metrics))
     if metrics.get("exists") and code_product is not None:
         review_report = analyze_code_product(cfg.repo_root, code_product, run_dir)
         if apply_safe:
@@ -206,6 +223,7 @@ def run_operator_lab(
                 apply_safe=True,
                 require_all_integrated=require_all_integrated,
             )
+    errors.extend(code_product_blockers(metrics, review_report))
     passed = bool(run_report.get("passed")) and bool(review_report.get("passed")) and not errors
     if apply_safe:
         passed = passed and bool(safe_apply_report.get("passed"))

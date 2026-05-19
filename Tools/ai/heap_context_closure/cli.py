@@ -34,13 +34,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--provider-model", default="qwen3-coder:latest")
     parser.add_argument("--ollama-num-ctx", type=int, default=16384)
     parser.add_argument("--max-new-tokens", type=int, default=1200)
-    parser.add_argument("--keep-alive", default="10m")
+    parser.add_argument("--keep-alive", default="0s")
     parser.add_argument("--gpu0-iterations", type=int, default=16)
     parser.add_argument("--gpu0-min-seconds", type=float, default=0.1)
     parser.add_argument("--npu-micro-timeout-seconds", type=int, default=60)
     parser.add_argument("--npu-max-context-chars", type=int, default=8000)
     parser.add_argument("--npu-max-prompt-chars", type=int, default=1200)
     parser.add_argument("--npu-max-new-tokens", type=int, default=384)
+    parser.add_argument(
+        "--allow-npu-device-workload",
+        action="store_true",
+        help="Opt in to bounded NPU device workload; semantic NPU audit still runs without it.",
+    )
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--npu-device-workload-seconds", type=float, default=5.0)
     parser.add_argument("--npu-device-workload-iterations", type=int, default=5000)
@@ -55,6 +60,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--startup-max-context-files", type=int, default=80)
     parser.add_argument("--startup-scan-context-files", type=int, default=10000)
     parser.add_argument("--startup-max-chars-per-file", type=int, default=12000)
+    parser.add_argument("--context-document-count", type=int, default=64)
+    parser.add_argument("--context-document-preview-chars", type=int, default=1800)
+    parser.add_argument("--semantic-code-chunk-limit", type=int, default=64)
+    parser.add_argument("--semantic-code-chunk-preview-chars", type=int, default=1800)
+    parser.add_argument("--semantic-evidence-chunk-limit", type=int, default=48)
+    parser.add_argument("--memory-search-limit", type=int, default=20)
+    parser.add_argument("--tool-catalog-limit", type=int, default=160)
     parser.add_argument(
         "--revision-context",
         default="auto_latest",

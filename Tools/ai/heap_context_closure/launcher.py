@@ -1,11 +1,8 @@
 """Orchestrate heap runtime context closure phases."""
-
 from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any
-
 from .commands import heap_command, startup_command
 from .common import (
     load_json,
@@ -15,6 +12,7 @@ from .common import (
     resolve_repo_root,
     resolve_revision_context,
     run_command,
+    terminate_provider_launch_manifest_processes,
     write_documents_run_manifest,
     write_json,
 )
@@ -22,8 +20,6 @@ from .fallback import write_fallback_heap_report
 from .postrun import run_external_postrun_package, run_final_readable_product
 from .requesting import augmented_request, startup_can_continue
 from .summary import build_launcher_summary
-
-
 def run_launcher(args: Any) -> int:
     state = _prepare_state(args)
     _write_started_manifest(args, state)
@@ -36,13 +32,10 @@ def run_launcher(args: Any) -> int:
     _run_composer(args, state)
     _run_postrun(args, state)
     _write_completed_manifest(args, state)
-
     summary = build_launcher_summary(args, state)
     write_json(state["run_dir"] / "heap_runtime_context_closure_launcher.json", summary)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0 if summary["launcher_passed"] else 2
-
-
 def _prepare_state(args: Any) -> dict[str, Any]:
     repo_root = resolve_repo_root(args.repo_root)
     base_request, operator_request_file = load_operator_request(
@@ -74,8 +67,6 @@ def _prepare_state(args: Any) -> dict[str, Any]:
         "preflight_report": run_dir / "heap_context_preflight_gate.json",
         "preflight_markdown": run_dir / "heap_context_preflight_gate.md",
     }
-
-
 def _write_started_manifest(args: Any, state: dict[str, Any]) -> None:
     if args.documents_root and not args.no_documents:
         write_documents_run_manifest(
@@ -143,6 +134,8 @@ def _run_preflight(args: Any, state: dict[str, Any]) -> None:
             command,
             state["repo_root"],
             timeout_seconds=max(30, int(args.preflight_timeout_seconds) + 30),
+            flow_dir=state["run_dir"],
+            phase="preflight",
         )
     state["preflight_result"] = result
     state["preflight_blocks_startup"] = bool(
@@ -174,7 +167,12 @@ def _run_startup(args: Any, state: dict[str, Any]) -> None:
         if args.strict_startup_reload:
             command.append("--strict-startup-reload")
         performed = True
-        result = run_command(command, state["repo_root"])
+        result = run_command(
+            command,
+            state["repo_root"],
+            flow_dir=state["run_dir"],
+            phase="startup_context_memory_reload",
+        )
         if state["preflight_nonblocking_for_provider_generation"]:
             result["preflight_nonblocking_for_provider_generation"] = True
             result["preflight_before_startup_passed"] = False
@@ -214,7 +212,21 @@ def _run_heap(args: Any, state: dict[str, Any]) -> None:
         command.extend(["--allow-provider-generation", "--operator-intent"])
 
     if state["can_continue"]:
-        heap_result = run_command(command, state["repo_root"])
+        try:
+            heap_result = run_command(
+                command,
+                state["repo_root"],
+                timeout_seconds=max(60, int(args.timeout_seconds) + 30),
+                flow_dir=state["run_dir"],
+                phase="heap_runtime_gate",
+            )
+        except BaseException:
+            state["provider_orphan_cleanup"] = terminate_provider_launch_manifest_processes(
+                run_dir=state["run_dir"],
+                repo_root=state["repo_root"],
+                reason="heap runtime gate interrupted before closure cleanup",
+            )
+            raise
     else:
         heap_result = {
             "command": command,
@@ -225,6 +237,21 @@ def _run_heap(args: Any, state: dict[str, Any]) -> None:
         }
     state["heap_result"] = heap_result
     state["fallback_heap_report_written"] = False
+    cleanup_reason = ""
+    if not heap_result.get("passed"):
+        cleanup_reason = "heap command failed before launcher completion"
+    if not state["report_file"].exists():
+        cleanup_reason = "heap report missing after heap command"
+    if cleanup_reason:
+        cleanup = terminate_provider_launch_manifest_processes(
+            run_dir=state["run_dir"],
+            repo_root=state["repo_root"],
+            reason=cleanup_reason,
+        )
+        state["provider_orphan_cleanup"] = cleanup
+        heap_result["provider_orphan_cleanup"] = cleanup
+    else:
+        state["provider_orphan_cleanup"] = {}
     if not state["report_file"].exists():
         reason = (
             "startup context/memory reload hard failed"
@@ -271,7 +298,12 @@ def _run_reconciliation(args: Any, state: dict[str, Any]) -> None:
         ]
         if state["startup_reload_degraded"] and state["can_continue"] and not args.strict_startup_reload:
             command.append("--allow-degraded-startup")
-        result = run_command(command, state["repo_root"])
+        result = run_command(
+            command,
+            state["repo_root"],
+            flow_dir=state["run_dir"],
+            phase="startup_heap_reconciliation",
+        )
     state["startup_heap_reconcile_result"] = result
 
 
@@ -296,7 +328,12 @@ def _run_composer(args: Any, state: dict[str, Any]) -> None:
         command.append("--write-documents")
         if args.documents_root:
             command.extend(["--documents-root", args.documents_root])
-    result = run_command(command, state["repo_root"])
+    result = run_command(
+        command,
+        state["repo_root"],
+        flow_dir=state["run_dir"],
+        phase="heap_final_proposals",
+    )
     composer_report = load_json(state["run_dir"] / "heap_final_proposal_composer.json")
     state.update(
         {
