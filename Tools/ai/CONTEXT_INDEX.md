@@ -7,12 +7,16 @@ Use this index to find the nearest `TOOL_CONTEXT.md` before working on a package
 | Agent context | `Tools/ai/agent_context/TOOL_CONTEXT.md` |
 | Agent memory | `Tools/ai/agent_memory/TOOL_CONTEXT.md` |
 | Agent review | `Tools/ai/agent_review/TOOL_CONTEXT.md` |
+| AI workload | `Tools/ai/ai_workload/TOOL_CONTEXT.md` |
 | Code product | `Tools/ai/code_product/TOOL_CONTEXT.md` |
+| Deterministic recommendations | `Tools/ai/deterministic_recommendations/TOOL_CONTEXT.md` |
 | External heap | `Tools/ai/external_heap/TOOL_CONTEXT.md` |
 | Generated patch specs | `Tools/ai/generated_patch_specs/TOOL_CONTEXT.md` |
 | Heap context memory reload | `Tools/ai/heap_context_memory_reload/TOOL_CONTEXT.md` |
 | Heap exchange | `Tools/ai/heap_exchange/TOOL_CONTEXT.md` |
+| Heap final proposals | `Tools/ai/heap_final_proposals/TOOL_CONTEXT.md` |
 | Heap gate | `Tools/ai/heap_gate/TOOL_CONTEXT.md` |
+| Heap provider | `Tools/ai/heap_provider/TOOL_CONTEXT.md` |
 | Heap runtime | `Tools/ai/heap_runtime/TOOL_CONTEXT.md` |
 | Operator product core | `Tools/ai/operator_product_core/TOOL_CONTEXT.md` |
 | Patch product | `Tools/ai/patch_product/TOOL_CONTEXT.md` |
