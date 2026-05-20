@@ -22,19 +22,8 @@ class OperatorProductController:
     def build_command(self) -> list[str]:
         return build_heap_command(self.config)
 
-    def run(
-        self,
-        *,
-        timeout: int = 24000,
-        apply_safe: bool = False,
-        require_all_integrated: bool = False,
-    ) -> dict[str, Any]:
-        return run_operator_lab(
-            self.config,
-            timeout=timeout,
-            apply_safe=apply_safe,
-            require_all_integrated=require_all_integrated,
-        )
+    def run(self, *, timeout: int = 24000) -> dict[str, Any]:
+        return run_operator_lab(self.config, timeout=timeout)
 
     def review_code_product(self, code_product: Path) -> dict[str, Any]:
         cfg = self.resolved_config()

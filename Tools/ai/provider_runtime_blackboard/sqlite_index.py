@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -10,13 +11,25 @@ from typing import Any
 from .common import safe_dict, safe_int
 
 
-def index_runtime_heap_event(db_path: Path, event: dict[str, Any]) -> None:
+def index_runtime_heap_event(
+    db_path: Path,
+    event: dict[str, Any],
+    *,
+    full_payload: dict[str, Any] | None = None,
+) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     try:
         _ensure_schema(conn)
         payload = safe_dict(event.get("payload"))
+        stored_payload = safe_dict(full_payload) if full_payload is not None else payload
         payload_json = json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
+        stored_payload_json = json.dumps(
+            stored_payload,
+            ensure_ascii=False,
+            sort_keys=True,
+            default=str,
+        )
         cursor = conn.execute(
             """
             INSERT INTO events(
@@ -37,6 +50,7 @@ def index_runtime_heap_event(db_path: Path, event: dict[str, Any]) -> None:
             ),
         )
         event_id = int(cursor.lastrowid)
+        _index_payload_blob(conn, event, event_id, stored_payload_json)
         _index_latest_event(conn, event, event_id, payload_json)
         _index_lane_status(conn, event, event_id)
         _index_pending_broker(conn, event, event_id, payload, payload_json)
@@ -64,6 +78,17 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_runtime_events_type ON events(event_type);
         CREATE INDEX IF NOT EXISTS idx_runtime_events_lane ON events(source, target);
+
+        CREATE TABLE IF NOT EXISTS payload_blobs(
+            event_id INTEGER PRIMARY KEY,
+            event_type TEXT,
+            source TEXT,
+            payload_sha256 TEXT NOT NULL,
+            payload_chars INTEGER NOT NULL,
+            payload_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_runtime_payload_blobs_hash
+            ON payload_blobs(payload_sha256);
 
         CREATE TABLE IF NOT EXISTS latest_event_by_type(
             event_type TEXT NOT NULL,
@@ -123,6 +148,30 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
             payload_json TEXT NOT NULL
         );
         """
+    )
+
+
+def _index_payload_blob(
+    conn: sqlite3.Connection,
+    event: dict[str, Any],
+    event_id: int,
+    payload_json: str,
+) -> None:
+    conn.execute(
+        """
+        INSERT OR REPLACE INTO payload_blobs(
+            event_id, event_type, source, payload_sha256, payload_chars, payload_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            event_id,
+            event.get("event_type") or "",
+            event.get("source") or "",
+            hashlib.sha256(payload_json.encode("utf-8", errors="replace")).hexdigest(),
+            len(payload_json),
+            payload_json,
+        ),
     )
 
 
@@ -327,6 +376,7 @@ def runtime_heap_index_summary(db_path: Path) -> dict[str, Any]:
             table: _table_count(conn, table)
             for table in (
                 "events",
+                "payload_blobs",
                 "latest_event_by_type",
                 "pending_broker_requests",
                 "provider_reports",
@@ -338,11 +388,15 @@ def runtime_heap_index_summary(db_path: Path) -> dict[str, Any]:
         unresolved = conn.execute(
             "SELECT COUNT(*) FROM pending_broker_requests WHERE resolved=0"
         ).fetchone()
+        payload_chars = conn.execute(
+            "SELECT COALESCE(SUM(payload_chars), 0) FROM payload_blobs"
+        ).fetchone()
         summary.update(
             {
                 "table_counts": table_counts,
                 "pending_unresolved_count": int(unresolved[0] or 0),
                 "latest_event_type_count": table_counts.get("latest_event_by_type", 0),
+                "full_payload_chars": int(payload_chars[0] or 0),
             }
         )
     finally:

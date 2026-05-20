@@ -201,8 +201,6 @@ def run_operator_lab(
     config: LauncherConfig,
     *,
     timeout: int = 3600,
-    apply_safe: bool = False,
-    require_all_integrated: bool = False,
 ) -> dict[str, Any]:
     cfg = resolve_config(config)
     run_report = run_heap(cfg, timeout=timeout)
@@ -215,18 +213,8 @@ def run_operator_lab(
     errors: list[str] = []
     if metrics.get("exists") and code_product is not None:
         review_report = analyze_code_product(cfg.repo_root, code_product, run_dir)
-        if apply_safe:
-            safe_apply_report = analyze_code_product(
-                cfg.repo_root,
-                code_product,
-                run_dir,
-                apply_safe=True,
-                require_all_integrated=require_all_integrated,
-            )
     errors.extend(code_product_blockers(metrics, review_report))
     passed = bool(run_report.get("passed")) and bool(review_report.get("passed")) and not errors
-    if apply_safe:
-        passed = passed and bool(safe_apply_report.get("passed"))
     report: dict[str, Any] = {
         "schema_version": 1,
         "kind": "operator_product_lab_summary",

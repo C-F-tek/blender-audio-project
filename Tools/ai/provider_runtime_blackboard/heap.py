@@ -68,6 +68,12 @@ class ProviderRuntimeHeap:
         source_lane = normalize_lane(source)
         normalized_type = normalize_event_type(event_type)
         target_lane = normalize_lane(target) if target else None
+        raw_payload = safe_dict(payload or {})
+        compacted_payload = compact_payload(raw_payload)
+        raw_payload_json = json.dumps(raw_payload, ensure_ascii=False, sort_keys=True, default=str)
+        compacted_payload_json = json.dumps(
+            compacted_payload, ensure_ascii=False, sort_keys=True, default=str
+        )
         event = {
             "schema_version": 1,
             "kind": "provider_runtime_event",
@@ -78,7 +84,14 @@ class ProviderRuntimeHeap:
             "round": round_id,
             "event_type": normalized_type,
             "correlation_id": correlation_id or "",
-            "payload": compact_payload(safe_dict(payload or {})),
+            "payload": compacted_payload,
+            "payload_index": {
+                "sqlite_sidecar": repo_rel(self.repo_root, self.sqlite_index_path()),
+                "table": "payload_blobs",
+                "full_payload_indexed": True,
+                "payload_compacted": raw_payload_json != compacted_payload_json,
+                "payload_chars": len(raw_payload_json),
+            },
             "guardrails": {
                 "provider_execution_performed": False,
                 "direct_tool_execution_allowed": False,
@@ -91,7 +104,7 @@ class ProviderRuntimeHeap:
         with self.paths.events.open("a", encoding="utf-8", newline="\n") as handle:
             handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
         self.runtime_state.apply_event(event)
-        self._index_event(event)
+        self._index_event(event, raw_payload)
         return event
 
     def add_event(
@@ -154,8 +167,8 @@ class ProviderRuntimeHeap:
     def sqlite_index_summary(self) -> dict[str, Any]:
         return runtime_heap_index_summary(self.sqlite_index_path())
 
-    def _index_event(self, event: dict[str, Any]) -> None:
-        index_runtime_heap_event(self.sqlite_index_path(), event)
+    def _index_event(self, event: dict[str, Any], raw_payload: dict[str, Any]) -> None:
+        index_runtime_heap_event(self.sqlite_index_path(), event, full_payload=raw_payload)
 
     def pending_broker_requests(self) -> list[dict[str, Any]]:
         events = self.read_events()

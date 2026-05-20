@@ -202,7 +202,7 @@ def _run_heap(args: Any, state: dict[str, Any]) -> None:
     command = heap_command(args, state)
     if state["startup_manifest"].exists():
         command.extend(["--startup-manifest", str(state["startup_manifest"])])
-    elif state["startup_task_file"].exists():
+    if state["startup_task_file"].exists():
         command.extend(["--task-file", str(state["startup_task_file"])])
     if getattr(args, "allow_provider_generation", False):
         command.extend(["--allow-provider-generation", "--operator-intent"])

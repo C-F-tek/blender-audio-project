@@ -64,7 +64,8 @@ def main() -> int:
         "runner_packages_final_readable_product": "launcher_passed" in runner_text
         and "CODE_PRODUCT_FULL_PATCH.md" in runner_text,
         "runner_intakes_code_product": "Tools.ai.code_product.artifact_intake" in runner_text,
-        "safe_apply_requires_confirmation": "--apply-safe requires --confirm safe_apply" in run_text,
+        "canonical_run_has_no_apply_safe_flag": "--apply-safe" not in run_text
+        and "apply_safe=args.apply_safe" not in run_text,
         "run_does_not_expose_skip_preflight": "skip-preflight" not in run_text
         and "skip_preflight" not in profiles_text,
         "no_merge_or_force_push": "git merge" not in run_text

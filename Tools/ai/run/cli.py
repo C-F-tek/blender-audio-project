@@ -246,9 +246,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--branch", default=DEFAULT_BRANCH)
     parser.add_argument("-DryRun", "--dry-run", dest="dry_run", action="store_true")
     parser.add_argument("--list-profiles", action="store_true")
-    parser.add_argument("--apply-safe", action="store_true")
-    parser.add_argument("--confirm", default="")
-    parser.add_argument("--require-all-integrated", action="store_true")
     return parser
 
 
@@ -333,8 +330,6 @@ def main(argv: list[str] | None = None) -> int:
     cfg = resolve_config(config)
     python_exe = resolve_project_python(repo_root, args.python_exe)
 
-    if args.apply_safe and args.confirm != "safe_apply":
-        raise SystemExit("--apply-safe requires --confirm safe_apply")
     if not cfg.request_file.exists() and not args.dry_run:
         raise SystemExit(f"Task markdown not found: {cfg.request_file}")
 
@@ -351,11 +346,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     controller = OperatorProductController(config)
-    report = controller.run(
-        timeout=args.timeout_seconds,
-        apply_safe=args.apply_safe,
-        require_all_integrated=args.require_all_integrated,
-    )
+    report = controller.run(timeout=args.timeout_seconds)
     report["canonical_entrypoint"] = "python -m Tools.ai run"
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("passed") else 2

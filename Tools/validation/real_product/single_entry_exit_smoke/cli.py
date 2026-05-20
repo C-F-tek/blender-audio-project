@@ -30,6 +30,7 @@ def main() -> int:
     repo = Path(args.repo_root).resolve()
     dispatch = read_text(repo / "Tools/ai/dispatch.py")
     run_cli = read_text(repo / "Tools/ai/run/cli.py")
+    core_cli = read_text(repo / "Tools/ai/operator_product_core/cli.py")
     controller = read_text(repo / "Tools/ai/operator_product_core/controller.py")
     runner = read_text(repo / "Tools/ai/operator_product_core/runner.py")
     gui = read_text(repo / "Tools/ai/operator_product_core/view/cli.py")
@@ -50,7 +51,9 @@ def main() -> int:
         "runner_requires_code_product": "CODE_PRODUCT_FULL_PATCH was not produced" in runner,
         "runner_validates_code_product": "code_product_review.json" in runner
         and "Tools.ai.code_product.artifact_intake" in runner,
-        "safe_apply_not_default": "apply_safe: bool = False" in controller and "apply_safe" in run_cli,
+        "safe_apply_separate_from_canonical_run": "--apply-safe" not in run_cli
+        and "--apply-safe" in core_cli
+        and "apply_safe_code_product" in controller,
         "preflight_contains_this_gate": "single_entry_exit" in preflight,
     }
 

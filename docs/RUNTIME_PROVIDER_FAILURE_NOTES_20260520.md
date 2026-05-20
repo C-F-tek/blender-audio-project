@@ -17,6 +17,10 @@ operator heap runs and for the repairs applied on `master`.
   after report absorption and process collection were split.
 - Revision-context smoke data did not prove that GPU0/NPU blocks refine and
   resume from the proposal block as causal pointer inputs.
+- Startup memory write was not enforced as a blocking dispatcher-owned
+  operational SQLite `remember` action.
+- Runtime heap SQLite sidecar indexed compact event payloads, so a large
+  static/runtime context payload could be searchable only as a preview.
 
 ## Applied Repairs
 
@@ -34,6 +38,13 @@ operator heap runs and for the repairs applied on `master`.
   provider process collection files.
 - Revision-context fixture blocks now carry `refines_block_id` and
   `resume_from_block_id` for GPU0/NPU causal review/audit tasks.
+- Canonical `python -m Tools.ai run` no longer exposes safe apply; code
+  application remains a separate reviewed code-product boundary.
+- Startup reload now executes `python -m Tools.ai agent_runtime_sqlite_memory
+  --action remember --scope operational` with a content file. Failure is
+  blocking, not degraded.
+- Runtime heap JSONL remains compact, but the SQLite sidecar now stores the
+  complete event payload in `payload_blobs` before compaction.
 
 ## Non-Claims
 
@@ -52,3 +63,5 @@ operator heap runs and for the repairs applied on `master`.
 - `python -m Tools.validation run_real_product_runtime_mesh_contract_smoke --repo-root .`
 - `python -m Tools.validation run_code_product_artifact_intake_smoke --repo-root .`
 - `python -m Tools.validation run_real_product_preflight_gate_smoke --repo-root . --timeout-seconds 120`
+- `python -m Tools.validation run_heap_startup_context_ingestion_smoke --repo-root .`
+- `python -m Tools.validation run_runtime_heap_sqlite_sidecar_smoke --repo-root .`

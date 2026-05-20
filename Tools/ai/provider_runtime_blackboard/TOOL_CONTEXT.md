@@ -49,6 +49,7 @@ provider report materialization
 pending broker request state
 lane status materialization
 SQLite sidecar index for provider runtime heap
+full payload sidecar blobs for compact JSONL events
 validation bridge signals
 live signal summaries
 peer report ingestion
@@ -76,6 +77,7 @@ The bridge makes the provider lanes observable by the rest of Universo IA.
 - Blackboard state is evidence, not a patch product.
 - Provider visibility is not provider success by itself.
 - SQLite sidecar indexes are runtime artifacts and must not be committed as databases.
+- Compact JSONL events may point at the SQLite `payload_blobs` table; the full payload must remain queryable there when the event payload is compacted.
 - Materialized state must distinguish diagnostic activity, semantic provider activity and operational provider output.
 - Do not treat blackboard events as source-write permission.
 - Do not treat live signals as proof of product success.

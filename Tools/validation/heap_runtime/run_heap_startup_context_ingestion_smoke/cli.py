@@ -163,11 +163,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         passed=(
             "--startup-manifest" in launcher
             and "startup_manifest" in launcher
-            and "elif state[\"startup_task_file\"].exists()" in launcher
+            and "if state[\"startup_task_file\"].exists()" in launcher
         ),
         severity="critical",
-        evidence="launcher should pass heap_context_memory_reload_manifest.json as primary gate input and keep task-file only as fallback",
-        recommendation="Forward --startup-manifest from heap_context_closure; do not use heap_startup_input_ready_context.md as the primary gate data plane.",
+        evidence="launcher should pass heap_context_memory_reload_manifest.json plus the readable startup task file when both exist",
+        recommendation="Forward --startup-manifest as the primary data plane and --task-file as the synchronized human-readable task artifact.",
     )
 
     bool_check(
@@ -272,17 +272,21 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "run_operational_memory_write(state)" in preload_runner
         and "operational_memory_write" in preload_memory_write
         and "agent_runtime_sqlite_memory" in preload_memory_write
-        and "remember" in preload_memory_write
+        and '"remember"' in preload_memory_write
         and "--scope" in preload_memory_write
-        and "operational" in preload_memory_write
+        and '"operational"' in preload_memory_write
+        and "--content-file" in preload_memory_write
+        and "required=True" in preload_memory_write
+        and 'command_result["effective_passed"] = False' in preload_memory_write
+        and 'command_result["degraded"] = False' in preload_memory_write
     )
     bool_check(
         checks,
         check_id="startup_records_operational_memory_write",
         passed=operational_write_signal,
-        severity="warning",
-        evidence="BASE_REQUIREMENTS contains operational_memory_write; startup should prove a run-specific scratch write or gate should do it before provider loop",
-        recommendation="Record startup manifest summary into operational SQLite memory under output/** with action=remember, scope=operational.",
+        severity="critical",
+        evidence="BASE_REQUIREMENTS contains operational_memory_write; startup must execute the dispatcher SQLite remember path before provider loop",
+        recommendation="Run python -m Tools.ai agent_runtime_sqlite_memory --action remember --scope operational with a content-file and make failure blocking, not degraded.",
     )
 
     bool_check(

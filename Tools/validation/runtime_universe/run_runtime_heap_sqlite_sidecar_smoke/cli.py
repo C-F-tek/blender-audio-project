@@ -26,6 +26,7 @@ except ImportError:
 
 REQUIRED_TABLES = (
     "events",
+    "payload_blobs",
     "latest_event_by_type",
     "pending_broker_requests",
     "provider_reports",
@@ -60,6 +61,14 @@ def sidecar_checks(db_path: Path, snapshot: dict[str, Any]) -> dict[str, bool]:
             "SELECT decision, reason FROM decisions WHERE decision_id=?",
             ("provider_universe_blocked",),
         ).fetchone()
+        payload_blob_row = conn.execute(
+            """
+            SELECT payload_chars, payload_json FROM payload_blobs
+            WHERE payload_chars > 10000
+            ORDER BY payload_chars DESC
+            LIMIT 1
+            """
+        ).fetchone()
     finally:
         conn.close()
     snapshot_index = snapshot.get("sqlite_index") if isinstance(snapshot, dict) else {}
@@ -70,6 +79,15 @@ def sidecar_checks(db_path: Path, snapshot: dict[str, Any]) -> dict[str, bool]:
         "sqlite_sidecar_created": True,
         "required_tables_present": set(REQUIRED_TABLES).issubset(table_names),
         "events_indexed": table_counts["events"] >= 5,
+        "full_payload_blobs_indexed": table_counts["payload_blobs"] >= 6,
+        "large_payload_not_truncated_in_sidecar": (
+            payload_blob_row is not None
+            and int(payload_blob_row[0] or 0) > 10000
+            and "STATIC_CONTEXT_SENTINEL_END" in str(payload_blob_row[1] or "")
+        ),
+        "snapshot_exposes_full_payload_chars": int(
+            snapshot_index.get("full_payload_chars") or 0
+        ) > 10000,
         "latest_events_indexed": table_counts["latest_event_by_type"] >= 4,
         "pending_request_indexed": table_counts["pending_broker_requests"] == 1,
         "pending_request_resolved": resolved_row is not None and int(resolved_row[0]) == 1,
@@ -171,6 +189,20 @@ def build_smoke_heap(repo_root: Path) -> tuple[ProviderRuntimeHeap, dict[str, An
             "reason": "gpu1_nonproductive_runtime_stall",
             "revision": 0,
             "round": 1,
+        },
+    )
+    heap.append_event(
+        source="context_memory",
+        target="orchestrator",
+        event_type="fact",
+        correlation_id="smoke:large-static-context",
+        round_id=1,
+        payload={
+            "kind": "large_static_context_ref",
+            "source": "startup_semantic_code_chunks.md",
+            "full_context": "STATIC_CONTEXT_SENTINEL_START\n"
+            + ("0123456789abcdef" * 900)
+            + "\nSTATIC_CONTEXT_SENTINEL_END",
         },
     )
     return heap, heap.write_snapshot()
