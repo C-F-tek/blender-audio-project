@@ -12,7 +12,9 @@ CHATGPT.md
 CONTEXT_INDEX.md
 docs/README.md
 docs/AI_DOCS_ENTRYPOINT.md
+docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+docs/CORE_LANE_COMPLETENESS_CONTRACT.md
 docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/STANDALONE_HEAP_SURFACE_MODEL.md
 docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
@@ -26,7 +28,7 @@ Tools/CONTEXT_INDEX.md
 
 Then open the nearest area/family `TOOL_CONTEXT.md`, the relevant `dispatch.py`, and the target source/document before making changes.
 
-Historical runbooks under `docs/LOCAL_AI_TASKS/**` are task-specific background. They do not override the current model files, model-to-code map, context indexes, dispatcher coverage, source code, validation reports or explicit operator instruction.
+Historical runbooks under `docs/LOCAL_AI_TASKS/**` and session notes under `docs/AI_SESSION_NOTES/**` are background unless promoted into current contracts. They do not override the current model files, anti-ambiguity contract, model-to-code map, core lane completeness contract, context indexes, dispatcher coverage, source code, validation reports or explicit operator instruction.
 
 ## Repository identity
 
@@ -36,7 +38,9 @@ Historical runbooks under `docs/LOCAL_AI_TASKS/**` are task-specific background.
 | Repository | `C-F-tek/blender-audio-project` |
 | Main language | Python |
 | Active app model | `Universo IA` |
+| Anti-ambiguity contract | `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` |
 | Model-to-code bridge | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
+| Lane completeness contract | `docs/CORE_LANE_COMPLETENESS_CONTRACT.md` |
 | Operator product entrypoint | `python -m Tools.ai run` |
 | Dynamic workflow launcher | `python -m Tools.workflow run_unified_local_ai_refactor` |
 | Main provider center | `Ollama / GPU1 / RTX 5080` |
@@ -52,12 +56,14 @@ The repository name is historical. Do not infer that Blender/audio is the curren
 The complete application is not a single model, single provider or single script. The complete application is the combination of all current models working together as **Universo IA** and concretized through dispatcher-owned tools.
 
 ```text
-heap/exchange useful model
+AI limitations / anti-ambiguity contract
++ heap/exchange useful model
 + standalone heap surface model
 + provider lanes unified mind model
 + real product run model
 + compact evidence model
 + patch/code product boundary model
++ core lane completeness contract
 + model-to-code map
 = Universo IA
 ```
@@ -66,7 +72,9 @@ Read these as one system:
 
 | Model | File | Meaning |
 |---|---|---|
+| AI limitations and anti-ambiguity contract | `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` | prevents context loss, invented architecture, smoke overfitting, optionalized lanes and completion-sounding claims without evidence |
 | Model-to-code map | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` | connects each model to code families, dispatcher commands, artifacts and validators |
+| Core lane completeness contract | `docs/CORE_LANE_COMPLETENESS_CONTRACT.md` | complete/full runs require viable lane evidence; degraded equals unviable |
 | Heap/exchange useful model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | controlled input, shared heap/exchange, evidence, deterministic exit |
 | Standalone heap surface model | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | preload, memory, chunks, namespaces, tool catalog, broker, lanes, composer |
 | Provider lanes unified mind model | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | Ollama/main provider, GPU0 coworker and NPU micro-lane as one operational mind with departments |
@@ -75,6 +83,35 @@ Read these as one system:
 | Patch/code product boundary model | `docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md` | provider proposal, patch plan, code product, PatchKit, repo-patch-runner and reviewed apply boundaries |
 
 A run, document, provider output or patch proposal is incomplete if it contradicts these models without source/validator evidence.
+
+## AI limitation rule
+
+A programming AI must not treat its chat context as project truth.
+
+```text
+chat memory != heap memory
+status text != runtime evidence
+provider prose != product
+report existence != successful run
+smoke pass != full product validation
+activity != useful work
+```
+
+If evidence cannot be named, the correct status is `not proven`, not `done`.
+
+## Core lane viability rule
+
+For complete/full profiles, required core lanes are not optional and `degraded` is not acceptable as success.
+
+```text
+valid evidence -> viable
+missing evidence -> unviable
+failed evidence -> unviable
+degraded -> unviable
+unavailable -> unviable
+```
+
+A full smoke must fail if a required lane lacks valid evidence. A partial/diagnostic smoke may report degraded/unavailable lanes, but it must not be named or treated as full.
 
 ## Mental model
 
@@ -317,7 +354,7 @@ implemented code
 -> emits compact evidence
 -> appears in telemetry/manifest/report surfaces when relevant
 -> understood by validators or explicitly marked diagnostic
--> has unavailable/degraded/disabled classification when it cannot run
+-> has viable evidence in complete/full profiles
 ```
 
 Do not stop at an internal helper, isolated smoke script or hidden command.

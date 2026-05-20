@@ -16,7 +16,9 @@ This file tracks whether context documentation is complete, partial or only a na
 
 ```text
 CONTEXT_INDEX.md
+-> docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 -> docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+-> docs/CORE_LANE_COMPLETENESS_CONTRACT.md
 -> docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 -> docs/STANDALONE_HEAP_SURFACE_MODEL.md
 -> docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
@@ -35,7 +37,9 @@ CONTEXT_INDEX.md
 
 | Area/family | File | Status |
 | --- | --- | --- |
+| AI limitations and anti-ambiguity contract | `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` | complete-enough |
 | IA universe model-to-code map | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` | complete-enough |
+| Core lane completeness contract | `docs/CORE_LANE_COMPLETENESS_CONTRACT.md` | complete-enough |
 | Heap/exchange useful model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | complete-enough |
 | Standalone heap surface model | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | complete-enough |
 | Provider lanes unified mind model | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | complete-enough |
