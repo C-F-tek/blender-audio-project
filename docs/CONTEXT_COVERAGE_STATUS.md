@@ -16,11 +16,13 @@ This file tracks whether context documentation is complete, partial or only a na
 
 ```text
 CONTEXT_INDEX.md
+-> docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 -> docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 -> docs/STANDALONE_HEAP_SURFACE_MODEL.md
 -> docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 -> docs/REAL_PRODUCT_RUN_MODEL.md
 -> docs/COMPACT_EVIDENCE_MODEL.md
+-> docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
 -> docs/CONTEXT_COVERAGE_STATUS.md
 -> docs/DISPATCHER_CONTEXT_COVERAGE.md
 -> Tools/CONTEXT_INDEX.md or docs/CONTEXT_INDEX.md or Scripting/CONTEXT_INDEX.md
@@ -33,11 +35,13 @@ CONTEXT_INDEX.md
 
 | Area/family | File | Status |
 | --- | --- | --- |
+| IA universe model-to-code map | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` | complete-enough |
 | Heap/exchange useful model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | complete-enough |
 | Standalone heap surface model | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | complete-enough |
 | Provider lanes unified mind model | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | complete-enough |
 | Real product run model | `docs/REAL_PRODUCT_RUN_MODEL.md` | complete-enough |
 | Compact evidence model | `docs/COMPACT_EVIDENCE_MODEL.md` | complete-enough |
+| Patch/code product boundary model | `docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md` | complete-enough |
 
 ## Tool context coverage
 
