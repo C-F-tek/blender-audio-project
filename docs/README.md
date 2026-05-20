@@ -18,6 +18,7 @@ Canonical root entrypoints:
 
 ```text
 AI_DOCS_ENTRYPOINT.md
+AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 CORE_LANE_COMPLETENESS_CONTRACT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
@@ -40,6 +41,7 @@ Read these first for active IA-Carmine runtime, provider, heap/exchange, patchki
 ../CHATGPT.md
 ../CONTEXT_INDEX.md
 AI_DOCS_ENTRYPOINT.md
+AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 CORE_LANE_COMPLETENESS_CONTRACT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
@@ -61,6 +63,7 @@ Older task/runbook files remain useful only after this path and only for their s
 
 | Area | Document |
 |---|---|
+| AI limitations / anti-ambiguity contract | `AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` |
 | Model-to-code bridge | `IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
 | Core lane completeness contract | `CORE_LANE_COMPLETENESS_CONTRACT.md` |
 | Heap/exchange useful model | `HEAP_EXCHANGE_USEFUL_MODEL.md` |
@@ -92,6 +95,12 @@ dispatcher commands
 expected artifacts
 validation/smoke commands
 semantic rule
+```
+
+Before drawing conclusions, apply the anti-ambiguity contract:
+
+```text
+AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 ```
 
 Then enforce lane viability with:
@@ -136,6 +145,7 @@ Provider/lane cooperation work should first read:
 ```text
 PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 CORE_LANE_COMPLETENESS_CONTRACT.md
+AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
@@ -164,6 +174,7 @@ Run/product classification should first read:
 ```text
 REAL_PRODUCT_RUN_MODEL.md
 CORE_LANE_COMPLETENESS_CONTRACT.md
+AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
@@ -180,6 +191,7 @@ Evidence publication decisions should first read:
 
 ```text
 COMPACT_EVIDENCE_MODEL.md
+AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
@@ -197,6 +209,7 @@ Source-change product decisions should first read:
 
 ```text
 PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
