@@ -12,11 +12,13 @@ CHATGPT.md
 CONTEXT_INDEX.md
 docs/README.md
 docs/AI_DOCS_ENTRYPOINT.md
+docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/STANDALONE_HEAP_SURFACE_MODEL.md
 docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 docs/REAL_PRODUCT_RUN_MODEL.md
 docs/COMPACT_EVIDENCE_MODEL.md
+docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
 docs/CONTEXT_COVERAGE_STATUS.md
 docs/DISPATCHER_CONTEXT_COVERAGE.md
 Tools/CONTEXT_INDEX.md
@@ -24,7 +26,7 @@ Tools/CONTEXT_INDEX.md
 
 Then open the nearest area/family `TOOL_CONTEXT.md`, the relevant `dispatch.py`, and the target source/document before making changes.
 
-Historical runbooks under `docs/LOCAL_AI_TASKS/**` are task-specific background. They do not override the current model files, context indexes, dispatcher coverage, source code, validation reports or explicit operator instruction.
+Historical runbooks under `docs/LOCAL_AI_TASKS/**` are task-specific background. They do not override the current model files, model-to-code map, context indexes, dispatcher coverage, source code, validation reports or explicit operator instruction.
 
 ## Repository identity
 
@@ -34,6 +36,7 @@ Historical runbooks under `docs/LOCAL_AI_TASKS/**` are task-specific background.
 | Repository | `C-F-tek/blender-audio-project` |
 | Main language | Python |
 | Active app model | `Universo IA` |
+| Model-to-code bridge | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
 | Operator product entrypoint | `python -m Tools.ai run` |
 | Dynamic workflow launcher | `python -m Tools.workflow run_unified_local_ai_refactor` |
 | Main provider center | `Ollama / GPU1 / RTX 5080` |
@@ -46,7 +49,7 @@ The repository name is historical. Do not infer that Blender/audio is the curren
 
 ## Universo IA
 
-The complete application is not a single model, single provider or single script. The complete application is the combination of all current models working together as **Universo IA**:
+The complete application is not a single model, single provider or single script. The complete application is the combination of all current models working together as **Universo IA** and concretized through dispatcher-owned tools.
 
 ```text
 heap/exchange useful model
@@ -54,6 +57,8 @@ heap/exchange useful model
 + provider lanes unified mind model
 + real product run model
 + compact evidence model
++ patch/code product boundary model
++ model-to-code map
 = Universo IA
 ```
 
@@ -61,11 +66,13 @@ Read these as one system:
 
 | Model | File | Meaning |
 |---|---|---|
+| Model-to-code map | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` | connects each model to code families, dispatcher commands, artifacts and validators |
 | Heap/exchange useful model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | controlled input, shared heap/exchange, evidence, deterministic exit |
 | Standalone heap surface model | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | preload, memory, chunks, namespaces, tool catalog, broker, lanes, composer |
 | Provider lanes unified mind model | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | Ollama/main provider, GPU0 coworker and NPU micro-lane as one operational mind with departments |
 | Real product run model | `docs/REAL_PRODUCT_RUN_MODEL.md` | evidence-only, blocked and real product run states |
 | Compact evidence model | `docs/COMPACT_EVIDENCE_MODEL.md` | raw runtime output vs compact Git-trackable evidence |
+| Patch/code product boundary model | `docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md` | provider proposal, patch plan, code product, PatchKit, repo-patch-runner and reviewed apply boundaries |
 
 A run, document, provider output or patch proposal is incomplete if it contradicts these models without source/validator evidence.
 
@@ -135,6 +142,12 @@ Tools/npu/CONTEXT_INDEX.md
 Tools/docs/CONTEXT_INDEX.md
 Tools/git/CONTEXT_INDEX.md
 Tools/repo_patch_runner/CONTEXT_INDEX.md
+```
+
+For model-to-code navigation, use:
+
+```text
+docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
 ## Product and evidence rules
