@@ -137,7 +137,6 @@ REQUIREMENT_ORDER = (
     "ai_context_pack",
     "semantic_evidence_chunks",
     "runtime_file_refs",
-    "validation_evidence",
     "gpu0_provider_peer",
     "npu_micro_task_auditor",
     "gpu1_provider_planner",
@@ -155,12 +154,12 @@ BASE_REQUIREMENTS = (
     "ai_context_pack",
     "semantic_evidence_chunks",
     "runtime_file_refs",
-    "validation_evidence",
 )
 
 PROVIDER_START_REQUIREMENTS = (
     "operational_memory_write",
     "semantic_code_chunks",
+    "shared_context_chunks",
     "runtime_file_refs",
 )
 

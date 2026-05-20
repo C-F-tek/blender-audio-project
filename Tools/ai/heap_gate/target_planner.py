@@ -342,7 +342,7 @@ class RuntimeTargetPlanner:
                 reasons.append("documentation_evidence_not_product_target")
             if product_intent and is_validation_path(rel_path) and not validation_intent:
                 score -= 70
-                reasons.append("validation_evidence_not_product_target")
+                reasons.append("validation_path_not_product_target")
             if rel_path in explicit and (token_hits or content_hits):
                 score += 4
                 reasons.append("explicit_current_context")

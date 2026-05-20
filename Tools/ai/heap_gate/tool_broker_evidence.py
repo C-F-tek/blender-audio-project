@@ -15,8 +15,6 @@ CHUNKABLE_REQUIREMENTS = {
     "code_interpreter_evidence",
     "tool_evidence_memory_write",
     "runtime_file_refs",
-    "validation_evidence",
-    "validation_report_contract_evidence",
     "refactor_duplication_audit_evidence",
 }
 

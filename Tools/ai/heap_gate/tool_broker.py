@@ -18,7 +18,7 @@ from Tools.ai.heap_gate.tool_broker_native_calls import (
     provider_plan_item_for_tool_call,
     publish_provider_native_tool_calls,
 )
-TOOL_REQUIREMENT_FALLBACKS = {"agent_runtime_debug_lab": "runtime_debug_lab", "ai_context_pack": "ai_context_pack", "build_agent_agnostic_tool_inventory": "tool_catalog", "build_agent_memory_inventory": "shared_memory", "build_agent_transient_request_context": "shared_context_chunks", "build_code_interpreter_report": "code_interpreter_evidence", "check_python_syntax": "python_syntax_evidence", "check_validation_report_contract": "validation_report_contract_evidence", "refactor_duplication_audit": "refactor_duplication_audit_evidence", "run_gpu_planner_json_contract_smoke": "validation_evidence", "run_heap_code_execution_matrix": "code_execution_matrix", "run_heap_code_execution_tool": "code_execution_matrix", "run_heap_virtual_dev_environment": "virtual_dev_environment", "runtime_file_refs": "runtime_file_refs", "select_semantic_code_chunks": "semantic_code_chunks", "semantic_evidence_chunks": "semantic_evidence_chunks"}
+TOOL_REQUIREMENT_FALLBACKS = {"agent_runtime_debug_lab": "runtime_debug_lab", "ai_context_pack": "ai_context_pack", "build_agent_agnostic_tool_inventory": "tool_catalog", "build_agent_memory_inventory": "shared_memory", "build_agent_transient_request_context": "shared_context_chunks", "build_code_interpreter_report": "code_interpreter_evidence", "check_python_syntax": "python_syntax_evidence", "refactor_duplication_audit": "refactor_duplication_audit_evidence", "run_heap_code_execution_matrix": "code_execution_matrix", "run_heap_code_execution_tool": "code_execution_matrix", "run_heap_virtual_dev_environment": "virtual_dev_environment", "runtime_file_refs": "runtime_file_refs", "select_semantic_code_chunks": "semantic_code_chunks", "semantic_evidence_chunks": "semantic_evidence_chunks"}
 class RuntimeGateToolBrokerMixin:
     def broker_result_digest(self, payload: dict[str, Any]) -> str:
         normalized = {
@@ -196,10 +196,6 @@ class RuntimeGateToolBrokerMixin:
             refs = self.broker_output_refs(events)
             if refs:
                 args["content"] = "\n".join(refs[:40])
-        if item.get("requirement") == "validation_report_contract_evidence":
-            refs = [ref for ref in self.broker_output_refs(events) if ref.endswith(".json")]
-            if refs:
-                args["report_file"] = refs[:20]
         if item.get("requirement") == "refactor_duplication_audit_evidence":
             refs = [ref for ref in self.broker_output_refs(events) if ref.endswith(".json")]
             if refs:

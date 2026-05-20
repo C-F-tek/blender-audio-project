@@ -142,7 +142,6 @@ def validate_complete(report: dict[str, Any]) -> list[str]:
         "shared_memory_evidence_count",
         "shared_context_chunk_evidence_count",
         "tool_catalog_evidence_count",
-        "validation_evidence_count",
         "gpu1_provider_evidence_count",
         "gpu0_provider_evidence_count",
         "npu_micro_task_evidence_count",

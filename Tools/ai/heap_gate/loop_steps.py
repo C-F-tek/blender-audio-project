@@ -376,7 +376,7 @@ class RuntimeGateLoopStepsMixin:
             "gpu0_audit": self.provider_response_text("gpu0_peer"),
             "npu_audit": self.provider_response_text("npu_micro_task_auditor"),
             "reason": (
-                "heap loop consumed tool catalog, memory, context/chunks and validation evidence"
+                "heap loop consumed tool catalog, memory, current source chunks and provider product evidence"
                 if ready
                 else "heap loop stopped by budget/failed requirement before readiness"
             ),

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Select focused semantic code chunks for local AI context.
 
-This tool is report-only. It reads the generated semantic chunk index,
-selects chunks using deterministic keyword scoring, optionally extracts bounded
-source excerpts, and writes JSON/Markdown context bundles.
+This tool is report-only. It can read an explicit semantic chunk index, but by
+default it builds current-run source chunks directly from repository files.
 """
 
 from __future__ import annotations
@@ -15,7 +14,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-DEFAULT_CHUNKS = "indexAI/code_chunks/semantic_code_chunks.json"
+from Tools.ai.agent_context.semantic_evidence_chunks.live_source import (
+    build_live_source_chunks,
+    repo_relative,
+)
+
+DEFAULT_CHUNKS = ""
 DEFAULT_OUTPUT = "output/ai_context_packs/selected_semantic_code_chunks.json"
 DEFAULT_MARKDOWN = "output/ai_context_packs/selected_semantic_code_chunks.md"
 TOKEN_RE = re.compile(r"[a-zA-Z0-9_./-]+")
@@ -53,6 +57,7 @@ def chunk_haystack(chunk: dict[str, Any]) -> str:
         chunk.get("risk"),
         chunk.get("risk_signals"),
         chunk.get("compatibility_notes"),
+        chunk.get("content_preview"),
     ]
     return " ".join(as_text(item) for item in fields).lower()
 
@@ -106,8 +111,8 @@ def source_excerpt(repo_root: Path, chunk: dict[str, Any], max_chars: int) -> tu
     excerpt_lines = lines[start - 1 : min(end, len(lines))]
     excerpt = "\n".join(excerpt_lines)
     if len(excerpt) <= max_chars:
-        return excerpt, False
-    return excerpt[:max_chars] + "\n...[truncated]", True
+        return excerpt, True
+    return "", False
 
 
 def render_markdown(payload: dict[str, Any]) -> str:
@@ -146,7 +151,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
 
 def build_selection(
     repo_root: Path,
-    chunks_path: Path,
+    chunks_path: Path | None,
     query: str,
     max_chunks: int,
     max_total_chars: int,
@@ -154,11 +159,27 @@ def build_selection(
     path_boosts: list[str],
     include_code: bool,
 ) -> dict[str, Any]:
-    chunk_data = read_json(chunks_path)
-    chunks = chunk_data.get("chunks") or []
+    query_tokens = tokenize(query)
+    warnings: list[str] = []
+    if chunks_path is not None and chunks_path.is_file():
+        chunk_data = read_json(chunks_path)
+        chunks = chunk_data.get("chunks") or []
+        source_chunks = repo_relative(repo_root, chunks_path)
+    else:
+        chunks = build_live_source_chunks(
+            repo_root,
+            query_tokens,
+            path_boosts,
+            max_files=max(max_chunks * 3, 12),
+            max_chunk_chars=max_excerpt_chars,
+        )
+        source_chunks = "current_source_live_chunks"
+        if chunks_path is not None:
+            warnings.append(
+                f"explicit semantic chunk index unavailable: {repo_relative(repo_root, chunks_path)}; selected current-run live source chunks"
+            )
     if not isinstance(chunks, list):
         raise ValueError("semantic chunks payload must contain a chunks list")
-    query_tokens = tokenize(query)
     if not query_tokens and not path_boosts:
         raise ValueError("query or path boost is required")
 
@@ -184,6 +205,7 @@ def build_selection(
 
     selected: list[dict[str, Any]] = []
     total_chars = 0
+    skipped_outside_budget_count = 0
     for item in scored:
         if len(selected) >= max_chunks:
             break
@@ -206,16 +228,17 @@ def build_selection(
             "score": item.get("score"),
             "matched_terms": item.get("matched_terms") or [],
         }
-        excerpt = ""
-        truncated = False
         if include_code:
             remaining = max(max_total_chars - total_chars, 0)
             if remaining <= 0:
                 break
             excerpt_limit = min(max_excerpt_chars, remaining)
-            excerpt, truncated = source_excerpt(repo_root, item, excerpt_limit)
+            excerpt, complete = source_excerpt(repo_root, item, excerpt_limit)
+            if not complete:
+                skipped_outside_budget_count += 1
+                continue
             out["source_excerpt"] = excerpt
-            out["source_excerpt_truncated"] = truncated
+            out["source_excerpt_complete"] = True
             total_chars += len(excerpt)
         else:
             total_chars += len(json.dumps(out, ensure_ascii=False))
@@ -226,11 +249,7 @@ def build_selection(
         "kind": "semantic_code_chunk_selection",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "query": query,
-        "source_chunks": (
-            chunks_path.relative_to(repo_root).as_posix()
-            if chunks_path.is_relative_to(repo_root)
-            else str(chunks_path)
-        ),
+        "source_chunks": source_chunks,
         "max_chunks": max_chunks,
         "max_total_chars": max_total_chars,
         "max_excerpt_chars": max_excerpt_chars,
@@ -239,11 +258,12 @@ def build_selection(
         "total_scored_chunks": len(scored),
         "selected_count": len(selected),
         "total_selected_chars": total_chars,
+        "skipped_outside_budget_count": skipped_outside_budget_count,
         "source_writes_performed": False,
         "provider_execution_performed": False,
         "passed": True,
         "errors": [],
-        "warnings": [] if selected else ["no chunks matched query"],
+        "warnings": warnings if selected else [*warnings, "no chunks matched query"],
         "selected_chunks": selected,
     }
 
@@ -251,7 +271,11 @@ def build_selection(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--chunks", default=DEFAULT_CHUNKS)
+    parser.add_argument(
+        "--chunks",
+        default=DEFAULT_CHUNKS,
+        help="Optional explicit semantic chunk index. Omit for current-run live source chunks.",
+    )
     parser.add_argument("--query", required=True)
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
@@ -263,8 +287,8 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    chunks_path = Path(args.chunks)
-    if not chunks_path.is_absolute():
+    chunks_path = Path(args.chunks) if str(args.chunks or "").strip() else None
+    if chunks_path is not None and not chunks_path.is_absolute():
         chunks_path = repo_root / chunks_path
     output_path = Path(args.output)
     if not output_path.is_absolute():

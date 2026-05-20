@@ -4,6 +4,7 @@ from Tools.ai.heap_gate.runtime_common import (
     Any,
     Path,
     json,
+    read_request_file,
     safe_int,
 )
 class RuntimeGateProviderContextMixin:
@@ -20,7 +21,23 @@ class RuntimeGateProviderContextMixin:
         path.mkdir(parents=True, exist_ok=True)
         return path
     def request_text(self) -> str:
-        return str(getattr(self.args, "request", "") or "").strip()
+        cached = getattr(self, "_request_text_cache", None)
+        if isinstance(cached, str):
+            return cached
+        direct = str(getattr(self.args, "request", "") or "").strip()
+        request_file = str(getattr(self.args, "request_file", "") or "").strip()
+        if request_file:
+            try:
+                text = read_request_file(self.repo_root, request_file).strip()
+            except Exception as exc:  # noqa: BLE001 - surfaced as blocked input, not hidden.
+                text = ""
+                self.warnings.append(
+                    f"request_file_read_failed:{request_file}:{type(exc).__name__}: {exc}"
+                )
+            self._request_text_cache = text or direct
+            return self._request_text_cache
+        self._request_text_cache = direct
+        return direct
     def provider_response_text(self, lane: str) -> str:
         for report in reversed(self.provider_reports):
             if report.get("lane") != lane:
@@ -57,20 +74,19 @@ class RuntimeGateProviderContextMixin:
                 or self.requirement_for_tool(str(payload.get("tool") or ""))
             )
             outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
-            summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
-            line = {
-                "requirement": requirement,
-                "tool": payload.get("tool"),
-                "returncode": payload.get("returncode"),
-                "outputs": outputs,
-                "summary": summary,
-            }
             text = json.dumps({"requirement": requirement, "tool": payload.get("tool"), "returncode": payload.get("returncode"), "outputs": outputs}, ensure_ascii=False, default=str)
             parts.append(text)
-        joined = "\n".join(parts)
-        return joined[:max_chars] + (
-            "\n...[team context truncated]" if len(joined) > max_chars else ""
-        )
+        selected: list[str] = []
+        total_chars = 0
+        for part in parts:
+            part_len = len(part) if not selected else len(part) + 1
+            if selected and total_chars + part_len > max_chars:
+                continue
+            if not selected and part_len > max_chars:
+                continue
+            selected.append(part)
+            total_chars += part_len
+        return "\n".join(selected)
 
     def tool_evidence_summary(
         self, events: list[dict[str, Any]], max_items: int = 12
@@ -217,6 +233,8 @@ class RuntimeGateProviderContextMixin:
 
     def build_final_response_text(self, events: list[dict[str, Any]]) -> str:
         base_response = self.response_text().strip()
+        if not base_response:
+            return ""
         if not self.detailed_output_expected():
             return base_response
         historical_refs = self.historical_tool_context_files()
@@ -347,42 +365,8 @@ class RuntimeGateProviderContextMixin:
         if not text:
             return False
         lowered = text.lower().rstrip()
-        dangling_suffixes = (
-            " in",
-            " con",
-            " e",
-            " ed",
-            " o",
-            " od",
-            " di",
-            " del",
-            " della",
-            " dello",
-            " dei",
-            " degli",
-            " su",
-            " per",
-            " da",
-            " a",
-            " al",
-            " alla",
-            " allo",
-            " ai",
-            " agli",
-            " tra",
-            " fra",
-            " che",
-            " come",
-            " quando",
-            " perché",
-            " se",
-            " ma",
-            " però",
-            " quindi",
-            " output_preview=",
-            "[",
-            "(",
-            "{",
+        dangling_suffixes = tuple(
+            " in| con| e| ed| o| od| di| del| della| dello| dei| degli| su| per| da| a| al| alla| allo| ai| agli| tra| fra| che| come| quando| perchÃ©| se| ma| perÃ²| quindi| output_preview=|[|(|{".split("|")
         )
         if lowered.endswith(dangling_suffixes):
             return False

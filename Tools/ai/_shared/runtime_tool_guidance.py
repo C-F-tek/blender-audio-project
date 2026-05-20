@@ -20,8 +20,6 @@ ALLOWED_RUNTIME_TOOLS = {
     "build_agent_agnostic_tool_inventory",
     "build_agent_transient_request_context",
     "check_python_syntax",
-    "check_validation_report_contract",
-    "run_gpu_planner_json_contract_smoke",
     "build_code_interpreter_report",
     "runtime_sqlite_memory",
 }
@@ -42,8 +40,8 @@ TOOL_REQUEST_DECISION_GUIDE: dict[str, Any] = {
     "must_request_tools_when": [
         "recommendations would otherwise be empty",
         "schema-valid target files cannot be selected from current evidence",
-        "syntax, line-count, validation-contract, memory, or tool inventory evidence is missing",
-        "the next_best_action would be collect_more_evidence, inspect validation, or inspect inventory",
+        "syntax, line-count, memory, or tool inventory evidence is missing",
+        "the next_best_action would be collect_more_evidence or inspect inventory",
     ],
     "must_not_request_tools_when": [
         "a recommendation is already ready_for_patch_plan with concrete target_files and validation_commands",
@@ -56,8 +54,6 @@ TOOL_REQUEST_DECISION_GUIDE: dict[str, Any] = {
         "need durable memory inventory": "build_agent_memory_inventory",
         "need transient task/request context": "build_agent_transient_request_context",
         "need syntax baseline": "check_python_syntax",
-        "need validation report contract check": "check_validation_report_contract",
-        "need GPU planner JSON contract check": "run_gpu_planner_json_contract_smoke",
         "need code-interpreter style static report": "build_code_interpreter_report",
         "need memory status/search": "runtime_sqlite_memory",
     },
@@ -152,23 +148,9 @@ def deterministic_fallback_tool_requests(
             "source": "deterministic_fallback",
         },
         {
-            "id": "fallback_validation_contract",
-            "tool": "check_validation_report_contract",
-            "reason": f"Deterministic fallback to refresh validation contract evidence: {reason}.",
-            "args": {},
-            "source": "deterministic_fallback",
-        },
-        {
             "id": "fallback_transient_context",
             "tool": "build_agent_transient_request_context",
             "reason": f"Deterministic fallback to refresh transient request context: {reason}.",
-            "args": {},
-            "source": "deterministic_fallback",
-        },
-        {
-            "id": "fallback_gpu_contract_smoke",
-            "tool": "run_gpu_planner_json_contract_smoke",
-            "reason": f"Deterministic fallback to verify planner JSON/tool-request contract: {reason}.",
             "args": {},
             "source": "deterministic_fallback",
         },

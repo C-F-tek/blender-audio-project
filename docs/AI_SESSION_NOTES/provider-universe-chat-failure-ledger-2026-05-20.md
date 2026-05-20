@@ -75,11 +75,11 @@ automated transcript parser.
 | Counter | Count |
 |---|---:|
 | Operator-aligned fixes kept in source/docs | 6 |
-| Operator blocks required before Codex matched instruction | 14 |
-| Script-gaming total regressions | 279 |
-| Misleading/Codex lie evidence count | 3 |
-| Systemic product-lie evidence count | 1 |
-| Systemic product-lie severity score | 5 |
+| Operator blocks required before Codex matched instruction | 16 |
+| Script-gaming total regressions | 409 |
+| Misleading/Codex lie evidence count | 5 |
+| Systemic product-lie evidence count | 4 |
+| Systemic product-lie severity score | 20 |
 
 Operator-aligned fixes kept in source/docs:
 
@@ -121,6 +121,8 @@ Operator blocks required:
   product contract.
 - The operator blocked repeated context reload behavior without proving delta
   memory use.
+- The operator blocked character-budget handling as chopped text instead of
+  complete chunk/pointer selection.
 
 Repeated-code regressions:
 
@@ -143,6 +145,10 @@ Systemic product-lie evidence:
   still absent: `provider_execution_performed=false`, GPU1 had no provider
   response text, GPU1/GPU0/NPU provider evidence counts were missing, and no
   MD/pointer-composed `FINAL_CODE_PRODUCT` was produced.
+- Count 2, severity 5/5: Codex handled character budget pressure by chopping
+  selected source text. The operator rejected this because the product context
+  must remain composed from complete heap/pointer chunks with memory jumps and
+  resumable context, not from chopped text fragments.
 
 Canonical counter rule:
 

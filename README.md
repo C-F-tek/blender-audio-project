@@ -110,11 +110,11 @@ automated transcript parser.
 | Counter | Count | Meaning |
 |---|---:|---|
 | Operator-aligned fixes kept in source/docs | 6 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
-| Operator blocks required | 14 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
-| Script-gaming total regression count | 279 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
-| Misleading/Codex lie evidence count | 3 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
-| Systemic product-lie evidence count | 1 | Cases where validation/report/prose replaced the promised MD/pointer/final-product path. |
-| Systemic product-lie severity score | 5 | Sum of severity weights for structural product lies; `5` is the maximum single-event severity. |
+| Operator blocks required | 16 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
+| Script-gaming total regression count | 409 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+| Misleading/Codex lie evidence count | 5 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
+| Systemic product-lie evidence count | 4 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
+| Systemic product-lie severity score | 20 | Sum of severity weights for structural product lies; `5` is the maximum single-event severity. |
 
 Recorded repeated-code regressions:
 
@@ -138,6 +138,10 @@ Recorded systemic product-lie evidence:
   text, GPU1/GPU0/NPU provider evidence counts were missing, and no
   MD/pointer-composed `FINAL_CODE_PRODUCT` was produced. This is counted as a
   structural product lie, not a wording issue.
+- Count 2, severity 5/5: Codex treated character budget pressure as text
+  truncation inside selected code chunks. That violates the heap/pointer
+  context contract: product context must move through complete chunks/pointers,
+  not chopped text outside the current heap memory path.
 
 Canonical counter rule:
 
@@ -178,6 +182,8 @@ Examples of operator blocks in this window:
   reconstruction and real code/patch product boundaries;
 - blocking repeated context reloads without delta/check of changed memory
   state.
+- blocking character-budget handling as chopped text instead of complete
+  chunk/pointer selection.
 
 This counter must be updated whenever a future Codex/OpenAI operator repeats
 the same class of script-gaming behavior, reintroduces deleted/rejected code, or

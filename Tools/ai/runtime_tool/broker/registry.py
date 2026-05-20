@@ -18,8 +18,6 @@ from .inventory_builders import (
     build_refactor_duplication_audit,
     build_semantic_code_chunk_selection,
     check_python_syntax,
-    check_validation_report_contract,
-    run_gpu_planner_json_contract_smoke,
 )
 from .runtime_builders import (
     analyze_code_product_artifact,
@@ -67,18 +65,6 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         allowed_args=(),
         builder=check_python_syntax,
     ),
-    "check_validation_report_contract": ToolSpec(
-        name="check_validation_report_contract",
-        description="Validate validation report contract for a scoped report-dir or explicit report files.",
-        allowed_args=("report_file",),
-        builder=check_validation_report_contract,
-    ),
-    "run_gpu_planner_json_contract_smoke": ToolSpec(
-        name="run_gpu_planner_json_contract_smoke",
-        description="Run GPU planner JSON contract smoke tests without provider.",
-        allowed_args=(),
-        builder=run_gpu_planner_json_contract_smoke,
-    ),
     "build_code_interpreter_report": ToolSpec(
         name="build_code_interpreter_report",
         description="Build static code-interpreter style report over selected roots.",
@@ -102,7 +88,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
     ),
     "select_semantic_code_chunks": ToolSpec(
         name="select_semantic_code_chunks",
-        description="Select bounded semantic code chunks for provider context from the existing chunk index.",
+        description="Select bounded semantic code chunks for provider context from current source or an explicit chunk index.",
         allowed_args=(
             "query",
             "chunks",
@@ -213,7 +199,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
     ),
     "run_heap_virtual_dev_environment": ToolSpec(
         name="run_heap_virtual_dev_environment",
-        description="Probe target scripts in a controlled virtual development environment with AST, import, help, compile and validation evidence.",
+        description="Probe target scripts in a controlled virtual development environment with AST, import, help, compile and product-check evidence.",
         allowed_args=(
             "target_file",
             "validation_script",
