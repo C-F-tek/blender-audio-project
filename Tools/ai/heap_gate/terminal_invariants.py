@@ -44,7 +44,10 @@ def evaluate_terminal_invariants(
     if metrics.get("product_status") not in {"ready", "blocked_with_reason"}:
         errors.append("product_status must be ready or blocked_with_reason")
     if not lane_gate_passed:
-        errors.append("runtime state degraded lane tolerance exceeded: " + ",".join(degraded_lanes))
+        errors.append(
+            "runtime state contains unviable lanes; degraded/unavailable lanes cannot pass complete/full mode: "
+            + ",".join(degraded_lanes)
+        )
     if metrics.get("product_status") == "ready" and missing_requirements:
         errors.append("ready product_status is forbidden while requirements are missing")
     if allow_provider_generation and metrics.get("missing_provider_lanes"):
