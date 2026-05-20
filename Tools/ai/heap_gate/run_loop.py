@@ -66,7 +66,7 @@ class RuntimeGateRunLoopMixin:
             self.heap,
             "orchestrator",
             "ready" if lane_gate["passed"] else "failed",
-            "Runtime lane status tolerance evaluated.",
+            "Runtime lane viability evaluated; degraded/unavailable lanes are unviable in complete/full mode.",
             lane_gate,
             correlation_id=f"{self.stamp}:runtime-state-gate",
         )
@@ -259,9 +259,12 @@ class RuntimeGateRunLoopMixin:
                 self.invocation_contract.get("real_run_gate")
             ).get("decision"),
             "runtime_state_lane_status": lane_gate["lane_status"],
+            "runtime_state_unviable_lanes": lane_gate["unviable_lanes"],
+            "runtime_state_unviable_lane_count": lane_gate["unviable_lane_count"],
             "runtime_state_degraded_lanes": lane_gate["degraded_lanes"],
             "runtime_state_degraded_lane_count": lane_gate["degraded_lane_count"],
             "max_degraded_lanes": lane_gate["max_degraded_lanes"],
+            "configured_max_degraded_lanes": lane_gate["configured_max_degraded_lanes"],
             "runtime_state_gate_passed": lane_gate["passed"],
             "response_text_complete": self.response_text_complete(),
         }
@@ -289,7 +292,7 @@ class RuntimeGateRunLoopMixin:
                 metrics=metrics,
                 missing_requirements=missing,
                 lane_gate_passed=bool(lane_gate["passed"]),
-                degraded_lanes=list(lane_gate["degraded_lanes"]),
+                degraded_lanes=list(lane_gate["unviable_lanes"]),
                 final_bridge_reports=final_bridge_reports,
                 allow_provider_generation=bool(self.args.allow_provider_generation),
                 provider_execution_performed=bool(self.provider_execution_performed),
