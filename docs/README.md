@@ -14,15 +14,17 @@ Canonical root entrypoints:
 ../CONTEXT_INDEX.md
 ```
 
-Current docs-side entrypoints:
+## Core-first docs-side entrypoints
 
 ```text
 AI_DOCS_ENTRYPOINT.md
+IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
 PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 REAL_PRODUCT_RUN_MODEL.md
 COMPACT_EVIDENCE_MODEL.md
+PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -37,11 +39,13 @@ Read these first for active IA-Carmine runtime, provider, heap/exchange, patchki
 ../CHATGPT.md
 ../CONTEXT_INDEX.md
 AI_DOCS_ENTRYPOINT.md
+IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
 PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 REAL_PRODUCT_RUN_MODEL.md
 COMPACT_EVIDENCE_MODEL.md
+PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
 CONTEXT_INDEX.md
 CONTEXT_COVERAGE_STATUS.md
 DISPATCHER_CONTEXT_COVERAGE.md
@@ -51,38 +55,50 @@ DISPATCHER_CONTEXT_COVERAGE.md
 
 Older task/runbook files remain useful only after this path and only for their specific topic.
 
-## Active architecture and workflow docs
+## Universo IA active models
 
 | Area | Document |
 |---|---|
+| Model-to-code bridge | `IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
 | Heap/exchange useful model | `HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Standalone heap surface model | `STANDALONE_HEAP_SURFACE_MODEL.md` |
 | Provider lanes unified mind model | `PROVIDER_LANES_UNIFIED_MIND_MODEL.md` |
 | Real product run model | `REAL_PRODUCT_RUN_MODEL.md` |
 | Compact evidence model | `COMPACT_EVIDENCE_MODEL.md` |
+| Patch/code product boundary model | `PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md` |
 | Root context navigation | `../CONTEXT_INDEX.md` |
 | Docs navigation | `CONTEXT_INDEX.md` |
 | Context coverage | `CONTEXT_COVERAGE_STATUS.md` |
 | Dispatcher/family coverage | `DISPATCHER_CONTEXT_COVERAGE.md` |
-| Runtime architecture | `MAIN_RUNTIME_ARCHITECTURE.md` |
-| Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md` |
-| Local AI workflow | `LOCAL_AI_WORKFLOW.md` |
-| Data flow | `DATA_FLOW.md` |
-| JSON/report schemas | `JSON_SCHEMAS.md` |
-| Patch-spec workflow | `PATCH_SPEC_WORKFLOW.md` |
-| Project status | `PROJECT_STATUS_POINT.md` |
-| AI task map | `LOCAL_AI_TASKS/README.md` |
 | Tooling index | `../Tools/CONTEXT_INDEX.md` |
 | Scripting index | `../Scripting/CONTEXT_INDEX.md` |
-| Tool package family map | `LOCAL_AI_TASKS/tool-package-family-map-2026-05-18.md` |
 
-## Recent failure notes
+## Core-first model-to-code use
 
-Provider-universe failures and assistant conduct failures from the 2026-05-20 runtime repair session are recorded in:
+When search is noisy or inconclusive, start from the model-to-code bridge:
 
 ```text
-AI_SESSION_NOTES/provider-universe-failure-summary-2026-05-20.md
-AI_SESSION_NOTES/provider-universe-chat-failure-ledger-2026-05-20.md
+IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+```
+
+It maps each current model to:
+
+```text
+code families
+dispatcher commands
+expected artifacts
+validation/smoke commands
+semantic rule
+```
+
+Then open the nearest family context and dispatcher:
+
+```text
+../Tools/CONTEXT_INDEX.md
+../Tools/ai/CONTEXT_INDEX.md
+../Tools/validation/CONTEXT_INDEX.md
+../Tools/workflow/CONTEXT_INDEX.md
+../Tools/npu/CONTEXT_INDEX.md
 ```
 
 ## Historical/task-specific runbooks
@@ -102,12 +118,24 @@ LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
 LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
 ```
 
+## Provider lanes as one operational mind
+
+Provider/lane cooperation work should first read:
+
+```text
+PROVIDER_LANES_UNIFIED_MIND_MODEL.md
+IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+```
+
+This is the current model for Ollama as main center, GPU0 as coworker/reviewer lane, and NPU as micro-lane/microtask auditor, with code/tool mapping in the model-to-code map.
+
 ## Standalone heap universe incubation
 
 Standalone heap architecture work should first read:
 
 ```text
 STANDALONE_HEAP_SURFACE_MODEL.md
+IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
 Then, only for historical/task detail:
@@ -117,24 +145,13 @@ LOCAL_AI_TASKS/standalone-heap-universe-incubation-2026-05-10.md
 LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md
 ```
 
-These documents are task-specific. They do not override current context indexes, dispatcher coverage or source inspection.
-
-## Provider lanes as one operational mind
-
-Provider/lane cooperation work should first read:
-
-```text
-PROVIDER_LANES_UNIFIED_MIND_MODEL.md
-```
-
-This is the current model for Ollama as main center, GPU0 as coworker/reviewer lane, and NPU as micro-lane/microtask auditor.
-
 ## Real product run classification
 
 Run/product classification should first read:
 
 ```text
 REAL_PRODUCT_RUN_MODEL.md
+IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
 Then, only for historical/task detail:
@@ -150,6 +167,7 @@ Evidence publication decisions should first read:
 
 ```text
 COMPACT_EVIDENCE_MODEL.md
+IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
 Then inspect selected compact evidence under:
@@ -159,6 +177,31 @@ docs/LOCAL_VALIDATION_EVIDENCE/
 ```
 
 Do not commit raw runtime output by default.
+
+## Patch/code product boundary
+
+Source-change product decisions should first read:
+
+```text
+PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+```
+
+This separates provider proposal, patch plan, patch candidate, code product, PatchKit bundle, repo-patch-runner and reviewed apply.
+
+## Other active architecture and workflow docs
+
+| Area | Document |
+|---|---|
+| Runtime architecture | `MAIN_RUNTIME_ARCHITECTURE.md` |
+| Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md` |
+| Local AI workflow | `LOCAL_AI_WORKFLOW.md` |
+| Data flow | `DATA_FLOW.md` |
+| JSON/report schemas | `JSON_SCHEMAS.md` |
+| Patch-spec workflow | `PATCH_SPEC_WORKFLOW.md` |
+| Project status | `PROJECT_STATUS_POINT.md` |
+| AI task map | `LOCAL_AI_TASKS/README.md` |
+| Tool package family map | `LOCAL_AI_TASKS/tool-package-family-map-2026-05-18.md` |
 
 ## Policy
 
