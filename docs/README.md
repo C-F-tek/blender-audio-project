@@ -19,6 +19,7 @@ Canonical root entrypoints:
 ```text
 AI_DOCS_ENTRYPOINT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+CORE_LANE_COMPLETENESS_CONTRACT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
 PROVIDER_LANES_UNIFIED_MIND_MODEL.md
@@ -40,6 +41,7 @@ Read these first for active IA-Carmine runtime, provider, heap/exchange, patchki
 ../CONTEXT_INDEX.md
 AI_DOCS_ENTRYPOINT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+CORE_LANE_COMPLETENESS_CONTRACT.md
 HEAP_EXCHANGE_USEFUL_MODEL.md
 STANDALONE_HEAP_SURFACE_MODEL.md
 PROVIDER_LANES_UNIFIED_MIND_MODEL.md
@@ -60,6 +62,7 @@ Older task/runbook files remain useful only after this path and only for their s
 | Area | Document |
 |---|---|
 | Model-to-code bridge | `IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
+| Core lane completeness contract | `CORE_LANE_COMPLETENESS_CONTRACT.md` |
 | Heap/exchange useful model | `HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Standalone heap surface model | `STANDALONE_HEAP_SURFACE_MODEL.md` |
 | Provider lanes unified mind model | `PROVIDER_LANES_UNIFIED_MIND_MODEL.md` |
@@ -90,6 +93,14 @@ expected artifacts
 validation/smoke commands
 semantic rule
 ```
+
+Then enforce lane viability with:
+
+```text
+CORE_LANE_COMPLETENESS_CONTRACT.md
+```
+
+For complete/full profiles, `degraded` and `unavailable` are `unviable`. A full smoke must not pass without valid evidence for required core lanes.
 
 Then open the nearest family context and dispatcher:
 
@@ -124,9 +135,8 @@ Provider/lane cooperation work should first read:
 
 ```text
 PROVIDER_LANES_UNIFIED_MIND_MODEL.md
+CORE_LANE_COMPLETENESS_CONTRACT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
-LOCAL_AI_TASKS/provider-universe-runtime-patch-contract-2026-05-20.md
-RUNTIME_PROVIDER_FAILURE_NOTES_20260520.md
 ```
 
 This is the current model for Ollama as main center, GPU0 as coworker/reviewer lane, and NPU as micro-lane/microtask auditor, with code/tool mapping in the model-to-code map.
@@ -153,6 +163,7 @@ Run/product classification should first read:
 
 ```text
 REAL_PRODUCT_RUN_MODEL.md
+CORE_LANE_COMPLETENESS_CONTRACT.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
