@@ -2,11 +2,13 @@
 
 This is the compact navigation entrypoint for AI and operator context.
 
-## Core models
+## Core contracts and models
 
 | File | Role |
 | --- | --- |
+| `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` | Mandatory anti-ambiguity contract for AI limitations, context loss, smoke overfitting, optionalized lanes and evidence-free completion claims. |
 | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` | Core bridge from each Universo IA model to real code families, dispatcher commands, artifacts and validators. |
+| `docs/CORE_LANE_COMPLETENESS_CONTRACT.md` | Complete/full run contract: required lanes need viable evidence; degraded/unavailable equals unviable. |
 | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | Current compact model for controlled input, shared heap/exchange, cooperating lanes, evidence and deterministic exit product. |
 | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | Current compact model for deterministic heap surfaces: preload, memory, chunks, namespaces, tool catalog, broker, lanes and composer. |
 | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | Current compact model for Ollama/main provider, GPU0 coworker lane and NPU micro-lane as one operational mind with departments. |
