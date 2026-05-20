@@ -11,6 +11,7 @@ This is the compact navigation entrypoint for AI and operator context.
 | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | Current compact model for Ollama/main provider, GPU0 coworker lane and NPU micro-lane as one operational mind with departments. |
 | `docs/REAL_PRODUCT_RUN_MODEL.md` | Current compact model for evidence-only, blocked and real product run states. |
 | `docs/COMPACT_EVIDENCE_MODEL.md` | Current compact model for raw runtime output, selected compact evidence, AI-to-AI bundles and Git-trackable evidence. |
+| `docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md` | Current compact model for provider proposal, patch plan, code product, PatchKit, repo-patch-runner and reviewed apply boundaries. |
 
 ## Coverage status
 
