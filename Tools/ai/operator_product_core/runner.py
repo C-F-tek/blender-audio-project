@@ -9,6 +9,10 @@ from typing import Any
 
 from Tools.ai._shared.live_flow_monitor import run_monitored_command
 from Tools.ai.heap_context_closure.common import terminate_provider_launch_manifest_processes
+from Tools.validation._shared.codex_failure_counters import (
+    apply_codex_failure_counter_updates,
+    classify_codex_failure_counters,
+)
 
 from .io_utils import read_json_quiet, write_json, write_text
 from .markdown import render_lab_markdown, render_run_markdown
@@ -233,6 +237,34 @@ def run_operator_lab(
         "errors": errors,
         "passed": passed,
     }
+    run_result = run_report.get("run_result") if isinstance(run_report.get("run_result"), dict) else {}
+    review_result = (
+        review_report.get("operator_launcher_command_result")
+        if isinstance(review_report.get("operator_launcher_command_result"), dict)
+        else {}
+    )
+    launcher_summary = (
+        run_report.get("launcher_summary_payload")
+        if isinstance(run_report.get("launcher_summary_payload"), dict)
+        else {}
+    )
+    report_warnings: list[Any] = []
+    for item in (launcher_summary, review_report):
+        warnings = item.get("warnings") if isinstance(item, dict) else None
+        if isinstance(warnings, list):
+            report_warnings.extend(warnings)
+    report["codex_failure_counters"] = classify_codex_failure_counters(
+        returncodes=[run_result.get("returncode"), review_result.get("returncode")],
+        errors=[*errors, run_result.get("stderr_tail", ""), review_result.get("stderr_tail", "")],
+        warnings=report_warnings,
+        user_interrupted=bool(
+            run_result.get("keyboard_interrupt") or review_result.get("keyboard_interrupt")
+        ),
+    )
+    report["codex_failure_counter_markdown_updates"] = apply_codex_failure_counter_updates(
+        cfg.repo_root,
+        report["codex_failure_counters"],
+    )
     write_json(run_dir / "operator_product_lab_summary.json", report)
     write_text(run_dir / "operator_product_lab_summary.md", render_lab_markdown(report))
     return report

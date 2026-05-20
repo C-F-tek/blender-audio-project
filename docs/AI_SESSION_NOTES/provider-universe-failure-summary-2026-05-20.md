@@ -28,9 +28,14 @@ blockers.
   narrow smokes, and too much tolerance for game-like scripting activity before
   the provider universe produced real heap/pointer/product results.
 - Last-hour Codex audit counters were added to the root README and the chat
-  failure ledger: 6 aligned fixes kept, 14 operator blocks required, and 1
-  repeated-code regression where NPU semantic compatibility fields were
-  reintroduced after operator rejection.
+  failure ledger: 6 aligned fixes kept, 14 operator blocks required, and 275
+  script-gaming total regressions.
+- The complete-only heap runtime smoke generated at `2026-05-20T23:25:27`
+  failed with return code `124`, empty metrics, no observable provider
+  execution, missing provider-lane evidence, and `product_status=None`.
+- The repeated `complete:` prefix on the error list is recorded as Codex
+  failure evidence and misleading formatting; it is not a new validation
+  surface and records the same underlying missing heap/provider/product work.
 
 ## Corrections Applied In This Patch
 

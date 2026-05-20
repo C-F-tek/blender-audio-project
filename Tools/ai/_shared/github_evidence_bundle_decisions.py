@@ -124,16 +124,6 @@ def ollama_gpu_primary_advisory(reports: list[dict[str, Any]]) -> bool:
     )
 
 
-def npu_decode_smoke_passed(reports: list[dict[str, Any]]) -> bool:
-    """Return whether a provider-executed NPU decode smoke diagnostic passed."""
-    return any(
-        item.get("kind") == "npu_decode_smoke_diagnostic"
-        and item.get("passed") is True
-        and item.get("summary", {}).get("provider_execution_performed") is True
-        for item in reports
-    )
-
-
 def provider_execution_seen(reports: list[dict[str, Any]]) -> bool:
     """Return whether any summarized report performed provider execution."""
     return any(
@@ -157,7 +147,6 @@ def build_decision(
         "ollama_gpu_primary_advisory": ollama_gpu_primary_advisory(reports),
         "npu_excluded_when_unusable": npu_excluded_when_unusable(reports),
         "provider_execution_seen": provider_execution_seen(reports),
-        "npu_decode_smoke_passed": npu_decode_smoke_passed(reports),
         "selected_chunks_evidence_seen": selected_chunks_evidence_seen(selected_chunks_evidence),
         "selected_chunks_built": selected_chunks_built(selected_chunks_evidence),
         "budget_respected": selected_chunks_budget_respected(selected_chunks_evidence),

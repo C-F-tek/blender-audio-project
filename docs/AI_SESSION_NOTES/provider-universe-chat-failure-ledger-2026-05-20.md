@@ -76,7 +76,8 @@ automated transcript parser.
 |---|---:|
 | Operator-aligned fixes kept in source/docs | 6 |
 | Operator blocks required before Codex matched instruction | 14 |
-| Repeated-code regressions | 1 |
+| Script-gaming total regressions | 275 |
+| Misleading/Codex lie evidence count | 1 |
 
 Operator-aligned fixes kept in source/docs:
 
@@ -114,22 +115,57 @@ Operator blocks required:
 - The operator blocked confusing activity in Task Manager with useful work.
 - The operator blocked NPU/GPU0 activity from substituting for GPU1 primary
   advisory work.
-- The operator blocked telemetry-style surfaces from being treated as the
+- The operator blocked report-style surfaces from being treated as the
   product contract.
 - The operator blocked repeated context reload behavior without proving delta
   memory use.
 
-Repeated-code regression:
+Repeated-code regressions:
 
 - Count 1: Codex reintroduced NPU `semantic_provider_*`/`npu_semantic_*`
   fields as compatibility after the operator had already rejected that shape.
   The corrected NPU surface is `npu_micro_provider_*`; future recurrence must
   increment this count.
 
+Misleading/Codex lie evidence:
+
+- Count 1: the complete-only smoke failure repeated the same missing
+  heap/provider/product errors with a `complete:` prefix. The prefix is not new
+  evidence; it is recorded as misleading formatting that can hide the plain
+  failure state.
+
+Canonical counter rule:
+
+- every new published Codex failure evidence must update this ledger and the
+  root README counter table;
+- smoke reports and operator-product run reports must apply these Markdown
+  counter updates automatically when they classify errors, warnings or operator
+  interruption;
+- if an event has a numeric return code and the operator classifies that return
+  code as the increment, the script-gaming total regression count increments by
+  that exact value;
+- if the operator/user closes or interrupts a smoke/run, all non-lie operational
+  failure counters exposed by the report increment by `1`; positive return
+  codes are not added on top of that interruption increment, and the
+  misleading/Codex lie counter does not increment from interruption alone;
+- misleading formatting, false framing, `complete`/`complete:` prefixes,
+  `fuorviante`/`fuorvianti` wording, masking, or any attempt to hide/silence
+  warnings or errors gets a separate misleading/Codex lie evidence increment;
+- later smoke output cannot erase or reset these counters.
+
 ## Runtime Failures Observed
 
 - The run displayed provider lanes as active while `provider_blocks=0` and
   `proposals=0`.
+- The complete-only heap runtime smoke generated at `2026-05-20T23:25:27`
+  failed with return code `124`, empty metrics,
+  `provider_execution_performed=false`, missing GPU1/GPU0/NPU provider
+  evidence, missing heap/tool/decision/candidate counts, and
+  `product_status=None`.
+- The same failure list was repeated with a `complete:` prefix. That prefix is
+  not a separate proof surface. It is recorded as Codex failure evidence and as
+  misleading formatting because it can hide or soften the underlying absence of
+  real heap/provider/product work.
 - The run could continue after 100+ heap events without a usable product block.
 - The flow could show `provider_lanes_running_or_written` while no proposal
   block was materialized.
@@ -153,7 +189,6 @@ Repeated-code regression:
 - The run also needed a product-level block, not just child termination.
 - A later local process scan found no matching live provider processes, but that
   does not erase the earlier design failure.
-
 ## Provider Lane Failures
 
 - GPU1 could produce partial text but that text did not become a proposal block

@@ -34,7 +34,6 @@ $QualityReport = "output/validation/ai_workload_report_quality.json"
 $LaneRoutingReport = "output/validation/ai_workload_quality_lane_routing.json"
 $LaneRoutingMarkdown = "output/validation/ai_workload_quality_lane_routing.md"
 $NpuDecodeRemediationReport = "output/validation/npu_decode_quality_remediation.json"
-$NpuDecodeSmokeReport = "output/validation/npu_decode_smoke_diagnostic.json"
 $UseResolvedOllama = [bool]$UseOllama
 $PrimaryAdvisoryProvider = "none"
 $PrimaryAdvisoryComputeLane = "none"
@@ -115,10 +114,6 @@ if (Test-Path $NpuDecodeRemediationReport) {
     $ArgsList += @("--report-file", $NpuDecodeRemediationReport)
 }
 
-if (Test-Path $NpuDecodeSmokeReport) {
-    $ArgsList += @("--report-file", $NpuDecodeSmokeReport)
-}
-
 if ($UseResolvedOllama) {
     $ArgsList += "--use-ollama"
 }
@@ -149,10 +144,6 @@ if (Test-Path $NpuDecodeRemediationReport) {
     $ProposalArgs += @("--report-file", $NpuDecodeRemediationReport)
 }
 
-if (Test-Path $NpuDecodeSmokeReport) {
-    $ProposalArgs += @("--report-file", $NpuDecodeSmokeReport)
-}
-
 if ($RequireConcreteProposals) {
     $ProposalArgs += "--require-concrete-proposals"
 }
@@ -172,9 +163,6 @@ if (Test-Path $LaneRoutingReport) {
 }
 if (Test-Path $NpuDecodeRemediationReport) {
     Write-Host "  $NpuDecodeRemediationReport"
-}
-if (Test-Path $NpuDecodeSmokeReport) {
-    Write-Host "  $NpuDecodeSmokeReport"
 }
 Write-Host ""
 Write-Host "Primary advisory provider: $PrimaryAdvisoryProvider / $PrimaryAdvisoryComputeLane"

@@ -15,7 +15,6 @@ IGNORED_PLAN_FILENAMES = {"README.md"}
 WORKLOAD_QUALITY_REPORT = "output/validation/ai_workload_report_quality.json"
 WORKLOAD_QUALITY_ROUTING_REPORT = "output/validation/ai_workload_quality_lane_routing.json"
 NPU_DECODE_REMEDIATION_REPORT = "output/validation/npu_decode_quality_remediation.json"
-NPU_DECODE_SMOKE_REPORT = "output/validation/npu_decode_smoke_diagnostic.json"
 TRACKED_WORKLOAD_CONTEXT_FILES = (
     "output/ai_packets/npu_real_workload_report.md",
     "output/ai_packets/ollama_gpu_real_workload_report.md",
@@ -77,7 +76,6 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         WORKLOAD_QUALITY_REPORT,
         WORKLOAD_QUALITY_ROUTING_REPORT,
         NPU_DECODE_REMEDIATION_REPORT,
-        NPU_DECODE_SMOKE_REPORT,
         "output/validation/npu_runtime_output_manifest.json",
         "output/validation/local_ai_resource_lanes.json",
         "output/validation/local_provider_probe.json",
@@ -95,7 +93,6 @@ PROFILE_REPORTS: dict[str, tuple[str, ...]] = {
         WORKLOAD_QUALITY_REPORT,
         WORKLOAD_QUALITY_ROUTING_REPORT,
         NPU_DECODE_REMEDIATION_REPORT,
-        NPU_DECODE_SMOKE_REPORT,
         "output/validation/npu_runtime_output_manifest.json",
         "output/validation/local_ai_resource_lanes.json",
         "output/validation/local_provider_probe.json",

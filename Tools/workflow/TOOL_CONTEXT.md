@@ -64,7 +64,6 @@ startup_check
 startup_check_core
 startup_preflight
 run_ai_cycle_startup_preflight
-ai_runtime_diagnostics
 ```
 
 Startup/preflight should verify environment, paths, request files, Python invocation, expected folders and safety assumptions.

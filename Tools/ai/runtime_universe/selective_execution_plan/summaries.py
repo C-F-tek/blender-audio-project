@@ -107,7 +107,6 @@ def summarize_provider_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
             "error": error,
             "provider_execution_seen": False,
             "ollama_gpu_primary_advisory": False,
-            "npu_decode_smoke_passed": False,
             "npu_excluded_when_unusable": False,
         }
 
@@ -131,7 +130,6 @@ def summarize_provider_evidence(path: Path, repo_root: Path) -> dict[str, Any]:
         "ollama_gpu_primary_advisory": decision.get("ollama_gpu_primary_advisory"),
         "npu_excluded_when_unusable": decision.get("npu_excluded_when_unusable"),
         "provider_execution_seen": decision.get("provider_execution_seen"),
-        "npu_decode_smoke_passed": decision.get("npu_decode_smoke_passed"),
     }
 
 def summarize_validation_contract(path: Path, repo_root: Path) -> dict[str, Any]:

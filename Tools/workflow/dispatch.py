@@ -48,7 +48,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "gui": "Tools.workflow.gui.workflow_gui:main",
     "workflow_shell": "Tools.workflow.workflow_run.workflow_shell.cli:main",
     "workflow_shell_with_push": "Tools.workflow.workflow_run.workflow_shell_with_push.cli:main",
-    "ai_runtime_diagnostics": "Tools.workflow.workflow_run.ai_runtime_diagnostics.cli:main",
     "git_auto_push": "Tools.workflow.workflow_run.git_auto_push.cli:main",
     "run_local_ai_artifact_reset": "Tools.workflow.workflow_run.local_ai_artifact_reset.cli:main",
     "smart_ai_context_core": "Tools.workflow.workflow_run.smart_ai_context_core.cli:main",

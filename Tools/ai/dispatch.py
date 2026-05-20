@@ -113,7 +113,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "external_heap_postrun_package": "Tools.ai.external_heap.postrun_package.cli:main",
     "run_gpu0_peer_companion_worker": "Tools.ai.provider_mesh.gpu0_peer_companion_worker.cli:main",
     "run_local_provider_probe": "Tools.ai.provider_mesh.local_provider_probe.cli:main",
-    "run_npu_decode_smoke_diagnostic": "Tools.ai.provider_mesh.npu_decode_smoke_diagnostic.cli:main",
     "runtime_tool_broker": "Tools.ai.runtime_tool.broker.cli:main",
     "analyze_code_product_artifact": "Tools.ai.code_product.artifact_intake.cli:main",
     "assemble_heap_final_readable_product": "Tools.ai.code_product.final_readable_product.cli:main",

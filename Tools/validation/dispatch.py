@@ -169,7 +169,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_patch_candidate_synthesis_smoke": "Tools.validation.patch_product.run_patch_candidate_synthesis_smoke.cli:main",
     "run_patchkit_bundle_contract_smoke": "Tools.validation.patch_product.run_patchkit_bundle_contract_smoke.cli:main",
     "run_patchkit_smoke": "Tools.validation.patch_product.run_patchkit_smoke.cli:main",
-    "run_provider_empty_response_diagnostics_smoke": "Tools.validation.provider_mesh.run_provider_empty_response_diagnostics_smoke.cli:main",
     "run_provider_tool_evidence_chain_smoke": "Tools.validation.runtime_tool.run_provider_tool_evidence_chain_smoke.cli:main",
     "run_provider_tool_loop_smoke": "Tools.validation.runtime_tool.run_provider_tool_loop_smoke.cli:main",
     "run_refactor_duplication_audit_smoke": "Tools.validation.docs_hygiene.run_refactor_duplication_audit_smoke.cli:main",

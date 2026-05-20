@@ -105,7 +105,6 @@ run_npu_micro_task_companion_smoke
 run_ollama_tool_gateway_smoke
 run_gpu_planner_json_contract_smoke
 run_gpu_runner_provider_error_smoke
-run_provider_empty_response_diagnostics_smoke
 ```
 
 Provider validations prove lane availability or response shape. They do not prove that the provider produced an apply-ready patch.

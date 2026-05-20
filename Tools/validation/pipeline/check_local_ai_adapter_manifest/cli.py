@@ -311,7 +311,6 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
         for flag in (
             "run_ollama_probe",
             "run_npu_probe",
-            "run_npu_decode_smoke",
             "multistep_provider_workflow_requested",
         ):
             if flag in data and data.get(flag) is True:

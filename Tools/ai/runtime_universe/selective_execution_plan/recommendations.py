@@ -201,7 +201,6 @@ def command_sets() -> dict[str, list[str]]:
             r"  -Profile npu `",
             r"  -RunOllamaProbe `",
             r"  -RunNpuProbe `",
-            r"  -RunNpuDecodeSmoke `",
             r"  -UsePrimaryAdvisoryProvider `",
             r"  -Basename parallel_gpu_npu_selective_planner_real `",
             r"  -ProposalBasename parallel_gpu_npu_selective_planner_real_proposals `",

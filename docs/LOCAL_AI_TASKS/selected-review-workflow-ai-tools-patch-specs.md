@@ -169,7 +169,7 @@ Run through the project-owned local wrapper and adapter:
 python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\selected-review-workflow-ai-tools-patch-specs.md `
   -TaskBranch codex/selected-review-workflow-ai-tools `
-  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename selected_review_workflow_ai_tools -ProposalBasename selected_review_workflow_ai_tools_proposals -EvidenceBasename selected_review_workflow_ai_tools_evidence -MultistepBasename selected_review_workflow_ai_tools_multistep -MultistepProposalBasename selected_review_workflow_ai_tools_multistep_proposals -MultistepEvidenceBasename selected_review_workflow_ai_tools_multistep_evidence'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename selected_review_workflow_ai_tools -ProposalBasename selected_review_workflow_ai_tools_proposals -EvidenceBasename selected_review_workflow_ai_tools_evidence -MultistepBasename selected_review_workflow_ai_tools_multistep -MultistepProposalBasename selected_review_workflow_ai_tools_multistep_proposals -MultistepEvidenceBasename selected_review_workflow_ai_tools_multistep_evidence'
 ```
 
 ## Optional proposal-only first pass

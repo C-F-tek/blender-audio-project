@@ -215,7 +215,7 @@ Run through the project-owned local wrapper and adapter:
 python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\enrich-local-ai-memory-chunks-context-wrapper.md `
   -TaskBranch codex/enrich-local-ai-memory-chunks-context `
-  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename enrich_local_ai_memory_chunks_context -ProposalBasename enrich_local_ai_memory_chunks_context_proposals -EvidenceBasename enrich_local_ai_memory_chunks_context_evidence -MultistepBasename enrich_local_ai_memory_chunks_context_multistep -MultistepProposalBasename enrich_local_ai_memory_chunks_context_multistep_proposals -MultistepEvidenceBasename enrich_local_ai_memory_chunks_context_multistep_evidence'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -UsePrimaryAdvisoryProvider -BuildEvidence -GeneratePatchSpecs -Basename enrich_local_ai_memory_chunks_context -ProposalBasename enrich_local_ai_memory_chunks_context_proposals -EvidenceBasename enrich_local_ai_memory_chunks_context_evidence -MultistepBasename enrich_local_ai_memory_chunks_context_multistep -MultistepProposalBasename enrich_local_ai_memory_chunks_context_multistep_proposals -MultistepEvidenceBasename enrich_local_ai_memory_chunks_context_multistep_evidence'
 ```
 
 ## Required validation after run

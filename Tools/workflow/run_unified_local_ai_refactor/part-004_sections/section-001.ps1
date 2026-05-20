@@ -30,7 +30,6 @@ if ((Test-ModeEnabled "official") -or (Test-ModeEnabled "provider") -or (Test-Mo
     if ($RunMultistepProviderWorkflow) { $OfficialArgs += "-RunMultistepProviderWorkflow" }
     if ($RunOllamaProbe) { $OfficialArgs += "-RunOllamaProbe" }
     if ($RunNpuProbe) { $OfficialArgs += "-RunNpuProbe" }
-    if ($RunNpuDecodeSmoke) { $OfficialArgs += "-RunNpuDecodeSmoke" }
     if ($BuildEvidence) { $OfficialArgs += "-BuildEvidence" }
     if ($GeneratePatchSpecs) { $OfficialArgs += "-GeneratePatchSpecs" }
     if ($DryRun) { $OfficialArgs += "-DryRun" }

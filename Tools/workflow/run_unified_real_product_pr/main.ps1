@@ -127,7 +127,6 @@ $script:LauncherArgs = @(
     "-RunMultistepProviderWorkflow",
     "-RunOllamaProbe",
     "-RunNpuProbe",
-    "-RunNpuDecodeSmoke",
     "-RunOpenVinoGpu0Workload",
     "-BuildEvidence",
     "-GeneratePatchSpecs",

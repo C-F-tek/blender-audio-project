@@ -26,7 +26,6 @@ def render_markdown(plan: dict[str, Any]) -> str:
         f"- Dry-run planned-only: `{dry_run.get('all_steps_planned_only')}`",
         f"- Provider execution seen: `{provider.get('provider_execution_seen')}`",
         f"- Ollama/GPU primary advisory: `{provider.get('ollama_gpu_primary_advisory')}`",
-        f"- NPU decode smoke passed: `{provider.get('npu_decode_smoke_passed')}`",
         "",
         "## Recommended Validators",
         "",

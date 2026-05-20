@@ -116,7 +116,6 @@ These are good candidates for documented project-tool status, but not necessaril
 |---|---:|---|---|
 | `python -m Tools.workflow startup_check` | 2 | CORE_BOOTSTRAP | Promote as project startup diagnostic tool. |
 | `Tools/workflow/startup_preflight.ps1` | 2 | CORE_BOOTSTRAP | Wrapper; document after `python -m Tools.workflow startup_check`. |
-| `Tools/workflow/workflow_run/ai_runtime_diagnostics.py` | 2 | PROVIDER_DIAGNOSTIC | Good preflight diagnostics candidate. |
 | `Tools/ai/provider_mesh/local_provider_probe.py` | 2 | PROVIDER_DIAGNOSTIC | Canonical provider probe. |
 | `Tools/ai/check_local_resource_lanes.py` | 2 | PROVIDER_DIAGNOSTIC | Local resource-lane checker. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | 2 | PROVIDER_DIAGNOSTIC | Workload quality routing report. |

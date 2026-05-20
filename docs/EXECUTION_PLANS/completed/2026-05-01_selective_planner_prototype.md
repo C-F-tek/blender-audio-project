@@ -78,7 +78,7 @@ python -m Tools.workflow run_parallel_ai_provider_multistep `
   -Profile npu `
   -RunOllamaProbe `
   -RunNpuProbe `
-  -RunNpuDecodeSmoke `
+  `
   -UsePrimaryAdvisoryProvider `
   -Basename parallel_gpu_npu_selective_planner_real `
   -ProposalBasename parallel_gpu_npu_selective_planner_real_proposals `

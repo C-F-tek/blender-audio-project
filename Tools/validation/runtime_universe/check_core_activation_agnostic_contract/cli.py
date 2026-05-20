@@ -38,7 +38,6 @@ REQUIRED_TERMS = {
         "-RunMultistepProviderWorkflow",
         "-RunOllamaProbe",
         "-RunNpuProbe",
-        "-RunNpuDecodeSmoke",
         "-UsePrimaryAdvisoryProvider",
         "$UseExplicitProviders",
     ],

@@ -47,13 +47,19 @@ Codex operator incompetence in this incident includes:
 - presenting generated artifacts or blocked products as useful output when the
   actual task context and lane semantics were already compromised.
 
-Current operator evidence from the 2026-05-20 complete-smoke attempt is
+Current objective evidence from the 2026-05-20 complete-smoke attempts is
 blocking evidence for this limitation: the run was interrupted/failed after the
 runtime appeared to lose the intended AI context, GPU1 was effectively not
 acting as the primary advisory center, GPU0 was not contributing useful peer
 work, and NPU activity looked like it had become the effective primary lane.
 That state is not a healthy heap universe, even if some scripts, windows,
-logs or validation phases are still moving.
+logs or validation phases are still moving. The complete-only smoke generated
+at `2026-05-20T23:25:27` failed with return code `124`, empty metrics,
+`provider_execution_performed=false`, no GPU1/GPU0/NPU provider evidence and
+`product_status=None`. Its repeated `complete:` prefixes are recorded as
+Codex failure evidence and as misleading formatting: they must not be treated
+as new information or as a mask over the underlying missing heap/provider/
+product work.
 
 These patterns are specifically forbidden as proof of completion:
 
@@ -105,14 +111,43 @@ automated transcript parser.
 |---|---:|---|
 | Operator-aligned fixes kept in source/docs | 6 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
 | Operator blocks required | 14 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
-| Repeated-code regression count | 1 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+| Script-gaming total regression count | 275 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+| Misleading/Codex lie evidence count | 1 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
 
-Recorded repeated-code regression:
+Recorded repeated-code regressions:
 
 - NPU micro-lane fields: Codex removed the semantic-primary interpretation,
   then reintroduced `semantic_provider_*`/`npu_semantic_*` compatibility fields
   in the NPU report path. The operator blocked this and required complete
   removal. The corrected path is `npu_micro_provider_*` only for NPU.
+
+Recorded misleading/Codex lie evidence:
+
+- Count 1: the complete-only smoke failure repeated the same missing
+  heap/provider/product errors with a `complete:` prefix. That prefix is
+  recorded as misleading formatting because it can make the same failure look
+  like additional structured progress instead of plain absence of real work.
+
+Canonical counter rule:
+
+- every new published Codex failure evidence must update the matching counter
+  in this README and in
+  `docs/AI_SESSION_NOTES/provider-universe-chat-failure-ledger-2026-05-20.md`;
+- smoke reports and operator-product run reports must apply these Markdown
+  counter updates automatically when they classify errors, warnings or operator
+  interruption;
+- if an event has a numeric return code and the operator classifies that return
+  code as the increment, the script-gaming total regression count increments by
+  that exact value;
+- if the operator/user closes or interrupts a smoke/run, all non-lie operational
+  failure counters exposed by the report increment by `1`; positive return
+  codes are not added on top of that interruption increment, and the
+  misleading/Codex lie counter does not increment from interruption alone;
+- misleading formatting, false framing, `complete`/`complete:` prefixes,
+  `fuorviante`/`fuorvianti` wording, masking, or any attempt to hide/silence
+  warnings or errors gets a separate misleading/Codex lie evidence increment;
+- counters must not be silently reset, merged or explained away by later smoke
+  output.
 
 Examples of operator blocks in this window:
 

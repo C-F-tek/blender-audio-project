@@ -124,7 +124,7 @@ Run through the project-owned local wrapper and adapter:
 python -m Tools.workflow run_local_ai_markdown_task `
   -TaskFile .\docs\LOCAL_AI_TASKS\consistency-local-ai-contracts-and-powershell.md `
   -TaskBranch codex/consistency-local-ai-contracts `
-  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -RunNpuDecodeSmoke -UsePrimaryAdvisoryProvider -BuildEvidence -Basename consistency_local_ai_contracts -ProposalBasename consistency_local_ai_contracts_proposals -EvidenceBasename consistency_local_ai_contracts_evidence -MultistepBasename consistency_local_ai_contracts_multistep -MultistepProposalBasename consistency_local_ai_contracts_multistep_proposals -MultistepEvidenceBasename consistency_local_ai_contracts_multistep_evidence'
+  -RunnerCommand 'python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile "{PROMPT_FILE}" -TaskFile "{TASK_FILE}" -RunDir "{RUN_DIR}" -Profile npu -RunMultistepProviderWorkflow -RunOllamaProbe -RunNpuProbe -UsePrimaryAdvisoryProvider -BuildEvidence -Basename consistency_local_ai_contracts -ProposalBasename consistency_local_ai_contracts_proposals -EvidenceBasename consistency_local_ai_contracts_evidence -MultistepBasename consistency_local_ai_contracts_multistep -MultistepProposalBasename consistency_local_ai_contracts_multistep_proposals -MultistepEvidenceBasename consistency_local_ai_contracts_multistep_evidence'
 ```
 
 ## Optional report-only first pass

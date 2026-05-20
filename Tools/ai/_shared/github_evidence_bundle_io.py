@@ -22,7 +22,6 @@ DEFAULT_REPORTS = (
     "output/validation/ai_workload_report_quality.json",
     "output/validation/ai_workload_quality_lane_routing.json",
     "output/validation/npu_decode_quality_remediation.json",
-    "output/validation/npu_decode_smoke_diagnostic.json",
     "output/validation/local_provider_probe.json",
     "output/validation/npu_runtime_output_manifest.json",
     "output/validation/provider_result_report.json",

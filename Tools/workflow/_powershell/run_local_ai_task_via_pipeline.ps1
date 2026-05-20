@@ -12,8 +12,8 @@
   Blender, does not run FFmpeg and does not edit source files.
 
   Provider execution remains explicit through -UsePrimaryAdvisoryProvider and
-  -RunMultistepProviderWorkflow. NPU remains probe / guardrail / decode
-  diagnostic. Ollama/GPU remains primary advisory behind the quality gate.
+  -RunMultistepProviderWorkflow. Ollama/GPU remains primary advisory behind the
+  quality gate.
 
   -FullContextGoldenPath is a safe preset. It expands to the standard local
   context enrichment options, selected-chunks evidence, context pack, agent state
@@ -73,7 +73,6 @@ param(
     [switch]$RunMultistepProviderWorkflow,
     [switch]$RunOllamaProbe,
     [switch]$RunNpuProbe,
-    [switch]$RunNpuDecodeSmoke,
     [switch]$BuildEvidence,
     [switch]$GeneratePatchSpecs,
     [switch]$DryRun
@@ -156,11 +155,11 @@ if ($IsRealProductOfficialAdapter) {
     }
 
     if ([string]::IsNullOrWhiteSpace($AgentStateObjective) -or $AgentStateObjective -like "Run local AI task *") {
-        $AgentStateObjective = "Run the IA-Carmine real-product heap/exchange process gate with current-stamp runtime evidence, GPU0 workload, NPU diagnostic peer, provider advisory, concrete patch specs and review-PR product separation."
+        $AgentStateObjective = "Run the IA-Carmine real-product heap/exchange process gate with current-stamp runtime evidence, GPU0 workload, NPU micro peer, provider advisory, concrete patch specs and review-PR product separation."
     }
 
     if ([string]::IsNullOrWhiteSpace($ChunkQuery) -or $ChunkQuery -eq $AgentStateObjective) {
-        $ChunkQuery = "IA-Carmine real product heap exchange single dynamic run GPU0 OpenVINO NPU diagnostic provider advisory runtime evidence repository change proposals concrete_operations generated patch specs review PR prepare final product contract"
+        $ChunkQuery = "IA-Carmine real product heap exchange single dynamic run GPU0 OpenVINO NPU micro provider advisory runtime evidence repository change proposals concrete_operations generated patch specs review PR prepare final product contract"
     }
 
     if ($ChunkPathBoost.Count -eq 0) {
@@ -276,7 +275,6 @@ Write-Host "Use primary advisory provider: $UsePrimaryAdvisoryProvider"
 Write-Host "Run multistep provider workflow: $RunMultistepProviderWorkflow"
 Write-Host "Run Ollama probe: $RunOllamaProbe"
 Write-Host "Run NPU probe: $RunNpuProbe"
-Write-Host "Run NPU decode smoke: $RunNpuDecodeSmoke"
 Write-Host "Build evidence: $BuildEvidence"
 Write-Host "Generate patch specs: $GeneratePatchSpecs"
 Write-Host "Dry run: $DryRun"
@@ -285,7 +283,6 @@ $ValidationState = Invoke-LocalAiTaskPipelineValidation `
     -RunMultistepProviderWorkflow ([bool]$RunMultistepProviderWorkflow) `
     -RunOllamaProbe ([bool]$RunOllamaProbe) `
     -RunNpuProbe ([bool]$RunNpuProbe) `
-    -RunNpuDecodeSmoke ([bool]$RunNpuDecodeSmoke) `
     -UsePrimaryAdvisoryProvider ([bool]$UsePrimaryAdvisoryProvider) `
     -GeneratePatchSpecs ([bool]$GeneratePatchSpecs) `
     -Model $Model `
@@ -329,5 +326,5 @@ Write-Host "[OK] Proposal: $PipelineRel/$ProposalBasename.md"
 Write-Host "[OK] Context files: $(@(As-Array $ContextFiles).Count)"
 Write-Host "[OK] Full context golden path preset: $FullContextGoldenPath"
 Write-Host "[OK] Multistep requested: $RunMultistepProviderWorkflow"
-Write-Host "[OK] Provider execution requested: $($UsePrimaryAdvisoryProvider -or $RunOllamaProbe -or $RunNpuProbe -or $RunNpuDecodeSmoke)"
+Write-Host "[OK] Provider execution requested: $($UsePrimaryAdvisoryProvider -or $RunOllamaProbe -or $RunNpuProbe)"
 Write-Host "[OK] Patch application performed: False"

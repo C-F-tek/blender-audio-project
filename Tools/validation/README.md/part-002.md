@@ -117,7 +117,7 @@ decision fields for Ollama/GPU primary advisory, NPU exclusion and provider exec
 per-report summary fields: path, exists, json_ok, kind, passed, summary
 ```
 
-Missing provider-specific optional fields are warnings, not blocking errors, so older evidence bundles remain readable while newer bundles can add richer diagnostic decisions such as `npu_decode_smoke_passed`.
+Missing provider-specific optional fields are warnings, not blocking errors, so older evidence bundles remain readable while newer bundles can add richer provider decisions.
 
 Other compact evidence kinds may also live under `docs/LOCAL_VALIDATION_EVIDENCE/`; this validator only checks `kind == github_validation_evidence_bundle` unless explicit `--bundle` paths are supplied.
 

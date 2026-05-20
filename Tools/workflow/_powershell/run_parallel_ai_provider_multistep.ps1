@@ -19,7 +19,6 @@ param(
     ),
     [switch]$RunOllamaProbe,
     [switch]$RunNpuProbe,
-    [switch]$RunNpuDecodeSmoke,
     [switch]$UsePrimaryAdvisoryProvider,
     [string]$Model = "",
     [string]$PythonExe = "",
@@ -55,14 +54,12 @@ Write-Host "Profile: $Profile"
 Write-Host "Basename: $Basename"
 Write-Host "GPU/Ollama probe: $RunOllamaProbe"
 Write-Host "NPU/OpenVINO probe: $RunNpuProbe"
-Write-Host "NPU decode smoke: $RunNpuDecodeSmoke"
 Write-Host "Primary advisory provider: $UsePrimaryAdvisoryProvider"
 
 $QualityReport = "output/validation/ai_workload_report_quality.json"
 $LaneRoutingReport = "output/validation/ai_workload_quality_lane_routing.json"
 $LaneRoutingMarkdown = "output/validation/ai_workload_quality_lane_routing.md"
 $NpuDecodeRemediationReport = "output/validation/npu_decode_quality_remediation.json"
-$NpuDecodeSmokeReport = "output/validation/npu_decode_smoke_diagnostic.json"
 $LocalProviderProbeReport = "output/validation/local_provider_probe.json"
 
 Write-Host ""
@@ -72,7 +69,7 @@ Write-Host "=== Step 1: workload quality gate ==="
     --output $QualityReport
 
 Write-Host ""
-Write-Host "=== Step 2: parallel provider probes / diagnostics ==="
+Write-Host "=== Step 2: parallel provider probes ==="
 # Provider probe background jobs disabled here: provider probe arguments must remain argv-safe.
 if ($RunOllamaProbe -or $RunNpuProbe) {
     $ProbeArgs = @(
@@ -96,27 +93,6 @@ if ($RunOllamaProbe -or $RunNpuProbe) {
     if ($LASTEXITCODE -ne 0) {
         throw "provider_probe failed with exit code $LASTEXITCODE"
     }
-}
-
-if ($RunNpuDecodeSmoke) {
-    $SmokeArgs = @(
-        "-m", "Tools.ai", "run_npu_decode_smoke_diagnostic",
-        "--repo-root", ".",
-        "--run-npu",
-        "--output", $NpuDecodeSmokeReport,
-        "--text-output", "output/ai_packets/npu_decode_smoke_output.md"
-    )
-    if (-not [string]::IsNullOrWhiteSpace($ResolvedNpuPythonExe)) {
-        $SmokeArgs += @("--python-exe", $ResolvedNpuPythonExe)
-    }
-    & $ProviderPythonExe @SmokeArgs
-    if ($LASTEXITCODE -ne 0) {
-        throw "npu_decode_smoke failed with exit code $LASTEXITCODE"
-    }
-} else {
-    & $ProviderPythonExe -m Tools.ai run_npu_decode_smoke_diagnostic `
-        --repo-root . `
-        --output $NpuDecodeSmokeReport
 }
 
 Write-Host ""

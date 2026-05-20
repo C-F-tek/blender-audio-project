@@ -134,7 +134,6 @@ if ($UseExplicitProviders) {
         "-RunMultistepProviderWorkflow",
         "-RunOllamaProbe",
         "-RunNpuProbe",
-        "-RunNpuDecodeSmoke",
         "-UsePrimaryAdvisoryProvider"
     )
 }

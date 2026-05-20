@@ -62,7 +62,6 @@ Patchkit handles backup, encoding/newlines, dry-run chain state, idempotency, pa
 | `artifact_consult.py` | supporting-tool | Artifact consultation helper. |
 | `project_awareness.py` | supporting-tool | Project-awareness context helper. |
 | `python -m Tools.workflow smart_ai_context` | supporting-tool | Smart context helper. |
-| `ai_runtime_diagnostics.py` | diagnostic-only | Runtime diagnostics helper. |
 
 ## Diagnostic rule
 

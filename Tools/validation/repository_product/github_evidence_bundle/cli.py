@@ -35,7 +35,7 @@ REQUIRED_DECISION_FIELDS = (
     "provider_execution_seen",
 )
 
-OPTIONAL_PROVIDER_DECISION_FIELDS = ("npu_decode_smoke_passed",)
+OPTIONAL_PROVIDER_DECISION_FIELDS: tuple[str, ...] = ()
 
 OPTIONAL_CONTEXT_DECISION_FIELDS = (
     "selected_chunks_evidence_seen",
@@ -73,13 +73,6 @@ OPTIONAL_SUMMARY_HINT_FIELDS_BY_KIND = {
         "provider_execution_performed",
         "policy",
         "mode",
-        "checks",
-    ),
-    "npu_decode_smoke_diagnostic": (
-        "provider_execution_performed",
-        "policy",
-        "mode",
-        "provider",
         "checks",
     ),
     "local_provider_probe": ("provider_execution_performed",),

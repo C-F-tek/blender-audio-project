@@ -131,39 +131,6 @@ PROFILES: dict[str, dict[str, Any]] = {
             "Use the explicit multistep runner before making provider-lane claims.",
         ],
     },
-    "npu_provider_diagnostics": {
-        "description": "NPU/OpenVINO probe, guardrail and decode diagnostic context.",
-        "required_files": [
-            {"path": "docs/LOCAL_AI_WORKFLOW.md", "role": "ai_workflow"},
-            {"path": "docs/DATA_FLOW.md", "role": "data_flow"},
-            {"path": "tools/ai/provider_mesh/local_provider_probe.py", "role": "provider_probe"},
-            {
-                "path": "tools/ai/provider_mesh/npu_decode_smoke_diagnostic.py",
-                "role": "npu_decode_smoke",
-            },
-            {
-                "path": "tools/validation/check_npu_decode_quality_remediation.py",
-                "role": "npu_remediation",
-            },
-            {"path": "tools/npu/pipeline/providers.py", "role": "provider_envelopes"},
-            {"path": "tools/validation/README.md", "role": "validation_commands"},
-        ],
-        "optional_files": [
-            {
-                "path": "docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.md",
-                "role": "baseline_evidence",
-            },
-        ],
-        "validation_commands": [
-            "python -m Tools.validation check_ai_workload_report_quality --repo-root . --output .\\output\\validation\\ai_workload_report_quality.json",
-            "python -m Tools.ai build_workload_quality_lane_routing --repo-root . --output .\\output\\validation\\ai_workload_quality_lane_routing.json --markdown-output .\\output\\validation\\ai_workload_quality_lane_routing.md",
-            "python -m Tools.validation check_npu_decode_quality_remediation --repo-root . --output .\\output\\validation\\npu_decode_quality_remediation.json",
-        ],
-        "stop_conditions": [
-            "Do not promote NPU to advisory from decode smoke alone.",
-            "Do not change model or prompt settings in a diagnostics-only context task.",
-        ],
-    },
     "artifact_pipeline": {
         "description": "AI artifact pipeline, dry-run matrix and refactor-status context.",
         "required_files": [

@@ -22,7 +22,6 @@ function Invoke-LocalAiTaskPipelineValidation {
         [bool]$RunMultistepProviderWorkflow,
         [bool]$RunOllamaProbe,
         [bool]$RunNpuProbe,
-        [bool]$RunNpuDecodeSmoke,
         [bool]$UsePrimaryAdvisoryProvider,
         [bool]$GeneratePatchSpecs,
         [string]$Model,
@@ -78,7 +77,6 @@ function Invoke-LocalAiTaskPipelineValidation {
         )
         if ($RunOllamaProbe) { $MultistepArgs += "-RunOllamaProbe" }
         if ($RunNpuProbe) { $MultistepArgs += "-RunNpuProbe" }
-        if ($RunNpuDecodeSmoke) { $MultistepArgs += "-RunNpuDecodeSmoke" }
         if ($UsePrimaryAdvisoryProvider) { $MultistepArgs += "-UsePrimaryAdvisoryProvider" }
         if ($Model -ne "") { $MultistepArgs += @("-Model", $Model) }
 

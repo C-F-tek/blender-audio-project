@@ -5,7 +5,6 @@
 if ($StrictRealRunActivationEnabled) {
     if (-not $NoOllamaProbe) { $RunOllamaProbe = $true }
     if (-not $NoNpuProbe) { $RunNpuProbe = $true }
-    if (-not $NoNpuDecodeSmoke) { $RunNpuDecodeSmoke = $true }
     if (-not $NoMultistepProvider) { $RunMultistepProviderWorkflow = $true }
     if (-not $NoWorkloadQuality) { $BuildWorkloadQualityReport = $true }
     if (-not $NoEvidence) { $BuildEvidence = $true }
