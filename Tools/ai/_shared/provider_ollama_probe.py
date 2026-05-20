@@ -145,6 +145,8 @@ def run_ollama_probe(
                     "native_tool_call_count": 0,
                 }
             )
+            if not text:
+                native_tool_loop_relevant = True
             if native_tool_loop_relevant:
                 tool_prompts = [ollama_tool_call_selection_prompt(proposal_prompt, text)]
                 if not text:

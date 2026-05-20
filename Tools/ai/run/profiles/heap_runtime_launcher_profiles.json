@@ -12,7 +12,8 @@
       "max_provider_revisions",
       "timeout_seconds",
       "preflight_timeout_seconds",
-      "allow_provider_generation"
+      "allow_provider_generation",
+      "operator_intent"
     ],
     "provider": [
       "provider_model",

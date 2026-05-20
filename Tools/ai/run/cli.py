@@ -240,7 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Opt in to bounded NPU device workload; semantic NPU audit still runs without it.",
     )
     parser.add_argument("--revision-context", default="auto_latest")
-    parser.add_argument("--timeout-seconds", type=int, default=24000)
+    parser.add_argument("--timeout-seconds", type=int, default=None)
     parser.add_argument("--set", action="append", default=[])
     parser.add_argument("--git-sync", action="store_true")
     parser.add_argument("--branch", default=DEFAULT_BRANCH)
@@ -281,8 +281,11 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         "semantic_evidence_chunk_limit",
         "memory_search_limit",
         "tool_catalog_limit",
+        "timeout_seconds",
     ):
         value = getattr(args, key, None)
+        if key == "timeout_seconds" and not value:
+            continue
         if value not in ("", None):
             overrides[key] = value
     if args.allow_npu_device_workload:
@@ -346,7 +349,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     controller = OperatorProductController(config)
-    report = controller.run(timeout=args.timeout_seconds)
+    report = controller.run(timeout=None)
     report["canonical_entrypoint"] = "python -m Tools.ai run"
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("passed") else 2

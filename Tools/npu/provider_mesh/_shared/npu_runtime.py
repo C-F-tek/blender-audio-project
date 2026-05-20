@@ -42,12 +42,13 @@ def utc_now() -> str:
 def _run_python(
     python_exe: Path, code: str, timeout: float = DEFAULT_TIMEOUT_SEC
 ) -> tuple[bool, str, int | None]:
+    hard_timeout = None if float(timeout or 0) <= 0 else timeout
     try:
         result = subprocess.run(
             [str(python_exe), "-c", code],
             capture_output=True,
             text=True,
-            timeout=timeout,
+            timeout=hard_timeout,
             check=False,
         )
     except Exception as exc:
@@ -113,7 +114,7 @@ def npu_preflight(
     ok, text, _ = _run_python(
         python_exe,
         "import json, sys; print(json.dumps({'version': sys.version.split()[0], 'executable': sys.executable}))",
-        timeout=min(timeout, 15.0),
+        timeout=(min(timeout, 15.0) if float(timeout or 0) > 0 else 0),
     )
     checks["python_starts"] = ok
     if ok:

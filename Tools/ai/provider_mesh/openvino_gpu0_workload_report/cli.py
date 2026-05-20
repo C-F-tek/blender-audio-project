@@ -59,6 +59,7 @@ def render_leader_peer_prompt(
     propagation = leader_packet.get("propagation_contract")
     propagation_text = "; ".join(str(item) for item in propagation[:5]) if isinstance(propagation, list) else ""
     pointer = leader_packet.get("pointer_contract") if isinstance(leader_packet.get("pointer_contract"), dict) else {}
+    time_counter = leader_packet.get("time_counter_contract") if isinstance(leader_packet.get("time_counter_contract"), dict) else {}
     universe = leader_packet.get("runtime_universe") if isinstance(leader_packet.get("runtime_universe"), dict) else {}
     universe_summary = universe.get("summary") if isinstance(universe.get("summary"), dict) else {}
     startup_plane = leader_packet.get("startup_context_plane")
@@ -80,6 +81,7 @@ def render_leader_peer_prompt(
             f"DIRECT_STARTUP_CONTEXT_FROM_CONTEXT_RELOAD: {direct_startup_context[:1600]}",
             f"STARTUP_ARTIFACT_KEYS: {startup_keys}",
             f"POINTER_CONTRACT: {pointer}",
+            f"TIME_COUNTER_CONTRACT: {time_counter}",
             f"PROPAGATION_CONTRACT: {propagation_text}",
             f"SOURCE_PATH_ALLOWLIST_CONTRACT: {str(leader_packet.get('source_allowlist_contract') or '')[:1200]}",
             f"GPU1_REVISION_FEEDBACK: {str(leader_packet.get('revision_feedback') or '')[:700]}",
@@ -108,6 +110,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Leader packet: `{report.get('leader_packet')}`",
         f"- Leader packet heap universe contract: `{report.get('leader_packet_heap_universe_contract')}`",
         f"- Leader packet pointer contract: `{report.get('leader_packet_pointer_contract')}`",
+        f"- Leader packet time counter: `{report.get('leader_packet_time_counter_contract')}`",
         f"- Leader packet startup artifacts: `{report.get('leader_packet_startup_artifacts_count')}`",
         f"- Leader packet broker tool evidence: `{report.get('leader_packet_broker_tool_evidence_count')}`",
         f"- GPU.0 visible: `{report.get('openvino_gpu0_visible')}`",
@@ -263,6 +266,7 @@ def main() -> int:
     report["leader_packet_role"] = str(leader_packet.get("role") or "")
     report["leader_packet_heap_universe_contract"] = bool(leader_packet.get("heap_universe_contract"))
     report["leader_packet_pointer_contract"] = bool(leader_packet.get("pointer_contract"))
+    report["leader_packet_time_counter_contract"] = bool(leader_packet.get("time_counter_contract"))
     report["leader_packet_startup_artifacts_count"] = len(leader_packet.get("startup_artifacts") or {})
     report["leader_packet_broker_tool_evidence_count"] = len(
         leader_packet.get("broker_tool_evidence") or []

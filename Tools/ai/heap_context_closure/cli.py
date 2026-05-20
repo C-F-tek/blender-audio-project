@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
         help="Gate planning rounds; must be high enough to complete base evidence before provider lanes.",
     )
     parser.add_argument("--allow-provider-generation", action="store_true")
+    parser.add_argument("--operator-intent", action="store_true")
     parser.add_argument("--provider-model", default="qwen3-coder:latest")
     parser.add_argument("--ollama-num-ctx", type=int, default=16384)
     parser.add_argument("--max-new-tokens", type=int, default=1200)

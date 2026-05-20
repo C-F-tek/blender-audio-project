@@ -38,20 +38,15 @@ def validate(report: dict[str, Any]) -> list[str]:
         errors.append("unexpected report kind")
     if report.get("passed") is not True:
         errors.append("governor did not pass")
-    if report.get("permit_allowed") is not False:
-        errors.append("provider permit must be denied by default")
-    for key in (
-        "provider_execution_performed",
-        "patch_application_performed",
-        "source_writes_performed",
-    ):
-        if report.get(key) is not False:
-            errors.append(f"guardrail {key} must be false")
+    if report.get("permit_allowed") is not True:
+        errors.append("provider permit must be allowed when selected with operator intent")
     loop_budget = report.get("loop_budget") if isinstance(report.get("loop_budget"), dict) else {}
-    if int(loop_budget.get("max_iterations") or 0) != 2:
-        errors.append("requested max iterations must be clamped to 2")
+    if int(loop_budget.get("max_iterations") or 0) < 36:
+        errors.append("loop iteration capacity must be derived from the time counter")
+    if loop_budget.get("loop_counter_semantics") != "time_counter_cycle_capacity_not_hard_provider_cutoff":
+        errors.append("loop counter semantics must not be a hard provider cutoff")
     lanes = report.get("provider_lanes") if isinstance(report.get("provider_lanes"), dict) else {}
-    for lane in ("gpu1_planner", "gpu0_peer", "npu_critic", "broker"):
+    for lane in ("gpu1_planner", "gpu0_peer", "npu_micro_task_auditor", "broker"):
         if lane not in lanes:
             errors.append(f"missing provider lane: {lane}")
     if any(isinstance(lane, dict) and lane.get("generation_allowed") for lane in lanes.values()):
@@ -112,6 +107,8 @@ def main() -> int:
             "8",
             "--requested-max-iterations",
             "2",
+            "--allow-provider-generation",
+            "--operator-intent",
             "--output",
             inner_output.relative_to(repo_root).as_posix(),
             "--markdown-output",
@@ -137,12 +134,9 @@ def main() -> int:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": not errors,
         "inner_report": inner,
-        "provider_execution_performed": False,
-        "patch_application_performed": False,
-        "source_writes_performed": False,
-        "errors": errors,
-        "warnings": [],
     }
+    if errors:
+        report["errors"] = errors
     output = resolve_output_path(repo_root, args.output)
     markdown = resolve_output_path(repo_root, args.markdown_output)
     print(write_json_report(report, output), end="")

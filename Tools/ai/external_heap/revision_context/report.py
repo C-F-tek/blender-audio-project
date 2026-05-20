@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from .applicability import terminal_no_patchable_target_summary
-from .common import normalize_bool
+from .common import as_list, normalize_bool
 from .symbols import latest_block, peer_blocks, proposal_blocks
 from .tasks import (
     build_gpu1_tasks,
@@ -14,6 +14,74 @@ from .tasks import (
     candidate_applicability_summary,
     choose_resume_block,
 )
+
+
+def _provider_evidence_blocks(pointer: dict[str, Any]) -> list[dict[str, Any]]:
+    blocks = []
+    for block in as_list(pointer.get("blocks")):
+        if not isinstance(block, dict):
+            continue
+        if str(block.get("block_type") or "") == "proposal_chunk":
+            continue
+        blocks.append(block)
+    return blocks
+
+
+def _latest_provider_block(pointer: dict[str, Any], role: str = "") -> dict[str, Any]:
+    blocks = _provider_evidence_blocks(pointer)
+    if role:
+        blocks = [block for block in blocks if str(block.get("role") or "") == role]
+    if not blocks:
+        return {}
+    return blocks[-1]
+
+
+def _provider_recovery_tasks(
+    pointer: dict[str, Any],
+    linked_gpu0: list[dict[str, Any]],
+    linked_npu: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    gpu1 = _latest_provider_block(pointer, "gpu1_planner")
+    if not gpu1:
+        return []
+    source_id = str(gpu1.get("block_id") or "")
+    tasks: list[dict[str, Any]] = [
+        {
+            "task_id": f"recover_missing_proposal_from_{source_id}",
+            "role": "gpu1_planner",
+            "task_type": "recover_missing_proposal_chunk",
+            "source_block_id": source_id,
+            "target_block_id": source_id,
+            "resume_from_block_id": source_id,
+            "instruction": (
+                "Resume from the provider evidence block, consume startup chunks/memory/tool "
+                "refs and emit a real HEAP_DELTA_PROPOSAL or NO_PATCHABLE_TARGET. Do not "
+                "discard the full operator request and do not invent a code product."
+            ),
+        }
+    ]
+    for role, linked in (
+        ("gpu0_reviewer_refiner", linked_gpu0),
+        ("npu_auditor", linked_npu),
+    ):
+        for block in linked[:1]:
+            block_id = str(block.get("block_id") or "")
+            tasks.append(
+                {
+                    "task_id": f"recheck_{role}_{block_id}",
+                    "role": role,
+                    "task_type": "peer_recheck_provider_failure",
+                    "source_block_id": block_id,
+                    "target_block_id": source_id,
+                    "resume_from_block_id": source_id,
+                    "instruction": (
+                        "Re-evaluate the GPU1 recovery block as the same heap consciousness. "
+                        "Keep refines/resume pointers and report operational vetoes."
+                    ),
+                }
+            )
+    return tasks
+
 
 def build_report(
     pointer: dict[str, Any], composer: dict[str, Any], causality: dict[str, Any]
@@ -25,27 +93,46 @@ def build_report(
     linked_npu = [block for block in npu if block.get("refines_block_id")]
     gpu1_tasks = build_gpu1_tasks(proposals, composer)
     peer_tasks = build_peer_tasks(proposals, linked_gpu0, linked_npu)
-    all_tasks = gpu1_tasks + peer_tasks
+    provider_recovery_tasks = (
+        [] if proposals else _provider_recovery_tasks(pointer, linked_gpu0, linked_npu)
+    )
+    all_tasks = gpu1_tasks + peer_tasks + provider_recovery_tasks
     candidate_summary = candidate_applicability_summary(all_tasks)
+    if provider_recovery_tasks:
+        candidate_summary = dict(candidate_summary)
+        candidate_summary["requires_concrete_rewrite"] = False
+        candidate_summary["priority_next_action"] = "recover_missing_proposal_chunk"
     terminal_no_patchable = terminal_no_patchable_target_summary(proposals)
     if terminal_no_patchable.get("all_proposals_terminal_no_patchable_target"):
         candidate_summary = dict(candidate_summary)
         candidate_summary["requires_concrete_rewrite"] = False
         candidate_summary["priority_next_action"] = "blocked_no_verified_target"
     latest = latest_block(proposals)
+    latest_provider = _latest_provider_block(pointer)
+    latest_id = str(latest.get("block_id") or latest_provider.get("block_id") or "")
+    resume_block = choose_resume_block(proposals) or latest_id
     pointer_limited = bool(pointer.get("max_blocks_applied"))
     source_run_was_fallback = (
         bool(composer.get("fallback_heap_report_used"))
         or str(composer.get("product_status") or "") == "blocked_with_reason"
         and not proposals
     )
-    operational_revision_context = bool(
+    proposal_graph_operational = bool(
         proposals
         and linked_gpu0
         and linked_npu
         and normalize_bool(pointer.get("provider_execution_performed"))
         and normalize_bool(causality.get("causal_chain_passed"))
     )
+    provider_graph_operational = bool(
+        not proposals
+        and normalize_bool(pointer.get("provider_execution_performed"))
+        and int(pointer.get("edge_count") or 0) > 0
+        and linked_gpu0
+        and linked_npu
+        and _latest_provider_block(pointer, "gpu1_planner")
+    )
+    operational_revision_context = proposal_graph_operational or provider_graph_operational
     warnings: list[str] = []
     if pointer_limited:
         warnings.append(
@@ -55,7 +142,11 @@ def build_report(
         warnings.append(
             "non-concrete candidate proposals require rewrite before symbol propagation or product acceptance"
         )
-    if not operational_revision_context:
+    if provider_graph_operational and not proposals:
+        warnings.append(
+            "provider graph is resumable but produced no proposal chunk; GPU1 recovery task required"
+        )
+    elif not operational_revision_context:
         warnings.append(
             "revision context is non-operational: source run had no linked provider/pointer blocks"
         )
@@ -66,6 +157,8 @@ def build_report(
         "protocol": "external_heap_revision_context_v1",
         "passed": True,
         "operational_revision_context": operational_revision_context,
+        "proposal_graph_operational": proposal_graph_operational,
+        "provider_graph_operational": provider_graph_operational,
         "source_run_was_fallback": source_run_was_fallback,
         "can_resume_universe": operational_revision_context,
         "source_pointer_protocol": pointer.get("protocol"),
@@ -86,10 +179,11 @@ def build_report(
         "npu_block_count": len(npu),
         "linked_gpu0_block_count": len(linked_gpu0),
         "linked_npu_block_count": len(linked_npu),
-        "resume_from_block_id": choose_resume_block(proposals),
-        "latest_block_id": latest.get("block_id", ""),
+        "resume_from_block_id": resume_block,
+        "latest_block_id": latest_id,
         "parallel_task_count": len(all_tasks),
         "gpu1_task_count": len(gpu1_tasks),
+        "provider_recovery_task_count": len(provider_recovery_tasks),
         "gpu0_task_count": len(
             [task for task in peer_tasks if task.get("role") == "gpu0_reviewer_refiner"]
         ),

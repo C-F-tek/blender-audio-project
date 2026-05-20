@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from time import monotonic
+
+from Tools.ai.heap_gate.provider_time import build_provider_time_counter_contract
 from Tools.ai.heap_gate.runtime_common import (
     DEFAULT_BRIDGE_DIR,
     DEFAULT_BRIDGE_JSON,
@@ -69,6 +72,8 @@ class RuntimeGateInitMixin:
         self.budget_governor = build_heap_provider_budget_governor(
             self.budget_config, requested_max_iterations=args.max_iterations
         )
+        self.time_counter_contract = build_provider_time_counter_contract(args)
+        self.runtime_loop_started_at = monotonic()
         self.invocation_contract = build_heap_provider_invocation_contract(
             self.budget_governor,
             allow_provider_generation=args.allow_provider_generation,
@@ -78,6 +83,7 @@ class RuntimeGateInitMixin:
         self.state = make_state(args.objective, getattr(args, "request", ""))
         self.state["budget_governor"] = self.budget_governor
         self.state["invocation_contract"] = self.invocation_contract
+        self.state["time_counter_contract"] = self.time_counter_contract
         self.heap_read_count = 0
         self.heap_write_count = 0
         self.tool_request_count = 0
@@ -99,6 +105,13 @@ class RuntimeGateInitMixin:
         ).build()
         self.runtime_universe_report_refs: dict[str, str] = {}
         self._code_execution_matrix_targets_cache: list[str] | None = None
+
+    def runtime_elapsed_seconds(self) -> float:
+        return max(0.0, monotonic() - self.runtime_loop_started_at)
+
+    def runtime_soft_close_reached(self) -> bool:
+        soft_close = int(self.time_counter_contract.get("soft_close_after_seconds") or 0)
+        return bool(soft_close > 0 and self.runtime_elapsed_seconds() >= soft_close)
 
     def path_arg(self, explicit: str, default: str) -> str:
         # With --output-dir, parser defaults such as DEFAULT_OUTPUT/DEFAULT_MARKDOWN

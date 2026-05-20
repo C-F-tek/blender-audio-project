@@ -71,7 +71,13 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     final_product = read_text(repo_root / "Tools/ai/_shared/heap_final_code_product.py")
     final_readable_product = read_text(repo_root / "Tools/ai/code_product/final_readable_product/cli.py")
     provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
-    provider_commands = read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py")
+    provider_commands = "\n".join(
+        (
+            read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py"),
+            read_text(repo_root / "Tools/ai/heap_gate/provider_command_specs.py"),
+            read_text(repo_root / "Tools/ai/heap_gate/provider_time.py"),
+        )
+    )
     provider_execution = read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py")
     provider_absorption = read_text(repo_root / "Tools/ai/heap_gate/provider_report_absorption.py")
     provider_collection = read_text(repo_root / "Tools/ai/heap_gate/provider_process_collection.py")
@@ -163,7 +169,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         )
         and has(provider_commands, "--require-semantic-provider")
         and has(provider_commands, "--leader-packet")
-        and has(provider_commands, "semantic_provider_execution_performed")
+        and has(provider_absorption, "semantic_provider_execution_performed")
         and has(heap_run_loop, "provider_semantic_missing_required_lanes")
         and has(provider_execution, "provider_launch_manifest")
         and has(provider_execution, "provider_teamwork_leader_packet")

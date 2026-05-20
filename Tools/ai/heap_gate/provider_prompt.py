@@ -7,6 +7,7 @@ from Tools.ai.heap_gate.provider_prompt_text import (
     POINTER_DELTA_PROTOCOL,
     provider_invocation_wrapper_text,
 )
+from Tools.ai.heap_gate.provider_time import provider_time_counter_prompt_text
 
 
 class RuntimeGateProviderPromptMixin:
@@ -78,9 +79,11 @@ class RuntimeGateProviderPromptMixin:
         """GPU1 prompt enriched with startup context digest."""
         base = self.gpu1_request_prompt()
         digest = self.startup_context_digest()
-        if not digest:
-            return "\n\n".join([base, POINTER_DELTA_PROTOCOL])
-        return "\n\n".join([base, POINTER_DELTA_PROTOCOL, digest])
+        time_contract = provider_time_counter_prompt_text(self.provider_time_counter_contract())
+        parts = [base, POINTER_DELTA_PROTOCOL, time_contract]
+        if digest:
+            parts.append(digest)
+        return "\n\n".join(part for part in parts if part)
 
     def write_provider_prompt_file(self, prompt: str, revision: int) -> str:
         """Persist the large GPU1 provider prompt and return repo-relative path."""

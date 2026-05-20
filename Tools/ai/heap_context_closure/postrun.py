@@ -51,7 +51,7 @@ def run_external_postrun_package(
     completed = run_command(
         command,
         repo_root,
-        timeout_seconds=max(60, int(timeout_seconds)),
+        timeout_seconds=None,
         flow_dir=run_dir,
         phase="external_heap_postrun_package",
     )

@@ -40,6 +40,10 @@ def absorb_completed_provider_item(
     provider_report["completed_at"] = item.get("completed_at")
     provider_report["elapsed_seconds"] = item.get("elapsed_seconds")
     provider_report["provider_process_id"] = item.get("pid")
+    provider_report["budget_counter_seconds"] = item.get("budget_counter_seconds")
+    provider_report["soft_close_after_seconds"] = item.get("soft_close_after_seconds")
+    provider_report["watchdog_timeout_seconds"] = item.get("watchdog_timeout_seconds")
+    provider_report["time_counter_contract"] = item.get("time_counter_contract")
     provider_report["launch_manifest"] = repo_rel(gate.repo_root, launch_manifest)
     provider_report["leader_packet"] = gate.provider_leader_packet_path
     provider_report = gate.enrich_provider_report_with_operational_peer_review(
@@ -56,12 +60,7 @@ def absorb_completed_provider_item(
     provider_report["diagnostic_only"] = not bool(
         provider_report.get("operational_provider_activity")
     )
-    if completed.returncode != 0:
-        provider_report["status"] = "failed"
-    elif provider_report["diagnostic_only"]:
-        provider_report["status"] = "non_operational"
-    else:
-        provider_report["status"] = "ready"
+    provider_report["status"] = "ready" if completed.returncode == 0 else "failed"
     normalized_output = dict(report_data) if isinstance(report_data, dict) else {}
     normalized_output.update(provider_report)
     write_json_report(normalized_output, Path(spec["output"]))
@@ -84,14 +83,21 @@ def _completed_process(
         return completed
     if process is not None:
         try:
-            stdout, stderr = process.communicate(timeout=float(item.get("timeout_seconds") or timeout_seconds))
+            watchdog = float(
+                item.get("watchdog_timeout_seconds")
+                or item.get("timeout_seconds")
+                or timeout_seconds
+            )
+            stdout, stderr = process.communicate(timeout=None if watchdog <= 0 else watchdog)
             item["completed_at"] = now_iso()
             completed = subprocess.CompletedProcess(command, process.returncode, stdout or "", stderr or "")
         except subprocess.TimeoutExpired:
             terminate_process_tree(process)
             stdout, stderr = process.communicate()
             item["completed_at"] = now_iso()
-            completed = subprocess.CompletedProcess(command, 124, stdout or "", (stderr or "") + "\nprovider timeout")
+            completed = subprocess.CompletedProcess(
+                command, 124, stdout or "", (stderr or "") + "\nprovider watchdog timeout"
+            )
     if completed is None:
         completed = subprocess.CompletedProcess(
             command,
@@ -140,6 +146,9 @@ def _publish_provider_report(
             "started_at": provider_report.get("started_at"),
             "completed_at": provider_report.get("completed_at"),
             "elapsed_seconds": provider_report.get("elapsed_seconds"),
+            "budget_counter_seconds": provider_report.get("budget_counter_seconds"),
+            "soft_close_after_seconds": provider_report.get("soft_close_after_seconds"),
+            "watchdog_timeout_seconds": provider_report.get("watchdog_timeout_seconds"),
             "provider_process_id": provider_report.get("provider_process_id"),
             "provider_block_id": provider_report.get("provider_block_id"),
             "proposal_block_id": provider_report.get("proposal_block_id"),

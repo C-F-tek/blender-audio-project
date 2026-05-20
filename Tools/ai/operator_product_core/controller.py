@@ -22,7 +22,7 @@ class OperatorProductController:
     def build_command(self) -> list[str]:
         return build_heap_command(self.config)
 
-    def run(self, *, timeout: int = 24000) -> dict[str, Any]:
+    def run(self, *, timeout: int | None = None) -> dict[str, Any]:
         return run_operator_lab(self.config, timeout=timeout)
 
     def review_code_product(self, code_product: Path) -> dict[str, Any]:

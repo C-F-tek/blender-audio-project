@@ -146,6 +146,12 @@ def _read_event_line(
                     or current.get("elapsed_seconds"),
                     "timeout_seconds": item.get("timeout_seconds")
                     or current.get("timeout_seconds"),
+                    "budget_counter_seconds": item.get("budget_counter_seconds")
+                    or current.get("budget_counter_seconds"),
+                    "soft_close_after_seconds": item.get("soft_close_after_seconds")
+                    or current.get("soft_close_after_seconds"),
+                    "watchdog_timeout_seconds": item.get("watchdog_timeout_seconds")
+                    or current.get("watchdog_timeout_seconds"),
                     "output": item.get("output") or current.get("output"),
                     "source": "provider_heartbeat",
                 }
@@ -164,6 +170,12 @@ def _read_event_line(
             "started_at": payload.get("started_at") or current.get("started_at"),
             "elapsed_seconds": payload.get("elapsed_seconds") or current.get("elapsed_seconds"),
             "timeout_seconds": payload.get("timeout_seconds") or current.get("timeout_seconds"),
+            "budget_counter_seconds": payload.get("budget_counter_seconds")
+            or current.get("budget_counter_seconds"),
+            "soft_close_after_seconds": payload.get("soft_close_after_seconds")
+            or current.get("soft_close_after_seconds"),
+            "watchdog_timeout_seconds": payload.get("watchdog_timeout_seconds")
+            or current.get("watchdog_timeout_seconds"),
             "output": payload.get("output") or current.get("output"),
             "source": "heap_event",
         }

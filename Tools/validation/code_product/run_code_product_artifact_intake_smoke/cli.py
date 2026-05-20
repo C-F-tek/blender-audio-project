@@ -285,15 +285,18 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     passed = (
         apply_run["returncode"] == 0
         and verify_run["returncode"] == 0
-        and empty_run["returncode"] == 0
-        and empty_apply_run["returncode"] == 0
+        and empty_run["returncode"] == 2
+        and empty_apply_run["returncode"] == 2
         and no_worktree_run["returncode"] == 0
         and no_worktree_alias_run["returncode"] == 0
         and apply_data.get("safe_apply", {}).get("applied_count") == 2
         and verify_data.get("all_integrated") is True
         and empty_data.get("empty_code_product") is True
-        and empty_data.get("all_integrated") is True
+        and empty_data.get("all_integrated") is False
+        and empty_data.get("passed") is False
+        and bool(empty_data.get("errors"))
         and empty_apply_data.get("safe_apply", {}).get("performed") is False
+        and empty_apply_data.get("passed") is False
         and empty_apply_data.get("source_writes_performed") is False
         and no_worktree_data.get("all_integrated") is True
         and no_worktree_data.get("forward_applicable_count") == 0

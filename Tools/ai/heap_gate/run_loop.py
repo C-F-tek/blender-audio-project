@@ -5,7 +5,9 @@ class RuntimeGateRunLoopMixin:
     def run(self) -> dict[str, Any]:
         self.bootstrap()
         last_round = 0
-        for round_id in range(1, self.max_iterations + 1):
+        round_id = 0
+        while True:
+            round_id += 1
             last_round = round_id
             events = self.read_events()
             self.planner_step(round_id, events)
@@ -214,6 +216,9 @@ class RuntimeGateRunLoopMixin:
             "npu_micro_task_evidence_count": (1 if "npu_micro_task_auditor" in completed else 0),
             "provider_result_count": len(self.provider_reports),
             "provider_revision_count": self.provider_revision_count,
+            "provider_revision_counter_semantics": (
+                "positive_evidence_counter_not_loop_cutoff"
+            ),
             "provider_lane_count": len({item.get("lane") for item in self.provider_reports}),
             "provider_lane_names": provider_lane_names,
             "required_provider_lanes": sorted(required_provider_lanes),
@@ -253,7 +258,7 @@ class RuntimeGateRunLoopMixin:
                 provider_semantic_missing_required_lanes
             ),
             "provider_teamwork_required": True,
-            "budget_exhausted": bool(missing and (last_round >= self.max_iterations)),
+            "budget_exhausted": bool(missing and self.runtime_soft_close_reached()),
             "invocation_contract_ready": bool(self.invocation_contract.get("passed")),
             "invocation_gate_decision": safe_dict(
                 self.invocation_contract.get("real_run_gate")

@@ -204,15 +204,13 @@ def _run_heap(args: Any, state: dict[str, Any]) -> None:
         command.extend(["--startup-manifest", str(state["startup_manifest"])])
     if state["startup_task_file"].exists():
         command.extend(["--task-file", str(state["startup_task_file"])])
-    if getattr(args, "allow_provider_generation", False):
-        command.extend(["--allow-provider-generation", "--operator-intent"])
 
     if state["can_continue"]:
         try:
             heap_result = run_command(
                 command,
                 state["repo_root"],
-                timeout_seconds=max(60, int(args.timeout_seconds) + 30),
+                timeout_seconds=None,
                 flow_dir=state["run_dir"],
                 phase="heap_runtime_gate",
             )

@@ -6,10 +6,6 @@ from Tools.ai.heap_gate.runtime_common import Any
 
 
 class RuntimeGateProviderRefinementMixin:
-    def effective_max_provider_revisions(self) -> int:
-        configured = int(getattr(self.args, "max_provider_revisions", 0) or 0)
-        return max(0, configured)
-
     def terminal_no_patchable_provider_loop(self) -> dict[str, Any]:
         """Detect repeated fake-path provider output that should stop revisions."""
         report = self.latest_proposal_iteration_report()
@@ -152,7 +148,7 @@ class RuntimeGateProviderRefinementMixin:
     ) -> list[dict[str, Any]]:
         while (
             self.detailed_output_expected()
-            and self.provider_revision_count < self.effective_max_provider_revisions()
+            and not self.runtime_soft_close_reached()
             and self.proposal_cycle_requires_refinement(self.response_text(), events)
         ):
             terminal = self.terminal_no_patchable_provider_loop()

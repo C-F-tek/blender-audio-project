@@ -50,6 +50,7 @@ def render_leader_peer_prompt(request: str, leader_packet: dict) -> str:
     propagation = leader_packet.get("propagation_contract")
     propagation_text = "; ".join(str(item) for item in propagation[:4]) if isinstance(propagation, list) else ""
     pointer = leader_packet.get("pointer_contract") if isinstance(leader_packet.get("pointer_contract"), dict) else {}
+    time_counter = leader_packet.get("time_counter_contract") if isinstance(leader_packet.get("time_counter_contract"), dict) else {}
     universe_contract = leader_packet.get("heap_universe_contract")
     startup_plane = leader_packet.get("startup_context_plane")
     return "\n".join(
@@ -62,6 +63,7 @@ def render_leader_peer_prompt(request: str, leader_packet: dict) -> str:
             f"HEAP_UNIVERSE_CONTRACT: {universe_contract}",
             f"STARTUP_CONTEXT_PLANE: {startup_plane}",
             f"POINTER_CONTRACT: {pointer}",
+            f"TIME_COUNTER_CONTRACT: {time_counter}",
             f"PROPAGATION_CONTRACT: {propagation_text}",
             f"SOURCE_PATH_ALLOWLIST_CONTRACT: {str(leader_packet.get('source_allowlist_contract') or '')[:700]}",
             f"GPU1_REVISION_FEEDBACK: {str(leader_packet.get('revision_feedback') or '')[:300]}",
@@ -221,6 +223,7 @@ def _report(
         "leader_packet_role": str(leader_packet.get("role") or ""),
         "leader_packet_heap_universe_contract": bool(leader_packet.get("heap_universe_contract")),
         "leader_packet_pointer_contract": bool(leader_packet.get("pointer_contract")),
+        "leader_packet_time_counter_contract": bool(leader_packet.get("time_counter_contract")),
         "leader_packet_startup_artifacts_count": len(leader_packet.get("startup_artifacts") or {}),
         "leader_packet_broker_tool_evidence_count": len(
             leader_packet.get("broker_tool_evidence") or []
@@ -350,6 +353,7 @@ def render_markdown(report: dict) -> str:
         f"- Leader packet: `{report['leader_packet']}`",
         f"- Leader packet heap universe contract: `{report['leader_packet_heap_universe_contract']}`",
         f"- Leader packet pointer contract: `{report['leader_packet_pointer_contract']}`",
+        f"- Leader packet time counter: `{report['leader_packet_time_counter_contract']}`",
         f"- Leader packet startup artifacts: `{report['leader_packet_startup_artifacts_count']}`",
         f"- Leader packet broker tool evidence: `{report['leader_packet_broker_tool_evidence_count']}`",
         f"- NPU OpenVINO native tool loop supported: `{report['native_tool_loop_supported']}`",
