@@ -28,7 +28,7 @@ def command_env(repo_root: Path, python_exe: str) -> dict[str, str]:
 def run_command(
     command: list[str],
     cwd: Path,
-    timeout: int = 3600,
+    timeout: int | None = None,
     *,
     flow_dir: Path | None = None,
     phase: str = "operator_command",
@@ -112,7 +112,7 @@ def code_product_blockers(
     return blockers
 
 
-def run_heap(config: LauncherConfig, timeout: int = 3600) -> dict[str, Any]:
+def run_heap(config: LauncherConfig, timeout: int | None = None) -> dict[str, Any]:
     cfg = resolve_config(config)
     cfg.final_root.mkdir(parents=True, exist_ok=True)
     command = build_heap_command(cfg)
@@ -200,7 +200,7 @@ def analyze_code_product(
 def run_operator_lab(
     config: LauncherConfig,
     *,
-    timeout: int = 3600,
+    timeout: int | None = None,
 ) -> dict[str, Any]:
     cfg = resolve_config(config)
     run_report = run_heap(cfg, timeout=timeout)

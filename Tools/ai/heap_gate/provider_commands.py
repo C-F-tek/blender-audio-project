@@ -6,140 +6,14 @@ from Tools.ai.heap_gate.runtime_common import (
     repo_rel,
     subprocess,
 )
+from Tools.ai.heap_gate.provider_command_specs import build_provider_command_specs
+from Tools.ai.heap_gate.provider_time import build_provider_time_counter_contract
 class RuntimeGateProviderCommandsMixin:
+    def provider_time_counter_contract(self) -> dict[str, Any]:
+        return build_provider_time_counter_contract(self.args)
+
     def provider_command_specs(self, work_dir: Path, revision: int = 0) -> list[dict[str, Any]]:
-        suffix = f"_revision{revision}" if revision else ""
-        gpu1_json = work_dir / f"gpu1_ollama_provider_probe{suffix}.json"
-        gpu0_json = work_dir / f"gpu0_openvino_peer_workload{suffix}.json"
-        gpu0_md = work_dir / f"gpu0_openvino_peer_workload{suffix}.md"
-        npu_json = work_dir / f"npu_micro_task_auditor{suffix}.json"
-        npu_md = work_dir / f"npu_micro_task_auditor{suffix}.md"
-        leader_packet = str(getattr(self, "provider_leader_packet_path", "") or "")
-        startup_manifest = str(getattr(self.args, "startup_manifest", "") or "")
-        task_file = str(getattr(self.args, "task_file", "") or "")
-        request_file = str(getattr(self.args, "request_file", "") or "")
-        request_args = ["--request-file", request_file] if request_file else ["--request", self.request_text()]
-        startup_args = (
-            ["--startup-manifest", startup_manifest]
-            if startup_manifest
-            else (["--task-file", task_file] if task_file else [])
-        )
-        gpu1_timeout = max(60, min(int(self.args.timeout_seconds // 5), 180))
-        gpu0_tool_loop_timeout = min(max(int(self.args.timeout_seconds // 2), 60), 180)
-        npu_tool_loop_timeout = max(20, min(int(self.args.npu_micro_timeout_seconds), 90))
-        return [
-            {
-                "lane": "gpu1_planner",
-                "requirement": "gpu1_provider_planner",
-                "role": "primary_planner_cumulative_responder",
-                "output": gpu1_json,
-                "timeout_seconds": gpu1_timeout + 30,
-                "command": [
-                    self.child_python(),
-                    "-m",
-                    "Tools.ai",
-                    "run_local_provider_probe",
-                    "--repo-root",
-                    ".",
-                    "--run-ollama",
-                    "--model",
-                    self.args.provider_model,
-                    "--prompt",
-                    "__GPU1_CUMULATIVE_PROMPT__",
-                    "--timeout",
-                    str(gpu1_timeout),
-                    "--max-new-tokens",
-                    str(max(128, min(int(self.args.max_new_tokens), 4096))),
-                    "--ollama-num-ctx",
-                    str(max(4096, int(self.args.ollama_num_ctx))),
-                    "--keep-alive",
-                    str(self.args.keep_alive),
-                    "--output",
-                    repo_rel(self.repo_root, gpu1_json),
-                ],
-            },
-            {
-                "lane": "gpu0_peer",
-                "requirement": "gpu0_provider_peer",
-                "role": "gpu0_peer_reviewer_refiner",
-                "output": gpu0_json,
-                "timeout_seconds": gpu0_tool_loop_timeout + 30,
-                "command": [
-                    self.child_python(),
-                    "-m",
-                    "Tools.ai",
-                    "build_openvino_gpu0_workload_report",
-                    "--repo-root",
-                    ".",
-                    "--iterations",
-                    str(self.args.gpu0_iterations),
-                    "--min-seconds",
-                    str(self.args.gpu0_min_seconds),
-                    "--tool-loop-timeout-seconds",
-                    str(gpu0_tool_loop_timeout),
-                    "--require-semantic-provider",
-                    "--role",
-                    "heap_runtime_peer_reviewer_refiner",
-                    *startup_args,
-                    *(
-                        ["--leader-packet", leader_packet]
-                        if leader_packet
-                        else []
-                    ),
-                    *request_args,
-                    "--output",
-                    repo_rel(self.repo_root, gpu0_json),
-                    "--markdown-output",
-                    repo_rel(self.repo_root, gpu0_md),
-                ],
-            },
-            {
-                "lane": "npu_micro_task_auditor",
-                "requirement": "npu_micro_task_auditor",
-                "role": "npu_micro_task_auditor",
-                "output": npu_json,
-                "timeout_seconds": npu_tool_loop_timeout + 30,
-                "command": [
-                    self.child_python(),
-                    "-m",
-                    "Tools.ai",
-                    "build_npu_micro_task_companion_report",
-                    "--repo-root",
-                    ".",
-                    *startup_args,
-                    *request_args,
-                    *(
-                        ["--leader-packet", leader_packet]
-                        if leader_packet
-                        else []
-                    ),
-                    "--python-exe",
-                    self.child_python(),
-                    "--timeout-seconds",
-                    str(self.args.npu_micro_timeout_seconds),
-                    "--max-context-chars",
-                    str(self.args.npu_max_context_chars),
-                    "--tool-loop-timeout-seconds",
-                    str(npu_tool_loop_timeout),
-                    "--require-semantic-provider",
-                    *(
-                        [
-                            "--run-device-workload",
-                            "--device-workload-seconds",
-                            str(self.args.npu_device_workload_seconds),
-                            "--device-workload-iterations",
-                            str(self.args.npu_device_workload_iterations),
-                        ]
-                        if self.args.allow_npu_device_workload
-                        else []
-                    ),
-                    "--output",
-                    repo_rel(self.repo_root, npu_json),
-                    "--markdown-output",
-                    repo_rel(self.repo_root, npu_md),
-                ],
-            },
-        ]
+        return build_provider_command_specs(self, work_dir, revision)
     def summarize_provider_report(
         self,
         spec: dict[str, Any],

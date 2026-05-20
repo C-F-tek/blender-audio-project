@@ -41,6 +41,8 @@ CPU/helper -> broker, validator, lab, composer
 - Provider text is evidence, not product.
 - Pointer/proposal blocks do not prove provider workload by themselves.
 - `provider_execution_performed` must be backed by explicit workload/provider evidence.
+- Time input is a shared heap counter for cycles and coordinated soft close, not a lane truncation boundary; a lane that fails to start is still a hard universe block.
+- `provider_revision_count` is positive telemetry/evidence only. It must not be compared to an effective max to cut GPU1 recursion.
 - Do not weaken gates to make a run pass.
 - Do not convert all context files into patch targets.
 

@@ -30,19 +30,27 @@ except ImportError:  # pragma: no cover
     from Tools.ai.heap_provider.invocation_contract import (
         build_heap_provider_invocation_contract,  # type: ignore
     )
-    from Tools.validation._shared.report_utils import (  # type: ignore
+from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
         write_text_report,
     )
 
+FORBIDDEN_CONTRACT_KEYS = {
+    "provider_execution_performed",
+    "generation_executes_now",
+    "patch_application_performed",
+    "source_writes_performed",
+    "persistent_memory_write_performed",
+    "warnings",
+    "errors",
+}
+
 
 def render_markdown(report: dict[str, object]) -> str:
     lines = ["# Heap Provider Invocation Contract Smoke", ""]
     lines.append(f"- Passed: `{report.get('passed')}`")
-    lines.append(f"- Contract passed: `{report.get('contract_passed')}`")
-    lines.append(f"- Real run allowed: `{report.get('real_run_allowed')}`")
-    lines.append(f"- Required event count: `{report.get('required_event_count')}`")
+    lines.append(f"- Scenario count: `{report.get('scenario_count')}`")
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report.get("errors", []))
@@ -61,9 +69,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> int:
-    args = parse_args()
-    repo_root = Path(args.repo_root).resolve()
+def build_contract(*, allow_provider_generation: bool, operator_intent: bool) -> dict[str, object]:
     config = ProviderBudgetConfig(
         objective="smoke heap provider invocation contract",
         budget_minutes=5,
@@ -79,44 +85,117 @@ def main() -> int:
         npu_max_context_chars=8000,
         npu_max_prompt_chars=1200,
         npu_max_new_tokens=384,
-        allow_provider_generation=False,
-        operator_intent=False,
+        allow_provider_generation=allow_provider_generation,
+        operator_intent=operator_intent,
     )
     governor = build_heap_provider_budget_governor(config, requested_max_iterations=4)
-    contract = build_heap_provider_invocation_contract(governor)
+    return build_heap_provider_invocation_contract(
+        governor,
+        allow_provider_generation=allow_provider_generation,
+        operator_intent=operator_intent,
+    )
+
+
+def find_forbidden_keys(value: object, path: str = "contract") -> list[str]:
+    if isinstance(value, dict):
+        found: list[str] = []
+        for key, child in value.items():
+            child_path = f"{path}.{key}"
+            if key in FORBIDDEN_CONTRACT_KEYS:
+                found.append(child_path)
+            found.extend(find_forbidden_keys(child, child_path))
+        return found
+    if isinstance(value, list):
+        found = []
+        for index, child in enumerate(value):
+            found.extend(find_forbidden_keys(child, f"{path}[{index}]"))
+        return found
+    return []
+
+
+def validate_contract(
+    name: str,
+    contract: dict[str, object],
+    *,
+    expected_allowed: bool,
+    expected_passed: bool,
+) -> list[str]:
+    errors: list[str] = []
     telemetry = (
         contract.get("expected_telemetry_contract")
         if isinstance(contract.get("expected_telemetry_contract"), dict)
         else {}
     )
     gate = contract.get("real_run_gate") if isinstance(contract.get("real_run_gate"), dict) else {}
+    lane_contract = (
+        contract.get("lane_activation_contract")
+        if isinstance(contract.get("lane_activation_contract"), dict)
+        else {}
+    )
     required_events = (
         telemetry.get("events_required")
         if isinstance(telemetry.get("events_required"), list)
         else []
     )
-    errors: list[str] = []
     if contract.get("kind") != "heap_provider_invocation_contract":
-        errors.append("kind mismatch")
-    if contract.get("provider_execution_performed") is not False:
-        errors.append("provider execution flag must be false")
-    if gate.get("real_run_allowed") is not False:
-        errors.append("real run must be blocked without explicit provider permit")
+        errors.append(f"{name}: kind mismatch")
+    for item in find_forbidden_keys(contract):
+        errors.append(f"{name}: contract-only report must not expose {item}")
+    if bool(contract.get("passed")) is not expected_passed:
+        errors.append(f"{name}: contract passed state mismatch")
+    if bool(gate.get("real_run_allowed")) is not expected_allowed:
+        errors.append(f"{name}: real_run_allowed mismatch")
     if "product_signal" not in required_events:
-        errors.append("product_signal required event missing")
+        errors.append(f"{name}: product_signal required event missing")
+    lanes = {
+        str(item.get("provider_lane"))
+        for item in lane_contract.get("required_lanes", [])
+        if isinstance(item, dict)
+    }
+    if lanes != {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}:
+        errors.append(f"{name}: lane activation contract must require GPU1/GPU0/NPU")
+    if lane_contract.get("start_failure_policy") != "abort_universe":
+        errors.append(f"{name}: lane start failure policy must abort universe")
+    return errors
+
+
+def main() -> int:
+    args = parse_args()
+    repo_root = Path(args.repo_root).resolve()
+    errors: list[str] = []
+    scenarios = [
+        ("not_selected", build_contract(allow_provider_generation=False, operator_intent=False), False, False),
+        ("selected_missing_intent", build_contract(allow_provider_generation=True, operator_intent=False), False, False),
+        ("selected_allowed", build_contract(allow_provider_generation=True, operator_intent=True), True, True),
+    ]
+    scenario_reports = []
+    for name, contract, expected_allowed, expected_passed in scenarios:
+        errors.extend(
+            validate_contract(
+                name,
+                contract,
+                expected_allowed=expected_allowed,
+                expected_passed=expected_passed,
+            )
+        )
+        gate = contract.get("real_run_gate") if isinstance(contract.get("real_run_gate"), dict) else {}
+        scenario_reports.append(
+            {
+                "name": name,
+                "contract_passed": contract.get("passed"),
+                "real_run_allowed": gate.get("real_run_allowed"),
+                "decision": gate.get("decision"),
+            }
+        )
     report = {
         "schema_version": 1,
         "kind": "heap_provider_invocation_contract_smoke",
         "passed": not errors,
-        "contract_passed": bool(contract.get("passed")),
-        "real_run_allowed": gate.get("real_run_allowed"),
-        "required_event_count": len(required_events),
-        "provider_execution_performed": False,
-        "patch_application_performed": False,
-        "source_writes_performed": False,
-        "errors": errors,
-        "warnings": contract.get("warnings", []),
+        "scenario_count": len(scenario_reports),
+        "scenarios": scenario_reports,
     }
+    if errors:
+        report["errors"] = errors
     output = resolve_output_path(repo_root, args.output)
     markdown = resolve_output_path(repo_root, args.markdown_output)
     write_json_report(report, output)

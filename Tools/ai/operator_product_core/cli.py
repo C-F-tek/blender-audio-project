@@ -96,11 +96,11 @@ def main() -> int:
     if args.run_and_review and args.apply_safe:
         raise SystemExit("--apply-safe is a separate code-product action, not part of run-and-review")
     if args.run_and_review:
-        report = run_operator_lab(config, timeout=args.timeout_seconds)
+        report = run_operator_lab(config, timeout=None)
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 0 if report.get("passed") else 2
     if args.run:
-        report = run_heap(config, timeout=args.timeout_seconds)
+        report = run_heap(config, timeout=None)
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 0 if report.get("passed") else 2
     code_product = Path(args.code_product)

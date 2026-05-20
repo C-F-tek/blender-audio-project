@@ -87,7 +87,10 @@ def operational_provider_activity(
         or ""
     )
     lowered_classification = classification.lower()
-    if any(marker in lowered_classification for marker in ("salvaged", "incomplete", "timeout", "failed", "error")):
+    if any(marker in lowered_classification for marker in ("timeout", "failed", "error")):
+        return False, f"non_operational_classification:{classification or 'unknown'}"
+    incomplete_native_tool_call = "incomplete" in lowered_classification
+    if "salvaged" in lowered_classification:
         return False, f"non_operational_classification:{classification or 'unknown'}"
     if any("salvaged" in str(call.get("reason") or "").lower() for call in tool_calls if isinstance(call, dict)):
         return False, "non_operational_salvaged_tool_call"
@@ -97,12 +100,14 @@ def operational_provider_activity(
         if _contains_heap_contract_text(response_text):
             return True, "gpu1_heap_delta_proposal_present"
         if tool_call_count > 0:
-            return True, "gpu1_native_tool_call_present_without_text_yet"
+            return True, "gpu1_structured_native_tool_call_present"
         return False, "gpu1_no_heap_delta_or_native_tool_call"
     if lane in {"gpu0_peer", "npu_micro_task_auditor"}:
         if not semantic_done:
             return False, f"{lane}_semantic_provider_not_performed"
-        if tool_call_count > 0 or _contains_review_or_audit_text(response_text):
+        if _has_peer_lane_evidence(lane, provider_report, response_text, tool_call_count):
+            if incomplete_native_tool_call:
+                return True, f"{lane}_semantic_evidence_with_incomplete_native_tool_call"
             return True, f"{lane}_semantic_review_or_native_tool_call"
         return False, f"{lane}_no_review_audit_or_native_tool_call"
     return bool(response_text or tool_call_count > 0), "generic_provider_activity"
@@ -120,6 +125,33 @@ def _contains_review_or_audit_text(text: str) -> bool:
     if any(marker in lowered for marker in ("micro-task eseguita", "workload", "device", "available_devices")):
         return False
     return len(text) >= 120 and any(marker in lowered for marker in ("evidence", "target", "guardrail", "validation"))
+
+
+def _has_peer_lane_evidence(
+    lane: str,
+    provider_report: dict[str, Any],
+    response_text: str,
+    tool_call_count: int,
+) -> bool:
+    if tool_call_count > 0 or _contains_review_or_audit_text(response_text):
+        return True
+    if lane == "gpu0_peer":
+        return bool(
+            provider_report.get("openvino_gpu0_workload_performed")
+            and provider_report.get("openvino_gpu0_workload_passed")
+            and (
+                provider_report.get("operational_peer_review_performed")
+                or provider_report.get("openvino_gpu0_provider_execution_performed")
+            )
+        )
+    if lane == "npu_micro_task_auditor":
+        return bool(
+            provider_report.get("npu_provider_execution_performed")
+            or provider_report.get("npu_peer_activity_performed")
+            or provider_report.get("npu_device_execution_performed")
+            or provider_report.get("npu_device_workload_performed")
+        )
+    return False
 
 
 def _safe_int(value: Any) -> int:

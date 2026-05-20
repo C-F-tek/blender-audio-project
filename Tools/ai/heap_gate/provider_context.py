@@ -65,7 +65,7 @@ class RuntimeGateProviderContextMixin:
                 "outputs": outputs,
                 "summary": summary,
             }
-            text = json.dumps(line, ensure_ascii=False, default=str)
+            text = json.dumps({"requirement": requirement, "tool": payload.get("tool"), "returncode": payload.get("returncode"), "outputs": outputs}, ensure_ascii=False, default=str)
             parts.append(text)
         joined = "\n".join(parts)
         return joined[:max_chars] + (
@@ -295,8 +295,8 @@ class RuntimeGateProviderContextMixin:
         peer_context = (
             "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         )
-        team_context = self.team_context_summary()
-        tool_catalog_limit = max(1, safe_int(getattr(self.args, "tool_catalog_limit", 24), 24))
+        team_context = self.team_context_summary(max_chars=2400)
+        tool_catalog_limit = min(24, max(1, safe_int(getattr(self.args, "tool_catalog_limit", 24), 24)))
         tool_catalog = self.broker_tool_catalog_summary(max_items=tool_catalog_limit)
         source_candidates = (
             "\n".join(f"- {item}" for item in self.real_source_file_candidates(limit=32))

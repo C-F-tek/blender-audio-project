@@ -104,7 +104,7 @@ def _safe_apply_report(
 
 
 def _all_integrated(sections: list[dict[str, Any]], empty_code_product: bool) -> bool:
-    return (not sections and empty_code_product) or bool(sections) and all(
+    return bool(sections) and all(
         section.get("status") in INTEGRATED_STATUSES for section in sections
     )
 
@@ -129,7 +129,7 @@ def _add_terminal_errors(
     warnings: list[str],
 ) -> None:
     if not sections and empty_code_product:
-        warnings.append("code product declares zero effective code sections; nothing to apply")
+        errors.append("code product declares zero effective code sections; no code product exists")
     elif not sections:
         errors.append("no target sections found")
     if args.require_all_integrated and not all_integrated:
@@ -170,7 +170,7 @@ def _build_report(
         "forward_applicable_count": forward_applicable,
         "needs_review_count": needs_review,
         "all_integrated": all_integrated,
-        "passed": bool((sections or empty_code_product) and not errors),
+        "passed": bool(sections and not errors),
         "require_all_integrated": bool(args.require_all_integrated),
         "apply_safe_requested": bool(args.apply_safe),
         "safe_apply": safe_apply_report,

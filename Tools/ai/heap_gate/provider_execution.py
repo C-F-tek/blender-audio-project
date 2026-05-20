@@ -43,7 +43,11 @@ class RuntimeGateProviderExecutionMixin:
             return
 
         work_dir = self.provider_work_dir()
-        timeout_seconds = max(30, self.args.timeout_seconds)
+        time_contract = self.provider_time_counter_contract()
+        raw_watchdog = time_contract.get("watchdog_timeout_seconds")
+        timeout_seconds = int(
+            raw_watchdog if raw_watchdog not in ("", None) else max(30, self.args.timeout_seconds)
+        )
         prepared: list[dict[str, Any]] = []
         try:
             leader_prompt = self.gpu1_provider_prompt()
@@ -72,6 +76,9 @@ class RuntimeGateProviderExecutionMixin:
                         "status": "preparing",
                         "output": repo_rel(self.repo_root, Path(spec["output"])),
                         "execution_mode": "concurrent_provider_teamwork",
+                        "budget_counter_seconds": spec.get("budget_counter_seconds"),
+                        "soft_close_after_seconds": spec.get("soft_close_after_seconds"),
+                        "watchdog_timeout_seconds": spec.get("watchdog_timeout_seconds"),
                     },
                     target="orchestrator",
                     correlation_id=correlation,
@@ -113,6 +120,10 @@ class RuntimeGateProviderExecutionMixin:
                             "completed_at": "",
                             "elapsed_seconds": None,
                             "timeout_seconds": spec.get("timeout_seconds", timeout_seconds),
+                            "budget_counter_seconds": spec.get("budget_counter_seconds"),
+                            "soft_close_after_seconds": spec.get("soft_close_after_seconds"),
+                            "watchdog_timeout_seconds": spec.get("watchdog_timeout_seconds"),
+                            "time_counter_contract": spec.get("time_counter_contract"),
                             "pid": None,
                         }
                     )
@@ -136,6 +147,10 @@ class RuntimeGateProviderExecutionMixin:
                             "completed_at": now_iso(),
                             "elapsed_seconds": 0.0,
                             "timeout_seconds": spec.get("timeout_seconds", timeout_seconds),
+                            "budget_counter_seconds": spec.get("budget_counter_seconds"),
+                            "soft_close_after_seconds": spec.get("soft_close_after_seconds"),
+                            "watchdog_timeout_seconds": spec.get("watchdog_timeout_seconds"),
+                            "time_counter_contract": spec.get("time_counter_contract"),
                             "pid": None,
                         }
                     )
@@ -175,15 +190,20 @@ class RuntimeGateProviderExecutionMixin:
                             "started_at": started_at,
                             "output": repo_rel(self.repo_root, Path(item["spec"]["output"])),
                             "execution_mode": "concurrent_provider_teamwork",
+                            "budget_counter_seconds": item.get("budget_counter_seconds"),
+                            "soft_close_after_seconds": item.get("soft_close_after_seconds"),
+                            "watchdog_timeout_seconds": item.get("watchdog_timeout_seconds"),
                         },
                         target="orchestrator",
                         correlation_id=str(item["correlation"]),
                         round_id=round_id,
                     )
                 except Exception as exc:  # noqa: BLE001 - provider lane failure becomes report evidence.
-                    item["started_at"] = started_at
+                    item["start_attempted_at"] = started_at
+                    item["started_at"] = ""
                     item["completed_at"] = now_iso()
                     item["elapsed_seconds"] = round(time.perf_counter() - started_perf, 6)
+                    item["prepare_error"] = f"start_error:{type(exc).__name__}: {exc}"
                     item["completed"] = subprocess.CompletedProcess(
                         command,
                         returncode=127,
@@ -200,6 +220,7 @@ class RuntimeGateProviderExecutionMixin:
                     "revision": revision,
                     "round": round_id,
                     "created_at": now_iso(),
+                    "time_counter_contract": time_contract,
                     "lanes": [
                         {
                             "lane": item.get("lane"),
@@ -215,6 +236,9 @@ class RuntimeGateProviderExecutionMixin:
                             "completed_at": item.get("completed_at"),
                             "elapsed_seconds": item.get("elapsed_seconds"),
                             "timeout_seconds": item.get("timeout_seconds"),
+                            "budget_counter_seconds": item.get("budget_counter_seconds"),
+                            "soft_close_after_seconds": item.get("soft_close_after_seconds"),
+                            "watchdog_timeout_seconds": item.get("watchdog_timeout_seconds"),
                             "prepare_error": item.get("prepare_error"),
                             "output": repo_rel(self.repo_root, Path(item["spec"]["output"])),
                             "leader_packet": self.provider_leader_packet_path,

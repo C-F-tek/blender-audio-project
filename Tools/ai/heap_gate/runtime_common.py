@@ -270,7 +270,6 @@ PROVIDER_ROLE_TO_HEAP_LANE = {
     "gpu0_diagnostic_peer": "gpu0",
     "npu_micro_task": "npu",
     "npu_micro_task_auditor": "npu",
-    "npu_critic": "npu",
 }
 
 

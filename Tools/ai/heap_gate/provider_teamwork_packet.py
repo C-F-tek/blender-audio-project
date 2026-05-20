@@ -55,6 +55,7 @@ def build_provider_teamwork_leader_packet(
         "snapshot": repo_rel(gate.repo_root, gate.heap.paths.snapshot),
         "markdown": repo_rel(gate.repo_root, gate.heap.paths.markdown),
     }
+    time_contract = gate.provider_time_counter_contract()
     return {
         "kind": "provider_teamwork_leader_packet",
         "role": "gpu1_primary_advisory_leader",
@@ -74,6 +75,7 @@ def build_provider_teamwork_leader_packet(
             "provider_text_alone_is_not_tool_execution_proof": True,
             "composer_assembles_heap_state_only": True,
         },
+        "time_counter_contract": time_contract,
         "same_heap_teamwork_contract": [
             "GPU1 is the primary advisor/leader and must produce file-grounded proposal blocks.",
             "GPU0 is a parallel peer and may jump through previous/refines/resume pointers to review/refine impacted blocks.",
@@ -81,6 +83,7 @@ def build_provider_teamwork_leader_packet(
             "GPU1 commands final synthesis and integrates GPU0/NPU vetoes and refinement signals.",
             "Broker/tool calls are optional enrichment, but executed tool outputs become heap facts.",
             "GPU1 must consume GPU0/NPU peer evidence before final synthesis.",
+            "The time input is a shared counter: started lanes are not hard-killed by elapsed time and must close through heap/pointer state near soft_close_after_seconds.",
         ],
         "pointer_contract": {
             "previous_block_id": "navigate backward through persisted proposal blocks",

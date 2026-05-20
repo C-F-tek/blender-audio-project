@@ -24,8 +24,8 @@ def build_heap_patch_proposal_prompt(prompt: str) -> str:
         "You are the GPU1 planner/worker inside the existing heap/pointer/veto loop. Do not collapse the run into a tool-only or JSON-only answer.\n"
         "Use startup artifacts, memory, source anchors, tool catalog, prior vetoes and pointer context as evidence.\n"
         "First write the normal heap proposal/revision text. Keep HEAP_POINTER_DELTA_PROTOCOL alive: reason over the universe, choose/reject targets, expose uncertainty and preserve veto/pointer continuity.\n"
-        "A second provider-native tool-call turn will follow and must validate or enrich this same proposal; it is not the proposal itself.\n"
-        "Ollama uses /api/chat tools and message.tool_calls. OpenVINO lanes attach the equivalent structured tool-call report to provider evidence. Tool calls are extra broker actions, not a replacement for heap text.\n\n"
+        "A provider-native tool-call turn may follow only when the prompt explicitly requires broker execution or the primary text is empty; it is not the proposal itself.\n"
+        "Ollama uses /api/chat tools and message.tool_calls only for that continuation. OpenVINO lanes attach equivalent structured reports. Tool calls are extra broker actions, not a replacement for heap text.\n\n"
         "BEGIN_HEAP_CONTEXT_AND_POINTERS\n"
         f"{prompt.rstrip()}\n"
         "END_HEAP_CONTEXT_AND_POINTERS\n\n"
@@ -166,7 +166,6 @@ def resolve_provider_python(repo_root: Path, python_exe: str | None = None) -> P
         return repo_python.resolve()
     return Path(sys.executable).resolve()
 
-
 def _openvino_tool_loop_child_main() -> int:
     try:
         payload = json.loads(sys.stdin.read() or "{}")
@@ -294,6 +293,7 @@ def openvino_tool_loop_report(
     child_env = command_env(repo_root)
     child_env["PYTHONIOENCODING"] = "utf-8"
     try:
+        hard_timeout = None if float(timeout_seconds or 0) <= 0 else max(1, int(timeout_seconds))
         completed = subprocess.run(
             [
                 str(runner),
@@ -308,7 +308,7 @@ def openvino_tool_loop_report(
             errors="replace",
             capture_output=True,
             env=child_env,
-            timeout=max(1, int(timeout_seconds)),
+            timeout=hard_timeout,
             check=False,
         )
     except subprocess.TimeoutExpired as exc:

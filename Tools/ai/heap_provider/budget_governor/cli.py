@@ -33,30 +33,23 @@ except ImportError:  # pragma: no cover
         write_text_report,
     )
 
-SAFETY_FLAGS = {
-    "provider_execution_performed": False,
-    "patch_application_performed": False,
-    "source_writes_performed": False,
-    "persistent_memory_write_performed": False,
-}
-
 DEFAULT_LANES = {
     "gpu1_planner": {
         "role": "primary_planner",
         "provider_kind": "ollama_gpu",
         "generation_allowed": False,
         "requires_explicit_operator_intent": True,
-        "tool_only_until_permit": True,
+        "requires_runtime_provider_permit": True,
     },
     "gpu0_peer": {
-        "role": "diagnostic_peer",
+        "role": "peer_reviewer_refiner",
         "provider_kind": "openvino_gpu0",
         "generation_allowed": False,
-        "diagnostic_only": True,
-        "promotion_required": True,
+        "peer_review_required_when_provider_selected": True,
+        "primary_generation_role": False,
     },
-    "npu_critic": {
-        "role": "critic_auditor",
+    "npu_micro_task_auditor": {
+        "role": "micro_task_auditor",
         "provider_kind": "openvino_npu",
         "generation_allowed": False,
         "audit_only": True,
@@ -118,7 +111,9 @@ def normalized_npu_micro_start_mode(value: str) -> str:
 def clamp_loop_iterations(config: ProviderBudgetConfig, requested_max_iterations: int) -> int:
     max_rounds = positive_int(config.max_rounds, 1)
     requested = positive_int(requested_max_iterations, max_rounds)
-    return max(1, min(requested, max_rounds))
+    budget_seconds = positive_int(config.budget_minutes, 1) * 60
+    counter_cycles = max_rounds if budget_seconds <= 0 else max(max_rounds, budget_seconds // 5)
+    return max(1, requested, max_rounds, counter_cycles)
 
 
 def build_budget_plan(
@@ -132,6 +127,7 @@ def build_budget_plan(
             "budget_minutes": positive_int(config.budget_minutes, 1),
             "max_rounds": positive_int(config.max_rounds, 1),
             "max_iterations": max_iterations,
+            "loop_counter_semantics": "time_counter_cycle_capacity_not_hard_provider_cutoff",
             "files_per_round": positive_int(config.files_per_round, 1),
             "max_context_files": positive_int(config.max_context_files, 1),
             "max_chars_per_file": positive_int(config.max_chars_per_file, 1),
@@ -140,14 +136,17 @@ def build_budget_plan(
         },
         "provider_lanes": {
             **DEFAULT_LANES,
-            "npu_critic": {
-                **DEFAULT_LANES["npu_critic"],
+            "npu_micro_task_auditor": {
+                **DEFAULT_LANES["npu_micro_task_auditor"],
                 "start_mode": normalized_npu_micro_start_mode(config.npu_micro_start_mode),
-                "timeout_seconds": positive_int(config.npu_micro_timeout_seconds, 1),
-                "final_wait_seconds": positive_int(config.npu_final_wait_seconds, 0, minimum=0),
+                "requested_counter_seconds": positive_int(config.npu_micro_timeout_seconds, 1),
+                "final_wait_counter_seconds": positive_int(config.npu_final_wait_seconds, 0, minimum=0),
                 "max_context_chars": positive_int(config.npu_max_context_chars, 1),
                 "max_prompt_chars": positive_int(config.npu_max_prompt_chars, 1),
                 "max_new_tokens": positive_int(config.npu_max_new_tokens, 1),
+                "time_input_semantics": "counter_not_hard_lane_timeout",
+                "started_lane_hard_kill_allowed": False,
+                "lane_start_failure_policy": "abort_universe",
             },
         },
         "global_limits": {
@@ -164,7 +163,7 @@ def build_budget_plan(
             "critic_claim_third",
             "arbiter_decision_fourth",
             "product_signal_required_before_exit",
-            "provider_generation_only_after_explicit_future_permit",
+            "provider_generation_only_after_runtime_permit",
         ],
     }
 
@@ -177,7 +176,7 @@ def build_requirements(
         {
             "requirement": "operator_intent_for_provider_generation",
             "passed": bool(config.operator_intent) or not bool(config.allow_provider_generation),
-            "reason": "provider generation requires explicit operator intent; deterministic heap lab can run without it",
+            "reason": "provider generation requires explicit operator intent when provider runtime is selected",
         },
         {
             "requirement": "budget_minutes_positive",
@@ -190,12 +189,12 @@ def build_requirements(
             "reason": "loop must have an explicit round budget",
         },
         {
-            "requirement": "generation_blocked_by_default",
+            "requirement": "provider_runtime_permit_required",
             "passed": all(
                 not lane.get("generation_allowed")
                 for lane in budget.get("provider_lanes", {}).values()
             ),
-            "reason": "all lanes must remain non-generative until a future permit explicitly unlocks providers",
+            "reason": "provider lanes require a valid runtime permit before generation",
         },
         {
             "requirement": "product_status_required",
@@ -212,29 +211,41 @@ def build_run_permit(
     permit_allowed = bool(
         config.allow_provider_generation and config.operator_intent and not failed
     )
+    raw_blocking_reasons = [
+        "provider generation selected without a valid heap/provider permit"
+    ] + [str(item.get("requirement")) for item in failed]
+    blocking_reasons = (
+        raw_blocking_reasons if config.allow_provider_generation and not permit_allowed else []
+    )
     permit = {
         "kind": "heap_provider_run_permit",
-        "passed": True,
+        "passed": not blocking_reasons,
         "permit_allowed": permit_allowed,
-        "decision": ("allow_provider_generation" if permit_allowed else "deny_provider_generation"),
+        "decision": (
+            "allow_provider_generation"
+            if permit_allowed
+            else (
+                "provider_generation_blocked_missing_operator_intent"
+                if config.allow_provider_generation
+                else "provider_generation_not_selected"
+            )
+        ),
         "allow_provider_generation_requested": bool(config.allow_provider_generation),
         "operator_intent": bool(config.operator_intent),
-        "failed_requirements": failed,
-        "deny_is_valid_governor_result": True,
+        "blocked_product_required_if_provider_selected": bool(blocking_reasons),
         "execution_contract": {
-            "this_report_executes_provider": False,
-            "future_provider_run_requires_this_permit": True,
+            "provider_generation_runtime_owner": (
+                "Tools.ai.heap_gate.provider_execution.run_provider_teamwork"
+            ),
+            "provider_runtime_requires_this_permit": True,
             "provider_generation_must_write_heap_events": True,
             "provider_generation_must_write_tool_telemetry": True,
         },
-        "warnings": (
-            []
-            if permit_allowed
-            else ["provider generation denied; deterministic heap/tool loop remains valid"]
-        ),
-        "errors": [],
     }
-    permit.update(SAFETY_FLAGS)
+    if failed:
+        permit["failed_requirements"] = failed
+    if blocking_reasons:
+        permit["blocking_reasons"] = blocking_reasons
     return permit
 
 
@@ -244,11 +255,12 @@ def build_heap_provider_budget_governor(
     budget = build_budget_plan(config, requested_max_iterations=requested_max_iterations)
     requirements = build_requirements(config, budget)
     permit = build_run_permit(config, requirements)
+    errors = list(permit.get("blocking_reasons") or [])
     governor = {
         "schema_version": 1,
         "kind": "heap_provider_budget_governor",
         "generated_at": now_iso(),
-        "passed": True,
+        "passed": not errors,
         "objective": config.objective,
         "budget": budget,
         "requirements": requirements,
@@ -257,10 +269,11 @@ def build_heap_provider_budget_governor(
         "permit_allowed": permit["permit_allowed"],
         "loop_budget": budget["loop_budget"],
         "provider_lanes": budget["provider_lanes"],
-        "errors": [],
-        "warnings": permit.get("warnings", []),
     }
-    governor.update(SAFETY_FLAGS)
+    if permit.get("blocking_reasons"):
+        governor["blocking_reasons"] = permit["blocking_reasons"]
+    if errors:
+        governor["errors"] = errors
     return governor
 
 
@@ -310,9 +323,6 @@ def render_markdown(report: dict[str, Any]) -> str:
             lines.append(
                 f"- `{lane}` role=`{value.get('role')}` provider=`{value.get('provider_kind')}` generation_allowed=`{value.get('generation_allowed')}`"
             )
-    if report.get("warnings"):
-        lines.extend(["", "## Warnings", ""])
-        lines.extend(f"- {item}" for item in report.get("warnings", []))
     return "\n".join(lines) + "\n"
 
 

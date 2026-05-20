@@ -54,6 +54,8 @@ def run_gate(
     timeout_seconds: int,
     max_iterations: int,
     provider_model: str,
+    allow_provider_generation: bool,
+    operator_intent: bool,
     request_text: str = "",
 ) -> tuple[subprocess.CompletedProcess[str], dict[str, Any], Path]:
     run_dir = (
@@ -82,6 +84,10 @@ def run_gate(
         "--provider-model",
         provider_model,
     ]
+    if allow_provider_generation:
+        command.append("--allow-provider-generation")
+    if operator_intent:
+        command.append("--operator-intent")
     if request_text.strip():
         command.extend(["--request", request_text.strip()])
     process = subprocess.Popen(
@@ -93,7 +99,8 @@ def run_gate(
         text=True,
     )
     try:
-        stdout, stderr = process.communicate(timeout=timeout_seconds * max(2, max_iterations))
+        watchdog = timeout_seconds * max(2, max_iterations) if timeout_seconds > 0 else None
+        stdout, stderr = process.communicate(timeout=watchdog)
         completed = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
     except subprocess.TimeoutExpired:
         terminate_process_tree(process)
@@ -102,7 +109,7 @@ def run_gate(
             command,
             124,
             stdout or "",
-            (stderr or "") + "\nheap runtime smoke timeout",
+            (stderr or "") + "\nheap runtime smoke outer watchdog expired",
         )
     return completed, read_json(output), run_dir
 
@@ -168,8 +175,8 @@ def validate_complete(report: dict[str, Any]) -> list[str]:
         metrics.get("required_requirement_count") or -1
     ):
         errors.append("complete run must satisfy all required requirements")
-    if metrics.get("budget_decision") != "deny_provider_generation":
-        errors.append("budget_decision must deny provider generation by default")
+    if metrics.get("budget_decision") != "allow_provider_generation":
+        errors.append("complete run must use positive provider permit and operator intent")
     state = report.get("state") if isinstance(report.get("state"), dict) else {}
     for key in (
         "facts",
@@ -189,7 +196,9 @@ def validate_complete(report: dict[str, Any]) -> list[str]:
         or metrics.get("provider_execution_performed") is not True
     ):
         errors.append("complete run must perform observable provider execution")
-    if int(metrics.get("provider_lane_count") or 0) < 3:
+    lanes = set(metrics.get("provider_lane_names") or [])
+    required_lanes = {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}
+    if int(metrics.get("provider_lane_count") or 0) < 3 or not required_lanes <= lanes:
         errors.append("complete run must include all three provider lanes")
     output_contract = (
         report.get("real_run_output_contract")
@@ -207,21 +216,17 @@ def validate_complete(report: dict[str, Any]) -> list[str]:
     return errors
 
 
-def validate_budget_block(report: dict[str, Any]) -> list[str]:
+def validate_provider_gate_block(report: dict[str, Any]) -> list[str]:
     errors: list[str] = []
-    if report.get("passed") is not True:
-        errors.append(
-            "budget-block heap runtime gate should pass as controlled blocked_with_reason"
-        )
     metrics = report.get("metrics") if isinstance(report.get("metrics"), dict) else {}
+    if report.get("passed") is not False:
+        errors.append("provider-gate block must not pass as a complete runtime product")
     if metrics.get("product_status") != "blocked_with_reason":
-        errors.append("budget-block product_status must be blocked_with_reason")
-    if not metrics.get("missing_requirements"):
-        errors.append("budget-block run must expose missing_requirements")
-    if metrics.get("budget_exhausted") is not True:
-        errors.append("budget-block run must mark budget_exhausted=true")
-    if int(metrics.get("tool_execution_count") or 0) <= 0:
-        errors.append("budget-block run must still execute at least one brokered tool")
+        errors.append("provider-gate block product_status must be blocked_with_reason")
+    if metrics.get("budget_decision") != "provider_generation_blocked_missing_operator_intent":
+        errors.append("provider-gate block must expose missing operator intent")
+    if metrics.get("provider_execution_performed") is True:
+        errors.append("provider-gate block must not claim provider execution")
     return errors
 
 
@@ -256,7 +261,7 @@ def main() -> int:
     parser.add_argument(
         "--markdown-output", default="output/validation/heap_runtime_completeness_gate_smoke.md"
     )
-    parser.add_argument("--timeout-seconds", type=int, default=240)
+    parser.add_argument("--timeout-seconds", type=int, default=0)
     parser.add_argument("--provider-model", default="qwen2.5-coder:14b")
     parser.add_argument("--contract-only", action="store_true")
     args = parser.parse_args()
@@ -270,9 +275,10 @@ def main() -> int:
             "passed": not errors,
             "run_dir": "",
             "returncode": 0 if not errors else 2,
-            "metrics": {"provider_execution_performed": False, "provider_lane_count": 0},
-            "errors": errors,
+            "scope": "static_contract_only_no_runtime_execution",
         }
+        if errors:
+            contract_run["errors"] = errors
         report = {
             "schema_version": 1,
             "kind": "heap_runtime_completeness_gate_smoke",
@@ -281,12 +287,9 @@ def main() -> int:
             "repo_root": repo_root.as_posix(),
             "passed": not errors,
             "runs": [contract_run],
-            "provider_execution_performed": False,
-            "patch_application_performed": False,
-            "source_writes_performed": False,
-            "errors": errors,
-            "warnings": [],
         }
+        if errors:
+            report["errors"] = errors
         output = resolve_output_path(repo_root, args.output)
         markdown = resolve_output_path(repo_root, args.markdown_output)
         write_json_report(report, output)
@@ -305,6 +308,8 @@ def main() -> int:
         args.timeout_seconds,
         max_iterations=4,
         provider_model=args.provider_model,
+        allow_provider_generation=True,
+        operator_intent=True,
         request_text=request_text,
     )
     complete_errors = []
@@ -327,23 +332,29 @@ def main() -> int:
 
     blocked_proc, blocked_report, blocked_dir = run_gate(
         repo_root,
-        "budget_block",
+        "provider_gate_block",
         stamp,
         args.timeout_seconds,
         max_iterations=2,
         provider_model=args.provider_model,
+        allow_provider_generation=True,
+        operator_intent=False,
         request_text=request_text,
     )
     blocked_errors = []
-    if blocked_proc.returncode != 0:
+    if blocked_proc.returncode == 0:
         blocked_errors.append(
-            f"budget_block gate returned {blocked_proc.returncode}: {(blocked_proc.stderr or blocked_proc.stdout)[-1500:]}"
+            "provider_gate_block returned 0 but missing operator intent must block"
         )
-    blocked_errors.extend(validate_budget_block(blocked_report))
-    errors.extend(f"budget_block: {item}" for item in blocked_errors)
+    if blocked_proc.returncode not in {0, 2}:
+        blocked_errors.append(
+            f"provider_gate_block returned {blocked_proc.returncode}: {(blocked_proc.stderr or blocked_proc.stdout)[-1500:]}"
+        )
+    blocked_errors.extend(validate_provider_gate_block(blocked_report))
+    errors.extend(f"provider_gate_block: {item}" for item in blocked_errors)
     runs.append(
         {
-            "label": "budget_block",
+            "label": "provider_gate_block",
             "passed": not blocked_errors,
             "run_dir": blocked_dir.relative_to(repo_root).as_posix(),
             "returncode": blocked_proc.returncode,
@@ -362,11 +373,9 @@ def main() -> int:
         "provider_execution_performed": any(
             bool((run.get("metrics") or {}).get("provider_execution_performed")) for run in runs
         ),
-        "patch_application_performed": False,
-        "source_writes_performed": False,
-        "errors": errors,
-        "warnings": [],
     }
+    if errors:
+        report["errors"] = errors
     output = resolve_output_path(repo_root, args.output)
     markdown = resolve_output_path(repo_root, args.markdown_output)
     write_json_report(report, output)

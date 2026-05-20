@@ -290,12 +290,12 @@ class RuntimeGateLoopStepsMixin:
         ):
             missing = [*missing, "provider_quality_output"]
             ready = False
-        budget_exhausted = round_id >= self.max_iterations
+        budget_exhausted = bool(getattr(self, "runtime_soft_close_reached", lambda: False)())
         no_more_progress = unattempted is None and bool(missing)
         refinement_possible = (
             self.detailed_output_expected()
             and self.provider_reports
-            and self.provider_revision_count < self.effective_max_provider_revisions()
+            and not self.runtime_soft_close_reached()
             and self.proposal_cycle_requires_refinement(self.response_text(), events)
         )
         if not ready and not budget_exhausted and refinement_possible:

@@ -53,7 +53,13 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     npu_companion_shared = read_text(repo_root / "Tools/ai/_shared/npu_micro_task_companion_cli.py")
     npu_shared = read_text(repo_root / "Tools/npu/provider_mesh/_shared/npu_runtime.py")
     provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
-    provider_commands = read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py")
+    provider_commands = "\n".join(
+        (
+            read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py"),
+            read_text(repo_root / "Tools/ai/heap_gate/provider_command_specs.py"),
+            read_text(repo_root / "Tools/ai/heap_gate/provider_time.py"),
+        )
+    )
     provider_execution = read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py")
     provider_absorption = read_text(repo_root / "Tools/ai/heap_gate/provider_report_absorption.py")
     provider_collection = read_text(repo_root / "Tools/ai/heap_gate/provider_process_collection.py")
@@ -160,7 +166,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_commands, '"lane": "gpu0_peer"')
         and has(provider_commands, '"lane": "npu_micro_task_auditor"')
         and has(provider_commands, "provider_execution_performed")
-        and has(provider_commands, "semantic_provider_execution_performed")
+        and has(provider_absorption, "semantic_provider_execution_performed")
         and has(provider_commands, "--require-semantic-provider")
         and has(provider_commands, "--leader-packet")
         and has(provider_commands, "--startup-manifest"),

@@ -36,6 +36,7 @@ PROFILE_TO_CLI: dict[str, tuple[str, str]] = {
     "output_dir": ("--output-dir", "value"),
     "stamp": ("--stamp", "value"),
     "allow_provider_generation": ("--allow-provider-generation", "flag"),
+    "operator_intent": ("--operator-intent", "flag"),
     "skip_preflight": ("--skip-preflight", "flag"),
     "skip_startup_reload": ("--skip-startup-reload", "flag"),
     "strict_startup_reload": ("--strict-startup-reload", "flag"),
@@ -89,6 +90,12 @@ def ps_quote(value: Any) -> str:
     text = str(value)
     return '"' + text.replace("`", "``").replace('"', '`"') + '"'
 
+def normalize_provider_flags(profile: dict[str, Any]) -> dict[str, Any]:
+    result = dict(profile)
+    if result.get("allow_provider_generation") is True:
+        result["operator_intent"] = True
+    return result
+
 def choose_profile(profile_doc: dict[str, Any], profile_name: str) -> dict[str, Any]:
     profiles = profile_doc.get("profiles") if isinstance(profile_doc.get("profiles"), dict) else {}
     selected = profile_name or str(profile_doc.get("default_profile") or "")
@@ -97,7 +104,7 @@ def choose_profile(profile_doc: dict[str, Any], profile_name: str) -> dict[str, 
         raise SystemExit(f"unknown profile '{selected}'. Available: {', '.join(sorted(profiles))}")
     result = dict(profile)
     result["profile_name"] = selected
-    return result
+    return normalize_provider_flags(result)
 
 def apply_overrides(profile: dict[str, Any], overrides: list[str]) -> dict[str, Any]:
     result = dict(profile)
@@ -123,7 +130,7 @@ def apply_overrides(profile: dict[str, Any], overrides: list[str]) -> dict[str, 
                         except json.JSONDecodeError:
                             pass
                     result[key] = value
-    return result
+    return normalize_provider_flags(result)
 
 def profile_cli_keys(profile: dict[str, Any]) -> list[str]:
     return [key for key in profile if key in PROFILE_TO_CLI]

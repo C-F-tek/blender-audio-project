@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .cli_contract import build_heap_runtime_argv, provider_flags_from_selection
 from .io_utils import now_stamp, read_json
 from .models import CLI_FLAG_KEYS, CLI_VALUE_KEYS, DEFAULT_PROFILE, PROFILE_FILE, LauncherConfig
 
@@ -111,4 +112,7 @@ def build_heap_command(config: LauncherConfig) -> list[str]:
     for key, flag in CLI_FLAG_KEYS.items():
         if bool(profile.get(key)):
             command.append(flag)
-    return command
+    return build_heap_runtime_argv(
+        command,
+        provider_flags_from_selection(bool(profile.get("allow_provider_generation"))),
+    )

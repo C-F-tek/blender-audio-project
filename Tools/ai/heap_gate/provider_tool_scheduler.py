@@ -18,7 +18,8 @@ def provider_patch_synthesis_plan(
     args = {
         "target_file": target_files,
         "max_candidates": min(5, max(1, int(files_per_round))),
-        "timeout_seconds": min(max(int(timeout_seconds), 60), 600),
+        "timeout_seconds": 0,
+        "time_input_semantics": "counter_not_hard_tool_timeout",
     }
     if operator_request_file:
         args["operator_request_file"] = operator_request_file

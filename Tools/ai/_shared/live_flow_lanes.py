@@ -28,6 +28,12 @@ def lane_details(run_status: dict[str, Any]) -> str:
         model_text = f",model={_short_label(model, 28)}" if model else ""
         elapsed = item.get("elapsed_seconds")
         elapsed_text = f",t={elapsed}s" if elapsed not in ("", None) else ""
+        budget = item.get("budget_counter_seconds")
+        budget_text = f",budget={budget}s" if budget not in ("", None) else ""
+        soft_close = item.get("soft_close_after_seconds")
+        soft_text = f",soft={soft_close}s" if soft_close not in ("", None) else ""
+        watchdog = item.get("watchdog_timeout_seconds")
+        watchdog_text = f",watchdog={watchdog}s" if watchdog not in ("", None) else ""
         pid = item.get("pid")
         pid_text = f",pid={pid}" if pid not in ("", None) else ""
         semantic = item.get("semantic_provider_execution_performed")
@@ -47,7 +53,8 @@ def lane_details(run_status: dict[str, Any]) -> str:
         output = str(item.get("output") or "").replace("\\", "/").rsplit("/", 1)[-1]
         output_text = f",out={output}" if output else ""
         parts.append(
-            f"{lane}[{status}{role_text}{model_text}{elapsed_text}{pid_text}{semantic_text}"
+            f"{lane}[{status}{role_text}{model_text}{elapsed_text}{budget_text}{soft_text}"
+            f"{watchdog_text}{pid_text}{semantic_text}"
             f"{operational_text}{diagnostic_text}{native_text}{partial_text}{response_text}"
             f"{class_text}{output_text}]"
         )
@@ -90,6 +97,9 @@ def provider_status(path: Path) -> list[dict[str, Any]]:
                 "native_tool_call_count": data.get("native_tool_call_count"),
                 "partial_response_chars": data.get("partial_response_chars"),
                 "response_chars": response_chars(data),
+                "budget_counter_seconds": data.get("budget_counter_seconds"),
+                "soft_close_after_seconds": data.get("soft_close_after_seconds"),
+                "watchdog_timeout_seconds": data.get("watchdog_timeout_seconds"),
                 "output": str(item),
             }
         )

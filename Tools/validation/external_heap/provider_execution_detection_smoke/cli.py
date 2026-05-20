@@ -64,9 +64,9 @@ def main() -> int:
     repo_root = resolve_repo_root(args.repo_root)
     sys.path.insert(0, str(repo_root))
 
-    from Tools.ai import build_external_heap_block_pointer_manifest as pointer_manifest
-    from Tools.ai import compose_heap_final_proposals as legacy_composer
-    from Tools.ai import normalize_heap_final_causality as causality_normalizer
+    from Tools.ai.external_heap.block_pointer_manifest import cli as pointer_manifest
+    from Tools.ai.heap_final_proposals import artifacts as legacy_composer
+    from Tools.ai.heap_final_proposals.normalize_final_causality import cli as causality_normalizer
 
     smoke_dir = (
         repo_root / "output" / "validation" / "external_heap_provider_execution_detection_smoke_run"

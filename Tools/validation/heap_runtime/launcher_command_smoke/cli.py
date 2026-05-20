@@ -232,6 +232,11 @@ def main() -> int:
             "passed": "-m Tools.ai heap_context_closure" in generated_command,
         },
         {
+            "name": "provider_flags_are_unified",
+            "passed": "--allow-provider-generation" in generated_command
+            and "--operator-intent" in generated_command,
+        },
+        {
             "name": "postrun_command_targets_orchestrator",
             "passed": "-m Tools.ai external_heap_postrun_package"
             in str(payload.get("postrun_package_command") or ""),

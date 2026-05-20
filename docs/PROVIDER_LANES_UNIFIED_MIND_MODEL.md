@@ -50,6 +50,10 @@ same evidence ledger
 
 If lanes operate on different context, the result is not a unified mind. It is only parallel prompting.
 
+Time is part of that shared operational picture. A run budget is a counter used to choose cycles and request a coordinated soft close near the end; it is not a hard lane cutoff. A provider lane that fails to start is a hard universe block, while a started lane must close through heap state, chunks and pointers.
+
+Provider revision count is telemetry, not a recursion limit. The loop may use it as evidence that revisions happened, but must not stop GPU1 because the count reached an effective maximum.
+
 ## Department responsibilities
 
 ### Ollama / main provider

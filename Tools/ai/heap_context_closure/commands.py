@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from Tools.ai.operator_product_core.cli_contract import HeapRuntimeFlags, build_heap_runtime_argv
+
 
 def request_args(state: dict[str, Any]) -> list[str]:
     request_file = str(state.get("operator_request_file") or "").strip()
@@ -112,4 +114,10 @@ def heap_command(args: Any, state: dict[str, Any]) -> list[str]:
     ]
     if getattr(args, "allow_npu_device_workload", False):
         command.append("--allow-npu-device-workload")
-    return command
+    return build_heap_runtime_argv(
+        command,
+        HeapRuntimeFlags(
+            allow_provider_generation=bool(getattr(args, "allow_provider_generation", False)),
+            operator_intent=bool(getattr(args, "operator_intent", False)),
+        ),
+    )

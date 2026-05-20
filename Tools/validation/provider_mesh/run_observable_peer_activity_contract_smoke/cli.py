@@ -165,7 +165,7 @@ def provider_contract_checks() -> dict[str, bool]:
         "gpu1_heap_delta_text_operational": gpu1_text
         and gpu1_text_class == "gpu1_heap_delta_proposal_present",
         "gpu1_native_tool_call_operational": gpu1_tool
-        and gpu1_tool_class == "gpu1_native_tool_call_present_without_text_yet",
+        and gpu1_tool_class == "gpu1_structured_native_tool_call_present",
         "gpu0_device_only_not_operational": (not gpu0_device_only)
         and gpu0_device_class == "gpu0_peer_no_review_audit_or_native_tool_call",
         "npu_timeout_not_operational": (not npu_timeout)
@@ -224,7 +224,7 @@ def provider_absorption_checks(repo: Path) -> dict[str, bool]:
         and report.get("report_passed") is True,
         "diagnostic_only_true": report.get("diagnostic_only") is True,
         "diagnostic_not_operational": report.get("operational_provider_activity") is False,
-        "diagnostic_status_non_operational": report.get("status") == "non_operational",
+        "diagnostic_status_ready": report.get("status") == "ready",
         "diagnostic_telemetry_published": "telemetry_signal" in event_types,
         "diagnostic_peer_block_not_published": "provider_peer_block" not in event_types,
         "diagnostic_product_not_blocked": gate.state["product"].get("status") == "not_ready",
@@ -266,52 +266,41 @@ def provider_stall_checks() -> dict[str, bool]:
         block_provider_universe_run,
         provider_universe_abort_reason,
     )
-    from Tools.ai.heap_gate.provider_process_collection import (
-        _materialized_provider_or_proposal_present,
-        _peer_lanes_degraded_without_operational_blocks,
-    )
+    from Tools.ai.heap_gate.provider_process_collection import _provider_lane_start_abort_reason
 
-    degraded = [
+    start_failed = [{"lane": "gpu1_planner", "prepare_error": "missing provider"}]
+    diagnostic_ready = [
         {
             "lane": "gpu0_peer",
             "completed": subprocess.CompletedProcess([], 0, "", ""),
-            "provider_report": {"operational_provider_activity": False},
-        },
+            "started_at": "2026-05-20T00:00:00",
+            "provider_report": {
+                "status": "ready",
+                "diagnostic_only": True,
+                "operational_provider_activity": False,
+            },
+        }
+    ]
+    failed_lane = [
         {
             "lane": "npu_micro_task_auditor",
             "completed": subprocess.CompletedProcess([], 1, "", ""),
-        },
+            "started_at": "2026-05-20T00:00:00",
+            "provider_report": {"status": "failed"},
+        }
     ]
-    operational = [
-        {
-            "lane": "gpu0_peer",
-            "completed": subprocess.CompletedProcess([], 0, "", ""),
-            "provider_report": {"operational_provider_activity": True},
-        },
-        degraded[1],
-    ]
-    empty_gate = SimpleNamespace(provider_reports=[], proposal_iteration_artifacts=lambda: [])
-    proposal_gate = SimpleNamespace(provider_reports=[], proposal_iteration_artifacts=lambda: ["p.json"])
-    provider_gate = SimpleNamespace(
-        provider_reports=[{"operational_provider_activity": True}],
-        proposal_iteration_artifacts=lambda: [],
-    )
     abort_gate = FakeGate(Path.cwd())
-    reason = provider_universe_abort_reason(
-        [{"lane": "gpu0_peer", "provider_report": {"status": "non_operational"}}]
-    )
+    reason = provider_universe_abort_reason(failed_lane)
     block_provider_universe_run(abort_gate, reason, 1, 0)
     return {
-        "stall_peer_degraded_condition_detected": (
-            _peer_lanes_degraded_without_operational_blocks(degraded) is True
+        "provider_lane_start_failure_is_hard_block": _provider_lane_start_abort_reason(
+            start_failed
+        ).startswith("provider_universe_lane_not_started:gpu1_planner:"),
+        "diagnostic_ready_peer_does_not_abort_universe": (
+            provider_universe_abort_reason(diagnostic_ready) == ""
         ),
-        "stall_peer_operational_blocks_watchdog": (
-            _peer_lanes_degraded_without_operational_blocks(operational) is False
-        ),
-        "stall_requires_no_materialized_blocks": (
-            _materialized_provider_or_proposal_present(empty_gate) is False
-            and _materialized_provider_or_proposal_present(proposal_gate) is True
-            and _materialized_provider_or_proposal_present(provider_gate) is True
+        "failed_lane_blocks_universe": (
+            reason == "provider_universe_lane_not_active:npu_micro_task_auditor:failed"
         ),
         "inactive_provider_universe_blocks_run": (
             abort_gate.state["product"].get("status") == "blocked_with_reason"

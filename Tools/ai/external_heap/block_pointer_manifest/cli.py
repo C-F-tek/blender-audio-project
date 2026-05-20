@@ -25,6 +25,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .provider_graph import provider_blocks
+
 DEFAULT_ROLES = ("gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor")
 POINTER_PRODUCT_CONTRACT = {
     "product_contract": True,
@@ -206,87 +208,6 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
                     existing["next_block_id"] = block_id
         append_block(blocks, block)
         previous_id = block_id
-    return blocks
-
-
-def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> list[dict[str, Any]]:
-    blocks: list[dict[str, Any]] = []
-    provider_dir = run_dir / "provider_teamwork"
-    provider_files = sorted(provider_dir.glob("*.json")) if provider_dir.exists() else []
-    for index, path in enumerate(provider_files, start=1):
-        data = read_json(path)
-        if str(data.get("kind") or "") in {
-            "provider_launch_manifest",
-            "provider_teamwork_leader_packet",
-        }:
-            continue
-        if path.name.startswith("provider_launch_manifest") or path.name.startswith(
-            "provider_teamwork_leader_packet"
-        ):
-            continue
-        lane = str(
-            data.get("lane")
-            or data.get("role")
-            or data.get("report_kind")
-            or data.get("kind")
-            or path.stem
-        ).lower()
-        if "gpu0" in lane:
-            role = "gpu0_reviewer_refiner"
-            block_type = "review_refinement_block"
-        elif "npu" in lane:
-            role = "npu_auditor"
-            block_type = "audit_block"
-        else:
-            role = "gpu1_planner"
-            block_type = "provider_evidence_block"
-        role = str(data.get("role") or role)
-        block_type = str(data.get("block_type") or block_type)
-        text = str(data.get("response_text") or "")
-        if not text:
-            text = json.dumps(data, indent=2, ensure_ascii=False)
-        if max_block_chars > 0 and len(text) > max_block_chars:
-            text = text[:max_block_chars] + "\n...[truncated]\n"
-        block_id = str(data.get("provider_block_id") or data.get("block_id") or "").strip()
-        if not block_id:
-            block_id = stable_id("provider", f"{repo_rel(repo_root, path)}:{role}:{index}")
-        proposal_block_id = str(data.get("proposal_block_id") or "")
-        provider_execution = provider_execution_evidence(data, text)
-        append_block(
-            blocks,
-            {
-                "block_id": block_id,
-                "block_type": block_type,
-                "role": role,
-                "step_index": index,
-                "source_path": repo_rel(repo_root, path),
-                "proposal_block_id": proposal_block_id,
-                "previous_block_id": str(data.get("previous_block_id") or ""),
-                "next_block_id": str(data.get("next_block_id") or ""),
-                "refines_block_id": str(data.get("refines_block_id") or proposal_block_id),
-                "resume_from_block_id": str(data.get("resume_from_block_id") or proposal_block_id),
-                "pointer_action": data.get("pointer_action"),
-                "target_files": data.get("target_files") if isinstance(data.get("target_files"), list) else [],
-                "decision": data.get("decision"),
-                "exit_decision": data.get("exit_decision"),
-                "quality_passed": data.get("passed"),
-                "provider_execution_performed": provider_execution,
-                "sha256": (
-                    hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
-                    if text
-                    else ""
-                ),
-                "preview": text,
-                "pointer_contract": {
-                    "product_contract": True,
-                    "decision_recovery": True,
-                    "navigation_role": "peer_decision_evidence",
-                    "can_continue_to_next": False,
-                    "can_backrefine": role == "gpu0_reviewer_refiner",
-                    "requires_review": role != "gpu0_reviewer_refiner",
-                },
-            },
-        )
     return blocks
 
 
