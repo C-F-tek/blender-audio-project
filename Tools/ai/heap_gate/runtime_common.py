@@ -287,16 +287,24 @@ def provider_heap_lane(value: str) -> str:
 
 
 def runtime_state_lane_gate(lane_status: dict[str, Any], max_degraded_lanes: int) -> dict[str, Any]:
-    degraded = sorted(
+    """Evaluate lane viability for the heap runtime gate.
+
+    ``max_degraded_lanes`` is kept for CLI/report compatibility, but degraded
+    and failed lanes are always unviable in complete/full mode.
+    """
+    unviable = sorted(
         lane
         for lane, status in lane_status.items()
-        if str(status).lower() in {"degraded", "failed"}
+        if str(status).lower() in {"degraded", "failed", "unavailable"}
     )
-    tolerance = max(0, int(max_degraded_lanes))
+    configured_tolerance = max(0, int(max_degraded_lanes))
     return {
-        "passed": len(degraded) <= tolerance,
-        "max_degraded_lanes": tolerance,
-        "degraded_lanes": degraded,
-        "degraded_lane_count": len(degraded),
+        "passed": not unviable,
+        "max_degraded_lanes": 0,
+        "configured_max_degraded_lanes": configured_tolerance,
+        "degraded_lanes": unviable,
+        "unviable_lanes": unviable,
+        "degraded_lane_count": len(unviable),
+        "unviable_lane_count": len(unviable),
         "lane_status": dict(sorted((str(k), str(v)) for k, v in lane_status.items())),
     }
