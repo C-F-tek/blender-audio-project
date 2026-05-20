@@ -4,7 +4,15 @@ This document records the dispatcher-driven context pass.
 
 ## Purpose
 
-The repository has many tools. Context documentation is therefore tracked by dispatcher and macro-family, not by pretending that every script has an individual hand-written page.
+The repository has many tools. Context documentation is tracked by dispatcher and macro-family, not by pretending that every script has an individual hand-written page.
+
+Dispatcher coverage is a support layer for the IA Universe model-to-code map:
+
+```text
+docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+```
+
+Use that map first when you need to understand how a model becomes code, commands, artifacts and validators. Use this document to verify dispatcher and family coverage.
 
 ## Dispatchers inspected
 
@@ -22,6 +30,7 @@ The repository has many tools. Context documentation is therefore tracked by dis
 
 ```text
 CONTEXT_INDEX.md
+-> docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 -> docs/CONTEXT_COVERAGE_STATUS.md
 -> Tools/CONTEXT_INDEX.md
 -> Tools/<area>/CONTEXT_INDEX.md
@@ -81,7 +90,8 @@ When a dispatcher adds a new public tool family:
 1. add or update the nearest `TOOL_CONTEXT.md`;
 2. update the area `CONTEXT_INDEX.md`;
 3. update `docs/CONTEXT_COVERAGE_STATUS.md`;
-4. update this dispatcher coverage document if the family changes the coverage status.
+4. update `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` if the family changes model-to-code meaning;
+5. update this dispatcher coverage document if the family changes coverage status.
 
 ## Guardrails
 
