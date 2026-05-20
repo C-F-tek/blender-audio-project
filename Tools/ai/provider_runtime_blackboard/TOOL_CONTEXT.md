@@ -6,6 +6,15 @@
 
 This area is not the provider itself. It is the observable state layer around provider activity.
 
+It concretizes the bridge between:
+
+```text
+docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
+docs/HEAP_EXCHANGE_USEFUL_MODEL.md
+docs/STANDALONE_HEAP_SURFACE_MODEL.md
+docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+```
+
 ## Responsibilities
 
 - Record provider runtime heap events.
@@ -14,6 +23,7 @@ This area is not the provider itself. It is the observable state layer around pr
 - Bridge validation signals into the provider blackboard.
 - Build telemetry and peer-report derived heap artifacts.
 - Provide live-signal reports that help distinguish active, stalled, degraded and diagnostic-only lanes.
+- Convert provider/peer reports into heap-readable state.
 
 ## Representative command surface
 
@@ -41,7 +51,25 @@ lane status materialization
 SQLite sidecar index for provider runtime heap
 validation bridge signals
 live signal summaries
+peer report ingestion
+provider runtime telemetry
 ```
+
+## Bridge model
+
+```text
+provider_mesh report
+GPU0 peer report
+NPU micro report
+broker result
+validator signal
+-> provider_runtime_blackboard
+-> materialized heap state
+-> exchange/telemetry evidence
+-> product or blocked classification
+```
+
+The bridge makes the provider lanes observable by the rest of Universo IA.
 
 ## Boundaries
 
@@ -50,6 +78,7 @@ live signal summaries
 - SQLite sidecar indexes are runtime artifacts and must not be committed as databases.
 - Materialized state must distinguish diagnostic activity, semantic provider activity and operational provider output.
 - Do not treat blackboard events as source-write permission.
+- Do not treat live signals as proof of product success.
 
 ## Expected artifacts
 
@@ -60,6 +89,7 @@ live signal reports
 validation bridge reports
 peer-report heap materialization
 provider runtime telemetry
+SQLite sidecar indexes under ignored runtime/output paths
 ```
 
 ## Validation expectations
@@ -71,6 +101,8 @@ python -m Tools.validation run_provider_tool_loop_smoke ...
 python -m Tools.validation run_provider_tool_evidence_chain_smoke ...
 python -m Tools.validation run_observable_peer_activity_contract_smoke ...
 python -m Tools.validation run_provider_empty_response_diagnostics_smoke ...
+python -m Tools.validation run_provider_tool_evidence_chain_smoke ...
+python -m Tools.validation run_provider_tool_loop_smoke ...
 ```
 
 ## Extension notes
