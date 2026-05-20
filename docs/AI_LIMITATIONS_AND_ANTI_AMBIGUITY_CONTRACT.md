@@ -1,0 +1,313 @@
+# AI limitations and anti-ambiguity contract
+
+## Status
+
+Current mandatory contract for AI agents working inside IA-Carmine / Universo IA.
+
+This document promotes lessons from historical failure notes into a canonical, required rule set.
+
+Historical sources:
+
+```text
+docs/AI_SESSION_NOTES/provider-universe-failure-summary-2026-05-20.md
+docs/AI_SESSION_NOTES/provider-universe-chat-failure-ledger-2026-05-20.md
+```
+
+## Purpose
+
+The repository is large enough that an AI can lose context, invent architecture, overfit to narrow smokes, or treat activity as product.
+
+This contract prevents that by forcing every AI to distinguish:
+
+```text
+concept
+code implementation
+runtime execution
+provider evidence
+tool evidence
+validation evidence
+product
+blocked state
+```
+
+## Core limitation
+
+An AI assistant is not the runtime.
+
+```text
+chat memory != heap memory
+status text != runtime evidence
+provider prose != product
+report existence != successful run
+smoke pass != full product validation
+activity != useful work
+```
+
+## Mandatory anti-ambiguity rule
+
+When an AI states that something works, is complete, is validated, or is ready, it must identify the evidence class:
+
+```text
+source file inspected
+command output inspected
+artifact path inspected
+validator report inspected
+runtime state inspected
+provider report inspected
+code/patch product inspected
+```
+
+If it cannot name the evidence, it must say `not proven`.
+
+## No architecture invention rule
+
+An AI must not invent a new architecture when current models already exist.
+
+Current canonical models:
+
+```text
+docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+docs/CORE_LANE_COMPLETENESS_CONTRACT.md
+docs/HEAP_EXCHANGE_USEFUL_MODEL.md
+docs/STANDALONE_HEAP_SURFACE_MODEL.md
+docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
+docs/REAL_PRODUCT_RUN_MODEL.md
+docs/COMPACT_EVIDENCE_MODEL.md
+docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+```
+
+Before proposing architecture, inspect the model-to-code map and nearest source packages.
+
+## Lane optionality failure
+
+A common AI failure is to make lanes optional because a narrow run, smoke or provider output succeeded.
+
+This is forbidden.
+
+For complete/full profiles:
+
+```text
+missing required lane evidence -> unviable
+degraded required lane -> unviable
+unavailable required lane -> unviable
+diagnostic-only required lane -> unviable unless the profile is explicitly diagnostic/partial
+```
+
+A full smoke must not pass if a required lane is missing, degraded, unavailable or diagnostic-only.
+
+## Provider universe failure rule
+
+Selected provider lanes are one provider universe, not unrelated helpers.
+
+```text
+Ollama/main provider
+GPU0 coworker/reviewer
+NPU micro-lane/auditor
+CPU validators/tooling authority
+```
+
+If one selected required provider lane is non-operational in a complete/full profile, the provider universe is unviable. The run must not continue as if product progress exists.
+
+Correct complete-run outcome:
+
+```text
+blocked_with_reason
+no fake provider blocks
+no invented proposal blocks
+no diagnostic-only product success
+no continued peer-lane work after provider-universe unviability
+```
+
+## Smoke overfitting failure
+
+A narrow smoke proves only the property it checks.
+
+Invalid conclusion:
+
+```text
+smoke passed -> full runtime works
+```
+
+Valid conclusion:
+
+```text
+smoke passed -> the checked contract passed under the fixture/input used
+```
+
+Full smoke must ask:
+
+```text
+for each required core lane, where is its valid evidence?
+```
+
+## Activity vs product failure
+
+Activity is not product.
+
+These are not sufficient:
+
+```text
+child process exists
+CPU/GPU/NPU usage rises
+JSON file is written
+console status updates
+provider text appears
+runtime output folder exists
+bundle ZIP exists
+```
+
+A product requires the conditions defined in:
+
+```text
+docs/REAL_PRODUCT_RUN_MODEL.md
+docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+```
+
+## Provider text failure
+
+Provider output must become structured evidence before it can affect product decisions.
+
+Invalid:
+
+```text
+provider says it reviewed -> accepted review
+provider says patch is ready -> apply-ready patch
+provider says validation passed -> validation passed
+```
+
+Valid:
+
+```text
+provider report with structured fields
+broker/tool evidence when tools were requested
+validator report for validation claims
+code/patch product for source-change claims
+```
+
+## Diagnostic-only failure
+
+Diagnostic-only output is useful evidence, but not product progress.
+
+Examples:
+
+```text
+GPU0 device visibility only
+NPU timeout report
+NPU diagnostic-only report
+provider empty response diagnostic
+runtime debug lab output
+file reference classification
+```
+
+A diagnostic-only artifact must not satisfy a product lane unless the profile explicitly says diagnostic/partial.
+
+## Context overload failure
+
+Large generated context can become mechanical CPU work instead of useful AI reasoning.
+
+Do not push enormous generated Markdown or raw chunk dumps into live provider paths as a substitute for retrieval.
+
+Preferred pattern:
+
+```text
+compact refs
+bounded excerpts
+SQLite/FTS/chunk lookup
+brokered retrieval when detail is needed
+compact evidence summary
+```
+
+## Evidence boundary failure
+
+Generated runtime evidence must not become maintained source context unless compacted and intentionally indexed.
+
+Do not commit by default:
+
+```text
+output/**
+*.db
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+renders/**
+indexAI/code_chunks/**
+indexAI/project_code_chunks/**
+large generated chunk folders
+```
+
+Use:
+
+```text
+docs/COMPACT_EVIDENCE_MODEL.md
+```
+
+## Source-write failure
+
+An AI must not move from idea to source write directly.
+
+Required boundary:
+
+```text
+evidence
+-> patch/code plan
+-> concrete candidate
+-> code/patch product
+-> reviewed apply boundary
+-> validation
+-> commit/review
+```
+
+Use:
+
+```text
+docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+```
+
+## Completion-language rule
+
+Avoid completion-sounding language unless full evidence exists.
+
+Do not say:
+
+```text
+done
+complete
+ready
+works
+validated
+fixed
+full
+```
+
+unless the response identifies the exact source, artifact, validator or run evidence.
+
+Prefer:
+
+```text
+updated documentation only
+validated by fixture smoke only
+not end-to-end proven
+blocked pending full run
+source not inspected
+runtime not executed
+provider not proven
+```
+
+## Required behavior when unsure
+
+```text
+1. Read AGENTS.md.
+2. Read this contract.
+3. Read docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md.
+4. Open nearest TOOL_CONTEXT.md.
+5. Inspect dispatch.py and source.
+6. Classify missing evidence as not proven or unviable.
+7. Do not invent architecture or optionalize lanes.
+8. Update docs only when ambiguity is found.
+```
+
+## Rule for future agents
+
+Do not treat selected provider lanes as background helpers.
+
+In complete/full runs, selected provider lanes are part of one provider universe. If a required lane is failed, unavailable, degraded or diagnostic-only, the complete run is unviable and must stop or block with reason.
