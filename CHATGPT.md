@@ -16,7 +16,9 @@ Prima di dichiarare stato, successo, diagnosi o architettura, leggere i core cor
 ```text
 AGENTS.md
 CONTEXT_INDEX.md
+docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
 docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+docs/CORE_LANE_COMPLETENESS_CONTRACT.md
 docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/STANDALONE_HEAP_SURFACE_MODEL.md
 docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
@@ -28,6 +30,8 @@ docs/DISPATCHER_CONTEXT_COVERAGE.md
 Tools/CONTEXT_INDEX.md
 ```
 
+Il documento `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` è obbligatorio: impedisce contesto inventato, lane rese opzionali, smoke overfitting e linguaggio di completamento senza evidenza.
+
 Il documento `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` è il ponte operativo tra modello, package reali, tool dispatcher, artifact e validator.
 
 ## Universo IA
@@ -35,12 +39,14 @@ Il documento `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` è il ponte operativo tra m
 L'app completa non è un singolo modello, provider o script. È l'insieme coerente dei modelli correnti più la loro concretizzazione nel codice:
 
 ```text
-heap/exchange useful model
+AI limitations / anti-ambiguity contract
++ heap/exchange useful model
 + standalone heap surface model
 + provider lanes unified mind model
 + real product run model
 + compact evidence model
 + patch/code product boundary model
++ core lane completeness contract
 + model-to-code map
 = Universo IA
 ```
@@ -90,12 +96,34 @@ rischio
 cosa NON viene fatto
 ```
 
+Se l'evidenza non può essere nominata, lo stato corretto è `not proven`.
+
+## Limiti obbligatori dell'AI
+
+Una chat GPT può perdere contesto, sovrastimare uno smoke, confondere attività con prodotto o inventare architettura. Deve quindi applicare sempre:
+
+```text
+chat memory != heap memory
+status text != runtime evidence
+provider prose != product
+report existence != successful run
+smoke pass != full product validation
+activity != useful work
+```
+
+Prima di rendere una lane opzionale, modificare il perimetro della run o dichiarare completo uno smoke, leggere:
+
+```text
+docs/CORE_LANE_COMPLETENESS_CONTRACT.md
+docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
+```
+
 ## Code-driven / reuse-first
 
 Prima di proporre cambiamenti:
 
 1. leggere file esistenti;
-2. partire da `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` quando si lavora sui core;
+2. partire da `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` e `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` quando si lavora sui core;
 3. identificare tool già presenti;
 4. distinguere builder, runner, composer, package, validator;
 5. verificare input e output;
@@ -164,6 +192,20 @@ docs/REAL_PRODUCT_RUN_MODEL.md
 docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
 ```
 
+## Core lane viability
+
+In complete/full mode, le lane core selezionate non sono facoltative.
+
+```text
+valid evidence -> viable
+missing evidence -> unviable
+failed evidence -> unviable
+degraded -> unviable
+unavailable -> unviable
+```
+
+Uno smoke completo non deve passare se manca evidenza valida di una lane richiesta. Uno smoke parziale/diagnostico deve dichiararsi tale.
+
 ## Pointer contract
 
 I pointer non sono diagnostica passiva. Sono contratto runtime/prodotto:
@@ -222,6 +264,7 @@ Per la semantica provider corrente leggere:
 
 ```text
 docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
+docs/CORE_LANE_COMPLETENESS_CONTRACT.md
 ```
 
 ### Ollama / main provider
