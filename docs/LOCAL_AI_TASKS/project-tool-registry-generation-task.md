@@ -47,7 +47,7 @@ docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 docs/LOCAL_AI_TASKS/README.md
 Tools/ai/runtime_tool/agent_broker.py
 Tools/ai/agent_context/shared_toolbox_bundle/cli.py
-Tools/ai/runtime_tool/usage_telemetry/cli.py
+Tools/ai/runtime_tool/usage_evidence/cli.py
 Tools/validation/**
 Tools/workflow/**
 Tools/npu/**

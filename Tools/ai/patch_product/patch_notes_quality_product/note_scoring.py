@@ -30,7 +30,6 @@ def _area_diverse_plans(plans: list[dict[str, Any]], limit: int) -> list[dict[st
         "python_doc",
         "policy_violation",
         "refactor_candidate",
-        "telemetry_gap",
         "evidence_gap",
     ]
     by_area: dict[str, list[dict[str, Any]]] = {area: [] for area in preferred_areas}
@@ -162,7 +161,6 @@ def score_product(
         "patch_notes_concrete": bool(report.get("patch_notes")),
         "patch_notes_applicable": applicability.get("all_applicable") is True,
         "evidence_coverage": safe_dict(report.get("evidence_coverage")).get("score", 0) >= 60,
-        "telemetry_quality": safe_dict(report.get("telemetry_quality")).get("score", 0) >= 50,
         "validation_commands": bool(
             safe_dict(report.get("patch_plan_summary")).get("validation_commands")
         ),
@@ -177,9 +175,8 @@ def score_product(
         "patch_plan_summary": 12,
         "patch_notes_concrete": 10,
         "patch_notes_applicable": 20,
-        "evidence_coverage": 12,
-        "telemetry_quality": 12,
-        "validation_commands": 10,
+        "evidence_coverage": 20,
+        "validation_commands": 14,
         "stop_conditions_guardrails": 8,
     }
     score = float(sum(weights[key] for key, ok in checks.items() if ok))
@@ -191,7 +188,7 @@ def score_product(
     fallback = [
         {
             "reason": f"patch_notes_quality_missing:{key}",
-            "recommended_followup": "rerun the heap-runtime workflow with patch specs, telemetry, capability manifest and evidence bundle enabled",
+            "recommended_followup": "rerun the heap-runtime workflow with patch specs and concrete evidence bundle enabled",
         }
         for key, ok in checks.items()
         if not ok

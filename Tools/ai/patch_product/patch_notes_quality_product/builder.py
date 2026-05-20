@@ -16,11 +16,10 @@ from Tools.ai.patch_product.patch_notes_quality_product.task_md import (
     build_request_summary,
     load_task_markdown,
 )
-from Tools.ai.patch_product.patch_notes_quality_product.telemetry_quality import (
+from Tools.ai.patch_product.patch_notes_quality_product.evidence_quality import (
     build_evidence_coverage,
     build_fallback_cases,
     build_success_cases,
-    build_telemetry_quality,
 )
 from Tools.ai.patch_product.patch_plan_quality_product.io_utils import (
     flatten_json,
@@ -38,11 +37,8 @@ from Tools.ai.patch_product.patch_plan_quality_product.token_search import (
 OPTIONAL_INPUTS = {
     "patch_quality": "patch_quality",
     "decision_loop": "decision_loop",
-    "runtime_usage": "runtime_usage",
-    "runtime_capability": "runtime_capability",
     "repository_consistency": "repository_consistency",
     "memory_bundle": "memory_bundle",
-    "full_toolbox_telemetry": "full_toolbox_telemetry",
     "github_evidence_bundle": "github_evidence_bundle",
 }
 
@@ -156,7 +152,6 @@ def build_report(args: Any) -> dict[str, Any]:
         "patch_notes": patch_notes,
         "patch_notes_applicability": patch_notes_applicability(patch_notes),
         "patch_plan_summary": patch_summary,
-        "telemetry_quality": build_telemetry_quality(loaded),
         "evidence_coverage": build_evidence_coverage(loaded, status),
         "missing_evidence": [],
         "validation_commands": validation_commands,
@@ -214,7 +209,7 @@ def build_report(args: Any) -> dict[str, Any]:
                 "reason": "patch_notes_quality_score_below_threshold",
                 "quality_score": score,
                 "min_quality_score": args.min_quality_score,
-                "recommended_followup": "strengthen request summary, evidence coverage, telemetry signals, validation commands and concrete/applicable patch notes",
+                "recommended_followup": "strengthen request summary, evidence coverage, validation commands and concrete/applicable patch notes",
             }
         )
     if not report["patch_notes_applicability"].get("all_applicable"):

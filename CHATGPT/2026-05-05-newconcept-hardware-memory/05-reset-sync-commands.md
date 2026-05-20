@@ -126,8 +126,8 @@ Collect and upload/send:
 bundle ZIP
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
 shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
-full_toolbox_run_telemetry_summary_<STAMP>.json/md
-runtime_tool_usage_telemetry_<STAMP>.json/md
+shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
+runtime_tool_capability_manifest_<STAMP>.json/md
 runtime_tool_capability_manifest_<STAMP>.json/md
 decision loop JSON/MD
 recommendations JSON/MD

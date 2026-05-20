@@ -121,9 +121,9 @@ def validate_contract(
     expected_passed: bool,
 ) -> list[str]:
     errors: list[str] = []
-    telemetry = (
-        contract.get("expected_telemetry_contract")
-        if isinstance(contract.get("expected_telemetry_contract"), dict)
+    evidence_events = (
+        contract.get("expected_evidence_event_contract")
+        if isinstance(contract.get("expected_evidence_event_contract"), dict)
         else {}
     )
     gate = contract.get("real_run_gate") if isinstance(contract.get("real_run_gate"), dict) else {}
@@ -133,8 +133,8 @@ def validate_contract(
         else {}
     )
     required_events = (
-        telemetry.get("events_required")
-        if isinstance(telemetry.get("events_required"), list)
+        evidence_events.get("events_required")
+        if isinstance(evidence_events.get("events_required"), list)
         else []
     )
     if contract.get("kind") != "heap_provider_invocation_contract":

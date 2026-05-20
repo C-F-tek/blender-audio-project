@@ -12,7 +12,7 @@ It must not produce application-domain audio or media output unless the user exp
 
 ## Rule
 
-For normal AI/tooling runs, documentation cleanup, provider diagnostics, tool promotion, broker telemetry, patch planning and evidence generation:
+For normal AI/tooling runs, documentation cleanup, provider diagnostics, tool promotion, broker evidence, patch planning and evidence generation:
 
     no audio playback
     no audio export

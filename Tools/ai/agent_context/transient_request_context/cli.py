@@ -184,6 +184,18 @@ def build_report_reference(repo_root: Path, value: str) -> dict[str, Any]:
     if not path.exists():
         out["error"] = "missing"
         return out
+    if path.suffix.lower() != ".json":
+        text, truncated, error = read_text(path, max_chars=2000)
+        out["kind"] = "text_artifact_reference"
+        out["summary"] = {
+            "extension": path.suffix.lower(),
+            "chars": len(text),
+            "lines": len(text.splitlines()),
+            "truncated": truncated,
+            "sha256": sha256_text(text) if text else "",
+        }
+        out["error"] = error or ""
+        return out
     data, errors = read_json_object(path)
     if errors:
         out["error"] = "; ".join(errors)

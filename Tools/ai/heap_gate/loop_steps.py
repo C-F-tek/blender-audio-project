@@ -61,7 +61,7 @@ class RuntimeGateLoopStepsMixin:
             "kind": "provider_invocation_contract",
             "value": safe_dict(self.invocation_contract.get("real_run_gate")).get("decision"),
             "required_events": safe_dict(
-                self.invocation_contract.get("expected_telemetry_contract")
+                self.invocation_contract.get("expected_evidence_event_contract")
             ).get("events_required", []),
         }
         completeness_fact = {
@@ -295,10 +295,9 @@ class RuntimeGateLoopStepsMixin:
         refinement_possible = (
             self.detailed_output_expected()
             and self.provider_reports
-            and not self.runtime_soft_close_reached()
             and self.proposal_cycle_requires_refinement(self.response_text(), events)
         )
-        if not ready and not budget_exhausted and refinement_possible:
+        if not ready and refinement_possible:
             return
         if not ready and not budget_exhausted and not no_more_progress:
             return

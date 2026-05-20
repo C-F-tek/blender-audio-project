@@ -73,13 +73,13 @@ Current code-derived behavior map:
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 ```
 
-Recent telemetry baseline:
+Recent evidence baseline:
 
 ```text
-docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+docs/LOCAL_AI_TASKS/recent-evidence-state-2026-05-05.md
 ```
 
-Historical telemetry notes are useful context only when current code and current run manifests confirm relevance.
+Historical evidence notes are useful context only when current code and current run manifests confirm relevance.
 
 ## TUTTO SU TUTTO doctrine
 
@@ -122,7 +122,7 @@ Use this order for current IA-Carmine local-AI work:
 6. docs/LOCAL_AI_TASKS/patch-suggestion-bundle-final-phase.md
 7. docs/LOCAL_AI_TASKS/gpu-peer-exchange-operational-principle.md
 8. docs/LOCAL_AI_TASKS/md-coherence-only-github-pass-2026-05-06.md
-9. docs/LOCAL_AI_TASKS/recent-telemetry-state-2026-05-05.md
+9. docs/LOCAL_AI_TASKS/recent-evidence-state-2026-05-05.md
 10. docs/LOCAL_AI_TASKS/current-code-flow-guide-2026-05-05.md
 11. docs/LOCAL_AI_TASKS/project-tool-registry.md
 12. docs/LOCAL_AI_TASKS/tool-inventory-placement-audit-2026-05-05.md
@@ -154,7 +154,7 @@ Required reading order for a run:
 1. launcher command from unified-local-ai-refactor-launcher.md
 2. unified_local_ai_refactor_manifest.json
 3. phase_status / phase_reports
-4. production bundle and telemetry summary
+4. production bundle and evidence summary
 5. compact Markdown or CSV/count summaries
 6. detailed evidence only when needed
 ```
@@ -246,7 +246,7 @@ Existing files already over the limits are technical debt. Do not split them bli
 | `md-coherence-only-github-pass-2026-05-06.md` | active policy | GitHub-only Markdown cleanup, split and pruning policy. |
 | `file-line-limit-validator-2026-05-06.md` | active validator note | File line-limit validator contract. |
 | `refactor-reuse-methods-classes-tools-planning.md` | active P1 task | Method/class/helper/tool reuse planning. |
-| `recent-telemetry-state-2026-05-05.md` | active baseline | Recent telemetry and broker context. |
+| `recent-evidence-state-2026-05-05.md` | active baseline | Recent evidence and broker context. |
 | `unified-local-ai-refactor-launcher.md` | canonical active | Operator guide for the single full-run entrypoint. |
 | `no-audio-media-output-guardrail-2026-05-05.md` | active guardrail | Prevent unintended media output in AI/tooling runs. |
 | `tool-inventory-placement-audit-2026-05-05.md` | active audit | Repository-wide tool/candidate audit. |

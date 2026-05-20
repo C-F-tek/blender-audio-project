@@ -9,7 +9,7 @@ provider invocation dry-run plan
 real-run gate
 command plan
 workload output paths
-bridge telemetry
+bridge evidence
 final product inclusion
 ```
 

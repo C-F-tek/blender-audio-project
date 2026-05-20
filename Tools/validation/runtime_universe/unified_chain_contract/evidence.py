@@ -50,40 +50,6 @@ def has_tool_capability_evidence(report: dict[str, Any] | None) -> bool:
             return True
     return "tool" in text and any(hint in text for hint in TOOL_EVIDENCE_HINTS)
 
-def has_tool_usage_evidence(report: dict[str, Any] | None) -> bool:
-    if not report:
-        return False
-    if report.get("passed") is False:
-        return False
-    text = json.dumps(report, ensure_ascii=False).lower()
-    for key in (
-        "tool_usage_count",
-        "runtime_tool_usage_count",
-        "tool_invocation_count",
-        "used_tool_count",
-    ):
-        try:
-            if int(report.get(key) or 0) > 0:
-                return True
-        except (TypeError, ValueError):
-            pass
-    for key in (
-        "tool_usage",
-        "tool_usages",
-        "runtime_tool_usage",
-        "tool_invocations",
-        "used_tools",
-        "tools_used",
-    ):
-        value = report.get(key)
-        if isinstance(value, list) and value:
-            return True
-        if isinstance(value, dict) and value:
-            return True
-    return ("tool" in text or "capability" in text) and any(
-        token in text for token in ("used", "usage", "invoked", "telemetry")
-    )
-
 def peer_presence(report: dict[str, Any] | None, events: list[dict[str, Any]]) -> dict[str, bool]:
     text_parts: list[str] = []
     if report:

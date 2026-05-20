@@ -146,7 +146,7 @@ def prepare_case(repo: Path, stamp: str, *, exchange: bool, concrete: bool, prod
         ]
         if product
         else [],
-        "supplemental_telemetry_debug_items": [],
+        "supplemental_debug_items": [],
     }
     write_json(
         repo / f"output/validation/patch_suggestion_product_separation_{MODE_NAME}_{stamp}.json",

@@ -86,7 +86,6 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     )
     review_pr_report = existing_or_blank(repo_root, context.get("review_pr_report"))
     tool_capability_manifest = existing_or_blank(repo_root, context.get("tool_capability_manifest"))
-    tool_usage_telemetry = existing_or_blank(repo_root, context.get("tool_usage_telemetry"))
     if not tool_capability_manifest:
         tool_capability_manifest = discover_first(
             repo_root,
@@ -94,16 +93,6 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
                 f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
                 f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
                 f"output/**/tool_capability_manifest*{stamp}*.json",
-            ],
-        )
-    if not tool_usage_telemetry:
-        tool_usage_telemetry = discover_first(
-            repo_root,
-            [
-                f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
-                f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
-                f"output/**/tool_usage*{stamp}*.json",
-                f"output/**/runtime_tool_usage*{stamp}*.json",
             ],
         )
     heap_peer_runtime = existing_or_blank(repo_root, context.get("heap_peer_runtime"))
@@ -114,8 +103,6 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
                 f"output/**/heap_peer_runtime*{stamp}*.json",
                 f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
                 f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
-                f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
-                f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
             ],
         )
     shared_memory_evidence = existing_or_blank(repo_root, context.get("shared_memory_evidence"))
@@ -201,7 +188,6 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
     add_pair(argv, "--product-separation-report", product_separation_report)
     add_pair(argv, "--review-pr-report", review_pr_report)
     add_pair(argv, "--tool-capability-manifest", tool_capability_manifest)
-    add_pair(argv, "--tool-usage-telemetry", tool_usage_telemetry)
     add_pair(argv, "--heap-peer-runtime", heap_peer_runtime)
     add_pair(argv, "--shared-memory-evidence", shared_memory_evidence)
     add_pair(argv, "--closure-audit-report", closure_audit_report)
@@ -245,7 +231,6 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
             "product_separation_report": product_separation_report,
             "review_pr_report": review_pr_report,
             "tool_capability_manifest": tool_capability_manifest,
-            "tool_usage_telemetry": tool_usage_telemetry,
             "heap_peer_runtime": heap_peer_runtime,
             "shared_memory_evidence": shared_memory_evidence,
             "closure_audit_report": closure_audit_report,

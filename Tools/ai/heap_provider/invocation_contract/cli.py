@@ -45,7 +45,7 @@ EXPECTED_WORKLOAD_REPORTS = (
     "model_name",
     "heap_event_refs",
     "tool_request_refs",
-    "tool_execution_telemetry",
+    "brokered_tool_evidence",
     "recommendations_or_blockers",
     "product_status_signal",
 )
@@ -78,7 +78,7 @@ def build_workload_report_contract(governor: dict[str, Any]) -> dict[str, Any]:
             "provider lane",
             "model name if provider is used",
             "input evidence references",
-            "brokered tool usage telemetry",
+            "brokered tool evidence",
             "recommendations or explicit blockers",
             "no patch applied flag",
             "product_status ready or blocked_with_reason",
@@ -93,10 +93,10 @@ def build_workload_report_contract(governor: dict[str, Any]) -> dict[str, Any]:
     return contract
 
 
-def build_expected_telemetry_contract(governor: dict[str, Any]) -> dict[str, Any]:
+def build_expected_evidence_event_contract(governor: dict[str, Any]) -> dict[str, Any]:
     loop_budget = safe_dict(governor.get("loop_budget"))
     contract = {
-        "kind": "heap_provider_expected_telemetry_contract",
+        "kind": "heap_provider_expected_evidence_event_contract",
         "passed": True,
         "provider_lane": PRIMARY_PROVIDER_LANE,
         "budget": loop_budget,
@@ -117,8 +117,6 @@ def build_expected_telemetry_contract(governor: dict[str, Any]) -> dict[str, Any
             "provider_lane",
             "permit_decision",
             "generation_enabled",
-            "duration_ms",
-            "exit_code",
             "heap_event_refs",
             "output_paths",
         ],
@@ -147,7 +145,7 @@ def build_npu_audit_hooks(governor: dict[str, Any]) -> dict[str, Any]:
             "compare recommendations to heap evidence",
             "verify no patch apply occurred",
             "verify GPU.0 did not become primary implicitly",
-            "verify telemetry completeness",
+            "verify evidence event completeness",
             "verify product_signal was produced",
         ],
         "sample_count": npu_lane.get("max_samples", 3),
@@ -170,7 +168,7 @@ def apply_runtime_gate_status(sections: list[dict[str, Any]], gate: dict[str, An
 def build_real_run_gate(
     governor: dict[str, Any],
     workload_contract: dict[str, Any],
-    telemetry_contract: dict[str, Any],
+    evidence_event_contract: dict[str, Any],
     npu_hooks: dict[str, Any],
     *,
     allow_provider_generation: bool,
@@ -200,9 +198,9 @@ def build_real_run_gate(
             "workload report contract must pass",
         ),
         requirement(
-            "telemetry_contract_ready",
-            bool(telemetry_contract.get("passed")),
-            "telemetry contract must pass",
+            "evidence_event_contract_ready",
+            bool(evidence_event_contract.get("passed")),
+            "evidence event contract must pass",
         ),
         requirement(
             "npu_audit_hooks_ready",
@@ -240,7 +238,7 @@ def build_lane_activation_contract(
     governor: dict[str, Any],
     gate: dict[str, Any],
     workload_contract: dict[str, Any],
-    telemetry_contract: dict[str, Any],
+    evidence_event_contract: dict[str, Any],
     npu_hooks: dict[str, Any],
 ) -> dict[str, Any]:
     blocking_reasons = list(gate.get("blocking_reasons") or [])
@@ -258,7 +256,7 @@ def build_lane_activation_contract(
                 "provider_lane": PRIMARY_PROVIDER_LANE,
                 "role": "primary_planner",
                 "must_start_when_provider_selected": True,
-                "budget": telemetry_contract.get("budget"),
+                "budget": evidence_event_contract.get("budget"),
                 "expected_outputs": workload_contract.get("reports_required_after_real_run", []),
             },
             {
@@ -286,21 +284,21 @@ def build_heap_provider_invocation_contract(
     operator_intent: bool = False,
 ) -> dict[str, Any]:
     workload_contract = build_workload_report_contract(governor)
-    telemetry_contract = build_expected_telemetry_contract(governor)
+    evidence_event_contract = build_expected_evidence_event_contract(governor)
     npu_hooks = build_npu_audit_hooks(governor)
     gate = build_real_run_gate(
         governor,
         workload_contract,
-        telemetry_contract,
+        evidence_event_contract,
         npu_hooks,
         allow_provider_generation=allow_provider_generation,
         operator_intent=operator_intent,
     )
     lane_activation_contract = build_lane_activation_contract(
-        governor, gate, workload_contract, telemetry_contract, npu_hooks
+        governor, gate, workload_contract, evidence_event_contract, npu_hooks
     )
     apply_runtime_gate_status(
-        [workload_contract, telemetry_contract, npu_hooks, lane_activation_contract],
+        [workload_contract, evidence_event_contract, npu_hooks, lane_activation_contract],
         gate,
     )
     contract = {
@@ -313,7 +311,7 @@ def build_heap_provider_invocation_contract(
         "permit_decision": safe_dict(governor.get("permit")).get("decision"),
         "permit_allowed": safe_dict(governor.get("permit")).get("permit_allowed"),
         "workload_report_contract": workload_contract,
-        "expected_telemetry_contract": telemetry_contract,
+        "expected_evidence_event_contract": evidence_event_contract,
         "npu_audit_hooks": npu_hooks,
         "real_run_gate": gate,
         "lane_activation_contract": lane_activation_contract,
@@ -325,7 +323,7 @@ def build_heap_provider_invocation_contract(
 
 def render_markdown(report: dict[str, Any]) -> str:
     gate = safe_dict(report.get("real_run_gate"))
-    telemetry = safe_dict(report.get("expected_telemetry_contract"))
+    evidence_events = safe_dict(report.get("expected_evidence_event_contract"))
     workload = safe_dict(report.get("workload_report_contract"))
     lines = ["# Heap Provider Invocation Contract", ""]
     lines.append(f"- Passed: `{report.get('passed')}`")
@@ -334,7 +332,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Real run decision: `{gate.get('decision')}`")
     lines.append(f"- Provider runtime owner: `{report.get('provider_runtime_owner')}`")
     lines.extend(["", "## Required heap events", ""])
-    for item in telemetry.get("events_required", []):
+    for item in evidence_events.get("events_required", []):
         lines.append(f"- `{item}`")
     lines.extend(["", "## Workload report requirements", ""])
     for item in workload.get("minimum_content_requirements", []):

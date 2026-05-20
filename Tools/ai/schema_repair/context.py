@@ -264,7 +264,7 @@ def build_schema_repair_retry_prompt(
     )
 
 def summarize_schema_repair_retry(attempt: dict[str, Any]) -> dict[str, Any]:
-    """Return compact telemetry for a repair attempt."""
+    """Return compact evidence for a repair attempt."""
 
     return {
         "attempted": bool(attempt.get("attempted")),

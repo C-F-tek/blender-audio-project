@@ -15,6 +15,12 @@ try:
         render_full_code_product_markdown,
     )
     from Tools.ai._shared.heap_final_readable_synthesis import render_markdown
+    from Tools.ai.code_product.final_readable_product.product_contract import (
+        code_product_markdown_metrics,
+        final_product_blockers,
+        real_code_product_ready,
+    )
+    from Tools.ai.code_product.final_readable_product.pointer_reconstruction import build_pointer_reconstruction
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
@@ -25,6 +31,12 @@ except ImportError:  # pragma: no cover
         render_full_code_product_markdown,
     )
     from Tools.ai._shared.heap_final_readable_synthesis import render_markdown  # type: ignore
+    from Tools.ai.code_product.final_readable_product.product_contract import (  # type: ignore
+        code_product_markdown_metrics,
+        final_product_blockers,
+        real_code_product_ready,
+    )
+    from Tools.ai.code_product.final_readable_product.pointer_reconstruction import build_pointer_reconstruction  # type: ignore
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 def read_json(path: Path) -> dict[str, Any]:
@@ -56,103 +68,11 @@ def as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
 def as_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
-def truthy(value: Any) -> bool:
-    return value is True or str(value).strip().lower() == "true"
-def revision_linked_count(revision: dict[str, Any], linked_key: str, fallback_key: str) -> int:
-    if linked_key in revision:
-        try:
-            return int(revision.get(linked_key) or 0)
-        except (TypeError, ValueError):
-            return 0
-    try:
-        return int(revision.get(fallback_key) or 0)
-    except (TypeError, ValueError):
-        return 0
 def count_from_decision(decision: dict[str, Any], key: str, items: list[Any]) -> int:
     try:
         return max(len(items), int(decision.get(key) or 0))
     except (TypeError, ValueError):
         return len(items)
-def code_product_markdown_metrics(markdown: str) -> dict[str, Any]:
-    text = str(markdown or "")
-    lines = text.splitlines()
-    return {
-        "bytes": len(text.encode("utf-8")),
-        "line_count": len(lines),
-        "diff_git_blocks": text.count("diff --git"),
-        "empty_code_product_marker": "EMPTY CODE PRODUCT" in text,
-        "no_applicable_marker": "NO_APPLICABLE_CODE_PRODUCT" in text,
-        "truncation_marker": "[truncated]" in text.lower(),
-    }
-def real_code_product_ready(
-    *,
-    final_document_status: str,
-    concrete_code_proposal_count: int,
-    code_product_metrics: dict[str, Any],
-) -> bool:
-    if final_document_status not in {
-        "APPLY_REVIEW_READY",
-        "BLOCKED_WITH_CODE_PRODUCT_REVIEW",
-    }:
-        return False
-    if concrete_code_proposal_count <= 0:
-        return False
-    return bool(
-        int(code_product_metrics.get("diff_git_blocks") or 0) > 0
-        and not code_product_metrics.get("empty_code_product_marker")
-        and not code_product_metrics.get("no_applicable_marker")
-        and not code_product_metrics.get("truncation_marker")
-    )
-def final_product_blockers(
-    *,
-    markdown_output: Path,
-    final_document_status: str,
-    concrete_code_proposal_count: int,
-    code_product_metrics: dict[str, Any],
-    code_product_ready: bool,
-    pointer: dict[str, Any],
-    revision: dict[str, Any],
-    matrix: dict[str, Any],
-    gate: dict[str, Any],
-) -> list[str]:
-    blockers: list[str] = []
-    if not pointer:
-        blockers.append("external heap pointer manifest is missing")
-    elif not truthy(pointer.get("passed")):
-        blockers.append("external heap pointer manifest did not pass")
-    if int(pointer.get("edge_count") or 0) <= 0:
-        blockers.append("external heap pointer manifest has no graph edges")
-    roles = set(str(item) for item in (pointer.get("all_roles_present") or pointer.get("roles_present") or []))
-    for role in ("gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"):
-        if pointer and role not in roles:
-            blockers.append(f"external heap pointer manifest missing role {role}")
-    if revision_linked_count(revision, "linked_gpu0_block_count", "gpu0_block_count") <= 0:
-        blockers.append("revision context has no linked GPU0 review/refinement block")
-    if revision_linked_count(revision, "linked_npu_block_count", "npu_block_count") <= 0:
-        blockers.append("revision context has no linked NPU audit block")
-    if not truthy(pointer.get("provider_execution_performed")) and not truthy(
-        gate.get("provider_execution_performed")
-    ):
-        blockers.append("provider execution is not proven by runtime/pointer evidence")
-    if matrix and matrix.get("passed") is not True:
-        blockers.append("code execution matrix did not pass")
-    if not markdown_output.exists():
-        blockers.append("final readable markdown was not written")
-    if final_document_status in {"DIAGNOSTIC_REVIEW_READY", "NO_APPLICABLE_CODE_PRODUCT"}:
-        blockers.append(f"final document status is not a real code product: {final_document_status}")
-    if concrete_code_proposal_count <= 0:
-        blockers.append("no concrete code proposal was available")
-    if int(code_product_metrics.get("diff_git_blocks") or 0) <= 0:
-        blockers.append("CODE_PRODUCT_FULL_PATCH.md contains no diff --git block")
-    if code_product_metrics.get("empty_code_product_marker"):
-        blockers.append("CODE_PRODUCT_FULL_PATCH.md contains EMPTY CODE PRODUCT")
-    if code_product_metrics.get("no_applicable_marker"):
-        blockers.append("CODE_PRODUCT_FULL_PATCH.md contains NO_APPLICABLE_CODE_PRODUCT")
-    if code_product_metrics.get("truncation_marker"):
-        blockers.append("CODE_PRODUCT_FULL_PATCH.md contains a truncation marker")
-    if not code_product_ready and not blockers:
-        blockers.append("real code product contract did not pass")
-    return blockers
 def discover_code_matrix_reports(
     repo_root: Path, run_dir: Path, gate: dict[str, Any]
 ) -> list[Path]:
@@ -223,6 +143,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     revision = read_json(run_dir / "external_heap_revision_context.json")
     pointer = read_json(run_dir / "external_heap_block_pointer_manifest.json")
     matrix, matrix_path = load_code_matrix(repo_root, run_dir, gate)
+    pointer_reconstruction = build_pointer_reconstruction(pointer, revision)
     decision = as_dict(composer.get("operator_decision"))
     gate_product_status = str(as_dict(gate.get("metrics")).get("product_status") or "")
     markdown = render_markdown(
@@ -321,6 +242,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         matrix=matrix,
         gate=gate,
     )
+    blockers.extend(str(item) for item in pointer_reconstruction.get("errors", []))
     report = {
         "schema_version": 1,
         "kind": "heap_final_readable_product",
@@ -348,6 +270,9 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         ),
         "code_execution_matrix_passed": matrix.get("passed"),
         "pointer_manifest_passed": pointer.get("passed"),
+        "pointer_reconstruction": pointer_reconstruction,
+        "pointer_reconstruction_performed": pointer_reconstruction.get("performed"),
+        "pointer_reconstruction_passed": pointer_reconstruction.get("passed"),
         "pointer_edge_count": pointer.get("edge_count"),
         "pointer_roles_present": pointer.get("all_roles_present", pointer.get("roles_present")),
         "linked_gpu0_block_count": revision.get("linked_gpu0_block_count")

@@ -23,7 +23,7 @@ def main() -> int:
         "--max-patch-plans",
         type=int,
         default=0,
-        help="Compatibility/telemetry only; does not truncate valid patch plans.",
+        help="Compatibility only; does not truncate valid patch plans.",
     )
     args = parser.parse_args()
 

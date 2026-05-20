@@ -19,7 +19,7 @@ blockers.
   proof that the universe was producing a valid product.
 - The product decision could fall back to `DIAGNOSTIC_ONLY`, which hid a real
   provider review failure.
-- GPU0/NPU evidence risked becoming telemetry instead of causal input for the
+- GPU0/NPU evidence risked becoming evidence instead of causal input for the
   pointer/refinement graph.
 - Earlier wording in this session overstated completion. The local patch fixed
   specific runtime gates, not every task in the Deep Research or operator
@@ -27,6 +27,10 @@ blockers.
 - Assistant behavior also failed: too much explanatory prose, too much trust in
   narrow smokes, and too much tolerance for game-like scripting activity before
   the provider universe produced real heap/pointer/product results.
+- Last-hour Codex audit counters were added to the root README and the chat
+  failure ledger: 6 aligned fixes kept, 14 operator blocks required, and 1
+  repeated-code regression where NPU semantic compatibility fields were
+  reintroduced after operator rejection.
 
 ## Corrections Applied In This Patch
 
@@ -41,15 +45,18 @@ blockers.
   `DIAGNOSTIC_ONLY`.
 - GPU0 wording and role are moved toward reviewer/refiner behavior instead of a
   diagnostic lane label.
-- NPU mode is reported as `peer_micro_audit`; if semantic execution is missing,
-  the report remains diagnostic-only and cannot satisfy product readiness.
+- NPU mode is reported as bounded micro-task/tool/device provider evidence; it
+  cannot satisfy product readiness by becoming a primary semantic lane.
+- NPU report wording must use micro-task/tool/device provider language, not
+  semantic-primary language. The corrected NPU report surface is
+  `npu_micro_provider_*`.
 - Smokes were updated to assert that inactive provider-universe state blocks the
   run.
 
 ## Not Finished
 
 - This does not prove a full `python -m Tools.ai run` is healthy.
-- This does not prove GPU0 or NPU are semantically useful providers on the
+- This does not prove GPU0 peer review or NPU micro-provider usefulness on the
   workstation.
 - This does not complete all Deep Research tasks.
 - This does not prove the final pointer/refinement/product loop is complete for

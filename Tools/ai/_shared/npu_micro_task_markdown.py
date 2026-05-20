@@ -1,0 +1,43 @@
+"""Markdown renderer for NPU micro-task reports."""
+
+from __future__ import annotations
+
+
+def render_markdown(report: dict) -> str:
+    lines = [
+        "# NPU Micro-task Companion Report",
+        "",
+        f"- Passed: `{report['passed']}`",
+        f"- Mode: `{report['mode']}`",
+        f"- NPU peer activity requested: `{report['npu_peer_activity_requested']}`",
+        f"- NPU peer activity performed: `{report['npu_peer_activity_performed']}`",
+        f"- NPU device execution performed: `{report['npu_device_execution_performed']}`",
+        f"- NPU provider execution performed: `{report['npu_provider_execution_performed']}`",
+        f"- NPU micro provider required: `{report['npu_micro_provider_required']}`",
+        f"- NPU micro provider performed: `{report['npu_micro_provider_execution_performed']}`",
+        f"- NPU micro model loaded: `{report['npu_micro_provider_model_loaded']}`",
+        f"- NPU micro classification: `{report['npu_micro_provider_classification']}`",
+        f"- Leader packet consumed: `{report['leader_packet_consumed']}`",
+        f"- Leader packet: `{report['leader_packet']}`",
+        f"- Leader packet heap universe contract: `{report['leader_packet_heap_universe_contract']}`",
+        f"- Leader packet pointer contract: `{report['leader_packet_pointer_contract']}`",
+        f"- Leader packet time counter: `{report['leader_packet_time_counter_contract']}`",
+        f"- Leader packet startup artifacts: `{report['leader_packet_startup_artifacts_count']}`",
+        f"- Leader packet broker tool evidence: `{report['leader_packet_broker_tool_evidence_count']}`",
+        f"- NPU OpenVINO native tool loop supported: `{report['native_tool_loop_supported']}`",
+        f"- NPU OpenVINO native tool calls: `{report['native_tool_call_count']}`",
+        f"- NPU device workload requested: `{report['npu_device_workload_requested']}`",
+        f"- NPU device workload performed: `{report['npu_device_workload_performed']}`",
+        f"- NPU device workload: `{report['npu_device_workload']}`",
+        f"- NPU activity classification: `{report['npu_activity_classification']}`",
+        f"- Request input: `{report['request_input']}`",
+        f"- Response text: {report['response_text']}",
+        f"- NPU activity limit: {report['npu_activity_limit']}",
+        f"- Legacy NPU auditor used: `{report['guardrails']['legacy_npu_auditor_used']}`",
+        f"- Provider execution performed: `{report['guardrails']['provider_execution_performed']}`",
+        "",
+        "## Recommendation",
+        "",
+        report["recommendations"][0]["summary"],
+    ]
+    return "\n".join(lines) + "\n"

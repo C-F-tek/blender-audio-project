@@ -135,6 +135,8 @@ CONTEXT_INDEX.md
 | --- | --- | --- |
 | docs index | `docs/CONTEXT_INDEX.md` | complete-enough |
 | docs overview | `docs/TOOL_CONTEXT.md` | complete-enough |
+| AI workload report quality gate | `docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md` | complete-enough |
+| local AI core tool activation | `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md` | complete-enough |
 | script surface map | `docs/SCRIPT_SURFACE_CONTEXT.md` | complete-enough |
 | root surface map | `docs/ROOT_SURFACE_CONTEXT.md` | complete-enough |
 | Scripting index | `Scripting/CONTEXT_INDEX.md` | complete-enough |

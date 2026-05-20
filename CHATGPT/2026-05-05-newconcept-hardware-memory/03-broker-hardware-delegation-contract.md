@@ -185,16 +185,16 @@ NPU tool-proxy request
 NPU tool-proxy response
 GPU0 worker request
 GPU0 worker response
-broker delegated-call telemetry
+broker delegated-call evidence
 hardware capability manifest
 SQLite heap memory event reports
 ```
 
 Validators must accept unknown future fields but reject unsafe side effects unless explicitly allowed.
 
-## Telemetry requirements
+## Evidence requirements
 
-Runtime telemetry must count:
+Runtime evidence must count:
 
 ```text
 delegated_call_count
@@ -207,7 +207,7 @@ blocked_delegated_call_count
 degraded_delegated_call_count
 ```
 
-Full toolbox telemetry summary must expose:
+Shared toolbox evidence bundle must expose:
 
 ```text
 hardware_lanes_seen

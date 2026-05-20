@@ -1,5 +1,6 @@
 """RuntimeGateRunLoopMixin extracted from the heap runtime completeness gate."""
 from __future__ import annotations
+from Tools.ai.heap_gate.run_loop_metrics import build_provider_lane_metrics
 from Tools.ai.heap_gate.runtime_common import Any, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
 class RuntimeGateRunLoopMixin:
     def run(self) -> dict[str, Any]:
@@ -100,41 +101,12 @@ class RuntimeGateRunLoopMixin:
         final_tool_execution_count = self.effective_tool_execution_count(final_events)
         final_response_text = self.build_final_response_text(final_events)
         final_quality_signals = self.quality_output_signals(final_response_text, final_events)
-        required_provider_lanes = (
-            {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}
-            if self.args.allow_provider_generation
-            else set()
-        )
         provider_reports_by_lane = {
             str(item.get("lane") or "unknown"): item for item in self.provider_reports
         }
         latest_provider_reports = list(provider_reports_by_lane.values())
-        provider_lane_names = sorted(provider_reports_by_lane)
-        missing_provider_lanes = sorted(required_provider_lanes - set(provider_lane_names))
-        provider_native_tool_missing_required_lanes = sorted(
-            lane
-            for lane in required_provider_lanes
-            if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
-            and safe_int(provider_reports_by_lane.get(lane, {}).get("native_tool_call_count")) <= 0
-        )
-        provider_native_tool_unavailable_required_lanes = sorted(
-            lane
-            for lane in required_provider_lanes
-            if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
-            and not provider_reports_by_lane.get(lane, {}).get("native_tool_loop_supported")
-        )
-        semantic_required_provider_lanes = (
-            {"gpu0_peer", "npu_micro_task_auditor"}
-            if self.args.allow_provider_generation
-            else set()
-        )
-        provider_semantic_missing_required_lanes = sorted(
-            lane
-            for lane in semantic_required_provider_lanes
-            if lane in provider_reports_by_lane
-            and not provider_reports_by_lane.get(lane, {}).get(
-                "semantic_provider_execution_performed"
-            )
+        provider_lane_metrics = build_provider_lane_metrics(
+            self, provider_reports_by_lane, latest_provider_reports
         )
         metrics = {
             "heap_read_count": self.heap_read_count,
@@ -219,45 +191,7 @@ class RuntimeGateRunLoopMixin:
             "provider_revision_counter_semantics": (
                 "positive_evidence_counter_not_loop_cutoff"
             ),
-            "provider_lane_count": len({item.get("lane") for item in self.provider_reports}),
-            "provider_lane_names": provider_lane_names,
-            "required_provider_lanes": sorted(required_provider_lanes),
-            "missing_provider_lanes": missing_provider_lanes,
-            "provider_execution_performed": self.provider_execution_performed,
-            "provider_native_tool_call_count": sum(
-                safe_int(item.get("native_tool_call_count")) for item in latest_provider_reports
-            ),
-            "provider_textual_tool_call_count": sum(
-                safe_int(item.get("textual_tool_call_count")) for item in latest_provider_reports
-            ),
-            "provider_native_tool_loop_requested_count": sum(
-                1 for item in latest_provider_reports if item.get("native_tool_loop_requested")
-            ),
-            "provider_native_tool_loop_supported_count": sum(
-                1 for item in latest_provider_reports if item.get("native_tool_loop_supported")
-            ),
-            "provider_native_tool_missing_lanes": [
-                str(item.get("lane") or "unknown")
-                for item in latest_provider_reports
-                if item.get("native_tool_loop_requested")
-                and safe_int(item.get("native_tool_call_count")) <= 0
-            ],
-            "provider_native_tool_missing_required_lanes": (
-                provider_native_tool_missing_required_lanes
-            ),
-            "provider_native_tool_unavailable_required_lanes": (
-                provider_native_tool_unavailable_required_lanes
-            ),
-            "semantic_required_provider_lanes": sorted(semantic_required_provider_lanes),
-            "provider_semantic_execution_count": sum(
-                1
-                for item in latest_provider_reports
-                if item.get("semantic_provider_execution_performed")
-            ),
-            "provider_semantic_missing_required_lanes": (
-                provider_semantic_missing_required_lanes
-            ),
-            "provider_teamwork_required": True,
+            **provider_lane_metrics,
             "budget_exhausted": bool(missing and self.runtime_soft_close_reached()),
             "invocation_contract_ready": bool(self.invocation_contract.get("passed")),
             "invocation_gate_decision": safe_dict(

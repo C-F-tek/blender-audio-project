@@ -19,6 +19,13 @@ from Tools.ai._shared.provider_ollama_probe import run_ollama_probe
 from Tools.ai._shared.provider_probe_paths import ensure_repo_imports
 
 
+def propagated_positive_int(name: str, value: int) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise ValueError(f"{name} must be a positive operator/heap propagated value")
+    return parsed
+
+
 def run_npu_probe(
     repo_root: Path,
     timeout: float,
@@ -58,7 +65,7 @@ print(json.dumps(result))
         repo_root=repo_root,
         prompt=prompt or "List the broker tool call you would request for code validation.",
         timeout_seconds=timeout,
-        max_new_tokens=max(1, min(max_new_tokens, 512)),
+        max_new_tokens=propagated_positive_int("max_new_tokens", max_new_tokens),
         python_exe=str(python_exe),
         device="NPU",
     )
@@ -123,7 +130,9 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                     repo_root,
                     args.model,
                     effective_prompt,
-                    max_new_tokens=max(1, min(args.max_new_tokens, 4096)),
+                    max_new_tokens=propagated_positive_int(
+                        "max_new_tokens", args.max_new_tokens
+                    ),
                     num_ctx=args.ollama_num_ctx,
                     keep_alive=args.keep_alive,
                     partial_output=partial_output,
@@ -146,7 +155,9 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                     args.timeout,
                     args.npu_python_exe,
                     effective_prompt,
-                    max_new_tokens=max(1, min(args.max_new_tokens, 512)),
+                    max_new_tokens=propagated_positive_int(
+                        "max_new_tokens", args.max_new_tokens
+                    ),
                 )
             )
         except Exception as exc:  # noqa: BLE001 - report-only tool.

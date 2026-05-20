@@ -253,7 +253,7 @@ def main() -> int:
         "patch_product_status": product["patch_product_status"],
         "ready_for_patch_suggestion_review": product["ready_for_patch_suggestion_review"],
         "essential_patch_suggestion_items": product["product_facing_manual_review_items"],
-        "supplemental_telemetry_debug_items": product["supplemental_manual_review_items"],
+        "supplemental_debug_items": product["supplemental_manual_review_items"],
         "results": results,
         "git_status_before": status_before,
         "git_status_after": git_status_short(repo_root),

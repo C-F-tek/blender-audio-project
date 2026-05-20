@@ -21,7 +21,7 @@ quick/balanced/deep/custom = intensity, not scope
 NPU helper validation != full-run proof
 NPU smoke success != primary advisory promotion
 NPU current role = micro/support/diagnostic/tool-support lane when selected
-telemetry accompanies evidence and patch plans for completeness
+evidence accompanies evidence and patch plans for completeness
 ```
 
 When an NPU helper, provider descriptor, provider result report or runtime-output manifest enters production full-run handoff, the handoff must expose state through:
@@ -30,9 +30,9 @@ When an NPU helper, provider descriptor, provider result report or runtime-outpu
 unified launcher manifest
 phase_status / phase_reports
 provider diagnostics
-runtime tool usage telemetry when tools execute
+runtime tool usage evidence when tools execute
 runtime/hardware capability manifest when capabilities matter
-full toolbox telemetry summary
+full toolbox evidence summary
 shared AI-to-AI bundle/final summary
 file-line-limit report when maintainability is in scope
 ```
@@ -86,12 +86,12 @@ provider behavior changes
 | `fixtures.py` | Deterministic fixture payloads for tests, dry-runs and contract examples. | Fixture evidence is not runtime proof. |
 | `prompts.py` | Deterministic prompt payload builders. | Prompt payloads are not provider execution. |
 | `context_builder.py` | Bounded context slices and compact context bundle metrics. | Needs manifest/bundle reference if used in full-run handoff. |
-| `providers.py` | Planned provider request/result envelopes and provider preflight report normalization. | Provider state must flow to telemetry/bundle if used in full-run evidence. |
+| `providers.py` | Planned provider request/result envelopes and provider preflight report normalization. | Provider state must flow to evidence/bundle if used in full-run evidence. |
 | `runner.py` | Planned stage-plan reports. | Planned-only unless an explicit runtime wrapper executes. |
 | `validators.py` | Contract-level validators that preserve unknown future fields. | Validation reports do not prove provider execution. |
 | `artifact_writer.py` | Validated generated-artifact write helpers. | Writes must remain scoped and report-visible. |
 | `migration_readiness.py` | Deterministic gates for future runtime wiring readiness. | Gate reports are advisory until local runtime validation. |
-| `reports.py` | Helper-boundary reports, validation envelopes and runtime-output manifests. | Runtime-output manifests must be bundled with telemetry when promoted. |
+| `reports.py` | Helper-boundary reports, validation envelopes and runtime-output manifests. | Runtime-output manifests must be bundled with evidence when promoted. |
 
 ## Runtime-adjacent scripts outside this package
 
@@ -101,7 +101,7 @@ provider behavior changes
 | `Tools/npu/provider_mesh/_shared/npu_runtime.py` | runtime-adjacent helper | Keep separate from planned provider descriptors. |
 | `Tools/npu/run_npu_review.py` | explicit local diagnostic/review helper | Not the unified launcher. |
 | `Tools/npu/run_npu_context.ps1` | explicit local context/review wrapper | Useful local helper; not canonical full 0-to-10 path. |
-| `Tools/npu/provider_mesh/provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces; bundle/telemetry visibility required when promoted. |
+| `Tools/npu/provider_mesh/provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces; bundle/evidence visibility required when promoted. |
 | `Tools/ai/provider_mesh/npu_gpu_deep_review_auditor/cli.py` | diagnostic/support lane | Not primary advisory proof by itself. |
 | `Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py` | provider orchestration lane | Prefer unified launcher; verify current caller before changing behavior. |
 
@@ -111,7 +111,7 @@ Policy:
 planned helper modules may be validated without providers
 runtime-adjacent helpers must not be called implicitly by validators
 provider execution must be visible in launcher manifest or explicit local evidence
-provider failure/degradation/exclusion must be visible in telemetry/bundle when it affects evidence or patch plans
+provider failure/degradation/exclusion must be visible in evidence/bundle when it affects evidence or patch plans
 broad validation belongs to the unified launcher
 ```
 
@@ -178,7 +178,7 @@ Current safe next layer:
 NPU validator/report contract consistency
 runtime-output manifest/reporting as additive observability
 provider result report cataloging without implicit provider execution
-telemetry/bundle visibility for any promoted provider result report
+evidence/bundle visibility for any promoted provider result report
 file-line impact review before runtime wiring or large helper refactors
 ```
 
@@ -190,7 +190,7 @@ provider result parsing/reporting
 prompt prose extraction
 full artifact writer runtime migration
 memory/guardrail runtime integration
-strict full-run telemetry completeness validation
+strict full-run evidence completeness validation
 ```
 
 Every runtime bridge phase must keep provider/model behavior stable unless a later execution plan explicitly scopes and validates that behavior change.

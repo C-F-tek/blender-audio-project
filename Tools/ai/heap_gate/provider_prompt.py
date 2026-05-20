@@ -354,34 +354,47 @@ class RuntimeGateProviderPromptMixin:
             ):
                 if marker in lowered:
                     forbidden_claims.append(marker)
+            pointer_missing = [
+                name
+                for name in missing
+                if name
+                in {
+                    "POINTER_ACTION=",
+                    "CURRENT_POINTER",
+                    "CURRENT_ITERATION_SCOPE",
+                    "PROPAGATION_TASKS",
+                    "BACKLOG_TASKS",
+                }
+            ]
+            npu_guardrails_passed = bool(
+                pointer_action
+                and not pointer_missing
+                and not placeholder_hits
+                and not forbidden_claims
+                and "VALIDATION_COMMANDS" in (delta_text or "")
+            )
             review_lines = [
                 "NPU operational guardrail audit:",
                 f"- revision={revision}",
                 f"- pointer_action={pointer_action or 'missing'}",
+                f"- pointer_sections_missing={pointer_missing}",
                 f"- placeholder_hits={placeholder_hits}",
                 f"- forbidden_runtime_claims={forbidden_claims}",
                 f"- validation_commands_present={'VALIDATION_COMMANDS' in (delta_text or '')}",
                 "- decision="
-                + (
-                    "accept_guardrails"
-                    if not placeholder_hits
-                    and not forbidden_claims
-                    and "VALIDATION_COMMANDS" in (delta_text or "")
-                    else "reject_until_guardrails_and_validation_are_concrete"
-                ),
+                + ("accept_guardrails" if npu_guardrails_passed else "reject_until_guardrails_and_validation_are_concrete"),
             ]
             provider_report["npu_operational_audit"] = {
                 "performed": True,
                 "revision": revision,
                 "pointer_action": pointer_action,
+                "pointer_sections_missing": pointer_missing,
                 "placeholder_hits": placeholder_hits,
                 "forbidden_runtime_claims": forbidden_claims,
                 "validation_commands_present": "VALIDATION_COMMANDS" in (delta_text or ""),
                 "decision": (
                     "accept_guardrails"
-                    if not placeholder_hits
-                    and not forbidden_claims
-                    and "VALIDATION_COMMANDS" in (delta_text or "")
+                    if npu_guardrails_passed
                     else "reject_until_guardrails_and_validation_are_concrete"
                 ),
             }

@@ -59,12 +59,72 @@ items, not a success narrative.
 - The agent can continue a coding loop on narrow files while the operator is
   pointing at a larger contract failure.
 - The agent can create "game-like scripting" behavior when scripts produce
-  activity, counters, telemetry or files without a causal product result.
+  activity, counters, evidence or files without a causal product result.
 - The agent must not treat generated artifacts, provider claims or partial text
   as proof of reasoning unless they enter the validated heap/pointer/product
   graph.
 - The agent must not call a lane active just because a child process exists or
   an output JSON is being written.
+
+## Last-Hour Codex Operator Audit - 2026-05-20
+
+Manual audit window: current visible operator session ending around
+2026-05-20 22:57 Europe/Rome. This is a maintained operator ledger, not an
+automated transcript parser.
+
+| Counter | Count |
+|---|---:|
+| Operator-aligned fixes kept in source/docs | 6 |
+| Operator blocks required before Codex matched instruction | 14 |
+| Repeated-code regressions | 1 |
+
+Operator-aligned fixes kept in source/docs:
+
+- GPU1 hard output/token/timeout cutoff behavior was moved away from local
+  arbitrary caps toward operator/heap-propagated values.
+- GPU1 incomplete output was kept as refinement evidence instead of being
+  discarded as a start failure.
+- NPU was changed from semantic-primary framing to micro-task/tool/device
+  provider framing.
+- NPU report fields were corrected to `npu_micro_provider_*` after operator
+  rejected `semantic_provider_*` compatibility fields.
+- The OpenVINO topology validator was updated to check current
+  `provider_teamwork_unified_parallel` wiring instead of stale markers.
+- The documentation now records the Codex failure counters in the root README
+  and this ledger.
+
+Operator blocks required:
+
+- The operator blocked treating preflight/static contract checks as complete
+  provider smoke.
+- The operator blocked accepting `provider_execution_performed=false` inside
+  full/complete provider evidence.
+- The operator blocked reports, warnings, ZIPs and readable summaries being
+  treated as product.
+- The operator blocked arbitrary hard timeouts, revision caps and token caps.
+- The operator blocked mandatory GPU1 tool continuation when GPU1 must choose
+  text/tool shape.
+- The operator blocked NPU being described or reported as semantic-primary.
+- The operator blocked keeping NPU `semantic_provider_*` compatibility fields.
+- The operator blocked smoke-fixing as a substitute for provider runtime repair.
+- The operator blocked report-first analysis when the requested action was
+  source investigation.
+- The operator blocked ignoring pointer reconstruction, memory delta and
+  final-code-product composition.
+- The operator blocked confusing activity in Task Manager with useful work.
+- The operator blocked NPU/GPU0 activity from substituting for GPU1 primary
+  advisory work.
+- The operator blocked telemetry-style surfaces from being treated as the
+  product contract.
+- The operator blocked repeated context reload behavior without proving delta
+  memory use.
+
+Repeated-code regression:
+
+- Count 1: Codex reintroduced NPU `semantic_provider_*`/`npu_semantic_*`
+  fields as compatibility after the operator had already rejected that shape.
+  The corrected NPU surface is `npu_micro_provider_*`; future recurrence must
+  increment this count.
 
 ## Runtime Failures Observed
 
@@ -103,11 +163,12 @@ items, not a success narrative.
   extend runtime without producing the actual product block.
 - GPU0 was effectively workload/diagnostic evidence in the observed run, not a
   causal reviewer/refiner.
-- GPU0 output risked being treated as telemetry rather than input to the next
+- GPU0 output risked being treated as evidence rather than input to the next
   pointer/refinement step.
-- NPU timed out or failed semantic/audit behavior and still appeared as a lane
-  in the provider group.
-- NPU activity was not enough if it did not produce semantic audit evidence.
+- NPU timed out or failed micro-tool/audit behavior and still appeared as a
+  lane in the provider group.
+- NPU activity was not enough if it did not produce micro-provider/audit
+  evidence.
 - Provider "running" was treated too much like provider "alive and useful".
 - Provider output needed an operational contract: semantic response, native tool
   call, review/refinement, audit, or concrete proposal evidence.
@@ -115,7 +176,7 @@ items, not a success narrative.
 ## Pointer And Heap Failures
 
 - GPU0/NPU review evidence must feed the next pointer/revision context, not
-  remain as isolated telemetry.
+  remain as isolated evidence.
 - `previous`, `next`, `refines`, and `resume_from` only matter if they carry
   causal input into the next proposal.
 - A pointer graph that only records that something happened is not enough.
@@ -200,7 +261,7 @@ items, not a success narrative.
 ## Still Not Proven
 
 - A full real `python -m Tools.ai run` was not launched after these changes.
-- End-to-end GPU1/GPU0/NPU semantic cooperation is not proven.
+- End-to-end GPU1/GPU0/NPU lane cooperation is not proven.
 - SQL/FTS/chunk memory behavior is not fully proven by these smokes.
 - Pointer/refinement composition across real provider revisions is not fully
   proven.

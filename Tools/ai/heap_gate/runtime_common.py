@@ -277,7 +277,7 @@ def provider_heap_lane(value: str) -> str:
     """Map logical provider roles to physical heap lanes.
 
     provider_runtime_heap accepts physical lanes only: gpu1/gpu0/npu/broker/
-    deterministic/telemetry/orchestrator. Logical roles stay in payloads and
+    deterministic/orchestrator. Logical roles stay in payloads and
     reports so the runtime can prove who contributed without inventing heap
     lanes.
     """

@@ -144,7 +144,7 @@ IN -> preload/context/memory/tool state -> heap/exchange loop -> deterministic O
 ## Product expectation
 
 A successful product run must produce concrete reviewable output, not only
-telemetry. Proposal chunks must reference real repository paths and must not be
+evidence. Proposal chunks must reference real repository paths and must not be
 placeholder/TODO/stub content.
 """,
     "docs/DATA_FLOW.md": """# Data Flow

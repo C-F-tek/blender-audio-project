@@ -41,27 +41,27 @@ If the timestamped CHATGPT handoff file is not present in GitHub, it is expected
 ```text
 1. current git state on codex/unified-local-ai-refactor-launcher
 2. runtime bundle evidence for 20260505-143844 when accessible
-3. manifest / decision loop / recommendations / patch plan / telemetry inside that bundle
+3. manifest / decision loop / recommendations / patch plan / evidence inside that bundle
 4. canonical docs and task files in the repository
 5. CHATGPT handoff notes as advisory operational memory
 ```
 
 Do not infer runtime-bundle contents from file existence alone.
 
-## Resolved broker telemetry context
+## Resolved broker evidence context
 
-The earlier broker telemetry issue from run `20260505-002508` is not the current active task.
+The earlier broker evidence issue from run `20260505-002508` is not the current active task.
 
 It is historical/resolved context unless a new regression is found.
 
 Known resolved state:
 
 ```text
-Commit a85bbf4 preserved broker report inputs in final runtime telemetry.
+Commit a85bbf4 preserved broker report inputs in final runtime evidence.
 Later evidence validated broker_reports propagation with executed_count=3, failed_count=0 and blocked_count=0.
 ```
 
-Docs that still mention the broker telemetry task should treat it as historical or validated context, not as the current P0.
+Docs that still mention the broker evidence task should treat it as historical or validated context, not as the current P0.
 
 ## Current review-only objective
 
@@ -84,9 +84,9 @@ No patch spec should be applied automatically.
 Before reading the runtime ZIP, code/docs inspection suggests one safe candidate family:
 
 ```text
-centralize report/telemetry helper functions in Tools/validation/_shared/report_utils.py
-reuse them from Tools/ai/runtime_tool/usage_telemetry/cli.py
-reuse them from Tools/ai/runtime_universe/full_toolbox_telemetry_summary/cli.py
+centralize report/evidence helper functions in Tools/validation/_shared/report_utils.py
+reuse them from Tools/ai/runtime_tool/usage_evidence/cli.py
+reuse them from Tools/ai/agent_context/shared_toolbox_bundle/cli.py
 then evaluate Tools/ai/agent_context/shared_toolbox_bundle/cli.py separately
 ```
 
@@ -112,7 +112,7 @@ Treat triple-quote/raw multiline edits as P1 risk for Python command-example cle
 
 ## Documentation follow-up
 
-The long task indexes may still contain historical references to broker telemetry as active work.
+The long task indexes may still contain historical references to broker evidence as active work.
 
 Preferred cleanup is incremental:
 

@@ -41,9 +41,7 @@ function Initialize-UnifiedRunObserver {
     Write-UnifiedRunProgressEvent -Phase "observer" -Status "initialized"
 
     if ($OpenConsoles) {
-        $telemetry = Join-Path $PSScriptRoot "watch_unified_run_telemetry.ps1"
         $exchange = Join-Path $PSScriptRoot "watch_unified_ai_public_exchange.ps1"
-        Start-Process powershell.exe -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $telemetry, "-ObserverDir", $Script:UnifiedObserverDir, "-RefreshSeconds", "$RefreshSeconds")
         Start-Process powershell.exe -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $exchange, "-ObserverDir", $Script:UnifiedObserverDir, "-RefreshSeconds", "$RefreshSeconds")
     }
 
@@ -84,7 +82,7 @@ function Write-UnifiedRunObserverWarning {
         Write-UnifiedRunJsonlLine -Path $warningPath -Line $line
     }
     catch {
-        # Observer telemetry is diagnostic-only. Never fail the product launcher.
+        # Observer writes are diagnostic-only. Never fail the product launcher.
     }
 }
 

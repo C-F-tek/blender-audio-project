@@ -9,7 +9,7 @@ The preferred mode is not a monolithic blind patch. It is a controlled, reuse-fi
 ## Preferred procedure
 
 1. Inspect the repository first.
-   - Reuse existing tools, reports, validation scripts, observer files, telemetry, manifests, and evidence surfaces before adding new code.
+   - Reuse existing tools, reports, validation scripts, observer files, evidence, manifests, and evidence surfaces before adding new code.
    - Do not duplicate functionality if a reusable tool or report already exists.
 
 2. Generate a modular patch bundle.

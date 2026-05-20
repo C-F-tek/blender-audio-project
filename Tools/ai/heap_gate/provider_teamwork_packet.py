@@ -33,10 +33,36 @@ def _compact_artifacts(artifacts: dict[str, Any], limit: int = 24) -> dict[str, 
     return selected
 
 
+def _compact_provider_reports(gate: Any, limit: int = 6) -> list[dict[str, Any]]:
+    reports: list[dict[str, Any]] = []
+    for report in reversed(getattr(gate, "provider_reports", []) or []):
+        if not isinstance(report, dict):
+            continue
+        reports.append(
+            {
+                "lane": report.get("lane"),
+                "role": report.get("role"),
+                "status": report.get("status"),
+                "passed": report.get("passed"),
+                "output": report.get("output"),
+                "provider_block_id": report.get("provider_block_id"),
+                "proposal_block_id": report.get("proposal_block_id"),
+                "operational_provider_activity": report.get("operational_provider_activity"),
+                "provider_activity_classification": report.get(
+                    "provider_activity_classification"
+                ),
+                "response_text_excerpt": str(report.get("response_text") or "")[:2400],
+            }
+        )
+        if len(reports) >= limit:
+            break
+    return list(reversed(reports))
+
+
 def build_provider_teamwork_leader_packet(
     gate: Any, round_id: int, revision: int, leader_prompt: str
 ) -> dict[str, Any]:
-    """Build the artifact consumed by GPU0/NPU before they start.
+    """Build the shared artifact consumed by all provider lanes.
 
     The packet is not a cosmetic launch note. It is the compact same-heap
     contract: startup artifacts, universe report refs, source allowlist,
@@ -72,16 +98,18 @@ def build_provider_teamwork_leader_packet(
             "startup_manifest_is_context_data_plane": bool(manifest_path),
             "operational_sqlite_memory_required_when_available": True,
             "same_heap_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
+            "unified_parallel_execution": True,
             "provider_text_alone_is_not_tool_execution_proof": True,
             "composer_assembles_heap_state_only": True,
         },
         "time_counter_contract": time_contract,
         "same_heap_teamwork_contract": [
             "GPU1 is the primary advisor/leader and must produce file-grounded proposal blocks.",
-            "GPU0 is a parallel peer and may jump through previous/refines/resume pointers to review/refine impacted blocks.",
-            "NPU is a parallel peer and may jump through previous/refines/resume pointers to audit impacted blocks.",
+            "GPU0 is a stronger peer/reviewer/refiner lane and may do more sophisticated support work than NPU.",
+            "NPU is a micro/audit lane and must not become the primary advisory or broker-driving center.",
+            "All provider lanes start in the same provider universe; failure to start any selected lane blocks the universe.",
             "GPU1 commands final synthesis and integrates GPU0/NPU vetoes and refinement signals.",
-            "Broker/tool calls are optional enrichment, but executed tool outputs become heap facts.",
+            "Only GPU1 native tool calls may drive broker work; GPU0/NPU tool calls are peer diagnostics.",
             "GPU1 must consume GPU0/NPU peer evidence before final synthesis.",
             "The time input is a shared counter: started lanes are not hard-killed by elapsed time and must close through heap/pointer state near soft_close_after_seconds.",
         ],
@@ -126,6 +154,7 @@ def build_provider_teamwork_leader_packet(
         "broker_tool_evidence": gate.tool_evidence_summary(events, max_items=12),
         "source_allowlist_contract": gate.render_source_allowlist_contract(limit=32),
         "verified_source_candidates": gate.real_source_file_candidates(events, limit=32),
+        "primary_provider_evidence": _compact_provider_reports(gate, limit=6),
         "revision_feedback": str(gate.provider_revision_feedback or ""),
         "leader_prompt_excerpt": leader_prompt[:6000],
     }

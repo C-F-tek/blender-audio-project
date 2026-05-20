@@ -157,9 +157,13 @@ docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md
 Validator:
 
 ```powershell
-python .\Tools
-alidation\check_ai_workload_report_quality.py --repo-root . --output .\output
-alidationi_workload_report_quality.json
+python -m Tools.validation check_ai_workload_report_quality --repo-root . --output .\output\validation\ai_workload_report_quality.json
+```
+
+Source validator name for compatibility and drift checks:
+
+```text
+check_ai_workload_report_quality.py
 ```
 
 Core report kind and policy:
@@ -179,11 +183,7 @@ source_writes_performed=false
 NPU review metadata can be emitted without provider loading:
 
 ```powershell
-python .\Tools
-pu
-un_npu_review.py --metadata-only --metadata-out .\output
-alidation
-pu_review_metadata.json
+python -m Tools.npu run_npu_review --metadata-only --metadata-out .\output\validation\npu_review_metadata.json
 ```
 
 The `npu_review_metadata` sidecar records advisory role and quality-gate status.

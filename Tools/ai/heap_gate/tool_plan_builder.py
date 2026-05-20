@@ -237,23 +237,6 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
         },
         {
             "stage": 3,
-            "requirement": "tool_evidence_memory_write",
-            "id": "tool-evidence-memory-write",
-            "tool": "runtime_sqlite_memory",
-            "args": {
-                "action": "remember",
-                "scope": "operational",
-                "summary": "brokered evidence refs",
-                "content": "pending brokered evidence refs",
-                "role": "heap_runtime_evidence_index",
-                "tag": ["heap", "broker_evidence", "tool_refs"],
-            },
-            "reason": "write brokered evidence refs into operational SQLite scratch memory for the current run",
-            "nonblocking": True,
-            "post_provider": True,
-        },
-        {
-            "stage": 3,
             "requirement": "semantic_evidence_chunks",
             "id": "semantic-evidence-chunk-manifest",
             "tool": "semantic_evidence_chunks",

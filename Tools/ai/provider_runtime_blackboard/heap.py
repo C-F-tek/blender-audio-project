@@ -248,7 +248,6 @@ class ProviderRuntimeHeap:
                 "context_memory": "startup_context_memory_reload_and_task_file_input",
                 "semantic_tools_registry": "agent_runtime_tool_broker.TOOL_SPECS",
                 "deterministic_validators": "cpu_authority_validation_lane",
-                "telemetry": "append_only_event_stream",
             },
             "guardrails": {
                 "report_only": True,

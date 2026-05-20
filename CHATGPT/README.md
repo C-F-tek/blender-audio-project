@@ -49,4 +49,4 @@ GPU0/NPU hardware capability manifest report-only
 + broker delegation contract
 ```
 
-Do not implement autonomous coworker behavior before report-only contracts, telemetry and validators exist.
+Do not implement autonomous coworker behavior before report-only contracts, evidence and validators exist.

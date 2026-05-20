@@ -71,8 +71,6 @@ $Manifest = [ordered]@{
         evidence_json = $EvidenceJson
         evidence_markdown = $EvidenceMd
         evidence_validation = $EvidenceValidationOutput
-        telemetry_json = $TelemetryJson
-        telemetry_markdown = $TelemetryMd
     }
     warnings = @()
     errors = @()

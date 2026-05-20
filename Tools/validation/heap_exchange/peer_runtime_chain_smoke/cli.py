@@ -51,7 +51,6 @@ def main() -> int:
         observer = repo / f"output/local_ai_runs/{STAMP}_observer"
         ai_events = observer / "ai_public_events.jsonl"
         capability = repo / f"output/validation/runtime_tool_capability_manifest_{STAMP}.json"
-        usage = repo / f"output/validation/full_toolbox_run_telemetry_summary_{STAMP}.json"
         heap_peer = repo / f"output/validation/heap_peer_runtime_{STAMP}.json"
         shared_memory = repo / f"output/validation/shared_toolbox_ai_to_ai_bundle_{STAMP}.json"
         output = repo / "output/validation/unified_chain_contract.json"
@@ -100,16 +99,6 @@ def main() -> int:
             },
         )
         write_json(
-            usage,
-            {
-                "schema_version": 1,
-                "kind": "full_toolbox_run_telemetry_summary",
-                "passed": True,
-                "tool_usage_count": 2,
-                "tool_usage": [{"tool": "repo_search"}, {"tool": "validator"}],
-            },
-        )
-        write_json(
             heap_peer,
             {
                 "schema_version": 1,
@@ -153,8 +142,6 @@ def main() -> int:
                 str(observer),
                 "--tool-capability-manifest",
                 str(capability),
-                "--tool-usage-telemetry",
-                str(usage),
                 "--heap-peer-runtime",
                 str(heap_peer),
                 "--shared-memory-evidence",

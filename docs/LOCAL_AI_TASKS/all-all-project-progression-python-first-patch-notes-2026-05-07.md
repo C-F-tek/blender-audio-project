@@ -1,4 +1,4 @@
-﻿# ALL_ALL Project Progression Python-First Patch Notes Task
+# ALL_ALL Project Progression Python-First Patch Notes Task
 
 Status: active local AI task
 Date: 2026-05-07
@@ -9,7 +9,7 @@ Mode: ALL_ALL / Python-first / policy-aware / refactor-proposal
 
 Produce a larger and more useful patch-notes product for progressing the project itself.
 
-The run must inspect code, Markdown, workflow scripts, validators, telemetry builders, provider mesh, runtime broker, evidence builders, local task docs and policy docs.
+The run must inspect code, Markdown, workflow scripts, validators, evidence builders, provider mesh, runtime broker, evidence builders, local task docs and policy docs.
 
 The output must not only describe inconsistencies. It must generate concrete, structured, manually reviewable patch notes and patch plans that can guide future code and documentation work.
 
@@ -39,7 +39,7 @@ The run must explicitly search for and classify:
 - `python_python`: import/API/CLI/schema/report/validator/workflow inconsistencies inside code;
 - `policy_violation`: output commit risk, DB/SQLite risk, provider execution ambiguity, Blender/FFmpeg runtime ambiguity, patch auto-apply ambiguity, Git write ambiguity, NPU advisory promotion risk, GPU0 primary-lane risk;
 - `refactor_candidate`: monoliths, duplicated helper logic, oversized Markdown, workflow files above maintainability threshold, repeated report field construction, repeated path policy code;
-- `telemetry_gap`: missing elapsed time, missing status normalization, missing fallback/success case, missing provider/runtime heap signal, missing capability manifest signal;
+- `evidence_gap`: missing elapsed time, missing status normalization, missing fallback/success case, missing provider/runtime heap signal, missing capability manifest signal;
 - `evidence_gap`: missing compact evidence, stale evidence, non-final evidence being treated as production evidence.
 
 ## Required product behavior
@@ -127,10 +127,10 @@ The final evidence set must include:
 
 - patch notes quality product;
 - patch plan quality product;
-- runtime tool usage telemetry;
+- runtime tool usage evidence;
 - runtime tool capability manifest;
-- provider runtime heap telemetry;
-- full toolbox run telemetry summary;
+- provider runtime heap evidence;
+- full toolbox run evidence summary;
 - shared AI-to-AI toolbox bundle when available;
 - generated artifact path policy;
 - compact final evidence only.
@@ -146,7 +146,7 @@ The run is acceptable only if:
 - invalid patch note count is zero or explicitly explained;
 - success_cases[] is present;
 - fallback_cases[] is present when degradation happens;
-- runtime tool telemetry has normalized status;
+- runtime tool evidence has normalized status;
 - broker elapsed timing is non-zero when broker tools execute;
 - NPU final review is classified by GPU/validator lane, not by NPU self-check alone;
 - policy violations are classified separately from normal doc drift;

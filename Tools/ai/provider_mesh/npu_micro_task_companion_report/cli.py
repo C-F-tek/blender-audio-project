@@ -154,7 +154,7 @@ def run_npu_device_workload(
     )
 
     try:
-        hard_timeout = None if int(timeout_seconds or 0) <= 0 else max(1, int(timeout_seconds))
+        hard_timeout = None if float(timeout_seconds or 0) <= 0 else float(timeout_seconds)
         completed = subprocess.run(
             [str(runner), "-c", child_code],
             cwd=str(Path.cwd()),

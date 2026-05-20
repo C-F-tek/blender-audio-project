@@ -32,6 +32,7 @@ def build_manifest(
     commands: list[dict[str, Any]],
     warnings: list[str],
     task_file: Path,
+    context_delta: dict[str, Any],
     context_pack_result: dict[str, Any],
     strict_ai_context_pack: bool,
     strict_startup_reload: bool,
@@ -53,6 +54,10 @@ def build_manifest(
         "request_chars": len(request_text),
         "request_sha256": sha256_text(request_text),
         "request_preview": request_text[:4000],
+        "context_delta": context_delta,
+        "context_reload_mode": context_delta.get("reload_mode", ""),
+        "changed_context_file_count": context_delta.get("changed_context_file_count", 0),
+        "unchanged_context_file_count": context_delta.get("unchanged_context_file_count", 0),
         "passed": passed,
         "input_ready_before_heap": input_ready_before_heap,
         "load_context_into_heap": True,
@@ -91,6 +96,11 @@ def build_manifest(
             "heap_task_file_written": task_file.exists(),
             "advisory_context_pack_non_blocking": not bool(strict_ai_context_pack),
             "final_composer_required": True,
+            "memory_reload_uses_delta": bool(context_delta),
+            "unchanged_context_refs_not_reloaded_as_previews": (
+                context_delta.get("unchanged_preview_policy")
+                == "omit_unchanged_bounded_previews_use_file_refs"
+            ),
         },
     }
 
@@ -109,6 +119,9 @@ def build_print_payload(manifest: dict[str, Any], repo_root: Path, manifest_path
         "request_chars": manifest.get("request_chars", 0),
         "request_sha256": manifest.get("request_sha256", ""),
         "context_file_count": manifest.get("context_file_count", 0),
+        "context_reload_mode": manifest.get("context_reload_mode", ""),
+        "changed_context_file_count": manifest.get("changed_context_file_count", 0),
+        "unchanged_context_file_count": manifest.get("unchanged_context_file_count", 0),
         "artifact_count": len(manifest.get("artifacts", {})),
         "tool_execution_count": len(manifest.get("tool_executions", [])),
         "blocking_requirements": manifest.get("blocking_requirements", []),

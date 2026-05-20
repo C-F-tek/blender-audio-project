@@ -17,7 +17,7 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 The current prototype answers this question:
 
 ```text
-Given the latest context pack, evidence, telemetry, capability manifest, provider diagnostics and patch-suggestion product state, what should be validated or specified next?
+Given the latest context pack, evidence, capability manifest, provider diagnostics and patch-suggestion product state, what should be validated or specified next?
 ```
 
 It is intentionally conservative. It separates:
@@ -26,7 +26,7 @@ It is intentionally conservative. It separates:
 context collection
 dry-run planning evidence
 real provider evidence
-runtime telemetry and capability context
+runtime capability and broker evidence context
 patch suggestion product/separation evidence
 validator recommendations
 patch-spec recommendations
@@ -40,7 +40,7 @@ Selective planning is a supporting lane behind the unified local-AI flow.
 
 If planner output is produced from full-run evidence, it must preserve the **TUTTO SU TUTTO** interpretation of that run. `quick`, `balanced`, `deep` and `custom` are intensity differences only; planner recommendations must not treat a quick full run as a partial-scope run.
 
-Telemetry is an obligatory completeness accessory for planner inputs and patch-spec recommendations. It does not replace evidence or patch plans; it explains whether the source lanes executed, failed, degraded, were blocked, were disabled or were planned-only.
+Runtime evidence is obligatory for planner inputs and patch-spec recommendations. It does not replace patch plans; it proves whether the source lanes executed, failed, degraded, were blocked, were disabled or were planned-only.
 
 A planner recommendation that cites full-run evidence should include or reference:
 
@@ -48,9 +48,7 @@ A planner recommendation that cites full-run evidence should include or referenc
 evidence artifacts
 patch-plan or patch-spec artifacts
 patch suggestion product/separation reports when review PR flow is selected
-runtime tool usage telemetry
 runtime tool capability manifest
-full toolbox telemetry summary
 shared AI-to-AI bundle/final summary
 ```
 
@@ -69,9 +67,7 @@ Focused direct invocation of the selective planner is allowed only when debuggin
 | Real GPU/NPU evidence | `docs/LOCAL_VALIDATION_EVIDENCE/parallel_gpu_npu_multistep_real_npu_v2_evidence.json` | Confirms provider execution evidence and lane decisions. |
 | Patch suggestion product/separation evidence | `docs/LOCAL_VALIDATION_EVIDENCE/*patch_suggestion*` or launcher phase report references | Confirms product-vs-supplemental classification and deterministic operation readiness when the review PR product path ran. |
 | Review PR preparation evidence | `docs/LOCAL_VALIDATION_EVIDENCE/review_pr_prepare_*.json` | Confirms explicit include paths, staged paths, commit/push/PR state and guardrails. |
-| Runtime tool usage telemetry | `docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_<STAMP>.json` | Confirms tool execution, failure and blocked counts when broker lane ran. |
 | Runtime capability manifest | `docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_<STAMP>.json` | Confirms which tools/capabilities were available and under which guardrails. |
-| Full toolbox telemetry summary | `docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_<STAMP>.json` | Confirms provider, GPU/NPU, broker, patch-plan and guardrail state. |
 | Shared AI-to-AI bundle/final summary | `docs/LOCAL_VALIDATION_EVIDENCE/shared_toolbox_ai_to_ai_bundle_<STAMP>.json` and final summary when available | Production handoff surface for next AI/operator. |
 | Validation report contract | `output/validation/validation_report_contract.json` | Optional local ignored validation health input. |
 | Execution plans | `docs/EXECUTION_PLANS/active/` | Detects active linked plans. |
@@ -93,7 +89,6 @@ provider_execution_performed: false
 patch_application_performed: false
 inputs
 provider_evidence_summary
-telemetry_summary
 capability_manifest_summary
 dry_run_summary
 patch_suggestion_product_summary
@@ -115,10 +110,10 @@ All recommended patch specs remain:
 ```text
 manual_review_only
 candidate_spec_only
-telemetry_required_for_full_run_evidence
+runtime_evidence_required_for_full_run
 ```
 
-## Provider and telemetry policy
+## Provider and evidence policy
 
 The planner must not execute providers.
 
@@ -193,7 +188,7 @@ execute Ollama/OpenVINO/GPU/NPU providers implicitly
 edit generated indexes manually
 edit full analysis JSON files
 change provider prompts, models, temperatures or orchestration behavior
-treat a patch-spec recommendation as complete when its full-run evidence lacks telemetry/capability context
+treat a patch-spec recommendation as complete when its full-run evidence lacks runtime capability and broker context
 treat product separation success as draft PR support when agent_review_prepare_pr.py does not implement draft PR creation
 ```
 
@@ -204,6 +199,6 @@ Add validator scoring and ranking.
 Add stricter evidence freshness heuristics when stable date policy exists.
 Add a generator that converts recommended_patch_specs into draft patch specs, still without replacements.
 Add formal provider evidence quality gates before any provider promotion work.
-Add telemetry completeness scoring for evidence-derived patch-spec recommendations.
+Add runtime evidence completeness scoring for evidence-derived patch-spec recommendations.
 Add patch suggestion product readiness scoring based on published-vs-total counts and deterministic operation readiness.
 ```

@@ -99,7 +99,7 @@ def is_report_container(raw: dict[str, Any]) -> bool:
 
 
 def is_manual_candidate(raw: dict[str, Any]) -> bool:
-    """Return true for real suggestion/proposal nodes, not telemetry containers."""
+    """Return true for real suggestion/proposal nodes, not debug/evidence containers."""
     if not isinstance(raw, dict) or is_report_container(raw):
         return False
 

@@ -97,7 +97,6 @@ unified_phase_visibility
 watch_unified_ai_conversation
 watch_unified_ai_public_exchange
 watch_unified_raw_debug_good_info
-watch_unified_run_telemetry
 workflow_debug
 workflow_debug_core
 ```

@@ -16,7 +16,7 @@ def json_request(
     base_url: str,
     path: str,
     payload: dict | None = None,
-    timeout: float = 10.0,
+    timeout: float | None = 10.0,
 ) -> dict:
     url = base_url.rstrip("/") + path
     data = None
@@ -37,7 +37,7 @@ def stream_json_request(
     base_url: str,
     path: str,
     payload: dict,
-    timeout: float = 10.0,
+    timeout: float | None = 10.0,
 ) -> Iterator[dict]:
     url = base_url.rstrip("/") + path
     data = json.dumps(payload).encode("utf-8")

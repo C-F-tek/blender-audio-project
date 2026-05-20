@@ -2,7 +2,7 @@
 
 ## Role
 
-`Tools/ai/runtime_universe` contains higher-level runtime universe builders, flow maps, telemetry summaries, execution plans, smart gatekeeping and unified run feed builders.
+`Tools/ai/runtime_universe` contains higher-level runtime universe builders, flow maps, execution plans, smart gatekeeping and unified run feed builders.
 
 It describes and summarizes the runtime system around a run; it is not a replacement for the heap runtime itself.
 
@@ -10,7 +10,6 @@ It describes and summarizes the runtime system around a run; it is not a replace
 
 - Build runtime universe models and reports.
 - Render flow maps for tool/runtime/data relationships.
-- Summarize full toolbox telemetry.
 - Build selective execution plans.
 - Provide smart gatekeeper checks.
 - Build unified observer/conversation/raw debug feeds.
@@ -22,7 +21,6 @@ Use through the AI dispatcher:
 
 ```powershell
 python -m Tools.ai runtime_flow_map ...
-python -m Tools.ai full_toolbox_telemetry_summary ...
 python -m Tools.ai selective_execution_plan ...
 python -m Tools.ai smart_ai_gatekeeper ...
 python -m Tools.ai build_unified_ai_conversation_feed ...
@@ -53,7 +51,6 @@ Typical outputs include:
 ```text
 runtime universe report
 flow map
-full toolbox telemetry summary
 selective execution plan
 unified observer snapshot
 unified conversation/feed artifacts

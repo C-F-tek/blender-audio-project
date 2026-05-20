@@ -14,7 +14,7 @@ The repository name is historical. The root README identifies the project primar
 IA-Carmine Local AI Orchestration Workbench
 ```
 
-Blender/audio remains the first application domain, but the active architecture is local AI orchestration, validation, telemetry, evidence and guardrail workflows.
+Blender/audio remains the first application domain, but the active architecture is local AI orchestration, validation, evidence, evidence and guardrail workflows.
 
 ## Important root files
 

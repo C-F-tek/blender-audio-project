@@ -7,7 +7,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .common import safe_identifier, utc_now_iso
+from .common import safe_identifier, sha256_text, utc_now_iso
 
 OPERATIONAL_FTS_TABLE = "operational_memory_records_fts"
 PERSISTENT_FTS_TABLE = "memory_records_fts"
@@ -195,11 +195,17 @@ def remember_operational(
 ) -> dict[str, Any]:
     ensure_operational_db(db_path)
     timestamp = now_iso()
-    identity = f"{timestamp}:{role}:{summary}:{content}"
+    content_sha256 = sha256_text(content)
+    identity = f"{role}:{summary}:{content_sha256}"
     record_id = safe_id(identity)[:48]
     if not content.strip():
         raise ValueError("content is required for operational remember")
     with sqlite3.connect(db_path) as conn:
+        existing = conn.execute(
+            "SELECT created_at FROM operational_memory_records WHERE record_id = ?",
+            (record_id,),
+        ).fetchone()
+        created_at = str(existing[0]) if existing else timestamp
         conn.execute(
             """
             INSERT OR REPLACE INTO operational_memory_records (
@@ -209,7 +215,7 @@ def remember_operational(
             """,
             (
                 record_id,
-                timestamp,
+                created_at,
                 timestamp,
                 "operational_context",
                 "runtime",
@@ -221,7 +227,13 @@ def remember_operational(
             ),
         )
         upsert_fts_record(conn, OPERATIONAL_FTS_TABLE, "role", role, record_id, summary, content, tags)
-    return {"record_id": record_id, "created_at": timestamp}
+    return {
+        "record_id": record_id,
+        "created_at": created_at,
+        "updated_at": timestamp,
+        "content_sha256": content_sha256,
+        "already_present_before_write": bool(existing),
+    }
 
 def remember_persistent(
     db_path: Path,

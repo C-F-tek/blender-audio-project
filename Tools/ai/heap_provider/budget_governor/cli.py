@@ -239,7 +239,7 @@ def build_run_permit(
             ),
             "provider_runtime_requires_this_permit": True,
             "provider_generation_must_write_heap_events": True,
-            "provider_generation_must_write_tool_telemetry": True,
+            "provider_generation_must_write_tool_evidence": True,
         },
     }
     if failed:

@@ -21,7 +21,7 @@ When replacing an owner, update this document, the launcher runbook, package REA
 | Full-toolbox engine wrapper | `python -m Tools.workflow run_agent_review_full_toolbox_decision_loop` | New orchestration wrappers that skip the packaged engine. |
 | Full-toolbox static foundation | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_engine.py` | Independent static-foundation runners. |
 | Provider mesh and peer exchange orchestration | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_mesh.py` | Standalone GPU1/GPU0/NPU production flows outside launcher. |
-| Product/bundle/telemetry finalization | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_product.py` | One-off final bundle or telemetry runners for normal flows. |
+| Product/bundle/evidence finalization | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_product.py` | One-off final bundle or evidence runners for normal flows. |
 | Workflow execution helpers | `Tools/workflow/run_agent_review_full_toolbox_decision_loop/py_support.py` | Repeated path/command/stamp helper logic. |
 | Official local AI task adapter lane | `Tools/workflow/run_local_ai_task_via_pipeline.ps1` | Parallel MD-to-packet adapter scripts. |
 | Post-validation AI packet lane | `Tools/workflow/run_post_validation_ai_packet.ps1` | Separate repository_update_suggestions launchers. |
@@ -31,14 +31,13 @@ When replacing an owner, update this document, the launcher runbook, package REA
 | GPU0 peer worker | `Tools/ai/provider_mesh/gpu0_peer_companion_worker.py` | One-off GPU0 support scripts for production peer exchange. |
 | Provider orchestrator | `Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py` | New GPU/NPU orchestration loops. |
 | GPU planner worker | `Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py` | New Ollama primary advisory workers. |
-| Runtime tool usage telemetry | `Tools/ai/runtime_tool/usage_telemetry/cli.py` | Manual telemetry counters. |
-| Full toolbox telemetry summary | `Tools/ai/runtime_universe/full_toolbox_telemetry_summary/cli.py` | One-off run summary assemblers. |
+| Runtime tool usage evidence | `Tools/ai/runtime_tool/usage_evidence/cli.py` | Manual evidence counters. |
 | Shared AI-to-AI bundle | `Tools/ai/agent_context/shared_toolbox_bundle/cli.py` | Parallel handoff bundle builders. |
 | GitHub evidence bundle | `Tools/ai/repository_product/github_evidence_bundle.py` | Handwritten compact evidence aggregators. |
 | Task patch suggestion report | `Tools/ai/patch_product/task_patch_suggestion_report.py` | Direct ad-hoc extraction from task MD. |
 | Patch suggestion dry/apply | `Tools/ai/patch_product/patch_suggestion_bundle/cli.py` and `Tools/ai/patch_product/patch_suggestion_bundle/cli.py` | Direct source writes from suggestion JSON. |
 | Review PR preparation | `Tools/ai/agent_review/review_pr_cli.py` | Ad-hoc staging/commit/push/PR scripts. |
-| Product separation validation | `Tools/validation/patch_product/product_separation/cli.py` | Manual product-vs-telemetry classification. |
+| Product separation validation | `Tools/validation/patch_product/product_separation/cli.py` | Manual product-vs-evidence classification. |
 | Python syntax validation | `python -m Tools.validation check_python_syntax` | Custom py_compile loops for product reports. |
 | Report contract validation | `python -m Tools.validation check_validation_report_contract` | One-off JSON contract scans. |
 | Markdown inventory | `Tools/validation/docs_hygiene/markdown_inventory/cli.py` | New Markdown scanners. |

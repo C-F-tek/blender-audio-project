@@ -158,7 +158,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_code_product_artifact_intake_smoke": "Tools.validation.code_product.run_code_product_artifact_intake_smoke.cli:main",
     "run_core_runtime_guard_suite": "Tools.validation.runtime_universe.run_core_runtime_guard_suite.cli:main",
     "run_deterministic_recommendation_synthesizer_smoke": "Tools.validation.deterministic_recommendations.run_deterministic_recommendation_synthesizer_smoke.cli:main",
-    "run_full_toolbox_deterministic_chunks_telemetry_smoke": "Tools.validation.agent_context.run_full_toolbox_deterministic_chunks_telemetry_smoke.cli:main",
     "run_heap_file_backed_request_startup_smoke": "Tools.validation.heap_runtime.run_heap_file_backed_request_startup_smoke.cli:main",
     "run_heap_final_readable_product_smoke": "Tools.validation.heap_runtime.run_heap_final_readable_product_smoke.cli:main",
     "run_heap_gate_terminal_invariants_smoke": "Tools.validation.heap_runtime.run_heap_gate_terminal_invariants_smoke.cli:main",

@@ -131,7 +131,7 @@ Lane fisiche valide:
 - `broker`
 - `context_memory`
 - `deterministic`
-- `telemetry`
+- `evidence`
 - `orchestrator`
 
 `context_memory` non e' sinonimo di broker. Serve a pubblicare nel ProviderRuntimeHeap il contenuto startup tool-owned prodotto da `prepare_heap_context_memory_reload.py` prima del lavoro provider.

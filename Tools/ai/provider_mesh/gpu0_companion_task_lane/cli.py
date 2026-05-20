@@ -89,8 +89,8 @@ def tool_requests(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
         {
             "id": f"gpu0_companion_tool_request_{idx:03d}",
-            "tool": "runtime_tool_usage_telemetry",
-            "reason": f"GPU0 companion task {task['id']} requests runtime telemetry context.",
+            "tool": "semantic_evidence_chunks",
+            "reason": f"GPU0 companion task {task['id']} requests compact evidence context.",
             "args": {},
             "source": "gpu0_companion_worker",
             "task_id": task["id"],

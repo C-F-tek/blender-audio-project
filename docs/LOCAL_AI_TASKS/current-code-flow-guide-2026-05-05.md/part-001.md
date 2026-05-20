@@ -10,4 +10,4 @@ Sorgente indice: [`README.md`](README.md)
 
     inputs.broker_reports has at least one broker report when the broker lane ran.
     summary.executed_count reflects broker executions.
-    broker telemetry is absorbed into the AI-to-AI production bundle.
+    broker evidence is absorbed into the AI-to-AI production bundle.

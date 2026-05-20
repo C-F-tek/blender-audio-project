@@ -52,7 +52,7 @@ Markdown task / prompt
   -> proposal contract validation
   -> optional patch-spec draft manifest
   -> adapter manifest
-  -> task-scoped telemetry JSON/Markdown
+  -> task-scoped evidence JSON/Markdown
   -> task-scoped GitHub evidence bundle
   -> evidence bundle validation
 ```
@@ -67,7 +67,7 @@ advisory packet JSON
 suggestion manifest JSON
 repository change proposals JSON
 repository change proposal validation report
-task-scoped telemetry JSON
+task-scoped evidence JSON
 optional patch-spec draft manifest
 selected-chunk validation when built
 enrichment-plan validation when built
@@ -92,16 +92,16 @@ no SQLite DB commit
 
 Patch-spec generation remains draft-only under `output/patch_specs/`.
 
-## Telemetry contract
+## Evidence contract
 
-Current adapter telemetry is emitted beside the task packet:
+Current adapter evidence is emitted beside the task packet:
 
 ```text
-output/local_ai_runs/<run>/pipeline/<basename>_telemetry.json
-output/local_ai_runs/<run>/pipeline/<basename>_telemetry.md
+output/local_ai_runs/<run>/pipeline/<basename>_evidence.json
+output/local_ai_runs/<run>/pipeline/<basename>_evidence.md
 ```
 
-The telemetry records:
+The evidence records:
 
 ```text
 expected output checks
@@ -112,7 +112,7 @@ evidence request state
 scenario flags
 ```
 
-When `-BuildEvidence` is selected, telemetry JSON is included as a report and telemetry Markdown is included as an artifact in the compact evidence bundle. This lets a pushed compact bundle prove the patch/spec/proposal state without committing raw `output/**`.
+When `-BuildEvidence` is selected, evidence JSON is included as a report and evidence Markdown is included as an artifact in the compact evidence bundle. This lets a pushed compact bundle prove the patch/spec/proposal state without committing raw `output/**`.
 
 ## Smoke command
 

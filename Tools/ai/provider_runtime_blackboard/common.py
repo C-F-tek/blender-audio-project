@@ -19,7 +19,6 @@ LANES = (
     "broker",
     "context_memory",
     "deterministic",
-    "telemetry",
     "orchestrator",
 )
 EVENT_TYPES = (
@@ -38,6 +37,7 @@ EVENT_TYPES = (
     "broker_result",
     "claim",
     "validation_signal",
+    "provider_evidence",
     "decision",
     "recommendation",
     "candidate_operation",
@@ -45,7 +45,6 @@ EVENT_TYPES = (
     "patch_plan_signal",
     "validation",
     "product_signal",
-    "telemetry_signal",
     "startup_task_file_context",
 )
 DEFAULT_EVENTS = "output/ai_runtime_heap/{stamp}/events.jsonl"

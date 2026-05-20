@@ -3,95 +3,18 @@ from __future__ import annotations
 from py_mesh import existing
 from py_product_common import *  # noqa: F403
 from py_product_core import run_decision_loop, run_patch_plan_quality_product_gate, run_post_validation_packet, run_runtime_bootstrap
-from py_product_telemetry import build_evidence_bundle, run_final_product, run_runtime_flow_map, run_runtime_telemetry
-
-def run_run_telemetry(ctx: WorkflowContext) -> None:
-    args = [
-        "-m",
-        "Tools.ai",
-        "full_toolbox_telemetry_summary",
-        "--repo-root",
-        ".",
-        "--stamp",
-        ctx.args.Stamp,
-        "--decision-loop",
-        ctx.p("decision_json"),
-        "--recommendations",
-        ctx.p("recommendations_json"),
-        "--patch-plan",
-        ctx.p("patch_plan_json"),
-        "--repository-consistency",
-        ctx.p("repo_consistency_json"),
-        "--repository-consistency-smoke",
-        ctx.p("repo_consistency_smoke_json"),
-        "--gpu-npu-sync",
-        ctx.p("gpu_npu_sync_json"),
-        "--orchestrator",
-        ctx.p("orch_json"),
-        "--gpu-report",
-        ctx.p("gpu_json"),
-        "--peer-exchange",
-        ctx.p("peer_json"),
-        "--peer-contract",
-        ctx.p("peer_contract_json"),
-        "--provider-runtime-heap-telemetry",
-        ctx.p("heap_telemetry_json"),
-        "--provider-runtime-heap-snapshot",
-        ctx.p("heap_snapshot_json"),
-        "--line-count-csv",
-        ctx.paths.get("line_count_csv", ""),
-        "--budget-minutes",
-        str(ctx.args.BudgetMinutes),
-        "--max-rounds",
-        str(ctx.args.MaxRounds),
-        "--files-per-round",
-        str(ctx.args.FilesPerRound),
-        "--max-context-files",
-        str(ctx.args.MaxContextFiles),
-        "--max-chars-per-file",
-        str(ctx.args.MaxCharsPerFile),
-        "--max-new-tokens",
-        str(ctx.args.MaxNewTokens),
-        "--npu-auditor-every-rounds",
-        str(ctx.args.NpuAuditorEveryRounds),
-        "--repository-consistency-map-workers",
-        str(ctx.args.RepositoryConsistencyMapWorkers),
-        "--output",
-        ctx.p("telemetry_json"),
-        "--markdown-output",
-        ctx.p("telemetry_md"),
-    ]
-    for key in (
-        "heap_init_json",
-        "heap_gpu1_request_json",
-        "heap_broker_json",
-        "heap_npu_json",
-        "heap_catalog_json",
-    ):
-        if Path(ctx.p(key)).exists():
-            args += ["--provider-runtime-heap-live-signal", ctx.p(key)]
-    for path in evidence_to_commit(ctx):
-        args += ["--evidence-to-commit", path]
-    if (read_json(ctx.p("bundle_validation_json")) or {}).get("passed"):
-        args.append("--bundle-validation-passed")
-    ctx.run_python("Full toolbox run telemetry summary", args)
+from py_product_evidence import build_evidence_bundle, run_final_product, run_runtime_flow_map
 
 def run_semantic_chunks(ctx: WorkflowContext) -> None:
     sources = existing(
         ctx,
         "bundle_json",
         "bundle_md",
-        "telemetry_json",
-        "telemetry_md",
-        "runtime_usage_json",
-        "runtime_usage_md",
         "runtime_capability_json",
         "runtime_capability_md",
         "runtime_flow_json",
         "runtime_flow_md",
         "runtime_flow_mmd",
-        "heap_telemetry_json",
-        "heap_telemetry_md",
         "heap_catalog_json",
         "heap_catalog_md",
         "heap_snapshot_json",
@@ -162,10 +85,6 @@ def evidence_to_commit(ctx: WorkflowContext) -> list[str]:
         "memory_line_count_csv",
         "bundle_json",
         "bundle_md",
-        "telemetry_json",
-        "telemetry_md",
-        "runtime_usage_json",
-        "runtime_usage_md",
         "runtime_capability_json",
         "runtime_capability_md",
         "runtime_flow_json",
@@ -176,8 +95,6 @@ def evidence_to_commit(ctx: WorkflowContext) -> list[str]:
         "patch_quality_md",
         "patch_notes_quality_json",
         "patch_notes_quality_md",
-        "heap_telemetry_json",
-        "heap_telemetry_md",
         "artifact_path_policy_json",
         "artifact_path_policy_md",
         "chunk_manifest_json",
@@ -207,7 +124,6 @@ def write_workflow(ctx: WorkflowContext) -> None:
         "patch_notes_quality_json",
         "runtime_flow_json",
         "heap_from_peer_json",
-        "heap_telemetry_json",
         "final_product_json",
         "final_product_manifest",
         "final_product_evidence",
@@ -243,10 +159,6 @@ def write_workflow(ctx: WorkflowContext) -> None:
         "patch_plan_md",
         "patch_quality_md",
         "patch_notes_quality_md",
-        "telemetry_json",
-        "telemetry_md",
-        "runtime_usage_json",
-        "runtime_usage_md",
         "runtime_capability_json",
         "runtime_capability_md",
         "runtime_flow_jsonl",
@@ -260,7 +172,6 @@ def write_workflow(ctx: WorkflowContext) -> None:
         "peer_md",
         "peer_contract_md",
         "heap_from_peer_md",
-        "heap_telemetry_md",
         "heap_catalog_md",
         "heap_snapshot_md",
         "heap_events",
@@ -343,7 +254,6 @@ def run_decision_and_bundle(ctx: WorkflowContext) -> None:
     run_decision_loop(ctx)
     run_post_validation_packet(ctx)
     run_runtime_bootstrap(ctx)
-    run_runtime_telemetry(ctx, "Runtime tool usage telemetry pre-bundle")
     run_patch_plan_quality_product_gate(ctx)
     run_patch_notes_quality_product(ctx)
     run_final_product(ctx)
@@ -383,8 +293,6 @@ def run_decision_and_bundle(ctx: WorkflowContext) -> None:
             ctx.p("final_contract_json"),
         ],
     )
-    run_run_telemetry(ctx)
-    run_runtime_telemetry(ctx, "Runtime tool usage telemetry")
     run_patch_notes_quality_product(ctx)
     run_semantic_chunks(ctx)
     run_artifact_path_policy(ctx)

@@ -25,17 +25,30 @@ STARTUP_DOCS_MAP_MARKDOWN_PREVIEW_BLOCKS = 16
 
 
 def build_repo_docs_map(
-    repo_root: Path, context_files: list[str], output_dir: Path
+    repo_root: Path,
+    context_files: list[str],
+    output_dir: Path,
+    *,
+    changed_paths: set[str] | None = None,
+    delta_active: bool = False,
 ) -> dict[str, str]:
+    changed_paths = changed_paths or set()
     docs = []
     for index, rel_path in enumerate(context_files):
         full = repo_root / rel_path
-        preview_included = index < STARTUP_DOCS_MAP_PREVIEW_LIMIT
+        preview_included = index < STARTUP_DOCS_MAP_PREVIEW_LIMIT and (
+            not delta_active or rel_path in changed_paths
+        )
         text = read_text(full, max_chars=STARTUP_DOCS_MAP_PREVIEW_CHARS) if preview_included else ""
         docs.append(
             {
                 "path": rel_path,
                 "size_bytes": full.stat().st_size if full.exists() else 0,
+                "delta_status": (
+                    "changed_or_new"
+                    if not delta_active or rel_path in changed_paths
+                    else "unchanged_ref_only"
+                ),
                 "preview_included": preview_included,
                 "preview_chars": len(text),
                 "sha256_scope": "preview" if text else "",
@@ -51,6 +64,9 @@ def build_repo_docs_map(
         "patch_application_performed": False,
         "source_writes_performed": False,
         "document_count": len(docs),
+        "delta_active": bool(delta_active),
+        "changed_document_count": sum(1 for item in docs if item["delta_status"] == "changed_or_new"),
+        "unchanged_ref_only_count": sum(1 for item in docs if item["delta_status"] == "unchanged_ref_only"),
         "live_artifact_policy": "all_context_paths_indexed; bounded previews only",
         "preview_document_limit": STARTUP_DOCS_MAP_PREVIEW_LIMIT,
         "stored_preview_chars": STARTUP_DOCS_MAP_PREVIEW_CHARS,
@@ -75,7 +91,7 @@ def build_repo_docs_map(
     for item in docs[:STARTUP_DOCS_MAP_MARKDOWN_ROW_LIMIT]:
         lines.append(
             f"- `{item['path']}` size=`{item['size_bytes']}` "
-            f"preview=`{item['preview_chars']}`"
+            f"delta=`{item['delta_status']}` preview=`{item['preview_chars']}`"
         )
     if len(docs) > STARTUP_DOCS_MAP_MARKDOWN_ROW_LIMIT:
         remaining = len(docs) - STARTUP_DOCS_MAP_MARKDOWN_ROW_LIMIT
@@ -109,7 +125,11 @@ def collect_semantic_code_chunks(
     request: str,
     limit: int = 48,
     preview_chars: int = 1800,
+    *,
+    changed_paths: set[str] | None = None,
+    delta_active: bool = False,
 ) -> dict[str, str]:
+    changed_paths = changed_paths or set()
     keywords = [
         part.lower()
         for part in request.replace("_", " ").replace("-", " ").split()
@@ -124,13 +144,20 @@ def collect_semantic_code_chunks(
     stored_preview_chars = max(1, min(preview_chars, STARTUP_SEMANTIC_PREVIEW_CHARS))
     for index, (score, path) in enumerate(ranked[:limit]):
         rel = repo_rel(repo_root, path)
-        preview_included = index < STARTUP_SEMANTIC_PREVIEW_CHUNK_LIMIT
+        preview_included = index < STARTUP_SEMANTIC_PREVIEW_CHUNK_LIMIT and (
+            not delta_active or rel in changed_paths
+        )
         text = read_text(path, max_chars=stored_preview_chars) if preview_included else ""
         chunks.append(
             {
                 "path": rel,
                 "score": score,
                 "size_bytes": path.stat().st_size if path.exists() else 0,
+                "delta_status": (
+                    "changed_or_new"
+                    if not delta_active or rel in changed_paths
+                    else "unchanged_ref_only"
+                ),
                 "preview": text,
                 "preview_included": preview_included,
                 "preview_chars": len(text),
@@ -145,6 +172,9 @@ def collect_semantic_code_chunks(
         "patch_application_performed": False,
         "source_writes_performed": False,
         "chunk_count": len(chunks),
+        "delta_active": bool(delta_active),
+        "changed_chunk_count": sum(1 for item in chunks if item["delta_status"] == "changed_or_new"),
+        "unchanged_ref_only_count": sum(1 for item in chunks if item["delta_status"] == "unchanged_ref_only"),
         "selection_policy": "deterministic_path_keyword_ranker",
         "live_artifact_policy": "all_selected_paths_indexed; bounded previews only",
         "requested_preview_chars": preview_chars,
@@ -171,7 +201,7 @@ def collect_semantic_code_chunks(
     for item in chunks[:STARTUP_SEMANTIC_MARKDOWN_ROW_LIMIT]:
         lines.append(
             f"- `{item['path']}` score=`{item['score']}` size=`{item['size_bytes']}` "
-            f"preview=`{item['preview_chars']}`"
+            f"delta=`{item['delta_status']}` preview=`{item['preview_chars']}`"
         )
     if len(chunks) > STARTUP_SEMANTIC_MARKDOWN_ROW_LIMIT:
         remaining = len(chunks) - STARTUP_SEMANTIC_MARKDOWN_ROW_LIMIT

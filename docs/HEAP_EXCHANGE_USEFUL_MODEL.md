@@ -14,6 +14,8 @@ controlled input -> shared heap/exchange -> cooperating lanes -> evidence -> det
 
 The heap/exchange is not a fixed script chain. It is a shared runtime knowledge surface where lanes publish and consume evidence.
 
+It is also not a one-way queue. A single run can move backward and forward through heap pointers, propagate newly discovered variables or contracts into earlier blocks, then resume from the current cursor when the affected blocks have been rechecked.
+
 ## Why it exists
 
 A linear pipeline tends to create isolated reports:
@@ -101,6 +103,19 @@ candidate operations
 blocked reasons
 final product decision
 ```
+
+Pointer continuity is part of the state:
+
+```text
+previous_block_id
+refines_block_id
+resume_from_block_id
+propagation tasks
+backlog tasks
+linked GPU1/GPU0/NPU blocks
+```
+
+The final product is a composition over that pointer state, not the raw text of one provider response.
 
 It can be represented through JSON, JSONL, SQLite, reports, manifests or event streams. The storage format is less important than the contract: evidence must be readable by other stages.
 

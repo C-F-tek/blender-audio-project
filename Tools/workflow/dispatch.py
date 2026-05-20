@@ -43,7 +43,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "watch_unified_ai_conversation": "ps1:_powershell/watch_unified_ai_conversation.ps1",
     "watch_unified_ai_public_exchange": "ps1:_powershell/watch_unified_ai_public_exchange.ps1",
     "watch_unified_raw_debug_good_info": "ps1:_powershell/watch_unified_raw_debug_good_info.ps1",
-    "watch_unified_run_telemetry": "ps1:_powershell/watch_unified_run_telemetry.ps1",
     "workflow_debug": "Tools.workflow.workflow_run.workflow_debug_core.cli:main",
     "workflow_gui": "Tools.workflow.gui.workflow_gui:main",
     "gui": "Tools.workflow.gui.workflow_gui:main",

@@ -2,7 +2,7 @@
 """Build runtime tool capability manifest for cloud handoff.
 
 Report-only manifest builder. It describes the IA-Carmine runtime tool body:
-allowlisted tools, allowed args, guardrails, source files and observed usage.
+allowlisted tools, allowed args, guardrails and source files.
 No provider, Blender runtime, patch application, Git write or SQLite write is executed.
 """
 
@@ -131,42 +131,8 @@ def source_entry(repo_root: Path, rel_path: str, role: str) -> dict[str, Any]:
     }
 
 
-def usage_by_tool(usage_report: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    summary = safe_dict(usage_report.get("summary"))
-    by_tool = safe_dict(summary.get("by_tool"))
-    result: dict[str, dict[str, Any]] = {}
-    for tool, value in by_tool.items():
-        if isinstance(value, dict):
-            result[str(tool)] = value
-    for entry in safe_list(usage_report.get("tool_calls")):
-        if not isinstance(entry, dict):
-            continue
-        tool = str(entry.get("tool") or "unknown")
-        item = result.setdefault(
-            tool,
-            {
-                "count": 0,
-                "executed": 0,
-                "failed": 0,
-                "blocked": 0,
-                "elapsed_seconds": 0.0,
-            },
-        )
-        item["count"] = int(item.get("count") or 0) + 1
-        if entry.get("executed") is True:
-            item["executed"] = int(item.get("executed") or 0) + 1
-        if entry.get("failed") is True:
-            item["failed"] = int(item.get("failed") or 0) + 1
-        if entry.get("blocked") is True:
-            item["blocked"] = int(item.get("blocked") or 0) + 1
-    return result
-
-
-def caller_modes(usage_report: dict[str, Any]) -> dict[str, Any]:
-    summary = safe_dict(usage_report.get("summary"))
+def caller_modes() -> dict[str, Any]:
     return {
-        "observed_by_caller_ai": safe_dict(summary.get("by_caller_ai")),
-        "observed_by_phase": safe_dict(summary.get("by_phase")),
         "supported_callers": [
             "gpu",
             "npu",
@@ -174,7 +140,7 @@ def caller_modes(usage_report: dict[str, Any]) -> dict[str, Any]:
             "ollama-local",
             "deterministic",
         ],
-        "cloud_handoff_rule": "cloud receives capability manifest plus runtime usage telemetry; local execution remains broker-controlled",
+        "cloud_handoff_rule": "cloud receives capability manifest and evidence chunks; local execution remains broker-controlled",
     }
 
 
@@ -190,16 +156,6 @@ def build_tool_rows(repo_root: Path, usage: dict[str, dict[str, Any]]) -> list[d
                 "allowed_args": list(spec.allowed_args),
                 "safe_default_mode": safe_default_mode(spec.name),
                 "guardrails": tool_guardrails(spec.name),
-                "usage_observed": usage.get(
-                    spec.name,
-                    {
-                        "count": 0,
-                        "executed": 0,
-                        "failed": 0,
-                        "blocked": 0,
-                        "elapsed_seconds": 0.0,
-                    },
-                ),
                 "broker_builder": getattr(spec.builder, "__name__", ""),
             }
         )
@@ -208,19 +164,11 @@ def build_tool_rows(repo_root: Path, usage: dict[str, dict[str, Any]]) -> list[d
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
-    usage_path = resolve_output_path(repo_root, args.tool_usage) if args.tool_usage else None
-    usage_report = read_json(usage_path) if usage_path else {}
-    usage = usage_by_tool(usage_report)
     sources = [
         source_entry(
             repo_root,
             "Tools/ai/runtime_tool/agent_broker/cli.py",
             "runtime_tool_broker_allowlist_source",
-        ),
-        source_entry(
-            repo_root,
-            "Tools/ai/runtime_tool/usage_telemetry/cli.py",
-            "runtime_tool_usage_telemetry_builder",
         ),
         source_entry(
             repo_root,
@@ -233,14 +181,6 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             "shared_toolbox_bundle_builder",
         ),
     ]
-    if usage_path:
-        sources.append(
-            source_entry(
-                repo_root,
-                repo_rel(repo_root, usage_path),
-                "observed_runtime_tool_usage_report",
-            )
-        )
     return {
         "schema_version": 1,
         "kind": "runtime_tool_capability_manifest",
@@ -256,16 +196,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "persistent_memory_write_performed": False,
         "blender_runtime_execution_performed": False,
         "tool_count": len(TOOL_SPECS),
-        "tool_usage_summary": safe_dict(usage_report.get("summary")),
-        "declared_runtime_tool_counters": safe_dict(
-            usage_report.get("declared_runtime_tool_counters")
-        ),
-        "tools": build_tool_rows(repo_root, usage),
-        "caller_modes": caller_modes(usage_report),
+        "tools": build_tool_rows(repo_root, {}),
+        "caller_modes": caller_modes(),
         "source_files": sources,
         "cloud_handoff_policy": {
             "include_with_evidence_chunks": True,
-            "include_runtime_usage_telemetry": True,
             "include_patch_plan_and_recommendations": True,
             "no_free_shell": True,
             "tool_execution_requires_local_broker": True,
@@ -287,16 +222,6 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = ["# Runtime Tool Capability Manifest", ""]
     lines.append(f"- Passed: `{report.get('passed')}`")
     lines.append(f"- Tool count: `{report.get('tool_count')}`")
-    usage_summary = safe_dict(report.get("tool_usage_summary"))
-    lines.append(
-        f"- Declared runtime tool requests: `{usage_summary.get('runtime_tool_request_count')}`"
-    )
-    lines.append(
-        f"- Broker runtime tool executions: `{usage_summary.get('runtime_tool_execution_count')}`"
-    )
-    lines.append(
-        f"- Declared not executed count: `{usage_summary.get('declared_not_executed_count')}`"
-    )
     lines.append(f"- Provider execution performed: `{report.get('provider_execution_performed')}`")
     lines.append(f"- Patch application performed: `{report.get('patch_application_performed')}`")
     lines.append("")
@@ -322,7 +247,6 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(f"- Safe mode: `{tool.get('safe_default_mode')}`")
         lines.append(f"- Description: {tool.get('description')}")
         lines.append(f"- Allowed args: `{tool.get('allowed_args')}`")
-        lines.append(f"- Usage observed: `{tool.get('usage_observed')}`")
         lines.append("- Guardrails:")
         for guardrail in safe_list(tool.get("guardrails")):
             lines.append(f"  - {guardrail}")
@@ -341,7 +265,6 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--tool-usage", default="", help="runtime_tool_usage_telemetry JSON path")
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
     args = parser.parse_args()

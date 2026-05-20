@@ -259,7 +259,7 @@ def _event_mix_label(run_status: dict[str, Any]) -> str:
         "provider_peer_block",
         "claim",
         "validation_signal",
-        "telemetry_signal",
+        "provider_evidence",
         "fact",
     ]
     parts = []

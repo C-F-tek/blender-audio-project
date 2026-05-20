@@ -104,7 +104,7 @@ def patchable_availability_smoke() -> dict[str, Any]:
                 }
             ],
         },
-        "full_toolbox_telemetry": {
+        "workflow_summary": {
             "workflow_summary": {"passed": True, "recommendation_count": 1, "patch_plan_count": 1}
         },
     }
@@ -131,7 +131,7 @@ def patchable_availability_smoke() -> dict[str, Any]:
                 },
             ],
         },
-        "full_toolbox_telemetry": {
+        "workflow_summary": {
             "workflow_summary": {"passed": True, "recommendation_count": 1, "patch_plan_count": 1}
         },
     }

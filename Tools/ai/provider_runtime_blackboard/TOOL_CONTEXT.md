@@ -21,7 +21,7 @@ docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 - Materialize lane state for provider/peer visibility.
 - Bridge broker requests/results into runtime state.
 - Bridge validation signals into the provider blackboard.
-- Build telemetry and peer-report derived heap artifacts.
+- Build peer-report derived heap artifacts.
 - Provide live-signal reports that help distinguish active, stalled, degraded and diagnostic-only lanes.
 - Convert provider/peer reports into heap-readable state.
 
@@ -35,7 +35,6 @@ python -m Tools.ai provider_runtime_broker_bridge ...
 python -m Tools.ai provider_runtime_live_signals ...
 python -m Tools.ai provider_runtime_validation_bridge ...
 python -m Tools.ai build_provider_runtime_heap_from_peer_reports ...
-python -m Tools.ai build_provider_runtime_heap_telemetry ...
 python -m Tools.ai run_provider_runtime_heap_gpu_peer_smoke ...
 ```
 
@@ -53,7 +52,7 @@ full payload sidecar blobs for compact JSONL events
 validation bridge signals
 live signal summaries
 peer report ingestion
-provider runtime telemetry
+provider runtime evidence
 ```
 
 ## Bridge model
@@ -66,7 +65,7 @@ broker result
 validator signal
 -> provider_runtime_blackboard
 -> materialized heap state
--> exchange/telemetry evidence
+-> exchange evidence
 -> product or blocked classification
 ```
 
@@ -90,7 +89,6 @@ broker bridge reports
 live signal reports
 validation bridge reports
 peer-report heap materialization
-provider runtime telemetry
 SQLite sidecar indexes under ignored runtime/output paths
 ```
 

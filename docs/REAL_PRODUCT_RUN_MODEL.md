@@ -104,7 +104,7 @@ source-write status unclear
 ```text
 GPU/provider lane -> advisory evidence or candidate reasoning
 GPU0/OpenVINO lane -> observable companion/review evidence
-NPU lane -> diagnostic/micro-audit evidence unless compute lane is validated
+NPU lane -> bounded micro-task/tool/device provider evidence, not primary semantic ownership
 CPU/validator lane -> deterministic checks and contracts
 ```
 

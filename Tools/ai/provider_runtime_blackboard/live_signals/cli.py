@@ -228,7 +228,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                     correlation_id=correlation_id,
                     payload={
                         **catalog_payload,
-                        "summary": "GPU1 requests the broker-controlled tool catalog before final product telemetry.",
+                        "summary": "GPU1 requests the broker-controlled tool catalog before final product assembly.",
                     },
                 )
             )

@@ -1,4 +1,4 @@
-"""Decision, product, bundle and telemetry phases for the Python workflow."""
+"""Decision, product and bundle phases for the Python workflow."""
 
 from __future__ import annotations
 
@@ -45,6 +45,5 @@ TOOL_REPORT_KEYS = [
     "heap_npu_json",
     "heap_catalog_json",
     "heap_snapshot_json",
-    "heap_telemetry_json",
     "memory_workflow",
 ]

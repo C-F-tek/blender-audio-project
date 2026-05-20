@@ -318,17 +318,12 @@ if ($BuildEvidence) {
     $EvidenceMd = "docs/LOCAL_VALIDATION_EVIDENCE/$EvidenceBasename.md"
     $EvidenceValidationOutput = "output/validation/${EvidenceBasename}_validation.json"
 }
-$TelemetryJson = "$PipelineRel/${Basename}_telemetry.json"
-$TelemetryMd = "$PipelineRel/${Basename}_telemetry.md"
-
 . (Join-Path $AdapterModuleDir "manifest.ps1")
-. (Join-Path $AdapterModuleDir "telemetry.ps1")
 . (Join-Path $AdapterModuleDir "evidence.ps1")
 
 Write-Host ""
 Write-Host "[OK] Local pipeline adapter complete" -ForegroundColor Green
 Write-Host "[OK] Manifest: $(Get-RepoRelativePath $RepoRootPath $ManifestPath)"
-Write-Host "[OK] Telemetry: $TelemetryMd"
 Write-Host "[OK] Packet:   $PipelineRel/$Basename.md"
 Write-Host "[OK] Proposal: $PipelineRel/$ProposalBasename.md"
 Write-Host "[OK] Context files: $(@(As-Array $ContextFiles).Count)"

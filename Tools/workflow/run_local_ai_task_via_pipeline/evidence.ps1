@@ -9,7 +9,6 @@ if ($BuildEvidence) {
 
     foreach ($path in @(
         $ManifestRel,
-        $TelemetryJson,
         "$PipelineRel/$Basename.json",
         "$PipelineRel/${Basename}_manifest.json",
         "$PipelineRel/$ProposalBasename.json",
@@ -29,7 +28,6 @@ if ($BuildEvidence) {
     foreach ($path in @(
         $PromptRel,
         $TaskRel,
-        $TelemetryMd,
         "$PipelineRel/$Basename.md",
         "$PipelineRel/$ProposalBasename.md",
         $PatchManifestMd,

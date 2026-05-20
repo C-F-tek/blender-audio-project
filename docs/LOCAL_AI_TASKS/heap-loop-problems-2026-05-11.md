@@ -95,7 +95,7 @@ semantic chunk refs
 context pack refs/degraded status
 ```
 
-Se il test fallisce, patchare `python -m Tools.ai run_heap_runtime_completeness_gate` per invocare esplicitamente il lifecycle reload in fase init e appendere gli artifact refs come `fact`/`evidence_response` o `telemetry_signal`.
+Se il test fallisce, patchare `python -m Tools.ai run_heap_runtime_completeness_gate` per invocare esplicitamente il lifecycle reload in fase init e appendere gli artifact refs come `fact`/`evidence_response` o `provider_evidence`.
 
 ## Finding 2 — `build_ai_context_pack.py`: il failure non e' spiegabile solo con truncation
 

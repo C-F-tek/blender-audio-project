@@ -2,8 +2,8 @@
 """GPU0/OpenVINO peer support helper functions.
 
 This module contains pure path/command/scheduling helpers extracted from the
-provider mesh orchestrator. Launching, harvesting and telemetry remain in the
-orchestrator for this phase.
+provider mesh orchestrator. Launching and harvesting remain in the orchestrator
+for this phase.
 """
 
 from __future__ import annotations

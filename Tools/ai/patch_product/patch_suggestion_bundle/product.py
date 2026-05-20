@@ -8,7 +8,6 @@ from Tools.ai.patch_product.patch_suggestion_bundle.operations import is_safe_ta
 
 AUXILIARY_FAMILIES = {
     "validation",
-    "telemetry",
     "debug",
     "evidence",
     "execution_plans",
@@ -73,7 +72,7 @@ def classify_manual_item(item: dict[str, Any]) -> dict[str, Any]:
     if product_ready:
         reason = "concrete target files plus patch sketch and validation/stop conditions"
     elif family in AUXILIARY_FAMILIES:
-        reason = "auxiliary validation/telemetry/debug signal"
+        reason = "auxiliary validation/debug signal"
     elif not quality["has_safe_source_target"]:
         reason = "no safe concrete source/doc target"
     elif not has_title:
@@ -137,6 +136,6 @@ def build_manual_review_product(
         "classification_policy": (
             "Product-facing suggestions need safe concrete source/doc targets, "
             "a title/rationale, patch sketch or operation, and validation commands "
-            "or stop conditions. Telemetry/debug/evidence-only items stay supplemental."
+            "or stop conditions. Debug/evidence-only items stay supplemental."
         ),
     }

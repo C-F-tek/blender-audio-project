@@ -11,6 +11,7 @@ from Tools.ai._shared.openvino_model_discovery import (
     discover_openvino_tool_model_dir,
     run_openvino_tool_loop_child_payload,
 )
+from Tools.ai._shared.provider_tool_schemas import broker_tool_schemas
 from Tools.ai.provider_mesh.runtime.python_runtime import command_env
 def heap_patch_prompt_required(prompt: str) -> bool:
     text = (prompt or "").lower()
@@ -71,44 +72,6 @@ def ollama_tool_call_selection_prompt(prompt: str, provider_delta: str) -> str:
         f"{decision_rule} Do not replace the heap delta with tool-only output. "
         f"Broker enriches args. Available broker tools: {tools_available}.\n\nCURRENT_OPERATOR_CONTEXT:\n{(prompt or '')[:3500]}\n\nPROVIDER_HEAP_DELTA_ALREADY_EMITTED:\n{(provider_delta or '')[:1800]}"
     )
-def broker_tool_schemas(
-    tool_names: list[str] | tuple[str, ...] | None = None,
-    *,
-    compact: bool = False,
-) -> list[dict[str, Any]]:
-    try:
-        from Tools.ai.runtime_tool.broker.registry import TOOL_SPECS
-    except ImportError:  # pragma: no cover
-        from Tools.ai.runtime_tool.broker.registry import TOOL_SPECS  # type: ignore
-
-    allowed = set(tool_names or [])
-    schemas: list[dict[str, Any]] = []
-    for name, spec in sorted(TOOL_SPECS.items()):
-        if allowed and name not in allowed:
-            continue
-        schemas.append(
-            {
-                "type": "function",
-                "function": {
-                    "name": name,
-                    "description": "IA-Carmine broker tool." if compact else spec.description,
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                        if compact
-                        else {
-                            arg: {
-                                "type": ["string", "number", "boolean", "array", "object"],
-                                "description": f"Broker-validated argument `{arg}`.",
-                            }
-                            for arg in spec.allowed_args
-                        },
-                        "additionalProperties": False,
-                    },
-                },
-            }
-        )
-    return schemas
 def normalize_ollama_tool_calls(chat_response: dict[str, Any]) -> list[dict[str, Any]]:
     message = chat_response.get("message") if isinstance(chat_response, dict) else {}
     if not isinstance(message, dict):
@@ -208,7 +171,7 @@ def openvino_tool_loop_report(
         model_dir_source = "environment" if model_dir else "missing"
     base = {
         "native_tool_loop_provider": "openvino_genai",
-        "native_tool_loop_requested": False,
+        "native_tool_loop_requested": True,
         "native_tool_loop_supported": False,
         "native_tool_loop_performed": False,
         "native_tool_decision_prompted": True,
@@ -265,12 +228,23 @@ def openvino_tool_loop_report(
         },
         ensure_ascii=False,
     )
-    prompt_limit = min(int(max_prompt_chars), 220) if device == "NPU" else int(max_prompt_chars)
+    prompt_limit = int(max_prompt_chars)
+    if prompt_limit <= 0:
+        base["classification"] = "openvino_tool_loop_invalid_prompt_limit"
+        base["errors"].append("max_prompt_chars must be a positive operator/heap propagated value.")
+        base["elapsed_sec"] = round(time.perf_counter() - started, 4)
+        return base
+    token_limit = int(max_new_tokens)
+    if token_limit <= 0:
+        base["classification"] = "openvino_tool_loop_invalid_token_limit"
+        base["errors"].append("max_new_tokens must be a positive operator/heap propagated value.")
+        base["elapsed_sec"] = round(time.perf_counter() - started, 4)
+        return base
     dialogue_prompt = (
         "You are inside IA-Carmine. Produce a concise provider heap delta for this "
         "task before selecting tools. Include evidence, target/ref uncertainty and "
         "what tool evidence is needed next.\n\nTASK:\n" + (prompt or "")
-    )[: max(160, prompt_limit)]
+    )[:prompt_limit]
     tool_prompt = (
         "Using the provider heap delta context, decide whether a native broker "
         "tool call is needed now. If the task asks for live code product, matrix, "
@@ -279,21 +253,21 @@ def openvino_tool_loop_report(
         "empty string only for no_tool_needed, and one broker tool name for call_tool. "
         "Args may be empty because the broker enriches resolved targets and output paths.\n\nTASK:\n"
         + (prompt or "")
-    )[: max(160, prompt_limit)]
+    )[:prompt_limit]
     child_payload = {
         "model_dir": str(Path(model_dir).expanduser()),
         "device": device,
-        "dialogue_prompt": dialogue_prompt[:12000],
-        "tool_prompt": tool_prompt[:12000],
+        "dialogue_prompt": dialogue_prompt,
+        "tool_prompt": tool_prompt,
         "tools": json.loads(tools_json),
         "structured_schema": structured_schema_json,
         "force_tool_call": force_tool_call,
-        "max_new_tokens": int(max_new_tokens),
+        "max_new_tokens": token_limit,
     }
     child_env = command_env(repo_root)
     child_env["PYTHONIOENCODING"] = "utf-8"
     try:
-        hard_timeout = None if float(timeout_seconds or 0) <= 0 else max(1, int(timeout_seconds))
+        hard_timeout = None if float(timeout_seconds or 0) <= 0 else float(timeout_seconds)
         completed = subprocess.run(
             [
                 str(runner),

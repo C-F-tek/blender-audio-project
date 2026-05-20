@@ -21,9 +21,6 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.append(f"- Input task MD: `{input_info.get('task_markdown')}`")
     lines.append(f"- Task digest: `{input_info.get('task_digest')}`")
     lines.append(f"- Manual review required: `{report.get('manual_review_required')}`")
-    telemetry = (
-        report.get("telemetry_quality") if isinstance(report.get("telemetry_quality"), dict) else {}
-    )
     coverage = (
         report.get("evidence_coverage") if isinstance(report.get("evidence_coverage"), dict) else {}
     )
@@ -32,7 +29,6 @@ def render_markdown(report: dict[str, Any]) -> str:
         if isinstance(report.get("patch_notes_applicability"), dict)
         else {}
     )
-    lines.append(f"- Telemetry quality score: `{telemetry.get('score')}`")
     lines.append(f"- Evidence coverage score: `{coverage.get('score')}`")
     lines.append(f"- Patch notes applicable: `{applicability.get('all_applicable')}`")
     lines.append(f"- Patch notes invalid count: `{applicability.get('invalid_note_count')}`")
@@ -92,11 +88,6 @@ def render_markdown(report: dict[str, Any]) -> str:
         )
         if note.get("summary"):
             lines.append(f"  - {note.get('summary')}")
-    lines += ["", "## Telemetry Quality", ""]
-    for key, value in (telemetry.get("required_signals") or {}).items():
-        lines.append(f"- {key}: `{value}`")
-    if telemetry.get("missing_signals"):
-        lines.append(f"- Missing signals: `{telemetry.get('missing_signals')}`")
     lines += ["", "## Evidence Coverage", ""]
     for key, value in (coverage.get("coverage") or {}).items():
         lines.append(f"- {key}: `{value}`")

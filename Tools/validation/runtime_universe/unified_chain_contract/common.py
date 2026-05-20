@@ -39,9 +39,7 @@ TOOL_EVIDENCE_HINTS = (
     "tool",
     "capability",
     "capabilities",
-    "tool_usage",
     "runtime_tool",
-    "telemetry",
 )
 
 REQUIRED_HEAP_PEERS = {

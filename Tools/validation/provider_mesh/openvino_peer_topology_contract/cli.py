@@ -87,7 +87,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             repo_root, "Tools/ai/provider_mesh/gpu0_companion_task_lane/cli.py"
         )
         and has(gpu0_companion, "companion_worker")
-        and has(gpu0_companion, "runtime_tool_usage_telemetry")
+        and has(gpu0_companion, "semantic_evidence_chunks")
         and has(gpu0_worker, "GPU0 peer emits numeric/tool evidence"),
         "npu_micro_uses_runtime_context_and_tool_broker": exists(
             repo_root, "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py"
@@ -107,10 +107,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(budget, "gpu1")
         and has(budget, "gpu0")
         and has(budget, "npu"),
-        "invocation_contract_defines_telemetry": exists(
+        "invocation_contract_defines_evidence_events": exists(
             repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
         )
-        and has(invocation, "expected_telemetry_contract")
+        and has(invocation, "expected_evidence_event_contract")
         and has(invocation, "broker_request")
         and has(invocation, "product_signal"),
         "orchestrator_launches_gpu0_and_npu_as_peers": exists(
@@ -143,9 +143,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(gpu0_workload, "--leader-packet")
         and has(gpu0_workload, "response_text"),
         "npu_provider_report_contract": has(npu_companion_shared, "npu_provider_execution_performed")
-        and has(npu_companion_shared, "semantic_provider_execution_performed")
-        and has(npu_companion_shared, "npu_semantic_provider_execution_performed")
-        and has(npu_companion_shared, "--require-semantic-provider")
+        and has(npu_companion_shared, "npu_micro_provider_execution_performed")
+        and has(npu_companion_shared, "npu_micro_provider_classification")
+        and has(npu_companion_shared, "micro_task_provider_tool_loop_requested_when_lane_selected")
+        and has(npu_companion_shared, "npu_micro_audit_performed")
+        and has(npu_companion_shared, "npu_lane_disabled")
         and has(npu_companion_shared, "npu_peer_activity_performed")
         and has(npu_companion_shared, "native_tool_loop_provider")
         and has(npu_companion_shared, "native_tool_loop_supported")
@@ -166,14 +168,18 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_commands, '"lane": "gpu0_peer"')
         and has(provider_commands, '"lane": "npu_micro_task_auditor"')
         and has(provider_commands, "provider_execution_performed")
+        and has(provider_commands, "npu_micro_provider_execution_performed")
         and has(provider_absorption, "semantic_provider_execution_performed")
         and has(provider_commands, "--require-semantic-provider")
+        and has(provider_commands, "--run-device-workload")
+        and has(provider_commands, "--tool-loop-max-new-tokens")
         and has(provider_commands, "--leader-packet")
         and has(provider_commands, "--startup-manifest"),
         "provider_teamwork_runs_gpu0_npu_concurrently": has(
-            provider_runtime, "concurrent_provider_teamwork"
+            provider_runtime, "provider_teamwork_unified_parallel"
         )
         and has(provider_execution, "provider_command_specs")
+        and has(provider_execution, "collect_provider_processes")
         and has(provider_absorption, "provider_output")
         and has(provider_absorption, "provider_execution_performed")
         and has(provider_execution, "provider_launch_manifest")
@@ -188,7 +194,8 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_teamwork_packet, "gpu0_peer_authority")
         and has(provider_teamwork_packet, "npu_peer_authority")
         and has(provider_teamwork_packet, "GPU1 commands final synthesis")
-        and has(provider_teamwork_packet, "parallel peer")
+        and has(provider_teamwork_packet, "unified_parallel_execution")
+        and has(provider_teamwork_packet, "re-evaluate in parallel")
         and has(provider_teamwork_packet, "requires_concrete_rewrite")
         and has(provider_teamwork_packet, "NO_PATCHABLE_TARGET")
         and has(provider_teamwork_packet, "startup_artifacts")
@@ -208,9 +215,19 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             heap_run_loop, "gpu0_provider_evidence_count"
         )
         and has(heap_run_loop, "npu_micro_task_evidence_count")
-        and has(heap_run_loop, "provider_lane_count")
-        and has(heap_run_loop, "provider_semantic_missing_required_lanes")
-        and has(heap_run_loop, '{"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}'),
+        and has(heap_run_loop, "build_provider_lane_metrics")
+        and has(
+            read_text(repo_root / "Tools/ai/heap_gate/run_loop_metrics.py"),
+            "provider_lane_count",
+        )
+        and has(
+            read_text(repo_root / "Tools/ai/heap_gate/run_loop_metrics.py"),
+            "provider_semantic_missing_required_lanes",
+        )
+        and has(
+            read_text(repo_root / "Tools/ai/heap_gate/run_loop_metrics.py"),
+            '{"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}',
+        ),
     }
     order = [
         "runtime_workload_targets_gpu0_only",
@@ -219,7 +236,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "npu_micro_uses_runtime_context_and_tool_broker",
         "runtime_heap_records_peer_events",
         "budget_governor_defines_lanes",
-        "invocation_contract_defines_telemetry",
+        "invocation_contract_defines_evidence_events",
         "orchestrator_launches_gpu0_and_npu_as_peers",
         "runtime_mesh_requires_heap_gpu0_npu",
         "real_product_wrapper_requests_openvino_npu_peer_lanes",

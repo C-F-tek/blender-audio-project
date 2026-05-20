@@ -293,6 +293,34 @@ runtime not executed
 provider not proven
 ```
 
+## Operator block audit counter
+
+When the operator has to stop Codex/OpenAI agent behavior because it is gaming
+the script instead of doing the requested task, the failure must be recorded in
+the active audit surfaces.
+
+Update at minimum:
+
+```text
+README.md
+docs/AI_SESSION_NOTES/provider-universe-chat-failure-ledger-2026-05-20.md
+```
+
+The counter must distinguish:
+
+```text
+operator-aligned fixes kept in source/docs
+operator blocks required
+repeated-code regressions
+```
+
+Repeated-code regression means Codex reintroduces a code shape, field, gate,
+wrapper or report surface that the operator already rejected or that was
+already deleted in the current work window.
+
+The count is part of the evidence of Codex operator unreliability. It is not a
+runtime success metric and must not be used to claim progress.
+
 ## Required behavior when unsure
 
 ```text

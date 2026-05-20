@@ -148,7 +148,6 @@ class RuntimeGateProviderRefinementMixin:
     ) -> list[dict[str, Any]]:
         while (
             self.detailed_output_expected()
-            and not self.runtime_soft_close_reached()
             and self.proposal_cycle_requires_refinement(self.response_text(), events)
         ):
             terminal = self.terminal_no_patchable_provider_loop()
@@ -175,6 +174,23 @@ class RuntimeGateProviderRefinementMixin:
                     }
                 )
                 break
+            if (
+                self.runtime_soft_close_reached()
+                and "SOFT_CLOSE_SIGNAL:" not in self.provider_revision_feedback
+            ):
+                self.provider_revision_feedback = "\n\n".join(
+                    part
+                    for part in (
+                        self.provider_revision_feedback.strip(),
+                        (
+                            "SOFT_CLOSE_SIGNAL: the time counter asks for coherent "
+                            "closure, but it is not a hard cutoff. Continue pointer "
+                            "propagation/refinement unless the heap has ready product "
+                            "evidence or EXIT_DECISION=NO_PATCHABLE_TARGET."
+                        ),
+                    )
+                    if part
+                )
             self.provider_revision_count += 1
             previous_veto_feedback = self.provider_revision_feedback.strip()
             quality_feedback = self.build_quality_failure_feedback(self.response_text(), events)

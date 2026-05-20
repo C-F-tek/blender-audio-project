@@ -313,9 +313,22 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     code_product_body = full_code_product.read_text(encoding="utf-8-sig") if full_code_product.exists() else ""
     required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Modifiche concrete", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore"]
     missing = [phrase for phrase in required_phrases if phrase not in body]
+    pointer_reconstruction = (
+        product.get("pointer_reconstruction")
+        if isinstance(product.get("pointer_reconstruction"), dict)
+        else {}
+    )
+    pointer_contract = (
+        pointer_reconstruction.get("contract")
+        if isinstance(pointer_reconstruction.get("contract"), dict)
+        else {}
+    )
     passed = (
         completed.returncode == 0
         and product.get("passed") is True
+        and product.get("pointer_reconstruction_passed") is True
+        and pointer_contract.get("final_code_product_composed_from_pointer_graph") is True
+        and pointer_contract.get("single_run_not_single_direction") is True
         and final_md.exists()
         and full_code_product.exists()
         and "CODE_PRODUCT_FULL_PATCH" in code_product_body
@@ -344,6 +357,8 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         "full_code_product": str(full_code_product),
         "documents_zip": str(zip_path),
         "missing_required_phrases": missing,
+        "pointer_reconstruction_passed": product.get("pointer_reconstruction_passed"),
+        "pointer_reconstruction": pointer_reconstruction,
         "returncode": completed.returncode,
         "stdout_tail": (completed.stdout or "")[-4000:],
         "stderr_tail": (completed.stderr or "")[-4000:],

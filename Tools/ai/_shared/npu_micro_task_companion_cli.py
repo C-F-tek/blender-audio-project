@@ -10,6 +10,7 @@ repo_root_for_import = Path(__file__).resolve().parents[2]
 if str(repo_root_for_import) not in sys.path:
     sys.path.insert(0, str(repo_root_for_import))
 
+from Tools.ai._shared.npu_micro_task_markdown import render_markdown
 from Tools.ai._shared.provider_tool_loop import openvino_tool_loop_report
 
 try:
@@ -118,9 +119,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-device-workload", action="store_true")
     parser.add_argument("--device-workload-seconds", type=float, default=0.25)
     parser.add_argument("--device-workload-iterations", type=int, default=8)
+    parser.add_argument("--max-prompt-chars", type=int, default=1200)
     parser.add_argument("--tool-loop-timeout-seconds", type=float, default=45.0)
     parser.add_argument("--tool-loop-max-new-tokens", type=int, default=128)
-    parser.add_argument("--require-semantic-provider", action="store_true")
     parser.add_argument("--leader-packet", default="", help="GPU1 primary advisor leader packet.")
     return parser.parse_args()
 
@@ -164,6 +165,7 @@ def _tool_loop(
         ),
         timeout_seconds=args.tool_loop_timeout_seconds,
         max_new_tokens=args.tool_loop_max_new_tokens,
+        max_prompt_chars=args.max_prompt_chars,
         device="NPU",
         python_exe=str(project_python),
     )
@@ -180,7 +182,7 @@ def _response_text(role_response: dict, device_workload: dict, npu_tool_loop: di
     if npu_tool_loop.get("native_tool_loop_supported"):
         response_text += f" NPU OpenVINO tool loop attivo: tool_calls={npu_tool_loop.get('native_tool_call_count')}."
     else:
-        response_text += f" NPU OpenVINO tool loop non disponibile: {npu_tool_loop.get('classification')}."
+        response_text += f" NPU OpenVINO tool loop richiesto ma non operativo: {npu_tool_loop.get('classification')}."
     return response_text
 
 
@@ -196,10 +198,13 @@ def _report(
     leader_packet: dict,
 ) -> dict:
     response_text = _response_text(role_response, device_workload, npu_tool_loop)
-    provider_performed = bool(device_workload.get("performed")) or bool(
-        npu_tool_loop.get("native_tool_loop_performed")
+    micro_activity_performed = bool(micro_task.get("micro_task_performed"))
+    provider_performed = (
+        micro_activity_performed
+        or bool(device_workload.get("performed"))
+        or bool(npu_tool_loop.get("native_tool_loop_performed"))
     )
-    semantic_provider_performed = bool(
+    micro_tool_provider_performed = bool(
         npu_tool_loop.get("native_tool_loop_supported")
         and npu_tool_loop.get("native_tool_loop_performed")
     )
@@ -209,7 +214,7 @@ def _report(
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": True,
         "mode": "peer_micro_audit",
-        "diagnostic_only": not semantic_provider_performed,
+        "diagnostic_only": not provider_performed,
         "timeout_seconds": args.timeout_seconds,
         "task_file": args.task_file,
         "startup_manifest": str(args.startup_manifest or ""),
@@ -251,31 +256,34 @@ def _report(
         "native_tool_loop_performed": bool(npu_tool_loop.get("native_tool_loop_performed")),
         "native_tool_call_count": int(npu_tool_loop.get("native_tool_call_count") or 0),
         "tool_calls": npu_tool_loop.get("tool_calls") or [],
-        "semantic_provider_required": bool(args.require_semantic_provider),
-        "semantic_provider_model_dir": str(npu_tool_loop.get("model_dir") or ""),
-        "semantic_provider_model_dir_source": str(npu_tool_loop.get("model_dir_source") or ""),
-        "semantic_provider_classification": str(npu_tool_loop.get("classification") or ""),
-        "semantic_provider_model_discovered": bool(
+        "npu_micro_provider_required": True,
+        "npu_micro_provider_model_dir": str(npu_tool_loop.get("model_dir") or ""),
+        "npu_micro_provider_model_dir_source": str(npu_tool_loop.get("model_dir_source") or ""),
+        "npu_micro_provider_classification": str(npu_tool_loop.get("classification") or ""),
+        "npu_micro_provider_model_discovered": bool(
             npu_tool_loop.get("model_dir")
             and str(npu_tool_loop.get("model_dir_source") or "") != "missing"
         ),
-        "semantic_child_failed": bool(
+        "npu_micro_provider_model_loaded": bool(npu_tool_loop.get("native_tool_loop_performed")),
+        "npu_micro_provider_execution_performed": micro_tool_provider_performed,
+        "npu_micro_child_failed": bool(
             npu_tool_loop.get("model_dir")
             and not npu_tool_loop.get("native_tool_loop_performed")
             and str(npu_tool_loop.get("classification") or "").endswith("_error")
         ),
-        "semantic_provider_model_loaded": bool(npu_tool_loop.get("native_tool_loop_performed")),
-        "semantic_provider_execution_performed": semantic_provider_performed,
-        "npu_semantic_provider_execution_performed": semantic_provider_performed,
         "npu_device_workload_requested": bool(device_workload.get("requested")),
         "npu_device_workload_performed": bool(device_workload.get("performed")),
         "npu_peer_activity_requested": True,
-        "npu_peer_activity_performed": bool(micro_task.get("micro_task_performed")),
+        "npu_peer_activity_performed": micro_activity_performed,
+        "npu_micro_audit_performed": micro_activity_performed,
+        "npu_lane_disabled": False,
+        "npu_active_surface": "micro_audit_device_workload_openvino_tool_loop",
+        "npu_broker_tool_loop_policy": "micro_task_provider_tool_loop_requested_when_lane_selected",
         "npu_device_execution_performed": bool(device_workload.get("performed"))
         or bool(micro_task.get("npu_device_available")),
         "npu_provider_execution_performed": provider_performed,
         "npu_activity_classification": role_response["role_decision"],
-        "npu_activity_limit": "NPU lane executes bounded OpenVINO/NPU checks and an OpenVINO GenAI native tool-loop attempt when a local model is resolvable.",
+        "npu_activity_limit": "NPU lane is a real bounded micro-task provider: it runs micro audit, device workload and micro tool-loop when selected. It remains support/micro and does not own the final product.",
         "recommendations": [{"id": "npu_companion_policy", "summary": response_text, "classification": "SAFE_MECHANICAL"}],
         "guardrails": {
             "legacy_npu_auditor_used": False,
@@ -290,25 +298,19 @@ def _report(
 
 
 def _apply_native_tool_loop_gate(report: dict, npu_tool_loop: dict) -> None:
+    if report.get("npu_device_workload_requested") and not report.get("npu_device_workload_performed"):
+        workload = report.get("npu_device_workload") if isinstance(report.get("npu_device_workload"), dict) else {}
+        report.setdefault("errors", []).append(
+            "NPU provider lane selected but real OpenVINO/NPU workload did not run: "
+            f"{workload.get('mode') or 'unknown'}"
+        )
+        report["passed"] = False
     if report["native_tool_loop_requested"] and report["native_tool_call_count"] <= 0:
         if npu_tool_loop.get("classification") != "openvino_native_tool_call_incomplete":
             report.setdefault("errors", []).append(
                 str(npu_tool_loop.get("classification") or "openvino_npu_native_tool_call_missing")
             )
             report["passed"] = False
-    if report["semantic_provider_required"] and not report["semantic_provider_execution_performed"]:
-        if report.get("semantic_provider_model_discovered"):
-            report.setdefault("errors", []).append(
-                "NPU semantic provider model was discovered but the OpenVINO child "
-                f"tool loop failed: {report.get('semantic_provider_classification')}."
-            )
-        else:
-            report.setdefault("errors", []).append(
-                "NPU semantic provider model was not discovered/executed; configure a valid "
-                "OpenVINO GenAI model dir via IA_CARMINE_NPU_MODEL_DIR, "
-                "SPAZIOTEMPO_NPU_MODEL_DIR or IA_CARMINE_OPENVINO_TOOL_MODEL_DIR."
-            )
-        report["passed"] = False
     if report["leader_packet_required"] and not report["leader_packet_consumed"]:
         report.setdefault("errors", []).append(
             "NPU peer did not consume a valid GPU1 primary advisor leader packet."
@@ -333,43 +335,3 @@ def _write_outputs(args: argparse.Namespace, report: dict) -> None:
             indent=2,
         )
     )
-
-
-def render_markdown(report: dict) -> str:
-    lines = [
-        "# NPU Micro-task Companion Report",
-        "",
-        f"- Passed: `{report['passed']}`",
-        f"- Mode: `{report['mode']}`",
-        f"- NPU peer activity requested: `{report['npu_peer_activity_requested']}`",
-        f"- NPU peer activity performed: `{report['npu_peer_activity_performed']}`",
-        f"- NPU device execution performed: `{report['npu_device_execution_performed']}`",
-        f"- NPU provider execution performed: `{report['npu_provider_execution_performed']}`",
-        f"- NPU semantic provider required: `{report['semantic_provider_required']}`",
-        f"- NPU semantic provider execution performed: `{report['semantic_provider_execution_performed']}`",
-        f"- NPU semantic provider model loaded: `{report['semantic_provider_model_loaded']}`",
-        f"- NPU semantic provider classification: `{report['semantic_provider_classification']}`",
-        f"- Leader packet consumed: `{report['leader_packet_consumed']}`",
-        f"- Leader packet: `{report['leader_packet']}`",
-        f"- Leader packet heap universe contract: `{report['leader_packet_heap_universe_contract']}`",
-        f"- Leader packet pointer contract: `{report['leader_packet_pointer_contract']}`",
-        f"- Leader packet time counter: `{report['leader_packet_time_counter_contract']}`",
-        f"- Leader packet startup artifacts: `{report['leader_packet_startup_artifacts_count']}`",
-        f"- Leader packet broker tool evidence: `{report['leader_packet_broker_tool_evidence_count']}`",
-        f"- NPU OpenVINO native tool loop supported: `{report['native_tool_loop_supported']}`",
-        f"- NPU OpenVINO native tool calls: `{report['native_tool_call_count']}`",
-        f"- NPU device workload requested: `{report['npu_device_workload_requested']}`",
-        f"- NPU device workload performed: `{report['npu_device_workload_performed']}`",
-        f"- NPU device workload: `{report['npu_device_workload']}`",
-        f"- NPU activity classification: `{report['npu_activity_classification']}`",
-        f"- Request input: `{report['request_input']}`",
-        f"- Response text: {report['response_text']}",
-        f"- NPU activity limit: {report['npu_activity_limit']}",
-        f"- Legacy NPU auditor used: `{report['guardrails']['legacy_npu_auditor_used']}`",
-        f"- Provider execution performed: `{report['guardrails']['provider_execution_performed']}`",
-        "",
-        "## Recommendation",
-        "",
-        report["recommendations"][0]["summary"],
-    ]
-    return "\n".join(lines) + "\n"

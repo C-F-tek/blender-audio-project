@@ -66,7 +66,10 @@ def repo_rel(repo_root: Path, path: Path) -> str:
 
 
 def normalize_ref_path(rel_path: str) -> str:
-    return str(rel_path or "").strip().strip("`'\"").replace("\\", "/")
+    normalized = str(rel_path or "").strip().strip("`'\"").replace("\\", "/")
+    normalized = re.sub(r"^(?:&\s*)?(?:python(?:\.exe)?|py)\s+", "", normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r"^-m\s+", "", normalized, flags=re.IGNORECASE)
+    return normalized.strip()
 
 
 def repo_file_exists(repo_root: Path, rel_path: str) -> bool:

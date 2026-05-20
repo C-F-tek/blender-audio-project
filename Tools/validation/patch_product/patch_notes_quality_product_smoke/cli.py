@@ -39,7 +39,7 @@ def main() -> int:
         "# ALL_ALL smoke task\n\n"
         "Objective: ALL_ALL repository progression. Required areas: "
         "doc_doc, doc_python, python_doc, python_python, policy_violation, "
-        "refactor_candidate, telemetry_gap, evidence_gap.\n",
+        "refactor_candidate, evidence_gap.\n",
         encoding="utf-8",
     )
     all_all_insufficient = run_case(repo_root, stamp + "_all_all_insufficient", fixtures, 72.0)

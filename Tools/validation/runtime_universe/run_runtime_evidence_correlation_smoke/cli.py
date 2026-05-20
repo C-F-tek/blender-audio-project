@@ -50,7 +50,7 @@ def seed_fixture(repo: Path) -> dict[str, Path]:
         "gpu0_peer": repo / f"output/validation/openvino_gpu0_workload_{STAMP}.json",
         "npu_micro_peer": repo / f"output/validation/npu_micro_peer_{STAMP}.json",
         "shared_memory": repo / f"output/validation/shared_toolbox_ai_to_ai_bundle_{STAMP}.json",
-        "tool_broker": repo / f"output/validation/full_toolbox_run_telemetry_summary_{STAMP}.json",
+        "tool_broker": repo / f"output/validation/runtime_tool_capability_manifest_{STAMP}.json",
         "closure_audit": repo / f"output/validation/heap_exchange_closure_audit_{STAMP}.json",
         "product_readiness": repo
         / f"output/validation/review_pr_product_readiness_real_product_{STAMP}.json",
@@ -96,10 +96,8 @@ def seed_fixture(repo: Path) -> dict[str, Path]:
     write_json(
         paths["tool_broker"],
         fixture_report(
-            "full_toolbox_run_telemetry_summary",
-            tool_usage_count=3,
+            "runtime_tool_capability_manifest",
             broker=True,
-            telemetry=True,
             capability=True,
         ),
     )

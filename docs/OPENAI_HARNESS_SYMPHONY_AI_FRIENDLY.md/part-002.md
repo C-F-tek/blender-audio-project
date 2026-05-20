@@ -22,7 +22,7 @@ topics:
   - workflow automation
   - guardrails
   - dry-run validation
-  - telemetry
+  - evidence
   - capability manifest
   - AI-to-AI handoff
 recommended_target_docs:

@@ -121,7 +121,7 @@ These are good candidates for documented project-tool status, but not necessaril
 | `Tools/ai/check_local_resource_lanes.py` | 2 | PROVIDER_DIAGNOSTIC | Local resource-lane checker. |
 | `Tools/ai/build_workload_quality_lane_routing.py` | 2 | PROVIDER_DIAGNOSTIC | Workload quality routing report. |
 | `Tools/validation/ai_workload/report_quality/cli.py` | 2 | PROVIDER_DIAGNOSTIC / VALIDATION | Already important; document as quality gate. |
-| `Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Important for broker telemetry follow-up. |
+| `Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Important for broker evidence follow-up. |
 | `Tools/validation/runtime_tool/npu_runtime_tool_execution_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime execution smoke. |
 | `Tools/validation/runtime_tool/npu_runtime_tool_context_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime context smoke. |
 | `Tools/validation/runtime_tool/npu_runtime_tool_fallback_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime fallback smoke. |
@@ -183,15 +183,15 @@ These should be documented as internal components, not promoted directly unless 
 
 ## Immediate recommendations
 
-### P0 — fix final runtime broker telemetry absorption
+### P0 — fix final runtime broker evidence absorption
 
 The next code patch remains:
 
-    fix(ai): preserve broker report in final runtime telemetry
+    fix(ai): preserve broker report in final runtime evidence
 
 Reason:
 
-    Broker tools exist, but the final Git-trackable telemetry did not absorb broker execution evidence in run `20260505-002508`.
+    Broker tools exist, but the final Git-trackable evidence did not absorb broker execution evidence in run `20260505-002508`.
 
 ### P1 — create a canonical project-tool registry document
 

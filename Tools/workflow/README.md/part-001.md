@@ -55,11 +55,11 @@ run_unified_local_ai_refactor.ps1 = unified launcher / dynamic heap-exchange exe
 quick/balanced/deep/custom = intensity, not scope
 supporting wrappers are implementation lanes, not first entrypoints
 provider/probe/workload-quality lanes are opt-out in real unified product runs
-GPU1/GPU0/NPU peer exchange must enter telemetry, bundle and acceptance evidence
+GPU1/GPU0/NPU peer exchange must enter evidence, bundle and acceptance evidence
 GPU1/Ollama advisory must consume current-stamp runtime evidence when available
 GPU0 OpenVINO lane must be observable workload/support evidence, not only device presence
 NPU is peer micro/diagnostic/report lane until a compute-provider lane is validated
-runtime tool telemetry must use normalized statuses and broker-measured elapsed seconds when tools execute
+runtime tool evidence must use normalized statuses and broker-measured elapsed seconds when tools execute
 final NPU provider work must not run on the performance-critical close path unless NpuMicroStartMode=final-provider
 provider-capable workflow runners prefer IA_CARMINE_PYTHON, then .venv, before system python
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant

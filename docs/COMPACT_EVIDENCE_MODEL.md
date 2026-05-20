@@ -64,7 +64,7 @@ Default policy: do not commit.
 docs/LOCAL_VALIDATION_EVIDENCE/*.md
 docs/LOCAL_VALIDATION_EVIDENCE/*.json
 small selected summaries
-run telemetry summaries
+run evidence summaries
 validation evidence summaries
 ```
 
@@ -194,6 +194,6 @@ Tools/validation/runtime_universe/TOOL_CONTEXT.md
 
 ```text
 docs/LOCAL_VALIDATION_EVIDENCE/*bundle*.md
-docs/LOCAL_VALIDATION_EVIDENCE/*telemetry*.md
+docs/LOCAL_VALIDATION_EVIDENCE/*evidence*.md
 docs/LOCAL_VALIDATION_EVIDENCE/*summary*.md
 ```

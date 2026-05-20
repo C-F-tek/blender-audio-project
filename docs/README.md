@@ -219,6 +219,8 @@ This separates provider proposal, patch plan, patch candidate, code product, Pat
 
 | Area | Document |
 |---|---|
+| AI workload quality gate | `AI_WORKLOAD_REPORT_QUALITY_GATE.md` |
+| Local AI core tool activation | `LOCAL_AI_CORE_TOOL_ACTIVATION.md` |
 | Runtime architecture | `MAIN_RUNTIME_ARCHITECTURE.md` |
 | Unified launcher contract | `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md` |
 | Local AI workflow | `LOCAL_AI_WORKFLOW.md` |

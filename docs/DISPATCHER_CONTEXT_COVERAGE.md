@@ -6,13 +6,15 @@ This document records the dispatcher-driven context pass.
 
 The repository has many tools. Context documentation is tracked by dispatcher and macro-family, not by pretending that every script has an individual hand-written page.
 
-Dispatcher coverage is a support layer for the IA Universe model-to-code map:
+Dispatcher coverage is a support layer for the anti-ambiguity, lane completeness and IA Universe model-to-code contracts:
 
 ```text
+docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
+docs/CORE_LANE_COMPLETENESS_CONTRACT.md
 docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 
-Use that map first when you need to understand how a model becomes code, commands, artifacts and validators. Use this document to verify dispatcher and family coverage.
+Use those contracts first when you need to decide whether a command, smoke, artifact or lane is proof. Use this document to verify dispatcher and family coverage.
 
 ## Dispatchers inspected
 
@@ -30,6 +32,8 @@ Use that map first when you need to understand how a model becomes code, command
 
 ```text
 CONTEXT_INDEX.md
+-> docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md
+-> docs/CORE_LANE_COMPLETENESS_CONTRACT.md
 -> docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 -> docs/CONTEXT_COVERAGE_STATUS.md
 -> Tools/CONTEXT_INDEX.md

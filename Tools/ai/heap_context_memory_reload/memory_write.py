@@ -26,6 +26,7 @@ def run_operational_memory_write(state: ReloadRun) -> None:
         blocking_requirements=blocking,
         artifacts=state.artifacts,
         commands=state.commands,
+        context_delta=state.context_delta,
     )
     output_json = state.output_dir / "startup_operational_memory_write.json"
     output_md = state.output_dir / "startup_operational_memory_write.md"
@@ -86,6 +87,7 @@ def build_final_task_markdown(state: ReloadRun) -> str:
         artifacts=state.artifacts,
         commands=state.commands,
         warnings=state.warnings,
+        context_delta=state.context_delta,
         startup_reload_degraded=bool(degraded or optional_failed),
         degraded_requirements=degraded,
         blocking_requirements=blocking,

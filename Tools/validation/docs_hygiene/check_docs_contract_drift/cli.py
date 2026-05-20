@@ -101,8 +101,22 @@ FORBIDDEN_TERMS = (
 )
 
 
+def markdown_source_exists(path: Path) -> bool:
+    return path.is_file() or path.is_dir()
+
+
+def split_markdown_files(path: Path) -> list[Path]:
+    candidates = [path / "README.md", *sorted(path.glob("part-*.md"))]
+    return [item for item in candidates if item.is_file()]
+
+
 def read_text(path: Path) -> tuple[str, str | None]:
     try:
+        if path.is_dir():
+            parts = split_markdown_files(path)
+            if not parts:
+                return "", f"split markdown directory has no readable README.md/part-*.md: {path}"
+            return "\n".join(part.read_text(encoding="utf-8-sig") for part in parts), None
         return path.read_text(encoding="utf-8-sig"), None
     except OSError as exc:
         return "", f"{type(exc).__name__}: {exc}"
@@ -142,7 +156,7 @@ def check_doc(repo_root: Path, spec: dict[str, Any]) -> dict[str, Any]:
     return {
         "path": rel_path,
         "contract": spec.get("contract"),
-        "exists": (repo_root / rel_path).is_file(),
+        "exists": markdown_source_exists(repo_root / rel_path),
         "ok": not errors,
         "required_term_count": len(required_terms),
         "recommended_term_count": len(recommended_terms),

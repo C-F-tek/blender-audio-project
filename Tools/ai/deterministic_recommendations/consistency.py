@@ -74,8 +74,6 @@ def consistency_area(kind: str) -> str:
         return "python_doc"
     if kind.startswith("policy_"):
         return "policy_violation"
-    if "telemetry" in kind:
-        return "telemetry_gap"
     if "evidence" in kind:
         return "evidence_gap"
     return "refactor_candidate"
@@ -176,7 +174,6 @@ def area_diverse_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]
         "python_doc",
         "policy_violation",
         "refactor_candidate",
-        "telemetry_gap",
         "evidence_gap",
     ]
     by_area: dict[str, list[dict[str, Any]]] = {area: [] for area in preferred_areas}
@@ -205,7 +202,6 @@ def area_diverse_items(items: list[dict[str, Any]], *, limit: int) -> list[dict[
         "python_doc",
         "policy_violation",
         "refactor_candidate",
-        "telemetry_gap",
         "evidence_gap",
     ]
     by_area: dict[str, list[dict[str, Any]]] = {area: [] for area in preferred_areas}

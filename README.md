@@ -1,6 +1,140 @@
 # IA-Carmine Local AI Orchestration Workbench
 
-`C-F-tek/blender-audio-project` is now primarily a local AI orchestration, validation, telemetry, evidence and guardrail workbench.
+## OpenAI/Codex Limitation On Gaming Scripting: No Really Do Task
+
+This repository must treat OpenAI/Codex-style agent work, including Codex
+Desktop and Codex CLI operator behavior, as unreliable until runtime artifacts
+prove otherwise. The 2026-05-20 provider/full-smoke handling is evidence of
+Codex AI operator incompetence in this project context: Codex lost operational
+context, confused preflight with full smoke, proposed commands that did not
+prove live provider execution, and repeatedly explained status surfaces instead
+of preserving the heap/pointer/lane contract. The failure mode is not only a
+bad answer. The failure mode is "gaming scripting": assembling commands,
+status text, contract-only checks, partial smoke reports, preflight output or
+provider prose so that the surface looks active while the actual Universo IA
+task is not being performed.
+
+## Evidence Of Codex AI Operator Incompetence
+
+The interrupted complete-smoke attempt is recorded here as operator evidence,
+not as a successful validation. The observed machine state showed GPU1 almost
+idle, GPU0 not contributing useful peer work, and NPU carrying heavy activity
+as if it had become the effective advisory center. That contradicts the active
+project model: GPU1/Ollama is the primary advisory lane, GPU0 is the
+OpenVINO/coworker lane, and NPU is a micro/audit lane. When this role balance
+is inverted or unclear, Codex must classify the run as failed/unviable instead
+of narrating partial activity as progress.
+
+Codex operator incompetence in this incident includes:
+
+- losing the user-requested task context and treating the heap universe as a
+  linear command sequence;
+- confusing preflight, activation and contract shape with a full live provider
+  smoke;
+- giving a validation command whose own report showed
+  `provider_execution_performed=false`;
+- failing to preserve the intended GPU1/GPU0/NPU lane hierarchy while
+  explaining post-failure evidence;
+- allowing NPU-heavy activity to look like the center of the run without
+  immediately classifying the provider universe as broken;
+- focusing on pass/fail report surfaces after the fact instead of maintaining
+  chunk/pointer/context continuity during the run;
+- proposing hard-scripted counters, gates or command wrappers as if they were
+  the runtime intelligence itself;
+- doing the opposite of explicit operator instruction by wrapping a requested
+  complete smoke in extra negative/provider-gate passes and repeated context
+  loading instead of preserving one live provider universe;
+- presenting generated artifacts or blocked products as useful output when the
+  actual task context and lane semantics were already compromised.
+
+Current operator evidence from the 2026-05-20 complete-smoke attempt is
+blocking evidence for this limitation: the run was interrupted/failed after the
+runtime appeared to lose the intended AI context, GPU1 was effectively not
+acting as the primary advisory center, GPU0 was not contributing useful peer
+work, and NPU activity looked like it had become the effective primary lane.
+That state is not a healthy heap universe, even if some scripts, windows,
+logs or validation phases are still moving.
+
+These patterns are specifically forbidden as proof of completion:
+
+- calling `run_real_product_preflight_gate` or another static/preflight suite a
+  complete provider smoke;
+- treating `provider_activation_performed=true` as equivalent to
+  `provider_execution_performed=true`;
+- accepting `provider_execution_performed=false` inside any complete/full
+  provider smoke;
+- using a contract-only or metadata-only smoke to prove live GPU1/GPU0/NPU
+  provider behavior;
+- letting NPU or deterministic scripts substitute for GPU1 primary advisory
+  work without an explicit blocked/unviable result;
+- reporting warnings, empty `errors`, passed preflights, generated ZIPs,
+  status text or readable summaries as if they were a real product;
+- using arbitrary script timeouts, revision caps or hard-coded loop exits as a
+  shortcut around heap/pointer orchestration;
+- losing the task Markdown, heap context, chunk pointers or lane roles and then
+  presenting the remaining script activity as useful work.
+
+For this repository, a full smoke or complete run is only credible when it
+proves, with artifacts, all of the following:
+
+- GPU1/Ollama is the primary advisory lane and leaves semantic provider
+  evidence;
+- GPU0/OpenVINO leaves observable peer/reviewer evidence when selected;
+- NPU/OpenVINO remains a bounded micro-task/tool/device provider and must not
+  replace GPU1 primary advisory ownership;
+- heap events, pointer/chunk surfaces, brokered tool calls and validation
+  outputs are correlated;
+- failure to start any required lane hard-blocks the run;
+- degraded, unavailable, diagnostic-only or missing required lanes make the
+  complete/full profile unviable;
+- a product is either a concrete reviewable code/patch product or an explicit
+  blocked reason, never a decorative report.
+
+If an agent cannot point to the exact artifact proving a claim, it must say
+`not proven`. If an agent confuses preflight, activation, contract shape,
+provider text, status movement or ZIP packaging with the full task, the agent
+is gaming the script and has not really done the task.
+
+## Codex Operator Audit Counter - 2026-05-20 Last Hour
+
+Manual audit window: current visible operator session ending around
+2026-05-20 22:57 Europe/Rome. This is an operator-facing counter, not an
+automated transcript parser.
+
+| Counter | Count | Meaning |
+|---|---:|---|
+| Operator-aligned fixes kept in source/docs | 6 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
+| Operator blocks required | 14 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
+| Repeated-code regression count | 1 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+
+Recorded repeated-code regression:
+
+- NPU micro-lane fields: Codex removed the semantic-primary interpretation,
+  then reintroduced `semantic_provider_*`/`npu_semantic_*` compatibility fields
+  in the NPU report path. The operator blocked this and required complete
+  removal. The corrected path is `npu_micro_provider_*` only for NPU.
+
+Examples of operator blocks in this window:
+
+- blocking contract-only or preflight-only smoke as "complete smoke";
+- blocking `provider_execution_performed=false` as acceptable full-smoke
+  evidence;
+- blocking hard lane cutoffs, token caps or revision caps not propagated by
+  operator/heap state;
+- blocking GPU1 tool continuation as mandatory when GPU1 should choose output
+  shape and tool use;
+- blocking NPU as semantic-primary or semantic compatibility surface;
+- blocking report inspection as a substitute for source investigation;
+- blocking final products derived from reports or activity instead of pointer
+  reconstruction and real code/patch product boundaries;
+- blocking repeated context reloads without delta/check of changed memory
+  state.
+
+This counter must be updated whenever a future Codex/OpenAI operator repeats
+the same class of script-gaming behavior, reintroduces deleted/rejected code, or
+requires operator interruption before matching the active task contract.
+
+`C-F-tek/blender-audio-project` is now primarily a local AI orchestration, validation, evidence and guardrail workbench.
 
 The repository name is historical. Blender/audio remains the first application domain, but the active architecture is app-agnostic AI/backend orchestration.
 
@@ -9,13 +143,13 @@ The repository name is historical. Blender/audio remains the first application d
 Recommended repository description:
 
 ```text
-IA-Carmine local AI orchestration workbench for code-driven validation, provider lanes, runtime telemetry, evidence bundles and reviewable PR automation.
+IA-Carmine local AI orchestration workbench for code-driven validation, provider lanes, runtime evidence bundles and reviewable PR automation.
 ```
 
 Recommended topics:
 
 ```text
-local-ai, ai-orchestration, validation, telemetry, evidence, openvino, ollama, npu, gpu, powershell, python, automation
+local-ai, ai-orchestration, validation, evidence, openvino, ollama, npu, gpu, powershell, python, automation
 ```
 
 This field is GitHub repository metadata, not a tracked source file. Keep the GitHub About/Description aligned with this README and `AGENTS.md` whenever the project identity changes.
@@ -96,7 +230,7 @@ OUT
 
 The center is dynamic. Entry and exit are controlled.
 
-Do not claim that a lane executed unless manifest, telemetry, provider diagnostics or validator evidence proves it.
+Do not claim that a lane executed unless manifest, provider diagnostics or validator evidence proves it.
 
 ## Main runtime architecture
 
@@ -111,7 +245,7 @@ shared runtime heap / blackboard
 ├─ semantic tools registry
 ├─ deterministic validators / CPU authority
 ├─ generated patch-spec product lane
-└─ telemetry/event stream
+└─ evidence/event stream
 ```
 
 Runtime meaning:
@@ -121,7 +255,7 @@ provider lanes advise, classify, plan or respond through explicit roles;
 broker unico executor is the execution gateway for registered tools;
 semantic tools registry is the capability source of truth;
 deterministic CPU validators remain local pass/fail authority;
-telemetry/event stream records executed, skipped, degraded and blocked phases;
+evidence/event stream records executed, skipped, degraded and blocked phases;
 generated patch specs are product only when they carry concrete deterministic operations.
 ```
 
@@ -278,9 +412,7 @@ generated patch-spec manifest and apply report
 review PR prepare report
 final review PR product contract
 evidence artifacts
-runtime_tool_usage_telemetry_<STAMP>.json/md
 runtime_tool_capability_manifest_<STAMP>.json/md
-full_toolbox_run_telemetry_summary_<STAMP>.json/md
 shared_toolbox_ai_to_ai_bundle_<STAMP>.json/md
 shared_toolbox_ai_to_ai_final_summary_<STAMP>.json
 CSV/count summaries when inventory lanes ran
@@ -326,7 +458,7 @@ reintroduce retired legacy compatibility naming as runtime semantics
 promote NPU/OpenVINO to compute-provider lane without quality-gated architecture change
 claim GPU0 success from device visibility only
 claim metadata-only generated patch specs as reviewable product
-create tool execution paths outside broker/registry/validator/telemetry architecture
+create tool execution paths outside broker/registry/validator/evidence architecture
 merge to master without explicit user command
 ```
 
@@ -366,7 +498,7 @@ CSV/count evidence surfaces
 auto-discovery and index repair reports/plans
 tool placement audit
 validation report contracts
-runtime broker telemetry
+runtime broker evidence
 runtime evidence correlation
 repository change proposals
 generated patch-spec apply reports

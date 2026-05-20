@@ -54,7 +54,7 @@ def absorb_completed_provider_item(
         gate.read_events(),
     )
     provider_report.update(gate.provider_block_contract(lane, revision, provider_report))
-    provider_report["execution_mode"] = "concurrent_provider_teamwork"
+    provider_report["execution_mode"] = "provider_teamwork_unified_parallel"
     provider_report["revision"] = revision
     provider_report["report_passed"] = bool(provider_report.get("passed"))
     provider_report["diagnostic_only"] = not bool(
@@ -120,7 +120,7 @@ def _publish_provider_report(
 ) -> None:
     gate.publish(
         provider_heap_lane(lane),
-        "telemetry_signal",
+        "provider_evidence",
         provider_report,
         target="orchestrator",
         correlation_id=correlation,
@@ -142,7 +142,7 @@ def _publish_provider_report(
             "round": round_id,
             "requirement": requirement,
             "revision": revision,
-            "execution_mode": "concurrent_provider_teamwork",
+            "execution_mode": "provider_teamwork_unified_parallel",
             "started_at": provider_report.get("started_at"),
             "completed_at": provider_report.get("completed_at"),
             "elapsed_seconds": provider_report.get("elapsed_seconds"),
@@ -168,7 +168,7 @@ def _provider_peer_block_payload(
     revision: int,
     provider_report: dict[str, Any],
 ) -> dict[str, Any]:
-    return {
+    payload = {
         "kind": "provider_peer_block",
         "lane": lane,
         "revision": revision,
@@ -183,9 +183,17 @@ def _provider_peer_block_payload(
         "decision": provider_report.get("decision"),
         "provider_report": provider_report.get("output"),
         "native_tool_call_count": provider_report.get("native_tool_call_count"),
-        "semantic_provider_execution_performed": provider_report.get("semantic_provider_execution_performed"),
         "operational_provider_activity": provider_report.get("operational_provider_activity"),
     }
+    if lane == "npu_micro_task_auditor":
+        payload["npu_micro_provider_execution_performed"] = provider_report.get(
+            "npu_micro_provider_execution_performed"
+        )
+    else:
+        payload["semantic_provider_execution_performed"] = provider_report.get(
+            "semantic_provider_execution_performed"
+        )
+    return payload
 
 
 def _publish_claim(
@@ -209,14 +217,21 @@ def _publish_claim(
         "requirement": requirement,
         "evidence_ref": provider_report.get("output"),
         "provider_execution_performed": provider_report.get("provider_execution_performed"),
-        "semantic_provider_execution_performed": provider_report.get("semantic_provider_execution_performed"),
         "operational_provider_activity": operational,
         "provider_activity_classification": provider_report.get("provider_activity_classification"),
         "leader_packet": provider_report.get("leader_packet"),
         "observed_request": gate.request_text(),
         "observed_response": provider_report.get("response_text") or gate.response_text(),
-        "execution_mode": "concurrent_provider_teamwork",
+        "execution_mode": "provider_teamwork_unified_parallel",
     }
+    if lane == "npu_micro_task_auditor":
+        claim["npu_micro_provider_execution_performed"] = provider_report.get(
+            "npu_micro_provider_execution_performed"
+        )
+    else:
+        claim["semantic_provider_execution_performed"] = provider_report.get(
+            "semantic_provider_execution_performed"
+        )
     append_unique(gate.state["claims"], claim)
     gate.publish(
         provider_heap_lane(lane),

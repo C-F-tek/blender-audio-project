@@ -21,7 +21,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--observer-dir", default="")
     parser.add_argument("--ai-public-events", default="")
     parser.add_argument("--tool-capability-manifest", default="")
-    parser.add_argument("--tool-usage-telemetry", default="")
     parser.add_argument("--heap-peer-runtime", default="")
     parser.add_argument("--shared-memory-evidence", default="")
     parser.add_argument("--closure-audit-report", default="")

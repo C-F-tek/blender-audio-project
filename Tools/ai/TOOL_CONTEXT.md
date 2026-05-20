@@ -2,7 +2,7 @@
 
 ## Role
 
-`Tools/ai` is the main IA-Carmine runtime and product surface. It owns the operator launcher, heap runtime, provider mesh, context/memory reload, brokered tools, code-product generation, patch-product synthesis, repository product tools, runtime telemetry and AI-to-AI bundle artifacts.
+`Tools/ai` is the main IA-Carmine runtime and product surface. It owns the operator launcher, heap runtime, provider mesh, context/memory reload, brokered tools, code-product generation, patch-product synthesis, repository product tools, runtime evidence and AI-to-AI bundle artifacts.
 
 Canonical invocation:
 
@@ -98,7 +98,6 @@ Representative tools:
 ```text
 agent_runtime_tool_broker
 runtime_tool_broker
-runtime_tool_usage_telemetry
 build_runtime_tool_capability_manifest
 runtime_file_refs
 agent_runtime_debug_lab

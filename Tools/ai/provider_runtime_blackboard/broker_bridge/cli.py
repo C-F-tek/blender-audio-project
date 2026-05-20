@@ -157,7 +157,6 @@ def broker_result_target_from_source(value: object) -> str:
         "npu",
         "broker",
         "deterministic",
-        "telemetry",
         "orchestrator",
     }:
         return lane

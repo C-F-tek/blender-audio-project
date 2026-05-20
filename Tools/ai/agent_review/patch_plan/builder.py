@@ -67,7 +67,7 @@ def build_patch_plan(args: argparse.Namespace) -> dict[str, Any]:
     max_patch_plans = 0
     if requested_max_patch_plans > 0:
         warnings.append(
-            "max_patch_plans is accepted for compatibility/telemetry but does not truncate patch plans; "
+            "max_patch_plans is accepted for compatibility but does not truncate patch plans; "
             "patch_plan_count may be lower than available_patch_plan_count only through guardrail rejection"
         )
 

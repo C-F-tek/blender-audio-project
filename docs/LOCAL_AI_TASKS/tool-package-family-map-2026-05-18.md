@@ -44,10 +44,10 @@ python -m Tools.docs <tool>
 | `Tools.ai` | `patchkit` | Deterministic PatchKit bundle application boundary. |
 | `Tools.ai` | `pipeline` | Pipeline dry-run matrix, artifact runner, validation step and artifact validation helpers. |
 | `Tools.ai` | `provider_mesh` | GPU1/GPU0/NPU provider probes, peers, auditors and provider runtime mesh helpers. |
-| `Tools.ai` | `provider_runtime_blackboard` | Provider runtime blackboard, telemetry, peer report and broker bridge helpers. |
+| `Tools.ai` | `provider_runtime_blackboard` | Provider runtime blackboard, evidence, peer report and broker bridge helpers. |
 | `Tools.ai` | `repository_product` | GitHub evidence, repository consistency and review PR product builders. |
 | `Tools.ai` | `run` | Canonical non-GUI operator product command. |
-| `Tools.ai` | `runtime_tool` | Broker, allowlist execution and runtime tool telemetry. |
+| `Tools.ai` | `runtime_tool` | Broker, allowlist execution and runtime tool evidence. |
 | `Tools.ai` | `runtime_universe` | Unified chain/launcher patches and universe/observer helpers. |
 | `Tools.ai` | `schema_repair` | Provider response schema repair helpers. |
 | `Tools.validation` | `agent_context` | Agent-context contract checks and semantic context smokes. |

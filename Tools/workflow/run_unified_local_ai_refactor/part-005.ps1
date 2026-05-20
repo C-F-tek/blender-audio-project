@@ -46,7 +46,7 @@ if ($BuildRuntimeEvidenceCorrelation) {
     $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--gpu0-report" -VariableNames @("OpenVinoGpu0WorkloadJson", "OpenVinoGpu0Report", "Gpu0WorkloadJson")
     $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--npu-report" -VariableNames @("NpuMicroCompanionJson", "NpuMicroReport", "NpuReport")
     $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--shared-memory-evidence" -VariableNames @("SharedToolboxBundleJson", "HeapPeerRuntimeJson")
-    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--tool-broker-report" -VariableNames @("RuntimeToolCapabilityManifestJson", "FullToolboxRunTelemetrySummaryJson", "FullToolboxTelemetrySummaryJson")
+    $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--tool-broker-report" -VariableNames @("RuntimeToolCapabilityManifestJson")
     $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--closure-audit-report" -VariableNames @("HeapExchangeClosureAuditJson")
     $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--product-readiness-report" -VariableNames @("ReviewPrProductReadinessJson")
     $RuntimeEvidenceCorrelationArgs = Add-ExistingRuntimeEvidencePathArg -ArgsValue $RuntimeEvidenceCorrelationArgs -Flag "--review-pr-report" -VariableNames @("ReviewPrJson")

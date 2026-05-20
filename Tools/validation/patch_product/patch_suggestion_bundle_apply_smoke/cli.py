@@ -233,7 +233,7 @@ def main() -> int:
         if manual_product.get("product_facing_manual_review_count") != 1:
             errors.append("expected one product-facing manual review proposal")
         if not manual_product.get("supplemental_manual_review_count"):
-            errors.append("expected supplemental telemetry/debug suggestions to be separated")
+            errors.append("expected supplemental debug/evidence suggestions to be separated")
         if apply_report.get("patch_product_status") != "deterministic_patch_operations_ready":
             errors.append("expected deterministic patch product readiness")
         if any(item.get("family") == "synthetic_patch_suggestions" for item in manual_items):

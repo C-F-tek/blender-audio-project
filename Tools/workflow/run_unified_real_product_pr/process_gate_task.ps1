@@ -74,7 +74,7 @@ The run is successful only if all of these are true:
 4. the heap/exchange layer emits observable exchange evidence;
 5. generated patch specs are current-stamp and concrete;
 6. at least one concrete deterministic operation is available for review;
-7. product separation classifies the output as reviewable product, not supplemental telemetry only;
+7. product separation classifies the output as reviewable product, not supplemental debug-only material;
 8. agent_review_prepare_pr creates a draft PR with real source/doc changes;
 9. the review PR final product contract validates the remote PR product.
 

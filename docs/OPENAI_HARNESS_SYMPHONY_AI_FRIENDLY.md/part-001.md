@@ -19,6 +19,6 @@ Tools/ai/pipeline/ come architettura modulare
 Tools/npu/pipeline/ come helper package app-agnostico in staged decomposition
 pipeline_dry_run_matrix come validazione planned-only ripetibile
 run_unified_local_ai_refactor.ps1 come launcher unico
-runtime telemetry e capability manifest come proof-of-work accessory
+runtime evidence e capability manifest come proof-of-work accessory
 Scripting/shared/ come libreria condivisa
 ```

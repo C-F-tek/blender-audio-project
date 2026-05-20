@@ -86,7 +86,7 @@ It contains:
 | `Scripting/_template_audio_reactive_package/` | Template for future generated packages. |
 | `Scripting/shared/` | Target area for reusable package-agnostic utilities. |
 | `Tools/workflow/` | Current workflow/launcher ownership. |
-| `Tools/ai/` | Current AI orchestration, context, telemetry, evidence, heap/exchange, patchkit and review tooling. |
+| `Tools/ai/` | Current AI orchestration, context, evidence, evidence, heap/exchange, patchkit and review tooling. |
 | `Tools/npu/` | Local AI, NPU, context-building, review and implementation tooling. |
 | `Tools/validation/` | Validators, smokes and report-contract checks. |
 | `Tools/docs/` | Documentation hygiene and tool-surface audit helpers. |

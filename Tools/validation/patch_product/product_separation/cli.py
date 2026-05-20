@@ -103,7 +103,7 @@ def validate_product_item(item: dict[str, Any], index: int) -> list[str]:
 
 
 def validate_supplemental_item(item: dict[str, Any], index: int) -> list[str]:
-    """Validate one supplemental telemetry/debug/evidence suggestion item."""
+    """Validate one supplemental debug/evidence suggestion item."""
     errors: list[str] = []
     label = item.get("id") or item.get("proposal_id") or f"supplemental[{index}]"
     if item.get("supplemental") is not True:
@@ -126,12 +126,12 @@ def validate_apply_report(
         else {}
     )
     essential = data.get("essential_patch_suggestion_items")
-    supplemental = data.get("supplemental_telemetry_debug_items")
+    supplemental = data.get("supplemental_debug_items")
     if not isinstance(essential, list):
         errors.append("essential_patch_suggestion_items is missing or not a list")
         essential = []
     if not isinstance(supplemental, list):
-        errors.append("supplemental_telemetry_debug_items is missing or not a list")
+        errors.append("supplemental_debug_items is missing or not a list")
         supplemental = []
 
     expected_product_total = int(product.get("product_facing_manual_review_count") or 0)
@@ -172,7 +172,7 @@ def validate_apply_report(
             "required product-facing patch suggestions or deterministic operations are absent"
         )
     if require_supplemental and not supplemental:
-        errors.append("required supplemental telemetry/debug items are absent")
+        errors.append("required supplemental debug/evidence items are absent")
 
     for index, item in enumerate(essential):
         errors.extend(
@@ -213,8 +213,8 @@ def validate_apply_report(
         "failed_count": failed_count,
         "essential_patch_suggestion_count": len(essential),
         "essential_patch_suggestion_total_count": expected_product_total,
-        "supplemental_telemetry_debug_count": len(supplemental),
-        "supplemental_telemetry_debug_total_count": expected_supplemental_total,
+        "supplemental_debug_count": len(supplemental),
+        "supplemental_debug_total_count": expected_supplemental_total,
         "patch_product_status": data.get("patch_product_status")
         or product.get("patch_product_status"),
         "ready_for_patch_suggestion_review": data.get("ready_for_patch_suggestion_review"),

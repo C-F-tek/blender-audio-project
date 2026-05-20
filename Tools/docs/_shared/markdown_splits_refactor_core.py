@@ -32,7 +32,6 @@ SKIP_PREFIXES = (
 )
 PRUNE_ALLOWLIST = (
     "docs/LOCAL_AI_TASKS/full-run-unica-tutto-su-tutto-patch-plan-task.md",
-    "docs/LOCAL_AI_TASKS/full-access-md-telemetry-refactor-cycle-2026-05-06.md",
     "docs/LOCAL_AI_TASKS/docs-md-obsolete-pruning-next-step.md",
 )
 SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")

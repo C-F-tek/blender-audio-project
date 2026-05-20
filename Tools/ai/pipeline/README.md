@@ -24,7 +24,7 @@ quick/balanced/deep/custom = intensity, not scope
 pipeline dry-run != full-run proof
 400-line policy applies to maintained docs and source files
 limitations are backlog to overcome, not reasons to skip available tools
-telemetry accompanies evidence and patch plans for completeness
+evidence accompanies evidence and patch plans for completeness
 ```
 
 ## Package role
@@ -71,9 +71,9 @@ A pipeline report that influences run-unica evidence, recommendations, patch pla
 ```text
 launcher manifest
 phase_status / phase_reports
-runtime tool usage telemetry
+runtime tool usage evidence
 runtime/hardware capability manifest
-full toolbox telemetry summary
+full toolbox evidence summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
 ```
@@ -105,7 +105,7 @@ schema/report compatibility helpers
 fixture builders
 validation/report summaries
 provider-neutral configuration helpers
-telemetry/capability reference plumbing
+evidence/capability reference plumbing
 file-line evidence references when maintainability is in scope
 ```
 

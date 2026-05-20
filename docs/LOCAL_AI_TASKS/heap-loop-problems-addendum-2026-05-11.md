@@ -278,7 +278,7 @@ decision
 candidate_operation
 patch_plan_signal
 product_signal
-telemetry_signal
+provider_evidence
 ```
 
 La funzione `append_reload_lifecycle_event()` in `python -m Tools.ai run_heap_runtime_completeness_gate` incapsula il reload come payload `kind=memory_context_reload`, ma deve per forza usare uno degli event type generici tramite `append_heap_exchange_event()`.
@@ -289,7 +289,7 @@ Il concetto e' presente ma non tipizzato a livello di heap event taxonomy. Quest
 
 ### Azione consigliata
 
-Senza rompere compatibilita', usare `event_type="telemetry_signal"` o `event_type="fact"` in modo stabile e documentare:
+Senza rompere compatibilita', usare `event_type="provider_evidence"` o `event_type="fact"` in modo stabile e documentare:
 
 ```text
 payload.kind == memory_context_reload

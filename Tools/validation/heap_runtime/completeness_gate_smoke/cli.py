@@ -167,8 +167,19 @@ def validate_complete(report: dict[str, Any]) -> list[str]:
     for key in required_positive:
         if int(metrics.get(key) or 0) <= 0:
             errors.append(f"metric {key} must be >0")
-    if metrics.get("product_status") not in {"ready", "blocked_with_reason"}:
-        errors.append("complete run product_status must be ready or blocked_with_reason")
+    if metrics.get("product_status") != "ready":
+        errors.append(
+            "complete smoke must not pass a blocked/non-product runtime; "
+            f"product_status={metrics.get('product_status')}"
+        )
+    if metrics.get("quality_output_passed") is not True:
+        errors.append("complete smoke must fail when GPU1/pointer product quality is false")
+    if metrics.get("latest_proposal_quality_passed") is False:
+        errors.append(
+            "complete smoke must fail when latest provider proposal iteration is rejected"
+        )
+    if metrics.get("latest_gpu0_review_decision", "").startswith("reject"):
+        errors.append("complete smoke must fail when GPU0 rejects the GPU1 delta")
     if metrics.get("missing_requirements"):
         errors.append("complete run must have no missing requirements")
     if int(metrics.get("completed_requirement_count") or 0) != int(
@@ -264,6 +275,7 @@ def main() -> int:
     parser.add_argument("--timeout-seconds", type=int, default=0)
     parser.add_argument("--provider-model", default="qwen2.5-coder:14b")
     parser.add_argument("--contract-only", action="store_true")
+    parser.add_argument("--include-provider-gate-block", action="store_true")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -330,42 +342,37 @@ def main() -> int:
         }
     )
 
-    blocked_proc, blocked_report, blocked_dir = run_gate(
-        repo_root,
-        "provider_gate_block",
-        stamp,
-        args.timeout_seconds,
-        max_iterations=2,
-        provider_model=args.provider_model,
-        allow_provider_generation=True,
-        operator_intent=False,
-        request_text=request_text,
-    )
-    blocked_errors = []
-    if blocked_proc.returncode == 0:
-        blocked_errors.append(
-            "provider_gate_block returned 0 but missing operator intent must block"
+    if args.include_provider_gate_block:
+        blocked_proc, blocked_report, blocked_dir = run_gate(
+            repo_root, "provider_gate_block", stamp, args.timeout_seconds,
+            max_iterations=2, provider_model=args.provider_model,
+            allow_provider_generation=True, operator_intent=False,
+            request_text=request_text,
         )
-    if blocked_proc.returncode not in {0, 2}:
-        blocked_errors.append(
-            f"provider_gate_block returned {blocked_proc.returncode}: {(blocked_proc.stderr or blocked_proc.stdout)[-1500:]}"
-        )
-    blocked_errors.extend(validate_provider_gate_block(blocked_report))
-    errors.extend(f"provider_gate_block: {item}" for item in blocked_errors)
-    runs.append(
-        {
+        blocked_errors = []
+        if blocked_proc.returncode == 0:
+            blocked_errors.append("provider_gate_block returned 0 but missing operator intent must block")
+        if blocked_proc.returncode not in {0, 2}:
+            blocked_errors.append(f"provider_gate_block returned {blocked_proc.returncode}: {(blocked_proc.stderr or blocked_proc.stdout)[-1500:]}")
+        blocked_errors.extend(validate_provider_gate_block(blocked_report))
+        errors.extend(f"provider_gate_block: {item}" for item in blocked_errors)
+        runs.append({
             "label": "provider_gate_block",
             "passed": not blocked_errors,
             "run_dir": blocked_dir.relative_to(repo_root).as_posix(),
             "returncode": blocked_proc.returncode,
             "metrics": blocked_report.get("metrics", {}),
             "errors": blocked_errors,
-        }
-    )
+        })
 
     report = {
         "schema_version": 1,
         "kind": "heap_runtime_completeness_gate_smoke",
+        "mode": (
+            "complete_with_provider_gate_block"
+            if args.include_provider_gate_block
+            else "complete_only"
+        ),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
         "passed": not errors,

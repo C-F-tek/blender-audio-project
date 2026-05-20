@@ -13,7 +13,7 @@ Use this precedence order:
 ```text
 1. current source code
 2. current validators/smokes and their reports
-3. current launcher manifests / phase reports / telemetry
+3. current launcher manifests / phase reports / evidence
 4. canonical compact docs listed below
 5. historical handoffs and generated evidence
 6. old runbooks / stale PR notes
@@ -225,7 +225,7 @@ Old current-* documents may contain historical PR/branch references.
 Large generated evidence Markdown must not become first-read documentation.
 Older patch-suggestion docs may still exist; check this map before treating them as current.
 Older product-chain docs may not include heap/exchange runtime entry/exit unless explicitly updated above.
-Any doc that claims success without manifest/telemetry/evidence report fields is suspect.
+Any doc that claims success without manifest/evidence/evidence report fields is suspect.
 ```
 
 ## Future cleanup queue

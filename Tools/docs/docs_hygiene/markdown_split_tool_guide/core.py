@@ -38,7 +38,7 @@ python -m Tools.docs refactor_markdown_splits `
 |---|---|
 | `Tools/ai/patch_product/task_patch_suggestion_report/cli.py` | Estrae suggestion concrete da task Markdown. |
 | `Tools/ai/patch_product/patch_suggestion_bundle/cli.py` | Applica/dry-run deterministic operations da patch suggestion report. |
-| `Tools/validation/patch_product/product_separation/cli.py` | Separa prodotto essenziale da telemetry/debug supplementare. |
+| `Tools/validation/patch_product/product_separation/cli.py` | Separa prodotto essenziale da debug supplementare. |
 | `Tools/ai/agent_review/review_pr_cli.py` | Prepara branch/commit/PR reviewabile con allowlist/autodiscovery include-path. |
 
 ## Validazioni minime

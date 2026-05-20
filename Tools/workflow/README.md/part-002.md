@@ -47,7 +47,7 @@ Patchkit handles backup, encoding/newlines, dry-run chain state, idempotency, pa
 | `python -m Tools.workflow run_agent_review_full_toolbox_decision_loop` | Python control entrypoint | Preserves the public CLI and runs the packaged Python engine under `run_agent_review_full_toolbox_decision_loop/`. |
 | `run_agent_review_full_toolbox_decision_loop/py_engine.py` | Python engine package | Static foundation and top-level phase sequencing. |
 | `run_agent_review_full_toolbox_decision_loop/py_mesh.py` | Python engine package | GPU1/GPU0/NPU provider mesh, runtime heap live signals and broker-controlled peer tool execution. |
-| `run_agent_review_full_toolbox_decision_loop/py_product.py` | Python engine package | Decision loop, final local AI product, evidence bundle, telemetry, semantic chunks and artifact path policy. |
+| `run_agent_review_full_toolbox_decision_loop/py_product.py` | Python engine package | Decision loop, final local AI product, evidence bundle, evidence, semantic chunks and artifact path policy. |
 | `run_agent_review_full_toolbox_decision_loop/py_support.py` | Python engine package | Shared paths, execution helpers and compact artifact stamp generation. |
 | `run_agent_review_full_toolbox_decision_loop_integrated.ps1` | supporting selected phase | Not primary operator path. |
 | `run_local_ai_markdown_task.ps1` | supporting-tool | Markdown helper; prefer unified launcher or real product wrapper. |
@@ -115,13 +115,13 @@ heap/exchange runtime entry
 heap/exchange runtime state
 heap/exchange runtime exit product
 heap/exchange lifecycle report
-runtime tool usage telemetry
+runtime tool usage evidence
 runtime/hardware capability manifest
 patch notes quality product when selected
 patch suggestion product/separation reports when selected
 AI peer-exchange report and contract when provider execution is selected
-runtime-heap tool catalog exchange before final telemetry
-full toolbox telemetry summary
+runtime-heap tool catalog exchange before final evidence
+full toolbox evidence summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
 generated artifact path policy evidence when long bundle names are possible

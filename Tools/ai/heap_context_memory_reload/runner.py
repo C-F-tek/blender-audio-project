@@ -9,7 +9,8 @@ from pathlib import Path
 from Tools.ai.agent_context.transient_request_context.cli import build_context as build_transient_context, render_markdown as render_transient_markdown
 from Tools.ai._shared.agent_memory_inventory_cli import DEFAULT_MEMORY_DB, build_inventory as build_memory_inventory, render_markdown as render_memory_inventory_markdown
 from Tools.ai.heap_context_memory_reload.builders import build_repo_docs_map, collect_semantic_code_chunks, write_semantic_evidence
-from Tools.ai.heap_context_memory_reload.common import read_json, repo_rel, run_tool, summarize_artifact, write_json
+from Tools.ai.heap_context_memory_reload.common import repo_rel, run_tool, summarize_artifact, write_json
+from Tools.ai.heap_context_memory_reload.delta import build_context_delta
 from Tools.ai.heap_context_memory_reload.manifest import build_manifest, build_print_payload
 from Tools.ai.heap_context_memory_reload.memory_write import build_final_task_markdown, run_operational_memory_write
 from Tools.ai.heap_context_memory_reload.runner_state import ReloadRun
@@ -78,6 +79,7 @@ def run_reload(state: ReloadRun) -> int:
         commands=state.commands,
         warnings=state.warnings,
         task_file=task_file,
+        context_delta=state.context_delta,
         context_pack_result=state.context_pack_result,
         strict_ai_context_pack=bool(state.args.strict_ai_context_pack),
         strict_startup_reload=bool(state.args.strict_startup_reload),
@@ -128,7 +130,18 @@ def _build_context_maps(state: ReloadRun) -> None:
         state.repo_root,
         max_files=state.args.startup_scan_context_files,
     )
-    state.artifacts.update(build_repo_docs_map(state.repo_root, state.context_files, state.output_dir))
+    build_context_delta(state)
+    changed_paths = set(state.context_delta.get("changed_context_files") or [])
+    delta_active = state.context_delta.get("reload_mode") == "delta_index"
+    state.artifacts.update(
+        build_repo_docs_map(
+            state.repo_root,
+            state.context_files,
+            state.output_dir,
+            changed_paths=changed_paths,
+            delta_active=delta_active,
+        )
+    )
     state.artifacts.update(
         collect_semantic_code_chunks(
             state.repo_root,
@@ -136,6 +149,8 @@ def _build_context_maps(state: ReloadRun) -> None:
             state.request_text,
             limit=max(1, state.args.max_context_files),
             preview_chars=max(1, state.args.max_chars_per_file),
+            changed_paths=changed_paths,
+            delta_active=delta_active,
         )
     )
 

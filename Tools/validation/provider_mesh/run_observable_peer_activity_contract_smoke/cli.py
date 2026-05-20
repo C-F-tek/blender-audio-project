@@ -225,7 +225,7 @@ def provider_absorption_checks(repo: Path) -> dict[str, bool]:
         "diagnostic_only_true": report.get("diagnostic_only") is True,
         "diagnostic_not_operational": report.get("operational_provider_activity") is False,
         "diagnostic_status_ready": report.get("status") == "ready",
-        "diagnostic_telemetry_published": "telemetry_signal" in event_types,
+        "diagnostic_provider_evidence_published": "provider_evidence" in event_types,
         "diagnostic_peer_block_not_published": "provider_peer_block" not in event_types,
         "diagnostic_product_not_blocked": gate.state["product"].get("status") == "not_ready",
     }

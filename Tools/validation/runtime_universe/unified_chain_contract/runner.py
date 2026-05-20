@@ -22,7 +22,6 @@ from .evidence import (
     has_productive_exchange_event,
     has_shared_memory_evidence,
     has_tool_capability_evidence,
-    has_tool_usage_evidence,
     peer_presence,
 )
 from .markdown import render_markdown
@@ -42,7 +41,6 @@ def run_contract(args: Any) -> int:
     review_pr_path = paths["review_pr"]
     ai_events_path = paths["ai_events"]
     tool_capability_path = paths["tool_capability"]
-    tool_usage_path = paths["tool_usage"]
     heap_peer_path = paths["heap_peer"]
     shared_memory_path = paths["shared_memory"]
     closure_audit_path = paths["closure_audit"]
@@ -139,9 +137,6 @@ def run_contract(args: Any) -> int:
     tool_capability_report, tool_capability_error = (
         load_json(tool_capability_path) if tool_capability_path else (None, "missing")
     )
-    tool_usage_report, tool_usage_error = (
-        load_json(tool_usage_path) if tool_usage_path else (None, "missing")
-    )
     heap_peer_report, heap_peer_error = (
         load_json(heap_peer_path) if heap_peer_path else (None, "missing")
     )
@@ -153,25 +148,23 @@ def run_contract(args: Any) -> int:
     )
 
     tool_capability_ok = has_tool_capability_evidence(tool_capability_report)
-    tool_usage_ok = has_tool_usage_evidence(tool_usage_report)
     tool_evidence_passed = True
     if args.require_provider_tool_evidence:
-        tool_evidence_passed = bool(tool_capability_ok and tool_usage_ok)
+        tool_evidence_passed = bool(tool_capability_ok)
     add_edge(
         edges,
         name="provider_to_tool_evidence",
         producer="provider/heap exchange runtime",
-        consumer="runtime tool capability and usage evidence",
-        expected="tool capability manifest and runtime tool usage telemetry"
+        consumer="runtime tool capability evidence",
+        expected="tool capability manifest"
         if args.require_provider_tool_evidence
         else "not required for this invocation",
         actual=(
-            f"capability_ok={tool_capability_ok} capability_error={tool_capability_error} "
-            f"usage_ok={tool_usage_ok} usage_error={tool_usage_error}"
+            f"capability_ok={tool_capability_ok} capability_error={tool_capability_error}"
         ),
         passed=tool_evidence_passed,
-        action="When provider/exchange is required, emit runtime_tool_capability_manifest and full_toolbox/tool-usage telemetry before declaring the chain complete.",
-        artifacts=[rel(repo_root, tool_capability_path), rel(repo_root, tool_usage_path)],
+        action="When provider/exchange is required, emit runtime_tool_capability_manifest before declaring the chain complete.",
+        artifacts=[rel(repo_root, tool_capability_path)],
     )
 
     peers = peer_presence(heap_peer_report, events)

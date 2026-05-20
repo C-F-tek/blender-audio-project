@@ -3,7 +3,7 @@
 
 The package is intentionally deterministic and provider-free: it composes the
 reports and artifacts already produced by the heap/team runtime, broker,
-telemetry, recommendations and patch-plan lanes into a small product surface
+evidence, recommendations and patch-plan lanes into a small product surface
 that downstream bundle builders can consume.
 """
 

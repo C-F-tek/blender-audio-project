@@ -335,12 +335,6 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
             for error in path_policy_errors(value):
                 errors.append(f"outputs.{output_key}: {error}")
 
-    for output_key in ("telemetry_json", "telemetry_markdown"):
-        value = normalize_path(outputs.get(output_key))
-        if value:
-            for error in path_policy_errors(value):
-                errors.append(f"outputs.{output_key}: {error}")
-
     return {
         "path": rel_path,
         "exists": True,
@@ -356,9 +350,6 @@ def validate_manifest(path: Path, repo_root: Path) -> dict[str, Any]:
         ),
         "patch_application_performed": data.get("patch_application_performed"),
         "build_evidence_requested": data.get("build_evidence_requested"),
-        "telemetry_outputs_declared": bool(
-            outputs.get("telemetry_json") or outputs.get("telemetry_markdown")
-        ),
         "enrichment_requested_keys": sorted(enrichment_requested.keys()),
         "enrichment_output_keys": sorted(enrichment_outputs.keys()),
     }

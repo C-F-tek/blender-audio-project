@@ -100,7 +100,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "heap_provider_invocation_contract": exists(
             repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
         )
-        and has(invocation, "expected_telemetry_contract")
+        and has(invocation, "expected_evidence_event_contract")
         and has(invocation, "broker_request"),
         "gpu1_primary_advisory": has(profiles, "gpu1_planner")
         and has(provider_loop, "GPU1 HEAP PARTICIPATION MODE"),

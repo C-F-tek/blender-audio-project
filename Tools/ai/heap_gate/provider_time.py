@@ -31,6 +31,9 @@ def build_provider_time_counter_contract(args: Any) -> dict[str, Any]:
         "watchdog_semantics": "disabled_for_started_provider_lanes",
         "operational_semantics": "budget_counter_with_coordinated_soft_close",
         "hard_block_on_budget_expiry": False,
+        "early_exit_when_product_ready_with_evidence": True,
+        "soft_close_is_finalization_signal_only": True,
+        "soft_close_must_not_truncate_pointer_recursion": True,
         "lane_start_failure_policy": "abort_universe",
         "active_lane_failure_policy": "block_universe_but_join_active_lanes",
     }
@@ -61,7 +64,10 @@ def provider_time_counter_prompt_text(contract: dict[str, Any]) -> str:
             f"- soft_close_after_seconds={contract.get('soft_close_after_seconds')}",
             f"- counter_tick_seconds={contract.get('counter_tick_seconds')}",
             "- The time input is a heap orchestration counter, not a lane truncation boundary.",
+            "- If the pointer universe reaches a ready product with evidence before soft_close_after_seconds, exit through product_signal immediately.",
             "- Near soft_close_after_seconds, close coherently: emit HEAP_DELTA_PROPOSAL or EXIT_DECISION=NO_PATCHABLE_TARGET with pointers.",
+            "- Soft close is not permission to truncate pointer recursion; continue propagation/refinement unless the heap has ready evidence or an explicit blocked reason.",
+            "- A unique run is not a one-way script row: it may BACKTRACK_PROPAGATE, let GPU0/NPU recheck old pointers, then RESUME_FORWARD.",
             "- Do not wait silently for a process cutoff; persist previous/refines/resume pointers and the final decision state.",
             f"- watchdog_timeout_seconds={contract.get('watchdog_timeout_seconds')} means the provider lane collector does not hard-kill started lanes by elapsed time.",
         ]

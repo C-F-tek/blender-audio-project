@@ -39,7 +39,7 @@ SURFACE_HINTS: dict[str, tuple[str, ...]] = {
     "gpu0_peer": ("gpu0", "openvino", "peer"),
     "npu_micro_peer": ("npu", "micro", "peer"),
     "shared_memory": ("shared", "memory", "ai-to-ai", "heap"),
-    "tool_broker": ("tool", "broker", "capability", "telemetry"),
+    "tool_broker": ("tool", "broker", "capability"),
     "closure_audit": ("closure", "audit", "heap_exchange", "ready_for_final_chain_contract"),
     "product_readiness": ("review_pr_product_readiness", "product", "ready"),
     "review_pr_prepare": ("review_pr_prepare", "product_commit", "git_commit"),
@@ -83,10 +83,6 @@ DEFAULT_PATTERNS: dict[str, tuple[str, ...]] = {
     "tool_broker": (
         "output/**/runtime_tool_capability_manifest*{stamp}*.json",
         "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
-        "output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
-        "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
-        "output/**/runtime_tool_usage*{stamp}*.json",
-        "output/**/tool_usage*{stamp}*.json",
     ),
     "closure_audit": (
         "output/**/heap_exchange_closure_audit*{stamp}*.json",

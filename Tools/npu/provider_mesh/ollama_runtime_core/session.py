@@ -110,7 +110,7 @@ class OllamaSession:
                     self.base_url,
                     "/api/generate",
                     payload=payload,
-                    timeout=600.0,
+                    timeout=None,
                 ):
                     data = chunk
                     piece = str(chunk.get("response") or "")
@@ -120,7 +120,7 @@ class OllamaSession:
                         partial_callback("".join(response_parts), chunk)
                 response = "".join(response_parts).strip()
             else:
-                data = json_request(self.base_url, "/api/generate", payload=payload, timeout=600.0)
+                data = json_request(self.base_url, "/api/generate", payload=payload, timeout=None)
                 response = str(data.get("response", "")).strip()
         except Exception as exc:
             append_ollama_runtime_event(
@@ -194,7 +194,7 @@ class OllamaSession:
                     self.base_url,
                     "/api/chat",
                     payload=payload,
-                    timeout=600.0,
+                    timeout=None,
                 ):
                     data = chunk
                     message_chunk = (
@@ -206,7 +206,7 @@ class OllamaSession:
                     if piece or chunk.get("done"):
                         partial_callback("".join(content_parts), chunk)
             else:
-                data = json_request(self.base_url, "/api/chat", payload=payload, timeout=600.0)
+                data = json_request(self.base_url, "/api/chat", payload=payload, timeout=None)
         except Exception as exc:
             append_ollama_runtime_event(
                 "chat_error",

@@ -161,6 +161,7 @@ def analyze_code_product(
     output_dir: Path,
     apply_safe: bool = False,
     require_all_integrated: bool = False,
+    timeout: int | None = None,
 ) -> dict[str, Any]:
     tool_root = Path(__file__).resolve().parents[3]
     output = output_dir / (
@@ -187,7 +188,7 @@ def analyze_code_product(
     result = run_command(
         command,
         tool_root,
-        timeout=600,
+        timeout=timeout,
         flow_dir=output_dir,
         phase="operator_code_product_intake",
     )
@@ -212,7 +213,7 @@ def run_operator_lab(
     safe_apply_report: dict[str, Any] = {}
     errors: list[str] = []
     if metrics.get("exists") and code_product is not None:
-        review_report = analyze_code_product(cfg.repo_root, code_product, run_dir)
+        review_report = analyze_code_product(cfg.repo_root, code_product, run_dir, timeout=timeout)
     errors.extend(code_product_blockers(metrics, review_report))
     passed = bool(run_report.get("passed")) and bool(review_report.get("passed")) and not errors
     report: dict[str, Any] = {

@@ -44,7 +44,12 @@ SOURCE_FILES = {
     "gate_loop": "Tools/ai/heap_gate/loop_steps.py",
     "preload": "Tools/ai/heap_context_memory_reload/cli.py",
     "preload_runner": "Tools/ai/heap_context_memory_reload/runner.py",
+    "preload_delta": "Tools/ai/heap_context_memory_reload/delta.py",
+    "preload_builders": "Tools/ai/heap_context_memory_reload/builders.py",
+    "preload_manifest": "Tools/ai/heap_context_memory_reload/manifest.py",
+    "preload_task_docs": "Tools/ai/heap_context_memory_reload/task_docs.py",
     "preload_memory_write": "Tools/ai/heap_context_memory_reload/memory_write.py",
+    "sqlite_store": "Tools/ai/agent_memory/sqlite_store.py",
     "reconciler": "Tools/ai/heap_context_memory_reload/reconcile_report/cli.py",
     "composer": "Tools/ai/heap_final_proposals/cli.py",
 }
@@ -153,7 +158,12 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     gate_loop = sources.get("gate_loop", "")
     preload = sources.get("preload", "")
     preload_runner = sources.get("preload_runner", "")
+    preload_delta = sources.get("preload_delta", "")
+    preload_builders = sources.get("preload_builders", "")
+    preload_manifest = sources.get("preload_manifest", "")
+    preload_task_docs = sources.get("preload_task_docs", "")
     preload_memory_write = sources.get("preload_memory_write", "")
+    sqlite_store = sources.get("sqlite_store", "")
     reconciler = sources.get("reconciler", "")
     composer = sources.get("composer", "")
 
@@ -210,7 +220,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         passed="memory_context_reload" in gate_startup and "append_heap_exchange_event" in gate_startup,
         severity="critical",
         evidence="gate should emit reload lifecycle as heap events/facts, not only report fields",
-        recommendation="Emit payload.kind='memory_context_reload' as stable fact/telemetry_signal before provider rounds.",
+        recommendation="Emit payload.kind='memory_context_reload' as stable fact/provider_evidence before provider rounds.",
     )
 
     bool_check(
@@ -287,6 +297,25 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         severity="critical",
         evidence="BASE_REQUIREMENTS contains operational_memory_write; startup must execute the dispatcher SQLite remember path before provider loop",
         recommendation="Run python -m Tools.ai agent_runtime_sqlite_memory --action remember --scope operational with a content-file and make failure blocking, not degraded.",
+    )
+
+    delta_reload_signal = bool(
+        "build_context_delta" in preload_runner
+        and "startup_context_delta.json" in preload_delta
+        and "startup_context_digest.json" in preload_delta
+        and "changed_context_file_count" in preload_manifest
+        and "unchanged_context_file_count" in preload_manifest
+        and "unchanged_ref_only" in preload_builders
+        and "startup_context_delta_json" in preload_task_docs
+        and "already_present_before_write" in sqlite_store
+    )
+    bool_check(
+        checks,
+        check_id="startup_memory_reload_uses_delta_not_blind_full_reload",
+        passed=delta_reload_signal,
+        severity="critical",
+        evidence="startup memory reload must compare request/context signatures and keep unchanged files as refs instead of reloading all previews every run",
+        recommendation="Keep startup_context_delta.json plus stable startup_context_digest.json and pass delta refs into provider task/context docs.",
     )
 
     bool_check(

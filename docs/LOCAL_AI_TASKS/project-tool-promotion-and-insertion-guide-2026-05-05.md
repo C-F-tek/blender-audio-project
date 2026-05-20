@@ -77,7 +77,7 @@ Additional requirements:
 Additional requirements:
 
     invoked by workflow or broker bootstrap
-    telemetry produced
+    evidence produced
     included or referenced in production bundle
     validation included in full-run acceptance
     failure class explicit and schema-valid
@@ -192,7 +192,7 @@ Promotion:
 Preferred paths:
 
     Tools/validation/<tool>.py       report-only checks and validators
-    Tools/ai/<tool>.py               AI evidence, planning, broker, context, telemetry
+    Tools/ai/<tool>.py               AI evidence, planning, broker, context, evidence
     Tools/workflow/<tool>.ps1        orchestration wrappers
     Tools/workflow/<tool>.py         workflow helpers
     Tools/npu/<tool>.py              NPU/provider-specific tooling
@@ -294,7 +294,7 @@ To add to `Tools/ai/runtime_tool/agent_broker.py`:
 
 Required broker acceptance:
 
-    runtime_tool_usage_telemetry_<STAMP>.json:
+    runtime_tool_capability_manifest_<STAMP>.json:
       inputs.broker_reports.Count >= 1
       summary.executed_count includes the new tool if it is part of bootstrap/full-run lane
       failed_count = 0

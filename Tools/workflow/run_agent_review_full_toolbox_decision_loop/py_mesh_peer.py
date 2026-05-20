@@ -328,22 +328,6 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
             ctx.p("heap_from_peer_md"),
         ],
     )
-    ctx.run_python(
-        "Provider runtime heap telemetry",
-        [
-            "-m",
-            "Tools.ai",
-            "build_provider_runtime_heap_telemetry",
-            "--repo-root",
-            ".",
-            "--stamp",
-            ctx.args.Stamp,
-            "--output",
-            ctx.p("heap_telemetry_json"),
-            "--markdown-output",
-            ctx.p("heap_telemetry_md"),
-        ],
-    )
     contract = [
         "-m",
         "Tools.validation",

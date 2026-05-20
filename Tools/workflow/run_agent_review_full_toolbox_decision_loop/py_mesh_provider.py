@@ -127,7 +127,7 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
     elif npu_mesh_mode in {"deferred", "live-seed-only"}:
         ctx.warnings.append(
             f"NPU micro provider is {npu_mesh_mode}; provider mesh keeps NPU off the live GPU1/GPU0 critical path. "
-            "The post-GPU peer-exchange NPU assistant and brokered telemetry remain available."
+            "The post-GPU peer-exchange NPU assistant and brokered evidence remain available."
         )
     else:
         ctx.warnings.append(

@@ -43,6 +43,36 @@ def evaluate_terminal_invariants(
             errors.append(f"{key} must be >0")
     if metrics.get("product_status") not in {"ready", "blocked_with_reason"}:
         errors.append("product_status must be ready or blocked_with_reason")
+    if allow_provider_generation and detailed_output_expected:
+        if metrics.get("product_status") != "ready":
+            errors.append(
+                "complete provider product run cannot pass without ready product; "
+                f"product_status={metrics.get('product_status')}"
+            )
+        if not metrics.get("provider_raw_response_text"):
+            errors.append("GPU1 primary center produced no provider response text")
+        if not metrics.get("proposal_iteration_artifacts"):
+            errors.append("provider product run requires GPU1 proposal/pointer iteration artifacts")
+        if metrics.get("quality_output_passed") is not True:
+            errors.append(
+                "GPU1/pointer proposal quality failed; provider prose cannot pass as product"
+            )
+        if metrics.get("latest_proposal_quality_passed") is False:
+            errors.append(
+                "latest proposal iteration was rejected by same-heap quality gate: "
+                + str(metrics.get("latest_proposal_reject_reason") or "")
+            )
+        gpu0_decision = str(metrics.get("latest_gpu0_review_decision") or "")
+        if gpu0_decision.startswith("reject"):
+            errors.append(f"GPU0 peer rejected current GPU1 delta: {gpu0_decision}")
+        missing_sections = metrics.get("latest_gpu0_missing_delta_sections") or []
+        if missing_sections:
+            errors.append(
+                "GPU1 delta is missing required pointer/product sections: "
+                + ",".join(str(item) for item in missing_sections)
+            )
+        if not metrics.get("npu_micro_activity_ok"):
+            errors.append("NPU micro-lane did not produce valid micro/audit evidence")
     if not lane_gate_passed:
         errors.append(
             "runtime state contains unviable lanes; degraded/unavailable lanes cannot pass complete/full mode: "

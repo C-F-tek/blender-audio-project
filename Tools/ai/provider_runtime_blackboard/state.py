@@ -12,7 +12,6 @@ LANES = (
     "broker",
     "context_memory",
     "deterministic",
-    "telemetry",
     "orchestrator",
 )
 DEGRADED_STATUSES = {"degraded", "failed"}
@@ -61,7 +60,7 @@ class RuntimeState:
         if lane in LANES and status:
             self.lane_status[lane] = status
             self.updated_at = str(event.get("created_at") or "")
-        if event_type in {"lane_evidence", "evidence_response"}:
+        if event_type in {"lane_evidence", "evidence_response", "provider_evidence"}:
             self.evidence.append(
                 {
                     "created_at": event.get("created_at"),

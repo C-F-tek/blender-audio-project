@@ -34,7 +34,13 @@ def stream(text: str) -> dict[str, Any]:
     }
 
 
-def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> dict[str, Any]:
+def run_step(
+    repo_root: Path,
+    name: str,
+    script: str,
+    timeout_seconds: int,
+    extra_args: list[str] | None = None,
+) -> dict[str, Any]:
     started = time.time()
     output = repo_root / "output/validation" / f"real_product_preflight_{name}.json"
     command = [
@@ -47,9 +53,9 @@ def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> d
     ]
 
     process_timeout = timeout_seconds
-    if name in {"full_product_pr_chain", "heap_runtime_completeness_gate"}:
+    if name in {"full_product_pr_chain", "heap_runtime_completeness_gate_complete"}:
         command.extend(["--timeout-seconds", str(timeout_seconds)])
-    if name == "heap_runtime_completeness_gate":
+    if name == "heap_runtime_completeness_gate_contract_only":
         command.append("--contract-only")
     if name == "provider_lane_activation":
         command.extend(
@@ -69,6 +75,8 @@ def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> d
                 "npu",
             ]
         )
+    if extra_args:
+        command.extend(extra_args)
 
     env = dict(os.environ)
     env["PYTHONPATH"] = str(repo_root)
@@ -120,6 +128,7 @@ def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> d
         "report_kind": report.get("kind"),
         "report_errors": report.get("errors") or [],
         "report_warnings": report.get("warnings") or [],
+        "provider_execution_performed": report.get("provider_execution_performed"),
         "stdout": stream(stdout or ""),
         "stderr": stream(stderr or ""),
     }
@@ -197,9 +206,16 @@ def main() -> int:
         "--markdown-output", default="output/validation/real_product_preflight_gate.md"
     )
     parser.add_argument("--timeout-seconds", type=int, default=120)
+    parser.add_argument("--complete-provider-smoke", action="store_true")
+    parser.add_argument("--provider-model", default="qwen3-coder:latest")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
+    heap_gate_step_name = (
+        "heap_runtime_completeness_gate_complete"
+        if args.complete_provider_smoke
+        else "heap_runtime_completeness_gate_contract_only"
+    )
     steps_config = [
         ("real_product_profile", "Tools/validation/real_product/profile_smoke/cli.py"),
         ("core_runtime_guard_suite", "Tools/validation/runtime_universe/run_core_runtime_guard_suite/cli.py"),
@@ -234,7 +250,7 @@ def main() -> int:
             "Tools/validation/heap_provider/invocation_contract_smoke/cli.py",
         ),
         (
-            "heap_runtime_completeness_gate",
+            heap_gate_step_name,
             "Tools/validation/heap_runtime/completeness_gate_smoke/cli.py",
         ),
         (
@@ -284,12 +300,24 @@ def main() -> int:
                 "stderr": stream(""),
             }
         else:
-            step = run_step(repo_root, name, script, args.timeout_seconds)
+            extra_args = []
+            if name == "heap_runtime_completeness_gate_complete":
+                extra_args.extend(["--provider-model", args.provider_model])
+            step = run_step(repo_root, name, script, args.timeout_seconds, extra_args)
         steps.append(step)
         if not step.get("passed"):
             errors.append(f"preflight step failed: {name}")
 
     failed_steps = [step for step in steps if not step.get("passed")]
+    provider_execution_performed = any(
+        step.get("provider_execution_performed") is True for step in steps
+    )
+    if args.complete_provider_smoke and not provider_execution_performed:
+        errors.append("complete provider smoke requested but no provider execution was observed")
+    if not args.complete_provider_smoke:
+        warnings.append(
+            "preflight is contract/static coverage only; it is not complete provider smoke evidence"
+        )
 
     report = {
         "schema_version": 1,
@@ -301,8 +329,10 @@ def main() -> int:
         "step_index": step_count,
         "step_count": step_count,
         "completed_step_count": len(steps),
-        "passed": not failed_steps,
-        "provider_execution_performed": False,
+        "passed": not failed_steps and not errors,
+        "preflight_only": not args.complete_provider_smoke,
+        "complete_provider_smoke_performed": bool(args.complete_provider_smoke),
+        "provider_execution_performed": provider_execution_performed,
         "provider_activation_performed": any(
             step.get("name") == "provider_lane_activation" and step.get("passed")
             for step in steps

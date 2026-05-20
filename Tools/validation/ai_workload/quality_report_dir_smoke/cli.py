@@ -12,7 +12,7 @@ from pathlib import Path
 GOOD_REPORT = """# Workload report
 
 This provider workload report contains human-readable advisory evidence. It
-describes GPU, NPU, telemetry, routing, decision quality, and expected usage in
+describes GPU, NPU, routing, decision quality, and expected usage in
 the heap-runtime workflow. The content is long enough and textual enough for the
 quality gate to classify it as useful. It is report-only and does not execute
 providers.

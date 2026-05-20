@@ -66,11 +66,21 @@ class RuntimeGateProviderCommandsMixin:
             or report_data.get("npu_device_workload_performed")
         )
         semantic_provider_execution = bool(
-            report_data.get("semantic_provider_execution_performed")
-            or report_data.get("gpu0_semantic_provider_execution_performed")
-            or report_data.get("npu_semantic_provider_execution_performed")
+            lane != "npu_micro_task_auditor"
+            and (
+                report_data.get("semantic_provider_execution_performed")
+                or report_data.get("gpu0_semantic_provider_execution_performed")
+            )
         )
-        if provider_execution or semantic_provider_execution:
+        npu_micro_provider_execution = bool(
+            lane == "npu_micro_task_auditor"
+            and (
+                report_data.get("npu_micro_provider_execution_performed")
+                or report_data.get("npu_provider_execution_performed")
+                or report_data.get("npu_device_workload_performed")
+            )
+        )
+        if provider_execution or semantic_provider_execution or npu_micro_provider_execution:
             self.provider_execution_performed = True
         errors = report_data.get("errors") if isinstance(report_data.get("errors"), list) else []
         warnings = (
@@ -105,7 +115,7 @@ class RuntimeGateProviderCommandsMixin:
                         )
                     if response_text:
                         break
-        return {
+        summary = {
             "lane": lane,
             "role": spec.get("role"),
             "requirement": spec.get("requirement"),
@@ -114,12 +124,6 @@ class RuntimeGateProviderCommandsMixin:
             "passed": completed.returncode == 0 and report_data.get("passed") is True,
             "provider_execution_performed": provider_execution,
             "device_workload_execution_performed": device_workload_execution,
-            "semantic_provider_required": report_data.get("semantic_provider_required"),
-            "semantic_provider_execution_performed": semantic_provider_execution,
-            "semantic_provider_model_loaded": report_data.get("semantic_provider_model_loaded"),
-            "semantic_provider_classification": report_data.get(
-                "semantic_provider_classification"
-            ),
             "report_kind": report_data.get("kind"),
             "response_text": response_text,
             "tool_calls": tool_calls,
@@ -127,6 +131,12 @@ class RuntimeGateProviderCommandsMixin:
             "native_tool_loop_requested": native_tool_loop_requested,
             "native_tool_loop_supported": native_tool_loop_supported,
             "native_tool_loop_performed": native_tool_loop_performed,
+            "native_tool_loop_classification": (
+                report_data.get("native_tool_loop_classification")
+                or report_data.get("classification")
+                or report_data.get("npu_micro_provider_classification")
+                or report_data.get("semantic_provider_classification")
+            ),
             "native_tool_call_count": len(tool_calls),
             "textual_tool_call_count": len(textual_tool_calls),
             "role_decision": report_data.get("role_decision"),
@@ -139,11 +149,40 @@ class RuntimeGateProviderCommandsMixin:
             "npu_device_workload_requested": report_data.get("npu_device_workload_requested"),
             "npu_device_workload_performed": report_data.get("npu_device_workload_performed"),
             "npu_provider_execution_performed": report_data.get("npu_provider_execution_performed"),
+            "npu_peer_activity_performed": report_data.get("npu_peer_activity_performed"),
+            "npu_device_execution_performed": report_data.get("npu_device_execution_performed"),
+            "npu_activity_classification": report_data.get("npu_activity_classification"),
             "errors": errors,
             "warnings": warnings,
             "stdout_tail": (completed.stdout or "")[-1000:],
             "stderr_tail": (completed.stderr or "")[-1000:],
         }
+        if lane == "npu_micro_task_auditor":
+            summary.update(
+                {
+                    "npu_micro_provider_execution_performed": npu_micro_provider_execution,
+                    "npu_micro_provider_model_loaded": report_data.get(
+                        "npu_micro_provider_model_loaded"
+                    ),
+                    "npu_micro_provider_classification": report_data.get(
+                        "npu_micro_provider_classification"
+                    ),
+                }
+            )
+        else:
+            summary.update(
+                {
+                    "semantic_provider_required": report_data.get("semantic_provider_required"),
+                    "semantic_provider_execution_performed": semantic_provider_execution,
+                    "semantic_provider_model_loaded": report_data.get(
+                        "semantic_provider_model_loaded"
+                    ),
+                    "semantic_provider_classification": report_data.get(
+                        "semantic_provider_classification"
+                    ),
+                }
+            )
+        return summary
     def build_quality_failure_feedback(self, text: str, events: list[dict[str, Any]]) -> str:
         file_quality = self.response_file_reference_quality(text)
         implementation_quality = self.implementation_quality_report(text, events)

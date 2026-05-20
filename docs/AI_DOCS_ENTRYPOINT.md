@@ -125,7 +125,7 @@ Use them as task-specific background, not as the current navigation root.
 | Unified launcher/full run | `docs/CORE_LANE_COMPLETENESS_CONTRACT.md`, `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md`, `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md`, `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md`, `../Tools/ai/run/TOOL_CONTEXT.md` |
 | Documentation staleness | `docs/CONTEXT_COVERAGE_STATUS.md`, `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md`, `LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` |
 | AI pipeline orchestration | `AI_PIPELINE_ARCHITECTURE.md`, `AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md`, `../Tools/ai/pipeline/TOOL_CONTEXT.md` |
-| Guardrails, evals, validation | `AI_GUARDRAILS_VALIDATION_GUIDE.md`, `AI_ARTIFACT_SCHEMAS.md`, `JSON_SCHEMAS.md`, `../Tools/validation/CONTEXT_INDEX.md` |
+| Guardrails, evals, validation | `AI_GUARDRAILS_VALIDATION_GUIDE.md`, `AI_ARTIFACT_SCHEMAS.md`, `AI_WORKLOAD_REPORT_QUALITY_GATE.md`, `LOCAL_AI_CORE_TOOL_ACTIVATION.md`, `JSON_SCHEMAS.md`, `../Tools/validation/CONTEXT_INDEX.md` |
 | NPU/OpenVINO/local inference | `AI_NPU_RUNTIME_REFERENCE_GUIDE.md`, `../Tools/npu/CONTEXT_INDEX.md` |
 | Generated Blender packages | `AI_GENERATED_PACKAGE_STANDARD.md`, `PACKAGE_CREATION_WORKFLOW.md`, `QUALITY_GATE.md`, `../Scripting/CONTEXT_INDEX.md` |
 | Runtime compatibility | `COMPATIBILITY.md`, `BLENDER_SCRIPT_ENTRYPOINTS.md`, `../Scripting/CONTEXT_INDEX.md` |

@@ -67,6 +67,11 @@ def _publish_report_native_tool_calls(
         if unique_id in owner.provider_native_tool_call_ids:
             continue
         owner.provider_native_tool_call_ids.add(unique_id)
+        if lane != "gpu1_planner":
+            _publish_peer_native_call_diagnostic(
+                owner, source, lane, output, call, unique_id, round_id
+            )
+            continue
         plan_item = owner.provider_plan_item_for_tool_call(call, events)
         if not plan_item:
             _publish_unmapped_native_call(owner, source, lane, output, call, unique_id, round_id)
@@ -76,6 +81,34 @@ def _publish_report_native_tool_calls(
         _publish_need_and_request(owner, report, call, plan_item, request_id, round_id)
         published += 1
     return published
+
+
+def _publish_peer_native_call_diagnostic(
+    owner: Any,
+    source: str,
+    lane: str,
+    output: str,
+    call: dict[str, Any],
+    unique_id: str,
+    round_id: int,
+) -> None:
+    owner.publish(
+        source,
+        "validation_signal",
+        {
+            "kind": "provider_peer_native_tool_call_diagnostic_only",
+            "lane": lane,
+            "tool_call": call,
+            "provider_report": output,
+            "policy": (
+                "GPU1 is the cognitive center. GPU0/NPU native tool calls are "
+                "peer evidence and must not become broker-driving work."
+            ),
+        },
+        target="deterministic",
+        correlation_id=unique_id,
+        round_id=round_id,
+    )
 
 
 def _publish_unmapped_native_call(

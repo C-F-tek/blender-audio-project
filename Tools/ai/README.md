@@ -1,6 +1,6 @@
 # AI Tools
 
-`Tools/ai/` contains report-oriented tools for IA-Carmine local AI orchestration, context building, provider diagnostics, deterministic recommendations, telemetry, evidence, final tool-product packaging, patch suggestion handling, reusable patchkit bundles and AI-to-AI handoff.
+`Tools/ai/` contains report-oriented tools for IA-Carmine local AI orchestration, context building, provider diagnostics, deterministic recommendations, evidence, final tool-product packaging, patch suggestion handling, reusable patchkit bundles and AI-to-AI handoff.
 
 This README is a technical catalog. It is not the primary command source.
 
@@ -83,9 +83,8 @@ Do not create a new script when one of these already owns the responsibility.
 | Heap/exchange runtime entry | `python -m Tools.ai heap_exchange_runtime_entry` |
 | Heap/exchange runtime exit | `python -m Tools.ai heap_exchange_runtime_exit` |
 | Runtime tool execution | `agent_runtime_tool_broker.py` |
-| Runtime tool telemetry | `build_runtime_tool_usage_telemetry.py` |
-| Full toolbox telemetry summary | `build_full_toolbox_run_telemetry_summary.py` |
-| Shared AI-to-AI bundle | `build_shared_toolbox_ai_to_ai_bundle.py` |
+| Runtime tool capability manifest | `python -m Tools.ai build_runtime_tool_capability_manifest` |
+| Shared AI-to-AI bundle | `python -m Tools.ai shared_toolbox_bundle` |
 | GitHub compact evidence bundle | `build_github_evidence_bundle.py` |
 | Task patch suggestion report | `build_task_patch_suggestion_report.py` |
 | Deterministic patchkit application | `patchkit/apply_patch_bundle.py` |
@@ -125,9 +124,9 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | Patch planning/spec support | `python -m Tools.ai agent_review_patch_plan`, `generated_patch_specs_from_proposals.py`, `generated_patch_specs_promote_draft.py` | Review-only unless explicit apply is authorized separately. |
 | Patchkit bundles | `patchkit/apply_patch_bundle.py`, `patchkit/*` | Preferred OOB application path for future core patch bundles. |
 | Patch suggestion product | `build_task_patch_suggestion_report.py`, `apply_patch_suggestion_bundle.py`, `agent_review_prepare_pr.py` | Markdown/task suggestion product, deterministic apply, review PR preparation. |
-| Runtime broker/telemetry | `agent_runtime_tool_broker.py`, `build_runtime_tool_usage_telemetry.py` | Broker-measured tool calls and normalized status. |
-| Capability and telemetry summary | capability manifest packages/builders, `build_full_toolbox_run_telemetry_summary.py` | Handoff context for available tools/hardware lanes and run state. |
-| Production bundle | `build_shared_toolbox_ai_to_ai_bundle.py` | AI-to-AI evidence/telemetry/patch-plan handoff. |
+| Runtime broker/evidence | `python -m Tools.ai agent_runtime_tool_broker`, `python -m Tools.ai build_runtime_tool_capability_manifest` | Broker-measured tool calls and normalized status. |
+| Capability and bundle evidence | capability manifest packages/builders, `python -m Tools.ai shared_toolbox_bundle` | Handoff context for available tools/hardware lanes and run state. |
+| Production bundle | `python -m Tools.ai shared_toolbox_bundle` | AI-to-AI evidence and patch-plan handoff. |
 | Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
 
 Use `docs/LOCAL_AI_TASKS/current-capability-depth-map-2026-05-09.md` to classify each family as active, report-only, provider-gated, manual-review, local-private, target or legacy/diagnostic.
@@ -238,9 +237,9 @@ A recommendation, patch plan or patch spec produced from run-unica evidence is i
 ```text
 launcher manifest
 phase_status / phase_reports
-runtime tool usage telemetry
+runtime tool usage evidence
 runtime/hardware capability manifest
-full toolbox telemetry summary
+full toolbox evidence summary
 shared AI-to-AI bundle/final summary
 CSV/index/discovery/file-line evidence when relevant
 proposal_core when patch notes quality product is part of the run

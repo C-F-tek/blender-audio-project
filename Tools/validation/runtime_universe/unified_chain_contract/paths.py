@@ -67,19 +67,6 @@ def discover_contract_paths(
             ],
         )
     )
-    tool_usage_path = (
-        repo_path(repo_root, args.tool_usage_telemetry)
-        if args.tool_usage_telemetry
-        else discover_first(
-            repo_root,
-            [
-                f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
-                f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
-                f"output/**/tool_usage*{stamp}*.json",
-                f"output/**/runtime_tool_usage*{stamp}*.json",
-            ],
-        )
-    )
     heap_peer_path = (
         repo_path(repo_root, args.heap_peer_runtime)
         if args.heap_peer_runtime
@@ -89,8 +76,6 @@ def discover_contract_paths(
                 f"output/**/heap_peer_runtime*{stamp}*.json",
                 f"output/**/runtime_tool_capability_manifest*{stamp}*.json",
                 f"docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest*{stamp}*.json",
-                f"output/**/full_toolbox_run_telemetry_summary*{stamp}*.json",
-                f"docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary*{stamp}*.json",
             ],
         )
     )
@@ -129,7 +114,6 @@ def discover_contract_paths(
         "observer_dir": observer_dir,
         "ai_events": ai_events_path,
         "tool_capability": tool_capability_path,
-        "tool_usage": tool_usage_path,
         "heap_peer": heap_peer_path,
         "shared_memory": shared_memory_path,
         "closure_audit": closure_audit_path,

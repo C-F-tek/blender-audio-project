@@ -53,7 +53,7 @@ Use it after a real product run to prove that one stamp contains the complete pr
 - GPU0 OpenVINO peer/support evidence;
 - NPU micro peer evidence;
 - shared memory / AI-to-AI evidence;
-- tool broker capability or usage telemetry;
+- tool broker capability or usage evidence;
 - heap/exchange closure audit;
 - review PR product readiness;
 - `agent_review_prepare_pr.py` result;

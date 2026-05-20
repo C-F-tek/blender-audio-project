@@ -2,7 +2,7 @@
 
 ## Accepted direction
 
-The current IA-Carmine architecture should evolve by enriching the existing run-unica, broker, telemetry and SQLite-memory lanes instead of adding disconnected parallel memory systems or uncontrolled autonomous agents.
+The current IA-Carmine architecture should evolve by enriching the existing run-unica, broker, evidence and SQLite-memory lanes instead of adding disconnected parallel memory systems or uncontrolled autonomous agents.
 
 Primary direction:
 
@@ -26,7 +26,7 @@ SQLite heap memory
   -> shared typed memory substrate for lane outputs, decisions, promotion candidates and unresolved questions
 
 runtime broker
-  -> mandatory policy, routing, capability, timeout, telemetry and side-effect control plane
+  -> mandatory policy, routing, capability, timeout, evidence and side-effect control plane
 ```
 
 ## Why NPU tool-proxy, not advisory
@@ -59,7 +59,7 @@ report-only OpenVINO probe
 future embedding/classification/batch worker
 ```
 
-Do not activate it immediately as an autonomous worker. Real delegation requires request/response schemas, broker policy, telemetry and validators.
+Do not activate it immediately as an autonomous worker. Real delegation requires request/response schemas, broker policy, evidence and validators.
 
 ## CSV/index/discovery before reasoning
 

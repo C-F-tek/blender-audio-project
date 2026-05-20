@@ -6,6 +6,7 @@ import json
 
 POINTER_DELTA_PROTOCOL = (
     "HEAP_POINTER_DELTA_PROTOCOL:\n"
+    "- Corsa unica non significa senso unico e non significa ciclo singolo: e' una run continua su grafo heap/pointer.\n"
     "- Non produrre una soluzione totale se il problema e' ampio. Produci il prossimo delta concreto.\n"
     "- Ogni revisione deve dichiarare POINTER_ACTION=STAY_FORWARD | BACKTRACK_PROPAGATE | RESUME_FORWARD | SPLIT_TASKS | NO_PATCHABLE_TARGET.\n"
     "- Se introduci import, simboli, schema field, CLI flag o contratti, crea PROPAGATION_TASKS e usa BACKTRACK_PROPAGATE.\n"
@@ -16,6 +17,7 @@ POINTER_DELTA_PROTOCOL = (
     "- Usa BACKLOG_TASKS per il lavoro successivo; il pointer graph mantiene memoria e contesto.\n"
     "- GPU1 puo' iterare su proposal chunks gia' scritti: se sono corretti ma poveri, non scartarli; arricchiscili con copertura repo, criteri di accettazione, validazioni, rischi e confini di apply.\n"
     "- La ricchezza finale nasce da COMPOSE/REFINE di piu' pezzi persistenti; ogni revisione deve dichiarare se estende un chunk precedente o crea un nuovo delta.\n"
+    "- FINAL_CODE_PRODUCT deve essere ricostruito dalla catena previous/refines/resume e dai blocchi provider collegati, non da una risposta lineare singola.\n"
     "- GPU0 deve verificare path/diff/validazione del delta; NPU deve auditare guardrail e placeholder.\n"
     "- Il delta corrente deve contenere TARGET_FILES repo-relative reali, PATCH_SKETCH_UNIFIED_DIFF e VALIDATION_COMMANDS.\n"
     "- PATCH_SKETCH_UNIFIED_DIFF deve essere un blocco ```diff con diff --git a/<path> b/<path>; non usare pseudocodice, sketch testuale o stub.\n"

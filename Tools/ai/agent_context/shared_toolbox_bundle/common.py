@@ -123,10 +123,7 @@ FULL_TOOLBOX_REPORT_TEMPLATES: tuple[str, ...] = (
     "output/validation/provider_runtime_live_signals_npu_support_{stamp}.json",
     "output/validation/provider_runtime_heap_from_peer_reports_{stamp}.json",
     "output/ai_runtime_heap/{stamp}/snapshot.json",
-    "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.json",
-    "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_{stamp}.json",
-    "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.json",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_{stamp}_cloud_semantic_deterministic_chunk_manifest.json",
 )
 
@@ -160,10 +157,7 @@ FULL_TOOLBOX_ARTIFACT_TEMPLATES: tuple[str, ...] = (
     "output/ai_runtime_heap/{stamp}/snapshot.md",
     "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_integrated.md",
     "output/validation/agent_review_full_toolbox_decision_loop_{stamp}_workflow.md",
-    "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_run_telemetry_summary_{stamp}.md",
-    "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_usage_telemetry_{stamp}.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/runtime_tool_capability_manifest_{stamp}.md",
-    "docs/LOCAL_VALIDATION_EVIDENCE/provider_runtime_heap_telemetry_{stamp}.md",
     "docs/LOCAL_VALIDATION_EVIDENCE/full_toolbox_{stamp}_cloud_semantic_deterministic_chunk_manifest.md",
 )
 

@@ -11,7 +11,7 @@ def build_fixtures(repo_root: Path, stamp: str) -> dict[str, str]:
     base.mkdir(parents=True, exist_ok=True)
     task = base / "task.md"
     task.write_text(
-        "# Patch notes smoke task\n\nObjective: produce patch notes from a manual-review patch plan with telemetry evidence.\n",
+        "# Patch notes smoke task\n\nObjective: produce patch notes from a manual-review patch plan with product evidence.\n",
         encoding="utf-8",
     )
     patch_plan = base / "patch_plan.json"
@@ -42,11 +42,9 @@ def build_fixtures(repo_root: Path, stamp: str) -> dict[str, str]:
     paths = {
         "patch_quality": base / "patch_quality.json",
         "decision_loop": base / "decision_loop.json",
-        "runtime_usage": base / "runtime_usage.json",
         "runtime_capability": base / "runtime_capability.json",
         "repository_consistency": base / "repository_consistency.json",
         "memory_bundle": base / "memory_bundle.json",
-        "full_toolbox_telemetry": base / "telemetry.json",
         "github_evidence_bundle": base / "bundle.json",
     }
     common = {"schema_version": 1, "passed": True, "errors": []}
@@ -76,22 +74,6 @@ def build_fixtures(repo_root: Path, stamp: str) -> dict[str, str]:
         "deterministic_validator_acceptance_required": True,
     }
     write_fixture(
-        paths["runtime_usage"],
-        {
-            **common,
-            "kind": "runtime_tool_usage_telemetry",
-            "provider_execution_performed": True,
-            "summary": {"tool_call_entry_count": 2, "executed_count": 2},
-            "provider_evidence": {
-                "provider_execution_performed": True,
-                "gpu_provider_execution_performed": True,
-                "gpu0_peer_support_provider_execution_performed": True,
-                "npu_micro_tool_lane_performed": True,
-                "npu_final_review": npu_final_review,
-            },
-        },
-    )
-    write_fixture(
         paths["runtime_capability"],
         {**common, "kind": "runtime_tool_capability_manifest", "tool_count": 2},
     )
@@ -101,21 +83,6 @@ def build_fixtures(repo_root: Path, stamp: str) -> dict[str, str]:
     )
     write_fixture(
         paths["memory_bundle"], {**common, "kind": "full_memory_tool_regeneration_bundle"}
-    )
-    write_fixture(
-        paths["full_toolbox_telemetry"],
-        {
-            **common,
-            "kind": "full_toolbox_run_telemetry_summary",
-            "provider_execution_performed": True,
-            "provider_evidence": {
-                "provider_execution_performed": True,
-                "gpu_provider_execution_performed": True,
-                "gpu0_peer_support_provider_execution_performed": True,
-                "npu_micro_tool_lane_performed": True,
-                "npu_final_review": npu_final_review,
-            },
-        },
     )
     write_fixture(
         paths["github_evidence_bundle"],

@@ -2,6 +2,16 @@
 
 Use this file as the compact navigation layer for tool context files.
 
+## Core contracts before tool navigation
+
+Read these before treating any tool, dispatcher, smoke or provider artifact as proof:
+
+| Contract | File |
+| --- | --- |
+| AI limitations and anti-ambiguity | `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` |
+| Core lane completeness | `docs/CORE_LANE_COMPLETENESS_CONTRACT.md` |
+| IA Universe model-to-code map | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
+
 ## Area indexes
 
 | Area | Main context | Family index |

@@ -83,6 +83,7 @@ def operational_provider_activity(
     native_done = bool(provider_report.get("native_tool_loop_performed"))
     classification = str(
         provider_report.get("native_tool_loop_classification")
+        or provider_report.get("npu_micro_provider_classification")
         or provider_report.get("semantic_provider_classification")
         or ""
     )
@@ -95,21 +96,31 @@ def operational_provider_activity(
     if any("salvaged" in str(call.get("reason") or "").lower() for call in tool_calls if isinstance(call, dict)):
         return False, "non_operational_salvaged_tool_call"
     if lane == "gpu1_planner":
+        if provider_report.get("provider_execution_performed") is not True:
+            return False, "gpu1_provider_execution_not_performed"
         if not selected_model:
             return False, "gpu1_missing_selected_model"
+        if provider_report.get("response_likely_incomplete"):
+            return True, "gpu1_heap_delta_proposal_incomplete_requires_refinement"
         if _contains_heap_contract_text(response_text):
             return True, "gpu1_heap_delta_proposal_present"
         if tool_call_count > 0:
             return True, "gpu1_structured_native_tool_call_present"
         return False, "gpu1_no_heap_delta_or_native_tool_call"
-    if lane in {"gpu0_peer", "npu_micro_task_auditor"}:
+    if lane == "gpu0_peer":
         if not semantic_done:
             return False, f"{lane}_semantic_provider_not_performed"
-        if _has_peer_lane_evidence(lane, provider_report, response_text, tool_call_count):
+        if _has_peer_lane_evidence(lane, provider_report, response_text):
             if incomplete_native_tool_call:
                 return True, f"{lane}_semantic_evidence_with_incomplete_native_tool_call"
             return True, f"{lane}_semantic_review_or_native_tool_call"
         return False, f"{lane}_no_review_audit_or_native_tool_call"
+    if lane == "npu_micro_task_auditor":
+        if _has_peer_lane_evidence(lane, provider_report, response_text):
+            if incomplete_native_tool_call:
+                return True, "npu_micro_task_tool_loop_incomplete_but_lane_active"
+            return True, "npu_micro_task_provider_activity"
+        return False, "npu_micro_task_provider_not_performed"
     return bool(response_text or tool_call_count > 0), "generic_provider_activity"
 
 
@@ -131,9 +142,8 @@ def _has_peer_lane_evidence(
     lane: str,
     provider_report: dict[str, Any],
     response_text: str,
-    tool_call_count: int,
 ) -> bool:
-    if tool_call_count > 0 or _contains_review_or_audit_text(response_text):
+    if _contains_review_or_audit_text(response_text):
         return True
     if lane == "gpu0_peer":
         return bool(

@@ -9,6 +9,27 @@ from typing import Any
 from Tools.ai._shared.provider_probe_paths import ensure_repo_imports
 
 
+def _positive_provider_value(name: str, value: int) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise ValueError(f"{name} must be a positive operator/heap propagated value")
+    return parsed
+
+
+def _response_likely_incomplete(text: str) -> bool:
+    stripped = (text or "").rstrip()
+    if not stripped:
+        return False
+    if stripped.count("```") % 2 == 1:
+        return True
+    if stripped[-1] in {",", ":", ";", "(", "[", "{"}:
+        return True
+    lowered = stripped.lower()
+    return lowered.endswith(
+        (" in", " con", " e", " di", " del", " alla", " che", " per", " from", " with", " and", " or")
+    )
+
+
 def run_ollama_probe(
     repo_root: Path,
     model: str | None,
@@ -43,6 +64,7 @@ def run_ollama_probe(
     from Tools.npu.pipeline import parse_provider_result  # noqa: PLC0415
 
     started = time.perf_counter()
+    propagated_max_new_tokens = _positive_provider_value("max_new_tokens", max_new_tokens)
     models = list_models() if is_server_ready() else list_models_from_disk()
     selected_model = choose_model(model, models)
     if not selected_model:
@@ -58,6 +80,7 @@ def run_ollama_probe(
     raw_chat_response: dict[str, Any] = {}
     native_tool_calls: list[dict[str, Any]] = []
     native_tool_decision_prompted = bool(prompt and prompt.strip())
+    heap_delta_text_required = bool(heap_patch_prompt_required(prompt or ""))
     explicit_tool_call_required = prompt_explicitly_requires_tool_call(prompt or "")
     native_tool_loop_relevant = bool(
         native_tool_decision_prompted and explicit_tool_call_required
@@ -128,7 +151,7 @@ def run_ollama_probe(
             proposal_prompt = (prompt or "").strip()
             proposal_text = session.generate(
                 proposal_prompt,
-                max_new_tokens=max_new_tokens,
+                max_new_tokens=propagated_max_new_tokens,
                 temperature=0.0,
                 partial_callback=write_partial if partial_json else None,
             )
@@ -140,7 +163,8 @@ def run_ollama_probe(
                     "prompt_chars": len(proposal_prompt),
                     "text_chars": len(text),
                     "text_present": bool(text),
-                    "max_new_tokens": max_new_tokens,
+                    "max_new_tokens": propagated_max_new_tokens,
+                    "max_new_tokens_source": "operator_heap_propagated",
                     "native_tool_loop_requested": False,
                     "native_tool_call_count": 0,
                 }
@@ -155,7 +179,7 @@ def run_ollama_probe(
                     raw_chat_response = session.chat(
                         [{"role": "user", "content": tool_prompt}],
                         tools=broker_tool_schemas(ollama_tool_call_tool_names()),
-                        max_new_tokens=max_new_tokens,
+                        max_new_tokens=propagated_max_new_tokens,
                         temperature=0.0,
                     )
                     message = raw_chat_response.get("message")
@@ -174,7 +198,8 @@ def run_ollama_probe(
                             "prompt_chars": len(tool_prompt),
                             "text_chars": len(candidate),
                             "text_present": bool(candidate.strip()),
-                            "max_new_tokens": max_new_tokens,
+                            "max_new_tokens": propagated_max_new_tokens,
+                            "max_new_tokens_source": "operator_heap_propagated",
                             "native_tool_loop_requested": True,
                             "native_tool_call_count": len(native_tool_calls),
                         }
@@ -191,7 +216,7 @@ def run_ollama_probe(
             for index, probe_prompt in enumerate(prompts, start=1):
                 candidate = session.generate(
                     probe_prompt,
-                    max_new_tokens=max_new_tokens,
+                    max_new_tokens=propagated_max_new_tokens,
                     temperature=0.0,
                 )
                 candidate = candidate or ""
@@ -202,7 +227,8 @@ def run_ollama_probe(
                         "prompt_chars": len(probe_prompt),
                         "text_chars": len(candidate),
                         "text_present": bool(candidate.strip()),
-                        "max_new_tokens": max_new_tokens,
+                        "max_new_tokens": propagated_max_new_tokens,
+                        "max_new_tokens_source": "operator_heap_propagated",
                         "native_tool_loop_requested": False,
                         "native_tool_call_count": 0,
                     }
@@ -257,6 +283,9 @@ def run_ollama_probe(
     if not validation_commands:
         validation_commands = extract_validation_refs(response_text)
     empty_output = not response_text.strip() and not native_tool_calls
+    response_likely_incomplete = bool(
+        heap_delta_text_required and _response_likely_incomplete(response_text)
+    )
     native_classification = "ollama_native_tool_decision_not_prompted"
     warnings: list[str] = []
     native_tool_loop_requested = bool(native_tool_calls)
@@ -271,10 +300,13 @@ def run_ollama_probe(
         native_classification = "ollama_native_tool_not_requested_text_delta_primary"
     elif native_tool_decision_prompted:
         native_classification = "ollama_native_tool_not_selected"
-    heap_delta_text_required = bool(heap_patch_prompt_required(prompt or ""))
     if heap_delta_text_required and not response_text.strip():
         warnings.append(
             "Heap/code-product provider task requires normal heap proposal text in addition to tool calls."
+        )
+    if response_likely_incomplete:
+        warnings.append(
+            "GPU1 heap proposal text looks incomplete; keep the lane operational but reject this proposal chunk for refinement."
         )
     passed = (not empty_output) and (parsed.ok or bool(prompt and prompt.strip()))
     if heap_delta_text_required and not response_text.strip():
@@ -289,10 +321,15 @@ def run_ollama_probe(
         "request_prompt": prompt or "",
         "response_text": response_text,
         "raw_response_chars": len(text.strip()),
+        "max_new_tokens": propagated_max_new_tokens,
+        "max_new_tokens_source": "operator_heap_propagated",
         "json_contract_requested": heap_patch_prompt_required(prompt or ""),
         "json_contract_passed": bool(parsed.json_ok and isinstance(parsed_json, dict)),
         "heap_delta_text_required": heap_delta_text_required,
         "heap_delta_text_present": bool(response_text.strip()),
+        "provider_output_complete": not response_likely_incomplete,
+        "response_likely_incomplete": response_likely_incomplete,
+        "proposal_requires_refinement": response_likely_incomplete,
         "tool_calls": native_tool_calls,
         "textual_tool_calls": textual_tool_calls,
         "native_tool_loop_provider": "ollama",

@@ -230,7 +230,7 @@ def build_provider_broker_loop(
             "blocking": False,
         },
         {
-            "id": "contract_telemetry_bundle",
+            "id": "contract_evidence_bundle",
             "from": "deterministic validators",
             "to": "patch bundle/evidence handoff",
             "performed": True,
@@ -246,7 +246,7 @@ def build_provider_broker_loop(
         "schema_version": 1,
         "kind": "provider_broker_loop",
         "active": active,
-        "topology": "input_md -> deterministic_baseline -> GPU1 -> GPU0 -> broker -> NPU_support -> broker -> contract -> telemetry -> bundle -> patch_plan",
+        "topology": "input_md -> deterministic_baseline -> GPU1 -> GPU0 -> broker -> NPU_support -> broker -> contract -> bundle -> patch_plan",
         "controlled_executor": "runtime_tool_broker",
         "direct_tool_execution_allowed": False,
         "provider_lanes": {

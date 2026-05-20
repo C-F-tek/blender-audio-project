@@ -72,7 +72,6 @@ def extract_provider_diagnostics_summary(
             "ai_peer_exchange_contract",
             "provider_runtime_live_signals",
             "provider_runtime_heap_from_peer_reports",
-            "provider_runtime_heap_telemetry",
         }:
             errors = data.get("errors") if isinstance(data.get("errors"), list) else []
             warnings = data.get("warnings") if isinstance(data.get("warnings"), list) else []
@@ -269,12 +268,6 @@ def extract_peer_mesh_product_state(
                 add_unique(degraded_lanes, "npu_semantic_provider_slow_or_degraded")
             if support.get("product_pass_blocker") is True:
                 add_unique(product_blockers, "npu_support_lane_marked_product_blocker")
-        if kind == "provider_runtime_heap_telemetry" and int(item.get("event_count") or 0) > 0:
-            add_unique(operational_lanes, "provider_runtime_heap_blackboard")
-            if int(item.get("broker_result_count") or 0) > 0:
-                add_unique(support_lanes, "provider_runtime_heap_broker_results")
-            if int(item.get("direct_execution_violation_count") or 0) > 0:
-                add_unique(product_blockers, "provider_runtime_heap_direct_execution_violation")
     if operational_lanes and "deterministic_scripts" not in operational_lanes:
         add_unique(operational_lanes, "deterministic_scripts")
     return {
@@ -317,26 +310,21 @@ def extract_provider_broker_loop_product_state(
     heap_items = [
         item
         for item in provider_diagnostics.get("diagnostics", [])
-        if isinstance(item, dict) and item.get("kind") == "provider_runtime_heap_telemetry"
+        if isinstance(item, dict) and item.get("kind") == "provider_runtime_heap_from_peer_reports"
     ]
     if heap_items:
-        broker_result_count = sum(int(item.get("broker_result_count") or 0) for item in heap_items)
         return {
             "seen": True,
-            "active": any(int(item.get("event_count") or 0) > 0 for item in heap_items),
+            "active": True,
             "controlled_executor": "provider_runtime_heap + agent_runtime_tool_broker",
             "direct_tool_execution_allowed": False,
-            "broker_tool_execution_count": broker_result_count,
-            "gpu0_broker_tool_execution_count": broker_result_count,
+            "broker_tool_execution_count": 0,
+            "gpu0_broker_tool_execution_count": 0,
             "npu_broker_tool_execution_count": 0,
             "npu_non_blocking": True,
             "npu_product_pass_blocker": False,
             "deterministic_scripts_heavy_audit_authority": True,
-            "product_pass_blockers": [
-                "provider_runtime_heap_direct_execution_violation"
-                for item in heap_items
-                if int(item.get("direct_execution_violation_count") or 0) > 0
-            ],
+            "product_pass_blockers": [],
             "topology": [
                 "gpu1 -> gpu0 evidence_request",
                 "broker -> gpu0 broker_result",

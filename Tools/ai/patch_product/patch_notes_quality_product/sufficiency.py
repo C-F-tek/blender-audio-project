@@ -23,7 +23,6 @@ ALL_ALL_REQUIRED_AREAS = [
     "python_python",
     "policy_violation",
     "refactor_candidate",
-    "telemetry_gap",
     "evidence_gap",
 ]
 
@@ -71,10 +70,6 @@ def detect_product_mode(task: dict[str, Any]) -> dict[str, Any]:
 
 
 def _workflow_summary(loaded: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    telemetry = safe_dict(loaded.get("full_toolbox_telemetry"))
-    summary = safe_dict(telemetry.get("workflow_summary"))
-    if summary:
-        return summary
     decision = safe_dict(loaded.get("decision_loop"))
     return {
         "passed": decision.get("passed"),
@@ -174,11 +169,6 @@ def _subtract_counts(
 
 def _proposal_area_counts(loaded: dict[str, dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
-    telemetry = safe_dict(loaded.get("full_toolbox_telemetry"))
-    for key in ("recommendations_first20", "patch_plans_first20"):
-        for item in safe_list(telemetry.get(key)):
-            if isinstance(item, dict):
-                _bump_area(counts, item.get("area"))
     patch_plan = safe_dict(loaded.get("patch_plan"))
     for key in ("patch_plans", "plans"):
         for item in safe_list(patch_plan.get(key)):

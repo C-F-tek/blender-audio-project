@@ -17,6 +17,8 @@ This file is the compact navigation layer for repository documentation.
 | `docs/ROOT_SURFACE_CONTEXT.md` | Root-level file and metadata surface map. |
 | `docs/MAPPING_TOOL_EVIDENCE.md` | Optional mapping evidence procedure. |
 | `docs/SHARED_SCRIPTING_UTILITIES.md` | Shared scripting utility extraction policy. |
+| `docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md` | Contract for workload-report advisory quality and fail-closed routing. |
+| `docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md` | Contract for local AI workload use inside core/tool activation. |
 
 ## Operational document folders
 

@@ -24,7 +24,6 @@ def input_paths_from_args(args: Any, repo_root: Path) -> dict[str, Path]:
         "patch_plan": resolve(repo_root, args.patch_plan),
         "decision_loop": resolve(repo_root, args.decision_loop),
         "recommendations": resolve(repo_root, args.recommendations),
-        "runtime_usage": resolve(repo_root, args.runtime_usage),
         "runtime_capability": resolve(repo_root, args.runtime_capability),
         "repository_consistency": resolve(repo_root, args.repository_consistency),
     }
@@ -41,7 +40,6 @@ def load_inputs(
         "patch_plan",
         "decision_loop",
         "recommendations",
-        "runtime_usage",
         "runtime_capability",
         "repository_consistency",
     }
@@ -89,12 +87,12 @@ def build_quality_notes(
         fallback.append(
             {
                 "reason": "sqlite_fts_search_found_no_relevant_evidence_hits",
-                "recommended_followup": "verify task/evidence/telemetry/memory terms are indexed and specific enough",
+                "recommended_followup": "verify task/evidence/memory terms are indexed and specific enough",
             }
         )
     missing = [
         key
-        for key in ("runtime_usage", "runtime_capability", "repository_consistency")
+        for key in ("runtime_capability", "repository_consistency")
         if input_status.get(key) != "ok"
     ]
     if missing:
@@ -102,7 +100,7 @@ def build_quality_notes(
             {
                 "reason": "required_tool_evidence_missing_or_unreadable",
                 "affected_inputs": missing,
-                "recommended_followup": "rerun with runtime telemetry, capability manifest and repository consistency reports enabled",
+                "recommended_followup": "rerun with capability manifest and repository consistency reports enabled",
             }
         )
     return findings, fallback
@@ -176,14 +174,13 @@ def build_report(args: Any) -> dict[str, Any]:
             "query_results": query_results,
         },
         "tool_utility_proof": {
-            "runtime_tool_telemetry_used": bool(loaded.get("runtime_usage", {})),
             "runtime_capability_manifest_used": bool(loaded.get("runtime_capability", {})),
             "repository_consistency_used": bool(loaded.get("repository_consistency", {})),
             "memory_bundle_used": bool(loaded.get("memory_bundle", {})),
             "sqlite_fts_or_fallback_used": True,
             "concrete_effects": [
                 "scores patch plans for target concreteness, rationale, strategy, validation and stop conditions",
-                "indexes request/evidence/telemetry/memory into operational SQLite FTS under output/**",
+                "indexes request/evidence/memory into operational SQLite FTS under output/**",
                 "records query hit counts proving which evidence was reachable",
                 "preserves run completion by writing fallback_path_notes instead of failing on weak patch-note quality",
             ],

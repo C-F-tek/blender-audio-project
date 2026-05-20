@@ -20,7 +20,7 @@ The system should not behave as three unrelated assistants. It should behave as 
 | --- | --- | --- |
 | Ollama / main provider | central reasoning, planning, synthesis, candidate generation | advisory evidence, proposed operations, final reasoning inputs |
 | GPU0 / coworker lane | companion reviewer, OpenVINO/helper workload, discrepancy check, peer visibility | peer reports, review evidence, workload proof, contradiction notes |
-| NPU / micro-lane | microtask auditor, diagnostic lane, small checks, support evidence | micro reports, diagnostic facts, audit notes, guardrail hints |
+| NPU / micro-lane | microtask/tool/device provider, small checks, support evidence | micro reports, device/tool-loop facts, audit notes, guardrail hints |
 | CPU / validators | deterministic authority, broker, validation, file/source inspection | pass/fail reports, contracts, blocked reasons |
 
 ## Core doctrine
@@ -28,7 +28,7 @@ The system should not behave as three unrelated assistants. It should behave as 
 ```text
 Ollama is the main center of reasoning.
 GPU0 is the coworker/reviewer department.
-NPU is the micro-lane/microtask auditor.
+NPU is the micro-lane/microtask tool provider.
 CPU validators are deterministic authority.
 The heap is the shared memory and evidence surface.
 ```
@@ -52,7 +52,24 @@ If lanes operate on different context, the result is not a unified mind. It is o
 
 Time is part of that shared operational picture. A run budget is a counter used to choose cycles and request a coordinated soft close near the end; it is not a hard lane cutoff. A provider lane that fails to start is a hard universe block, while a started lane must close through heap state, chunks and pointers.
 
-Provider revision count is telemetry, not a recursion limit. The loop may use it as evidence that revisions happened, but must not stop GPU1 because the count reached an effective maximum.
+Provider revision count is evidence, not a recursion limit. The loop may use it as evidence that revisions happened, but must not stop GPU1 because the count reached an effective maximum.
+
+## Single Run, Not Single Direction
+
+`Corsa unica` means one continuous heap universe, not one script line, one cycle or one-way movement.
+
+GPU1 may move on the pointer graph:
+
+```text
+current block
+-> backtrack to previous/refines block
+-> propagate imports, variables, classes, schema fields, CLI flags and contracts
+-> ask GPU0/NPU to re-check impacted blocks in parallel
+-> resume forward from resume_from_block_id
+-> compose/refine the final code product from linked blocks
+```
+
+The final code product must be reconstructed from `previous_block_id`, `refines_block_id`, `resume_from_block_id` and linked GPU1/GPU0/NPU blocks. A long provider answer is still only evidence until the pointer graph and deterministic product boundary can compose it.
 
 ## Department responsibilities
 
@@ -98,18 +115,22 @@ Useful GPU0 output is structured evidence, not just device presence.
 
 ### NPU / micro-lane
 
-NPU is the microtask lane.
+NPU is the microtask/tool/device lane.
 
 It should:
 
 ```text
 run small diagnostic/audit tasks
+run bounded OpenVINO device/tool-loop work when selected
 support guardrail and sanity checks
 produce compact reports
-stay honest about diagnostic-only status unless compute lane is validated
+publish `npu_micro_provider_*` evidence when the micro provider runs
 ```
 
-NPU should not be documented as a full compute provider until code and validation prove that role.
+NPU must not be documented or reported as the primary semantic provider. It is a
+real bounded micro-provider when selected, but it remains support/micro and does
+not own final product synthesis. NPU reports must use `npu_micro_provider_*`
+fields, not `semantic_provider_*` or `npu_semantic_*` fields.
 
 ### CPU / validators
 

@@ -149,10 +149,10 @@ The center is dynamic. The entry and exit must stay controlled, observable and d
 |---|---|---|
 | Ollama / main provider | central reasoning, planning, synthesis, candidate generation | structured recommendation/proposal evidence |
 | GPU0 / coworker lane | peer review, OpenVINO/helper workload, discrepancy checks | observable peer evidence, contradiction/refinement notes |
-| NPU / micro-lane | microtask auditor and diagnostic support | compact diagnostic/audit reports |
+| NPU / micro-lane | microtask/tool/device provider and diagnostic support | compact micro-provider/audit reports |
 | CPU / validators | deterministic authority | pass/fail/blocked reports |
 
-Ollama is the main center, but not an unchecked source-write authority. GPU0 is not decoration; it must leave observable evidence when selected. NPU remains micro-lane/diagnostic unless source and validators prove a stronger compute-provider role.
+Ollama is the main center, but not an unchecked source-write authority. GPU0 is not decoration; it must leave observable evidence when selected. NPU is a real bounded micro-task/tool/device provider when selected, but it remains support/micro and must not be reported as the primary semantic provider.
 
 ## Canonical command surfaces
 
@@ -352,7 +352,7 @@ implemented code
 -> visible in context docs or CLI/help/runbook
 -> environment preflight documented when relevant
 -> emits compact evidence
--> appears in telemetry/manifest/report surfaces when relevant
+-> appears in manifest/report/evidence surfaces when relevant
 -> understood by validators or explicitly marked diagnostic
 -> has viable evidence in complete/full profiles
 ```
@@ -420,7 +420,7 @@ keep path/JSON/provider/evidence logic app-agnostic when practical
 keep generated indexes out of source-level refactors
 keep artistic scene behavior separate from infrastructure refactors
 do not migrate Blender packages broadly unless explicitly scoped
-centralize execution through broker/registry/validator/telemetry surfaces instead of duplicating per-runner logic
+centralize execution through broker/registry/validator/evidence surfaces instead of duplicating per-runner logic
 ```
 
 ## Reporting contract
