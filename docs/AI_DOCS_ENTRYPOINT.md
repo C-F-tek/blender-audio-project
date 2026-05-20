@@ -4,7 +4,7 @@
 
 Current `docs/` entrypoint for AI agents.
 
-This file is a routing bridge only. It points to current source-of-truth maps and must not preserve old first-read orders that predate the context-index, dispatcher-coverage and heap/exchange useful-model layer.
+This file is a routing bridge only. It points to current source-of-truth maps and must not preserve old first-read orders that predate the context-index, dispatcher-coverage and IA Universe model-to-code layer.
 
 ## Purpose
 
@@ -26,11 +26,13 @@ For a new AI session, read in this order:
 ../AGENTS.md
 ../CHATGPT.md
 ../CONTEXT_INDEX.md
+docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/STANDALONE_HEAP_SURFACE_MODEL.md
 docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 docs/REAL_PRODUCT_RUN_MODEL.md
 docs/COMPACT_EVIDENCE_MODEL.md
+docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
 docs/CONTEXT_COVERAGE_STATUS.md
 docs/DISPATCHER_CONTEXT_COVERAGE.md
 ../Tools/CONTEXT_INDEX.md
@@ -38,7 +40,7 @@ docs/CONTEXT_INDEX.md
 ../Scripting/CONTEXT_INDEX.md
 ```
 
-Then open the nearest area/family `TOOL_CONTEXT.md` before touching code.
+Then open the nearest area/family `TOOL_CONTEXT.md`, dispatcher and source file before touching code.
 
 ## First rule
 
@@ -46,6 +48,7 @@ Do not treat `docs/` as passive background text.
 
 In this repository, `docs/` is the contract and evidence layer for:
 
+- IA Universe model-to-code mapping;
 - project architecture;
 - AI workflow;
 - validation expectations;
@@ -58,6 +61,7 @@ In this repository, `docs/` is the contract and evidence layer for:
 - provider lanes unified mind model;
 - real product run model;
 - compact evidence model;
+- patch/code product boundary model;
 - heap/exchange lifecycle boundaries;
 - patchkit/source-write boundaries;
 - dispatcher-driven context navigation.
@@ -67,11 +71,13 @@ In this repository, `docs/` is the contract and evidence layer for:
 | Need | Read |
 | --- | --- |
 | Whole-repo entrypoint | `../CONTEXT_INDEX.md` |
+| Model-to-code bridge | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
 | Heap/exchange compact model | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` |
 | Standalone heap deterministic surfaces | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` |
 | Provider lanes as one operational mind | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` |
 | Real product/evidence/blocked classification | `docs/REAL_PRODUCT_RUN_MODEL.md` |
 | Raw output vs compact evidence | `docs/COMPACT_EVIDENCE_MODEL.md` |
+| Patch/code product boundary | `docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md` |
 | Context coverage status | `docs/CONTEXT_COVERAGE_STATUS.md` |
 | Dispatcher-to-family coverage | `docs/DISPATCHER_CONTEXT_COVERAGE.md` |
 | Documentation folder navigation | `docs/CONTEXT_INDEX.md` |
@@ -103,12 +109,13 @@ Use them as task-specific background, not as the current navigation root.
 
 | Work area | Read |
 |---|---|
-| Current AI orientation | `../CONTEXT_INDEX.md`, `docs/HEAP_EXCHANGE_USEFUL_MODEL.md`, `docs/STANDALONE_HEAP_SURFACE_MODEL.md`, `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md`, `docs/REAL_PRODUCT_RUN_MODEL.md`, `docs/COMPACT_EVIDENCE_MODEL.md`, `docs/CONTEXT_COVERAGE_STATUS.md`, `docs/DISPATCHER_CONTEXT_COVERAGE.md` |
-| Provider lanes / unified mind | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md`, `../Tools/ai/provider_mesh/TOOL_CONTEXT.md`, `../Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md`, `../Tools/npu/provider_mesh/TOOL_CONTEXT.md` |
-| Heap/exchange and patchkit | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md`, `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md`, `MAIN_RUNTIME_ARCHITECTURE.md`, `../Tools/ai/CONTEXT_INDEX.md` |
-| Standalone heap surfaces | `docs/STANDALONE_HEAP_SURFACE_MODEL.md`, `LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md`, `../Tools/ai/heap_runtime/TOOL_CONTEXT.md` |
-| Real product run classification | `docs/REAL_PRODUCT_RUN_MODEL.md`, `LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md`, `LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md`, `../Tools/validation/real_product/TOOL_CONTEXT.md` |
-| Evidence publication | `docs/COMPACT_EVIDENCE_MODEL.md`, `docs/LOCAL_VALIDATION_EVIDENCE/TOOL_CONTEXT.md`, `../Tools/validation/docs_hygiene/TOOL_CONTEXT.md` |
+| Current AI orientation | `../CONTEXT_INDEX.md`, `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md`, all current Universo IA model docs, `docs/CONTEXT_COVERAGE_STATUS.md`, `docs/DISPATCHER_CONTEXT_COVERAGE.md` |
+| Provider lanes / unified mind | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md`, `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md`, `../Tools/ai/provider_mesh/TOOL_CONTEXT.md`, `../Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md`, `../Tools/npu/provider_mesh/TOOL_CONTEXT.md` |
+| Heap/exchange and patchkit | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md`, `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md`, `LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md`, `../Tools/ai/CONTEXT_INDEX.md` |
+| Standalone heap surfaces | `docs/STANDALONE_HEAP_SURFACE_MODEL.md`, `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md`, `LOCAL_AI_TASKS/standalone-heap-universe-tool-surface-2026-05-10.md`, `../Tools/ai/heap_runtime/TOOL_CONTEXT.md` |
+| Real product run classification | `docs/REAL_PRODUCT_RUN_MODEL.md`, `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md`, `LOCAL_AI_TASKS/real-product-run-doc-index-2026-05-10.md`, `../Tools/validation/real_product/TOOL_CONTEXT.md` |
+| Evidence publication | `docs/COMPACT_EVIDENCE_MODEL.md`, `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md`, `docs/LOCAL_VALIDATION_EVIDENCE/TOOL_CONTEXT.md`, `../Tools/validation/docs_hygiene/TOOL_CONTEXT.md` |
+| Patch/code product boundary | `docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md`, `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md`, `../Tools/ai/code_product/TOOL_CONTEXT.md`, `../Tools/ai/patch_product/TOOL_CONTEXT.md`, `../Tools/ai/patchkit/TOOL_CONTEXT.md`, `../Tools/repo_patch_runner/CONTEXT_INDEX.md` |
 | Unified launcher/full run | `LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md`, `UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md/README.md`, `../Tools/ai/run/TOOL_CONTEXT.md` |
 | Documentation staleness | `docs/CONTEXT_COVERAGE_STATUS.md`, `LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md` |
 | AI pipeline orchestration | `AI_PIPELINE_ARCHITECTURE.md`, `AI_PROVIDER_AGNOSTIC_PIPELINE_GUIDE.md`, `../Tools/ai/pipeline/TOOL_CONTEXT.md` |
@@ -117,7 +124,6 @@ Use them as task-specific background, not as the current navigation root.
 | Generated Blender packages | `AI_GENERATED_PACKAGE_STANDARD.md`, `PACKAGE_CREATION_WORKFLOW.md`, `QUALITY_GATE.md`, `../Scripting/CONTEXT_INDEX.md` |
 | Runtime compatibility | `COMPATIBILITY.md`, `BLENDER_SCRIPT_ENTRYPOINTS.md`, `../Scripting/CONTEXT_INDEX.md` |
 | GitHub/local validation flow | `GITHUB_LOCAL_VALIDATION_WORKFLOW.md`, `GITHUB_ONLY_AI_CONTINUATION_GUIDE.md`, `../Tools/git/CONTEXT_INDEX.md` |
-| Mechanical patch workflow | `PATCH_SPEC_WORKFLOW.md`, `../Tools/ai/patchkit/TOOL_CONTEXT.md`, `../Tools/repo_patch_runner/CONTEXT_INDEX.md` |
 | Larger refactors | `EXECUTION_PLANS/README.md`, `TECH_DEBT_TRACKER.md`, `REFACTORING_AND_REUSE_PLAN.md` |
 
 ## How to use external-reference guides
@@ -141,9 +147,9 @@ If one conflicts with current context indexes, dispatcher coverage, heap/exchang
 When entering through `docs/`, an AI agent should:
 
 1. identify the task area;
-2. read the current heap/exchange useful model, standalone heap surface model, provider lanes unified mind model, real product run model, compact evidence model and index/coverage files first;
+2. read `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` and the relevant current model docs;
 3. open the nearest family `TOOL_CONTEXT.md`;
-4. inspect current source before proposing patches;
+4. inspect current dispatcher/source before proposing patches;
 5. avoid destructive edits;
 6. preserve existing Blender behavior;
 7. prefer additive docs, validators and helper modules;
@@ -159,4 +165,5 @@ When adding stable documentation:
 2. link it from the nearest `CONTEXT_INDEX.md` when it changes navigation;
 3. update `docs/CONTEXT_COVERAGE_STATUS.md` when it changes coverage;
 4. update `docs/DISPATCHER_CONTEXT_COVERAGE.md` when it changes dispatcher/family coverage;
-5. explain whether it is a contract, guide, status marker or historical note.
+5. update `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` when a model changes code/tool meaning;
+6. explain whether it is a contract, guide, status marker or historical note.
