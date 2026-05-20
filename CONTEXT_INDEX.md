@@ -6,6 +6,7 @@ This is the compact navigation entrypoint for AI and operator context.
 
 | File | Role |
 | --- | --- |
+| `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` | Core bridge from each Universo IA model to real code families, dispatcher commands, artifacts and validators. |
 | `docs/HEAP_EXCHANGE_USEFUL_MODEL.md` | Current compact model for controlled input, shared heap/exchange, cooperating lanes, evidence and deterministic exit product. |
 | `docs/STANDALONE_HEAP_SURFACE_MODEL.md` | Current compact model for deterministic heap surfaces: preload, memory, chunks, namespaces, tool catalog, broker, lanes and composer. |
 | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | Current compact model for Ollama/main provider, GPU0 coworker lane and NPU micro-lane as one operational mind with departments. |
