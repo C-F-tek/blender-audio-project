@@ -77,7 +77,7 @@ automated transcript parser.
 | Operator-aligned fixes kept in source/docs | 6 |
 | Operator blocks required before Codex matched instruction | 16 |
 | Script-gaming total regressions | 409 |
-| Misleading/Codex lie evidence count | 5 |
+| Misleading/Codex lie evidence count | 48 |
 | Systemic product-lie evidence count | 4 |
 | Systemic product-lie severity score | 20 |
 
@@ -137,6 +137,11 @@ Misleading/Codex lie evidence:
   heap/provider/product errors with a `complete:` prefix. The prefix is not new
   evidence; it is recorded as misleading formatting that can hide the plain
   failure state.
+- Counts 5-48: the complete smoke generated at `2026-05-21T00:18:36`
+  emitted 35 top-level error entries containing 44 `complete` occurrences.
+  The report collapsed that into `misleading_codex_lie_increment=1`, but the
+  ledger records the actual misleading `complete` error framing count for this
+  run.
 
 Systemic product-lie evidence:
 

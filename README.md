@@ -112,7 +112,7 @@ automated transcript parser.
 | Operator-aligned fixes kept in source/docs | 6 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
 | Operator blocks required | 16 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
 | Script-gaming total regression count | 409 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
-| Misleading/Codex lie evidence count | 5 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
+| Misleading/Codex lie evidence count | 48 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
 | Systemic product-lie evidence count | 4 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
 | Systemic product-lie severity score | 20 | Sum of severity weights for structural product lies; `5` is the maximum single-event severity. |
 
@@ -129,6 +129,11 @@ Recorded misleading/Codex lie evidence:
   heap/provider/product errors with a `complete:` prefix. That prefix is
   recorded as misleading formatting because it can make the same failure look
   like additional structured progress instead of plain absence of real work.
+- Counts 5-48: the complete smoke generated at `2026-05-21T00:18:36`
+  emitted 35 top-level error entries containing 44 `complete` occurrences.
+  The report collapsed that into `misleading_codex_lie_increment=1`, but the
+  canonical counter records the actual misleading `complete` error framing
+  count for this run.
 
 Recorded systemic product-lie evidence:
 
