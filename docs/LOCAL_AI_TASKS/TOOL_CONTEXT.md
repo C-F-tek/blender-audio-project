@@ -30,6 +30,12 @@ validation checklist
 next-chat continuation notes
 ```
 
+## Current active task docs
+
+```text
+provider-universe-runtime-patch-contract-2026-05-20.md
+```
+
 ## Rules for AI agents
 
 - Read the current task file before acting.

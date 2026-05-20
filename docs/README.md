@@ -125,6 +125,7 @@ Provider/lane cooperation work should first read:
 ```text
 PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+LOCAL_AI_TASKS/provider-universe-runtime-patch-contract-2026-05-20.md
 ```
 
 This is the current model for Ollama as main center, GPU0 as coworker/reviewer lane, and NPU as micro-lane/microtask auditor, with code/tool mapping in the model-to-code map.
