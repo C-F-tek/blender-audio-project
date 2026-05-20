@@ -42,6 +42,7 @@ def index_runtime_heap_event(db_path: Path, event: dict[str, Any]) -> None:
         _index_pending_broker(conn, event, event_id, payload, payload_json)
         _index_provider_report(conn, event, event_id, payload, payload_json)
         _index_proposal_iteration(conn, event_id, payload, payload_json)
+        _index_decision(conn, event, event_id, payload, payload_json)
         conn.commit()
     finally:
         conn.close()
@@ -109,6 +110,16 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
             block_id TEXT,
             revision INTEGER,
             status TEXT,
+            payload_json TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS decisions(
+            event_id INTEGER PRIMARY KEY,
+            decision_id TEXT,
+            decision TEXT,
+            reason TEXT,
+            revision INTEGER,
+            round_id INTEGER,
             payload_json TEXT NOT NULL
         );
         """
@@ -269,6 +280,79 @@ def _index_proposal_iteration(
             payload_json,
         ),
     )
+
+
+def _index_decision(
+    conn: sqlite3.Connection,
+    event: dict[str, Any],
+    event_id: int,
+    payload: dict[str, Any],
+    payload_json: str,
+) -> None:
+    if str(event.get("event_type") or "") != "decision" and not payload.get("decision"):
+        return
+    conn.execute(
+        """
+        INSERT OR REPLACE INTO decisions(
+            event_id, decision_id, decision, reason, revision, round_id, payload_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            event_id,
+            payload.get("id") or event.get("correlation_id") or f"event:{event_id}",
+            payload.get("decision") or "",
+            payload.get("reason") or "",
+            safe_int(payload.get("revision")),
+            safe_int(payload.get("round") if payload.get("round") is not None else event.get("round")),
+            payload_json,
+        ),
+    )
+
+
+def runtime_heap_index_summary(db_path: Path) -> dict[str, Any]:
+    summary: dict[str, Any] = {
+        "path": str(db_path),
+        "exists": db_path.is_file(),
+        "table_counts": {},
+        "pending_unresolved_count": 0,
+        "latest_event_type_count": 0,
+    }
+    if not db_path.is_file():
+        return summary
+    conn = sqlite3.connect(db_path)
+    try:
+        _ensure_schema(conn)
+        table_counts = {
+            table: _table_count(conn, table)
+            for table in (
+                "events",
+                "latest_event_by_type",
+                "pending_broker_requests",
+                "provider_reports",
+                "lane_status_materialized",
+                "proposal_iterations",
+                "decisions",
+            )
+        }
+        unresolved = conn.execute(
+            "SELECT COUNT(*) FROM pending_broker_requests WHERE resolved=0"
+        ).fetchone()
+        summary.update(
+            {
+                "table_counts": table_counts,
+                "pending_unresolved_count": int(unresolved[0] or 0),
+                "latest_event_type_count": table_counts.get("latest_event_by_type", 0),
+            }
+        )
+    finally:
+        conn.close()
+    return summary
+
+
+def _table_count(conn: sqlite3.Connection, table: str) -> int:
+    row = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()
+    return int(row[0] or 0)
 
 
 def _sqlite_bool(value: Any) -> int | None:

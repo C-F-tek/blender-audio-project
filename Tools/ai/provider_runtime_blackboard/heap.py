@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .state import RuntimeState
-from .sqlite_index import index_runtime_heap_event
+from .sqlite_index import index_runtime_heap_event, runtime_heap_index_summary
 from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 
 from .common import (
@@ -151,6 +151,9 @@ class ProviderRuntimeHeap:
     def sqlite_index_path(self) -> Path:
         return self.paths.events.with_name("runtime_heap.sqlite3")
 
+    def sqlite_index_summary(self) -> dict[str, Any]:
+        return runtime_heap_index_summary(self.sqlite_index_path())
+
     def _index_event(self, event: dict[str, Any]) -> None:
         index_runtime_heap_event(self.sqlite_index_path(), event)
 
@@ -222,6 +225,7 @@ class ProviderRuntimeHeap:
             "pending_broker_request_count": len(self.pending_broker_requests()),
             "pending_broker_requests": self.pending_broker_requests()[:20],
             "runtime_state": runtime_state.as_dict(),
+            "sqlite_index": self.sqlite_index_summary(),
             "tool_catalog": tool_catalog_snapshot(),
             "architecture": {
                 "gpu1": "primary_advisory_planner",

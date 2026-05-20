@@ -13,6 +13,9 @@ def render_markdown(snapshot: dict[str, Any]) -> str:
     lines.append(f"- Parse error count: `{snapshot.get('parse_error_count')}`")
     lines.append(f"- Pending broker requests: `{snapshot.get('pending_broker_request_count')}`")
     lines.append(f"- Event log: `{snapshot.get('event_log')}`")
+    sqlite_index = safe_dict(snapshot.get("sqlite_index"))
+    lines.append(f"- SQLite sidecar: `{sqlite_index.get('path')}`")
+    lines.append(f"- SQLite sidecar exists: `{sqlite_index.get('exists')}`")
     lines.append("")
     runtime_state = safe_dict(snapshot.get("runtime_state"))
     lines.append("## Runtime state")
@@ -30,6 +33,14 @@ def render_markdown(snapshot: dict[str, Any]) -> str:
     lines.append("")
     for lane, value in safe_dict(snapshot.get("by_lane")).items():
         lines.append(f"- `{lane}`: `{value}`")
+    lines.append("")
+    lines.append("## SQLite sidecar")
+    lines.append("")
+    for table, count in safe_dict(sqlite_index.get("table_counts")).items():
+        lines.append(f"- `{table}`: `{count}`")
+    lines.append(
+        f"- `pending_unresolved_count`: `{sqlite_index.get('pending_unresolved_count')}`"
+    )
     lines.append("")
     lines.append("## Semantic tools registry")
     lines.append("")
