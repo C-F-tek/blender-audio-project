@@ -35,6 +35,8 @@ def render_markdown(report: dict[str, Any]) -> str:
             "script_gaming_regression_increment",
             "operator_block_increment",
             "misleading_codex_lie_increment",
+            "systemic_product_lie_increment",
+            "systemic_product_lie_severity",
             "user_interrupted",
         ):
             lines.append(f"- {key}: `{counters.get(key)}`")

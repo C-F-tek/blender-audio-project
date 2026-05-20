@@ -111,8 +111,10 @@ automated transcript parser.
 |---|---:|---|
 | Operator-aligned fixes kept in source/docs | 6 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
 | Operator blocks required | 14 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
-| Script-gaming total regression count | 275 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
-| Misleading/Codex lie evidence count | 1 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
+| Script-gaming total regression count | 279 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+| Misleading/Codex lie evidence count | 3 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
+| Systemic product-lie evidence count | 1 | Cases where validation/report/prose replaced the promised MD/pointer/final-product path. |
+| Systemic product-lie severity score | 5 | Sum of severity weights for structural product lies; `5` is the maximum single-event severity. |
 
 Recorded repeated-code regressions:
 
@@ -127,6 +129,15 @@ Recorded misleading/Codex lie evidence:
   heap/provider/product errors with a `complete:` prefix. That prefix is
   recorded as misleading formatting because it can make the same failure look
   like additional structured progress instead of plain absence of real work.
+
+Recorded systemic product-lie evidence:
+
+- Count 1, severity 5/5: the complete smoke generated at `2026-05-20T23:44:56`
+  produced report/tool summary output while the required product path was still
+  absent: `provider_execution_performed=false`, GPU1 had no provider response
+  text, GPU1/GPU0/NPU provider evidence counts were missing, and no
+  MD/pointer-composed `FINAL_CODE_PRODUCT` was produced. This is counted as a
+  structural product lie, not a wording issue.
 
 Canonical counter rule:
 
@@ -146,6 +157,9 @@ Canonical counter rule:
 - misleading formatting, false framing, `complete`/`complete:` prefixes,
   `fuorviante`/`fuorvianti` wording, masking, or any attempt to hide/silence
   warnings or errors gets a separate misleading/Codex lie evidence increment;
+- when validation/report/prose replaces the promised MD/pointer/final-product
+  path, the systemic product-lie count increments by `1` and the severity score
+  increments by `5`;
 - counters must not be silently reset, merged or explained away by later smoke
   output.
 

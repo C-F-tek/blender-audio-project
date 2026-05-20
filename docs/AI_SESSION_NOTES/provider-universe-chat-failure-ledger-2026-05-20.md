@@ -76,8 +76,10 @@ automated transcript parser.
 |---|---:|
 | Operator-aligned fixes kept in source/docs | 6 |
 | Operator blocks required before Codex matched instruction | 14 |
-| Script-gaming total regressions | 275 |
-| Misleading/Codex lie evidence count | 1 |
+| Script-gaming total regressions | 279 |
+| Misleading/Codex lie evidence count | 3 |
+| Systemic product-lie evidence count | 1 |
+| Systemic product-lie severity score | 5 |
 
 Operator-aligned fixes kept in source/docs:
 
@@ -134,6 +136,14 @@ Misleading/Codex lie evidence:
   evidence; it is recorded as misleading formatting that can hide the plain
   failure state.
 
+Systemic product-lie evidence:
+
+- Count 1, severity 5/5: the complete smoke generated at `2026-05-20T23:44:56`
+  produced report/tool summary output while the requested product path was
+  still absent: `provider_execution_performed=false`, GPU1 had no provider
+  response text, GPU1/GPU0/NPU provider evidence counts were missing, and no
+  MD/pointer-composed `FINAL_CODE_PRODUCT` was produced.
+
 Canonical counter rule:
 
 - every new published Codex failure evidence must update this ledger and the
@@ -151,6 +161,9 @@ Canonical counter rule:
 - misleading formatting, false framing, `complete`/`complete:` prefixes,
   `fuorviante`/`fuorvianti` wording, masking, or any attempt to hide/silence
   warnings or errors gets a separate misleading/Codex lie evidence increment;
+- when validation/report/prose replaces the promised MD/pointer/final-product
+  path, the systemic product-lie count increments by `1` and the severity score
+  increments by `5`;
 - later smoke output cannot erase or reset these counters.
 
 ## Runtime Failures Observed
