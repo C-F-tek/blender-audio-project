@@ -15,6 +15,7 @@ def validate_contract_only(repo_root: Path) -> list[str]:
         "run_loop": read_text(repo_root / "Tools/ai/heap_gate/run_loop.py"),
         "provider_commands": read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py"),
         "provider_execution": read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py"),
+        "provider_absorption": read_text(repo_root / "Tools/ai/heap_gate/provider_report_absorption.py"),
         "startup_context": read_text(repo_root / "Tools/ai/heap_gate/startup_context.py"),
         "startup_manifest": read_text(repo_root / "Tools/ai/heap_gate/startup_manifest_context.py"),
         "matrix_lab": read_text(repo_root / "Tools/ai/heap_gate/matrix_lab.py"),
@@ -30,8 +31,8 @@ def validate_contract_only(repo_root: Path) -> list[str]:
         "concurrent_provider_teamwork": "concurrent_provider_teamwork"
         in files["provider_execution"],
         "provider_launch_manifest": "provider_launch_manifest" in files["provider_execution"],
-        "provider_process_evidence": "provider_process_id" in files["provider_execution"]
-        and "started_at" in files["provider_execution"],
+        "provider_process_evidence": "provider_process_id" in files["provider_absorption"]
+        and "started_at" in files["provider_absorption"],
         "provider_required_when_enabled": "provider_teamwork_universe_required"
         in files["run_loop"],
         "matrix_consumes_evidence": "evidence_report" in files["matrix_lab"],

@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import json
+import os
 import sys
 import time
 from collections.abc import Callable
@@ -29,6 +30,18 @@ def ensure_repo_imports(repo_root: Path) -> None:
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+def provider_python(repo_root: Path) -> Path:
+    configured = os.environ.get("IA_CARMINE_PYTHON") or os.environ.get("SPAZIOTEMPO_NPU_PYTHON")
+    if configured:
+        return Path(configured).expanduser()
+    candidate = repo_root / (".venv/Scripts/python.exe" if os.name == "nt" else ".venv/bin/python")
+    if candidate.exists():
+        return candidate
+    from Tools.npu.provider_mesh._shared.npu_runtime import DEFAULT_NPU_PYTHON  # noqa: PLC0415
+
+    return DEFAULT_NPU_PYTHON
 
 
 def unavailable_lane(
@@ -50,11 +63,7 @@ def check_npu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
-        from Tools.npu.provider_mesh._shared.npu_runtime import (  # noqa: PLC0415
-            DEFAULT_MODEL_DIR,
-            DEFAULT_NPU_PYTHON,
-            npu_preflight,
-        )
+        from Tools.npu.provider_mesh._shared.npu_runtime import DEFAULT_MODEL_DIR, npu_preflight  # noqa: PLC0415
     except Exception as exc:  # noqa: BLE001 - report-only check.
         return unavailable_lane(
             "npu",
@@ -64,7 +73,7 @@ def check_npu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
         )
 
     try:
-        report = npu_preflight(DEFAULT_NPU_PYTHON, DEFAULT_MODEL_DIR, timeout=timeout)
+        report = npu_preflight(provider_python(repo_root), DEFAULT_MODEL_DIR, timeout=timeout)
     except Exception as exc:  # noqa: BLE001 - report-only check.
         return {
             "lane": "npu",
@@ -95,11 +104,7 @@ def check_gpu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
-        from Tools.npu.provider_mesh._shared.npu_runtime import (  # noqa: PLC0415
-            DEFAULT_NPU_PYTHON,
-            _parse_last_json_line,
-            _run_python,
-        )
+        from Tools.npu.provider_mesh._shared.npu_runtime import _parse_last_json_line, _run_python  # noqa: PLC0415
     except Exception as exc:  # noqa: BLE001 - report-only check.
         return unavailable_lane(
             "gpu",
@@ -109,8 +114,9 @@ def check_gpu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
         )
 
     code = "import json, openvino as ov; print(json.dumps(ov.Core().available_devices))"
+    python_exe = provider_python(repo_root)
     try:
-        ok, text, exit_code = _run_python(DEFAULT_NPU_PYTHON, code, timeout=timeout)
+        ok, text, exit_code = _run_python(python_exe, code, timeout=timeout)
     except Exception as exc:  # noqa: BLE001 - report-only check.
         ok, text, exit_code = False, f"{type(exc).__name__}: {exc}", 1
     devices = _parse_last_json_line(text) if ok else []
@@ -126,7 +132,7 @@ def check_gpu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
         "provider_execution_performed": False,
         "elapsed_sec": round(time.perf_counter() - started, 4),
         "report": {
-            "python_exe": str(DEFAULT_NPU_PYTHON),
+            "python_exe": str(python_exe),
             "python_starts": ok,
             "exit_code": exit_code,
             "openvino_available_devices": devices,
@@ -199,6 +205,7 @@ def check_ollama_lane(
     return {
         "lane": "ollama",
         "kind": "ollama_preflight",
+        "role": "gpu1_ollama_primary",
         "passed": bool(selected_model) and (not probe_generate or not errors),
         "ready": bool(selected_model),
         "available": bool(models),

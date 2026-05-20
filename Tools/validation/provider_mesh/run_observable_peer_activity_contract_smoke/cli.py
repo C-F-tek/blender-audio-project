@@ -251,8 +251,8 @@ def provider_requirement_checks() -> dict[str, bool]:
     no_provider = FakeRequirements(False).required_requirements_order()
     return {
         "gpu1_primary_is_hard_provider_requirement": "gpu1_provider_planner" in required,
-        "gpu0_peer_not_hard_provider_requirement": "gpu0_provider_peer" not in required,
-        "npu_peer_not_hard_provider_requirement": "npu_micro_task_auditor" not in required,
+        "gpu0_peer_is_hard_provider_requirement": "gpu0_provider_peer" in required,
+        "npu_peer_is_hard_provider_requirement": "npu_micro_task_auditor" in required,
         "provider_requirements_absent_when_generation_disabled": not any(
             item.endswith("_provider_peer")
             or item in {"gpu1_provider_planner", "npu_micro_task_auditor"}

@@ -51,6 +51,24 @@ def run_step(repo_root: Path, name: str, script: str, timeout_seconds: int) -> d
         command.extend(["--timeout-seconds", str(timeout_seconds)])
     if name == "heap_runtime_completeness_gate":
         command.append("--contract-only")
+    if name == "provider_lane_activation":
+        command.extend(
+            [
+                "--markdown-output",
+                str(output.with_suffix(".md")),
+                "--model",
+                "qwen3-coder:latest",
+                "--timeout",
+                str(max(10, min(timeout_seconds, 60))),
+                "--parallel",
+                "--require-lane",
+                "ollama",
+                "--require-lane",
+                "gpu",
+                "--require-lane",
+                "npu",
+            ]
+        )
 
     env = dict(os.environ)
     env["PYTHONPATH"] = str(repo_root)
@@ -197,6 +215,10 @@ def main() -> int:
             "runtime_mesh_contract",
             "Tools/validation/real_product/runtime_mesh_contract_smoke/cli.py",
         ),
+        (
+            "provider_lane_activation",
+            "Tools/ai/provider_mesh/local_resource_lanes_check/cli.py",
+        ),
         ("openvino_peer_topology", "Tools/validation/provider_mesh/openvino_peer_topology_contract_smoke/cli.py"),
         ("review_pr_prepare_args", "Tools/validation/repository_product/review_pr_prepare_args_smoke/cli.py"),
         (
@@ -281,6 +303,10 @@ def main() -> int:
         "completed_step_count": len(steps),
         "passed": not failed_steps,
         "provider_execution_performed": False,
+        "provider_activation_performed": any(
+            step.get("name") == "provider_lane_activation" and step.get("passed")
+            for step in steps
+        ),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "blender_runtime_execution_performed": False,

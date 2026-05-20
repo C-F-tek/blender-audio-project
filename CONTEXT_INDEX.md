@@ -58,6 +58,7 @@ This is the compact navigation entrypoint for AI and operator context.
 | File | Role |
 | --- | --- |
 | `docs/MAPPING_TOOL_EVIDENCE.md` | Optional operator-scheduled mapping procedure. |
+| `docs/RUNTIME_PROVIDER_FAILURE_NOTES_20260520.md` | Compact public note for the 2026-05-20 provider-lane runtime failures and repairs. |
 | `docs/LOCAL_AI_TASKS/exhaustive-script-surface-inventory-2026-05-19.md` | Script inventory procedure and baseline. |
 | `docs/LOCAL_AI_TASKS/mapping-tool-evidence-publishing-2026-05-19.md` | Compact mapping evidence publication procedure. |
 

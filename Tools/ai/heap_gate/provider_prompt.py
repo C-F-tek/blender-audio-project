@@ -2,14 +2,7 @@
 
 from __future__ import annotations
 
-from Tools.ai.heap_gate.runtime_common import (
-    Any,
-    Path,
-    os,
-    re,
-    read_json,
-    repo_rel,
-)
+from Tools.ai.heap_gate.runtime_common import Any, Path, os, re, read_json, repo_rel
 from Tools.ai.heap_gate.provider_prompt_text import (
     POINTER_DELTA_PROTOCOL,
     provider_invocation_wrapper_text,
@@ -17,7 +10,7 @@ from Tools.ai.heap_gate.provider_prompt_text import (
 
 
 class RuntimeGateProviderPromptMixin:
-    def startup_context_digest(self, max_chars: int = 9000) -> str:
+    def startup_context_digest(self, max_chars: int = 8000, excerpt_chars: int = 1200) -> str:
         """Build a bounded digest of startup context artifacts for GPU1.
 
         The startup reload already creates tool catalog, memory inventory,
@@ -56,15 +49,18 @@ class RuntimeGateProviderPromptMixin:
                 sections.append(f"## {key}\n- unreadable: {value}: {type(exc).__name__}: {exc}\n")
                 continue
 
-            header = f"## {key}\nsource: {value}\n\n"
+            header = (
+                f"## {key}\nsource: {value}\n"
+                "mode: artifact_reference_with_excerpt\n\n"
+            )
             if key in {"tool_catalog_markdown", "repo_docs_map_markdown"}:
                 content = "\n".join(content.splitlines()[:80])
             budget = max(0, remaining - len(header) - 128)
             if budget <= 0:
                 break
-            chunk = content[:budget]
-            if len(content) > budget:
-                chunk += "\n\n...[truncated by startup_context_digest]...\n"
+            chunk = content[: min(budget, max(200, int(excerpt_chars)))]
+            if len(content) > len(chunk):
+                chunk += "\n\n...[full content available at source; excerpt only]...\n"
             sections.append(header + chunk)
             remaining -= len(sections[-1])
             if remaining <= 0:

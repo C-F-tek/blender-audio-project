@@ -55,6 +55,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
     provider_commands = read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py")
     provider_execution = read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py")
+    provider_absorption = read_text(repo_root / "Tools/ai/heap_gate/provider_report_absorption.py")
+    provider_collection = read_text(repo_root / "Tools/ai/heap_gate/provider_process_collection.py")
+    provider_runtime = "\n".join((provider_execution, provider_absorption, provider_collection))
     provider_teamwork_packet = read_text(repo_root / "Tools/ai/heap_gate/provider_teamwork_packet.py")
     heap_run_loop = read_text(repo_root / "Tools/ai/heap_gate/run_loop.py")
     gpu0_workload = read_text(repo_root / "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py")
@@ -162,11 +165,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_commands, "--leader-packet")
         and has(provider_commands, "--startup-manifest"),
         "provider_teamwork_runs_gpu0_npu_concurrently": has(
-            provider_execution, "concurrent_provider_teamwork"
+            provider_runtime, "concurrent_provider_teamwork"
         )
         and has(provider_execution, "provider_command_specs")
-        and has(provider_execution, "provider_output")
-        and has(provider_execution, "provider_execution_performed")
+        and has(provider_absorption, "provider_output")
+        and has(provider_absorption, "provider_execution_performed")
         and has(provider_execution, "provider_launch_manifest")
         and has(provider_execution, "provider_teamwork_leader_packet")
         and has(provider_execution, "build_provider_teamwork_leader_packet")
@@ -187,8 +190,8 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_teamwork_packet, "artifact_reference_only_not_runtime_database")
         and has(provider_teamwork_packet, "broker_tool_evidence")
         and has(provider_teamwork_packet, "source_allowlist_contract")
-        and has(provider_execution, "started_at")
-        and has(provider_execution, "provider_process_id")
+        and has(provider_runtime, "started_at")
+        and has(provider_absorption, "provider_process_id")
         and ordered_tokens(
             provider_commands,
             '"lane": "gpu1_planner"',

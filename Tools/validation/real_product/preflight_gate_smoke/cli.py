@@ -105,6 +105,7 @@ def main() -> int:
         "real_product_single_entry_exit",
         "intrinsic_capability_contract",
         "runtime_mesh_contract",
+        "provider_lane_activation",
         "openvino_peer_topology",
         "review_pr_prepare_args",
         "review_pr_product_readiness",

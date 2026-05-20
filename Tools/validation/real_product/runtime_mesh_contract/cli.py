@@ -73,6 +73,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
     provider_commands = read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py")
     provider_execution = read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py")
+    provider_absorption = read_text(repo_root / "Tools/ai/heap_gate/provider_report_absorption.py")
+    provider_collection = read_text(repo_root / "Tools/ai/heap_gate/provider_process_collection.py")
+    provider_runtime = "\n".join((provider_execution, provider_absorption, provider_collection))
     provider_teamwork_packet = read_text(repo_root / "Tools/ai/heap_gate/provider_teamwork_packet.py")
     heap_context_launcher = read_text(repo_root / "Tools/ai/heap_context_closure/launcher.py")
     startup_context = read_text(repo_root / "Tools/ai/heap_gate/startup_context.py")
@@ -182,9 +185,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_teamwork_packet, "source_allowlist_contract")
         and has(provider_teamwork_packet, "startup_context_plane")
         and has(provider_teamwork_packet, "artifact_reference_only_not_runtime_database")
-        and has(provider_execution, "started_at")
-        and has(provider_execution, "provider_process_id")
-        and has(provider_execution, "concurrent_provider_teamwork"),
+        and has(provider_runtime, "started_at")
+        and has(provider_absorption, "provider_process_id")
+        and has(provider_runtime, "concurrent_provider_teamwork"),
     }
     order = [
         "task_md_in",

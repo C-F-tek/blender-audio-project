@@ -109,12 +109,16 @@ function Invoke-HeapEntry {
                 "block_id": "gpu0_review_smoke",
                 "step_index": 1,
                 "role": "gpu0_reviewer_refiner",
+                "refines_block_id": "proposal_smoke",
+                "resume_from_block_id": "proposal_smoke",
             },
             {
                 "block_type": "peer_audit",
                 "block_id": "npu_audit_smoke",
                 "step_index": 2,
                 "role": "npu_auditor",
+                "refines_block_id": "proposal_smoke",
+                "resume_from_block_id": "proposal_smoke",
             },
         ],
     }
@@ -221,8 +225,22 @@ runtime_universe_contract = RuntimeUniverseContract()
                 "preview": current_preview,
                 "candidate_response_preview": current_preview,
             },
-            {"block_type": "peer_review", "block_id": "gpu0_review_current", "step_index": 2, "role": "gpu0_reviewer_refiner"},
-            {"block_type": "peer_audit", "block_id": "npu_audit_current", "step_index": 3, "role": "npu_auditor"},
+            {
+                "block_type": "peer_review",
+                "block_id": "gpu0_review_current",
+                "step_index": 2,
+                "role": "gpu0_reviewer_refiner",
+                "refines_block_id": "proposal_current",
+                "resume_from_block_id": "proposal_current",
+            },
+            {
+                "block_type": "peer_audit",
+                "block_id": "npu_audit_current",
+                "step_index": 3,
+                "role": "npu_auditor",
+                "refines_block_id": "proposal_current",
+                "resume_from_block_id": "proposal_current",
+            },
         ],
     }
     composer = {

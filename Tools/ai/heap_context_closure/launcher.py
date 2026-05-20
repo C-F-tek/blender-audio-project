@@ -138,12 +138,8 @@ def _run_preflight(args: Any, state: dict[str, Any]) -> None:
             phase="preflight",
         )
     state["preflight_result"] = result
-    state["preflight_blocks_startup"] = bool(
-        (not result["passed"]) and not args.allow_provider_generation
-    )
-    state["preflight_nonblocking_for_provider_generation"] = bool(
-        (not result["passed"]) and args.allow_provider_generation
-    )
+    state["preflight_blocks_startup"] = bool(not result["passed"])
+    state["preflight_nonblocking_for_provider_generation"] = False
 
 
 def _run_startup(args: Any, state: dict[str, Any]) -> None:
