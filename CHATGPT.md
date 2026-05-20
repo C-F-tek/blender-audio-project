@@ -9,11 +9,50 @@ La chat non è la memoria.
 La chat non è il prodotto.
 La chat è solo un client temporaneo verso artifact, contratti e stato operativo esterno.
 
+## Primo ingresso obbligatorio
+
+Prima di dichiarare stato, successo, diagnosi o architettura, leggere i core correnti:
+
+```text
+AGENTS.md
+CONTEXT_INDEX.md
+docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
+docs/HEAP_EXCHANGE_USEFUL_MODEL.md
+docs/STANDALONE_HEAP_SURFACE_MODEL.md
+docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
+docs/REAL_PRODUCT_RUN_MODEL.md
+docs/COMPACT_EVIDENCE_MODEL.md
+docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+docs/CONTEXT_COVERAGE_STATUS.md
+docs/DISPATCHER_CONTEXT_COVERAGE.md
+Tools/CONTEXT_INDEX.md
+```
+
+Il documento `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` è il ponte operativo tra modello, package reali, tool dispatcher, artifact e validator.
+
+## Universo IA
+
+L'app completa non è un singolo modello, provider o script. È l'insieme coerente dei modelli correnti più la loro concretizzazione nel codice:
+
+```text
+heap/exchange useful model
++ standalone heap surface model
++ provider lanes unified mind model
++ real product run model
++ compact evidence model
++ patch/code product boundary model
++ model-to-code map
+= Universo IA
+```
+
+Ogni modello deve essere letto insieme al codice reale che lo implementa e ai validator che ne controllano il contratto.
+
 ## Fonti di verità
 
 Prima di dichiarare stato, successo o diagnosi, leggere fonti reali:
 
 - file del repository;
+- dispatchers e `TOOL_CONTEXT.md` vicini;
 - log e output comando;
 - artifact JSON/MD;
 - diff e patch candidate;
@@ -56,12 +95,13 @@ cosa NON viene fatto
 Prima di proporre cambiamenti:
 
 1. leggere file esistenti;
-2. identificare tool già presenti;
-3. distinguere builder, runner, composer, package, validator;
-4. verificare input e output;
-5. non creare duplicati;
-6. non introdurre nuovi universi paralleli;
-7. non trattare un Markdown come runtime se il codice non lo consuma.
+2. partire da `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` quando si lavora sui core;
+3. identificare tool già presenti;
+4. distinguere builder, runner, composer, package, validator;
+5. verificare input e output;
+6. non creare duplicati;
+7. non introdurre nuovi universi paralleli;
+8. non trattare un Markdown come runtime se il codice non lo consuma.
 
 Se un tool esiste, va riusato o corretto. Non clonato.
 
@@ -117,6 +157,13 @@ Prodotto operativo richiede almeno:
 
 Se `CODE_PRODUCT_FULL_PATCH.md` contiene zero diff, zero matrix proposal, zero patch candidate e nessun target verificato, non è un prodotto applicabile.
 
+Per la classificazione prodotto, leggere:
+
+```text
+docs/REAL_PRODUCT_RUN_MODEL.md
+docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+```
+
 ## Pointer contract
 
 I pointer non sono diagnostica passiva. Sono contratto runtime/prodotto:
@@ -171,32 +218,43 @@ La chat non sostituisce nessuna delle due.
 
 ## Provider lanes
 
-### GPU1 planner
+Per la semantica provider corrente leggere:
 
-- legge heap state;
-- consuma startup context;
-- consuma revision context;
-- produce proposal chunks;
-- propaga import, variabili, classi, funzioni e contratti scoperti tardi;
-- riprende da `resume_from_block_id` quando serve.
+```text
+docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
+```
 
-### GPU0 reviewer/refiner
+### Ollama / main provider
 
-- rivaluta blocchi vecchi;
-- propone refines/resume;
+- centro principale di ragionamento e sintesi;
+- legge heap state, context e artifact;
+- produce proposal/recommendation evidence;
+- consuma feedback di GPU0, NPU e validator;
+- non è autorità di source-write.
+
+### GPU0 coworker/reviewer
+
+- rivaluta blocchi e proposte;
 - verifica concretezza;
-- segnala path inventati;
-- blocca proposte deboli.
+- segnala path inventati o contraddizioni;
+- produce peer evidence osservabile;
+- non è completa se espone solo device visibility.
 
-### NPU auditor
+### NPU micro-lane
 
 - audita placeholder/stub;
 - path inventati;
 - source writes non dichiarati;
 - provider execution falsa;
 - patch application non autorizzata;
-- ripetizioni;
-- accettabilità del blocco.
+- produce microtask/diagnostic evidence;
+- non è full compute provider finché codice e validator non lo provano.
+
+### CPU / validators
+
+- autorità deterministica;
+- broker e validator classificano pass/fail/blocked;
+- impediscono che provider prose diventi prodotto.
 
 ## Smoke e test
 
