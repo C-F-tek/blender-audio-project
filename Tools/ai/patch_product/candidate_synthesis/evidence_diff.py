@@ -14,9 +14,12 @@ from Tools.ai.runtime_tool.file_refs import RuntimeFileRef
 EVIDENCE_DIFF_KEYS = {
     "unified_diff",
     "diff",
+    "diff_text",
     "patch",
+    "full_patch",
     "proposed_patch",
     "patch_sketch",
+    "patch_sketch_unified_diff",
     "code_or_patch_sketch",
     "response_text",
 }
