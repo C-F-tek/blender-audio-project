@@ -68,40 +68,65 @@ provider_generation_requested = true when profile forwards --allow-provider-gene
 required_provider_roles = gpu1_planner, gpu0_reviewer_refiner, npu_auditor
 ```
 
-## Inspection findings still open
+### 4. P1 NPU workload/profile mismatch patched
 
-### P1 — NPU workload/profile mismatch
-
-Observation:
-
-`Tools/ai/heap_gate/provider_command_specs.py` always adds:
+Patched:
 
 ```text
---run-device-workload
+Tools/ai/heap_gate/provider_command_specs.py
 ```
 
-for `build_npu_micro_task_companion_report`, while profiles such as `deep_external_heap` and `day0_full_code_product` currently set:
-
-```json
-"allow_npu_device_workload": false
-```
-
-The shared NPU CLI then treats requested-but-not-performed device workload as a hard failure.
-
-Decision required in code:
+Commit:
 
 ```text
-A) Make NPU device workload mandatory and update profiles/report wording accordingly.
-B) Or make provider_command_specs respect allow_npu_device_workload and keep semantic NPU audit mandatory.
+77fc1b7a03c0e34c773a39d3dd9385718d24746c
 ```
 
-Given the run-unica contract, the preferred direction is:
+Resulting line count:
 
 ```text
-NPU microtask provider is mandatory.
-NPU physical device workload is controlled/explicit.
-The report must distinguish semantic/micro provider activity from device workload activity.
+154
 ```
+
+Behavioral intent:
+
+```text
+NPU microtask provider lane remains mandatory in provider generation mode.
+Physical OpenVINO/NPU device workload is controlled by allow_npu_device_workload.
+```
+
+Before this patch, `provider_command_specs.py` always forwarded `--run-device-workload` to the NPU report tool even when selected profiles declared `allow_npu_device_workload=false`. That made profile semantics inconsistent with runtime behavior.
+
+### 5. P2 provider diff extraction key patched
+
+Patched:
+
+```text
+Tools/ai/patch_product/candidate_synthesis/evidence_diff.py
+```
+
+Commit:
+
+```text
+f76c4b521fff26f71284eae25e8d1dcc618526fa
+```
+
+Resulting line count:
+
+```text
+193
+```
+
+Behavioral intent:
+
+```text
+GPU1 prompt requires PATCH_SKETCH_UNIFIED_DIFF.
+Patch candidate synthesis now recognizes patch_sketch_unified_diff as an evidence diff key.
+```
+
+The extractor also now recognizes `diff_text` and `full_patch`, reducing the risk that valid provider-generated unified diffs are ignored because of field-name mismatch.
+
+## Still open
 
 ### P1 — Verify startup digest is active context
 
@@ -115,27 +140,33 @@ Tools/ai/heap_gate/startup_context.py
 Tools/ai/heap_gate/provider_prompt.py
 ```
 
-### P2 — Force GPU1 patch output into extractable unified diff
+### P2 — Verify GPU1 diff pressure end to end
 
-Current product contract is correct: no real `diff --git`, no real code product.
-
-Next inspection must verify whether the GPU1 prompt and provider feedback force this shape strongly enough:
+The prompt now demands `PATCH_SKETCH_UNIFIED_DIFF`, and synthesis recognizes that key, but the end-to-end path must still be validated:
 
 ```text
-PATCH_SKETCH
-unified diff
-repo-relative verified target paths
-git apply --check compatible
-validation commands
+GPU1 provider output -> evidence report -> _json_text_sources -> _diff_blocks -> diff_targets -> git apply --check -> code matrix -> CODE_PRODUCT_FULL_PATCH.md
 ```
 
 Relevant files:
 
 ```text
+Tools/ai/heap_gate/provider_prompt_text.py
 Tools/ai/heap_gate/provider_prompt.py
 Tools/ai/heap_gate/provider_commands.py
 Tools/ai/patch_product/candidate_synthesis/evidence_diff.py
 Tools/ai/_shared/heap_final_code_product.py
+Tools/ai/code_product/final_readable_product/product_contract.py
+```
+
+### P2 — Add focused smoke tests
+
+Recommended smoke coverage:
+
+```text
+1. dry-run route asserts Tools.ai.run -> heap_context_closure.
+2. provider_command_specs asserts --run-device-workload appears only when allow_npu_device_workload=true.
+3. evidence_diff asserts patch_sketch_unified_diff JSON field containing a diff --git block is extracted.
 ```
 
 ## Required local validation commands
@@ -143,7 +174,11 @@ Tools/ai/_shared/heap_final_code_product.py
 Run from repository root:
 
 ```powershell
-python -m py_compile .\Tools\ai\run\cli.py
+python -m py_compile `
+  .\Tools\ai\run\cli.py `
+  .\Tools\ai\heap_gate\provider_command_specs.py `
+  .\Tools\ai\patch_product\candidate_synthesis\evidence_diff.py
+
 python -m Tools.ai run --dry-run --run-intensity quick
 python -m Tools.ai run --dry-run --run-intensity deep
 ```
@@ -158,10 +193,17 @@ command contains --allow-provider-generation for quick/deep profiles
 required_provider_roles contains gpu1_planner/gpu0_reviewer_refiner/npu_auditor
 ```
 
+Recommended focused NPU command-spec check:
+
+```text
+For default deep profile without --allow-npu-device-workload, NPU command must not contain --run-device-workload.
+With --allow-npu-device-workload, NPU command must contain --run-device-workload.
+```
+
 ## Do not lose context
 
 Next task should continue from here:
 
 ```text
-Inspect and patch P1 NPU workload/profile mismatch, then inspect GPU1 PATCH_SKETCH/diff extraction pressure.
+Inspect startup digest active context, then add focused smoke tests for dry-run routing, controlled NPU workload flag, and patch_sketch_unified_diff extraction.
 ```
