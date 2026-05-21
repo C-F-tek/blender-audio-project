@@ -47,6 +47,7 @@ def base_artifact_entry(path: Path, repo_root: Path, role: str) -> dict[str, Any
         "size_bytes": path.stat().st_size if path.exists() and path.is_file() else None,
         "sha256": sha256_file(path),
         "role": role,
+        "git_trackable_copy": False,
     }
 
 
@@ -64,7 +65,7 @@ def text_line_chunks(rel_path: str, text: str, *, max_lines: int) -> list[dict[s
     if len(lines) <= max_lines:
         return []
     chunks: list[dict[str, Any]] = []
-    chunk_count = (len(lines) + max_lines - 1) / max_lines
+    chunk_count = (len(lines) + max_lines - 1) // max_lines
     for index in range(chunk_count):
         start = index * max_lines + 1
         end = min((index + 1) * max_lines, len(lines))
@@ -145,6 +146,8 @@ def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
     """Return a compact manifest entry for a local artifact/report path."""
     item = base_artifact_entry(path, repo_root, "local_artifact_reference")
     item["content_included"] = False
+    item["preview_included"] = False
+    item["content_mode"] = "manifest_only"
 
     if not path.exists() or not path.is_file():
         return item
@@ -155,10 +158,13 @@ def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
         if error:
             item["read_error"] = error
             return item
-        item["preview"] = text[:MAX_ARTIFACT_PREVIEW_CHARS]
+        preview = text[:MAX_ARTIFACT_PREVIEW_CHARS]
+        item["preview"] = preview
         item["preview_chars"] = min(len(text), MAX_ARTIFACT_PREVIEW_CHARS)
         item["line_count"] = line_count(text)
-        item["content_included"] = bool(item["preview"])
+        item["preview_included"] = bool(preview)
+        item["content_mode"] = "preview_only" if preview else "manifest_only"
+        item["content_included"] = False
 
     return item
 

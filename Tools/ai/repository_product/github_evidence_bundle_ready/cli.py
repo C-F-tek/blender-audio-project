@@ -56,7 +56,6 @@ def build_bundle(
     """Build and write the JSON/Markdown evidence bundle."""
     resolved_reports = [resolve_repo_path(repo_root, raw) for raw in report_paths]
     reports = [summarize_report(path, repo_root) for path in resolved_reports]
-    artifact_manifest = [summarize_artifact(path, repo_root) for path in resolved_reports]
     selected_paths = discover_selected_chunks_evidence(repo_root, selected_chunks_paths)
     selected_chunks_evidence = [
         summarize_selected_chunks_evidence(path, repo_root) for path in selected_paths
@@ -72,6 +71,18 @@ def build_bundle(
         max_chars=max_included_artifact_chars,
         max_artifacts=max_included_artifacts,
     )
+    included_manifest_paths = [
+        resolve_repo_path(repo_root, str(item.get("path")))
+        for item in included_artifacts
+        if isinstance(item, dict) and item.get("path")
+    ]
+    artifact_manifest_paths = []
+    artifact_manifest_paths.extend(resolved_reports)
+    artifact_manifest_paths.extend(explicit_artifacts)
+    artifact_manifest_paths.extend(included_manifest_paths)
+    artifact_manifest = [
+        summarize_artifact(path, repo_root) for path in artifact_manifest_paths
+    ]
 
     bundle = {
         "schema_version": 1,
@@ -80,6 +91,7 @@ def build_bundle(
         "repo_root": str(repo_root),
         "source_reports": [item["path"] for item in reports],
         "source_selected_chunks_evidence": [item["path"] for item in selected_chunks_evidence],
+        "source_artifact_manifest": [item["path"] for item in artifact_manifest],
         "source_included_artifacts": [item["path"] for item in included_artifacts],
         "reports": reports,
         "selected_chunks_evidence": selected_chunks_evidence,

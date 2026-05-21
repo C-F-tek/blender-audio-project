@@ -9,6 +9,7 @@ Limite massimo configurato: `400` righe per file Markdown.
 Prima delle parti storiche, usare questi documenti per orientare una nuova IA sullo stato corrente:
 
 ```text
+../urgent.md/README.md
 ../current-capability-depth-map-2026-05-09.md
 ../unified-launcher-parameter-decision-map-2026-05-09.md
 ../script-aging-visibility-audit-2026-05-09.md

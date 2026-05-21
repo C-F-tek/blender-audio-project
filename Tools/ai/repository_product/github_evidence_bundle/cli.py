@@ -107,7 +107,6 @@ def build_bundle(
     recursive_artifact_paths = dedupe_paths(recursive_artifact_paths)
 
     reports = [summarize_report(path, repo_root) for path in resolved_reports]
-    artifact_manifest = [summarize_artifact(path, repo_root) for path in resolved_reports]
     selected_paths = discover_selected_chunks_evidence(
         repo_root,
         selected_chunks_paths,
@@ -126,6 +125,17 @@ def build_bundle(
         recursive_artifact_paths=recursive_artifact_paths,
         max_lines_per_chunk=chunk_large_files_lines,
     )
+    included_manifest_paths = [
+        resolve_repo_path(repo_root, str(item.get("path")))
+        for item in included_artifacts
+        if isinstance(item, dict) and item.get("path")
+    ]
+    artifact_manifest_paths = dedupe_paths(
+        resolved_reports + explicit_artifacts + recursive_artifact_paths + included_manifest_paths
+    )
+    artifact_manifest = [
+        summarize_artifact(path, repo_root) for path in artifact_manifest_paths
+    ]
     chunk_index_source_paths = dedupe_paths(
         resolved_reports + explicit_artifacts + recursive_artifact_paths
     )
@@ -159,6 +169,7 @@ def build_bundle(
         "repo_root": str(repo_root),
         "source_reports": [item["path"] for item in reports],
         "source_selected_chunks_evidence": [item["path"] for item in selected_chunks_evidence],
+        "source_artifact_manifest": [item["path"] for item in artifact_manifest],
         "source_included_artifacts": [item["path"] for item in included_artifacts],
         "reports": reports,
         "selected_chunks_evidence": selected_chunks_evidence,

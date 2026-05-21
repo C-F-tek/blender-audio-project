@@ -146,7 +146,7 @@ def render_artifact_manifest(lines: list[str], bundle: dict[str, Any]) -> None:
     for item in manifest:
         if isinstance(item, dict):
             lines.append(
-                f"- `{item.get('path')}` exists=`{item.get('exists')}` size=`{item.get('size_bytes')}` suffix=`{item.get('suffix')}` preview_chars=`{item.get('preview_chars')}`"
+                f"- `{item.get('path')}` exists=`{item.get('exists')}` size=`{item.get('size_bytes')}` suffix=`{item.get('suffix')}` role=`{item.get('role')}` git_trackable_copy=`{item.get('git_trackable_copy')}` content_mode=`{item.get('content_mode')}` preview_chars=`{item.get('preview_chars')}`"
             )
     lines.append("")
 
