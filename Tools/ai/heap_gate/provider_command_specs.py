@@ -18,6 +18,24 @@ def _time_fields(lane_time: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _npu_device_workload_args(gate: Any) -> list[str]:
+    """Return controlled physical NPU workload args.
+
+    The NPU microtask provider lane is mandatory in provider-generation mode,
+    but the physical OpenVINO/NPU device workload remains an explicit opt-in
+    controlled by the selected runtime profile/operator flag.
+    """
+    if not bool(getattr(gate.args, "allow_npu_device_workload", False)):
+        return []
+    return [
+        "--run-device-workload",
+        "--device-workload-seconds",
+        str(gate.args.npu_device_workload_seconds),
+        "--device-workload-iterations",
+        str(gate.args.npu_device_workload_iterations),
+    ]
+
+
 def build_provider_command_specs(gate: Any, work_dir: Path, revision: int = 0) -> list[dict[str, Any]]:
     suffix = f"_revision{revision}" if revision else ""
     gpu1_json = work_dir / f"gpu1_ollama_provider_probe{suffix}.json"
@@ -126,11 +144,7 @@ def build_provider_command_specs(gate: Any, work_dir: Path, revision: int = 0) -
                 str(gate.args.npu_max_prompt_chars),
                 "--tool-loop-max-new-tokens",
                 str(gate.args.npu_max_new_tokens),
-                "--run-device-workload",
-                "--device-workload-seconds",
-                str(gate.args.npu_device_workload_seconds),
-                "--device-workload-iterations",
-                str(gate.args.npu_device_workload_iterations),
+                *_npu_device_workload_args(gate),
                 "--output",
                 repo_rel(gate.repo_root, npu_json),
                 "--markdown-output",
