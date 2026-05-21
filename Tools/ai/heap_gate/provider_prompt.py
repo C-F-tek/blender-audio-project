@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from Tools.ai.heap_gate.runtime_common import Any, Path, os, re, read_json, repo_rel
+from Tools.ai.heap_gate.runtime_common import Any, Path, json, os, re, read_json, repo_rel
 from Tools.ai.heap_gate.provider_prompt_text import (
     POINTER_DELTA_PROTOCOL,
     provider_invocation_wrapper_text,
@@ -35,8 +35,30 @@ class RuntimeGateProviderPromptMixin:
             "repo_docs_map_markdown",
         )
 
-        sections: list[str] = []
-        remaining = max(1000, int(max_chars))
+        manifest_summary = {
+            "startup_manifest": repo_rel(self.repo_root, manifest_path) if manifest_path else "",
+            "request_preview": str(manifest.get("request_preview") or "")[:1200],
+            "request_sha256": manifest.get("request_sha256"),
+            "input_ready_before_heap": manifest.get("input_ready_before_heap"),
+            "startup_reload_degraded": manifest.get("startup_reload_degraded"),
+            "blocking_requirements": manifest.get("blocking_requirements") or [],
+            "degraded_requirements": manifest.get("degraded_requirements") or [],
+            "context_file_count": manifest.get("context_file_count"),
+            "context_files_sample": [str(item).replace("\\", "/") for item in (manifest.get("context_files") or [])[:20]],
+            "artifact_keys": sorted(str(key) for key in artifacts),
+            "tool_execution_count": len(manifest.get("tool_executions") or []),
+            "contract": manifest.get("contract") if isinstance(manifest.get("contract"), dict) else {},
+        }
+
+        sections: list[str] = [
+            "## startup_manifest\n"
+            f"source: {manifest_summary['startup_manifest']}\n"
+            "mode: structured_manifest_summary\n\n"
+            "```json\n"
+            + json.dumps(manifest_summary, indent=2, ensure_ascii=False, default=str)[:2200]
+            + "\n```\n"
+        ]
+        remaining = max(1000, int(max_chars)) - len(sections[0])
         for key in preferred_keys:
             value = artifacts.get(key)
             if not isinstance(value, str) or not value.strip():
@@ -67,8 +89,6 @@ class RuntimeGateProviderPromptMixin:
             if remaining <= 0:
                 break
 
-        if not sections:
-            return ""
         return (
             "STARTUP_CONTEXT_DIGEST_FOR_GPU1:\n"
             "Use this as active heap context. Prefer exact repo-relative paths and concrete validation commands.\n\n"
