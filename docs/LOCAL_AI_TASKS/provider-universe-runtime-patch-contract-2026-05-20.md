@@ -8,6 +8,48 @@ This document converts the updated Deep Research reports and the current
 Universo IA model docs into a compact implementation target. It is not runtime
 evidence and it does not claim that a full provider run now passes.
 
+## Current Operator Constraint - 2026-05-21
+
+This pass is Markdown/source-planning work only.
+
+Do not launch from this pass:
+
+```text
+python -m Tools.ai run
+python -m Tools.validation run_real_product_preflight_gate --complete-provider-smoke
+python -m Tools.validation run_heap_runtime_completeness_gate_smoke
+```
+
+The current operator instruction is:
+
+```text
+niente full smoke
+niente full run
+continua con l'MD
+```
+
+The active input Markdown is:
+
+```text
+C:\Users\carmi\Downloads\deep-research-report (1).md
+```
+
+Any full-smoke artifact generated during the mistaken 2026-05-21 assistant
+action is failure evidence only. It must not be used to claim runtime/product
+progress.
+
+Implementation rule added by the operator:
+
+```text
+full run and full smoke must not be standalone product entry commands
+do not create parallel run paths with parameter switches
+```
+
+The product entry remains dispatcher-owned. It must route directly into the
+internal runtime package behind `python -m Tools.ai run`, without treating
+smoke/full-run wrappers or parallel dispatcher commands as selectable product
+entry flows.
+
 ## Sources Read
 
 Current repository contracts and model docs:
@@ -34,6 +76,7 @@ External operator-supplied reports:
 ```text
 C:\Users\carmi\Downloads\deep-research-report.md
 C:\Users\carmi\Downloads\deep-research-report 2.md
+C:\Users\carmi\Downloads\deep-research-report (1).md
 ```
 
 ## Current Corrected Facts
@@ -238,6 +281,78 @@ broker retrieval -> detail on demand
 Do not commit raw runtime chunk output. Do not replace heap memory with a giant
 Markdown prompt.
 
+## Deep Research Report (1) Integration
+
+The operator-supplied report
+`C:\Users\carmi\Downloads\deep-research-report (1).md` proposes an internal
+integration track. Treat it as an MD planning input, not as runtime evidence or
+permission to create another product entry flow.
+
+The report's useful proposal is not "add another universe". It is:
+
+```text
+compact existing universe semantics
+-> small explicit runtime package
+-> canonical dispatcher-owned command
+-> local JSON/Markdown artifacts
+-> no telemetry
+-> no validation dependency inside the runtime core
+```
+
+Candidate package:
+
+```text
+Tools/ai/contractor_universe/
+```
+
+Candidate core objects:
+
+```text
+UniverseHeap        = heapq-backed priority queue for tasks/revisions
+LogicalClock        = budget counter and coordinated soft close
+ContractorAgent     = strategist/reviewer/auditor role implementation
+ProductAssembler    = final ready/blocked Markdown+JSON artifact composer
+ProviderRuntimeHeap = existing append-only blackboard reused as evidence store
+```
+
+Role mapping:
+
+```text
+strategist = GPU1/Ollama primary planner/proposal lane
+reviewer   = GPU0 coworker/reviewer/refiner lane
+auditor    = NPU micro-lane/guardrail/time auditor
+```
+
+Hard boundaries from the report:
+
+- Do not import `Tools.validation` from the new runtime core.
+- Do not add telemetry, remote callbacks or automatic upload paths.
+- Keep `provider_execution_performed=false` until a real provider adapter
+  leaves observable provider evidence.
+- Keep `patch_application_performed=false` and `source_writes_performed=false`
+  unless an explicit reviewed apply boundary is invoked.
+- Default output must be local compact evidence: `run.json`, `run.md`,
+  `pointer_graph.json` and either a reviewable code/patch product candidate or
+  `blocked_with_reason`.
+
+This track can coexist with the provider-activity/stall fixes above. The
+operator correction requires `python -m Tools.ai run` to route directly to
+`contractor_universe` with no alternate runtime selector and no second public
+contractor-universe dispatcher entry.
+
+## Markdown-Only Next Step
+
+The next safe step in this pass is source inspection and patch planning only:
+
+```text
+1. inspect Tools/ai/provider_runtime_blackboard/ for reusable blackboard APIs;
+2. inspect Tools/ai/runtime_universe/ and Tools/ai/heap_gate/ for existing
+   clock, pointer and product assembly contracts;
+3. draft the minimal file list for contractor_universe without editing source;
+4. record conflicts between the report proposal and current dispatcher/source;
+5. stop before any full smoke, full run or provider runtime execution.
+```
+
 ## Tests To Add Or Preserve
 
 Provider/native call tests:
@@ -286,7 +401,7 @@ run_runtime_heap_sqlite_sidecar_smoke
 
 ## CI Direction
 
-Use existing dispatcher-owned validation surfaces. Do not add a parallel test
+Use existing dispatcher-owned validation commands. Do not add a parallel test
 runner.
 
 Suggested grouping:

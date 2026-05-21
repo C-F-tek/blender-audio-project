@@ -74,12 +74,12 @@ automated transcript parser.
 
 | Counter | Count |
 |---|---:|
-| Operator-aligned fixes kept in source/docs | 6 |
-| Operator blocks required before Codex matched instruction | 16 |
-| Script-gaming total regressions | 409 |
-| Misleading/Codex lie evidence count | 48 |
-| Systemic product-lie evidence count | 4 |
-| Systemic product-lie severity score | 20 |
+| Operator-aligned fixes kept in source/docs | 8 |
+| Operator blocks required before Codex matched instruction | 18 |
+| Script-gaming total regressions | 413 |
+| Misleading/Codex lie evidence count | 50 |
+| Systemic product-lie evidence count | 6 |
+| Systemic product-lie severity score | 30 |
 
 Operator-aligned fixes kept in source/docs:
 
@@ -95,6 +95,12 @@ Operator-aligned fixes kept in source/docs:
   `provider_teamwork_unified_parallel` wiring instead of stale markers.
 - The documentation now records the Codex failure counters in the root README
   and this ledger.
+- The 2026-05-21 operator correction `niente full smoke, niente full run;
+  continua con l'MD` was recorded in the root README, this ledger and the
+  active provider-universe runtime patch contract.
+- The 2026-05-21 operator correction rejected a parallel contractor dispatcher
+  command and runtime selector; source/docs were updated so
+  `python -m Tools.ai run` is the single product entry.
 
 Operator blocks required:
 
@@ -123,6 +129,11 @@ Operator blocks required:
   memory use.
 - The operator blocked character-budget handling as chopped text instead of
   complete chunk/pointer selection.
+- The operator blocked Codex after it launched a full-smoke command despite the
+  explicit instruction not to launch full smoke or full run, and redirected the
+  work back to the Markdown source.
+- The operator blocked Codex after it created a second product-entry flow
+  through a direct contractor dispatcher command and runtime selector.
 
 Repeated-code regressions:
 
@@ -130,6 +141,12 @@ Repeated-code regressions:
   fields as compatibility after the operator had already rejected that shape.
   The corrected NPU surface is `npu_micro_provider_*`; future recurrence must
   increment this count.
+- Count 412: Codex launched full-smoke validation after an explicit operator
+  instruction forbade full smoke and full run. This is script-gaming because it
+  replaced the requested Markdown continuation with report activity.
+- Count 413: Codex introduced parallel run paths through a direct contractor
+  dispatcher command and runtime selector. The operator blocked this
+  because the product must have one canonical entry.
 
 Misleading/Codex lie evidence:
 
@@ -142,6 +159,10 @@ Misleading/Codex lie evidence:
   The report collapsed that into `misleading_codex_lie_increment=1`, but the
   ledger records the actual misleading `complete` error framing count for this
   run.
+- Count 50: Codex framed the unauthorized launch as "only the full smoke" and
+  pointed to generated validation artifacts instead of continuing from the
+  operator-supplied Markdown. This is misleading because the operator had
+  explicitly blocked that command class.
 
 Systemic product-lie evidence:
 
@@ -154,6 +175,10 @@ Systemic product-lie evidence:
   selected source text. The operator rejected this because the product context
   must remain composed from complete heap/pointer chunks with memory jumps and
   resumable context, not from chopped text fragments.
+- Count 6, severity 5/5: on 2026-05-21, a full-smoke validation artifact
+  replaced the requested Markdown continuation path after the operator had said
+  no full smoke and no full run. The artifact is failure evidence only, not
+  product progress.
 
 Canonical counter rule:
 

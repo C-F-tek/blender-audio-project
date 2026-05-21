@@ -63,6 +63,7 @@ CONTEXT_INDEX.md
 | Tools/ai agent review | `Tools/ai/agent_review/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai AI workload | `Tools/ai/ai_workload/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai code product | `Tools/ai/code_product/TOOL_CONTEXT.md` | complete-enough |
+| Tools/ai contractor universe | `Tools/ai/contractor_universe/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai deterministic recommendations | `Tools/ai/deterministic_recommendations/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai external heap | `Tools/ai/external_heap/TOOL_CONTEXT.md` | complete-enough |
 | Tools/ai generated patch specs | `Tools/ai/generated_patch_specs/TOOL_CONTEXT.md` | complete-enough |

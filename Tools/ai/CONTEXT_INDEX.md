@@ -10,6 +10,7 @@ Use this index to find the nearest `TOOL_CONTEXT.md` before working on a package
 | Agent review | `Tools/ai/agent_review/TOOL_CONTEXT.md` |
 | AI workload | `Tools/ai/ai_workload/TOOL_CONTEXT.md` |
 | Code product | `Tools/ai/code_product/TOOL_CONTEXT.md` |
+| Contractor universe | `Tools/ai/contractor_universe/TOOL_CONTEXT.md` |
 | Deterministic recommendations | `Tools/ai/deterministic_recommendations/TOOL_CONTEXT.md` |
 | External heap | `Tools/ai/external_heap/TOOL_CONTEXT.md` |
 | Generated patch specs | `Tools/ai/generated_patch_specs/TOOL_CONTEXT.md` |

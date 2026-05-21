@@ -64,9 +64,16 @@ def is_indexable_file(path: Path) -> bool:
 class RepoRuntimeUniverseBuilder:
     """Filesystem-first universe builder used before provider and matrix phases."""
 
-    def __init__(self, repo_root: str | Path, run_dir: str | Path | None = None):
+    def __init__(
+        self,
+        repo_root: str | Path,
+        run_dir: str | Path | None = None,
+        *,
+        include_validation: bool = True,
+    ):
         self.repo_root = Path(repo_root).resolve()
         self.run_dir = Path(run_dir).resolve() if run_dir else None
+        self.include_validation = bool(include_validation)
 
     def _tracked_files(self) -> list[str]:
         out: list[str] = []
@@ -116,7 +123,15 @@ class RepoRuntimeUniverseBuilder:
             and not item.startswith("docs/LOCAL_VALIDATION_EVIDENCE/")
         ]
         docs = [item for item in files if Path(item).suffix.lower() in DOC_SUFFIXES]
-        validation = [item for item in files if item.startswith("Tools/validation/") and item.endswith(".py")]
+        validation = (
+            [
+                item
+                for item in files
+                if item.startswith("Tools/validation/") and item.endswith(".py")
+            ]
+            if self.include_validation
+            else []
+        )
         assets = [item for item in files if Path(item).suffix.lower() in ASSET_SUFFIXES]
         return RepoRuntimeUniverse(
             repo_root=str(self.repo_root),

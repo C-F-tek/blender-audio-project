@@ -207,10 +207,45 @@ def main() -> int:
     )
     parser.add_argument("--timeout-seconds", type=int, default=120)
     parser.add_argument("--complete-provider-smoke", action="store_true")
+    parser.add_argument(
+        "--downstream-verification",
+        action="store_true",
+        help="Acknowledge this smoke is downstream verification, not a product entrypoint.",
+    )
     parser.add_argument("--provider-model", default="qwen3-coder:latest")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
+    output = resolve_output_path(repo_root, args.output)
+    markdown_output = resolve_output_path(repo_root, args.markdown_output)
+    if args.complete_provider_smoke and not args.downstream_verification:
+        report = {
+            "schema_version": 1,
+            "kind": "real_product_preflight_gate",
+            "generated_at": datetime.now().isoformat(timespec="seconds"),
+            "repo_root": repo_root.as_posix(),
+            "status": "blocked",
+            "passed": False,
+            "preflight_only": False,
+            "complete_provider_smoke_performed": False,
+            "product_entry_allowed": False,
+            "provider_execution_performed": False,
+            "patch_application_performed": False,
+            "source_writes_performed": False,
+            "blender_runtime_execution_performed": False,
+            "ffmpeg_execution_performed": False,
+            "steps": [],
+            "failed_steps": [],
+            "errors": [
+                "complete provider smoke is downstream verification only; "
+                "do not use full smoke as product entry command"
+            ],
+            "warnings": [],
+        }
+        write_json_report(report, output)
+        write_markdown(report, markdown_output)
+        print(write_json_report(report), end="")
+        return 2
     heap_gate_step_name = (
         "heap_runtime_completeness_gate_complete"
         if args.complete_provider_smoke
@@ -274,8 +309,6 @@ def main() -> int:
     steps: list[dict[str, Any]] = []
     errors: list[str] = []
     warnings: list[str] = []
-    output = resolve_output_path(repo_root, args.output)
-    markdown_output = resolve_output_path(repo_root, args.markdown_output)
     step_count = len(steps_config)
 
     for index, (name, script) in enumerate(steps_config, start=1):
@@ -332,6 +365,8 @@ def main() -> int:
         "passed": not failed_steps and not errors,
         "preflight_only": not args.complete_provider_smoke,
         "complete_provider_smoke_performed": bool(args.complete_provider_smoke),
+        "product_entry_allowed": not args.complete_provider_smoke
+        or args.downstream_verification,
         "provider_execution_performed": provider_execution_performed,
         "provider_activation_performed": any(
             step.get("name") == "provider_lane_activation" and step.get("passed")

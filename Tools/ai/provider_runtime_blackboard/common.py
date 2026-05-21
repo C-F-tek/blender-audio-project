@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .state import RuntimeState, normalize_status
-from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
+from Tools.ai._shared.report_io import resolve_output_path, write_json_report, write_text_report
 
 LANES = (
     "gpu1",

@@ -79,6 +79,10 @@ Tools/validation/runtime_tool/
 
 ## Main tool commands
 
+Only `python -m Tools.ai run ...` is the product entry command for this model.
+The other commands in this list are auxiliary product packaging, review,
+inspection or apply-boundary tools; they are not alternate product run flows.
+
 ```powershell
 python -m Tools.ai heap_exchange_runtime_entry ...
 python -m Tools.ai heap_exchange_runtime_exit ...
@@ -249,6 +253,7 @@ CPU validators = deterministic authority
 ```text
 Tools/ai/provider_mesh/
 Tools/ai/provider_runtime_blackboard/
+Tools/ai/contractor_universe/
 Tools/ai/heap_provider/
 Tools/npu/provider_mesh/
 Tools/npu/dual_ai_pipeline/
@@ -272,6 +277,7 @@ python -m Tools.ai build_npu_micro_task_companion_report ...
 python -m Tools.ai check_npu_provider_environment ...
 python -m Tools.ai runtime_hardware_capability ...
 python -m Tools.ai provider_runtime_blackboard ...
+python -m Tools.ai run ...
 python -m Tools.ai provider_runtime_live_signals ...
 python -m Tools.ai heap_provider_budget_governor ...
 python -m Tools.ai heap_provider_invocation_contract ...
@@ -302,6 +308,7 @@ GPU0 workload report
 GPU0 companion/peer report
 NPU microtask companion report
 provider runtime blackboard state
+contractor universe local compact evidence
 provider live signals report
 provider lane evidence
 runtime hardware capability report

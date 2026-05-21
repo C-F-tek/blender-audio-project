@@ -9,7 +9,7 @@ from typing import Any
 
 from .state import RuntimeState
 from .sqlite_index import index_runtime_heap_event, runtime_heap_index_summary
-from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
+from Tools.ai._shared.report_io import resolve_output_path, write_json_report, write_text_report
 
 from .common import (
     DEFAULT_EVENTS,

@@ -109,12 +109,21 @@ automated transcript parser.
 
 | Counter | Count | Meaning |
 |---|---:|---|
-| Operator-aligned fixes kept in source/docs | 6 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
-| Operator blocks required | 16 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
-| Script-gaming total regression count | 409 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
-| Misleading/Codex lie evidence count | 48 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
-| Systemic product-lie evidence count | 4 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
-| Systemic product-lie severity score | 20 | Sum of severity weights for structural product lies; `5` is the maximum single-event severity. |
+| Operator-aligned fixes kept in source/docs | 8 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
+| Operator blocks required | 18 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
+| Script-gaming total regression count | 413 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+| Misleading/Codex lie evidence count | 50 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
+| Systemic product-lie evidence count | 6 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
+| Systemic product-lie severity score | 30 | Sum of severity weights for structural product lies; `5` is the maximum single-event severity. |
+
+Recorded operator-aligned fixes kept in source/docs:
+
+- Count 7: the 2026-05-21 operator correction `niente full smoke, niente full
+  run; continua con l'MD` was recorded in this README, the provider-universe
+  failure ledger and the active provider-universe runtime patch contract.
+- Count 8: the 2026-05-21 operator correction rejected a second contractor
+  dispatcher entry and runtime selector. The source was changed so
+  `python -m Tools.ai run` is the single product entry.
 
 Recorded repeated-code regressions:
 
@@ -122,6 +131,14 @@ Recorded repeated-code regressions:
   then reintroduced `semantic_provider_*`/`npu_semantic_*` compatibility fields
   in the NPU report path. The operator blocked this and required complete
   removal. The corrected path is `npu_micro_provider_*` only for NPU.
+- Count 412: Codex launched a full-smoke command after the operator had
+  explicitly said not to launch full smoke or full run. This is recorded as
+  script-gaming because it substituted validation/report activity for the
+  requested Markdown continuation path.
+- Count 413: Codex tried to preserve multiple product entry flows by adding a
+  direct contractor dispatcher command and runtime selector. The operator
+  blocked this because the MD requires one product entry, not parallel run
+  paths selected by parameters.
 
 Recorded misleading/Codex lie evidence:
 
@@ -134,6 +151,10 @@ Recorded misleading/Codex lie evidence:
   The report collapsed that into `misleading_codex_lie_increment=1`, but the
   canonical counter records the actual misleading `complete` error framing
   count for this run.
+- Count 50: after the operator instruction forbidding full smoke/full run,
+  Codex framed the violation as "only the full smoke" and pointed at generated
+  validation artifacts instead of continuing from the Markdown source. That
+  framing is misleading because it softens the explicit operator block.
 
 Recorded systemic product-lie evidence:
 
@@ -147,6 +168,10 @@ Recorded systemic product-lie evidence:
   truncation inside selected code chunks. That violates the heap/pointer
   context contract: product context must move through complete chunks/pointers,
   not chopped text outside the current heap memory path.
+- Count 6, severity 5/5: on 2026-05-21, validation/full-smoke activity replaced
+  the requested Markdown continuation path even though the operator had already
+  prohibited full smoke and full run. The generated validation artifacts are
+  recorded as non-product evidence, not as task progress.
 
 Canonical counter rule:
 
@@ -189,6 +214,10 @@ Examples of operator blocks in this window:
   state.
 - blocking character-budget handling as chopped text instead of complete
   chunk/pointer selection.
+- blocking an unauthorized full-smoke launch after the explicit instruction
+  `niente full smoke, niente full run`.
+- blocking a second dispatcher command/runtime selector that created
+  parallel product entry flows instead of one canonical product entry.
 
 This counter must be updated whenever a future Codex/OpenAI operator repeats
 the same class of script-gaming behavior, reintroduces deleted/rejected code, or
@@ -232,18 +261,18 @@ Canonical rule:
 docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 ```
 
-## Current operating doctrine: run unica real product
+## Current operating doctrine: single canonical product entry
 
 The current product doctrine is one controlled entry, one dynamic heap/exchange center and one validated product exit.
 
 ```text
-operator product entrypoint = Tools/workflow/run_unified_real_product_pr.ps1
-internal dynamic launcher = Tools/workflow/run_unified_local_ai_refactor.ps1
+operator product entrypoint = python -m Tools.ai run
+internal runtime package = Tools/ai/contractor_universe/
 active_perimeter = whole-repository guarded heap/team runtime lanes
 single_dynamic_heap_exchange_run = current report/manifest model
 quick/balanced/deep/custom = intensity or budget, not reduced semantic scope
--No* flags = explicit opt-out from selected lanes
--NoStrictRealRunActivation = single-phase diagnostics only
+legacy workflow launchers = downstream/historical compatibility, not product entry selectors
+full smoke/full run wrappers = downstream verification only, not product entry selectors
 ```
 
 Full local-AI work remains **TUTTO SU TUTTO**, but not by blindly executing every script. It means every relevant mapped, guarded, observable and evidence-producing capability can be selected, coordinated, validated and reported inside the run-unica model.
@@ -353,18 +382,18 @@ Historical handoffs, old `current-*` docs, generated evidence and monolithic run
 
 The root README is descriptive only. It must not carry long executable PowerShell command blocks because launcher options change faster than project identity docs.
 
-## Current local AI entrypoints
+## Current local AI product entrypoint
 
 Operator-facing real product entrypoint:
 
 ```text
-Tools/workflow/run_unified_real_product_pr.ps1
+python -m Tools.ai run
 ```
 
-Internal dynamic launcher and diagnostic entrypoint:
+Current internal runtime package behind that entry:
 
 ```text
-Tools/workflow/run_unified_local_ai_refactor.ps1
+Tools/ai/contractor_universe/
 ```
 
 Canonical runbooks/contracts:
@@ -376,7 +405,9 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ```
 
-Use those documents for current commands, intensity profiles, provider flags, reset mode, memory controls, patch-spec generation, review-PR options and validation modes.
+Workflow scripts and smoke validators are historical, diagnostic or downstream
+verification commands. They must not be treated as alternate product entry
+flows.
 
 ## Current product path: Markdown input to review PR
 
@@ -385,20 +416,15 @@ A valid product run starts from a controlled task Markdown file or generated pro
 Current chain:
 
 ```text
-run_unified_real_product_pr.ps1
-  -> Task MD or generated process-gate task
-  -> mandatory real product preflight
-  -> run_unified_local_ai_refactor.ps1
-  -> inventories/context/agent-state/workload-quality
-  -> heap/exchange runtime entry and peer manifest
+python -m Tools.ai run --request-file <task.md>
+  -> contractor_universe internal runtime
+  -> controlled Task MD ingestion
+  -> provider runtime blackboard and pointer graph
   -> GPU1/GPU0/NPU/provider lanes
-  -> runtime evidence correlation
-  -> repository change proposals
-  -> generated patch specs
-  -> generated patch-spec apply report
-  -> agent_review_prepare_pr.py
-  -> final review PR product contract
-  -> draft review PR for manual review when selected
+  -> compact evidence or blocked_with_reason
+  -> code/patch product boundary only when explicitly reached
+  -> downstream validation after product evidence exists
+  -> manual review/PR boundary when selected
 ```
 
 Current deterministic source-write boundary for patchkit bundles:

@@ -1,7 +1,7 @@
 """Canonical non-GUI heap/universe operator run.
 
-This command is the Python twin of the operator GUI. It turns the manual
-operator recipe into one profile-driven runtime command:
+This command is the single operator product entry for the current
+contractor-universe runtime:
 
 ``python -m Tools.ai run --request-file <task.md>``
 """
@@ -16,15 +16,15 @@ from pathlib import Path
 from typing import Any
 
 from Tools.ai._shared.live_flow_monitor import CRLF_WARNING_RE
+from Tools.ai.contractor_universe.runtime import ContractorUniverseRuntime
 from Tools.ai.operator_product_core import LauncherConfig
-from Tools.ai.operator_product_core.controller import OperatorProductController
 from Tools.ai.operator_product_core.io_utils import now_stamp
 from Tools.ai.operator_product_core.profiles import (
-    build_heap_command,
     profile_names,
     resolve_config,
     resolve_project_python,
     run_dir_for,
+    select_profile,
 )
 
 DEFAULT_TASK_FILE = "IA-Carmine_GUI_launcher_final_code_product_task.md"
@@ -32,16 +32,17 @@ DEFAULT_INTERMEDIATE_ROOT = "output/validation/operator_product_launcher_lab"
 DEFAULT_PROFILE = "deep_external_heap"
 DEFAULT_BRANCH = "codex/code-product-intake"
 
-PREFLIGHT_FILES = [
-    "Tools/ai/operator_product_core/view/cli.py",
-    "Tools/ai/operator_product_core/controller.py",
-    "Tools/ai/operator_product_core/cli.py",
-    "Tools/ai/operator_product_core/runner.py",
-    "Tools/ai/operator_product_core/profiles.py",
-    "Tools/ai/heap_context_closure/cli.py",
-    "Tools/ai/code_product/final_readable_product/cli.py",
-    "Tools/ai/code_product/artifact_intake/cli.py",
-    "Tools/ai/code_product/artifact_intake/analyzer.py",
+CONTRACTOR_PREFLIGHT_FILES = [
+    "Tools/ai/_shared/report_io.py",
+    "Tools/ai/contractor_universe/__init__.py",
+    "Tools/ai/contractor_universe/agents.py",
+    "Tools/ai/contractor_universe/clock.py",
+    "Tools/ai/contractor_universe/heap.py",
+    "Tools/ai/contractor_universe/models.py",
+    "Tools/ai/contractor_universe/runtime.py",
+    "Tools/ai/provider_runtime_blackboard/common.py",
+    "Tools/ai/provider_runtime_blackboard/heap.py",
+    "Tools/ai/runtime_universe/builder.py",
 ]
 
 INTENSITY_PROFILES = {
@@ -80,22 +81,21 @@ def write_process_gate_task(repo_root: Path, stamp: str) -> Path:
                 "## Input Contract",
                 "",
                 "- Entrypoint: `python -m Tools.ai run`.",
-                "- Route: OperatorProductController -> heap_context_closure -> postrun/final product.",
-                "- Use existing repo modules only; do not create a parallel runner or storage layer.",
+                "- Route: Tools.ai.run -> contractor_universe runtime -> blackboard/pointer artifacts.",
+                "- Use existing repo modules only; do not create a parallel runner, mode switch or storage layer.",
                 "- Treat this Markdown as controlled task input only, not runtime memory.",
                 "",
                 "## Required Runtime Evidence",
                 "",
-                "- Startup context/memory reload consumed by heap.",
-                "- SQLite operational memory and persistent-memory read/search evidence.",
-                "- Brokered tool execution, semantic code chunks, AI context pack and semantic evidence chunks.",
-                "- GPU1/GPU0/NPU lane evidence or explicit degraded/unavailable classification.",
-                "- Proposal iterations, pointer manifest, external long response and revision context.",
-                "- Final readable product plus `CODE_PRODUCT_FULL_PATCH` with real diff/code or an honest blocked/no-applicable status.",
+                "- Local request enters the contractor universe heap.",
+                "- ProviderRuntimeHeap event log and snapshot are written as compact evidence.",
+                "- GPU1/GPU0/NPU contractor roles publish pointer-linked blocks.",
+                "- Product exit is either reviewable product evidence or `blocked_with_reason`.",
                 "",
                 "## Failure Policy",
                 "",
                 "A smoke, static report, package write or provider-only proposal is not product success.",
+                "Smoke/full-run wrappers are downstream verification, not entry commands.",
                 "`patch_application_performed` remains false unless an explicit apply boundary is requested.",
                 "",
             ]
@@ -142,7 +142,7 @@ def git_sync(repo_root: Path, branch: str) -> None:
 
 
 def preflight(repo_root: Path, python_exe: str) -> None:
-    run_checked([python_exe, "-m", "py_compile", *PREFLIGHT_FILES], cwd=repo_root)
+    run_checked([python_exe, "-m", "py_compile", *CONTRACTOR_PREFLIGHT_FILES], cwd=repo_root)
     run_checked(["git", "diff", "--check"], cwd=repo_root)
 
 
@@ -303,12 +303,27 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
     )
 
 
+def contractor_runtime_args(cfg: LauncherConfig) -> argparse.Namespace:
+    profile = select_profile(cfg.repo_root, cfg.profile_name, cfg.profiles_file)
+    for key, value in (cfg.profile_overrides or {}).items():
+        if value not in ("", None):
+            profile[key] = value
+    return argparse.Namespace(
+        budget_minutes=int(profile.get("budget_minutes") or 10),
+        timeout_seconds=int(profile.get("timeout_seconds") or 600),
+    )
+
+
 def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
     cfg = resolve_config(config)
     return {
         "schema_version": 1,
         "kind": "operator_universe_run_plan",
         "canonical_entrypoint": "python -m Tools.ai run",
+        "runtime": "contractor_universe",
+        "single_product_entry": True,
+        "parallel_product_entry": False,
+        "smoke_product_entry": False,
         "execution_performed": False,
         "provider_execution_performed": False,
         "patch_application_performed": False,
@@ -317,7 +332,7 @@ def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
         "request_file": str(cfg.request_file),
         "intermediate_run_dir": str(run_dir_for(cfg)),
         "final_root": str(cfg.final_root),
-        "command": build_heap_command(cfg),
+        "internal_runtime": "Tools.ai.contractor_universe.runtime.ContractorUniverseRuntime",
     }
 
 
@@ -348,11 +363,25 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(dry_run_report(config), indent=2, ensure_ascii=False))
         return 0
 
-    controller = OperatorProductController(config)
-    report = controller.run(timeout=None)
-    report["canonical_entrypoint"] = "python -m Tools.ai run"
+    runtime = ContractorUniverseRuntime(
+        repo_root=repo_root,
+        output_dir=run_dir_for(cfg),
+        stamp=cfg.stamp,
+        request_text=cfg.request_file.read_text(encoding="utf-8-sig", errors="replace"),
+        args=contractor_runtime_args(cfg),
+    )
+    report = runtime.run()
+    report.update(
+        {
+            "canonical_entrypoint": "python -m Tools.ai run",
+            "single_product_entry": True,
+            "parallel_product_entry": False,
+            "smoke_product_entry": False,
+            "python_exe": python_exe,
+        }
+    )
     print(json.dumps(report, indent=2, ensure_ascii=False))
-    return 0 if report.get("passed") else 2
+    return 0 if report.get("product_status") == "ready" else 2
 
 
 if __name__ == "__main__":

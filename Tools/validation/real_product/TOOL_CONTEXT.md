@@ -4,6 +4,10 @@
 
 `Tools/validation/real_product` contains checks for real-product run contracts, preflight gates, runtime mesh contracts, live-provider gates, bundle completeness and product boundary behavior.
 
+Validation commands are downstream verification commands. They are not product
+entrypoints. A complete provider smoke must be invoked only as downstream
+verification, not as the first action of a product run.
+
 It validates the output side of:
 
 ```text
@@ -21,6 +25,7 @@ docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 - Validate full run bundle completeness.
 - Distinguish evidence-only run, blocked product run and real product run.
 - Ensure provider/tool evidence does not bypass product requirements.
+- Block complete-provider smoke when it is used as a standalone entry command.
 
 ## Representative commands
 

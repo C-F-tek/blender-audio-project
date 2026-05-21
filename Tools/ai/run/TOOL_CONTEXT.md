@@ -4,13 +4,23 @@
 
 `Tools/ai/run` is the canonical packaged entrypoint for IA-Carmine / Universo IA runs.
 
-It is the public command surface behind:
+It is the public command behind:
 
 ```powershell
 python -m Tools.ai run ...
 ```
 
 This package is not just a command wrapper. It is the operator-facing entrypoint where request files, profiles, runtime lanes, evidence and final product classification meet.
+
+Current runtime route:
+
+```text
+contractor_universe
+```
+
+There is no alternate runtime selector flag. Full smoke and legacy full-run wrappers
+are not standalone product entry commands. They are downstream verification or
+historical compatibility code, not public entry choices from this command.
 
 ## Mandatory model contracts
 
@@ -109,9 +119,11 @@ A completed run requires output artifacts, return codes, lane evidence, validati
 
 ## Relationship to other packages
 
-`Tools/ai/run` routes into the actual runtime/product packages. Important related surfaces:
+`Tools/ai/run` routes into the actual runtime/product packages. Important
+internal packages and downstream validators:
 
 ```text
+Tools/ai/contractor_universe/TOOL_CONTEXT.md
 Tools/ai/heap_exchange/TOOL_CONTEXT.md
 Tools/ai/heap_runtime/TOOL_CONTEXT.md
 Tools/ai/provider_mesh/TOOL_CONTEXT.md
@@ -125,11 +137,13 @@ Tools/validation/real_product/TOOL_CONTEXT.md
 ## Guardrails
 
 - Do not silently downgrade complete/full profiles to partial behavior.
+- Do not use smoke/full-run validators as the product entry command.
+- Do not add parallel runtime selector switches for competing run flows.
 - Do not make GPU0/NPU/provider lanes optional by implementation convenience.
 - Do not report full success with degraded or unavailable required lanes.
 - Do not commit raw `output/**` from a run by default.
 - Do not treat final readable output as apply-ready source change unless code/patch product boundaries pass.
-- Inspect `Tools/ai/dispatch.py` and this package before changing the public run surface.
+- Inspect `Tools/ai/dispatch.py` and this package before changing the public run command.
 
 ## Extension notes
 
