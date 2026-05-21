@@ -85,13 +85,10 @@ def item_has_code_product(item: dict[str, Any]) -> bool:
     source = str(item.get("source") or "")
     if status != "validated_patch_candidate" and source != "patch_candidate_synthesis":
         return False
-    if status == "verified_target_no_worktree_diff":
-        return False
-    diff_ref = str(item.get("diff_path") or "").strip()
     sketch = str(item.get("code_or_patch_sketch") or "").strip()
-    if diff_ref:
-        return True
     if not sketch or sketch == "[no worktree diff captured]":
+        return False
+    if status == "verified_target_no_worktree_diff":
         return False
     return True
 
@@ -215,7 +212,8 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
         lines.extend(
             [
                 f"### {target}",
-                "",\n                f"- Git status: `{data.get('git_status')}`.",
+                "",
+                f"- Git status: `{data.get('git_status')}`.",
                 f"- Implementation status: `{data.get('implementation_status')}`.",
                 "",
                 "```diff",
