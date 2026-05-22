@@ -9,21 +9,21 @@ from pathlib import Path
 from typing import Any
 
 
-DENIED_GIT_PATH_PREFIXES = (
+ADVISORY_GIT_PATH_PREFIXES = (
     "output/",
     "renders/",
     "indexAI/code_chunks/",
     "indexAI/project_code_chunks/",
 )
 
-DENIED_GIT_SUFFIXES = (
+ADVISORY_GIT_SUFFIXES = (
     ".db",
     ".sqlite",
     ".sqlite-wal",
     ".sqlite-shm",
 )
 
-DESTRUCTIVE_PATTERNS = (
+RISKY_COMMAND_PATTERNS = (
     r"\bgit\s+add\s+(\.|-A|--all)\b",
     r"\bgit\s+add\s+(\.\\)?output\b",
     r"\bgit\s+reset\s+--hard\b",
@@ -36,12 +36,12 @@ DESTRUCTIVE_PATTERNS = (
     r"\bterraform\s+(apply|destroy)\b",
 )
 
-SAFE_VALIDATION_HINTS = (
+VALIDATION_HINTS = (
     "git status --short",
     "git diff --check",
-    "python -m Tools.validation check_python_syntax",
-    "python .\\Tools\\validation\\check_python_syntax.py",
-    "python .\\Tools\\validation\\check_validation_report_contract.py",
+    "python -m py_compile <modified_python_files>",
+    "python .\\Tools\\validation\\check_python_syntax.py --repo-root . --output .\\output\\validation\\python_syntax.json",
+    "python .\\Tools\\validation\\check_validation_report_contract.py --repo-root . --output .\\output\\validation\\validation_report_contract.json",
 )
 
 
@@ -91,12 +91,14 @@ def run_git(root: Path, *args: str, timeout: int = 10) -> str:
         return f"{type(exc).__name__}: {exc}"
 
 
-def git_status_paths(root: Path) -> list[str]:
+def git_status_lines(root: Path) -> list[str]:
     status = run_git(root, "status", "--short")
+    return [line for line in status.splitlines() if line.strip()]
+
+
+def git_status_paths(root: Path) -> list[str]:
     paths: list[str] = []
-    for line in status.splitlines():
-        if not line.strip():
-            continue
+    for line in git_status_lines(root):
         text = line[3:].strip() if len(line) > 3 else line.strip()
         if " -> " in text:
             text = text.split(" -> ", 1)[1].strip()
@@ -108,12 +110,12 @@ def normalize_repo_path(path: str) -> str:
     return str(path or "").strip().strip('"').replace("\\", "/")
 
 
-def is_denied_git_path(path: str) -> bool:
+def is_advisory_git_path(path: str) -> bool:
     normalized = normalize_repo_path(path)
     lower = normalized.lower()
-    if any(lower.startswith(prefix.lower()) for prefix in DENIED_GIT_PATH_PREFIXES):
+    if any(lower.startswith(prefix.lower()) for prefix in ADVISORY_GIT_PATH_PREFIXES):
         return True
-    return any(lower.endswith(suffix) for suffix in DENIED_GIT_SUFFIXES)
+    return any(lower.endswith(suffix) for suffix in ADVISORY_GIT_SUFFIXES)
 
 
 def command_text(event: dict[str, Any]) -> str:
@@ -124,6 +126,17 @@ def command_text(event: dict[str, Any]) -> str:
             return command
         return json.dumps(tool_input, ensure_ascii=False, sort_keys=True)
     return "" if tool_input is None else str(tool_input)
+
+
+def tool_response_text(event: dict[str, Any], max_chars: int = 2400) -> str:
+    response = event.get("tool_response")
+    if response is None:
+        return ""
+    if isinstance(response, str):
+        text = response
+    else:
+        text = json.dumps(response, ensure_ascii=False, sort_keys=True)
+    return text[-max_chars:]
 
 
 def tool_name(event: dict[str, Any]) -> str:
@@ -177,54 +190,49 @@ def additional_context(event_name: str, text: str, *, system_message: str | None
     return payload
 
 
-def pretool_deny(reason: str) -> dict[str, Any]:
-    return {
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "permissionDecision": "deny",
-            "permissionDecisionReason": reason,
-        }
-    }
-
-
-def posttool_block(reason: str, context: str) -> dict[str, Any]:
-    return {
-        "continue": False,
-        "stopReason": reason,
-        "hookSpecificOutput": {
-            "hookEventName": "PostToolUse",
-            "additionalContext": context,
-        },
-    }
-
-
-def stop_continue(context: str) -> dict[str, Any]:
-    return {
-        "continue": False,
-        "stopReason": "IA-Carmine completion gate requires more work before closing.",
-        "systemMessage": "IA-Carmine completion gate found missing validation or unsafe working-tree state.",
-        "hookSpecificOutput": {
-            "hookEventName": "Stop",
-            "additionalContext": context,
-        },
-    }
-
-
-def command_matches_any(command: str, patterns: tuple[str, ...]) -> str:
+def command_matches(command: str, patterns: tuple[str, ...]) -> list[str]:
+    matches: list[str] = []
     for pattern in patterns:
         if re.search(pattern, command, flags=re.IGNORECASE | re.MULTILINE):
-            return pattern
-    return ""
+            matches.append(pattern)
+    return matches
 
 
 def summarize_git(root: Path) -> list[str]:
     branch = run_git(root, "branch", "--show-current") or "unknown"
     head = run_git(root, "log", "--oneline", "-1") or "unknown"
-    status = run_git(root, "status", "--short")
-    dirty = "yes" if status.strip() else "no"
+    status_lines = git_status_lines(root)
+    dirty = "yes" if status_lines else "no"
     return [
         f"repo_root={root}",
         f"branch={branch}",
         f"head={head}",
         f"dirty={dirty}",
     ]
+
+
+def classify_prompt(prompt: str) -> list[str]:
+    text = prompt.lower()
+    labels: list[str] = []
+    checks = (
+        ("heap_runtime", ("heap", "blackboard", "exchange", "runtime", "closure")),
+        ("provider_gpu_npu", ("gpu", "npu", "ollama", "openvino", "provider")),
+        ("evidence_bundle", ("evidence", "bundle", "manifest", "validation")),
+        ("patch_or_refactor", ("patch", "refactor", "fix", "modifica", "implementa")),
+        ("docs_hygiene", ("documentazione", "docs", ".md", "markdown", "handoff")),
+        ("git_flow", ("git", "branch", "commit", "push", "pull", "merge", "pr ")),
+    )
+    for label, needles in checks:
+        if any(needle in text for needle in needles):
+            labels.append(label)
+    return labels or ["general_repo_work"]
+
+
+def unique_lines(lines: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for line in lines:
+        if line not in seen:
+            result.append(line)
+            seen.add(line)
+    return result
