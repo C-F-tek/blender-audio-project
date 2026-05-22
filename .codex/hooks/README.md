@@ -1,39 +1,57 @@
 # IA-Carmine Codex Hooks
 
-This directory contains repository-local Codex lifecycle hooks.
+This directory contains experimental repository-local Codex lifecycle hook scripts.
 
-## Mode
+## Default state
 
-These hooks are intentionally **non-blocking**.
+Repository hooks are **disabled by default**.
 
-They add context, warnings and validation reminders, but they do not:
+The active repository config is:
 
-- deny tool calls;
-- approve tool calls;
-- rewrite tool calls;
-- stop Codex;
-- force operator approval;
-- merge, push, delete or deploy anything.
-
-The goal is to improve continuity and action quality without breaking Codex work.
-
-## Active hooks
-
-- `SessionStart`: loads repository state, relevant guides, latest task handoffs and latest compact evidence.
-- `PreToolUse`: adds advisory context before risky or broad commands.
-- `PostToolUse`: adds validation reminders after tool execution.
-
-## Disabled by design
-
-- `UserPromptSubmit` is not enabled in `hooks.json`. It runs exactly when the operator submits a chat goal/prompt and can interfere with prompt entry in some Codex App builds.
-- `Stop` is not enabled. The hook layer must not become a hard completion gate.
-
-## Local review
-
-After pulling these files locally, inspect and trust them from Codex with:
-
-```text
-/hooks
+```json
+{
+  "hooks": {}
+}
 ```
 
-If needed, disable any single hook from the Codex hook browser.
+This prevents Codex App session startup, chat goal submission, and tool execution from being affected by repository-local hooks.
+
+## Why disabled
+
+During local Codex App usage, hook execution caused session/chat errors. The repository must prioritize stable Codex operation over hook automation.
+
+## Available scripts
+
+The scripts remain in this directory as opt-in experiments only:
+
+- `session_start_context.py`: repository context loader.
+- `pre_tool_guard.py`: advisory command context.
+- `post_tool_review.py`: advisory validation reminders.
+- `user_prompt_context.py`: disabled helper; do not wire into `UserPromptSubmit` until tested in the target Codex App build.
+
+## Required policy for future reactivation
+
+Do not enable hooks repo-wide until a small compatibility test proves that Codex App can:
+
+- open a session;
+- submit a chat goal/prompt;
+- run a simple command;
+- continue a normal conversation after hook output.
+
+Any future hook configuration must remain non-destructive and must not merge, push, delete, deploy or change permissions.
+
+## Local emergency disable
+
+If a local session breaks, keep this file as documentation and disable only the config:
+
+```text
+.codex/hooks.json -> hooks.disabled.json
+```
+
+or replace the config with:
+
+```json
+{
+  "hooks": {}
+}
+```
