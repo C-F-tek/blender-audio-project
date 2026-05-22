@@ -20,11 +20,13 @@ The goal is to improve continuity and action quality without breaking Codex work
 ## Active hooks
 
 - `SessionStart`: loads repository state, relevant guides, latest task handoffs and latest compact evidence.
-- `UserPromptSubmit`: classifies the prompt and injects nearby repo context.
 - `PreToolUse`: adds advisory context before risky or broad commands.
 - `PostToolUse`: adds validation reminders after tool execution.
 
-There is deliberately no `Stop` hook.
+## Disabled by design
+
+- `UserPromptSubmit` is not enabled in `hooks.json`. It runs exactly when the operator submits a chat goal/prompt and can interfere with prompt entry in some Codex App builds.
+- `Stop` is not enabled. The hook layer must not become a hard completion gate.
 
 ## Local review
 
