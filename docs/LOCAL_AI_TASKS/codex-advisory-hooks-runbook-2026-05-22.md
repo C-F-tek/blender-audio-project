@@ -14,6 +14,8 @@ They do not deny tool calls, rewrite tool calls, stop Codex, force operator appr
 
 There is deliberately no `Stop` hook.
 
+`UserPromptSubmit` is also disabled in `hooks.json` because it runs exactly when the operator submits a chat prompt/goal and may interfere with prompt entry in some Codex App builds.
+
 ## Installed files
 
 ```text
@@ -27,27 +29,13 @@ There is deliberately no `Stop` hook.
 docs/LOCAL_AI_TASKS/codex-advisory-hooks-runbook-2026-05-22.md
 ```
 
-## Behavior
+`user_prompt_context.py` remains available as a disabled helper for future CLI/build compatibility tests, but it is not wired in `hooks.json`.
+
+## Active behavior
 
 ### SessionStart
 
 Adds repository state, current branch, latest commit, dirty state, known guide files, latest task handoffs, latest compact evidence and IA-Carmine policy reminders.
-
-### UserPromptSubmit
-
-Classifies the incoming prompt and injects the closest available repository context.
-
-Detected labels include:
-
-```text
-heap_runtime
-provider_gpu_npu
-evidence_bundle
-patch_or_refactor
-docs_hygiene
-git_flow
-general_repo_work
-```
 
 ### PreToolUse
 
