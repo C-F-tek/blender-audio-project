@@ -17,8 +17,10 @@ def main() -> int:
         _check_independent_sidecar_watchdogs(repo_root),
         _check_boot_handoff(repo_root),
         _check_gpu0_command_contract(repo_root),
+        _check_vulkan_identity_contract(repo_root),
         _check_provider_residency_lifecycle(repo_root),
         _check_gpu1_workload_absorption(repo_root),
+        _check_external_heap_health_report_filter(repo_root),
         _check_bounded_npu_micro_tasks(repo_root),
         _check_final_cleanup(repo_root),
     ]
@@ -75,8 +77,14 @@ def _check_gpu0_command_contract(repo_root: Path) -> dict[str, Any]:
     errors: list[str] = []
     if "--startup-manifest" not in gpu0:
         errors.append("GPU0 CLI does not accept --startup-manifest")
+    if "--server-evidence" not in gpu0:
+        errors.append("GPU0 CLI does not accept boot handoff server evidence")
     if "startup_manifest_context" not in gpu0:
         errors.append("GPU0 CLI does not ingest startup manifest context")
+    if "--server-evidence" not in specs:
+        errors.append("runtime GPU0 command does not pass boot handoff evidence")
+    if "_gpu0_max_new_tokens" not in specs:
+        errors.append("runtime GPU0 command does not bound peer max_new_tokens separately")
     if "--restart-gpu0-vulkan-server" in specs:
         errors.append("runtime GPU0 command still forces Vulkan server restart")
     if '"provider_model": gpu0_model' not in specs:
@@ -88,6 +96,19 @@ def _check_gpu0_command_contract(repo_root: Path) -> dict[str, Any]:
     if 'report.get("ollama_unload_verified")' in _extract_function(gpu0, "_gpu0_workload_verified"):
         errors.append("GPU0 workload verification still requires unload as proof")
     return {"name": "gpu0_command_contract", "errors": errors}
+
+
+def _check_vulkan_identity_contract(repo_root: Path) -> dict[str, Any]:
+    vulkan = _read(repo_root, "ia_carmine/providers/ollama/vulkan_devices.py")
+    context = _read(repo_root, "ia_carmine/providers/provider_mesh/TOOL_CONTEXT.md")
+    errors: list[str] = []
+    if 'vendor == "0x8086"' not in vulkan:
+        errors.append("Vulkan GPU0 auto-selection is not pinned to Intel vendor identity")
+    if "Windows Task Manager numbering" not in context:
+        errors.append("provider mesh context does not document Windows/Vulkan index mismatch")
+    if "GGML_VK_VISIBLE_DEVICES" not in context:
+        errors.append("provider mesh context does not document resolved Vulkan visible device")
+    return {"name": "vulkan_identity_contract", "errors": errors}
 
 
 def _check_provider_residency_lifecycle(repo_root: Path) -> dict[str, Any]:
@@ -111,6 +132,8 @@ def _check_provider_residency_lifecycle(repo_root: Path) -> dict[str, Any]:
 def _check_gpu1_workload_absorption(repo_root: Path) -> dict[str, Any]:
     local_probe = _read(repo_root, "ia_carmine/providers/provider_mesh/local_provider_probe/cli.py")
     commands = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_commands.py")
+    provider_context = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_context.py")
+    provider_prompt_text = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_prompt_text.py")
     errors: list[str] = []
     if "mirror_single_provider_lane" not in local_probe or "args.run_ollama" not in local_probe:
         errors.append("GPU1 provider wrapper still mirrors only replight lanes")
@@ -123,7 +146,21 @@ def _check_gpu1_workload_absorption(repo_root: Path) -> dict[str, Any]:
         errors.append("runtime summarizer cannot overwrite empty top-level wrapper fields")
     if "--defer-unload" not in _read(repo_root, "ia_carmine/runtime/heap_gate/provider_command_specs.py"):
         errors.append("GPU1 provider loop does not defer model unload until cleanup")
+    if "runtime_file_refs/SOURCE_PATH_ALLOWLIST_CONTRACT" not in provider_context:
+        errors.append("GPU1 prompt does not anchor target files to runtime_file_refs allowlist")
+    if "basename o path ricordati ma non allowlisted" not in provider_prompt_text:
+        errors.append("GPU1 pointer protocol does not forbid remembered basename targets")
     return {"name": "gpu1_workload_absorption", "errors": errors}
+
+
+def _check_external_heap_health_report_filter(repo_root: Path) -> dict[str, Any]:
+    graph = _read(repo_root, "ia_carmine/runtime/external_heap/block_pointer_manifest/provider_graph.py")
+    errors: list[str] = []
+    if "provider_role_coexistence" not in graph:
+        errors.append("external heap provider graph may still count boot coexistence as provider work")
+    if "provider_replight" not in graph or "replight_mode" not in graph:
+        errors.append("external heap provider graph may still count replight health reports as provider work")
+    return {"name": "external_heap_health_report_filter", "errors": errors}
 
 
 def _check_bounded_npu_micro_tasks(repo_root: Path) -> dict[str, Any]:

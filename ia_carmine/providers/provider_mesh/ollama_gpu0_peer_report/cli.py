@@ -96,6 +96,41 @@ def load_leader_packet(repo_root: Path, value: str) -> dict[str, Any]:
         return {}
 
 
+def load_server_evidence(repo_root: Path, value: str) -> dict[str, Any]:
+    if not value:
+        return {}
+    try:
+        payload = json.loads(read_text(repo_root, value))
+    except Exception:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    server = payload.get("gpu0_vulkan_server")
+    if isinstance(server, dict):
+        return {
+            **server,
+            "handoff_provider_loop": payload.get("handoff_provider_loop"),
+            "server_evidence_source": value,
+        }
+    return {}
+
+
+def merge_server_evidence(current: dict[str, Any], evidence: dict[str, Any]) -> dict[str, Any]:
+    if not evidence:
+        return current
+    merged = dict(current)
+    for key in ("env", "stderr_log", "stdout_log", "pid", "vulkan_device_selection"):
+        if not merged.get(key) and evidence.get(key):
+            merged[key] = evidence[key]
+    for key in ("handoff_provider_loop", "server_evidence_source"):
+        if evidence.get(key) is not None:
+            merged[key] = evidence[key]
+    if current.get("reason") == "already_ready" and evidence.get("ready") is True:
+        merged["ready"] = True
+        merged["handoff_server_reused"] = True
+    return merged
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     server = report.get("gpu0_vulkan_server") if isinstance(report.get("gpu0_vulkan_server"), dict) else {}
     selection = server.get("vulkan_device_selection") if isinstance(server.get("vulkan_device_selection"), dict) else {}
@@ -143,6 +178,7 @@ def main() -> int:
     parser.add_argument("--output", default="output/validation/ollama_gpu0_peer.json")
     parser.add_argument("--markdown-output", default="output/validation/ollama_gpu0_peer.md")
     parser.add_argument("--base-url", default=DEFAULT_GPU0_OLLAMA_BASE_URL)
+    parser.add_argument("--server-evidence", default="")
     parser.add_argument("--no-start-gpu0-vulkan-server", action="store_true")
     parser.add_argument("--gpu0-vulkan-visible-devices", default="auto")
     parser.add_argument("--restart-gpu0-vulkan-server", action="store_true")
@@ -169,6 +205,7 @@ def main() -> int:
     request = request_text(repo_root, args)
     leader_packet = load_leader_packet(repo_root, args.leader_packet)
     prompt = render_peer_prompt(request, leader_packet)
+    server_evidence = load_server_evidence(repo_root, args.server_evidence)
     gpu0_server = {"started": False, "ready": False, "reason": "disabled"}
     if not args.no_start_gpu0_vulkan_server:
         gpu0_server = start_gpu0_vulkan_server(
@@ -177,6 +214,7 @@ def main() -> int:
             visible_devices=args.gpu0_vulkan_visible_devices,
             restart_if_ready=args.restart_gpu0_vulkan_server,
         )
+    gpu0_server = merge_server_evidence(gpu0_server, server_evidence)
     report = run_ollama_probe(
         repo_root,
         args.model,

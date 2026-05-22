@@ -58,6 +58,17 @@ def _provider_keep_alive(gate: Any) -> str:
     return str(getattr(gate.args, "keep_alive", "") or "120s")
 
 
+def _gpu0_max_new_tokens(gate: Any) -> int:
+    env_value = str(os.environ.get("IA_CARMINE_GPU0_MAX_NEW_TOKENS") or "").strip()
+    default = int(env_value) if env_value.isdigit() and int(env_value) > 0 else 192
+    return max(32, min(int(gate.args.max_new_tokens), default))
+
+
+def _coexistence_evidence_path(work_dir: Path, revision: int) -> Path:
+    suffix = f"_revision{revision}" if revision else ""
+    return work_dir / f"provider_role_coexistence{suffix}.json"
+
+
 def build_provider_command_specs(
     gate: Any,
     work_dir: Path,
@@ -70,6 +81,7 @@ def build_provider_command_specs(
     gpu0_md = work_dir / f"gpu0_ollama_vulkan_peer{suffix}.md"
     npu_json = work_dir / f"npu_micro_task_auditor{suffix}.json"
     npu_md = work_dir / f"npu_micro_task_auditor{suffix}.md"
+    coexistence_evidence = _coexistence_evidence_path(work_dir, revision)
     leader_packet = str(getattr(gate, "provider_leader_packet_path", "") or "")
     startup_manifest = str(getattr(gate.args, "startup_manifest", "") or "")
     task_file = str(getattr(gate.args, "task_file", "") or "")
@@ -149,6 +161,7 @@ def build_provider_command_specs(
             "provider_base_url": gpu0_base_url,
             "provider_compute_device": "ollama/gpu0-vulkan",
             "provider_device_policy": "ollama_gpu0_vulkan_required_openvino_gpu0_forbidden",
+            "provider_max_new_tokens": _gpu0_max_new_tokens(gate),
             **_time_fields(lane_times["gpu0_peer"]),
             "command": [
                 gate.child_python(),
@@ -161,10 +174,12 @@ def build_provider_command_specs(
                 gpu0_base_url,
                 "--gpu0-vulkan-visible-devices",
                 gpu0_vulkan_devices,
+                "--server-evidence",
+                repo_rel(gate.repo_root, coexistence_evidence),
                 "--model",
                 gpu0_model,
                 "--max-new-tokens",
-                str(int(gate.args.max_new_tokens)),
+                str(_gpu0_max_new_tokens(gate)),
                 "--ollama-num-ctx",
                 str(gpu1_ctx),
                 "--ollama-gpu-layers",

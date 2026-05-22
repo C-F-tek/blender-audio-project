@@ -103,6 +103,7 @@ python -m ia_carmine.cli build_gpu_repair_failure_recommendation ...
 - GPU0 is not complete when it only reports device visibility; it must produce observable Ollama/Vulkan peer evidence when selected.
 - GPU0 native model/tool-loop timeout is provider failure in complete run-unica mode; OpenVINO GPU0/tensor workload alone is diagnostic.
 - GPU0 must use Ollama/Vulkan. OpenVINO GPU0 is not a full/complete lane fallback; OpenVINO `GPU.1` is reserved for Ollama/CUDA and must not receive GPU0 workload.
+- GPU0/Intel selection must not rely on Windows Task Manager numbering. On the IA-Carmine workstation Windows shows Intel as GPU 0 and NVIDIA as GPU 1, while Vulkan may enumerate NVIDIA as index 0 and Intel as index 1. GPU0/Ollama Vulkan must select the Intel integrated device by Vulkan identity (`vendorID=0x8086`, Intel name/device UUID) and set `GGML_VK_VISIBLE_DEVICES` to that resolved Vulkan index.
 - `ensure_ollama_role_models` proves GPU1 and GPU0 are simultaneously alive on their
   separate Ollama servers, then unloads both by default.
 - `ensure_openvino_npu_model` proves the NPU micro lane by loading the OpenVINO

@@ -52,6 +52,7 @@ RESOURCE_MECHANICS_BOOL_KEYS = {
 }
 SKIP_KINDS = {
     "provider_launch_manifest",
+    "provider_role_coexistence",
     "provider_runtime_plan",
     "provider_teamwork_leader_packet",
 }
@@ -160,16 +161,23 @@ def _provider_items(provider_dir: Path) -> list[tuple[Path, dict[str, Any]]]:
     items: list[tuple[Path, dict[str, Any]]] = []
     for path in provider_dir.glob("*.json"):
         data = _read_json(path)
-        if str(data.get("kind") or "") in SKIP_KINDS:
-            continue
-        if path.name.startswith("provider_launch_manifest") or path.name.startswith(
-            "provider_teamwork_leader_packet"
-        ):
-            continue
-        if path.name.startswith("provider_runtime_plan"):
+        if _skip_provider_item(path, data):
             continue
         items.append((path, data))
     return sorted(items, key=_provider_sort_key)
+
+
+def _skip_provider_item(path: Path, data: dict[str, Any]) -> bool:
+    name = path.name
+    if str(data.get("kind") or "") in SKIP_KINDS:
+        return True
+    if name.startswith(("provider_launch_manifest", "provider_runtime_plan")):
+        return True
+    if name.startswith("provider_teamwork_leader_packet"):
+        return True
+    if "provider_replight" in name or _normalize_bool(data.get("replight_mode")):
+        return True
+    return False
 
 
 def _preview_text(data: dict[str, Any], max_block_chars: int) -> str:

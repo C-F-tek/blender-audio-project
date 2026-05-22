@@ -346,7 +346,7 @@ class RuntimeGateProviderContextMixin:
             f"File sorgente reali candidati verificati nel repository/context:\n{source_candidates}\n"
             f"{source_allowlist_contract}\n"
             f"Feedback qualitativo heap da eventuale giro precedente:\n{revision_feedback}\n"
-            "Regola: rispondi come sintesi GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati, non gli artifact output/validation. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
+            "Regola: rispondi come sintesi GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati da runtime_file_refs/SOURCE_PATH_ALLOWLIST_CONTRACT, non gli artifact output/validation e non basename ricordati. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
             "Per richieste implementative devi produrre un blocco operativo, non consigli generici. Usa sezioni TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, PATCH_SKETCH_UNIFIED_DIFF, VALIDATION_COMMANDS, RISKS, EXIT_DECISION. PATCH_SKETCH_UNIFIED_DIFF deve essere un blocco ```diff con diff --git a/<path> b/<path> su path allowlisted; se non hai un target verificato usa EXIT_DECISION=NO_PATCHABLE_TARGET. TARGET_FILES deve essere copiato esattamente da Allowed source paths; non citare path non allowlisted nemmeno in PROBLEM/EVIDENCE/PATCH_SKETCH_UNIFIED_DIFF. La tua proposta e' evidenza: il code product sara' valido solo se matrix/synthesis estrae e valida il diff.\n"
             "Risposta finale completa e chiusa:"
         )

@@ -22,7 +22,7 @@ POINTER_DELTA_PROTOCOL = (
     "- Il delta corrente deve contenere TARGET_FILES repo-relative reali, PATCH_SKETCH_UNIFIED_DIFF e VALIDATION_COMMANDS.\n"
     "- PATCH_SKETCH_UNIFIED_DIFF deve essere un blocco ```diff con diff --git a/<path> b/<path>; non usare pseudocodice, sketch testuale o stub.\n"
     "- Provider proposal e' evidenza heap; il code product esiste solo quando matrix/synthesis estrae e valida quel diff.\n"
-    "- TARGET_FILES e diff header devono usare solo path nella SOURCE_PATH_ALLOWLIST_CONTRACT.\n"
+    "- TARGET_FILES e diff header devono usare solo path nella SOURCE_PATH_ALLOWLIST_CONTRACT derivata da runtime_file_refs; basename o path ricordati ma non allowlisted richiedono EXIT_DECISION=NO_PATCHABLE_TARGET.\n"
     "- Se nessun path allowlisted e' patchabile, usa EXIT_DECISION=NO_PATCHABLE_TARGET e spiega BLOCKED_NO_VERIFIED_TARGET_REASON.\n"
     "- Non usare mai placeholder angle-bracket come <id-or-empty>; usa valori vuoti o block id reali.\n"
     "- Se candidate_applicability_flags contiene invented_source_path, unresolved_pointer_placeholder o unresolved_angle_bracket_token, tratta candidate_response_preview come esempio negativo e non copiarne TARGET_FILES/PATCH_SKETCH.\n"
