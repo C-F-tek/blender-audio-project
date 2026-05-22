@@ -2,7 +2,7 @@
 # Indice — LOCAL_RUNS_TESTING_AND_EVIDENCE.md
 
 Documento migrato da layout legacy `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE/part-xxx.md`. Stub precedente: `docs/LOCAL_RUNS_TESTING_AND_EVIDENCE.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

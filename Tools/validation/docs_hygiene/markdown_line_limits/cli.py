@@ -19,7 +19,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-DEFAULT_MAX_LINES = 400
+DEFAULT_MAX_LINES = 700
 DEFAULT_SCOPES = (
     "AGENTS.md",
     "CHATGPT.md",

@@ -208,9 +208,9 @@ Index repair must be plan/report-first unless explicitly requested.
 Maintained documentation and source files must stay small enough for human review and AI-assisted patching.
 
 ```text
-active Markdown hard threshold: <= 500 lines
-preferred active runbook: <= 400 lines
-maintained Python/PowerShell/script file: <= 400 lines
+active Markdown hard threshold: <= 700 lines
+preferred active runbook: <= 700 lines
+maintained Python/PowerShell/script file: <= 700 lines
 ```
 
 Markdown split rule:
@@ -219,7 +219,7 @@ Markdown split rule:
 Keep the original file as a compact index.
 Create a sibling folder named exactly like the file, including .md: <file>.md/.
 Move detailed content into <file>.md/part-001.md, part-002.md, ...
-Keep each part <= 500 lines.
+Keep each part <= 700 lines.
 The index must list all parts and state why the document was split.
 ```
 

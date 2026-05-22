@@ -41,7 +41,7 @@ CPU/helper -> broker, validator, lab, composer
 - Provider text is evidence, not product.
 - Pointer/proposal blocks do not prove provider workload by themselves.
 - `provider_execution_performed` must be backed by explicit workload/provider evidence.
-- GPU1 owns closure and may drive broker/native tool calls. GPU0 can review/refine and use tools as evidence. NPU can run only bounded micro audit/tool work and must not hold the run open as semantic closer.
+- GPU1 and GPU0 are Ollama operative lanes and may drive broker/native tool calls. NPU can emit bounded micro audit/veto/tool evidence only as diagnostic support and must not drive broker execution or hold closure as semantic closer.
 - In canonical provider runs, the provider boot gate first proves GPU1/Ollama, GPU0/Ollama Vulkan and NPU/OpenVINO are alive in the same provider window. GPU1 then gets the short replight check. GPU0/NPU useful workload evidence is produced in the real provider loop, not by replaying their full reports as pre-loop replight.
 - GPU0 and NPU boot failures are `provider_boot_gate_failed:*` exits. GPU0/NPU loop failures remain provider workload failures, not degraded provider success and not CPU fallback.
 - Time input is a shared heap counter for GPU1 cycles and coordinated soft close. GPU0/NPU sidecars use bounded watchdogs/timeouts; a selected lane that fails to start is still a hard universe block.
@@ -52,6 +52,7 @@ CPU/helper -> broker, validator, lab, composer
 - `provider_revision_count` is positive evidence only. It must not be compared to an effective max to cut GPU1 recursion.
 - Do not weaken gates to make a run pass.
 - Do not convert all context files into patch targets.
+- `generic_write` is a broker evidence tool for refined request/action-plan turns. A GPU1/GPU0 call forces a later GPU1 revision; after three consumed refinements it can close as `generic_write_refined_product`, including code content, but it still cannot claim patch application or source writes.
 
 ## Expected downstream outputs
 

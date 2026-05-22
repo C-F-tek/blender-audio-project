@@ -67,6 +67,7 @@ class PartialWriter:
         self,
         *,
         path: Path | None,
+        markdown_path: Path | None,
         lane: str,
         selected_model: str,
         num_ctx: int | None,
@@ -76,6 +77,7 @@ class PartialWriter:
         started: float,
     ) -> None:
         self.path = path
+        self.markdown_path = markdown_path
         self.lane = lane
         self.selected_model = selected_model
         self.num_ctx = num_ctx
@@ -97,6 +99,8 @@ class PartialWriter:
             json.dumps(self._payload(text, chunk), indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
+        if self.markdown_path is not None:
+            self.markdown_path.write_text(self._markdown(text, chunk), encoding="utf-8")
 
     def _payload(self, text: str, chunk: dict[str, Any]) -> dict[str, Any]:
         return {
@@ -123,6 +127,23 @@ class PartialWriter:
             "provider_device_verified": False,
             "cpu_provider_fallback_performed": False,
         }
+
+    def _markdown(self, text: str, chunk: dict[str, Any]) -> str:
+        return "\n".join(
+            [
+                "# Ollama Provider Partial",
+                "",
+                f"- Lane: `{self.lane}`",
+                f"- Model: `{self.selected_model}`",
+                f"- Done: `{bool(chunk.get('done'))}`",
+                f"- Partial chars: `{len(text)}`",
+                "",
+                "## Partial Response",
+                "",
+                text,
+                "",
+            ]
+        )
 
 
 def parsed_contract_fields(

@@ -2,7 +2,7 @@
 # Indice â€” README.md
 
 Documento monolitico trasformato da file `Tools/workflow/README.md` a directory-form.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

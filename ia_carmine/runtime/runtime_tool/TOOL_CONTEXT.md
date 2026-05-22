@@ -35,6 +35,7 @@ python -m ia_carmine.cli runtime_tool_broker ...
 python -m ia_carmine.cli build_runtime_tool_capability_manifest ...
 python -m ia_carmine.cli runtime_file_refs ...
 python -m ia_carmine.cli agent_runtime_debug_lab ...
+python -m ia_carmine.cli generic_write ...
 ```
 
 ## Broker model
@@ -49,6 +50,8 @@ provider/request
 ```
 
 Tool output must preserve enough information for later validation. Broker request/response should remain lossless enough for review.
+
+`generic_write` writes refined request/action-plan Markdown/JSON for the next provider turn. It is broker evidence when called by GPU1/GPU0 native tools; after three consumed refinements the heap may expose it as a readable refined product, including code content, without claiming source writes or patch application.
 
 ## Runtime file refs model
 

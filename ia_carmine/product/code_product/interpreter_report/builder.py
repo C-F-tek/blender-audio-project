@@ -16,12 +16,12 @@ def classify_file_risk(item: dict[str, Any]) -> str:
     """Classify static review risk for one file."""
     if not item.get("parse_ok"):
         return "high"
-    if item.get("risk_signal_count", 0) >= 5 or item.get("line_count", 0) >= 800:
+    if item.get("risk_signal_count", 0) >= 5 or item.get("line_count", 0) >= 1000:
         return "high"
     if (
         item.get("large_function_count", 0)
         or item.get("complex_function_count", 0)
-        or item.get("line_count", 0) >= 400
+        or item.get("line_count", 0) >= 700
     ):
         return "medium"
     return "low"
@@ -32,9 +32,9 @@ def recommendation_reasons(item: dict[str, Any], risk: str) -> list[str]:
     reasons: list[str] = []
     if not item.get("parse_ok"):
         reasons.append("file does not parse")
-    if item.get("line_count", 0) >= 800:
+    if item.get("line_count", 0) >= 1000:
         reasons.append("large Python module")
-    elif risk in {"medium", "high"} and item.get("line_count", 0) >= 400:
+    elif risk in {"medium", "high"} and item.get("line_count", 0) >= 700:
         reasons.append("medium-size Python module")
     if item.get("large_function_count", 0):
         reasons.append("large functions detected")

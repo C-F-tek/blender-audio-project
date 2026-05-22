@@ -43,21 +43,24 @@ def evaluate_terminal_invariants(
             errors.append(f"{key} must be >0")
     if metrics.get("product_status") not in {"ready", "blocked_with_reason"}:
         errors.append("product_status must be ready or blocked_with_reason")
+    generic_product = metrics.get("generic_write_document_product")
+    generic_product = generic_product if isinstance(generic_product, dict) else {}
+    generic_product_ready = bool(generic_product.get("eligible"))
     if allow_provider_generation and detailed_output_expected:
         if metrics.get("product_status") != "ready":
             errors.append(
                 "complete provider product run cannot pass without ready product; "
                 f"product_status={metrics.get('product_status')}"
             )
-        if not metrics.get("provider_raw_response_text"):
+        if not metrics.get("provider_raw_response_text") and not generic_product_ready:
             errors.append("GPU1 primary center produced no provider response text")
         if not metrics.get("proposal_iteration_artifacts"):
             errors.append("provider product run requires GPU1 proposal/pointer iteration artifacts")
-        if metrics.get("quality_output_passed") is not True:
+        if metrics.get("quality_output_passed") is not True and not generic_product_ready:
             errors.append(
                 "GPU1/pointer proposal quality failed; provider prose cannot pass as product"
             )
-        if metrics.get("latest_proposal_quality_passed") is False:
+        if metrics.get("latest_proposal_quality_passed") is False and not generic_product_ready:
             errors.append(
                 "latest proposal iteration was rejected by same-heap quality gate: "
                 + str(metrics.get("latest_proposal_reject_reason") or "")
@@ -71,10 +74,10 @@ def evaluate_terminal_invariants(
                     "rejected GPU1 proposal did not trigger mandatory provider revision retry"
                 )
         gpu0_decision = str(metrics.get("latest_gpu0_review_decision") or "")
-        if gpu0_decision.startswith("reject"):
+        if gpu0_decision.startswith("reject") and not generic_product_ready:
             errors.append(f"GPU0 peer rejected current GPU1 delta: {gpu0_decision}")
         missing_sections = metrics.get("latest_gpu0_missing_delta_sections") or []
-        if missing_sections:
+        if missing_sections and not generic_product_ready:
             errors.append(
                 "GPU1 delta is missing required pointer/product sections: "
                 + ",".join(str(item) for item in missing_sections)
@@ -88,6 +91,18 @@ def evaluate_terminal_invariants(
         )
     if metrics.get("product_status") == "ready" and missing_requirements:
         errors.append("ready product_status is forbidden while requirements are missing")
+    if (
+        metrics.get("product_status") == "ready"
+        and safe_int(metrics.get("generic_write_followup_pending_count")) > 0
+    ):
+        errors.append("ready product_status is forbidden while generic_write follow-up is pending")
+    if metrics.get("product_status") == "ready" and generic_product.get("eligible"):
+        if safe_int(generic_product.get("refinement_count")) < safe_int(
+            generic_product.get("minimum_refinements")
+        ):
+            errors.append("generic_write refined product requires the configured minimum refinements")
+        if generic_product.get("patch_application_performed"):
+            errors.append("generic_write refined product cannot claim patch application")
     if allow_provider_generation and metrics.get("missing_provider_lanes"):
         errors.append(
             "provider generation requires all three provider lanes; missing: "
@@ -125,12 +140,17 @@ def evaluate_terminal_invariants(
         errors.append("ready product_status requires broker bridge reports")
     if metrics.get("product_status") == "ready" and not metrics.get("context_artifact_refs"):
         errors.append("ready product_status requires memory/chunk/context artifacts")
-    if metrics.get("product_status") == "ready" and not metrics.get("response_text_complete"):
+    if (
+        metrics.get("product_status") == "ready"
+        and not metrics.get("response_text_complete")
+        and not generic_product_ready
+    ):
         errors.append("ready product_status requires a complete provider response_text")
     if (
         metrics.get("product_status") == "ready"
         and detailed_output_expected
         and not metrics.get("quality_output_passed")
+        and not generic_product_ready
     ):
         errors.append(
             "ready product_status requires detailed heap/tool/provider quality output for complex requests"
@@ -139,6 +159,7 @@ def evaluate_terminal_invariants(
         metrics.get("product_status") == "ready"
         and metrics.get("virtual_dev_environment_required")
         and not metrics.get("virtual_dev_environment_passed")
+        and not generic_product_ready
     ):
         errors.append(
             "ready product_status requires virtual development environment passed for debug/runtime requests"
@@ -147,6 +168,7 @@ def evaluate_terminal_invariants(
         metrics.get("product_status") == "ready"
         and metrics.get("code_execution_matrix_required")
         and not metrics.get("code_execution_matrix_passed")
+        and not generic_product_ready
     ):
         errors.append(
             "ready product_status requires code execution matrix passed for coding requests"
@@ -164,6 +186,7 @@ def evaluate_terminal_invariants(
         metrics.get("product_status") == "ready"
         and metrics.get("runtime_debug_lab_required")
         and not metrics.get("runtime_debug_lab_passed")
+        and not generic_product_ready
     ):
         errors.append(
             "ready product_status requires runtime debug lab execution passed for MVP/lab requests"

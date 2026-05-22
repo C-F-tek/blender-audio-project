@@ -128,8 +128,8 @@ def build_provider_lane_metrics(
         "lane_authority": lane_authority,
         "native_tool_calling_policy": {
             "gpu1_planner": "may_drive_broker_native_tool_calls",
-            "gpu0_peer": "may_call_native_tools_as_review_evidence",
-            "npu_micro_task_auditor": "micro_audit_native_tools_only",
+            "gpu0_peer": "may_drive_broker_native_tool_calls",
+            "npu_micro_task_auditor": "micro_audit_native_tools_diagnostic_only",
         },
         "revision_lane_policy": getattr(owner, "provider_revision_lane_policy", {}),
         "npu_micro_timeout_enforced": bool(

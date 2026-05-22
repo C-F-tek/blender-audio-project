@@ -37,6 +37,8 @@ def main() -> int:
     )
     from ia_carmine.runtime.heap_gate.provider_prompt import RuntimeGateProviderPromptMixin
     from ia_carmine.runtime.runtime_tool.broker.runtime_builders import run_heap_code_execution_matrix
+    from ia_carmine.runtime.runtime_tool.broker.runtime_builders import generic_write
+    from ia_carmine._shared.provider_tool_loop import ollama_tool_call_tool_names
     from ia_carmine.providers.ollama.session import OllamaSession
     from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
 
@@ -47,6 +49,18 @@ def main() -> int:
         for item in schemas
     ):
         errors.append("matrix broker tool schema missing")
+    if not any(item.get("function", {}).get("name") == "generic_write" for item in schemas):
+        errors.append("generic_write broker tool schema missing")
+    tool_names = set(ollama_tool_call_tool_names())
+    for required in (
+        "generic_write",
+        "run_heap_virtual_dev_environment",
+        "run_heap_code_execution_matrix",
+        "agent_runtime_debug_lab",
+        "synthesize_patch_candidates",
+    ):
+        if required not in tool_names:
+            errors.append(f"Ollama native tool list missing {required}")
 
     fake_chat = {
         "message": {
@@ -77,6 +91,16 @@ def main() -> int:
         errors.append("broker builder must preserve leading-dash validation args")
     if "--validation-arg" in command:
         errors.append("broker builder emitted split leading-dash validation arg")
+    generic_command, generic_outputs = generic_write(
+        repo_root,
+        repo_root / "output" / "validation" / "provider_tool_loop_smoke",
+        "generic_write_regression",
+        {"source_lane": "gpu0_peer", "reason": "smoke", "operator_request": "refine"},
+    )
+    if "generic_write" not in generic_command:
+        errors.append("generic_write builder does not invoke ia_carmine generic_write")
+    if not generic_outputs.get("json_report") or not generic_outputs.get("markdown_report"):
+        errors.append("generic_write builder does not declare JSON/Markdown outputs")
     if "partial_callback" not in inspect.signature(OllamaSession.generate).parameters:
         errors.append("Ollama generate must expose partial_callback for GPU1 checkpoints")
     if "partial_output" not in inspect.signature(run_ollama_probe).parameters:

@@ -22,7 +22,7 @@ Current sources:
 Use this split document only as legacy context and compare claims against current source, launcher manifest evidence and the current code-driven maps.
 
 Documento migrato da layout legacy `docs/LOCAL_AI_WORKFLOW/part-xxx.md`. Stub precedente: `docs/LOCAL_AI_WORKFLOW.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

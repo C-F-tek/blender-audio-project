@@ -92,10 +92,12 @@ def run_ollama_probe(
     )
     prompt_attempts: list[dict[str, Any]] = []
     partial_json = Path(partial_output).expanduser() if partial_output else None
+    partial_markdown_output = partial_json.with_suffix(".md") if partial_json else None
     generation_stats: dict[str, Any] = {}
     gpu_runtime_summary: dict[str, Any] = {}
     write_partial = PartialWriter(
         path=partial_json,
+        markdown_path=partial_markdown_output,
         lane=provider_lane,
         selected_model=selected_model,
         num_ctx=num_ctx,

@@ -120,9 +120,9 @@ broad validation belongs to the unified launcher
 Maintained NPU helper docs and source files follow the active file-size policy:
 
 ```text
-preferred active runbook <= 400 lines
-active Markdown hard threshold <= 500 lines
-maintained source/script target <= 400 lines
+preferred active runbook <= 700 lines
+active Markdown hard threshold <= 700 lines
+maintained source/script target <= 700 lines
 ```
 
 Markdown split layout:

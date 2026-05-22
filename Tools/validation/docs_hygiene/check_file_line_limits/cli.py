@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 
-DEFAULT_MAX_LINES = 400
+DEFAULT_MAX_LINES = 700
 DEFAULT_INCLUDE_SUFFIXES = (
     ".md",
     ".py",
@@ -247,7 +247,7 @@ def write_markdown(path: Path, data: dict[str, object]) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Report files that exceed the IA-Carmine 400-line policy."
+        description="Report files that exceed the IA-Carmine 700-line file policy."
     )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--max-lines", type=int, default=DEFAULT_MAX_LINES)

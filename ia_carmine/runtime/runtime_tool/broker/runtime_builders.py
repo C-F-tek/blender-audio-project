@@ -117,6 +117,40 @@ def synthesize_patch_candidates(
     }
 
 
+def generic_write(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, str]]:
+    report, markdown = base_outputs(out_dir, request_id, "generic_write_md")
+    command = [
+        resolve_child_python(repo_root),
+        "-m",
+        "ia_carmine",
+        "generic_write",
+        "--repo-root",
+        ".",
+        "--output",
+        str(report),
+        "--markdown-output",
+        str(markdown),
+    ]
+    for evidence_report in split_values(args.get("evidence_report")):
+        command.extend(["--evidence-report", evidence_report])
+    for key, flag in (
+        ("request_file", "--request-file"),
+        ("operator_request", "--operator-request"),
+        ("provider_report", "--provider-report"),
+        ("proposal_text", "--proposal-text"),
+        ("source_lane", "--source-lane"),
+        ("reason", "--reason"),
+    ):
+        if args.get(key) is not None:
+            command.extend([flag, str(args[key])])
+    return command, {
+        "json_report": repo_rel(report, repo_root),
+        "markdown_report": repo_rel(markdown, repo_root),
+    }
+
+
 def run_heap_virtual_dev_environment(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, str]]:

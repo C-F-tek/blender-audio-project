@@ -2,7 +2,7 @@
 # Indice — CODE_CONSULTATION_REPORT.md
 
 Documento migrato da layout legacy `docs/CODE_CONSULTATION_REPORT/part-xxx.md`. Stub precedente: `docs/CODE_CONSULTATION_REPORT.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

@@ -8,8 +8,8 @@ Owner validator:
 
 Soglia operativa corrente:
 
-- default hard limit: 400 righe per file monitorato;
-- policy storica README: runbook attivo preferito entro 400 righe;
+- default hard limit: 700 righe per file monitorato;
+- policy storica README: runbook attivo preferito entro 700 righe;
 - Markdown oltre soglia: trasformare in indice compatto o directory-form split controllato;
 - non fare split cieco se il file contiene anchor usati da smoke/validator.
 
@@ -109,8 +109,8 @@ Per farlo diventare bloccante in una PR dedicata:
 ## Regola operativa per domani
 
 1. Non espandere README già lunghi.
-2. Ogni nuovo runbook deve restare sotto 400 righe.
-3. Se un runbook supera 400 righe, trasformarlo in indice + parti.
+2. Ogni nuovo runbook deve restare sotto 700 righe.
+3. Se un runbook supera 700 righe, trasformarlo in indice + parti.
 4. Se un file lungo contiene anchor validator, prima aggiornare validator/smoke o lasciare anchor nel file indice.
 5. Se si splitta, usare directory-form `.md` riconosciuta dal validator:
    - contenitore `qualcosa.md/`;

@@ -22,7 +22,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```text
 quick/balanced/deep/custom = intensity, not scope
 pipeline dry-run != full-run proof
-400-line policy applies to maintained docs and source files
+Line policy applies to maintained docs and source files
 limitations are backlog to overcome, not reasons to skip available tools
 evidence accompanies evidence and patch plans for completeness
 ```
@@ -79,13 +79,13 @@ CSV/index/discovery/file-line evidence when relevant
 ```
 
 
-## 400-line policy
+## Line policy
 
-Maintained source files in this package must stay under 400 lines.
+Maintained source files in this package must stay under 700 lines.
 
 ```text
-Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
-Markdown >400 lines -> compact index + <file>.md/part-001.md layout.
+Code/script >700 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >700 lines -> compact index + <file>.md/part-001.md layout.
 Existing oversized files -> technical debt to refactor progressively, not blind split targets.
 ```
 

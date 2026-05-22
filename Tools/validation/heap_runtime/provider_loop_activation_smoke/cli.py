@@ -17,6 +17,7 @@ def main() -> int:
         _check_independent_sidecar_watchdogs(repo_root),
         _check_boot_handoff(repo_root),
         _check_gpu0_command_contract(repo_root),
+        _check_ollama_native_tool_lane_contract(repo_root),
         _check_vulkan_identity_contract(repo_root),
         _check_provider_residency_lifecycle(repo_root),
         _check_gpu1_workload_absorption(repo_root),
@@ -97,6 +98,116 @@ def _check_gpu0_command_contract(repo_root: Path) -> dict[str, Any]:
     if 'report.get("ollama_unload_verified")' in _extract_function(gpu0, "_gpu0_workload_verified"):
         errors.append("GPU0 workload verification still requires unload as proof")
     return {"name": "gpu0_command_contract", "errors": errors}
+
+
+def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
+    native = _read(repo_root, "ia_carmine/runtime/heap_gate/tool_broker_native_calls.py")
+    followup = _read(repo_root, "ia_carmine/runtime/heap_gate/generic_write_followup.py")
+    provider_context = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_context.py")
+    gpu0 = _read(repo_root, "ia_carmine/providers/provider_mesh/ollama_gpu0_peer_report/cli.py")
+    loop = _read(repo_root, "ia_carmine/_shared/provider_tool_loop.py")
+    terminal = _read(repo_root, "ia_carmine/runtime/heap_gate/terminal_invariants.py")
+    team_packet = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_teamwork_packet.py")
+    errors: list[str] = []
+    if 'OPERATIVE_NATIVE_TOOL_CALL_LANES = {"gpu1_planner", "gpu0_peer"}' not in native:
+        errors.append("GPU1/GPU0 operative native tool lane set is missing")
+    if 'DIAGNOSTIC_NATIVE_TOOL_CALL_LANES = {"npu_micro_task_auditor"}' not in native:
+        errors.append("NPU diagnostic native tool lane set is missing")
+    if 'lane not in OPERATIVE_NATIVE_TOOL_CALL_LANES' not in native:
+        errors.append("native tool router does not gate operative broker requests by lane set")
+    if "generic_write_refinement" not in native:
+        errors.append("generic_write native call is not mapped to refinement evidence")
+    if "generic_write" not in loop or "run_heap_virtual_dev_environment" not in loop:
+        errors.append("Ollama native tool list does not expose generic_write/dev/matrix tools")
+    for source, name in ((provider_context, "GPU1 prompt"), (gpu0, "GPU0 prompt")):
+        if "BROKER_NATIVE_TOOL_RULE" not in source or "generic_write" not in source:
+            errors.append(f"{name} lacks generic_write native broker instruction")
+    if "GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS = 3" not in followup:
+        errors.append("generic_write follow-up does not require three refinements")
+    if "generic_write_next_turn_required" not in followup:
+        errors.append("generic_write follow-up does not force next GPU1 turn")
+    if "code_product_allowed_after_three_refinements" not in followup:
+        errors.append("generic_write cannot become refined product after three iterations")
+    if "generic_write_followup_pending_count" not in terminal:
+        errors.append("terminal invariants do not block pending generic_write follow-up")
+    if "GPU1 and GPU0 are Ollama operative lanes" not in team_packet:
+        errors.append("provider teamwork packet still treats GPU0 as diagnostic-only")
+    errors.extend(_probe_native_tool_routing())
+    return {"name": "ollama_native_tool_lane_contract", "errors": errors}
+
+
+def _probe_native_tool_routing() -> list[str]:
+    from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
+        provider_plan_item_for_tool_call,
+        publish_provider_native_tool_calls,
+    )
+
+    class FakeOwner:
+        def __init__(self) -> None:
+            self.stamp = "smoke"
+            self.args = SimpleNamespace(request_file="")
+            self.provider_native_tool_call_ids: set[str] = set()
+            self.state = {"needs": [], "tool_requests": []}
+            self.tool_request_count = 0
+            self.errors: list[str] = []
+            self.published: list[dict[str, Any]] = []
+            self.provider_reports = [
+                _fake_report("gpu1_planner", "gpu1.json", "generic_write", 0),
+                _fake_report("gpu0_peer", "gpu0.json", "generic_write", 0),
+                _fake_report("npu_micro_task_auditor", "npu.json", "generic_write", 0),
+            ]
+
+        def tool_plan(self) -> list[dict[str, Any]]:
+            return []
+
+        def enrich_plan_item_args(
+            self, item: dict[str, Any], _events: list[dict[str, Any]]
+        ) -> dict[str, Any]:
+            return dict(item)
+
+        def provider_plan_item_for_tool_call(
+            self, call: dict[str, Any], events: list[dict[str, Any]]
+        ) -> dict[str, Any] | None:
+            return provider_plan_item_for_tool_call(self, call, events)
+
+        def proposal_iteration_artifacts(self) -> list[str]:
+            return []
+
+        def request_text(self) -> str:
+            return "smoke request"
+
+        def publish(self, source: str, event_type: str, payload: dict[str, Any], **kwargs: Any) -> None:
+            self.published.append(
+                {"source": source, "event_type": event_type, "payload": payload, **kwargs}
+            )
+
+    owner = FakeOwner()
+    published = publish_provider_native_tool_calls(owner, 1, [])
+    lanes = [item.get("lane") for item in owner.state["tool_requests"]]
+    diagnostics = [
+        item
+        for item in owner.published
+        if item.get("event_type") == "validation_signal"
+        and item.get("payload", {}).get("kind") == "provider_peer_native_tool_call_diagnostic_only"
+    ]
+    errors: list[str] = []
+    if published != 2:
+        errors.append(f"expected two operative GPU1/GPU0 broker requests, got {published}")
+    if lanes != ["gpu1_planner", "gpu0_peer"]:
+        errors.append(f"expected GPU1/GPU0 tool request lanes, got {lanes}")
+    if not diagnostics or diagnostics[0].get("payload", {}).get("lane") != "npu_micro_task_auditor":
+        errors.append("NPU native call did not become diagnostic evidence only")
+    return errors
+
+
+def _fake_report(lane: str, output: str, tool: str, revision: int) -> dict[str, Any]:
+    return {
+        "lane": lane,
+        "output": output,
+        "revision": revision,
+        "response_text": f"{lane} response",
+        "tool_calls": [{"id": f"{lane}_call", "tool": tool, "args": {}, "reason": "smoke"}],
+    }
 
 
 def _check_vulkan_identity_contract(repo_root: Path) -> dict[str, Any]:

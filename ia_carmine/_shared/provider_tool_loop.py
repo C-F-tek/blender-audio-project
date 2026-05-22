@@ -50,7 +50,7 @@ def ollama_tool_call_tool_names() -> list[str]:
     return [
         "build_agent_agnostic_tool_inventory", "build_agent_memory_inventory", "build_agent_transient_request_context",
         "runtime_sqlite_memory", "select_semantic_code_chunks", "semantic_evidence_chunks",
-        "ai_context_pack", "agent_runtime_debug_lab", "run_heap_code_execution_matrix",
+        "ai_context_pack", "generic_write", "agent_runtime_debug_lab", "run_heap_code_execution_matrix",
         "run_heap_virtual_dev_environment", "synthesize_patch_candidates", "analyze_code_product_artifact",
     ]
 def prompt_explicitly_requires_tool_call(prompt: str) -> bool:
@@ -66,7 +66,7 @@ def ollama_tool_call_selection_prompt(prompt: str, provider_delta: str) -> str:
     tool_relevant = heap_patch_prompt_required(prompt) or prompt_explicitly_requires_tool_call(prompt)
     tools_available = ", ".join(ollama_tool_call_tool_names())
     decision_rule = (
-        "Keep heap proposal text as primary. For code product, matrix, lab, patch synthesis, runtime refs or memory gaps, choose one broker tool through message.tool_calls. "
+        "Keep heap proposal text as primary. GPU1/GPU0 Ollama lanes may drive operative broker requests; NPU tool calls are diagnostic/veto evidence only. For code product, matrix, lab, patch synthesis, runtime refs or memory gaps, choose one broker tool through message.tool_calls. Use generic_write when the current lane cannot yet produce code and needs a refined request/next-turn plan. "
         "Use NO_TOOL_NEEDED only when current heap/matrix evidence already proves no broker action can improve the delta."
         if tool_relevant
         else "If yes, call one tool through message.tool_calls; otherwise answer NO_TOOL_NEEDED with reason."

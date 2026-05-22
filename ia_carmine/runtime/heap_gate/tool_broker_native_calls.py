@@ -10,6 +10,14 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
 )
 from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
 
+OPERATIVE_NATIVE_TOOL_CALL_LANES = {"gpu1_planner", "gpu0_peer"}
+DIAGNOSTIC_NATIVE_TOOL_CALL_LANES = {"npu_micro_task_auditor"}
+EVIDENCE_ENRICHED_TOOLS = {
+    "generic_write",
+    "run_heap_code_execution_matrix",
+    "synthesize_patch_candidates",
+}
+
 
 def provider_plan_item_for_tool_call(
     owner: Any, call: dict[str, Any], events: list[dict[str, Any]]
@@ -29,9 +37,14 @@ def provider_plan_item_for_tool_call(
             timeout_seconds=int(owner.args.timeout_seconds),
         )
     if tool_name in TOOL_SPECS:
+        fallback_requirement = (
+            "generic_write_refinement"
+            if tool_name == "generic_write"
+            else f"provider_native_{tool_name}"
+        )
         return {
             "stage": 99,
-            "requirement": requirement or f"provider_native_{tool_name}",
+            "requirement": requirement or fallback_requirement,
             "id": f"provider-native-{tool_name}",
             "tool": tool_name,
             "args": dict(call.get("args") or {}),
@@ -67,7 +80,7 @@ def _publish_report_native_tool_calls(
         if unique_id in owner.provider_native_tool_call_ids:
             continue
         owner.provider_native_tool_call_ids.add(unique_id)
-        if lane != "gpu1_planner":
+        if lane not in OPERATIVE_NATIVE_TOOL_CALL_LANES:
             _publish_peer_native_call_diagnostic(
                 owner, source, lane, output, call, unique_id, round_id
             )
@@ -76,7 +89,7 @@ def _publish_report_native_tool_calls(
         if not plan_item:
             _publish_unmapped_native_call(owner, source, lane, output, call, unique_id, round_id)
             continue
-        _add_evidence_reports(owner, output, plan_item)
+        _enrich_provider_native_tool_args(owner, report, output, call, plan_item)
         request_id = f"{owner.stamp}:provider-native:{call_id}:{plan_item['tool']}"
         _publish_need_and_request(owner, report, call, plan_item, request_id, round_id)
         published += 1
@@ -100,9 +113,10 @@ def _publish_peer_native_call_diagnostic(
             "lane": lane,
             "tool_call": call,
             "provider_report": output,
+            "diagnostic_tool_call_lane": lane in DIAGNOSTIC_NATIVE_TOOL_CALL_LANES,
             "policy": (
-                "GPU1 is the cognitive center. GPU0/NPU native tool calls are "
-                "peer evidence and must not become broker-driving work."
+                "GPU1 and GPU0 are Ollama operative native-tool lanes. NPU native "
+                "tool calls remain diagnostic/veto evidence and do not drive broker work."
             ),
         },
         target="deterministic",
@@ -137,8 +151,15 @@ def _publish_unmapped_native_call(
     )
 
 
-def _add_evidence_reports(owner: Any, output: str, plan_item: dict[str, Any]) -> None:
-    if plan_item.get("tool") not in {"synthesize_patch_candidates", "run_heap_code_execution_matrix"}:
+def _enrich_provider_native_tool_args(
+    owner: Any,
+    report: dict[str, Any],
+    output: str,
+    call: dict[str, Any],
+    plan_item: dict[str, Any],
+) -> None:
+    tool = str(plan_item.get("tool") or "")
+    if tool not in EVIDENCE_ENRICHED_TOOLS:
         return
     args = dict(plan_item.get("args") or {})
     refs = args.get("evidence_report")
@@ -147,6 +168,18 @@ def _add_evidence_reports(owner: Any, output: str, plan_item: dict[str, Any]) ->
         if ref and ref not in evidence_reports:
             evidence_reports.append(ref)
     args["evidence_report"] = evidence_reports
+    if tool == "generic_write":
+        args.setdefault("provider_report", output)
+        args.setdefault("source_lane", str(report.get("lane") or ""))
+        args.setdefault("proposal_text", str(report.get("response_text") or ""))
+        args.setdefault("request_file", str(getattr(owner.args, "request_file", "") or ""))
+        if not args.get("request_file"):
+            args.setdefault("operator_request", owner.request_text()[:5000])
+        args.setdefault(
+            "reason",
+            call.get("reason")
+            or "Ollama lane requested generic_write to refine the next GPU1 turn.",
+        )
     plan_item["args"] = args
 
 

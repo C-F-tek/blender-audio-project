@@ -57,8 +57,8 @@ def dry_run_contract_policy() -> dict[str, Any]:
         "npu_closure_role": "advisory_only",
         "native_tool_calling_policy": {
             "gpu1_planner": "open_revision_and_may_drive_broker_native_tool_calls",
-            "gpu0_peer": "review_refine_native_tools_as_evidence",
-            "npu_micro_task_auditor": "micro_audit_native_tools_only",
+            "gpu0_peer": "review_refine_and_may_drive_broker_native_tool_calls",
+            "npu_micro_task_auditor": "micro_audit_native_tools_diagnostic_only",
         },
         "soft_lock_policy": {
             "soft_lock_state": "closing_open_pointers",

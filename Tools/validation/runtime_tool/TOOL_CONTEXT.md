@@ -54,6 +54,7 @@ Outputs from this area are validation reports. They help confirm that runtime to
 - File refs are evidence/classification, not source patch targets by themselves.
 - Debug-lab reports are diagnostics, not product.
 - Tool-loop success must not be confused with provider product success.
+- `generic_write` smoke coverage must prove GPU1/GPU0 can expose it through Ollama native tool schemas and that it remains broker evidence until the heap validates the three-refinement product rule.
 - Validation should check flags such as provider execution, tool execution, source writes and patch application when reports expose them.
 
 ## Notes

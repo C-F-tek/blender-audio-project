@@ -1,6 +1,12 @@
 """RuntimeGateRunLoopMixin extracted from the heap runtime completeness gate."""
 from __future__ import annotations
 from ia_carmine.runtime.heap_gate.pointer_soft_lock import runtime_soft_lock_state
+from ia_carmine.runtime.heap_gate.generic_write_followup import (
+    generic_write_document_product,
+    generic_write_followup_pending_count,
+    generic_write_refinement_count,
+    maybe_run_generic_write_followup,
+)
 from ia_carmine.runtime.heap_gate.run_loop_metrics import build_provider_lane_metrics
 from ia_carmine.runtime.heap_gate.runtime_common import Any, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
 class RuntimeGateRunLoopMixin:
@@ -41,6 +47,7 @@ class RuntimeGateRunLoopMixin:
                         events=events,
                         source="gpu1_initial",
                     )
+                events = maybe_run_generic_write_followup(self, round_id, events)
             if (
                 self.base_requirements_complete(events)
                 and self.provider_reports
@@ -53,6 +60,7 @@ class RuntimeGateRunLoopMixin:
                     if self.heap.pending_broker_requests():
                         self.run_bridge()
                     events = self.read_events()
+                events = maybe_run_generic_write_followup(self, round_id, events)
             self.critic_step(round_id, events)
             self.arbiter_step(round_id, events)
             if self.state["product"].get("status") in {"ready", "blocked_with_reason"} and self.minimum_runtime_depth_satisfied(round_id):
@@ -159,6 +167,13 @@ class RuntimeGateRunLoopMixin:
             "runtime_debug_lab_passed": self.runtime_debug_lab_passed(final_events),
             "runtime_debug_lab_reports": self.runtime_debug_lab_reports(final_events),
             "proposal_iteration_artifacts": self.proposal_iteration_artifacts(),
+            "generic_write_refinement_count": generic_write_refinement_count(final_events),
+            "generic_write_followup_pending_count": generic_write_followup_pending_count(
+                self, final_events
+            ),
+            "generic_write_document_product": generic_write_document_product(
+                self, final_events
+            ),
             "historical_tool_context_refs": self.historical_tool_context_files(),
             "response_file_reference_quality": self.response_file_reference_quality(
                 self.response_text()

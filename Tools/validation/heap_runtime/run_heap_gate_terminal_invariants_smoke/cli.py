@@ -40,6 +40,16 @@ def ready_metrics() -> dict[str, Any]:
         "missing_provider_lanes": [],
         "provider_native_tool_unavailable_required_lanes": [],
         "provider_native_tool_missing_required_lanes": [],
+        "provider_semantic_missing_required_lanes": [],
+        "provider_raw_response_text": "GPU1 response with source-backed product evidence.",
+        "proposal_iteration_artifacts": ["output/validation/proposal_iteration_000.json"],
+        "latest_proposal_quality_passed": True,
+        "latest_proposal_exit_decision": "PATCHABLE_TARGET",
+        "latest_gpu0_review_decision": "agree_close",
+        "latest_gpu0_missing_delta_sections": [],
+        "npu_micro_activity_ok": True,
+        "generic_write_followup_pending_count": 0,
+        "generic_write_document_product": {"eligible": False},
         "context_artifact_refs": ["output/validation/context.json"],
         "response_text_complete": True,
         "quality_output_passed": True,
@@ -58,6 +68,53 @@ def ready_metrics() -> dict[str, Any]:
 def run_smoke(repo_root: Path) -> dict[str, Any]:
     ok_errors = evaluate_terminal_invariants(
         metrics=ready_metrics(),
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
+    generic_ready = ready_metrics()
+    generic_ready["provider_raw_response_text"] = ""
+    generic_ready["response_text_complete"] = False
+    generic_ready["quality_output_passed"] = False
+    generic_ready["latest_proposal_quality_passed"] = False
+    generic_ready["latest_proposal_reject_reason"] = "response_file_reference_quality failed"
+    generic_ready["provider_revision_count"] = 3
+    generic_ready["latest_gpu0_review_decision"] = "reject_until_concrete_repo_relative_delta"
+    generic_ready["latest_gpu0_missing_delta_sections"] = ["TARGET_FILES"]
+    generic_ready["virtual_dev_environment_passed"] = False
+    generic_ready["code_execution_matrix_passed"] = False
+    generic_ready["matrix_verified_target_count"] = 0
+    generic_ready["concrete_code_proposal_count"] = 0
+    generic_ready["runtime_debug_lab_passed"] = False
+    generic_ready["generic_write_document_product"] = {
+        "eligible": True,
+        "minimum_refinements": 3,
+        "refinement_count": 3,
+        "latest_refined_request": "Readable product after three refinements:\n```python\nprint('refined')\n```",
+        "code_product_allowed_after_three_refinements": True,
+        "patch_application_performed": False,
+    }
+    generic_errors = evaluate_terminal_invariants(
+        metrics=generic_ready,
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
+    generic_claims_patch = dict(generic_ready)
+    generic_claims_patch["generic_write_document_product"] = dict(
+        generic_ready["generic_write_document_product"]
+    )
+    generic_claims_patch["generic_write_document_product"]["patch_application_performed"] = True
+    generic_claims_patch_errors = evaluate_terminal_invariants(
+        metrics=generic_claims_patch,
         missing_requirements=[],
         lane_gate_passed=True,
         degraded_lanes=[],
@@ -98,6 +155,10 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     errors: list[str] = []
     if ok_errors:
         errors.append("ready metric set produced terminal errors")
+    if generic_errors:
+        errors.append("generic_write three-refinement product produced terminal errors")
+    if not any("cannot claim patch application" in error for error in generic_claims_patch_errors):
+        errors.append("generic_write product must reject fake patch application claims")
     required_fragments = (
         "PROVIDER_TOOL_CALLS_REMAIN_TEXT",
         "code execution matrix passed",
@@ -116,6 +177,9 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "repo_root": str(repo_root),
         "passed": not errors,
         "ready_error_count": len(ok_errors),
+        "generic_write_ready_error_count": len(generic_errors),
+        "generic_write_claims_patch_error_count": len(generic_claims_patch_errors),
+        "generic_write_claims_patch_errors": generic_claims_patch_errors,
         "broken_error_count": len(bad_errors),
         "broken_errors": bad_errors,
         "peer_degraded_error_count": len(peer_degraded_errors),

@@ -135,9 +135,9 @@ patchkit reports when source writes are applied through patchkit
 Maintained workflow scripts and docs must stay under the active line-budget policy.
 
 ```text
-Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
-Markdown >500 lines -> compact index + <file>.md/part-001.md layout.
-Preferred active runbook size -> <=400 lines.
+Code/script >700 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >700 lines -> compact index + <file>.md/part-001.md layout.
+Preferred active runbook size -> <=700 lines.
 Existing oversized files -> technical debt to refactor progressively, not blind split targets.
 ```
 

@@ -75,6 +75,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_heap_code_execution_matrix": "ia_carmine.runtime.heap_runtime.code_execution_tool.cli:main",
     "run_heap_runtime_completeness_gate": "ia_carmine.runtime.heap_runtime.completeness_gate.cli:main",
     "run_heap_virtual_dev_environment": "ia_carmine.runtime.heap_runtime.virtual_dev_environment.cli:main",
+    "generic_write": "ia_carmine.runtime.runtime_tool.generic_write.cli:main",
     "megalithic_repo_review": "ia_carmine.product.repository_product.megalithic_repo_review.cli:main",
     "npu_gpu_deep_review_auditor": "ia_carmine.providers.provider_mesh.npu_gpu_deep_review_auditor.cli:main",
     "pipeline_dry_run_matrix": "ia_carmine.product.pipeline.dry_run_matrix.cli:main",

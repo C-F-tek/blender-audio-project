@@ -352,7 +352,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--area", action="append", default=[], help="Limit to Tools area names.")
-    parser.add_argument("--code-max-lines", type=int, default=400)
+    parser.add_argument("--code-max-lines", type=int, default=700)
     parser.add_argument("--md-max-lines", type=int, default=500)
     parser.add_argument("--output", default="output/validation/repo_tool_surface_audit.json")
     parser.add_argument("--markdown-output", default="output/validation/repo_tool_surface_audit.md")

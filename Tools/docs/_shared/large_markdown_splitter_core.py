@@ -23,7 +23,7 @@ from pathlib import Path
 MARKER_INDEX = "<!-- IA-CARMINE-MD-SPLIT: index -->"
 MARKER_PART = "<!-- IA-CARMINE-MD-SPLIT: part -->"
 MARKER_MANIFEST = "_ia_carmine_md_split_manifest.json"
-DEFAULT_MAX_LINES = 400
+DEFAULT_MAX_LINES = 700
 DEFAULT_SCOPES = (
     "AGENTS.md",
     "CHATGPT.md",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ia_carmine.runtime.heap_gate.runtime_common import Any, append_unique, repo_rel
+from ia_carmine.runtime.heap_gate.generic_write_followup import generic_write_document_product
 
 
 def build_arbiter_product(
@@ -31,6 +32,7 @@ def build_arbiter_product(
         "provider_refs": owner.provider_refs(),
         "provider_response_texts": owner.provider_response_texts(),
         "context_artifact_refs": owner.broker_output_refs(events),
+        "generic_write_document_product": generic_write_document_product(owner, events),
         "bridge_reports": bridge_refs,
         "quality_output_signals": owner.quality_output_signals(final_response_text, events),
         "quality_output_passed": owner.quality_output_passed(final_response_text, events),

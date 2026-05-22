@@ -110,9 +110,9 @@ automated transcript parser.
 | Counter | Count | Meaning |
 |---|---:|---|
 | Operator-aligned fixes kept in source/docs | 16 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
-| Operator blocks required | 31 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
-| Script-gaming total regression count | 474 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
-| Misleading/Codex lie evidence count | 79 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
+| Operator blocks required | 32 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
+| Script-gaming total regression count | 487 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+| Misleading/Codex lie evidence count | 86 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
 | Systemic product-lie evidence count | 14 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
 | Systemic product-lie severity score | 165 | Sum of severity weights for structural product lies; operator override may exceed the normal `5` severity. |
 
@@ -443,9 +443,9 @@ Never infer success only from file existence, focused validator output, dry-run 
 ## File-size and Markdown split rule
 
 ```text
-preferred active runbook <= 400 lines
-active Markdown hard threshold <= 500 lines
-maintained source/script target <= 400 lines
+preferred active runbook <= 700 lines
+active Markdown hard threshold <= 700 lines
+maintained source/script target <= 700 lines
 path/name.md
 path/name.md/part-001.md
 path/name.md/part-002.md

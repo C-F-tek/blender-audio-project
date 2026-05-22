@@ -290,8 +290,8 @@ Agents must not claim local application or validation until terminal/output evid
 This repository uses compact Markdown as an operational surface.
 
 ```text
-active .md file <= 500 lines
-preferred active runbook <= 400 lines
+active .md file <= 700 lines
+preferred active runbook <= 700 lines
 ```
 
 When a maintained Markdown file exceeds the limit, keep the original as a compact index and split details into a sibling folder named exactly like the file, including `.md`:
@@ -315,7 +315,7 @@ Do not use fragile Windows PowerShell `Set-Content` snippets for Unicode Markdow
 Hard limit for maintained code/script files:
 
 ```text
-Python/PowerShell/scripts/source code: <= 400 lines per maintained source file
+Python/PowerShell/scripts/source code: <= 700 lines per maintained source file
 ```
 
 When modifying code, report resulting line count for every created or modified code/script file.

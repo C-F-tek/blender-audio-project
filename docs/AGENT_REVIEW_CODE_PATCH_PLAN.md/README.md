@@ -2,7 +2,7 @@
 # Indice — AGENT_REVIEW_CODE_PATCH_PLAN.md
 
 Documento migrato da layout legacy `docs/AGENT_REVIEW_CODE_PATCH_PLAN/part-xxx.md`. Stub precedente: `docs/AGENT_REVIEW_CODE_PATCH_PLAN.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

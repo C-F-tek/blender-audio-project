@@ -19,7 +19,7 @@ Ordine operativo:
 
 ## Policy Markdown
 
-- I Markdown attivi devono restare sotto 400 righe.
+- I Markdown attivi devono restare sotto 700 righe.
 - File oltre budget diventano stub breve + cartella di parti Markdown.
 - La trasformazione deve essere ricorsiva se una parte supera ancora il budget.
 - Root README/WORKFLOW devono restare descrittivi e rimandare ai runbook canonici.

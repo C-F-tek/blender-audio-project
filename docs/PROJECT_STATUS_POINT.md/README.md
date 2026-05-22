@@ -24,7 +24,7 @@ Current sources:
 Use this split only as historical context and compare claims against current source, validation reports, launcher manifests and PR state.
 
 Documento migrato da layout legacy `docs/PROJECT_STATUS_POINT/part-xxx.md`. Stub precedente: `docs/PROJECT_STATUS_POINT.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

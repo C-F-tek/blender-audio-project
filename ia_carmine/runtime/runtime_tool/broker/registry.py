@@ -21,6 +21,7 @@ from .inventory_builders import (
 )
 from .runtime_builders import (
     analyze_code_product_artifact,
+    generic_write,
     run_heap_code_execution_matrix,
     run_heap_virtual_dev_environment,
     runtime_file_refs,
@@ -196,6 +197,20 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "timeout_seconds",
         ),
         builder=synthesize_patch_candidates,
+    ),
+    "generic_write": ToolSpec(
+        name="generic_write",
+        description="Write report-only refined request/action-plan evidence for the next GPU1 turn when code is not yet safely producible.",
+        allowed_args=(
+            "request_file",
+            "operator_request",
+            "provider_report",
+            "proposal_text",
+            "evidence_report",
+            "source_lane",
+            "reason",
+        ),
+        builder=generic_write,
     ),
     "run_heap_virtual_dev_environment": ToolSpec(
         name="run_heap_virtual_dev_environment",

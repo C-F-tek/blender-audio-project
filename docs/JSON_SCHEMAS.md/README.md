@@ -2,7 +2,7 @@
 # Indice — JSON_SCHEMAS.md
 
 Documento migrato da layout legacy `docs/JSON_SCHEMAS/part-xxx.md`. Stub precedente: `docs/JSON_SCHEMAS.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

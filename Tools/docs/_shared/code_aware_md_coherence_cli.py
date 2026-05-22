@@ -51,7 +51,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build a code-aware Markdown coherence report.")
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--max-lines", type=int, default=400)
+    parser.add_argument("--max-lines", type=int, default=700)
     parser.add_argument("--output", default="output/validation/md_code_coherence_report.json")
     parser.add_argument("--markdown-output", default="output/validation/md_code_coherence_report.md")
     parser.add_argument("--max-markdown-finding-rows", type=int, default=120)

@@ -22,6 +22,15 @@ ALLOWED_RUNTIME_TOOLS = {
     "check_python_syntax",
     "build_code_interpreter_report",
     "runtime_sqlite_memory",
+    "generic_write",
+    "run_heap_virtual_dev_environment",
+    "run_heap_code_execution_matrix",
+    "agent_runtime_debug_lab",
+    "synthesize_patch_candidates",
+    "runtime_file_refs",
+    "select_semantic_code_chunks",
+    "semantic_evidence_chunks",
+    "ai_context_pack",
 }
 
 FORBIDDEN_RUNTIME_TOOL_ACTIONS = {
@@ -56,6 +65,11 @@ TOOL_REQUEST_DECISION_GUIDE: dict[str, Any] = {
         "need syntax baseline": "check_python_syntax",
         "need code-interpreter style static report": "build_code_interpreter_report",
         "need memory status/search": "runtime_sqlite_memory",
+        "need refined next-turn request when code cannot yet be produced": "generic_write",
+        "need virtual dev/import/compile target evidence": "run_heap_virtual_dev_environment",
+        "need compile/test/diff matrix evidence": "run_heap_code_execution_matrix",
+        "need bounded runtime debugging evidence": "agent_runtime_debug_lab",
+        "need validated patch candidates": "synthesize_patch_candidates",
     },
     "valid_examples": [
         {
@@ -151,6 +165,13 @@ def deterministic_fallback_tool_requests(
             "id": "fallback_transient_context",
             "tool": "build_agent_transient_request_context",
             "reason": f"Deterministic fallback to refresh transient request context: {reason}.",
+            "args": {},
+            "source": "deterministic_fallback",
+        },
+        {
+            "id": "fallback_tool_inventory",
+            "tool": "build_agent_agnostic_tool_inventory",
+            "reason": f"Deterministic fallback to refresh available tool inventory: {reason}.",
             "args": {},
             "source": "deterministic_fallback",
         },

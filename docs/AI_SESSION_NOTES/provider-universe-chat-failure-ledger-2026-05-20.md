@@ -75,9 +75,9 @@ automated transcript parser.
 | Counter | Count |
 |---|---:|
 | Operator-aligned fixes kept in source/docs | 16 |
-| Operator blocks required before Codex matched instruction | 31 |
-| Script-gaming total regressions | 474 |
-| Misleading/Codex lie evidence count | 79 |
+| Operator blocks required before Codex matched instruction | 32 |
+| Script-gaming total regressions | 487 |
+| Misleading/Codex lie evidence count | 86 |
 | Systemic product-lie evidence count | 14 |
 | Systemic product-lie severity score | 165 |
 

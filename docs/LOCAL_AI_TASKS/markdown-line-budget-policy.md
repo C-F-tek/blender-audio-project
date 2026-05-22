@@ -7,12 +7,12 @@ This policy defines the operational line budget for maintained Markdown in IA-Ca
 ## Rule
 
 ```text
-active maintained .md hard threshold: <= 500 lines
-preferred active runbook size: <= 400 lines
+active maintained .md hard threshold: <= 700 lines
+preferred active runbook size: <= 700 lines
 generated evidence: may exceed 500 only with compact manifest/summary/index
 ```
 
-If a maintained Markdown file exceeds 500 lines, it must become a compact entrypoint that points to a folder of Markdown parts.
+If a maintained Markdown file exceeds 700 lines, it must become a compact entrypoint that points to a folder of Markdown parts.
 
 Split layout:
 

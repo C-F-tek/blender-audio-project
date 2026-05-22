@@ -67,9 +67,9 @@ heap/exchange entry and exit are deterministic boundaries around the dynamic cen
 patchkit is the preferred deterministic source-write boundary for future long or delicate patch bundles
 generated patch specs must produce concrete deterministic operations for product PR application
 metadata-only generated patch specs with --apply are a hard failure, not a reviewable product
-preferred active runbook/docs size <=400 lines
-active Markdown hard threshold <=500 lines
-maintained source/script target <=400 lines
+preferred active runbook/docs size <=700 lines
+active Markdown hard threshold <=700 lines
+maintained source/script target <=700 lines
 limitations are backlog to overcome, not reasons to skip available tools
 ```
 

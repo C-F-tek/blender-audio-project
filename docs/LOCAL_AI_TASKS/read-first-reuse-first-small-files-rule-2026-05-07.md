@@ -34,9 +34,9 @@ source tree search
 Maintained files must remain reviewable.
 
 ```text
-preferred active runbook <= 400 lines
-active Markdown hard threshold <= 500 lines
-maintained source/script target <= 400 lines
+preferred active runbook <= 700 lines
+active Markdown hard threshold <= 700 lines
+maintained source/script target <= 700 lines
 ```
 
 When splitting Markdown, the split folder must preserve the complete file name including `.md`:

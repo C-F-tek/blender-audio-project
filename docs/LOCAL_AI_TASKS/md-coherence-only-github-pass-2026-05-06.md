@@ -32,21 +32,21 @@ renders/media
 Maintained Markdown must stay compact.
 
 ```text
-active .md file <= 500 lines
-preferred active runbook <= 400 lines
+active .md file <= 700 lines
+preferred active runbook <= 700 lines
 ```
 
-When a maintained Markdown file exceeds 500 lines:
+When a maintained Markdown file exceeds 700 lines:
 
 ```text
 keep original file as compact index
 create sibling folder named exactly like the file, including .md: <file>.md/
 move detail into <file>.md/part-001.md, part-002.md, ...
-keep each part <= 500 lines
+keep each part <= 700 lines
 link every part from the compact index
 ```
 
-Generated evidence may exceed 500 lines only when it is classified as evidence and has a compact manifest, summary or index.
+Generated evidence may exceed 700 lines only when it is classified as evidence and has a compact manifest, summary or index.
 
 ## Add-before-prune workflow
 

@@ -55,7 +55,7 @@ no length-policy statement
 
 ## Required replacement shape
 
-Target file should be approximately 300-500 lines, not 700+.
+Target file should stay within the 700-line Markdown/runbook policy unless split evidence is required.
 
 Sections:
 

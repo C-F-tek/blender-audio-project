@@ -2,7 +2,7 @@
 # Indice — README.md
 
 Documento migrato da layout legacy `docs/LOCAL_AI_TASKS/README/part-xxx.md`. Stub precedente: `docs/LOCAL_AI_TASKS/README.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Entry point aggiornati
 

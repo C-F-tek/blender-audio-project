@@ -12,7 +12,7 @@ CHATGPT/2026-05-05-newconcept-hardware-memory/06-md-directory-policy.md
 
 ## Core rule
 
-When a maintained Markdown file exceeds 500 lines, it should not keep growing as a single file.
+When a maintained Markdown file exceeds 700 lines, it should not keep growing as a single file.
 
 It should become or be complemented by a document-directory:
 
@@ -50,7 +50,7 @@ The `.md/` suffix is intentionally used to make a directory behave like a docume
 
 This policy is recursive.
 
-If a child Markdown file also exceeds 500 lines, it can itself become:
+If a child Markdown file also exceeds 700 lines, it can itself become:
 
 ```text
 child-topic.md/
@@ -108,7 +108,7 @@ encourages macro-patches and fragile copy/paste
 mixes policy, evidence, commands and history
 ```
 
-External AI-coding guidance recommends keeping machine-readable instruction files compact and using nested/hierarchical documentation for complex projects. This project applies that principle with a local threshold: 500 lines for maintained operational docs.
+External AI-coding guidance recommends keeping machine-readable instruction files compact and using nested/hierarchical documentation for complex projects. This project applies that principle with a local threshold: 700 lines for maintained operational docs.
 
 ## Implementation guidance
 

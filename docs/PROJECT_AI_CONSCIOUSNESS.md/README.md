@@ -2,7 +2,7 @@
 # Indice — PROJECT_AI_CONSCIOUSNESS.md
 
 Documento migrato da layout legacy `docs/PROJECT_AI_CONSCIOUSNESS/part-xxx.md`. Stub precedente: `docs/PROJECT_AI_CONSCIOUSNESS.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

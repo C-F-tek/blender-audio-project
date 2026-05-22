@@ -30,8 +30,8 @@ docs/LOCAL_AI_TASKS/code-driven-data-flow-map-2026-05-07.md
 quick/balanced/deep/custom = intensity, not scope
 GPU1/GPU0/NPU peer exchange is production evidence, not smoke-only proof
 CSV/index/discovery/file-line-limit surfaces are evidence lanes when relevant
-preferred active runbook/docs size <=400 lines; active Markdown hard threshold <=500 lines
-maintained source/script target <=400 lines
+preferred active runbook/docs size <=700 lines; active Markdown hard threshold <=700 lines
+maintained source/script target <=700 lines
 limitations are backlog to overcome, not reasons to skip available tools
 patch application is explicit and separate
 tool output should become verifiable product/evidence/readiness material, not chat-only summary
@@ -285,9 +285,9 @@ bypass patchkit for long/delicate future patch bundles when patchkit operations 
 Maintained tools and docs must stay within active line-budget policy.
 
 ```text
-Code/script >400 lines -> compact entrypoint + responsibility-based module/package split.
-Markdown >500 lines -> compact index + <file>.md/part-001.md layout.
-Preferred active runbook size -> <=400 lines.
+Code/script >700 lines -> compact entrypoint + responsibility-based module/package split.
+Markdown >700 lines -> compact index + <file>.md/part-001.md layout.
+Preferred active runbook size -> <=700 lines.
 Existing oversized files -> technical debt to refactor progressively, not blind split targets.
 ```
 

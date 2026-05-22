@@ -109,8 +109,8 @@ def build_provider_teamwork_leader_packet(
         "lane_authority": lane_authority,
         "native_tool_calling_policy": {
             "gpu1_planner": "open_revision_and_may_drive_broker_native_tool_calls",
-            "gpu0_peer": "review_refine_and_may_call_native_tools_as_evidence",
-            "npu_micro_task_auditor": "micro_audit_native_tools_only",
+            "gpu0_peer": "review_refine_and_may_drive_broker_native_tool_calls",
+            "npu_micro_task_auditor": "micro_audit_native_tools_diagnostic_only",
         },
         "delta_context_mode": "startup_full_once_then_pointer_delta_revisions",
         "npu_micro_timeout_enforced": bool(
@@ -157,7 +157,8 @@ def build_provider_teamwork_leader_packet(
             "NPU is a micro/audit lane and must not become the primary advisory or broker-driving center.",
             "All provider lanes start in the same provider universe; failure to start any selected lane blocks the universe.",
             "GPU1 commands final synthesis and integrates GPU0/NPU vetoes and refinement signals.",
-            "Only GPU1 native tool calls may drive broker work; GPU0/NPU tool calls are peer diagnostics.",
+            "GPU1 and GPU0 are Ollama operative lanes whose native tool calls may drive broker work.",
+            "NPU native tool calls are diagnostic/veto evidence only and never drive broker execution.",
             "GPU0 and NPU remain parallel peer lanes inside the same heap, not alternate product routes.",
             "GPU1 must consume GPU0/NPU peer evidence before final synthesis.",
             "GPU0 and NPU are bounded sidecars: their watchdogs prevent them from holding closure ownership.",

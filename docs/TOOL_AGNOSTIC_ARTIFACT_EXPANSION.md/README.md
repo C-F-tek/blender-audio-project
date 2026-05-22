@@ -2,7 +2,7 @@
 # Indice — TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md
 
 Documento migrato da layout legacy `docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION/part-xxx.md`. Stub precedente: `docs/TOOL_AGNOSTIC_ARTIFACT_EXPANSION.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

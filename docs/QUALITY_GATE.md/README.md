@@ -2,7 +2,7 @@
 # Indice — QUALITY_GATE.md
 
 Documento migrato da layout legacy `docs/QUALITY_GATE/part-xxx.md`. Stub precedente: `docs/QUALITY_GATE.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 

@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 MARKER_MANIFEST = "_ia_carmine_md_split_manifest.json"
-DEFAULT_MAX_LINES = 400
+DEFAULT_MAX_LINES = 700
 DEFAULT_SCOPES = (".", "docs", "CHATGPT")
 SKIP_DIRS = {".git", ".venv", "venv", "output", "renders", "node_modules", "__pycache__"}
 SKIP_PREFIXES = (

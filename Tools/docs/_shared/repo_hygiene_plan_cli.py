@@ -72,7 +72,7 @@ def build_summary(items: list[dict[str, Any]]) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build repo hygiene cleanup/refactor plan.")
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--max-lines", type=int, default=400)
+    parser.add_argument("--max-lines", type=int, default=700)
     parser.add_argument("--output", default="output/validation/repo_hygiene_plan.json")
     parser.add_argument("--markdown-output", default="output/validation/repo_hygiene_plan.md")
     parser.add_argument("--emit-patchkit-bundle", default="")

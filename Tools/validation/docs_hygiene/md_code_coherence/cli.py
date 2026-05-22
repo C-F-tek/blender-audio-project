@@ -48,7 +48,7 @@ def main() -> int:
     )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--report", default="output/validation/md_code_coherence_report.json")
-    parser.add_argument("--max-lines", type=int, default=400)
+    parser.add_argument("--max-lines", type=int, default=700)
     parser.add_argument("--max-high", type=int, default=0)
     parser.add_argument("--max-medium", type=int, default=999999)
     parser.add_argument("--output", default="output/validation/md_code_coherence_check.json")

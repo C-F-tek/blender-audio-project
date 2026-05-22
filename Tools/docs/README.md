@@ -5,7 +5,7 @@ Strumenti locali per confrontare documentazione Markdown e codice reale.
 ## Comandi
 
 ```powershell
-python -m Tools.docs build_code_aware_md_coherence --repo-root . --max-lines 400
+python -m Tools.docs build_code_aware_md_coherence --repo-root . --max-lines 700
 python -m Tools.docs repo_tool_surface_audit --repo-root . --area ai --area validation
 python -m Tools.docs rewrite_legacy_tool_invocations --repo-root . --area ai --area validation
 python -m Tools.docs promote_root_tool_package --repo-root . --area <area> --tool <tool>

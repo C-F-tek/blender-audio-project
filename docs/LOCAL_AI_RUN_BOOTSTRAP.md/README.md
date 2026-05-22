@@ -2,7 +2,7 @@
 # Indice — LOCAL_AI_RUN_BOOTSTRAP.md
 
 Documento migrato da layout legacy `docs/LOCAL_AI_RUN_BOOTSTRAP/part-xxx.md`. Stub precedente: `docs/LOCAL_AI_RUN_BOOTSTRAP.md`.
-Limite massimo configurato: `400` righe per file Markdown.
+Limite massimo configurato: `700` righe per file Markdown.
 
 ## Parti
 
