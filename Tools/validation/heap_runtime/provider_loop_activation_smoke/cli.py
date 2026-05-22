@@ -167,8 +167,10 @@ def _check_rejected_gpu1_retry_contract(repo_root: Path) -> dict[str, Any]:
     ):
         if marker not in refinement:
             errors.append(f"GPU1 retry contract missing {marker}")
-    if "or self.latest_rejected_proposal_requires_retry()" not in run_loop:
-        errors.append("run loop does not bypass evidence delay for rejected GPU1 retry")
+    if "and self.provider_revision_evidence_ready(events)" not in run_loop:
+        errors.append("run loop does not require matrix/lab evidence before GPU1 retry")
+    if "or self.latest_rejected_proposal_requires_retry()" in run_loop:
+        errors.append("run loop bypasses required matrix/lab evidence for rejected GPU1 retry")
     if "mandatory provider revision retry" not in terminal:
         errors.append("terminal invariants do not block rejected proposal without retry")
     errors.extend(_probe_rejected_gpu1_retry_helper())
