@@ -25,6 +25,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from ia_carmine._shared.report_io import print_json_report
 
 REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
 
@@ -335,7 +336,7 @@ def main() -> int:
         else run_dir / "external_heap_postrun_package.json"
     )
     write_json(output, report)
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    print_json_report(report)
     return 0 if report["passed"] else 2
 
 

@@ -49,7 +49,10 @@ def ready_metrics() -> dict[str, Any]:
         "latest_gpu0_missing_delta_sections": [],
         "npu_micro_activity_ok": True,
         "generic_write_followup_pending_count": 0,
+        "gpu0_peer_followup_pending_count": 0,
+        "npu_peer_followup_pending_count": 0,
         "generic_write_document_product": {"eligible": False},
+        "generic_write_refined_product": {"eligible": False},
         "context_artifact_refs": ["output/validation/context.json"],
         "response_text_complete": True,
         "quality_output_passed": True,
@@ -92,12 +95,19 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     generic_ready["runtime_debug_lab_passed"] = False
     generic_ready["generic_write_document_product"] = {
         "eligible": True,
+        "kind": "generic_write_refined_product",
         "minimum_refinements": 3,
         "refinement_count": 3,
+        "capture_count": 3,
+        "latest_consumed_by_gpu1": True,
         "latest_refined_request": "Readable product after three refinements:\n```python\nprint('refined')\n```",
         "code_product_allowed_after_three_refinements": True,
         "patch_application_performed": False,
+        "source_writes_performed": False,
     }
+    generic_ready["generic_write_refined_product"] = dict(
+        generic_ready["generic_write_document_product"]
+    )
     generic_errors = evaluate_terminal_invariants(
         metrics=generic_ready,
         missing_requirements=[],
@@ -109,12 +119,51 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         detailed_output_expected=True,
     )
     generic_claims_patch = dict(generic_ready)
-    generic_claims_patch["generic_write_document_product"] = dict(
-        generic_ready["generic_write_document_product"]
+    generic_claims_patch["generic_write_refined_product"] = dict(
+        generic_ready["generic_write_refined_product"]
     )
-    generic_claims_patch["generic_write_document_product"]["patch_application_performed"] = True
+    generic_claims_patch["generic_write_refined_product"]["patch_application_performed"] = True
     generic_claims_patch_errors = evaluate_terminal_invariants(
         metrics=generic_claims_patch,
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
+    generic_claims_source = dict(generic_ready)
+    generic_claims_source["generic_write_refined_product"] = dict(
+        generic_ready["generic_write_refined_product"]
+    )
+    generic_claims_source["generic_write_refined_product"]["source_writes_performed"] = True
+    generic_claims_source_errors = evaluate_terminal_invariants(
+        metrics=generic_claims_source,
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
+    gpu0_followup_pending = ready_metrics()
+    gpu0_followup_pending["gpu0_peer_followup_pending_count"] = 1
+    gpu0_followup_errors = evaluate_terminal_invariants(
+        metrics=gpu0_followup_pending,
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
+    npu_followup_pending = ready_metrics()
+    npu_followup_pending["npu_peer_followup_pending_count"] = 1
+    npu_followup_errors = evaluate_terminal_invariants(
+        metrics=npu_followup_pending,
         missing_requirements=[],
         lane_gate_passed=True,
         degraded_lanes=[],
@@ -159,6 +208,12 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         errors.append("generic_write three-refinement product produced terminal errors")
     if not any("cannot claim patch application" in error for error in generic_claims_patch_errors):
         errors.append("generic_write product must reject fake patch application claims")
+    if not any("cannot claim source writes" in error for error in generic_claims_source_errors):
+        errors.append("generic_write product must reject fake source write claims")
+    if not any("GPU0 peer follow-up is pending" in error for error in gpu0_followup_errors):
+        errors.append("ready metric set must reject pending GPU0 peer follow-up")
+    if not any("NPU peer follow-up is pending" in error for error in npu_followup_errors):
+        errors.append("ready metric set must reject pending NPU peer follow-up")
     required_fragments = (
         "PROVIDER_TOOL_CALLS_REMAIN_TEXT",
         "code execution matrix passed",
@@ -168,6 +223,11 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
             errors.append(f"missing expected terminal invariant: {fragment}")
     if not any("semantic GPU0/NPU model execution" in error for error in peer_degraded_errors):
         errors.append("ready metric set must reject missing GPU0/NPU semantic execution")
+    arbiter_product = (repo_root / "ia_carmine/runtime/heap_gate/arbiter_product.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    if "product_blocked_reason" not in arbiter_product or "npu_peer_followup_pending" not in arbiter_product:
+        errors.append("arbiter product must expose peer follow-up as product blocked reason")
     if not all(error.startswith("AI STAI GIOCANDO:") for error in bad_errors):
         errors.append("terminal errors must use AI STAI GIOCANDO prefix")
     return {
@@ -180,6 +240,12 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "generic_write_ready_error_count": len(generic_errors),
         "generic_write_claims_patch_error_count": len(generic_claims_patch_errors),
         "generic_write_claims_patch_errors": generic_claims_patch_errors,
+        "generic_write_claims_source_error_count": len(generic_claims_source_errors),
+        "generic_write_claims_source_errors": generic_claims_source_errors,
+        "gpu0_followup_error_count": len(gpu0_followup_errors),
+        "gpu0_followup_errors": gpu0_followup_errors,
+        "npu_followup_error_count": len(npu_followup_errors),
+        "npu_followup_errors": npu_followup_errors,
         "broken_error_count": len(bad_errors),
         "broken_errors": bad_errors,
         "peer_degraded_error_count": len(peer_degraded_errors),

@@ -102,9 +102,11 @@ def npu_rejection_reason(
 ) -> str:
     if normalize_bool(report.get("provider_work_verified")):
         return ""
+    if normalize_bool(report.get("npu_peer_evidence_verified")):
+        return ""
     classification = str(report.get("npu_micro_provider_classification") or "")
     if "timeout" in classification:
-        return "npu_micro_provider_timeout"
+        return "npu_native_tool_loop_timeout_without_peer_evidence"
     if not device_detected:
         return "npu_device_unverified"
     if not model_loaded:

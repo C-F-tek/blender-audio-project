@@ -5,7 +5,9 @@ from ia_carmine.runtime.heap_gate.generic_write_followup import (
     generic_write_document_product,
     generic_write_followup_pending_count,
     generic_write_refinement_count,
+    gpu0_peer_followup_pending_count,
     maybe_run_generic_write_followup,
+    npu_peer_followup_pending_count,
 )
 from ia_carmine.runtime.heap_gate.run_loop_metrics import build_provider_lane_metrics
 from ia_carmine.runtime.heap_gate.runtime_common import Any, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
@@ -29,8 +31,6 @@ class RuntimeGateRunLoopMixin:
                 self.publish_shared_evidence_facts(round_id, events)
             if self.provider_start_requirements_complete(events) and not self.provider_reports:
                 self.run_provider_teamwork(round_id)
-                if self.provider_universe_blocked_reason:
-                    break
                 events = self.read_events()
                 if self.publish_provider_native_tool_calls(round_id, events):
                     if self.heap.pending_broker_requests():
@@ -48,19 +48,21 @@ class RuntimeGateRunLoopMixin:
                         source="gpu1_initial",
                     )
                 events = maybe_run_generic_write_followup(self, round_id, events)
+                if self.provider_universe_blocked_reason:
+                    break
             if (
                 self.base_requirements_complete(events)
                 and self.provider_reports
                 and self.provider_revision_evidence_ready(events)
             ):
                 events = self.maybe_run_provider_quality_revisions(round_id, events)
-                if self.provider_universe_blocked_reason:
-                    break
                 if self.publish_provider_native_tool_calls(round_id, events):
                     if self.heap.pending_broker_requests():
                         self.run_bridge()
                     events = self.read_events()
                 events = maybe_run_generic_write_followup(self, round_id, events)
+                if self.provider_universe_blocked_reason:
+                    break
             self.critic_step(round_id, events)
             self.arbiter_step(round_id, events)
             if self.state["product"].get("status") in {"ready", "blocked_with_reason"} and self.minimum_runtime_depth_satisfied(round_id):
@@ -118,6 +120,7 @@ class RuntimeGateRunLoopMixin:
             self, provider_reports_by_lane, latest_provider_reports
         )
         soft_lock_state = runtime_soft_lock_state(self, final_events)
+        generic_write_product = generic_write_document_product(self, final_events)
         metrics = {
             "heap_read_count": self.heap_read_count,
             "heap_write_count": self.heap_write_count,
@@ -167,13 +170,24 @@ class RuntimeGateRunLoopMixin:
             "runtime_debug_lab_passed": self.runtime_debug_lab_passed(final_events),
             "runtime_debug_lab_reports": self.runtime_debug_lab_reports(final_events),
             "proposal_iteration_artifacts": self.proposal_iteration_artifacts(),
-            "generic_write_refinement_count": generic_write_refinement_count(final_events),
+            "generic_write_refinement_count": generic_write_refinement_count(
+                final_events, self
+            ),
             "generic_write_followup_pending_count": generic_write_followup_pending_count(
                 self, final_events
             ),
-            "generic_write_document_product": generic_write_document_product(
+            "gpu0_peer_followup_pending_count": gpu0_peer_followup_pending_count(
                 self, final_events
             ),
+            "npu_peer_followup_pending_count": npu_peer_followup_pending_count(
+                self, final_events
+            ),
+            "generic_write_no_tool_capture_count": generic_write_product.get(
+                "generic_write_no_tool_capture_count", 0
+            ),
+            "generic_write_lanes": generic_write_product.get("generic_write_lanes", []),
+            "generic_write_document_product": generic_write_product,
+            "generic_write_refined_product": generic_write_product,
             "historical_tool_context_refs": self.historical_tool_context_files(),
             "response_file_reference_quality": self.response_file_reference_quality(
                 self.response_text()

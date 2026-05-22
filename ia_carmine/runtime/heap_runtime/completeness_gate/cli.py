@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -36,6 +35,7 @@ from ia_carmine.runtime.heap_gate.runtime_init import RuntimeGateInitMixin
 from ia_carmine.runtime.heap_gate.source_refs import RuntimeGateSourceRefsMixin
 from ia_carmine.runtime.heap_gate.startup_context import RuntimeGateStartupContextMixin
 from ia_carmine.runtime.heap_gate.tool_broker import RuntimeGateToolBrokerMixin
+from ia_carmine._shared.report_io import print_json_report
 
 
 class HeapRuntimeCompletenessGate(
@@ -233,7 +233,7 @@ def main() -> int:
     )
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    print_json_report(report)
     return 0 if report.get("passed") is True else 2
 
 

@@ -29,6 +29,7 @@ from ia_carmine.product.heap_final_proposals.common import (
 )
 from ia_carmine.product.heap_final_proposals.documents import write_documents_package
 from ia_carmine.product.heap_final_proposals.rendering import render_markdown
+from ia_carmine._shared.report_io import print_json_report
 
 try:
     from ia_carmine._shared.heap_proposal_gate import build_operator_decision, gate_proposals, load_allowlist
@@ -137,7 +138,7 @@ def main() -> int:
             f"Apri o copia il file TXT principale: {document_package['primary_txt']}"
         )
         _write_outputs(output, markdown_output, result, markdown, repo_root)
-    print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
+    print_json_report(result, default=str)
     return 0 if not blockers else 2
 
 

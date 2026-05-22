@@ -206,6 +206,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "operator_request",
             "provider_report",
             "proposal_text",
+            "capture_mode",
             "evidence_report",
             "source_lane",
             "reason",

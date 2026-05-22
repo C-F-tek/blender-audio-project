@@ -60,7 +60,8 @@ class RuntimeGateProviderCommandsMixin:
             or (
                 lane == "npu_micro_task_auditor"
                 and (
-                    report_data.get("npu_provider_execution_performed")
+                    report_data.get("npu_peer_evidence_verified")
+                    or report_data.get("npu_provider_execution_performed")
                     or report_data.get("npu_device_workload_performed")
                 )
             )
@@ -78,11 +79,7 @@ class RuntimeGateProviderCommandsMixin:
         )
         npu_micro_provider_execution = bool(
             lane == "npu_micro_task_auditor"
-            and (
-                report_data.get("npu_micro_provider_execution_performed")
-                or report_data.get("npu_provider_execution_performed")
-                or report_data.get("npu_device_workload_performed")
-            )
+            and report_data.get("npu_micro_provider_execution_performed")
         )
         if provider_execution or semantic_provider_execution or npu_micro_provider_execution:
             self.provider_execution_performed = True
@@ -234,6 +231,11 @@ class RuntimeGateProviderCommandsMixin:
             "npu_device_workload_requested": report_data.get("npu_device_workload_requested"),
             "npu_device_workload_performed": report_data.get("npu_device_workload_performed"),
             "npu_provider_execution_performed": report_data.get("npu_provider_execution_performed"),
+            "npu_peer_evidence_verified": report_data.get("npu_peer_evidence_verified"),
+            "npu_response_schema_valid": report_data.get("npu_response_schema_valid"),
+            "npu_native_tool_loop_error": report_data.get("npu_native_tool_loop_error"),
+            "npu_native_tool_loop_required": report_data.get("npu_native_tool_loop_required"),
+            "npu_peer_followup_required": report_data.get("npu_peer_followup_required"),
             "npu_peer_activity_performed": report_data.get("npu_peer_activity_performed"),
             "npu_device_execution_performed": report_data.get("npu_device_execution_performed"),
             "npu_activity_classification": report_data.get("npu_activity_classification"),
@@ -255,6 +257,7 @@ class RuntimeGateProviderCommandsMixin:
                     "npu_micro_task_kind": report_data.get("npu_micro_task_kind"),
                     "npu_micro_decision": report_data.get("npu_micro_decision"),
                     "npu_micro_task_closed": report_data.get("npu_micro_task_closed"),
+                    "npu_micro_audit_performed": report_data.get("npu_micro_audit_performed"),
                 }
             )
         else:

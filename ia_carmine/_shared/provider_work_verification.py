@@ -89,6 +89,7 @@ def provider_rejection_record(
         "useful_output_produced": status["useful_output_produced"],
         "provider_work_verified": status["provider_work_verified"],
         "provider_role_counted": status["provider_role_counted"],
+        "npu_peer_evidence_verified": status.get("npu_peer_evidence_verified", False),
     }
 
 
@@ -227,16 +228,26 @@ def _npu_status(report: dict[str, Any]) -> dict[str, Any]:
     device_detected = bool(
         normalize_bool(report.get("provider_device_verified")) and "NPU" in compute_device
     )
-    model_loaded = normalize_bool(report.get("npu_micro_provider_model_loaded"))
+    peer_evidence = normalize_bool(report.get("npu_peer_evidence_verified"))
+    native_model_loaded = normalize_bool(report.get("npu_micro_provider_model_loaded"))
+    model_loaded = bool(native_model_loaded or peer_evidence)
     provider_execution = normalize_bool(report.get("npu_micro_provider_execution_performed"))
     workload = bool(
-        provider_execution and normalize_bool(report.get("npu_device_workload_performed"))
+        peer_evidence
+        or (
+            provider_execution
+            and normalize_bool(report.get("npu_device_workload_performed"))
+        )
     )
-    useful_output = bool(provider_execution and _useful_output(report))
+    useful_output = bool(
+        (provider_execution or peer_evidence)
+        and (_useful_output(report) or normalize_bool(report.get("npu_response_schema_valid")))
+    )
     verified = bool(device_detected and model_loaded and workload and useful_output)
     return {
         "device_detected": device_detected,
         "model_loaded": model_loaded,
+        "npu_peer_evidence_verified": peer_evidence,
         "health_check_passed": bool(normalize_bool(report.get("replight_passed")) or device_detected),
         "workload_performed": workload,
         "useful_output_produced": useful_output,

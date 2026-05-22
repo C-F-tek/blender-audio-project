@@ -165,10 +165,13 @@ real bounded micro-provider when selected, but it remains support/micro and does
 not own final product synthesis. NPU reports must use `npu_micro_provider_*`
 fields, not `semantic_provider_*` or `npu_semantic_*` fields.
 
-GPU0/NPU native model/tool-loop timeout is provider failure in complete
-run-unica provider mode. Tensor workload, device visibility or NPU preflight
-alone are diagnostic evidence; they do not satisfy the coworker or micro-lane
-provider contract.
+GPU0 native model/tool-loop timeout is provider failure in complete run-unica
+provider mode. NPU has two levels: `npu_peer_evidence_verified=true` is valid
+peer/audit evidence when the NPU device workload ran, the micro-audit ran and
+the response schema is valid; an OpenVINO GenAI/native tool-loop timeout remains
+`npu_native_tool_loop_error` runtime feedback and blocks only required native
+tool-loop work. Tensor workload, device visibility or NPU preflight alone remain
+diagnostic evidence.
 
 ### CPU / validators
 

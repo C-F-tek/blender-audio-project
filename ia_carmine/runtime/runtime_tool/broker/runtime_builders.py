@@ -140,7 +140,12 @@ def generic_write(
         ("operator_request", "--operator-request"),
         ("provider_report", "--provider-report"),
         ("proposal_text", "--proposal-text"),
+        ("capture_mode", "--capture-mode"),
         ("source_lane", "--source-lane"),
+        ("source_revision", "--source-revision"),
+        ("gpu1_followup_required", "--gpu1-followup-required"),
+        ("peer_followup_required", "--peer-followup-required"),
+        ("provider_role", "--provider-role"),
         ("reason", "--reason"),
     ):
         if args.get(key) is not None:

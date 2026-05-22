@@ -36,7 +36,8 @@ def build_provider_lane_metrics(
     )
     npu_report = provider_reports_by_lane.get("npu_micro_task_auditor", {})
     npu_micro_activity_ok = bool(
-        npu_report.get("npu_peer_activity_performed")
+        npu_report.get("npu_peer_evidence_verified")
+        or npu_report.get("npu_peer_activity_performed")
         or npu_report.get("npu_provider_execution_performed")
         or npu_report.get("npu_device_execution_performed")
         or npu_report.get("operational_provider_activity")
@@ -78,6 +79,7 @@ def build_provider_lane_metrics(
             lane
             for lane in required_lanes
             if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
+            and _native_tool_loop_required(lane, provider_reports_by_lane.get(lane, {}))
             and safe_int(provider_reports_by_lane.get(lane, {}).get("native_tool_call_count"))
             <= 0
         ),
@@ -85,6 +87,7 @@ def build_provider_lane_metrics(
             lane
             for lane in required_lanes
             if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
+            and _native_tool_loop_required(lane, provider_reports_by_lane.get(lane, {}))
             and not provider_reports_by_lane.get(lane, {}).get("native_tool_loop_supported")
         ),
         "semantic_required_provider_lanes": sorted(semantic_required),
@@ -127,8 +130,8 @@ def build_provider_lane_metrics(
         "closure_owner": "gpu1_planner",
         "lane_authority": lane_authority,
         "native_tool_calling_policy": {
-            "gpu1_planner": "may_drive_broker_native_tool_calls",
-            "gpu0_peer": "may_drive_broker_native_tool_calls",
+            "gpu1_planner": "may_drive_broker_native_tool_calls_and_own_final_synthesis",
+            "gpu0_peer": "same_tool_schema_peer_only_requires_later_gpu1_consumption",
             "npu_micro_task_auditor": "micro_audit_native_tools_diagnostic_only",
         },
         "revision_lane_policy": getattr(owner, "provider_revision_lane_policy", {}),
@@ -137,6 +140,9 @@ def build_provider_lane_metrics(
                 "npu_micro_timeout_enforced"
             )
         ),
+        "npu_peer_evidence_verified": bool(npu_report.get("npu_peer_evidence_verified")),
+        "npu_native_tool_loop_error": str(npu_report.get("npu_native_tool_loop_error") or ""),
+        "npu_native_tool_loop_required": bool(npu_report.get("npu_native_tool_loop_required")),
         "delta_context_mode": "startup_full_once_then_pointer_delta_revisions",
         "soft_close_reached": bool(owner.runtime_soft_close_reached()),
         "soft_close_is_finalization_signal_only": bool(
@@ -165,3 +171,9 @@ def build_provider_lane_metrics(
         "latest_npu_audit_decision": str(npu_audit.get("decision") or ""),
         "npu_micro_activity_ok": npu_micro_activity_ok,
     }
+
+
+def _native_tool_loop_required(lane: str, report: dict[str, Any]) -> bool:
+    if lane == "npu_micro_task_auditor":
+        return bool(report.get("npu_native_tool_loop_required"))
+    return True

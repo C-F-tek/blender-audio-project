@@ -9,6 +9,8 @@ from ia_carmine.runtime.heap_gate.arbiter_product import (
 from ia_carmine.runtime.heap_gate.generic_write_followup import (
     generic_write_document_product_eligible,
     generic_write_followup_pending_count,
+    gpu0_peer_followup_pending_count,
+    npu_peer_followup_pending_count,
 )
 from ia_carmine.runtime.heap_gate.pointer_soft_lock import runtime_soft_lock_state
 from ia_carmine.runtime.heap_gate.runtime_common import Any, append_unique, safe_dict
@@ -57,6 +59,14 @@ def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) ->
     generic_pending = generic_write_followup_pending_count(owner, events)
     if ready and generic_pending:
         missing = [*missing, "generic_write_followup_pending"]
+        ready = False
+    gpu0_pending = gpu0_peer_followup_pending_count(owner, events)
+    if ready and gpu0_pending:
+        missing = [*missing, "gpu0_peer_followup_pending"]
+        ready = False
+    npu_pending = npu_peer_followup_pending_count(owner, events)
+    if ready and npu_pending:
+        missing = [*missing, "npu_peer_followup_pending"]
         ready = False
     budget_exhausted = bool(getattr(owner, "runtime_soft_close_reached", lambda: False)())
     no_more_progress = unattempted is None and bool(missing)

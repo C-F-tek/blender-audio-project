@@ -98,7 +98,15 @@ def operational_provider_activity(
     if not work_status["provider_work_verified"]:
         return False, str(work_status.get("provider_rejection_reason") or "provider_no_verified_workload")
     lowered_classification = classification.lower()
-    if any(marker in lowered_classification for marker in ("timeout", "failed", "error")):
+    npu_nonfatal_native_error = bool(
+        lane == "npu_micro_task_auditor"
+        and provider_report.get("npu_peer_evidence_verified")
+        and not provider_report.get("npu_native_tool_loop_required")
+    )
+    if (
+        any(marker in lowered_classification for marker in ("timeout", "failed", "error"))
+        and not npu_nonfatal_native_error
+    ):
         return False, f"non_operational_classification:{classification or 'unknown'}"
     incomplete_native_tool_call = "incomplete" in lowered_classification
     if "salvaged" in lowered_classification:
@@ -142,13 +150,18 @@ def operational_provider_activity(
     if lane == "npu_micro_task_auditor":
         if provider_report.get("provider_device_verified") is not True:
             return False, "npu_openvino_provider_unavailable"
-        if provider_report.get("npu_micro_provider_execution_performed") is not True:
+        if (
+            provider_report.get("npu_micro_provider_execution_performed") is not True
+            and provider_report.get("npu_peer_evidence_verified") is not True
+        ):
             return False, "npu_openvino_micro_provider_not_performed"
         if provider_report.get("npu_device_workload_performed") is not True:
             return False, "npu_openvino_device_workload_not_performed"
         if _has_peer_lane_evidence(lane, provider_report, response_text):
-            if incomplete_native_tool_call:
+            if incomplete_native_tool_call and provider_report.get("npu_native_tool_loop_required"):
                 return False, "npu_micro_task_tool_loop_incomplete"
+            if provider_report.get("npu_peer_evidence_verified"):
+                return True, "npu_peer_evidence_verified"
             return True, "npu_micro_task_provider_activity"
         return False, "npu_micro_task_provider_not_performed"
     return bool(response_text or tool_call_count > 0), "generic_provider_activity"
@@ -188,6 +201,8 @@ def _has_peer_lane_evidence(
             )
         return False
     if lane == "npu_micro_task_auditor":
+        if provider_report.get("npu_peer_evidence_verified"):
+            return True
         return bool(
             provider_report.get("provider_device_verified")
             and (

@@ -43,7 +43,9 @@ def evaluate_terminal_invariants(
             errors.append(f"{key} must be >0")
     if metrics.get("product_status") not in {"ready", "blocked_with_reason"}:
         errors.append("product_status must be ready or blocked_with_reason")
-    generic_product = metrics.get("generic_write_document_product")
+    generic_product = metrics.get("generic_write_refined_product") or metrics.get(
+        "generic_write_document_product"
+    )
     generic_product = generic_product if isinstance(generic_product, dict) else {}
     generic_product_ready = bool(generic_product.get("eligible"))
     if allow_provider_generation and detailed_output_expected:
@@ -96,6 +98,16 @@ def evaluate_terminal_invariants(
         and safe_int(metrics.get("generic_write_followup_pending_count")) > 0
     ):
         errors.append("ready product_status is forbidden while generic_write follow-up is pending")
+    if (
+        metrics.get("product_status") == "ready"
+        and safe_int(metrics.get("gpu0_peer_followup_pending_count")) > 0
+    ):
+        errors.append("ready product_status is forbidden while GPU0 peer follow-up is pending")
+    if (
+        metrics.get("product_status") == "ready"
+        and safe_int(metrics.get("npu_peer_followup_pending_count")) > 0
+    ):
+        errors.append("ready product_status is forbidden while NPU peer follow-up is pending")
     if metrics.get("product_status") == "ready" and generic_product.get("eligible"):
         if safe_int(generic_product.get("refinement_count")) < safe_int(
             generic_product.get("minimum_refinements")
@@ -103,6 +115,8 @@ def evaluate_terminal_invariants(
             errors.append("generic_write refined product requires the configured minimum refinements")
         if generic_product.get("patch_application_performed"):
             errors.append("generic_write refined product cannot claim patch application")
+        if generic_product.get("source_writes_performed"):
+            errors.append("generic_write refined product cannot claim source writes")
     if allow_provider_generation and metrics.get("missing_provider_lanes"):
         errors.append(
             "provider generation requires all three provider lanes; missing: "

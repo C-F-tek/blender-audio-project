@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.report_io import print_json_report
+
 try:
     from build_external_heap_block_pointer_manifest import build_report
 except ModuleNotFoundError:
@@ -92,5 +94,5 @@ def main() -> int:
     output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.write_text(render_markdown(report), encoding="utf-8")
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    print_json_report(report)
     return 0

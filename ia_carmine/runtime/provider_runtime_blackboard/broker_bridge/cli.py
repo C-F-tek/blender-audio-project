@@ -70,6 +70,12 @@ def event_to_tool_request(event: dict[str, Any], index: int) -> dict[str, Any]:
         "provider_report": str(payload.get("provider_report") or ""),
         "provider_block_id": str(payload.get("provider_block_id") or ""),
         "proposal_block_id": str(payload.get("proposal_block_id") or ""),
+        "native_tool_call_authority": str(payload.get("native_tool_call_authority") or ""),
+        "tool_result_scope": str(payload.get("tool_result_scope") or ""),
+        "gpu1_followup_required": bool(payload.get("gpu1_followup_required")),
+        "cannot_close_product": bool(payload.get("cannot_close_product")),
+        "peer_only": bool(payload.get("peer_only")),
+        "capture_mode": str(safe_dict(payload.get("args")).get("capture_mode") or ""),
         "heap_event": {
             "source": event.get("source"),
             "target": event.get("target"),
@@ -143,9 +149,12 @@ def run_broker(
 
 
 def read_json(path: Path) -> dict[str, Any]:
-    if not path.exists():
+    if not path.is_file():
         return {}
-    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return {}
     return data if isinstance(data, dict) else {}
 
 
@@ -222,8 +231,83 @@ def mapped_request_value(mapping: dict[str, str], result_id: str, default: str =
     return default
 
 
+def mapped_request_payload(
+    mapping: dict[str, dict[str, Any]], result_id: str
+) -> dict[str, Any]:
+    if result_id in mapping:
+        return mapping[result_id]
+    for request_id, payload in mapping.items():
+        if request_id.startswith(result_id) or result_id.startswith(request_id):
+            return payload
+    return {}
+
+
+def resolve_ref(repo_root: Path, value: object) -> Path:
+    path = Path(str(value or ""))
+    return path if path.is_absolute() else repo_root / path
+
+
+def read_output_report(repo_root: Path, outputs: object) -> dict[str, Any]:
+    data = safe_dict(outputs)
+    report_ref = str(data.get("json_report") or "")
+    if not report_ref:
+        return {}
+    return read_json(resolve_ref(repo_root, report_ref))
+
+
+def hydrate_generic_write_payload(
+    repo_root: Path,
+    result: dict[str, Any],
+    request_payload: dict[str, Any],
+) -> dict[str, Any]:
+    outputs = safe_dict(result.get("outputs"))
+    report = read_output_report(repo_root, outputs)
+    provider_summary = safe_dict(report.get("provider_summary"))
+    provider_report_ref = (
+        request_payload.get("provider_report")
+        or report.get("provider_report")
+        or provider_summary.get("provider_report")
+    )
+    provider_report = read_json(resolve_ref(repo_root, provider_report_ref))
+    lane = (
+        request_payload.get("lane")
+        or report.get("source_lane")
+        or provider_summary.get("lane")
+        or provider_report.get("lane")
+    )
+    revision = request_payload.get("revision")
+    if revision is None:
+        revision = (
+            report.get("source_revision")
+            or provider_summary.get("revision")
+            or provider_report.get("revision")
+        )
+    followup = request_payload.get("gpu1_followup_required")
+    if followup is None:
+        followup = report.get("gpu1_followup_required")
+    if followup is None:
+        followup = str(lane or "") in {"gpu0_peer", "npu_micro_task_auditor"}
+    return {
+        **request_payload,
+        "lane": lane,
+        "revision": revision,
+        "provider_report": provider_report_ref or request_payload.get("provider_report"),
+        "provider_block_id": request_payload.get("provider_block_id")
+        or provider_summary.get("provider_block_id")
+        or provider_report.get("provider_block_id"),
+        "proposal_block_id": request_payload.get("proposal_block_id")
+        or provider_summary.get("proposal_block_id")
+        or provider_report.get("proposal_block_id"),
+        "gpu1_followup_required": bool(followup),
+        "peer_only": request_payload.get("peer_only")
+        if request_payload.get("peer_only") is not None
+        else str(lane or "") in {"gpu0_peer", "npu_micro_task_auditor"},
+        "capture_mode": request_payload.get("capture_mode") or report.get("capture_mode"),
+    }
+
+
 def append_broker_results(
-    heap: ProviderRuntimeHeap, broker_report: dict[str, Any]
+    heap: ProviderRuntimeHeap, broker_report: dict[str, Any], repo_root: Path
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     source_by_request_id = request_sources_by_id(broker_report)
@@ -242,7 +326,11 @@ def append_broker_results(
             result.get("requirement")
             or mapped_request_value(requirement_by_request_id, result_id, "")
         )
-        request_payload = payload_by_request_id.get(result_id, {})
+        request_payload = mapped_request_payload(payload_by_request_id, result_id)
+        if str(result.get("tool") or "") == "generic_write":
+            request_payload = hydrate_generic_write_payload(
+                repo_root, result, request_payload
+            )
         event = heap.append_event(
             source="broker",
             target=target_lane,
@@ -260,6 +348,12 @@ def append_broker_results(
                 "provider_report": request_payload.get("provider_report"),
                 "provider_block_id": request_payload.get("provider_block_id"),
                 "proposal_block_id": request_payload.get("proposal_block_id"),
+                "native_tool_call_authority": request_payload.get("native_tool_call_authority"),
+                "tool_result_scope": request_payload.get("tool_result_scope"),
+                "gpu1_followup_required": request_payload.get("gpu1_followup_required"),
+                "cannot_close_product": request_payload.get("cannot_close_product"),
+                "peer_only": request_payload.get("peer_only"),
+                "capture_mode": request_payload.get("capture_mode"),
                 "executed": result.get("executed"),
                 "blocked": result.get("blocked"),
                 "returncode": result.get("returncode"),
@@ -313,7 +407,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             # the generated tool_requests attached here so broker_result events
             # can be routed back to the provider lane that created the request.
             broker_report.setdefault("tool_requests", packet.get("tool_requests", []))
-            broker_result_events = append_broker_results(heap, broker_report)
+            broker_result_events = append_broker_results(heap, broker_report, repo_root)
 
     snapshot = heap.write_snapshot()
     errors: list[str] = []

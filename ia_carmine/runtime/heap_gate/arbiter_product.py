@@ -20,6 +20,18 @@ def build_arbiter_product(
     soft_lock_state: dict[str, Any],
 ) -> dict[str, Any]:
     final_response_text = owner.build_final_response_text(events)
+    generic_product = generic_write_document_product(owner, events)
+    peer_reasons = []
+    if int(generic_product.get("gpu0_peer_followup_pending_count") or 0) > 0:
+        peer_reasons.append("gpu0_peer_followup_pending")
+    if int(generic_product.get("npu_peer_followup_pending_count") or 0) > 0:
+        peer_reasons.append("npu_peer_followup_pending")
+    blocked_reason = (
+        ",".join(peer_reasons)
+        or soft_lock_state.get("closure_quorum_reason")
+        or owner.budget_governor.get("decision")
+        or "heap loop stopped by budget/failed requirement before readiness"
+    )
     return {
         "required": True,
         "product_kind": product_kind,
@@ -32,7 +44,8 @@ def build_arbiter_product(
         "provider_refs": owner.provider_refs(),
         "provider_response_texts": owner.provider_response_texts(),
         "context_artifact_refs": owner.broker_output_refs(events),
-        "generic_write_document_product": generic_write_document_product(owner, events),
+        "generic_write_document_product": generic_product,
+        "generic_write_refined_product": generic_product,
         "bridge_reports": bridge_refs,
         "quality_output_signals": owner.quality_output_signals(final_response_text, events),
         "quality_output_passed": owner.quality_output_passed(final_response_text, events),
@@ -48,16 +61,13 @@ def build_arbiter_product(
         "reason": (
             "heap loop consumed tool catalog, memory, current source chunks and provider product evidence"
             if ready
-            else (
-                soft_lock_state.get("closure_quorum_reason")
-                or "heap loop stopped by budget/failed requirement before readiness"
-            )
+            else blocked_reason
         ),
+        "product_blocked_reason": "" if ready else blocked_reason,
         "product_approval_status": "approved" if ready else "blocked",
         "product_approval_evidence": soft_lock_state,
         "continuation_required": product_kind == "blocked_continuation_product",
-        "soft_close_reason": soft_lock_state.get("closure_quorum_reason")
-        or owner.budget_governor.get("decision"),
+        "soft_close_reason": "" if ready else blocked_reason,
         "completed_requirements": sorted(owner.completed_requirements(events)),
         "missing_requirements": missing,
         "budget_exhausted": budget_exhausted,

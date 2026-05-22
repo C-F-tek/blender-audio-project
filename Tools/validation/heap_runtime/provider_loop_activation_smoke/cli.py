@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
+import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from typing import Any
 
@@ -118,12 +121,20 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
     terminal = _read(repo_root, "ia_carmine/runtime/heap_gate/terminal_invariants.py")
     team_packet = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_teamwork_packet.py")
     errors: list[str] = []
-    if 'OPERATIVE_NATIVE_TOOL_CALL_LANES = {"gpu1_planner", "gpu0_peer"}' not in native:
-        errors.append("GPU1/GPU0 operative native tool lane set is missing")
+    if 'PRIMARY_NATIVE_TOOL_CALL_LANES = {"gpu1_planner"}' not in native:
+        errors.append("GPU1 primary native tool lane set is missing")
+    if 'PEER_NATIVE_TOOL_CALL_LANES = {"gpu0_peer"}' not in native:
+        errors.append("GPU0 peer native tool lane set is missing")
+    if "OPERATIVE_NATIVE_TOOL_CALL_LANES = PRIMARY_NATIVE_TOOL_CALL_LANES | PEER_NATIVE_TOOL_CALL_LANES" not in native:
+        errors.append("operative native tool lane set does not separate primary and peer lanes")
     if 'DIAGNOSTIC_NATIVE_TOOL_CALL_LANES = {"npu_micro_task_auditor"}' not in native:
         errors.append("NPU diagnostic native tool lane set is missing")
     if 'lane not in OPERATIVE_NATIVE_TOOL_CALL_LANES' not in native:
         errors.append("native tool router does not gate operative broker requests by lane set")
+    if "no_tool_capture" not in native or "NO_TOOL_GENERIC_WRITE_CAPTURE_LANES" not in native:
+        errors.append("native tool router does not capture useful no-tool Ollama responses")
+    if "gpu1_followup_required" not in native or "tool_result_scope" not in native:
+        errors.append("native tool router does not stamp lane authority on broker requests")
     if "generic_write_refinement" not in native:
         errors.append("generic_write native call is not mapped to refinement evidence")
     if "generic_write" not in loop or "run_heap_virtual_dev_environment" not in loop:
@@ -135,62 +146,41 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
         errors.append("generic_write follow-up does not require three refinements")
     if "generic_write_next_turn_required" not in followup:
         errors.append("generic_write follow-up does not force next GPU1 turn")
+    if "gpu0_peer_followup_pending_count" not in followup:
+        errors.append("GPU0 peer evidence does not force later GPU1 consumption")
+    if "npu_peer_followup_pending_count" not in followup:
+        errors.append("NPU peer evidence does not force later GPU1 consumption")
     if "code_product_allowed_after_three_refinements" not in followup:
         errors.append("generic_write cannot become refined product after three iterations")
-    if "generic_write_followup_pending_count" not in terminal:
-        errors.append("terminal invariants do not block pending generic_write follow-up")
-    if "GPU1 and GPU0 are Ollama operative lanes" not in team_packet:
-        errors.append("provider teamwork packet still treats GPU0 as diagnostic-only")
+    if (
+        "generic_write_followup_pending_count" not in terminal
+        or "gpu0_peer_followup_pending_count" not in terminal
+        or "npu_peer_followup_pending_count" not in terminal
+    ):
+        errors.append("terminal invariants do not block pending generic_write/GPU0/NPU follow-up")
+    if "same_tool_schema_peer_only" not in team_packet:
+        errors.append("provider teamwork packet does not scope GPU0 as peer-only same-schema lane")
     errors.extend(_probe_native_tool_routing())
+    errors.extend(_probe_no_tool_generic_write_capture())
+    errors.extend(_probe_npu_peer_evidence_timeout())
+    errors.extend(_probe_npu_generic_write_result_hydration())
+    errors.extend(_probe_generic_write_no_tool_product())
+    errors.extend(_probe_peer_pointer_requires_later_gpu1())
+    errors.extend(_probe_final_readable_generic_write_section(repo_root))
+    errors.extend(_probe_unicode_json_print())
     return {"name": "ollama_native_tool_lane_contract", "errors": errors}
 
 
 def _probe_native_tool_routing() -> list[str]:
-    from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
-        provider_plan_item_for_tool_call,
-        publish_provider_native_tool_calls,
+    from ia_carmine.runtime.heap_gate.tool_broker_native_calls import publish_provider_native_tool_calls
+
+    owner = _FakeNativeOwner(
+        [
+            _fake_report("gpu1_planner", "gpu1.json", "generic_write", 0),
+            _fake_report("gpu0_peer", "gpu0.json", "generic_write", 0),
+            _fake_report("npu_micro_task_auditor", "npu.json", "generic_write", 0),
+        ]
     )
-
-    class FakeOwner:
-        def __init__(self) -> None:
-            self.stamp = "smoke"
-            self.args = SimpleNamespace(request_file="")
-            self.provider_native_tool_call_ids: set[str] = set()
-            self.state = {"needs": [], "tool_requests": []}
-            self.tool_request_count = 0
-            self.errors: list[str] = []
-            self.published: list[dict[str, Any]] = []
-            self.provider_reports = [
-                _fake_report("gpu1_planner", "gpu1.json", "generic_write", 0),
-                _fake_report("gpu0_peer", "gpu0.json", "generic_write", 0),
-                _fake_report("npu_micro_task_auditor", "npu.json", "generic_write", 0),
-            ]
-
-        def tool_plan(self) -> list[dict[str, Any]]:
-            return []
-
-        def enrich_plan_item_args(
-            self, item: dict[str, Any], _events: list[dict[str, Any]]
-        ) -> dict[str, Any]:
-            return dict(item)
-
-        def provider_plan_item_for_tool_call(
-            self, call: dict[str, Any], events: list[dict[str, Any]]
-        ) -> dict[str, Any] | None:
-            return provider_plan_item_for_tool_call(self, call, events)
-
-        def proposal_iteration_artifacts(self) -> list[str]:
-            return []
-
-        def request_text(self) -> str:
-            return "smoke request"
-
-        def publish(self, source: str, event_type: str, payload: dict[str, Any], **kwargs: Any) -> None:
-            self.published.append(
-                {"source": source, "event_type": event_type, "payload": payload, **kwargs}
-            )
-
-    owner = FakeOwner()
     published = publish_provider_native_tool_calls(owner, 1, [])
     lanes = [item.get("lane") for item in owner.state["tool_requests"]]
     diagnostics = [
@@ -204,9 +194,87 @@ def _probe_native_tool_routing() -> list[str]:
         errors.append(f"expected two operative GPU1/GPU0 broker requests, got {published}")
     if lanes != ["gpu1_planner", "gpu0_peer"]:
         errors.append(f"expected GPU1/GPU0 tool request lanes, got {lanes}")
+    gpu1_request = owner.state["tool_requests"][0] if owner.state["tool_requests"] else {}
+    gpu0_request = owner.state["tool_requests"][1] if len(owner.state["tool_requests"]) > 1 else {}
+    if gpu1_request.get("tool_result_scope") != "primary_product_evidence":
+        errors.append("GPU1 native request is not scoped as primary product evidence")
+    if gpu1_request.get("gpu1_followup_required"):
+        errors.append("GPU1 native request incorrectly requires a later GPU1 follow-up")
+    if gpu0_request.get("tool_result_scope") != "gpu0_peer_evidence_only":
+        errors.append("GPU0 native request is not scoped as peer-only evidence")
+    if gpu0_request.get("gpu1_followup_required") is not True:
+        errors.append("GPU0 native request does not require later GPU1 consumption")
+    if gpu0_request.get("cannot_close_product") is not True:
+        errors.append("GPU0 native request can incorrectly close product")
     if not diagnostics or diagnostics[0].get("payload", {}).get("lane") != "npu_micro_task_auditor":
         errors.append("NPU native call did not become diagnostic evidence only")
     return errors
+
+
+def _probe_no_tool_generic_write_capture() -> list[str]:
+    from ia_carmine.runtime.heap_gate.tool_broker_native_calls import publish_provider_native_tool_calls
+
+    owner = _FakeNativeOwner(
+        [
+            _fake_no_tool_report("gpu1_planner", "gpu1-no-tool.json", 0),
+            _fake_no_tool_report("gpu0_peer", "gpu0-no-tool.json", 0),
+            _fake_no_tool_report("npu_micro_task_auditor", "npu-no-tool.json", 0),
+        ]
+    )
+    published = publish_provider_native_tool_calls(owner, 1, [])
+    requests = owner.state["tool_requests"]
+    lanes = [item.get("lane") for item in requests]
+    capture_modes = [item.get("args", {}).get("capture_mode") for item in requests]
+    errors: list[str] = []
+    if published != 3:
+        errors.append(f"expected three no-tool generic_write captures, got {published}")
+    if lanes != ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"]:
+        errors.append(f"expected GPU1/GPU0/NPU no-tool capture lanes, got {lanes}")
+    if capture_modes != ["no_tool_capture", "no_tool_capture", "no_tool_capture"]:
+        errors.append(f"expected no_tool_capture modes, got {capture_modes}")
+    gpu0_request = requests[1] if len(requests) > 1 else {}
+    npu_request = requests[2] if len(requests) > 2 else {}
+    if gpu0_request.get("tool_result_scope") != "gpu0_peer_evidence_only":
+        errors.append("GPU0 no-tool capture is not peer-only evidence")
+    if gpu0_request.get("gpu1_followup_required") is not True:
+        errors.append("GPU0 no-tool capture does not force GPU1 follow-up")
+    if npu_request.get("tool_result_scope") != "diagnostic_veto_evidence":
+        errors.append("NPU no-tool capture is not diagnostic peer evidence")
+    if npu_request.get("gpu1_followup_required") is not True:
+        errors.append("NPU no-tool capture does not force GPU1 follow-up")
+    return errors
+
+
+class _FakeNativeOwner:
+    def __init__(self, provider_reports: list[dict[str, Any]]) -> None:
+        self.stamp = "smoke"
+        self.args = SimpleNamespace(request_file="")
+        self.provider_native_tool_call_ids: set[str] = set()
+        self.state = {"needs": [], "tool_requests": []}
+        self.tool_request_count = 0
+        self.errors: list[str] = []
+        self.published: list[dict[str, Any]] = []
+        self.provider_reports = provider_reports
+
+    def tool_plan(self) -> list[dict[str, Any]]:
+        return []
+
+    def enrich_plan_item_args(self, item: dict[str, Any], _events: list[dict[str, Any]]) -> dict[str, Any]:
+        return dict(item)
+
+    def provider_plan_item_for_tool_call(self, call: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any] | None:
+        from ia_carmine.runtime.heap_gate.tool_broker_native_calls import provider_plan_item_for_tool_call
+
+        return provider_plan_item_for_tool_call(self, call, events)
+
+    def proposal_iteration_artifacts(self) -> list[str]:
+        return []
+
+    def request_text(self) -> str:
+        return "smoke request"
+
+    def publish(self, source: str, event_type: str, payload: dict[str, Any], **kwargs: Any) -> None:
+        self.published.append({"source": source, "event_type": event_type, "payload": payload, **kwargs})
 
 
 def _fake_report(lane: str, output: str, tool: str, revision: int) -> dict[str, Any]:
@@ -217,6 +285,240 @@ def _fake_report(lane: str, output: str, tool: str, revision: int) -> dict[str, 
         "response_text": f"{lane} response",
         "tool_calls": [{"id": f"{lane}_call", "tool": tool, "args": {}, "reason": "smoke"}],
     }
+
+
+def _fake_no_tool_report(lane: str, output: str, revision: int) -> dict[str, Any]:
+    report = {
+        "lane": lane,
+        "output": output,
+        "revision": revision,
+        "response_text": f"{lane} useful prose response",
+        "tool_calls": [],
+        "provider_work_verified": True,
+        "operational_provider_activity": True,
+        "useful_output_produced": True,
+    }
+    if lane == "npu_micro_task_auditor":
+        report.update(
+            {
+                "provider_device_verified": True,
+                "provider_compute_device": "openvino/NPU",
+                "npu_peer_evidence_verified": True,
+                "npu_device_workload_performed": True,
+                "npu_micro_audit_performed": True,
+                "npu_native_tool_loop_error": "openvino_native_tool_loop_timeout",
+                "npu_native_tool_loop_required": False,
+            }
+        )
+    return report
+
+
+def _probe_npu_peer_evidence_timeout() -> list[str]:
+    from ia_carmine._shared.provider_work_verification import provider_work_status
+
+    report = {
+        "lane": "npu_micro_task_auditor",
+        "provider_compute_device": "openvino/NPU",
+        "provider_device_verified": True,
+        "npu_peer_evidence_verified": True,
+        "npu_response_schema_valid": True,
+        "npu_device_workload_requested": True,
+        "npu_device_workload_performed": True,
+        "npu_micro_audit_performed": True,
+        "npu_micro_provider_model_loaded": False,
+        "npu_micro_provider_execution_performed": False,
+        "npu_native_tool_loop_error": "openvino_native_tool_loop_timeout",
+        "npu_native_tool_loop_required": False,
+        "response_text": "MICRO_TASK=section_presence_audit\nCHECKED=x\nFINDINGS=y\nDECISION=NPU_TIMEOUT_BOUNDARY\nREASON=openvino_native_tool_loop_timeout",
+    }
+    status = provider_work_status(lane="npu_micro_task_auditor", report=report)
+    errors: list[str] = []
+    if status.get("provider_work_verified") is not True:
+        errors.append("NPU peer evidence with workload+micro-audit did not count as verified")
+    if status.get("provider_role") != "npu_auditor":
+        errors.append("verified NPU peer evidence did not count as npu_auditor")
+    if report.get("npu_micro_provider_model_loaded") is not False:
+        errors.append("NPU native model-loaded flag must remain false on tool-loop timeout")
+    if report.get("npu_native_tool_loop_error") != "openvino_native_tool_loop_timeout":
+        errors.append("NPU native tool-loop timeout was not preserved")
+    return errors
+def _probe_npu_generic_write_result_hydration() -> list[str]:
+    from ia_carmine.runtime.heap_gate.generic_write_followup import generic_write_document_product
+    from ia_carmine.runtime.provider_runtime_blackboard.broker_bridge.cli import mapped_request_payload
+    errors: list[str] = []
+    with TemporaryDirectory(prefix="npu-generic-write-hydration-") as tmp:
+        root = Path(tmp)
+        provider = {"lane": "npu_micro_task_auditor", "revision": 0, "response_text": "MICRO_TASK=target_reference_audit\nDECISION=NPU_TIMEOUT_BOUNDARY"}
+        (root / "npu.json").write_text(json.dumps(provider), encoding="utf-8")
+        report = {"passed": True, "source_lane": provider["lane"], "provider_report": "npu.json", "capture_mode": "no_tool_capture", "provider_summary": provider, "provider_response_excerpt": provider["response_text"]}
+        (root / "generic.json").write_text(json.dumps(report), encoding="utf-8")
+        request_id = "20260523_provider-no-tool-capture_npu_micro_task_auditor_000_generic_writ"
+        result_id = request_id + "_generic_write_md"
+        payload = mapped_request_payload({request_id: {"lane": "npu_micro_task_auditor"}}, result_id)
+        if payload.get("lane") != "npu_micro_task_auditor":
+            errors.append("broker bridge did not recover truncated NPU request payload")
+        owner = SimpleNamespace(repo_root=root, provider_reports=[{"lane": "gpu1_planner", "revision": 0}])
+        broker_payload = {"tool": "generic_write", "lane": None, "revision": None, "gpu1_followup_required": None, "blocked": False, "returncode": 0, "summary": {"passed": True}, "outputs": {"json_report": "generic.json"}, "errors": []}
+        product = generic_write_document_product(owner, [{"event_type": "broker_result", "payload": broker_payload}])
+        checks = [
+            ("npu_micro_task_auditor" in product.get("generic_write_lanes", []), "hydrated generic_write product does not count NPU lane"),
+            (product.get("npu_peer_followup_pending_count") == 1, "hydrated NPU generic_write did not force GPU1 follow-up"),
+            ("MICRO_TASK=target_reference_audit" in str(product.get("captures")), "hydrated NPU generic_write did not preserve NPU prose"),
+        ]
+        errors.extend(message for passed, message in checks if not passed)
+    return errors
+def _probe_generic_write_no_tool_product() -> list[str]:
+    from ia_carmine.runtime.heap_gate.generic_write_followup import generic_write_document_product
+    from ia_carmine.runtime.runtime_tool.generic_write.cli import build_report
+
+    errors: list[str] = []
+    with TemporaryDirectory(prefix="generic-write-smoke-") as tmp:
+        root = Path(tmp)
+        (root / "request.md").write_text("operator asks for a code plan", encoding="utf-8")
+        broker_report = {
+            "kind": "agent_runtime_tool_broker",
+            "passed": False,
+            "tool_results": [
+                {
+                    "id": "tool-001",
+                    "tool": "run_heap_code_execution_matrix",
+                    "executed": True,
+                    "blocked": False,
+                    "returncode": 2,
+                    "errors": ["runtime boom"],
+                    "warnings": [],
+                }
+            ],
+            "errors": ["matrix failed"],
+            "warnings": [],
+        }
+        (root / "broker.json").write_text(
+            json.dumps(broker_report, ensure_ascii=False), encoding="utf-8"
+        )
+        events: list[dict[str, Any]] = []
+        for revision in range(3):
+            provider = {
+                "lane": "gpu1_planner",
+                "revision": revision,
+                "provider_block_id": f"gpu1:{revision}",
+                "response_text": f"provider prose output {revision}\n```python\nprint({revision})\n```",
+                "native_tool_call_count": 0,
+            }
+            provider_path = root / f"provider-{revision}.json"
+            provider_path.write_text(json.dumps(provider, ensure_ascii=False), encoding="utf-8")
+            report = build_report(
+                SimpleNamespace(
+                    repo_root=str(root),
+                    request_file="request.md",
+                    operator_request="",
+                    provider_report=provider_path.name,
+                    proposal_text="",
+                    capture_mode="no_tool_capture",
+                    evidence_report=["broker.json"],
+                    source_lane="gpu1_planner",
+                    reason="smoke no-tool capture",
+                )
+            )
+            if "provider prose output" not in report.get("refined_request", ""):
+                errors.append("generic_write no-tool report does not include provider prose output")
+            if "runtime boom" not in report.get("refined_request", ""):
+                errors.append("generic_write no-tool report hides failed broker/runtime errors")
+            report_path = root / f"generic-write-{revision}.json"
+            report_path.write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
+            events.append(
+                {
+                    "event_type": "broker_result",
+                    "payload": {
+                        "tool": "generic_write",
+                        "lane": "gpu1_planner",
+                        "revision": revision,
+                        "blocked": False,
+                        "returncode": 0,
+                        "summary": {"passed": True},
+                        "outputs": {"json_report": report_path.name},
+                    },
+                }
+            )
+
+        class Owner:
+            pass
+
+        owner = Owner()
+        owner.repo_root = root
+        owner.provider_reports = [{"lane": "gpu1_planner", "revision": 3}]
+        product = generic_write_document_product(owner, events)
+        if not product.get("eligible"):
+            errors.append("three consumed generic_write captures did not become eligible")
+        if product.get("patch_application_performed") or product.get("source_writes_performed"):
+            errors.append("generic_write refined product incorrectly claims source writes")
+        if "provider prose output 2" not in product.get("latest_refined_request", ""):
+            errors.append("generic_write refined product does not include latest provider prose")
+        if "runtime boom" not in product.get("latest_refined_request", ""):
+            errors.append("generic_write refined product does not include runtime error evidence")
+    return errors
+
+
+def _probe_peer_pointer_requires_later_gpu1() -> list[str]:
+    from ia_carmine.runtime.heap_gate.pointer_soft_lock import pointer_closure_summary
+
+    peer_final = [
+        {"block_id": "p0", "role": "gpu1_planner", "accepted": True},
+        {
+            "block_id": "npu0",
+            "role": "npu_auditor",
+            "accepted": True,
+            "refines_block_id": "p0",
+        },
+    ]
+    consumed = [
+        *peer_final,
+        {
+            "block_id": "p1",
+            "role": "gpu1_planner",
+            "accepted": True,
+            "previous_block_id": "npu0",
+        },
+    ]
+    peer_table = pointer_closure_summary(peer_final).get("pointer_closure_table", [])
+    consumed_table = pointer_closure_summary(consumed).get("pointer_closure_table", [])
+    peer_row = next((row for row in peer_table if row.get("pointer_id") == "npu0"), {})
+    consumed_row = next((row for row in consumed_table if row.get("pointer_id") == "npu0"), {})
+    errors: list[str] = []
+    if peer_row.get("closure_status") != "deferred_to_resume":
+        errors.append("final NPU peer block closed without later GPU1 consumption")
+    if consumed_row.get("closure_status") != "merged_into_final_product":
+        errors.append("NPU peer block consumed by later GPU1 did not close")
+    return errors
+
+
+def _probe_final_readable_generic_write_section(repo_root: Path) -> list[str]:
+    text = _read(repo_root, "ia_carmine/_shared/heap_final_readable_synthesis.py")
+    errors: list[str] = []
+    if "## Generic write" not in text:
+        errors.append("final readable product does not render a generic_write section")
+    if "provider_response_excerpt" not in text or "Runtime/tool errors catturati" not in text:
+        errors.append("final readable generic_write section does not expose prose/runtime errors")
+    return errors
+
+
+def _probe_unicode_json_print() -> list[str]:
+    from ia_carmine._shared.report_io import print_json_report
+
+    previous_stdout = sys.stdout
+    buffer = io.BytesIO()
+    sys.stdout = io.TextIOWrapper(buffer, encoding="cp1252", errors="strict")
+    errors: list[str] = []
+    try:
+        print_json_report({"emoji": "🔍", "passed": True})
+        sys.stdout.flush()
+        output = buffer.getvalue().decode("cp1252")
+        if "\\ud83d\\udd0d" not in output and "\\U0001f50d" not in output and "\\ud83d" not in output:
+            errors.append("Unicode fallback did not emit ASCII escaped JSON")
+    except UnicodeEncodeError:
+        errors.append("print_json_report still raises UnicodeEncodeError on cp1252 stdout")
+    finally:
+        sys.stdout = previous_stdout
+    return errors
 
 
 def _check_vulkan_identity_contract(repo_root: Path) -> dict[str, Any]:

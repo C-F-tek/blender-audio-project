@@ -10,8 +10,15 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
 )
 from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
 
-OPERATIVE_NATIVE_TOOL_CALL_LANES = {"gpu1_planner", "gpu0_peer"}
+PRIMARY_NATIVE_TOOL_CALL_LANES = {"gpu1_planner"}
+PEER_NATIVE_TOOL_CALL_LANES = {"gpu0_peer"}
+OPERATIVE_NATIVE_TOOL_CALL_LANES = PRIMARY_NATIVE_TOOL_CALL_LANES | PEER_NATIVE_TOOL_CALL_LANES
 DIAGNOSTIC_NATIVE_TOOL_CALL_LANES = {"npu_micro_task_auditor"}
+NO_TOOL_GENERIC_WRITE_CAPTURE_LANES = (
+    PRIMARY_NATIVE_TOOL_CALL_LANES
+    | PEER_NATIVE_TOOL_CALL_LANES
+    | DIAGNOSTIC_NATIVE_TOOL_CALL_LANES
+)
 EVIDENCE_ENRICHED_TOOLS = {
     "generic_write",
     "run_heap_code_execution_matrix",
@@ -93,7 +100,110 @@ def _publish_report_native_tool_calls(
         request_id = f"{owner.stamp}:provider-native:{call_id}:{plan_item['tool']}"
         _publish_need_and_request(owner, report, call, plan_item, request_id, round_id)
         published += 1
+    if not calls and _report_has_useful_no_tool_text(report):
+        published += _publish_no_tool_generic_write_capture(owner, report, output, round_id, events)
     return published
+
+
+def _lane_tool_authority(lane: str) -> dict[str, Any]:
+    if lane in PRIMARY_NATIVE_TOOL_CALL_LANES:
+        return {
+            "native_tool_call_authority": "primary_broker_authority",
+            "tool_result_scope": "primary_product_evidence",
+            "gpu1_followup_required": False,
+            "cannot_close_product": False,
+            "peer_only": False,
+        }
+    if lane in PEER_NATIVE_TOOL_CALL_LANES:
+        return {
+            "native_tool_call_authority": "peer_broker_authority",
+            "tool_result_scope": "gpu0_peer_evidence_only",
+            "gpu1_followup_required": True,
+            "cannot_close_product": True,
+            "peer_only": True,
+        }
+    return {
+        "native_tool_call_authority": "diagnostic_only",
+        "tool_result_scope": "diagnostic_veto_evidence",
+        "gpu1_followup_required": True,
+        "cannot_close_product": True,
+        "peer_only": True,
+    }
+
+
+def _report_has_useful_no_tool_text(report: dict[str, Any]) -> bool:
+    lane = str(report.get("lane") or "")
+    if lane not in NO_TOOL_GENERIC_WRITE_CAPTURE_LANES:
+        return False
+    if str(report.get("response_text") or "").strip() == "":
+        return False
+    if isinstance(report.get("tool_calls"), list) and report.get("tool_calls"):
+        return False
+    npu_peer_evidence = bool(
+        lane == "npu_micro_task_auditor"
+        and (
+            report.get("npu_peer_evidence_verified")
+            or (
+                report.get("provider_device_verified")
+                and report.get("npu_device_workload_performed")
+                and report.get("npu_micro_audit_performed")
+            )
+        )
+    )
+    useful_evidence = bool(
+        report.get("provider_work_verified")
+        or report.get("operational_provider_activity")
+        or report.get("useful_output_produced")
+        or npu_peer_evidence
+    )
+    provider_stage = str(report.get("provider_stage") or "").strip()
+    if provider_stage in {"health_check_only", "not_available"} and not npu_peer_evidence:
+        return False
+    if report.get("provider_work_verified") is False and not useful_evidence:
+        return False
+    if report.get("replight_passed") is not None and not useful_evidence:
+        return False
+    return True
+
+
+def _publish_no_tool_generic_write_capture(
+    owner: Any,
+    report: dict[str, Any],
+    output: str,
+    round_id: int,
+    events: list[dict[str, Any]],
+) -> int:
+    lane = str(report.get("lane") or "provider")
+    revision = str(report.get("revision") or "000")
+    call = {
+        "id": f"{lane}_no_tool_capture_{revision}",
+        "tool": "generic_write",
+        "args": {"capture_mode": "no_tool_capture"},
+        "reason": (
+            "Provider lane produced useful text without native tool calls; capture it "
+            "as generic_write primary communication evidence."
+        ),
+    }
+    unique_id = f"{output}:{call['id']}:generic_write"
+    if unique_id in owner.provider_native_tool_call_ids:
+        return 0
+    owner.provider_native_tool_call_ids.add(unique_id)
+    plan_item = owner.provider_plan_item_for_tool_call(call, events)
+    if not plan_item:
+        _publish_unmapped_native_call(
+            owner,
+            provider_heap_lane(lane),
+            lane,
+            output,
+            call,
+            unique_id,
+            round_id,
+        )
+        return 0
+    _enrich_provider_native_tool_args(owner, report, output, call, plan_item)
+    request_id = f"{owner.stamp}:provider-no-tool-capture:{lane}:{revision}:generic_write"
+    _publish_need_and_request(owner, report, call, plan_item, request_id, round_id)
+    return 1
 
 
 def _publish_peer_native_call_diagnostic(
@@ -115,8 +225,10 @@ def _publish_peer_native_call_diagnostic(
             "provider_report": output,
             "diagnostic_tool_call_lane": lane in DIAGNOSTIC_NATIVE_TOOL_CALL_LANES,
             "policy": (
-                "GPU1 and GPU0 are Ollama operative native-tool lanes. NPU native "
-                "tool calls remain diagnostic/veto evidence and do not drive broker work."
+                "GPU1 is the primary native-tool lane. GPU0 uses the same tool schema "
+                "as peer evidence that must be consumed by a later GPU1 turn. NPU "
+                "native tool calls remain diagnostic/veto evidence and do not drive "
+                "broker work."
             ),
         },
         target="deterministic",
@@ -164,13 +276,25 @@ def _enrich_provider_native_tool_args(
     args = dict(plan_item.get("args") or {})
     refs = args.get("evidence_report")
     evidence_reports = list(refs if isinstance(refs, list) else ([refs] if refs else []))
-    for ref in [output, *owner.proposal_iteration_artifacts()]:
+    bridge_reports = list(getattr(owner, "bridge_reports", []) or [])
+    for ref in [output, *owner.proposal_iteration_artifacts(), *bridge_reports]:
         if ref and ref not in evidence_reports:
             evidence_reports.append(ref)
     args["evidence_report"] = evidence_reports
     if tool == "generic_write":
+        call_args = call.get("args") if isinstance(call.get("args"), dict) else {}
+        args.setdefault("capture_mode", str(call_args.get("capture_mode") or "native_call"))
         args.setdefault("provider_report", output)
-        args.setdefault("source_lane", str(report.get("lane") or ""))
+        lane = str(report.get("lane") or "")
+        peer_followup_required = lane in {"gpu0_peer", "npu_micro_task_auditor"}
+        args.setdefault("source_lane", lane)
+        args.setdefault("source_revision", str(report.get("revision") or ""))
+        args.setdefault("gpu1_followup_required", str(peer_followup_required).lower())
+        args.setdefault("peer_followup_required", str(peer_followup_required).lower())
+        args.setdefault(
+            "provider_role",
+            str(report.get("provider_role") or report.get("role") or ""),
+        )
         args.setdefault("proposal_text", str(report.get("response_text") or ""))
         args.setdefault("request_file", str(getattr(owner.args, "request_file", "") or ""))
         if not args.get("request_file"):
@@ -178,7 +302,7 @@ def _enrich_provider_native_tool_args(
         args.setdefault(
             "reason",
             call.get("reason")
-            or "Ollama lane requested generic_write to refine the next GPU1 turn.",
+            or "Provider lane requested generic_write to refine the next GPU1 turn.",
         )
     plan_item["args"] = args
 
@@ -195,6 +319,7 @@ def _publish_need_and_request(
     source = provider_heap_lane(lane)
     output = str(report.get("output") or "")
     call_id = str(call.get("id") or f"{plan_item['tool']}_001")
+    authority = _lane_tool_authority(lane)
     need = {
         "id": f"need_provider_native_{plan_item['requirement']}_{call_id}",
         "owner": lane,
@@ -209,6 +334,7 @@ def _publish_need_and_request(
         "proposal_block_id": report.get("proposal_block_id"),
         "revision": report.get("revision"),
         "round": round_id,
+        **authority,
     }
     append_unique(owner.state["needs"], need)
     owner.publish(
@@ -231,6 +357,7 @@ def _publish_need_and_request(
         "revision": report.get("revision"),
         "provider_block_id": report.get("provider_block_id"),
         "proposal_block_id": report.get("proposal_block_id"),
+        **authority,
     }
     if plan_item.get("nonblocking"):
         tool_request["nonblocking"] = True

@@ -77,7 +77,7 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
             "sidecar_lane": False,
             "lane_watchdog_seconds": 0,
             "timeout_seconds": 0,
-            "native_tool_calling_policy": "gpu1_may_drive_broker_native_tool_calls",
+            "native_tool_calling_policy": "gpu1_may_drive_broker_native_tool_calls_and_own_final_synthesis",
             "delta_context_mode": "full_startup_then_pointer_delta_revisions",
         },
         GPU0_LANE: {
@@ -98,7 +98,7 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
             "primary_closer": False,
             "sidecar_lane": True,
             "reviewer_refiner": True,
-            "native_tool_calling_policy": "gpu0_may_drive_broker_native_tool_calls",
+            "native_tool_calling_policy": "gpu0_same_schema_peer_only_requires_later_gpu1_consumption",
             "delta_context_mode": "pointer_delta_review",
             "started_lane_hard_kill_allowed": True,
         },

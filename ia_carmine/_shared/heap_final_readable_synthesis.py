@@ -126,7 +126,7 @@ def provider_rejection_summary(decision: dict[str, Any], revision: dict[str, Any
     ]
     if provider_reasons:
         lines = [
-            "Provider respinti: nessuna lane conta come ruolo prodotto senza `provider_work_verified=true`.",
+            "Provider respinti: nessuna lane conta come ruolo prodotto senza `provider_work_verified=true`; NPU conta come peer evidence solo con `npu_peer_evidence_verified=true`, mentre il timeout native tool-loop resta errore runtime separato.",
         ]
         for reason in uniq(provider_reasons):
             lines.append(f"Provider rejection: `{reason}`.")
@@ -168,6 +168,103 @@ def provider_rejection_summary(decision: dict[str, Any], revision: dict[str, Any
     if revision.get("terminal_no_patchable_target"):
         lines.append("Decisione terminale provider: `NO_PATCHABLE_TARGET`/diagnostic-only.")
     return lines
+
+
+def generic_write_summary(run_dir: Path, gate: dict[str, Any]) -> list[str]:
+    metrics = as_dict(gate.get("metrics"))
+    product = as_dict(
+        metrics.get("generic_write_refined_product")
+        or metrics.get("generic_write_document_product")
+    )
+    if not product:
+        return ["Nessuna cattura `generic_write` disponibile."]
+    latest_outputs = as_dict(product.get("latest_outputs"))
+    latest_report = _read_generic_write_report(run_dir, gate, latest_outputs)
+    tool_evidence = as_list(latest_report.get("tool_evidence_summary"))
+    runtime_errors: list[str] = []
+    for item in tool_evidence:
+        data = as_dict(item)
+        runtime_errors.extend(str(error) for error in as_list(data.get("errors")))
+        for result in as_list(data.get("tool_results")):
+            runtime_errors.extend(str(error) for error in as_list(as_dict(result).get("errors")))
+    provider_excerpt = str(
+        latest_report.get("provider_response_excerpt")
+        or latest_report.get("latest_refined_request")
+        or product.get("latest_refined_request")
+        or ""
+    )
+    capture_lines = []
+    for capture in as_list(product.get("captures"))[:8]:
+        item = as_dict(capture)
+        lane = str(item.get("lane") or "")
+        excerpt = str(item.get("provider_response_excerpt") or "").replace("\n", " ")
+        capture_lines.append(
+            f"{lane or 'unknown'}@{item.get('revision')}: {excerpt[:360] or 'no excerpt'}"
+        )
+    return [
+        f"Capture count: `{product.get('capture_count')}`; no-tool capture: `{product.get('generic_write_no_tool_capture_count')}`.",
+        f"Lane catturate: `{product.get('generic_write_lanes') or metrics.get('generic_write_lanes') or []}`.",
+        f"Eligible refined product: `{product.get('eligible')}`; ultimo consumato da GPU1: `{product.get('latest_consumed_by_gpu1')}`.",
+        f"Ultima source lane: `{product.get('latest_source_lane')}`; capture mode: `{latest_report.get('capture_mode') or ''}`.",
+        f"Tool calls assenti: `{latest_report.get('tool_calls_absent')}`; output report: `{latest_outputs.get('json_report') or ''}`.",
+        "Provider prose excerpt: " + (provider_excerpt[:1200] or "non disponibile"),
+        "Capture excerpts: " + (" | ".join(capture_lines) if capture_lines else "non disponibili"),
+        "Runtime/tool errors catturati: " + (", ".join(runtime_errors[:8]) if runtime_errors else "nessuno"),
+        "Semantica: `generic_write` e' prodotto leggibile/codice proposto, non patch applicata e non source write.",
+    ]
+
+
+def _read_generic_write_report(
+    run_dir: Path, gate: dict[str, Any], latest_outputs: dict[str, Any]
+) -> dict[str, Any]:
+    ref = str(latest_outputs.get("json_report") or "").strip()
+    if not ref:
+        return {}
+    candidates = []
+    path = Path(ref)
+    if path.is_absolute():
+        candidates.append(path)
+    repo_root = Path(str(gate.get("repo_root") or "")).resolve()
+    if str(repo_root):
+        candidates.append(repo_root / ref)
+    candidates.append(run_dir / ref)
+    for candidate in candidates:
+        data = read_json(candidate)
+        if data:
+            return data
+    return {}
+
+
+def peer_followup_summary(metrics: dict[str, Any], pointer: dict[str, Any]) -> list[str]:
+    product = as_dict(
+        metrics.get("generic_write_refined_product")
+        or metrics.get("generic_write_document_product")
+    )
+    gpu0_count = int(
+        product.get("gpu0_peer_followup_pending_count")
+        or metrics.get("gpu0_peer_followup_pending_count")
+        or 0
+    )
+    npu_count = int(
+        product.get("npu_peer_followup_pending_count")
+        or metrics.get("npu_peer_followup_pending_count")
+        or 0
+    )
+    rows = [
+        as_dict(row)
+        for row in as_list(pointer.get("pointer_closure_table"))
+        if str(as_dict(row).get("source_role") or "")
+        in {"gpu0_reviewer_refiner", "npu_auditor"}
+        and str(as_dict(row).get("closure_status") or "") == "deferred_to_resume"
+    ]
+    latest = rows[-1] if rows else {}
+    return [
+        f"GPU0 peer follow-up pending: `{gpu0_count}`.",
+        f"NPU peer follow-up pending: `{npu_count}`.",
+        f"Ultimo peer pending block: `{latest.get('pointer_id') or 'not_available'}`.",
+        "Azione richiesta: `next GPU1 revision must consume this peer evidence`.",
+        "Regola: GPU0/NPU possono produrre peer/refinement/veto/evidence, ma non chiudono mai il prodotto senza un blocco GPU1 successivo collegato.",
+    ]
 
 
 def validation_summary(
@@ -330,6 +427,14 @@ def render_markdown(
             f"- Decisione pratica: {practical_decision}",
             "",
             *provider_replight_table(gate),
+            "## Generic write",
+            "",
+            *[f"- {line}" for line in generic_write_summary(run_dir, gate)],
+            "",
+            "## Peer follow-up pending",
+            "",
+            *[f"- {line}" for line in peer_followup_summary(metrics, pointer)],
+            "",
             "## Piano applicabile",
             "",
         "Questi sono i cambiamenti concreti che fanno avanzare il progetto rispetto all'MD input: final product run-owned, N-turn pointer graph, ambiente virtuale controllato, gate piu severi e verifiche eseguibili.",

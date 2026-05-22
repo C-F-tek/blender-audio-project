@@ -162,6 +162,15 @@ def _provider_loaded(
             and report.get("semantic_provider_execution_performed") is True
         )
     if lane == "npu_micro_task_auditor":
+        if report.get("npu_peer_evidence_verified") is True:
+            return bool(
+                provider_model
+                and generated_phrase
+                and report.get("provider_device_verified") is True
+                and report.get("npu_device_workload_requested") is True
+                and report.get("npu_device_workload_performed") is True
+                and report.get("npu_micro_audit_performed") is True
+            )
         return bool(
             provider_model
             and generated_phrase
@@ -243,6 +252,15 @@ def _provider_loaded_failure(
             or report.get("npu_device_workload_performed") is not True
         ):
             return "npu_device_workload_missing"
+        if report.get("npu_peer_evidence_verified") is True:
+            if report.get("npu_micro_audit_performed") is not True:
+                return "npu_micro_audit_missing"
+            if not generated_phrase:
+                return "no_generated_phrase"
+            return "passed_false"
+        native_error = str(report.get("npu_native_tool_loop_error") or "").strip()
+        if native_error:
+            return native_error
         if report.get("npu_micro_provider_model_loaded") is not True:
             return "npu_micro_provider_model_not_loaded"
         if report.get("npu_micro_provider_execution_performed") is not True:

@@ -16,6 +16,7 @@ try:
     from ia_carmine.product.code_product.final_readable_product.product_contract import code_product_markdown_metrics, final_product_blockers, real_code_product_ready
     from ia_carmine.product.code_product.final_readable_product.pointer_reconstruction import build_pointer_reconstruction
     from ia_carmine.runtime.heap_gate.pointer_soft_lock import gpu1_blocked_reason_from_gate, soft_lock_state_from_reports
+    from ia_carmine._shared.report_io import print_json_report
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
@@ -27,6 +28,7 @@ except ImportError:  # pragma: no cover
     from ia_carmine.product.code_product.final_readable_product.product_contract import code_product_markdown_metrics, final_product_blockers, real_code_product_ready  # type: ignore
     from ia_carmine.product.code_product.final_readable_product.pointer_reconstruction import build_pointer_reconstruction  # type: ignore
     from ia_carmine.runtime.heap_gate.pointer_soft_lock import gpu1_blocked_reason_from_gate, soft_lock_state_from_reports  # type: ignore
+    from ia_carmine._shared.report_io import print_json_report  # type: ignore
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 def read_json(path: Path) -> dict[str, Any]:
@@ -255,6 +257,26 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     blockers.extend(str(item) for item in pointer_reconstruction.get("errors", []))
     if open_pointer_count_final > 0:
         blockers.append("pointer closure has open pointers")
+    generic_product = as_dict(
+        metrics.get("generic_write_refined_product")
+        or metrics.get("generic_write_document_product")
+    )
+    peer_pending_reasons = []
+    if int(generic_product.get("gpu0_peer_followup_pending_count") or metrics.get("gpu0_peer_followup_pending_count") or 0) > 0:
+        peer_pending_reasons.append("gpu0_peer_followup_pending")
+    if int(generic_product.get("npu_peer_followup_pending_count") or metrics.get("npu_peer_followup_pending_count") or 0) > 0:
+        peer_pending_reasons.append("npu_peer_followup_pending")
+    peer_pending_reason = ",".join(peer_pending_reasons)
+    final_soft_close_reason = (
+        peer_pending_reason
+        or closure_quorum_reason
+        or gpu1_reason
+        or gate_product_status
+        or provider_decision
+        or soft_lock_state
+    )
+    if peer_pending_reason and not provider_blocked_reason:
+        provider_blocked_reason = peer_pending_reason
     if documents_dir_for_later:
         operator_decision_path = documents_dir_for_later / "OPERATOR_DECISION.txt"
         write_operator_decision(
@@ -291,7 +313,8 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "product_approval_status": "blocked" if blocked_continuation else code_product_state,
         "resume_from_block_id": resume_from_block_id,
         "continuation_required": blocked_continuation,
-        "soft_close_reason": closure_quorum_reason or gpu1_reason or gate_product_status or provider_decision or soft_lock_state,
+        "soft_close_reason": final_soft_close_reason,
+        "product_blocked_reason": "" if code_product_ready else final_soft_close_reason,
         "soft_lock_state": soft_lock_state,
         "soft_lock_closure_owner_decision": soft_lock.get("soft_lock_closure_owner_decision", ""),
         "gpu0_closure_agreement": soft_lock.get("gpu0_closure_agreement", ""),
@@ -376,7 +399,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 def main() -> int:
     report, _markdown = build_report(parse_args())
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    print_json_report(report)
     return 0 if report.get("passed") else 2
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -41,9 +41,9 @@ CPU/helper -> broker, validator, lab, composer
 - Provider text is evidence, not product.
 - Pointer/proposal blocks do not prove provider workload by themselves.
 - `provider_execution_performed` must be backed by explicit workload/provider evidence.
-- GPU1 and GPU0 are Ollama operative lanes and may drive broker/native tool calls. NPU can emit bounded micro audit/veto/tool evidence only as diagnostic support and must not drive broker execution or hold closure as semantic closer.
+- GPU1 is the primary Ollama broker/native tool-call lane and owns final synthesis. GPU0 keeps the same Ollama tool schema, but its tool results and no-tool prose captures are peer-only refinement/veto/evidence that require a later GPU1 consumption turn. NPU can emit bounded micro audit/veto/tool evidence only as peer/diagnostic support; `npu_peer_evidence_verified=true` counts when NPU workload + micro-audit + schema are real, while `npu_native_tool_loop_error` remains runtime feedback unless the native tool loop was explicitly required.
 - In canonical provider runs, the provider boot gate first proves GPU1/Ollama, GPU0/Ollama Vulkan and NPU/OpenVINO are alive in the same provider window. GPU1 then gets the short replight check. GPU0/NPU useful workload evidence is produced in the real provider loop, not by replaying their full reports as pre-loop replight.
-- GPU0 and NPU boot failures are `provider_boot_gate_failed:*` exits. GPU0/NPU loop failures remain provider workload failures, not degraded provider success and not CPU fallback.
+- GPU0 and NPU boot failures are `provider_boot_gate_failed:*` exits. GPU0 loop failures remain provider workload failures. NPU native tool-loop timeout does not erase valid `npu_peer_evidence_verified` evidence, but it is still reported as runtime/tool-loop feedback and cannot close without later GPU1 consumption.
 - Time input is a shared heap counter for GPU1 cycles and coordinated soft close. GPU0/NPU sidecars use bounded watchdogs/timeouts; a selected lane that fails to start is still a hard universe block.
 - GPU1 must remain resident for the whole provider production cycle, not only until its current subprocess exits. GPU0 uses the same residency rule when selected so provider lanes can call back into each other across revisions. Ollama unload happens at provider production-cycle cleanup, not as a per-lane success proof.
 - Soft close enters `soft_lock_state=closing_open_pointers`: no broad new exploration, only merge/veto/refine/classify/resume work until every pointer is merged, rejected, superseded, deferred, externally blocked or requires operator input.
@@ -52,7 +52,7 @@ CPU/helper -> broker, validator, lab, composer
 - `provider_revision_count` is positive evidence only. It must not be compared to an effective max to cut GPU1 recursion.
 - Do not weaken gates to make a run pass.
 - Do not convert all context files into patch targets.
-- `generic_write` is a broker evidence tool for refined request/action-plan turns. A GPU1/GPU0 call forces a later GPU1 revision; after three consumed refinements it can close as `generic_write_refined_product`, including code content, but it still cannot claim patch application or source writes.
+- `generic_write` is a broker evidence tool for refined request/action-plan turns. A GPU1/GPU0/NPU no-tool capture or call forces a later GPU1 revision; after three consumed refinements it can close as `generic_write_refined_product`, including code content, but it still cannot claim patch application or source writes.
 
 ## Expected downstream outputs
 

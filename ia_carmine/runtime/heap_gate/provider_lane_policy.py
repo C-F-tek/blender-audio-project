@@ -32,7 +32,8 @@ def valid_npu_micro_audit_available(provider_reports: list[dict[str, Any]]) -> b
         return bool(
             report.get("passed")
             and (
-                report.get("npu_peer_activity_performed")
+                report.get("npu_peer_evidence_verified")
+                or report.get("npu_peer_activity_performed")
                 or report.get("npu_micro_provider_execution_performed")
                 or report.get("npu_provider_execution_performed")
                 or report.get("operational_provider_activity")

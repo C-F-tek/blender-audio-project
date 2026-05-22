@@ -363,6 +363,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "dry_run": bool(args.dry_run),
         "tool_request_count": len(tool_requests),
         "tool_execution_count": len(executed),
+        "tool_requests": tool_requests,
         "blocked_tool_count": len(blocked),
         "failed_tool_count": len(failed),
         "nonblocking_failed_tool_count": len(nonblocking_failed),

@@ -56,8 +56,8 @@ def dry_run_contract_policy() -> dict[str, Any]:
         "gpu0_required_for_close": True,
         "npu_closure_role": "advisory_only",
         "native_tool_calling_policy": {
-            "gpu1_planner": "open_revision_and_may_drive_broker_native_tool_calls",
-            "gpu0_peer": "review_refine_and_may_drive_broker_native_tool_calls",
+            "gpu1_planner": "open_revision_drive_broker_tools_and_own_final_synthesis",
+            "gpu0_peer": "same_tool_schema_peer_only_refinement_veto_evidence_requires_later_gpu1_consumption",
             "npu_micro_task_auditor": "micro_audit_native_tools_diagnostic_only",
         },
         "soft_lock_policy": {

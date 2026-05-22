@@ -227,13 +227,19 @@ def _report(
     micro_activity_performed = bool(micro_task.get("micro_task_performed"))
     npu_device_available = bool(micro_task.get("npu_device_available"))
     npu_device_verified = bool(npu_device_available and micro_activity_performed)
-    npu_real_provider_performed = bool(
+    response_schema_valid = _npu_response_schema_valid(
+        response_text, micro_task_kind, micro_decision
+    )
+    npu_peer_evidence_verified = bool(
         npu_device_verified
         and device_workload.get("requested")
         and device_workload.get("performed")
         and device_workload.get("passed")
-        and npu_tool_loop.get("native_tool_loop_performed")
+        and response_schema_valid
     )
+    npu_real_provider_performed = npu_peer_evidence_verified
+    native_tool_loop_required = bool(npu_tool_loop.get("native_tool_loop_required"))
+    native_tool_loop_error = _native_tool_loop_error(npu_tool_loop)
     micro_tool_provider_performed = bool(
         npu_device_available
         and
@@ -315,6 +321,11 @@ def _report(
         ),
         "npu_micro_provider_model_loaded": bool(npu_tool_loop.get("native_tool_loop_performed")),
         "npu_micro_provider_execution_performed": micro_tool_provider_performed,
+        "npu_peer_evidence_verified": npu_peer_evidence_verified,
+        "npu_response_schema_valid": response_schema_valid,
+        "npu_native_tool_loop_error": native_tool_loop_error,
+        "npu_native_tool_loop_required": native_tool_loop_required,
+        "npu_peer_followup_required": npu_peer_evidence_verified,
         "npu_micro_child_failed": bool(
             npu_tool_loop.get("model_dir")
             and not npu_tool_loop.get("native_tool_loop_performed")
@@ -345,12 +356,16 @@ def _report(
     }
 
 def _apply_native_tool_loop_gate(report: dict, npu_tool_loop: dict) -> None:
+    peer_verified = bool(report.get("npu_peer_evidence_verified"))
+    native_required = bool(report.get("npu_native_tool_loop_required"))
     if report.get("npu_micro_task_closed") is not True:
         report.setdefault("errors", []).append("npu_micro_task_missing_final_decision")
         report["passed"] = False
     if report.get("npu_micro_decision") == "NPU_TIMEOUT_BOUNDARY":
-        report.setdefault("errors", []).append("npu_micro_timeout_boundary")
-        report["passed"] = False
+        target = "errors" if native_required or not peer_verified else "warnings"
+        report.setdefault(target, []).append("npu_micro_timeout_boundary")
+        if target == "errors":
+            report["passed"] = False
     if report.get("npu_device_workload_requested") and not report.get("npu_device_workload_performed"):
         workload = report.get("npu_device_workload") if isinstance(report.get("npu_device_workload"), dict) else {}
         message = (
@@ -370,7 +385,7 @@ def _apply_native_tool_loop_gate(report: dict, npu_tool_loop: dict) -> None:
                 classification or "openvino_npu_native_tool_call_missing"
             )
             report["native_tool_loop_timeout_warning"] = message
-            target = "errors"
+            target = "errors" if native_required or not peer_verified else "warnings"
             report.setdefault(target, []).append(message)
             if target == "errors":
                 report["passed"] = False
@@ -379,6 +394,42 @@ def _apply_native_tool_loop_gate(report: dict, npu_tool_loop: dict) -> None:
             "NPU peer did not consume a valid GPU1 primary advisor leader packet."
         )
         report["passed"] = False
+
+
+def _npu_response_schema_valid(text: str, micro_task_kind: str, decision: str) -> bool:
+    required = {
+        "MICRO_TASK": micro_task_kind,
+        "CHECKED": "",
+        "FINDINGS": "",
+        "DECISION": decision,
+        "REASON": "",
+    }
+    lines = {}
+    for raw_line in str(text or "").splitlines():
+        if "=" not in raw_line:
+            continue
+        key, value = raw_line.split("=", 1)
+        lines[key.strip()] = value.strip()
+    if decision not in NPU_MICRO_DECISIONS:
+        return False
+    for key, expected in required.items():
+        if key not in lines:
+            return False
+        if expected and lines[key] != expected:
+            return False
+    return True
+
+
+def _native_tool_loop_error(npu_tool_loop: dict) -> str:
+    classification = str(npu_tool_loop.get("classification") or "").strip()
+    if (
+        npu_tool_loop.get("native_tool_loop_requested")
+        and not npu_tool_loop.get("native_tool_loop_performed")
+    ):
+        return classification or "openvino_native_tool_loop_not_performed"
+    if any(marker in classification.lower() for marker in ("timeout", "failed", "error")):
+        return classification
+    return ""
 
 def _write_outputs(args: argparse.Namespace, report: dict) -> None:
     output = Path(args.output)

@@ -7,6 +7,7 @@ import json
 import shutil
 from pathlib import Path
 
+from ia_carmine._shared.report_io import print_json_report
 from .common import read_json, write_json, write_text
 from .output import attach_to_composer_documents, render_markdown
 from .report import build_report
@@ -57,5 +58,5 @@ def main() -> int:
                 "composer documents_dir not found; revision context kept in run dir only"
             )
             write_json(output, report)
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    print_json_report(report)
     return 0

@@ -92,6 +92,54 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
         ("gpu0_peer", "gpu0_reviewer_refiner", "review_refinement_block", "smoke:gpu0:002", "REFINE"),
         ("npu_micro_task_auditor", "npu_auditor", "audit_block", "smoke:npu:002", "AUDIT"),
     ):
+        provider_fields: dict[str, Any] = {}
+        if lane == "gpu1_planner":
+            provider_fields.update(
+                {
+                    "provider_backend": "ollama",
+                    "provider_compute_device": "ollama/gpu1",
+                    "provider_device_verified": True,
+                    "provider_loaded": True,
+                    "ollama_full_gpu_verified": True,
+                    "ollama_compute_verified": True,
+                    "done": True,
+                    "eval_count": 96,
+                    "provider_model": "qwen3-coder:latest",
+                }
+            )
+        elif lane == "gpu0_peer":
+            provider_fields.update(
+                {
+                    "provider_backend": "ollama",
+                    "provider_compute_device": "ollama/gpu0-vulkan",
+                    "provider_device_verified": True,
+                    "provider_loaded": True,
+                    "ollama_residency_verified": True,
+                    "ollama_compute_verified": True,
+                    "done": True,
+                    "eval_count": 96,
+                    "provider_model": "qwen3:1.7b",
+                }
+            )
+        else:
+            provider_fields.update(
+                {
+                    "provider_backend": "openvino",
+                    "provider_compute_device": "openvino/NPU",
+                    "provider_device_verified": True,
+                    "provider_model": "openvino_npu_micro",
+                    "npu_peer_evidence_verified": True,
+                    "npu_response_schema_valid": True,
+                    "npu_device_workload_requested": True,
+                    "npu_device_workload_performed": True,
+                    "npu_micro_audit_performed": True,
+                    "npu_micro_provider_model_loaded": False,
+                    "npu_micro_provider_execution_performed": False,
+                    "npu_native_tool_loop_error": "openvino_native_tool_loop_timeout",
+                    "npu_native_tool_loop_required": False,
+                    "npu_peer_followup_required": True,
+                }
+            )
         write_json(
             provider_dir / f"{lane}.json",
             {
@@ -113,6 +161,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "selected_model": "qwen3-coder:latest" if lane == "gpu1_planner" else "",
                 "workload": {"performed": True},
                 "response_text": f"{role} performed=true reviewed {proposal_2}",
+                **provider_fields,
             },
         )
     write_json(
@@ -253,6 +302,26 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "runtime_debug_lab_passed": True,
                 "virtual_dev_environment_passed": True,
                 "virtual_dev_environment_reports": [repo_rel(repo_root, virtual_dev_path)],
+                "generic_write_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
+                "generic_write_no_tool_capture_count": 3,
+                "gpu0_peer_followup_pending_count": 1,
+                "npu_peer_followup_pending_count": 1,
+                "generic_write_refined_product": {
+                    "eligible": False,
+                    "capture_count": 3,
+                    "generic_write_no_tool_capture_count": 3,
+                    "generic_write_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
+                    "gpu0_peer_followup_pending_count": 1,
+                    "npu_peer_followup_pending_count": 1,
+                    "latest_consumed_by_gpu1": False,
+                    "captures": [
+                        {
+                            "lane": "npu_micro_task_auditor",
+                            "revision": 2,
+                            "provider_response_excerpt": "MICRO_TASK=target_reference_audit DECISION=NPU_TIMEOUT_BOUNDARY",
+                        }
+                    ],
+                },
             },
             "real_run_output_contract": {
                 "product_status": "blocked_with_reason",
@@ -311,7 +380,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     zip_path = Path(str(documents_dir) + ".zip")
     body = final_md.read_text(encoding="utf-8-sig") if final_md.exists() else ""
     code_product_body = full_code_product.read_text(encoding="utf-8-sig") if full_code_product.exists() else ""
-    required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Modifiche concrete", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore"]
+    required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Modifiche concrete", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore", "Peer follow-up pending", "MICRO_TASK=target_reference_audit"]
     missing = [phrase for phrase in required_phrases if phrase not in body]
     pointer_reconstruction = (
         product.get("pointer_reconstruction")

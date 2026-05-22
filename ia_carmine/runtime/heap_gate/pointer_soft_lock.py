@@ -20,6 +20,7 @@ POINTER_CLOSURE_STATUSES = {
     "requires_operator_input",
     "open",
 }
+PEER_POINTER_ROLES = {"gpu0_reviewer_refiner", "npu_auditor"}
 
 def pointer_closure_table(
     blocks: list[dict[str, Any]],
@@ -276,7 +277,15 @@ def _closure_entry(
     reason = str(block.get("reject_reason") or block.get("blocked_reason") or "")
     exit_decision = str(block.get("exit_decision") or "").upper()
     superseded = _superseded_by(pointer_id, blocks)
-    if accepted:
+    peer_needs_gpu1_consumption = bool(
+        accepted and role in PEER_POINTER_ROLES and not _peer_consumed_by_gpu1(pointer_id, blocks)
+    )
+    if peer_needs_gpu1_consumption:
+        status = "deferred_to_resume"
+        included = False
+        resume = resume or pointer_id
+        reason = reason or f"{role}_followup_pending_gpu1_consumption"
+    elif accepted:
         status = "merged_into_final_product"
         included = True
     elif superseded:
@@ -324,6 +333,35 @@ def _superseded_by(pointer_id: str, blocks: list[dict[str, Any]]) -> str:
         if str(block.get("refines_block_id") or "") == pointer_id:
             return str(block.get("id") or block.get("block_id") or "")
     return ""
+
+
+def _peer_consumed_by_gpu1(pointer_id: str, blocks: list[dict[str, Any]]) -> bool:
+    if not pointer_id:
+        return False
+    peer_index = next(
+        (
+            index
+            for index, block in enumerate(blocks)
+            if str(block.get("id") or block.get("block_id") or "") == pointer_id
+        ),
+        -1,
+    )
+    candidate_blocks = blocks[peer_index + 1 :] if peer_index >= 0 else []
+    for block in candidate_blocks:
+        role = str(block.get("role") or block.get("source_role") or "")
+        if role != "gpu1_planner":
+            continue
+        related = {
+            str(block.get("previous_block_id") or ""),
+            str(block.get("refines_block_id") or ""),
+            str(block.get("resume_from_block_id") or ""),
+        }
+        consumed = block.get("consumed_block_ids") or block.get("consumes_block_ids") or []
+        if isinstance(consumed, list):
+            related.update(str(item) for item in consumed)
+        if pointer_id in related:
+            return True
+    return False
 
 
 def _md(value: Any) -> str:

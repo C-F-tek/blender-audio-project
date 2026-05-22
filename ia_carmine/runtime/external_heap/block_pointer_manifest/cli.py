@@ -384,7 +384,11 @@ def build_report(
         "pointer_product_contract": POINTER_PRODUCT_CONTRACT,
         "pointer_contract_role": "product_graph_decision_recovery_and_long_response_composition",
         "provider_execution_semantics": "separate_guardrail_true_only_with_explicit_provider_or_workload_evidence",
-        "provider_work_semantics": "provider role counts only when provider_work_verified=true; device/model/diagnostic/replight are health evidence only",
+        "provider_work_semantics": (
+            "provider role counts only when provider_work_verified=true; NPU peer evidence "
+            "counts when npu_peer_evidence_verified=true, while native tool-loop timeout "
+            "remains runtime feedback unless npu_native_tool_loop_required=true"
+        ),
         "resource_mechanics_semantics": "separate_counter_true_for_resource_or_provider_preflight_mechanics",
         "roles_expected": list(DEFAULT_ROLES),
         "roles_present": roles_present,

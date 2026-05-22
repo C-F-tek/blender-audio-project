@@ -26,6 +26,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.report_io import print_json_report
+
 EXECUTION_TRUE_PATTERNS = (
     re.compile(
         r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b",
@@ -371,7 +373,7 @@ def main() -> int:
                 "composer documents_dir not found; long response kept in run dir only"
             )
             write_json(json_output, report)
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    print_json_report(report)
     return 0
 
 
