@@ -2,19 +2,33 @@
 
 ## Scope
 
-This runbook documents the repository-local Codex hooks added under `.codex/`.
+This runbook documents the repository-local Codex hook scripts added under `.codex/`.
 
-The hooks improve context, continuity and validation quality while preserving normal Codex flow.
+The scripts are retained as opt-in experiments only.
+
+## Current default
+
+Repository hooks are disabled by default.
+
+The active config is:
+
+```json
+{
+  "hooks": {}
+}
+```
+
+This avoids Codex App session/chat startup errors caused by repository-local hook execution.
 
 ## Policy
 
-These hooks are advisory only.
+Do not enable hooks repo-wide until compatibility is validated in the target Codex App build.
 
-They do not deny tool calls, rewrite tool calls, stop Codex, force operator approval, commit, push, merge, delete, deploy or change permissions.
+Future hooks must not deny tool calls, rewrite tool calls, stop Codex, force operator approval, commit, push, merge, delete, deploy or change permissions.
 
-There is deliberately no `Stop` hook.
+There must be no `Stop` hook unless the operator explicitly asks for a hard completion gate.
 
-`UserPromptSubmit` is also disabled in `hooks.json` because it runs exactly when the operator submits a chat prompt/goal and may interfere with prompt entry in some Codex App builds.
+`UserPromptSubmit` must remain disabled until tested because it runs exactly when the operator submits a chat prompt/goal.
 
 ## Installed files
 
@@ -29,34 +43,36 @@ There is deliberately no `Stop` hook.
 docs/LOCAL_AI_TASKS/codex-advisory-hooks-runbook-2026-05-22.md
 ```
 
-`user_prompt_context.py` remains available as a disabled helper for future CLI/build compatibility tests, but it is not wired in `hooks.json`.
+## Script roles if manually tested later
 
-## Active behavior
+### session_start_context.py
 
-### SessionStart
+Repository context loader for startup/resume only.
 
-Adds repository state, current branch, latest commit, dirty state, known guide files, latest task handoffs, latest compact evidence and IA-Carmine policy reminders.
+### pre_tool_guard.py
 
-### PreToolUse
+Advisory command context for Bash/apply_patch/Edit/Write/MCP calls.
 
-Adds advisory context before Bash, apply_patch, Edit, Write and MCP tool calls.
+### post_tool_review.py
 
-It highlights broad Git staging, runtime artifact paths and other command shapes that should normally be handled with explicit scope.
+Advisory validation reminders after supported tool execution.
 
-### PostToolUse
+### user_prompt_context.py
 
-Adds advisory validation reminders after tool execution, especially when Python paths or runtime/local paths appear in the working tree.
+Disabled helper. Do not wire into `UserPromptSubmit` until Codex App prompt submission is proven stable.
 
-## Local activation
+## Local emergency disable
 
-After pulling the files locally, open Codex and run:
+Rename `.codex/hooks.json` to `hooks.disabled.json`, or replace it with:
 
-```text
-/hooks
+```json
+{
+  "hooks": {}
+}
 ```
 
-Review and trust the hook definitions.
+Then reopen Codex App.
 
-## Validation
+## Validation before any future reactivation
 
-Validate the hook scripts locally with Python bytecode compilation and `git diff --check` before relying on them for daily work.
+Validate scripts with Python bytecode compilation and confirm that Codex App can open a session, submit a chat prompt, run a simple command and continue the conversation normally.
