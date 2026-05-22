@@ -118,8 +118,8 @@ def read_prompt_file(repo_root: Path, prompt_file: str) -> str:
     return path.read_text(encoding="utf-8-sig")
 
 
-def mirror_single_replight_lane(report: dict[str, Any], lane_report: dict[str, Any]) -> dict[str, Any]:
-    """Expose the actual provider lane at top level for hard replight gates."""
+def mirror_single_provider_lane(report: dict[str, Any], lane_report: dict[str, Any]) -> dict[str, Any]:
+    """Expose the actual provider lane at top level for gates and workload checks."""
     mirror_keys = (
         "lane",
         "provider_id",
@@ -128,7 +128,21 @@ def mirror_single_replight_lane(report: dict[str, Any], lane_report: dict[str, A
         "provider_backend",
         "provider_compute_device",
         "provider_device_verified",
+        "provider_execution_performed",
         "provider_loaded",
+        "response_text",
+        "raw_response_chars",
+        "text_preview",
+        "target_files",
+        "validation_commands",
+        "tool_calls",
+        "textual_tool_calls",
+        "native_tool_loop_requested",
+        "native_tool_loop_supported",
+        "native_tool_loop_performed",
+        "native_tool_loop_classification",
+        "native_tool_call_count",
+        "textual_tool_call_count",
         "generated_phrase",
         "prompt_token_count",
         "completion_token_count",
@@ -163,6 +177,13 @@ def mirror_single_replight_lane(report: dict[str, Any], lane_report: dict[str, A
         "gpu_process_observed",
         "ollama_residency_verified",
         "ollama_compute_verified",
+        "heap_delta_text_present",
+        "heap_delta_text_required",
+        "provider_output_complete",
+        "response_likely_incomplete",
+        "prompt_attempts",
+        "eval_count",
+        "prompt_eval_count",
     )
     for key in mirror_keys:
         if key in lane_report:
@@ -218,6 +239,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                     lane=args.ollama_lane,
                     role=args.ollama_role,
                     base_url=args.ollama_base_url,
+                    unload_model=not args.defer_unload,
                 )
             )
         except Exception as exc:  # noqa: BLE001 - report-only tool.
@@ -303,8 +325,8 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "lane_reports": lane_reports,
         "provider_result_report": provider_report,
     }
-    if args.replight_mode and len(lane_reports) == 1 and isinstance(lane_reports[0], dict):
-        return mirror_single_replight_lane(report, lane_reports[0])
+    if args.run_ollama and len(lane_reports) == 1 and isinstance(lane_reports[0], dict):
+        return mirror_single_provider_lane(report, lane_reports[0])
     return report
 
 def main() -> int:
@@ -326,6 +348,7 @@ def main() -> int:
     parser.add_argument("--ollama-lane", default="gpu1_planner")
     parser.add_argument("--ollama-role", default="")
     parser.add_argument("--keep-alive", default="0s")
+    parser.add_argument("--defer-unload", action="store_true")
     parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=True)
     parser.add_argument("--replight-mode", action="store_true")
     parser.add_argument("--npu-python-exe", default="")

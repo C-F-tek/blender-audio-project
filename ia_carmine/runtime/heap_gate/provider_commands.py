@@ -1,23 +1,13 @@
-"""RuntimeGateProviderCommandsMixin extracted from the heap runtime completeness gate."""
 from __future__ import annotations
-from ia_carmine.runtime.heap_gate.runtime_common import (
-    Any,
-    Path,
-    repo_rel,
-    subprocess,
-)
+from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, repo_rel, subprocess
 from ia_carmine.runtime.heap_gate.provider_command_specs import build_provider_command_specs
 from ia_carmine.runtime.heap_gate.provider_time import build_provider_time_counter_contract
+def _empty_report_value(value: Any) -> bool:
+    return value is None or value == "" or value == [] or value == {}
 class RuntimeGateProviderCommandsMixin:
     def provider_time_counter_contract(self) -> dict[str, Any]:
         return build_provider_time_counter_contract(self.args)
-
-    def provider_command_specs(
-        self,
-        work_dir: Path,
-        revision: int = 0,
-        selected_lanes: set[str] | None = None,
-    ) -> list[dict[str, Any]]:
+    def provider_command_specs(self, work_dir: Path, revision: int = 0, selected_lanes: set[str] | None = None) -> list[dict[str, Any]]:
         return build_provider_command_specs(self, work_dir, revision, selected_lanes)
     def summarize_provider_report(
         self,
@@ -107,7 +97,10 @@ class RuntimeGateProviderCommandsMixin:
             for lane_report in lane_reports:
                 if isinstance(lane_report, dict):
                     absorb_tool_loop(lane_report)
-                if isinstance(lane_report, dict) and lane_report.get("lane") == "ollama":
+                lane_report_lane = str(
+                    lane_report.get("lane") or lane_report.get("provider_id") or ""
+                ) if isinstance(lane_report, dict) else ""
+                if isinstance(lane_report, dict) and lane_report_lane in {"ollama", lane}:
                     selected_model = str(
                         lane_report.get("selected_model")
                         or lane_report.get("model")
@@ -131,6 +124,7 @@ class RuntimeGateProviderCommandsMixin:
                         "provider_backend",
                         "provider_compute_device",
                         "provider_device_verified",
+                        "provider_execution_performed",
                         "cpu_provider_fallback_performed",
                         "provider_replight_required",
                         "provider_id",
@@ -159,8 +153,17 @@ class RuntimeGateProviderCommandsMixin:
                         "product_blocked_reason",
                         "provider_work_verified",
                         "provider_rejection_reason",
+                        "response_text",
+                        "raw_response_chars",
+                        "heap_delta_text_present",
+                        "heap_delta_text_required",
+                        "provider_output_complete",
+                        "response_likely_incomplete",
+                        "prompt_attempts",
+                        "eval_count",
+                        "prompt_eval_count",
                     ):
-                        if key not in report_data and key in lane_report:
+                        if key in lane_report and _empty_report_value(report_data.get(key)):
                             report_data[key] = lane_report.get(key)
                     if response_text:
                         break
@@ -249,6 +252,9 @@ class RuntimeGateProviderCommandsMixin:
                     "npu_micro_provider_classification": report_data.get(
                         "npu_micro_provider_classification"
                     ),
+                    "npu_micro_task_kind": report_data.get("npu_micro_task_kind"),
+                    "npu_micro_decision": report_data.get("npu_micro_decision"),
+                    "npu_micro_task_closed": report_data.get("npu_micro_task_closed"),
                 }
             )
         else:
@@ -351,7 +357,6 @@ class RuntimeGateProviderCommandsMixin:
         vetoed = veto.get("vetoed") is True
         if not (has_placeholder or repeated or vetoed):
             return ""
-
         candidates = self.real_source_file_candidates(events, limit=18)
         latest_revision = report.get("revision")
         latest_source = report.get("source")

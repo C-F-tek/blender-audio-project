@@ -36,7 +36,6 @@ def collect_provider_processes(
         return
     while pending:
         now = time.perf_counter()
-        primary_done_at = _primary_completed_perf(prepared)
         for item in list(pending):
             process = item.get("process")
             if process is None:
@@ -44,14 +43,7 @@ def collect_provider_processes(
                 continue
             elapsed = now - float(item.get("started_perf") or now)
             watchdog = _item_watchdog_seconds(item, timeout_seconds)
-            sidecar_join = _sidecar_join_after_primary_seconds(item)
-            sidecar_expired = bool(
-                primary_done_at
-                and sidecar_join > 0
-                and not item.get("closure_owner")
-                and now - primary_done_at > sidecar_join
-            )
-            if process.poll() is None and elapsed <= watchdog and not sidecar_expired:
+            if process.poll() is None and elapsed <= watchdog:
                 continue
             command = list(item["command"])
             if process.poll() is None:
@@ -60,18 +52,14 @@ def collect_provider_processes(
                     stdout, stderr = process.communicate(timeout=5)
                 except Exception:
                     stdout, stderr = "", "provider watchdog cleanup output collection failed"
-                reason = (
-                    "sidecar join timeout after primary closure owner completed"
-                    if sidecar_expired
-                    else "provider watchdog timeout"
-                )
+                reason = "provider watchdog timeout"
                 item["completed"] = subprocess.CompletedProcess(
                     command,
                     returncode=124,
                     stdout=stdout or "",
                     stderr=(stderr or "") + f"\n{reason}",
                 )
-                status = "sidecar_join_timeout" if sidecar_expired else "watchdog_timeout"
+                status = "watchdog_timeout"
             else:
                 stdout, stderr = process.communicate()
                 item["completed"] = subprocess.CompletedProcess(
@@ -150,23 +138,6 @@ def _item_watchdog_seconds(item: dict[str, Any], fallback_seconds: int) -> float
         or fallback_seconds
     )
     return inf if value <= 0 else value
-
-
-def _sidecar_join_after_primary_seconds(item: dict[str, Any]) -> float:
-    try:
-        return float(item.get("sidecar_join_after_primary_seconds") or 0)
-    except (TypeError, ValueError):
-        return 0.0
-
-
-def _primary_completed_perf(prepared: list[dict[str, Any]]) -> float:
-    for item in prepared:
-        if item.get("closure_owner") and item.get("completed") is not None:
-            try:
-                return float(item.get("completed_perf") or 0)
-            except (TypeError, ValueError):
-                return 0.0
-    return 0.0
 
 
 def _terminate_pending_when_universe_inactive(

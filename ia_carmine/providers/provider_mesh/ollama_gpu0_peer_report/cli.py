@@ -33,11 +33,44 @@ def read_text(repo_root: Path, value: str) -> str:
 
 
 def request_text(repo_root: Path, args: argparse.Namespace) -> str:
+    parts: list[str] = []
     if args.request_file:
-        return read_text(repo_root, args.request_file)
-    if args.task_file:
-        return read_text(repo_root, args.task_file)
-    return str(args.request or "")
+        parts.append("OPERATOR_REQUEST:\n" + read_text(repo_root, args.request_file))
+    elif args.task_file:
+        parts.append("TASK_FILE_CONTEXT:\n" + read_text(repo_root, args.task_file))
+    elif args.request:
+        parts.append("INLINE_REQUEST:\n" + str(args.request or ""))
+    startup_text = startup_manifest_context(repo_root, args.startup_manifest)
+    if startup_text:
+        parts.append(startup_text)
+    return "\n\n".join(parts).strip()
+
+
+def startup_manifest_context(repo_root: Path, value: str) -> str:
+    if not value:
+        return ""
+    try:
+        payload = json.loads(read_text(repo_root, value))
+    except Exception as exc:  # noqa: BLE001 - report-only context fallback.
+        return f"STARTUP_MANIFEST_READ_ERROR: {type(exc).__name__}: {exc}"
+    artifacts = payload.get("artifacts") if isinstance(payload.get("artifacts"), dict) else {}
+    heap_task_file = str(payload.get("heap_task_file") or artifacts.get("heap_task_file") or "")
+    compact = {
+        "source": "startup_manifest",
+        "request_sha256": payload.get("request_sha256"),
+        "input_ready_before_heap": payload.get("input_ready_before_heap"),
+        "startup_reload_degraded": payload.get("startup_reload_degraded"),
+        "context_file_count": payload.get("context_file_count"),
+        "artifact_keys": sorted(str(key) for key in artifacts)[:40],
+        "heap_task_file": heap_task_file,
+    }
+    sections = ["STARTUP_MANIFEST_CONTEXT:\n" + json.dumps(compact, ensure_ascii=False, indent=2)]
+    if heap_task_file:
+        try:
+            sections.append("HEAP_TASK_FILE_CONTEXT:\n" + read_text(repo_root, heap_task_file)[:5000])
+        except Exception as exc:  # noqa: BLE001 - preserve compact failure evidence.
+            sections.append(f"HEAP_TASK_FILE_READ_ERROR: {type(exc).__name__}: {exc}")
+    return "\n\n".join(sections)
 
 
 def render_peer_prompt(request: str, leader_packet: dict[str, Any]) -> str:
@@ -80,6 +113,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Vulkan target: `{target.get('deviceName')}`",
         f"- Runtime Intel inference: `{runtime_log.get('runner_inference_intel')}`",
         f"- Unload verified: `{report.get('ollama_unload_verified')}`",
+        f"- Unload deferred until production cleanup: `{report.get('provider_residency_deferred_until_production_cleanup')}`",
         f"- Native tool calls: `{report.get('native_tool_call_count')}`",
         f"- Rejection reason: `{report.get('provider_rejection_reason')}`",
         "",
@@ -117,6 +151,7 @@ def main() -> int:
     parser.add_argument("--request", default="")
     parser.add_argument("--request-file", default="")
     parser.add_argument("--task-file", default="")
+    parser.add_argument("--startup-manifest", default="")
     parser.add_argument("--leader-packet", default="")
     parser.add_argument("--max-new-tokens", type=int, default=384)
     parser.add_argument("--ollama-num-ctx", type=int, default=8192)
@@ -124,6 +159,7 @@ def main() -> int:
     parser.add_argument("--ollama-num-thread", type=int, default=None)
     parser.add_argument("--ollama-context-candidates", default="8192,4096")
     parser.add_argument("--keep-alive", default="120s")
+    parser.add_argument("--defer-unload", action="store_true")
     parser.add_argument("--strict-provider-model", action="store_true")
     parser.add_argument("--operator-gpu-observation", default="")
     parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=True)
@@ -158,6 +194,7 @@ def main() -> int:
         role="gpu0_peer_reviewer_refiner",
         base_url=args.base_url,
         gpu0_vulkan_policy_verified=_gpu0_vulkan_policy_verified(gpu0_server),
+        unload_model=not args.defer_unload,
     )
     runtime_log = _runtime_log_evidence(gpu0_server)
     workload_verified = _gpu0_workload_verified(report, runtime_log)
@@ -173,6 +210,8 @@ def main() -> int:
             "ollama_gpu0_vulkan_required": True,
             "gpu0_windows_lane": "Windows GPU0 / Intel(R) Graphics",
             "gpu0_vulkan_workload_verified": workload_verified,
+            "provider_residency_deferred_until_production_cleanup": bool(args.defer_unload),
+            "gpu0_vulkan_server_deferred_until_provider_cleanup": bool(args.defer_unload),
             "openvino_gpu0_used": False,
         }
     )
@@ -185,7 +224,7 @@ def main() -> int:
         report["provider_work_verified"] = False
         report["provider_rejection_reason"] = "gpu0_ollama_vulkan_no_verified_workload"
         report["product_blocked_reason"] = "gpu0_ollama_vulkan_no_verified_workload"
-    if gpu0_server.get("started") and not args.keep_gpu0_vulkan_server:
+    if gpu0_server.get("started") and not args.keep_gpu0_vulkan_server and not args.defer_unload:
         report["gpu0_vulkan_server_stop"] = stop_gpu0_vulkan_server(args.base_url)
     output = resolve_path(repo_root, args.output)
     markdown = resolve_path(repo_root, args.markdown_output)
@@ -233,7 +272,6 @@ def _runtime_log_evidence(server_report: dict[str, Any]) -> dict[str, Any]:
 def _gpu0_workload_verified(report: dict[str, Any], runtime_log: dict[str, Any]) -> bool:
     return bool(
         report.get("gpu0_vulkan_policy_verified")
-        and report.get("ollama_unload_verified")
         and int(report.get("eval_count") or 0) > 0
         and runtime_log.get("runner_inference_intel")
     )

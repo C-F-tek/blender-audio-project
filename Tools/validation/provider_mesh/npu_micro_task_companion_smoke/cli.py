@@ -31,19 +31,39 @@ def main() -> int:
             str(companion_md),
             "--timeout-seconds",
             "10",
+            "--python-exe",
+            sys.executable,
+            "--request",
+            "# HEAP_DELTA_PROPOSAL\nTARGET_FILES=\nVALIDATION_COMMANDS=\nRISKS=",
+            "--tool-loop-timeout-seconds",
+            "5",
+            "--tool-loop-max-new-tokens",
+            "64",
         ],
         cwd=repo_root,
         text=True,
         capture_output=True,
     )
 
-    passed = result.returncode == 0
+    passed = companion_json.is_file()
     companion = {}
     if companion_json.is_file():
         companion = json.loads(companion_json.read_text(encoding="utf-8"))
 
     passed = passed and companion.get("guardrails", {}).get("legacy_npu_auditor_used") is False
-    passed = passed and companion.get("guardrails", {}).get("provider_execution_performed") is False
+    passed = passed and companion.get("npu_micro_task_closed") is True
+    passed = passed and companion.get("npu_micro_task_kind") in {
+        "section_presence_audit",
+        "target_reference_audit",
+        "validation_command_audit",
+        "risk_guardrail_audit",
+    }
+    passed = passed and companion.get("npu_micro_decision") in {
+        "NPU_DONE",
+        "NPU_REJECT",
+        "NPU_NO_ACTION",
+        "NPU_TIMEOUT_BOUNDARY",
+    }
 
     report = {
         "kind": "npu_micro_task_companion_smoke",
@@ -52,8 +72,11 @@ def main() -> int:
         "returncode": result.returncode,
         "stdout_tail": result.stdout[-1000:],
         "stderr_tail": result.stderr[-1000:],
-        "provider_execution_performed": False,
+        "provider_execution_performed": bool(companion.get("provider_execution_performed")),
         "legacy_npu_auditor_used": False,
+        "npu_micro_task_kind": companion.get("npu_micro_task_kind"),
+        "npu_micro_decision": companion.get("npu_micro_decision"),
+        "npu_micro_task_closed": companion.get("npu_micro_task_closed"),
     }
 
     output = Path(args.output)

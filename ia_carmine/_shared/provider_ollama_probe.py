@@ -1,26 +1,19 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-
 import time
 from pathlib import Path
 from typing import Any
-
 from ia_carmine._shared.ollama_gpu_residency import gpu_residency_summary, ollama_ps_snapshot
 from ia_carmine._shared.ollama_server_process import server_process_evidence
 from ia_carmine._shared.gpu_runtime_sampling import GpuRuntimeSampler
 from ia_carmine._shared.ollama_provider_selection import operator_gpu_observation_block_reason, select_ollama_provider_model
 from ia_carmine._shared.provider_ollama_report import build_ollama_probe_report, ollama_report_context
-from ia_carmine._shared.provider_ollama_probe_helpers import (
-    PartialWriter,
-    parsed_contract_fields,
-    positive_provider_value,
-    selection_blocked_report,
-)
+from ia_carmine._shared.provider_ollama_probe_helpers import PartialWriter, parsed_contract_fields, positive_provider_value, selection_blocked_report
+from ia_carmine._shared.provider_ollama_unload import finalize_ollama_unload_snapshots
 from ia_carmine._shared.provider_replight import provider_replight_fields
 from ia_carmine._shared.provider_probe_paths import ensure_repo_imports
 from ia_carmine._shared.provider_work_verification import full_gpu_requested, provider_work_status, response_likely_incomplete as is_response_likely_incomplete
 from ia_carmine.providers.ollama.runtime_evidence import apply_ollama_lane_evidence, ollama_lane_role
-
 def run_ollama_probe(
     repo_root: Path,
     model: str | None,
@@ -40,6 +33,7 @@ def run_ollama_probe(
     role: str = "",
     base_url: str | None = None,
     gpu0_vulkan_policy_verified: bool = False,
+    unload_model: bool = True,
 ) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from ia_carmine._shared.provider_tool_loop import (  # noqa: PLC0415
@@ -52,19 +46,9 @@ def run_ollama_probe(
         parse_json_contract,
         prompt_explicitly_requires_tool_call,
     )
-    from ia_carmine.providers.ollama import (  # noqa: PLC0415
-        DEFAULT_BASE_URL,
-        OllamaSession,
-        is_server_ready,
-        list_models,
-        list_models_from_disk,
-    )
-    from ia_carmine.runtime.runtime_tool.file_refs.classifier import (  # noqa: PLC0415
-        extract_target_refs,
-        extract_validation_refs,
-    )
+    from ia_carmine.providers.ollama import DEFAULT_BASE_URL, OllamaSession, is_server_ready, list_models, list_models_from_disk  # noqa: PLC0415
+    from ia_carmine.runtime.runtime_tool.file_refs.classifier import extract_target_refs, extract_validation_refs  # noqa: PLC0415
     from ia_carmine.providers.npu.pipeline import parse_provider_result  # noqa: PLC0415
-
     started = time.perf_counter()
     provider_lane = str(lane or "gpu1_planner").strip()
     provider_role = str(role or ollama_lane_role(provider_lane)).strip()
@@ -120,14 +104,13 @@ def run_ollama_probe(
         prompt=prompt,
         started=started,
     )
-
     ollama_ps_snapshots: list[dict[str, Any]] = []
     session_ollama_exe: Any = None
     with OllamaSession(
         model=selected_model,
         keep_alive=keep_alive,
         shutdown_server=False,
-        unload_model=True,
+        unload_model=bool(unload_model),
         base_url=effective_base_url,
         gpu_layers=gpu_layers,
         num_thread=num_thread,
@@ -247,16 +230,13 @@ def run_ollama_probe(
     ollama_ps_snapshots.append(
         ollama_ps_snapshot(session_ollama_exe, selected_model, "after", base_url=effective_base_url)
     )
-    time.sleep(0.5)
-    unload_snapshot = ollama_ps_snapshot(
-        session_ollama_exe,
-        selected_model,
-        "after_unload",
+    unload_performed, unload_verified = finalize_ollama_unload_snapshots(
+        snapshots=ollama_ps_snapshots,
+        session_ollama_exe=session_ollama_exe,
+        selected_model=selected_model,
         base_url=effective_base_url,
+        unload_model=bool(unload_model),
     )
-    ollama_ps_snapshots.append(unload_snapshot)
-    unload_performed = True
-    unload_verified = not bool(unload_snapshot.get("model_line"))
 
     parsed = parse_provider_result(
         {"response": text},

@@ -255,6 +255,14 @@ def _run_heap(args: Any, state: dict[str, Any]) -> None:
         )
         state["provider_orphan_cleanup"] = cleanup
         heap_result["provider_orphan_cleanup"] = cleanup
+    elif (state["run_dir"] / "provider_teamwork").exists():
+        cleanup = terminate_provider_launch_manifest_processes(
+            run_dir=state["run_dir"],
+            repo_root=state["repo_root"],
+            reason="heap command completed provider cleanup",
+        )
+        state["provider_orphan_cleanup"] = cleanup
+        heap_result["provider_orphan_cleanup"] = cleanup
     else:
         state["provider_orphan_cleanup"] = {}
     if not state["report_file"].exists():

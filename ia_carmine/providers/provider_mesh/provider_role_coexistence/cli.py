@@ -34,6 +34,7 @@ def main() -> int:
     parser.add_argument("--npu-model-dir", default="")
     parser.add_argument("--npu-hold-seconds", type=float, default=8.0)
     parser.add_argument("--npu-timeout-seconds", type=float, default=90.0)
+    parser.add_argument("--handoff-provider-loop", action="store_true")
     parser.add_argument("--output", default="output/validation/provider_role_coexistence.json")
     parser.add_argument("--markdown-output", default="output/validation/provider_role_coexistence.md")
     args = parser.parse_args()
@@ -90,15 +91,25 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         errors.append("gpu0_not_alive_during_triple_coexistence")
     if not npu_alive:
         errors.append("npu_not_loaded_during_triple_coexistence")
-    unload = {
-        "gpu1": _unload_ollama_role(args.gpu1_base_url, args.gpu1_model),
-        "gpu0": _unload_ollama_role(args.gpu0_base_url, args.gpu0_model),
-    }
+    if args.handoff_provider_loop:
+        unload = {
+            "gpu1": _deferred_unload(args.gpu1_base_url, args.gpu1_model),
+            "gpu0": _deferred_unload(args.gpu0_base_url, args.gpu0_model),
+        }
+    else:
+        unload = {
+            "gpu1": _unload_ollama_role(args.gpu1_base_url, args.gpu1_model),
+            "gpu0": _unload_ollama_role(args.gpu0_base_url, args.gpu0_model),
+        }
     npu_exit = _wait_npu_exit(npu.get("process"))
-    gpu0_stop = stop_gpu0_vulkan_server(args.gpu0_base_url) if gpu0_server.get("started") else {}
-    if not unload["gpu1"]["unloaded"]:
+    gpu0_stop = (
+        _deferred_gpu0_server_stop(args.gpu0_base_url)
+        if args.handoff_provider_loop
+        else (stop_gpu0_vulkan_server(args.gpu0_base_url) if gpu0_server.get("started") else {})
+    )
+    if not args.handoff_provider_loop and not unload["gpu1"]["unloaded"]:
         errors.append("gpu1_not_unloaded_after_probe")
-    if not unload["gpu0"]["unloaded"]:
+    if not args.handoff_provider_loop and not unload["gpu0"]["unloaded"]:
         errors.append("gpu0_not_unloaded_after_probe")
     if not npu_exit.get("exited"):
         errors.append("npu_child_not_exited_after_probe")
@@ -109,6 +120,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "repo_root": str(repo_root),
         "passed": not errors,
         "errors": errors,
+        "handoff_provider_loop": bool(args.handoff_provider_loop),
         "provider_inactivity_unload_seconds": 120,
         "coexistence_verified": bool(gpu1["alive_during_coexistence"] and gpu0["alive_during_coexistence"] and npu_alive),
         "roles": {"gpu1_planner": gpu1, "gpu0_peer": gpu0, "npu_micro_task_auditor": npu.get("ready_payload", {})},
@@ -242,6 +254,23 @@ def _unload_ollama_role(base_url: str, model: str) -> dict[str, Any]:
     return {"unloaded": False, "ps": payload}
 
 
+def _deferred_unload(base_url: str, model: str) -> dict[str, Any]:
+    return {
+        "unloaded": False,
+        "deferred_until_provider_cleanup": True,
+        "base_url": base_url,
+        "model": model,
+    }
+
+
+def _deferred_gpu0_server_stop(base_url: str) -> dict[str, Any]:
+    return {
+        "stopped": False,
+        "deferred_until_provider_cleanup": True,
+        "base_url": base_url,
+    }
+
+
 def _wait_npu_exit(process: Any) -> dict[str, Any]:
     if process is None:
         return {"exited": False, "reason": "process_missing"}
@@ -266,6 +295,7 @@ def _markdown(report: dict[str, Any]) -> str:
         f"- GPU1 alive: `{report.get('roles', {}).get('gpu1_planner', {}).get('alive_during_coexistence')}`\n"
         f"- GPU0 alive: `{report.get('roles', {}).get('gpu0_peer', {}).get('alive_during_coexistence')}`\n"
         f"- NPU loaded: `{report.get('roles', {}).get('npu_micro_task_auditor', {}).get('model_loaded')}`\n"
+        f"- Handoff provider loop: `{report.get('handoff_provider_loop')}`\n"
         f"- Unload seconds: `{report.get('provider_inactivity_unload_seconds')}`\n"
     )
 

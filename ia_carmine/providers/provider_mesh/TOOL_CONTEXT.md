@@ -111,6 +111,10 @@ python -m ia_carmine.cli build_gpu_repair_failure_recommendation ...
 - `ensure_provider_role_coexistence` proves GPU1 Ollama, GPU0 Ollama/Vulkan and
   NPU OpenVINO are alive during the same runtime window before unloading or
   exiting all three provider roles.
+- In full provider runtime handoff mode, GPU1 and GPU0 Ollama models stay
+  resident through the provider production cycle. A lane subprocess may finish
+  and be joined, but model unload and GPU0 `11435` shutdown are final cleanup
+  operations so provider lanes can call back into each other across revisions.
 - NPU should remain a sampled microtask/audit lane unless a specific compute-provider contract changes that; NPU provider evidence must be OpenVINO `NPU`, not CPU fallback.
 - NPU native model/tool-loop timeout is provider failure in complete run-unica mode; device enumeration or micro-preflight alone is diagnostic.
 - Provider prompts must use verified context and target allowlists where applicable.

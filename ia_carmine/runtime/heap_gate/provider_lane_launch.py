@@ -99,6 +99,7 @@ def _lane_manifest_item(gate: Any, item: dict[str, Any]) -> dict[str, Any]:
         "soft_close_after_seconds": item.get("soft_close_after_seconds"),
         "watchdog_timeout_seconds": item.get("watchdog_timeout_seconds"),
         "provider_backend": spec.get("provider_backend"),
+        "provider_base_url": spec.get("provider_base_url"),
         "provider_compute_device": spec.get("provider_compute_device"),
         "provider_device_policy": spec.get("provider_device_policy"),
         **lane_policy_payload(item),

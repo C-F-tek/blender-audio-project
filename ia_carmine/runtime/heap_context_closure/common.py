@@ -132,25 +132,37 @@ def terminate_provider_launch_manifest_processes(
 
     provider_dir = run_dir / "provider_teamwork"
     manifests = sorted(provider_dir.glob("provider_launch_manifest*.json"))
+    boot_reports = sorted(provider_dir.glob("provider_role_coexistence*.json"))
     report: dict[str, Any] = {
         "schema_version": 1,
         "kind": "provider_launch_manifest_orphan_cleanup",
         "reason": reason,
         "run_dir": str(run_dir),
         "manifest_count": len(manifests),
+        "boot_report_count": len(boot_reports),
         "checked": [],
         "terminated": [],
         "skipped": [],
     }
     for manifest in manifests:
         payload = load_json(manifest)
-        provider_models: list[str] = []
+        provider_models: list[tuple[str, str]] = []
+        gpu0_base_urls: list[str] = []
         for lane in payload.get("lanes") or []:
             if not isinstance(lane, dict):
                 continue
             provider_model = str(lane.get("provider_model") or "").strip()
-            if provider_model and provider_model not in provider_models:
-                provider_models.append(provider_model)
+            compute_device = str(lane.get("provider_compute_device") or "")
+            provider_base_url = str(lane.get("provider_base_url") or "").strip()
+            if "gpu0-vulkan" in compute_device:
+                provider_base_url = provider_base_url or "http://127.0.0.1:11435"
+                if provider_base_url not in gpu0_base_urls:
+                    gpu0_base_urls.append(provider_base_url)
+            elif not provider_base_url:
+                provider_base_url = "http://127.0.0.1:11434"
+            model_ref = (provider_model, provider_base_url)
+            if provider_model and model_ref not in provider_models:
+                provider_models.append(model_ref)
             pid = _safe_pid(lane.get("pid"))
             item = {
                 "manifest": str(manifest),
@@ -182,15 +194,47 @@ def terminate_provider_launch_manifest_processes(
                 continue
             terminate_process_tree(_ProcessPidRef(pid))
             report["terminated"].append({**item, "reason": reason})
-        for model in provider_models:
-            stopped = _stop_ollama_model(model)
+        for model, base_url in provider_models:
+            stopped = _stop_ollama_model(model, base_url)
             if stopped:
                 report.setdefault("ollama_models_stopped", []).append(model)
-    report["performed"] = bool(report["checked"])
+        for base_url in gpu0_base_urls:
+            report.setdefault("gpu0_vulkan_server_stop", []).append(
+                _stop_gpu0_vulkan_server(base_url)
+            )
+    for boot_report in boot_reports:
+        _cleanup_provider_boot_handoff_report(boot_report, report)
+    report["performed"] = bool(
+        report["checked"]
+        or report.get("boot_handoff_unload_checked")
+        or report.get("gpu0_vulkan_server_stop")
+    )
     report["terminated_count"] = len(report["terminated"])
     report["skipped_count"] = len(report["skipped"])
     write_json(run_dir / "provider_orphan_cleanup.json", report)
     return report
+
+
+def _cleanup_provider_boot_handoff_report(path: Path, report: dict[str, Any]) -> None:
+    payload = load_json(path)
+    unload = payload.get("unload") if isinstance(payload.get("unload"), dict) else {}
+    for role, item in unload.items():
+        if not isinstance(item, dict) or not item.get("deferred_until_provider_cleanup"):
+            continue
+        model = str(item.get("model") or "").strip()
+        base_url = str(item.get("base_url") or "").strip()
+        if model and _stop_ollama_model(model, base_url):
+            report.setdefault("ollama_models_stopped", []).append(model)
+        report.setdefault("boot_handoff_unload_checked", []).append(
+            {"source": str(path), "role": role, "model": model, "base_url": base_url}
+        )
+    stop = payload.get("gpu0_vulkan_server_stop")
+    stop = stop if isinstance(stop, dict) else {}
+    if stop.get("deferred_until_provider_cleanup"):
+        base_url = str(stop.get("base_url") or "http://127.0.0.1:11435")
+        report.setdefault("gpu0_vulkan_server_stop", []).append(
+            _stop_gpu0_vulkan_server(base_url)
+        )
 
 
 def _safe_pid(value: Any) -> int:
@@ -270,8 +314,11 @@ def _windows_provider_process_status(pid: int, repo_root: Path) -> dict[str, Any
     }
 
 
-def _stop_ollama_model(model: str) -> bool:
+def _stop_ollama_model(model: str, base_url: str = "") -> bool:
     try:
+        env = os.environ.copy()
+        if base_url:
+            env["OLLAMA_HOST"] = base_url
         result = subprocess.run(
             ["ollama", "stop", model],
             stdout=subprocess.DEVNULL,
@@ -279,10 +326,20 @@ def _stop_ollama_model(model: str) -> bool:
             stdin=subprocess.DEVNULL,
             check=False,
             timeout=OLLAMA_STOP_TIMEOUT_SECONDS,
+            env=env,
         )
         return result.returncode == 0
     except BaseException:
         return False
+
+
+def _stop_gpu0_vulkan_server(base_url: str) -> dict[str, Any]:
+    try:
+        from ia_carmine.providers.ollama.role_models import stop_gpu0_vulkan_server
+
+        return stop_gpu0_vulkan_server(base_url)
+    except BaseException as exc:  # noqa: BLE001 - cleanup evidence only.
+        return {"stopped": False, "base_url": base_url, "error": f"{type(exc).__name__}: {exc}"}
 
 
 def write_documents_run_manifest(

@@ -108,6 +108,7 @@ def run_provider_role_coexistence_preflight(
         str(gpu1_ctx),
         "--max-new-tokens",
         "4",
+        "--handoff-provider-loop",
         "--npu-hold-seconds",
         "6",
         "--npu-timeout-seconds",

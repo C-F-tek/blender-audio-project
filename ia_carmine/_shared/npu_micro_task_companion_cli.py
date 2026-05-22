@@ -11,6 +11,13 @@ if str(repo_root_for_import) not in sys.path:
     sys.path.insert(0, str(repo_root_for_import))
 
 from ia_carmine._shared.npu_micro_task_markdown import render_markdown
+from ia_carmine._shared.npu_micro_task_contract import (
+    NPU_MICRO_DECISIONS,
+    infer_npu_decision,
+    render_npu_micro_prompt,
+    schema_response_text,
+    select_npu_micro_task,
+)
 from ia_carmine._shared.provider_replight import provider_replight_fields
 from ia_carmine._shared.provider_tool_loop import openvino_tool_loop_report
 from ia_carmine._shared.provider_work_verification import provider_work_status
@@ -45,36 +52,6 @@ def read_text_file(repo_root: Path, value: str) -> str:
     return path.read_text(encoding="utf-8-sig", errors="replace")
 
 
-def render_leader_peer_prompt(request: str, leader_packet: dict) -> str:
-    if not leader_packet:
-        return request
-    contract = leader_packet.get("same_heap_teamwork_contract")
-    contract_text = "; ".join(str(item) for item in contract[:4]) if isinstance(contract, list) else ""
-    propagation = leader_packet.get("propagation_contract")
-    propagation_text = "; ".join(str(item) for item in propagation[:4]) if isinstance(propagation, list) else ""
-    pointer = leader_packet.get("pointer_contract") if isinstance(leader_packet.get("pointer_contract"), dict) else {}
-    time_counter = leader_packet.get("time_counter_contract") if isinstance(leader_packet.get("time_counter_contract"), dict) else {}
-    universe_contract = leader_packet.get("heap_universe_contract")
-    startup_plane = leader_packet.get("startup_context_plane")
-    return "\n".join(
-        part
-        for part in (
-            "NPU peer micro lane. Consume the GPU1 primary advisor leader packet.",
-            f"OPERATOR_REQUEST: {request}",
-            f"GPU1_LEADER_ROLE: {leader_packet.get('role')}",
-            f"SAME_HEAP_TEAMWORK_CONTRACT: {contract_text}",
-            f"HEAP_UNIVERSE_CONTRACT: {universe_contract}",
-            f"STARTUP_CONTEXT_PLANE: {startup_plane}",
-            f"POINTER_CONTRACT: {pointer}",
-            f"TIME_COUNTER_CONTRACT: {time_counter}",
-            f"PROPAGATION_CONTRACT: {propagation_text}",
-            f"SOURCE_PATH_ALLOWLIST_CONTRACT: {str(leader_packet.get('source_allowlist_contract') or '')[:700]}",
-            f"GPU1_REVISION_FEEDBACK: {str(leader_packet.get('revision_feedback') or '')[:300]}",
-        )
-        if part.strip()
-    )
-
-
 def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
@@ -90,6 +67,7 @@ def main() -> int:
     if leader_packet_path and not leader_packet_path.is_absolute():
         leader_packet_path = leader_packet_path.resolve()
     leader_packet = read_json_file(leader_packet_path) if leader_packet_path else {}
+    micro_task_kind = select_npu_micro_task(request_input, leader_packet, task_preview)
     micro_task = run_npu_micro_task(args.timeout_seconds, repo_root=repo_root, python_exe=args.python_exe)
     device_workload = run_npu_device_workload(
         enabled=bool(args.run_device_workload),
@@ -99,8 +77,27 @@ def main() -> int:
         python_exe=project_python,
     )
     role_response = build_npu_role_response(request_input, micro_task)
-    npu_tool_loop = _tool_loop(repo_root, request_input, args, project_python, leader_packet)
-    report = _report(args, task_preview, request_input, project_python, micro_task, device_workload, role_response, npu_tool_loop, leader_packet)
+    npu_tool_loop = _tool_loop(
+        repo_root,
+        request_input,
+        task_preview,
+        args,
+        project_python,
+        leader_packet,
+        micro_task_kind,
+    )
+    report = _report(
+        args,
+        task_preview,
+        request_input,
+        project_python,
+        micro_task,
+        device_workload,
+        role_response,
+        npu_tool_loop,
+        leader_packet,
+        micro_task_kind,
+    )
     _apply_native_tool_loop_gate(report, npu_tool_loop)
     report.update(
         provider_work_status(
@@ -180,15 +177,19 @@ def _task_preview(repo_root: Path, task_file: str, startup_manifest: str, max_ch
 def _tool_loop(
     repo_root: Path,
     request_input: str,
+    task_preview: str,
     args: argparse.Namespace,
     project_python: Path,
     leader_packet: dict,
+    micro_task_kind: str,
 ):
     return openvino_tool_loop_report(
         repo_root=repo_root,
-        prompt=render_leader_peer_prompt(
-            request_input or "Call the broker tool needed for a heap code-product audit.",
+        prompt=render_npu_micro_prompt(
+            request_input or "No operator request text available.",
             leader_packet,
+            task_preview,
+            micro_task_kind,
         ),
         timeout_seconds=args.tool_loop_timeout_seconds,
         max_new_tokens=args.tool_loop_max_new_tokens,
@@ -199,19 +200,20 @@ def _tool_loop(
     )
 
 
-def _response_text(role_response: dict, device_workload: dict, npu_tool_loop: dict) -> str:
-    response_text = role_response["response_text"]
-    if device_workload.get("requested"):
-        response_text += (
-            f" Workload NPU reale richiesto: performed={device_workload.get('performed')}, "
-            f"passed={device_workload.get('passed')}, iterations={device_workload.get('iterations')}, "
-            f"seconds={device_workload.get('seconds')}."
-        )
-    if npu_tool_loop.get("native_tool_loop_supported"):
-        response_text += f" NPU OpenVINO tool loop attivo: tool_calls={npu_tool_loop.get('native_tool_call_count')}."
-    else:
-        response_text += f" NPU OpenVINO tool loop richiesto ma non operativo: {npu_tool_loop.get('classification')}."
-    return response_text
+def _response_text(
+    role_response: dict,
+    device_workload: dict,
+    npu_tool_loop: dict,
+    micro_task_kind: str,
+    decision: str,
+) -> str:
+    return schema_response_text(
+        micro_task_kind,
+        decision,
+        role_response,
+        device_workload,
+        npu_tool_loop,
+    )
 
 
 def _report(
@@ -224,8 +226,16 @@ def _report(
     role_response: dict,
     npu_tool_loop: dict,
     leader_packet: dict,
+    micro_task_kind: str,
 ) -> dict:
-    response_text = _response_text(role_response, device_workload, npu_tool_loop)
+    micro_decision = infer_npu_decision(npu_tool_loop, role_response)
+    response_text = _response_text(
+        role_response,
+        device_workload,
+        npu_tool_loop,
+        micro_task_kind,
+        micro_decision,
+    )
     micro_activity_performed = bool(micro_task.get("micro_task_performed"))
     npu_device_available = bool(micro_task.get("npu_device_available"))
     npu_device_verified = bool(npu_device_available and micro_activity_performed)
@@ -292,6 +302,9 @@ def _report(
         "response_text": response_text,
         "request_classification": role_response["request_classification"],
         "role_decision": role_response["role_decision"],
+        "npu_micro_task_kind": micro_task_kind,
+        "npu_micro_decision": micro_decision,
+        "npu_micro_task_closed": micro_decision in NPU_MICRO_DECISIONS,
         "micro_task_used": role_response["micro_task_used"],
         "micro_task_result_summary": role_response["micro_task_result_summary"],
         "npu_micro_task": micro_task,
@@ -345,6 +358,12 @@ def _report(
 
 
 def _apply_native_tool_loop_gate(report: dict, npu_tool_loop: dict) -> None:
+    if report.get("npu_micro_task_closed") is not True:
+        report.setdefault("errors", []).append("npu_micro_task_missing_final_decision")
+        report["passed"] = False
+    if report.get("npu_micro_decision") == "NPU_TIMEOUT_BOUNDARY":
+        report.setdefault("errors", []).append("npu_micro_timeout_boundary")
+        report["passed"] = False
     if report.get("npu_device_workload_requested") and not report.get("npu_device_workload_performed"):
         workload = report.get("npu_device_workload") if isinstance(report.get("npu_device_workload"), dict) else {}
         message = (
@@ -356,9 +375,12 @@ def _apply_native_tool_loop_gate(report: dict, npu_tool_loop: dict) -> None:
         if target == "errors":
             report["passed"] = False
     if report["native_tool_loop_requested"] and report["native_tool_call_count"] <= 0:
-        if npu_tool_loop.get("classification") != "openvino_native_tool_call_incomplete":
+        classification = str(npu_tool_loop.get("classification") or "")
+        if report.get("npu_micro_decision") == "NPU_NO_ACTION" or classification == "openvino_native_tool_not_selected":
+            report.setdefault("warnings", []).append("npu_micro_task_closed_without_native_tool_call")
+        elif classification != "openvino_native_tool_call_incomplete":
             message = str(
-                npu_tool_loop.get("classification") or "openvino_npu_native_tool_call_missing"
+                classification or "openvino_npu_native_tool_call_missing"
             )
             report["native_tool_loop_timeout_warning"] = message
             target = "errors"

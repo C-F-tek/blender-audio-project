@@ -332,7 +332,7 @@ class RuntimeGateProviderExecutionMixin:
                     round_id,
                     revision,
                     time_contract,
-                    "primary_blocked_after_sidecar_join",
+                    "primary_blocked_after_bounded_lane_join",
                 )
                 return
             missing_replight_lanes = [
