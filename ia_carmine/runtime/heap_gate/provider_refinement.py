@@ -157,6 +157,8 @@ class RuntimeGateProviderRefinementMixin:
         """Return True when the current heap proposal block still needs another GPU1 pass."""
         if not self.detailed_output_expected():
             return False
+        if self.latest_rejected_proposal_requires_retry():
+            return True
         if not str(text or "").strip():
             return True
         # Raw response quality still matters, but the accepted/rejected proposal
@@ -188,6 +190,66 @@ class RuntimeGateProviderRefinementMixin:
         updated_events = self.read_events()
         self.publish_shared_evidence_facts(revision, updated_events)
         return updated_events
+
+    def latest_no_patchable_target_exit_valid(self) -> bool:
+        report = self.latest_proposal_iteration_report()
+        if not report:
+            return False
+        exit_decision = str(report.get("exit_decision") or "").strip().upper()
+        response_text = str(report.get("response_text") or "")
+        quality = (
+            report.get("response_file_reference_quality")
+            if isinstance(report.get("response_file_reference_quality"), dict)
+            else {}
+        )
+        return exit_decision == "NO_PATCHABLE_TARGET" and (
+            "BLOCKED_NO_VERIFIED_TARGET_REASON" in response_text
+            or quality.get("no_patchable_target_declared") is True
+        )
+
+    def latest_rejected_proposal_requires_retry(self) -> bool:
+        report = self.latest_proposal_iteration_report()
+        if not report or report.get("quality_passed") is not False:
+            return False
+        if self.latest_no_patchable_target_exit_valid():
+            return False
+        if str(getattr(self, "provider_universe_blocked_reason", "") or "").strip():
+            return False
+        return True
+
+    def build_rejected_proposal_retry_feedback(self) -> str:
+        report = self.latest_proposal_iteration_report()
+        if not report:
+            return ""
+
+        def compact(value: Any, limit: int = 500) -> str:
+            text = str(value or "").replace("\n", " | ").strip()
+            return text[:limit]
+
+        file_quality = (
+            report.get("response_file_reference_quality")
+            if isinstance(report.get("response_file_reference_quality"), dict)
+            else {}
+        )
+        implementation = (
+            report.get("implementation_quality")
+            if isinstance(report.get("implementation_quality"), dict)
+            else {}
+        )
+        lines = [
+            "REJECTED_GPU1_BLOCK_RETRY_REQUIRED:",
+            f"- rejected_block_id={report.get('block_id') or ''}",
+            f"- rejected_revision={report.get('revision')}",
+            "- validator_action=generate_new_gpu1_revision_for_same_block",
+            "- Rewrite the block; do not repeat rejected TARGET_FILES, diff headers or prose.",
+            f"- response_file_reference_quality={compact(file_quality)}",
+            f"- implementation_quality_errors={compact(implementation.get('errors'))}",
+            f"- gpu0_decision={compact(report.get('gpu0_review'))}",
+            f"- npu_decision={compact(report.get('npu_micro_task_piece'))}",
+        ]
+        if report.get("reject_reason"):
+            lines.append(f"- reject_reason={compact(report.get('reject_reason'))}")
+        return "\n".join(lines)
 
     def maybe_run_provider_quality_revisions(
         self, round_id: int, events: list[dict[str, Any]]
@@ -277,9 +339,10 @@ class RuntimeGateProviderRefinementMixin:
                     )
             self.provider_revision_count += 1
             previous_veto_feedback = self.provider_revision_feedback.strip()
+            retry_feedback = self.build_rejected_proposal_retry_feedback()
             quality_feedback = self.build_quality_failure_feedback(self.response_text(), events)
             self.provider_revision_feedback = "\n\n".join(
-                part for part in (previous_veto_feedback, quality_feedback) if part
+                part for part in (previous_veto_feedback, retry_feedback, quality_feedback) if part
             )
             self.publish(
                 "deterministic",
@@ -287,6 +350,8 @@ class RuntimeGateProviderRefinementMixin:
                 {
                     "id": f"{self.stamp}:product_quality_failure:{self.provider_revision_count}",
                     "revision": self.provider_revision_count,
+                    "retry_required": True,
+                    "rejected_proposal": self.latest_proposal_iteration_report(),
                     "feedback": self.provider_revision_feedback,
                     "file_quality": self.response_file_reference_quality(self.response_text()),
                 },

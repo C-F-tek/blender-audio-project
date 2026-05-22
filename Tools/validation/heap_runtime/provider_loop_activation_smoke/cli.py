@@ -20,6 +20,7 @@ def main() -> int:
         _check_vulkan_identity_contract(repo_root),
         _check_provider_residency_lifecycle(repo_root),
         _check_gpu1_workload_absorption(repo_root),
+        _check_rejected_gpu1_retry_contract(repo_root),
         _check_external_heap_health_report_filter(repo_root),
         _check_bounded_npu_micro_tasks(repo_root),
         _check_final_cleanup(repo_root),
@@ -151,6 +152,56 @@ def _check_gpu1_workload_absorption(repo_root: Path) -> dict[str, Any]:
     if "basename o path ricordati ma non allowlisted" not in provider_prompt_text:
         errors.append("GPU1 pointer protocol does not forbid remembered basename targets")
     return {"name": "gpu1_workload_absorption", "errors": errors}
+
+
+def _check_rejected_gpu1_retry_contract(repo_root: Path) -> dict[str, Any]:
+    refinement = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_refinement.py")
+    run_loop = _read(repo_root, "ia_carmine/runtime/heap_gate/run_loop.py")
+    terminal = _read(repo_root, "ia_carmine/runtime/heap_gate/terminal_invariants.py")
+    errors: list[str] = []
+    for marker in (
+        "latest_rejected_proposal_requires_retry",
+        "REJECTED_GPU1_BLOCK_RETRY_REQUIRED",
+        "validator_action=generate_new_gpu1_revision_for_same_block",
+        "run_provider_teamwork(round_id, revision=self.provider_revision_count)",
+    ):
+        if marker not in refinement:
+            errors.append(f"GPU1 retry contract missing {marker}")
+    if "or self.latest_rejected_proposal_requires_retry()" not in run_loop:
+        errors.append("run loop does not bypass evidence delay for rejected GPU1 retry")
+    if "mandatory provider revision retry" not in terminal:
+        errors.append("terminal invariants do not block rejected proposal without retry")
+    errors.extend(_probe_rejected_gpu1_retry_helper())
+    return {"name": "rejected_gpu1_retry_contract", "errors": errors}
+
+
+def _probe_rejected_gpu1_retry_helper() -> list[str]:
+    from ia_carmine.runtime.heap_gate.provider_refinement import RuntimeGateProviderRefinementMixin
+
+    class FakeGate(RuntimeGateProviderRefinementMixin):
+        provider_universe_blocked_reason = ""
+
+        def __init__(self, report: dict[str, Any], blocked: str = "") -> None:
+            self.report = report
+            self.provider_universe_blocked_reason = blocked
+
+        def latest_proposal_iteration_report(self) -> dict[str, Any]:
+            return self.report
+
+    rejected = {"quality_passed": False, "exit_decision": "PATCHABLE_TARGET"}
+    terminal = {
+        "quality_passed": False,
+        "exit_decision": "NO_PATCHABLE_TARGET",
+        "response_text": "BLOCKED_NO_VERIFIED_TARGET_REASON: no target",
+    }
+    errors: list[str] = []
+    if not FakeGate(rejected).latest_rejected_proposal_requires_retry():
+        errors.append("fake rejected GPU1 proposal did not require retry")
+    if FakeGate(terminal).latest_rejected_proposal_requires_retry():
+        errors.append("valid NO_PATCHABLE_TARGET proposal still required retry")
+    if FakeGate(rejected, blocked="gpu0_ollama_vulkan_required").latest_rejected_proposal_requires_retry():
+        errors.append("provider failure did not suppress retry requirement")
+    return errors
 
 
 def _check_external_heap_health_report_filter(repo_root: Path) -> dict[str, Any]:

@@ -62,6 +62,14 @@ def evaluate_terminal_invariants(
                 "latest proposal iteration was rejected by same-heap quality gate: "
                 + str(metrics.get("latest_proposal_reject_reason") or "")
             )
+            if (
+                safe_int(metrics.get("provider_revision_count")) <= 0
+                and str(metrics.get("latest_proposal_exit_decision") or "").upper()
+                != "NO_PATCHABLE_TARGET"
+            ):
+                errors.append(
+                    "rejected GPU1 proposal did not trigger mandatory provider revision retry"
+                )
         gpu0_decision = str(metrics.get("latest_gpu0_review_decision") or "")
         if gpu0_decision.startswith("reject"):
             errors.append(f"GPU0 peer rejected current GPU1 delta: {gpu0_decision}")

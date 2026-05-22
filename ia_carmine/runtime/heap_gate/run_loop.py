@@ -44,7 +44,10 @@ class RuntimeGateRunLoopMixin:
             if (
                 self.base_requirements_complete(events)
                 and self.provider_reports
-                and self.provider_revision_evidence_ready(events)
+                and (
+                    self.provider_revision_evidence_ready(events)
+                    or self.latest_rejected_proposal_requires_retry()
+                )
             ):
                 events = self.maybe_run_provider_quality_revisions(round_id, events)
                 if self.provider_universe_blocked_reason:
