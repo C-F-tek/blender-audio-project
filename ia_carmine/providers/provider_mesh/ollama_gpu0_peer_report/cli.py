@@ -123,7 +123,7 @@ def main() -> int:
     parser.add_argument("--ollama-gpu-layers", default="all")
     parser.add_argument("--ollama-num-thread", type=int, default=None)
     parser.add_argument("--ollama-context-candidates", default="8192,4096")
-    parser.add_argument("--keep-alive", default="0s")
+    parser.add_argument("--keep-alive", default="120s")
     parser.add_argument("--strict-provider-model", action="store_true")
     parser.add_argument("--operator-gpu-observation", default="")
     parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=True)

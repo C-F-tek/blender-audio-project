@@ -1,4 +1,4 @@
-"""Hard provider replight gate before full provider teamwork."""
+"""GPU1 live provider gate after the shared provider boot gate."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
 )
 
 
-REQUIRED_REPLIGHT_LANES = ("gpu1_planner", "gpu0_peer", "npu_micro_task_auditor")
+REQUIRED_REPLIGHT_LANES = ("gpu1_planner",)
 
 
 def run_provider_replight_gate(
@@ -26,7 +26,12 @@ def run_provider_replight_gate(
     revision: int,
     selected_lanes: set[str] | None,
 ) -> str:
-    """Run short live-provider checks and return a blocking reason if any fail."""
+    """Run the short GPU1 live-provider check.
+
+    GPU0 and NPU boot/model-load health are proven by the provider boot gate.
+    Their useful workload evidence belongs to the real provider loop, not this
+    short GPU1 replight.
+    """
 
     lanes = tuple(lane for lane in REQUIRED_REPLIGHT_LANES if selected_lanes is None or lane in selected_lanes)
     if not lanes:
@@ -175,8 +180,20 @@ def _report_for_completed(
     report = read_json(output) if output else {}
     if not isinstance(report, dict) or not report:
         reason = f"provider_replight_failed:{spec.get('lane')}:process_returncode_{completed.returncode}"
-        report = _write_failure_report(spec, reason, completed.returncode)
+        report = _write_failure_report(
+            spec,
+            reason,
+            completed.returncode,
+            stdout=completed.stdout or "",
+            stderr=completed.stderr or "",
+        )
     report = extract_lane_report(report, str(spec.get("lane") or ""))
+    report.setdefault("stdout_tail", (completed.stdout or "")[-1200:])
+    report.setdefault("stderr_tail", (completed.stderr or "")[-1200:])
+    if str(spec.get("lane") or "") == "gpu0_peer":
+        command = list(spec.get("command") or [])
+        report.setdefault("ollama_base_url", _arg_value(command, "--base-url"))
+        report.setdefault("gpu0_vulkan_visible_devices", _arg_value(command, "--gpu0-vulkan-visible-devices"))
     report.setdefault("returncode", completed.returncode)
     report.setdefault("lane", spec.get("lane"))
     report.setdefault("provider_id", spec.get("lane"))
@@ -239,7 +256,11 @@ def _write_failure_report(
     spec: dict[str, Any],
     reason: str,
     returncode: int,
+    *,
+    stdout: str = "",
+    stderr: str = "",
 ) -> dict[str, Any]:
+    command = list(spec.get("command") or [])
     report = {
         "lane": spec.get("lane"),
         "provider_id": spec.get("lane"),
@@ -262,6 +283,10 @@ def _write_failure_report(
         "passed": False,
         "status": "failed",
         "returncode": returncode,
+        "stdout_tail": str(stdout or "")[-1200:],
+        "stderr_tail": str(stderr or "")[-1200:],
+        "ollama_base_url": _arg_value(command, "--base-url") or _arg_value(command, "--ollama-base-url"),
+        "gpu0_vulkan_visible_devices": _arg_value(command, "--gpu0-vulkan-visible-devices"),
     }
     output = Path(spec.get("output") or "")
     if output:
@@ -295,6 +320,15 @@ def _insert_after(command: list[str], anchor: str, value: str) -> None:
         command.append(value)
         return
     command.insert(command.index(anchor) + 1, value)
+
+
+def _arg_value(command: list[str], flag: str) -> str:
+    if flag not in command:
+        return ""
+    index = command.index(flag)
+    if index + 1 >= len(command):
+        return ""
+    return str(command[index + 1])
 
 
 def _timeout_for(spec: dict[str, Any]) -> float:

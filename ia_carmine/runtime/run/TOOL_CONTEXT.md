@@ -162,14 +162,13 @@ Only reports with `provider_work_verified=true` may count provider roles or set
 `provider_execution_performed=true`. CPU remains valid only for runtime scripts,
 broker orchestration, parsing, I/O and deterministic validators.
 
-Provider replight is a hard live gate for real run-unica execution. Before heap
-loop, proposal cycles, soft lock or long sidecar work can proceed, each required
-provider must emit a live report with model/backend/device, loaded status,
-generated phrase, token or deterministic activity metrics, native tool policy,
-broker tool count and declared functionality. A missing, incomplete or failed
-replight closes immediately as `blocked_with_reason` /
-`blocked_continuation_product`; CPU may write the report but cannot replace the
-failed lane.
+Provider boot is the hard live gate for real run-unica execution. Before heap
+loop, proposal cycles, soft lock or long sidecar work can proceed, GPU1/Ollama,
+GPU0/Ollama Vulkan and NPU/OpenVINO must be alive in the same provider window.
+GPU1 then emits the short replight report with model/backend/device, loaded
+status, generated phrase, token metrics, native tool policy, broker tool count
+and declared functionality. GPU0/NPU useful workload is proven in the real
+provider loop; their boot failure closes immediately as `provider_boot_gate_failed:*`.
 
 The technical `final_root` is not the public product root. Every real run must
 also publish or mirror the final product or blocked continuation package to:

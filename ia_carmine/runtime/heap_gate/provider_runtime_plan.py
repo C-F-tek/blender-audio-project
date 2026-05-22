@@ -42,6 +42,7 @@ def write_provider_runtime_plan(
         "provider_role_coexistence_preflight": _compact_coexistence(
             getattr(gate, "provider_role_coexistence_preflight", {})
         ),
+        "provider_boot_gate": _compact_coexistence(getattr(gate, "provider_boot_gate", {})),
     }
     write_json_report(payload, path)
     gate.provider_runtime_plan = repo_rel(gate.repo_root, path)

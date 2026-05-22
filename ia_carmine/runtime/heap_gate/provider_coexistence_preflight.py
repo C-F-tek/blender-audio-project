@@ -39,13 +39,14 @@ def enforce_provider_role_coexistence_preflight(
         revision=revision,
     )
     gate.provider_role_coexistence_preflight = coexistence
+    gate.provider_boot_gate = coexistence
     write_provider_runtime_plan(
         gate,
         work_dir,
         selected_lanes=selected_lanes,
-        stage="provider_role_coexistence_passed"
+        stage="provider_roles_alive"
         if coexistence.get("passed")
-        else "provider_role_coexistence_failed",
+        else "provider_boot_gate_failed",
         reports=reports,
     )
     reason = provider_role_coexistence_block_reason(coexistence)
@@ -59,7 +60,7 @@ def enforce_provider_role_coexistence_preflight(
         round_id,
         revision,
         time_contract,
-        "provider_role_coexistence_failed_before_provider_loop",
+        "provider_boot_gate_failed_before_provider_loop",
     )
     return False
 
@@ -77,7 +78,7 @@ def run_provider_role_coexistence_preflight(
     markdown = work_dir / f"provider_role_coexistence{suffix}.md"
     if not required.issubset(selected_lanes):
         return {
-            "kind": "provider_role_coexistence_preflight",
+            "kind": "provider_boot_gate",
             "passed": True,
             "skipped": True,
             "reason": "selected_lanes_do_not_require_all_three_provider_roles",
@@ -152,8 +153,20 @@ def provider_role_coexistence_block_reason(report: dict[str, Any]) -> str:
         return ""
     errors = report.get("errors") if isinstance(report.get("errors"), list) else []
     if errors:
-        return "provider_role_coexistence_failed:" + ",".join(str(item) for item in errors)
-    return "provider_role_coexistence_failed"
+        lanes = sorted({_error_lane(str(item)) for item in errors if str(item).strip()})
+        lane_text = ",".join(lanes) if lanes else "provider_universe"
+        return "provider_boot_gate_failed:" + lane_text + ":" + ",".join(str(item) for item in errors)
+    return "provider_boot_gate_failed:provider_universe"
+
+
+def _error_lane(error: str) -> str:
+    if error.startswith("gpu1_") or "gpu1" in error:
+        return PRIMARY_LANE
+    if error.startswith("gpu0_") or "gpu0" in error:
+        return GPU0_LANE
+    if error.startswith("npu_") or "npu" in error:
+        return NPU_LANE
+    return "provider_universe"
 
 
 def _gpu0_model() -> str:

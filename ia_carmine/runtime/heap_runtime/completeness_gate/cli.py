@@ -184,7 +184,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gpu0-model-dir", default="")
     parser.add_argument("--npu-model-dir", default="")
     parser.add_argument("--operator-gpu-observation", default="")
-    parser.add_argument("--keep-alive", default="0s")
+    parser.add_argument("--keep-alive", default="120s")
     parser.add_argument("--npu-micro-start-mode", default="deferred")
     parser.add_argument("--npu-micro-timeout-seconds", type=int, default=60)
     parser.add_argument("--npu-final-wait-seconds", type=int, default=60)

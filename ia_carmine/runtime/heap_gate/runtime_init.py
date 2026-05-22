@@ -40,6 +40,10 @@ class RuntimeGateInitMixin:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
         self.repo_root = Path(args.repo_root).resolve()
+        if bool(getattr(args, "allow_provider_generation", False)):
+            keep_alive = str(getattr(args, "keep_alive", "") or "").strip().lower()
+            if keep_alive in {"", "0", "0s", "0m", "0h"}:
+                args.keep_alive = "120s"
         if getattr(args, "request_file", ""):
             args.request = read_request_file(self.repo_root, args.request_file)
         self.stamp = args.stamp or datetime.now().strftime("%Y%m%d-%H%M%S")

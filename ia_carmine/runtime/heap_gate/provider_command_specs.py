@@ -49,6 +49,15 @@ def _npu_device_workload_args(gate: Any) -> list[str]:
     ]
 
 
+def _provider_keep_alive(gate: Any) -> str:
+    value = str(getattr(gate.args, "keep_alive", "") or "").strip().lower()
+    if value in {"", "0", "0s", "0m", "0h"} and bool(
+        getattr(gate.args, "allow_provider_generation", False)
+    ):
+        return "120s"
+    return str(getattr(gate.args, "keep_alive", "") or "120s")
+
+
 def build_provider_command_specs(
     gate: Any,
     work_dir: Path,
@@ -84,6 +93,7 @@ def build_provider_command_specs(
     gpu0_vulkan_devices = str(os.environ.get("IA_CARMINE_GPU0_VULKAN_VISIBLE_DEVICES") or "auto")
     gpu1_base_url = str(os.environ.get("IA_CARMINE_GPU1_OLLAMA_BASE_URL") or "")
     gpu1_ctx = int(getattr(gate, "selected_ollama_num_ctx", 0) or gate.args.ollama_num_ctx)
+    keep_alive = _provider_keep_alive(gate)
     specs = [
         {
             "lane": "gpu1_planner",
@@ -119,7 +129,7 @@ def build_provider_command_specs(
                 "--ollama-context-candidates",
                 str(getattr(gate.args, "ollama_context_candidates", "") or "8192,4096"),
                 "--keep-alive",
-                str(gate.args.keep_alive),
+                keep_alive,
                 "--output",
                 repo_rel(gate.repo_root, gpu1_json),
                 *(["--strict-provider-model"] if getattr(gate.args, "strict_provider_model", False) else []),
@@ -158,7 +168,7 @@ def build_provider_command_specs(
                 "--ollama-context-candidates",
                 str(getattr(gate.args, "ollama_context_candidates", "") or "8192,4096"),
                 "--keep-alive",
-                str(gate.args.keep_alive),
+                keep_alive,
                 *startup_args,
                 *(["--leader-packet", leader_packet] if leader_packet else []),
                 *request_args,

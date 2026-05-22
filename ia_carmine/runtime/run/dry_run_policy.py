@@ -13,13 +13,14 @@ def dry_run_contract_policy() -> dict[str, Any]:
             "npu_micro_task_auditor": "micro_audit_only_not_primary_closer",
         },
         "provider_parallel_policy": {
-            "gpu1_start": "brief_ollama_gpu_residency_handshake",
+            "provider_boot_gate": "gpu1_gpu0_npu_alive_in_same_window_before_replight_or_pointer_loop",
+            "gpu1_start": "brief_ollama_gpu_residency_handshake_after_boot_gate",
             "gpu0_npu_start": "parallel_after_gpu1_residency_proven",
             "gpu1_wait_for_full_completion_before_sidecars": False,
         },
         "provider_replight_required": True,
         "provider_replight_policy": {
-            "required_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
+            "required_lanes": ["gpu1_planner"],
             "required_fields": [
                 "provider_model",
                 "provider_loaded",
@@ -33,6 +34,14 @@ def dry_run_contract_policy() -> dict[str, Any]:
             "failure_exit": "blocked_with_reason",
             "failure_product_kind": "blocked_continuation_product",
             "cpu_provider_fallback_allowed": False,
+        },
+        "provider_boot_gate_policy": {
+            "required_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
+            "gpu1": "ollama_11434_tiny_generate_keep_alive_120s",
+            "gpu0": "ollama_vulkan_11435_tiny_generate_keep_alive_120s",
+            "npu": "openvino_NPU_model_load_probe_bounded",
+            "workload_verified_at_boot": False,
+            "failure_exit": "provider_boot_gate_failed",
         },
         "soft_lock_closure_quorum_policy": {
             "gpu1_closure_owner": True,

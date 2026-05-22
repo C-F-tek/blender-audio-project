@@ -121,6 +121,8 @@ def _failed_provider_from_reason(reason: str) -> str:
     parts = str(reason or "").split(":")
     if len(parts) >= 2 and parts[0] == "provider_replight_failed":
         return parts[1]
+    if len(parts) >= 2 and parts[0] == "provider_boot_gate_failed":
+        return parts[1]
     for lane in ("gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"):
         if lane in str(reason or ""):
             return lane

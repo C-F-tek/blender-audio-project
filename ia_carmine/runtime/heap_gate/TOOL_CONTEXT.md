@@ -31,7 +31,7 @@ terminal invariants -> final status contract
 
 ```text
 GPU1/Ollama -> planner, review opener, closure owner and final synthesis lane
-GPU0/OpenVINO -> coworker reviewer/refiner lane, not primary closer
+GPU0/Ollama Vulkan -> coworker reviewer/refiner lane, not primary closer
 NPU/OpenVINO -> bounded microtask/tool auditor lane, not primary closer
 CPU/helper -> broker, validator, lab, composer
 ```
@@ -42,8 +42,8 @@ CPU/helper -> broker, validator, lab, composer
 - Pointer/proposal blocks do not prove provider workload by themselves.
 - `provider_execution_performed` must be backed by explicit workload/provider evidence.
 - GPU1 owns closure and may drive broker/native tool calls. GPU0 can review/refine and use tools as evidence. NPU can run only bounded micro audit/tool work and must not hold the run open as semantic closer.
-- In canonical provider runs, GPU1 is launched first for a live replight gate, not merely a surface `ollama ps` check. GPU1 must answer with model/backend/device, generated phrase, token metrics, tool/function surface and `replight_passed=true` before GPU0/NPU sidecars or labs can start. CPU-only, unproven, missing or incomplete provider replight blocks immediately before sidecars/labs.
-- GPU0 and NPU also have hard replight requirements when selected. A sidecar that cannot produce live provider evidence is a `blocked_with_reason` exit, not a degraded provider success and not a CPU fallback.
+- In canonical provider runs, the provider boot gate first proves GPU1/Ollama, GPU0/Ollama Vulkan and NPU/OpenVINO are alive in the same provider window. GPU1 then gets the short replight check. GPU0/NPU useful workload evidence is produced in the real provider loop, not by replaying their full reports as pre-loop replight.
+- GPU0 and NPU boot failures are `provider_boot_gate_failed:*` exits. GPU0/NPU loop failures remain provider workload failures, not degraded provider success and not CPU fallback.
 - Time input is a shared heap counter for GPU1 cycles and coordinated soft close. GPU0/NPU sidecars use bounded watchdogs/timeouts; a selected lane that fails to start is still a hard universe block.
 - Soft close enters `soft_lock_state=closing_open_pointers`: no broad new exploration, only merge/veto/refine/classify/resume work until every pointer is merged, rejected, superseded, deferred, externally blocked or requires operator input.
 - Soft close exits through closure quorum, not inert repetition. GPU1 emits `soft_lock_closure_owner_decision`, GPU0 emits `gpu0_closure_agreement`, CPU validates `closure_quorum_status`, and NPU remains `npu_closure_advisory=evidence_ready_non_closer` when its micro evidence is valid.

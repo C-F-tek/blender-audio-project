@@ -88,7 +88,7 @@ class LauncherConfig:
     npu_model_dir: str = ""
     operator_gpu_observation: str = ""
     max_new_tokens: int = 900
-    keep_alive: str = "0s"
+    keep_alive: str = "120s"
     gpu0_iterations: int = 16
     gpu0_min_seconds: float = 0.1
     npu_micro_timeout_seconds: int = 60

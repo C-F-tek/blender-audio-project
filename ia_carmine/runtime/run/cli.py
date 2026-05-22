@@ -160,7 +160,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--gpu0-model-dir", default="")
     parser.add_argument("--npu-model-dir", default="")
     parser.add_argument("--operator-gpu-observation", default="")
-    parser.add_argument("-KeepAlive", "--keep-alive", dest="keep_alive", default="0s")
+    parser.add_argument("-KeepAlive", "--keep-alive", dest="keep_alive", default="120s")
     parser.add_argument("--gpu0-iterations", dest="gpu0_iterations", type=int, default=16)
     parser.add_argument("--gpu0-min-seconds", dest="gpu0_min_seconds", type=float, default=0.1)
     parser.add_argument("--npu-micro-timeout-seconds", dest="npu_micro_timeout_seconds", type=int, default=60)
@@ -251,6 +251,7 @@ def resolve_request_file(args: argparse.Namespace, repo_root: Path, stamp: str) 
 
 
 def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> LauncherConfig:
+    normalize_provider_keep_alive(args)
     request_file = resolve_request_file(args, repo_root, stamp)
     final_root = Path(args.final_root) if args.final_root else default_final_root(stamp)
     return LauncherConfig(
@@ -308,6 +309,14 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         strict_startup_reload=args.strict_startup_reload,
         no_documents=args.no_documents,
     )
+
+
+def normalize_provider_keep_alive(args: argparse.Namespace) -> None:
+    if not bool(getattr(args, "allow_provider_generation", False)):
+        return
+    value = str(getattr(args, "keep_alive", "") or "").strip().lower()
+    if value in {"", "0", "0s", "0m", "0h"}:
+        args.keep_alive = "120s"
 
 
 def main(argv: list[str] | None = None) -> int:

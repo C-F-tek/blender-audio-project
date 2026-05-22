@@ -72,6 +72,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_heap_provider_invocation_contract_smoke": "Tools.validation.heap_provider.invocation_contract_smoke.cli:main",
     "run_heap_provider_peer_review_events_scope_smoke": "Tools.validation.heap_provider.peer_review_events_scope_smoke.cli:main",
     "run_heap_runtime_completeness_gate_smoke": "Tools.validation.heap_runtime.completeness_gate_smoke.cli:main",
+    "run_provider_boot_gate_smoke": "Tools.validation.heap_runtime.provider_boot_gate_smoke.cli:main",
     "run_heap_runtime_launcher_command_smoke": "Tools.validation.heap_runtime.launcher_command_smoke.cli:main",
     "run_heap_virtual_dev_environment_smoke": "Tools.validation.heap_runtime.virtual_dev_environment_smoke.cli:main",
     "run_md_split_dir_validator_smoke": "Tools.validation.docs_hygiene.md_split_dir_validator_smoke.cli:main",

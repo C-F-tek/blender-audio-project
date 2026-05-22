@@ -135,6 +135,7 @@ def build_provider_teamwork_leader_packet(
         "provider_role_coexistence_preflight": getattr(
             gate, "provider_role_coexistence_preflight", {}
         ),
+        "provider_boot_gate": getattr(gate, "provider_boot_gate", {}),
         "integrated_surface_map": {
             "ingress": "operator request/request-file through python -m ia_carmine.cli run",
             "startup_preload": "heap_context_memory_reload manifest, memory and context artifacts",

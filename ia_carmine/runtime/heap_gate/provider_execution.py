@@ -64,7 +64,26 @@ class RuntimeGateProviderExecutionMixin:
                 self,
                 work_dir,
                 selected_lanes=selected_lanes,
-                stage="before_provider_replight",
+                stage="provider_boot_gate_started",
+            )
+            if not enforce_provider_role_coexistence_preflight(
+                self,
+                work_dir,
+                launch_manifest,
+                prepared,
+                round_id=round_id,
+                revision=revision,
+                selected_lanes=selected_lanes,
+                time_contract=time_contract,
+                reports=getattr(self, "provider_replight_reports", []),
+            ):
+                return
+            write_provider_runtime_plan(
+                self,
+                work_dir,
+                selected_lanes=selected_lanes,
+                stage="before_gpu1_replight",
+                reports=getattr(self, "provider_replight_reports", []),
             )
             replight_block_reason = run_provider_replight_gate(
                 self,
@@ -92,19 +111,6 @@ class RuntimeGateProviderExecutionMixin:
                     "provider_replight_failed_before_provider_loop",
                 )
                 return
-            if not enforce_provider_role_coexistence_preflight(
-                self,
-                work_dir,
-                launch_manifest,
-                prepared,
-                round_id=round_id,
-                revision=revision,
-                selected_lanes=selected_lanes,
-                time_contract=time_contract,
-                reports=getattr(self, "provider_replight_reports", []),
-            ):
-                return
-
             for spec in self.provider_command_specs(work_dir, revision=revision, selected_lanes=selected_lanes):
                 lane = str(spec["lane"])
                 requirement = str(spec["requirement"])

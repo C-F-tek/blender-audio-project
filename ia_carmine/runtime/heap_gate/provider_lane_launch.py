@@ -48,6 +48,7 @@ def write_provider_launch_manifest(
             "provider_role_coexistence_preflight": getattr(
                 gate, "provider_role_coexistence_preflight", {}
             ),
+            "provider_boot_gate": getattr(gate, "provider_boot_gate", {}),
             "ollama_gpu_layers_requested": str(
                 getattr(gate.args, "ollama_gpu_layers", "") or "all"
             ),
