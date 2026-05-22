@@ -14,6 +14,7 @@ def main() -> int:
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     checks = [
+        _check_heap_loop_bootstrap_import_contract(repo_root),
         _check_independent_sidecar_watchdogs(repo_root),
         _check_boot_handoff(repo_root),
         _check_gpu0_command_contract(repo_root),
@@ -41,6 +42,14 @@ def main() -> int:
         output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
+
+
+def _check_heap_loop_bootstrap_import_contract(repo_root: Path) -> dict[str, Any]:
+    loop_steps = _read(repo_root, "ia_carmine/runtime/heap_gate/loop_steps.py")
+    errors: list[str] = []
+    if "safe_dict(" in loop_steps and "safe_dict," not in loop_steps:
+        errors.append("loop_steps.py uses safe_dict but does not import it from runtime_common")
+    return {"name": "heap_loop_bootstrap_import_contract", "errors": errors}
 
 
 def _check_independent_sidecar_watchdogs(repo_root: Path) -> dict[str, Any]:

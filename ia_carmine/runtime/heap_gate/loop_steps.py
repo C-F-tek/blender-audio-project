@@ -13,6 +13,7 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
     read_json,
     repo_rel,
     resolve_output_path,
+    safe_dict,
     safe_int,
     subprocess,
 )
