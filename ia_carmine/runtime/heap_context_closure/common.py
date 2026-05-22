@@ -1,7 +1,5 @@
 """Common IO, path, process, and revision-context helpers."""
-
 from __future__ import annotations
-
 import json
 import os
 import signal
@@ -10,10 +8,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
 from ia_carmine._shared.live_flow_monitor import run_monitored_command
 from ia_carmine._shared.process_tree import terminate_process_tree
-
 DEFAULT_REQUEST = (
     "Esegui heap runtime con proposal chunks multi-parte. "
     "Non comprimere tutto nella sola risposta GPU1: salva blocchi par1/par2/par3, "
@@ -26,21 +22,17 @@ REVISION_CONTEXT_MARKER = "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN"
 WINDOWS_PROVIDER_STATUS_TIMEOUT_SECONDS = 1
 OLLAMA_STOP_TIMEOUT_SECONDS = 5
 
-
 def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
 
-
 def resolve_repo_root(value: str) -> Path:
     return Path(value).resolve()
-
 
 def repo_rel(repo_root: Path, path: Path) -> str:
     try:
         return path.resolve(strict=False).relative_to(repo_root.resolve(strict=False)).as_posix()
     except ValueError:
         return str(path)
-
 
 def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
     if explicit:
@@ -54,13 +46,11 @@ def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
             return str(candidate.resolve())
     return sys.executable
 
-
 def resolve_repo_file(repo_root: Path, value: str) -> Path:
     path = Path(value)
     if not path.is_absolute():
         path = repo_root / path
     return path.resolve(strict=False)
-
 
 def load_operator_request(repo_root: Path, inline_request: str, request_file: str) -> tuple[str, str]:
     if not request_file:
@@ -70,7 +60,6 @@ def load_operator_request(repo_root: Path, inline_request: str, request_file: st
         return path.read_text(encoding="utf-8-sig"), str(path)
     except Exception as exc:
         raise SystemExit(f"cannot read --request-file {path}: {type(exc).__name__}: {exc}") from exc
-
 
 def run_command(
     command: list[str],
@@ -91,7 +80,6 @@ def run_command(
         keyboard_interrupt="exit",
     )
 
-
 def load_json(path: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -99,11 +87,9 @@ def load_json(path: Path) -> dict[str, Any]:
         return {}
     return data if isinstance(data, dict) else {}
 
-
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-
 
 class _ProcessPidRef:
     def __init__(self, pid: int) -> None:
@@ -120,7 +106,6 @@ class _ProcessPidRef:
             os.kill(self.pid, signal.SIGTERM if os.name == "nt" else 15)
         except BaseException:
             pass
-
 
 def terminate_provider_launch_manifest_processes(
     *,
@@ -236,13 +221,11 @@ def _cleanup_provider_boot_handoff_report(path: Path, report: dict[str, Any]) ->
             _stop_gpu0_vulkan_server(base_url)
         )
 
-
 def _safe_pid(value: Any) -> int:
     try:
         return int(value or 0)
     except BaseException:
         return 0
-
 
 def _provider_process_status(pid: int, repo_root: Path) -> dict[str, Any]:
     if os.name == "nt":
@@ -254,7 +237,6 @@ def _provider_process_status(pid: int, repo_root: Path) -> dict[str, Any]:
     except BaseException:
         return {"alive": False, "safe_to_terminate": False, "image_name": "", "command_line": ""}
     return {"alive": True, "safe_to_terminate": True, "image_name": "", "command_line": ""}
-
 
 def _windows_provider_process_status(pid: int, repo_root: Path) -> dict[str, Any]:
     image_name = ""
@@ -313,7 +295,6 @@ def _windows_provider_process_status(pid: int, repo_root: Path) -> dict[str, Any
         "command_line": command_line[:1000],
     }
 
-
 def _stop_ollama_model(model: str, base_url: str = "") -> bool:
     try:
         env = os.environ.copy()
@@ -331,7 +312,6 @@ def _stop_ollama_model(model: str, base_url: str = "") -> bool:
         return result.returncode == 0
     except BaseException:
         return False
-
 
 def _stop_gpu0_vulkan_server(base_url: str) -> dict[str, Any]:
     try:

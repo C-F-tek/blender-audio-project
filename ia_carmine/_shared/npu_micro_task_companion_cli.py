@@ -1,15 +1,12 @@
 from __future__ import annotations
-
 import argparse
 import json
 import sys
 from datetime import datetime
 from pathlib import Path
-
 repo_root_for_import = Path(__file__).resolve().parents[2]
 if str(repo_root_for_import) not in sys.path:
     sys.path.insert(0, str(repo_root_for_import))
-
 from ia_carmine._shared.npu_micro_task_markdown import render_markdown
 from ia_carmine._shared.npu_micro_task_contract import (
     NPU_MICRO_DECISIONS,
@@ -21,7 +18,6 @@ from ia_carmine._shared.npu_micro_task_contract import (
 from ia_carmine._shared.provider_replight import provider_replight_fields
 from ia_carmine._shared.provider_tool_loop import openvino_tool_loop_report
 from ia_carmine._shared.provider_work_verification import provider_work_status
-
 try:
     from build_npu_micro_task_companion_report import (
         build_npu_role_response,
@@ -37,20 +33,17 @@ except ModuleNotFoundError:
         run_npu_micro_task,
     )
 
-
 def read_json_file(path: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception as exc:  # noqa: BLE001 - reported as provider evidence.
         return {"_read_error": f"{type(exc).__name__}: {exc}"}
 
-
 def read_text_file(repo_root: Path, value: str) -> str:
     path = Path(value)
     if not path.is_absolute():
         path = repo_root / path
     return path.read_text(encoding="utf-8-sig", errors="replace")
-
 
 def main() -> int:
     args = parse_args()
@@ -126,7 +119,6 @@ def main() -> int:
     _write_outputs(args, report)
     return 0 if report.get("passed") else 2
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
@@ -148,7 +140,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--npu-model-dir", default="")
     parser.add_argument("--leader-packet", default="", help="GPU1 primary advisor leader packet.")
     return parser.parse_args()
-
 
 def _task_preview(repo_root: Path, task_file: str, startup_manifest: str, max_chars: int) -> str:
     manifest_path = repo_root / startup_manifest if startup_manifest else None
@@ -172,7 +163,6 @@ def _task_preview(repo_root: Path, task_file: str, startup_manifest: str, max_ch
     if task_path and task_path.is_file():
         return task_path.read_text(encoding="utf-8", errors="replace")[:max_chars]
     return ""
-
 
 def _tool_loop(
     repo_root: Path,
@@ -199,7 +189,6 @@ def _tool_loop(
         model_dir=args.npu_model_dir,
     )
 
-
 def _response_text(
     role_response: dict,
     device_workload: dict,
@@ -214,7 +203,6 @@ def _response_text(
         device_workload,
         npu_tool_loop,
     )
-
 
 def _report(
     args: argparse.Namespace,
@@ -356,7 +344,6 @@ def _report(
         },
     }
 
-
 def _apply_native_tool_loop_gate(report: dict, npu_tool_loop: dict) -> None:
     if report.get("npu_micro_task_closed") is not True:
         report.setdefault("errors", []).append("npu_micro_task_missing_final_decision")
@@ -392,7 +379,6 @@ def _apply_native_tool_loop_gate(report: dict, npu_tool_loop: dict) -> None:
             "NPU peer did not consume a valid GPU1 primary advisor leader packet."
         )
         report["passed"] = False
-
 
 def _write_outputs(args: argparse.Namespace, report: dict) -> None:
     output = Path(args.output)

@@ -78,8 +78,6 @@ def _write_started_manifest(args: Any, state: dict[str, Any]) -> None:
             request_file=state["operator_request_file"],
             status="started",
         )
-
-
 def _resolve_revision_context(args: Any, state: dict[str, Any]) -> None:
     path, payload, policy = resolve_revision_context(state["repo_root"], args.revision_context)
     state.update(
@@ -89,8 +87,6 @@ def _resolve_revision_context(args: Any, state: dict[str, Any]) -> None:
             "revision_context_selection_policy": policy,
         }
     )
-
-
 def _write_heap_request(args: Any, state: dict[str, Any]) -> None:
     heap_request = augmented_request(
         state["base_request"],
@@ -102,8 +98,6 @@ def _write_heap_request(args: Any, state: dict[str, Any]) -> None:
     state["request_transport"] = "inline_cli"
     if state.get("operator_request_file"):
         state["request_transport"] = "operator_request_file"
-
-
 def _empty_result(passed: bool = True, returncode: int | None = 0) -> dict[str, Any]:
     return {
         "passed": passed,
@@ -112,8 +106,6 @@ def _empty_result(passed: bool = True, returncode: int | None = 0) -> dict[str, 
         "stderr_tail": "",
         "command": [],
     }
-
-
 def _run_preflight(args: Any, state: dict[str, Any]) -> None:
     result = _empty_result()
     if not args.skip_preflight:
@@ -151,8 +143,6 @@ def _run_preflight(args: Any, state: dict[str, Any]) -> None:
     state["preflight_nonblocking_for_provider_generation"] = bool(
         policy["preflight_failed_but_runtime_allowed"]
     )
-
-
 def _run_startup(args: Any, state: dict[str, Any]) -> None:
     result = _empty_result(passed=False, returncode=None)
     result["skipped"] = False
@@ -184,7 +174,6 @@ def _run_startup(args: Any, state: dict[str, Any]) -> None:
             result["preflight_nonblocking_for_provider_generation"] = True
             result["preflight_before_startup_passed"] = False
         payload = load_json(state["startup_manifest"])
-
     can_continue = startup_can_continue(
         startup_result=result,
         startup_payload=payload,
@@ -207,15 +196,12 @@ def _run_startup(args: Any, state: dict[str, Any]) -> None:
             ),
         }
     )
-
-
 def _run_heap(args: Any, state: dict[str, Any]) -> None:
     command = heap_command(args, state)
     if state["startup_manifest"].exists():
         command.extend(["--startup-manifest", str(state["startup_manifest"])])
     if state["startup_task_file"].exists():
         command.extend(["--task-file", str(state["startup_task_file"])])
-
     if state["can_continue"]:
         try:
             heap_result = run_command(
@@ -318,8 +304,6 @@ def _run_reconciliation(args: Any, state: dict[str, Any]) -> None:
             phase="startup_heap_reconciliation",
         )
     state["startup_heap_reconcile_result"] = result
-
-
 def _run_composer(args: Any, state: dict[str, Any]) -> None:
     command = [
         state["project_python"],
@@ -369,8 +353,6 @@ def _run_composer(args: Any, state: dict[str, Any]) -> None:
             "proposal_txt_outputs": _list_or_empty(composer_report.get("proposal_txt_outputs")),
         }
     )
-
-
 def _run_postrun(args: Any, state: dict[str, Any]) -> None:
     external_result, external_payload = run_external_postrun_package(
         repo_root=state["repo_root"],
@@ -395,8 +377,6 @@ def _run_postrun(args: Any, state: dict[str, Any]) -> None:
             "final_readable_payload": final_payload,
         }
     )
-
-
 def _write_completed_manifest(args: Any, state: dict[str, Any]) -> None:
     if args.documents_root and not args.no_documents:
         write_documents_run_manifest(
@@ -407,7 +387,5 @@ def _write_completed_manifest(args: Any, state: dict[str, Any]) -> None:
             request_file=state["operator_request_file"],
             status="completed" if state["final_readable_result"].get("passed") else "blocked",
         )
-
-
 def _list_or_empty(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
