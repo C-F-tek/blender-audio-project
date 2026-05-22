@@ -1,4 +1,4 @@
-"""Compatibility facade for decision, product and bundle phases."""
+"""Compatibility adapter for decision, product and bundle phases."""
 
 from __future__ import annotations
 

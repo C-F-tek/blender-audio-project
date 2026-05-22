@@ -61,7 +61,7 @@ Requirements:
 
 Additional requirements:
 
-    safe for `Tools/ai/runtime_tool/agent_broker.py`
+    safe for `ia_carmine/runtime/runtime_tool/agent_broker.py`
     no free shell
     no provider execution unless explicitly designated diagnostic and safe
     no patch application
@@ -132,8 +132,8 @@ Promotion:
 
 Examples:
 
-    Tools/ai/provider_mesh/local_provider_probe.py
-    Tools/ai/check_local_resource_lanes.py
+    ia_carmine/providers/provider_mesh/local_provider_probe.py
+    ia_carmine/check_local_resource_lanes.py
     Tools/validation/ai_workload/report_quality/cli.py
     Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py
 
@@ -151,10 +151,10 @@ Promotion:
 
 Examples:
 
-    Tools/ai/agent_review/patch_plan/cli.py
-    Tools/ai/agent_review/code_patch_plan_cli.py
-    Tools/ai/code_product/edit_proposal_from_plan/cli.py
-    Tools/ai/code_product/patch_artifact_pack/cli.py
+    ia_carmine/product/agent_review/patch_plan/cli.py
+    ia_carmine/product/agent_review/code_patch_plan_cli.py
+    ia_carmine/product/code_product/edit_proposal_from_plan/cli.py
+    ia_carmine/product/code_product/patch_artifact_pack/cli.py
 
 Placement:
 
@@ -192,13 +192,13 @@ Promotion:
 Preferred paths:
 
     Tools/validation/<tool>.py       report-only checks and validators
-    Tools/ai/<tool>.py               AI evidence, planning, broker, context, evidence
+    ia_carmine/<tool>.py               AI evidence, planning, broker, context, evidence
     Tools/workflow/<tool>.ps1        orchestration wrappers
     Tools/workflow/<tool>.py         workflow helpers
     Tools/npu/<tool>.py              NPU/provider-specific tooling
     Scripting/v61b/<tool>.py         Blender/audio runtime helpers
 
-Do not add new root-level tool entrypoints; user-facing tools should live under `Tools/workflow/`, `Tools/ai/`, `Tools/validation/`, `Tools/npu/` or `Scripting/` according to ownership.
+Do not add new root-level tool entrypoints; user-facing tools should live under `Tools/workflow/`, `ia_carmine/`, `Tools/validation/`, `Tools/npu/` or `Scripting/` according to ownership.
 
 ### B. Define CLI contract
 
@@ -282,7 +282,7 @@ Update one or more:
 
 ### H. Broker insertion only if safe
 
-To add to `Tools/ai/runtime_tool/agent_broker.py`:
+To add to `ia_carmine/runtime/runtime_tool/agent_broker.py`:
 
     1. add builder function;
     2. add ToolSpec entry;
@@ -346,7 +346,7 @@ ToolSpec pattern:
 Validation after the concrete file exists:
 
 ```text
-python -m py_compile <tracked validation tool> Tools/ai/runtime_tool/agent_broker.py
+python -m py_compile <tracked validation tool> ia_carmine/runtime/runtime_tool/agent_broker.py
 ```
 
 ## Example: promoting the workflow audio analyzer

@@ -6,7 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from Tools.ai.patch_product.patch_notes_quality_product.builder import build_report
+from ia_carmine.product.patch_product.patch_notes_quality_product.builder import build_report
 
 def run_case(
     repo_root: Path, stamp: str, fixtures: dict[str, str], min_score: float

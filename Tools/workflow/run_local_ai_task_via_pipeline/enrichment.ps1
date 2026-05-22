@@ -13,7 +13,7 @@ if ($BuildEnrichmentPlan) {
     $EnrichmentPlanMd = "output/ai_pipeline/${EnrichmentPlanBasename}.md"
     $EnrichmentPlanValidation = "output/validation/${EnrichmentPlanBasename}_contract.json"
     Invoke-CommandChecked -Label "Build local AI enrichment plan" -Block {
-        & $PipelinePythonExe -m Tools.ai build_local_ai_enrichment_plan `
+        & $PipelinePythonExe -m ia_carmine build_local_ai_enrichment_plan `
             --repo-root . `
             --objective $AgentStateObjective `
             --task-file $TaskRel `
@@ -50,7 +50,7 @@ if ($SelectSemanticChunks) {
     $SelectedChunksJson = "output/ai_context_packs/$SelectedChunksBasename.json"
     $SelectedChunksMd = "output/ai_context_packs/$SelectedChunksBasename.md"
     $SelectArgs = @(
-        "-m", "Tools.ai", "select_semantic_code_chunks",
+        "-m", "ia_carmine.cli", "select_semantic_code_chunks",
         "--repo-root", ".",
         "--query", $ChunkQuery,
         "--output", $SelectedChunksJson,
@@ -92,7 +92,7 @@ if ($SelectSemanticChunks) {
 
 if ($BuildContextPack) {
     Invoke-CommandChecked -Label "Build bounded AI context pack" -Block {
-        & $PipelinePythonExe -m Tools.ai build_ai_context_pack `
+        & $PipelinePythonExe -m ia_carmine build_ai_context_pack `
             --repo-root . `
             --profile $ContextPackProfile `
             --basename $ContextPackBasename `
@@ -114,7 +114,7 @@ if ($BuildContextPack) {
 if ($BuildAgentStatePacket) {
     $ContextFiles = @(Normalize-ContextFiles $ContextFiles)
     $AgentArgs = @(
-        "-m", "Tools.ai", "build_agent_state_packet",
+        "-m", "ia_carmine.cli", "build_agent_state_packet",
         "--repo-root", ".",
         "--objective", $AgentStateObjective,
         "--output-dir", $AgentStateRel,

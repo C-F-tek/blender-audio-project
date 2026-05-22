@@ -22,7 +22,7 @@ def main() -> int:
     result = subprocess.run(
         [
             sys.executable,
-            str(repo_root / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py"),
+            str(repo_root / "ia_carmine/providers/provider_mesh/npu_micro_task_companion_report/cli.py"),
             "--repo-root",
             str(repo_root),
             "--output",

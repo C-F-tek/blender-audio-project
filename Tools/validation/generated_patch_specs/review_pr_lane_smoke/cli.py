@@ -158,7 +158,7 @@ def main() -> int:
 
         apply_command = [
             sys.executable,
-            str(source_repo / "Tools/ai/generated_patch_specs/apply_cli.py"),
+            str(source_repo / "ia_carmine/product/generated_patch_specs/apply_cli.py"),
             "--repo-root",
             str(repo),
             "--manifest",
@@ -202,7 +202,7 @@ def main() -> int:
         prepare_command = [
             sys.executable,
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "agent_review_prepare_pr",
             "--repo-root",
             str(repo),

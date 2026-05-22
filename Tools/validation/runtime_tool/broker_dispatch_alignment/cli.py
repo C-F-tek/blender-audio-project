@@ -97,11 +97,11 @@ def render_markdown(report: dict[str, Any]) -> str:
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
-    ai_dispatch = dispatch_targets(repo_root / "Tools/ai/dispatch.py", "TOOL_MAIN_TARGETS")
+    ai_dispatch = dispatch_targets(repo_root / "ia_carmine/dispatch.py", "TOOL_MAIN_TARGETS")
     validation_dispatch = dispatch_targets(
         repo_root / "Tools/validation/dispatch.py", "TOOL_MAIN_TARGETS"
     )
-    broker_tools = broker_tool_names(repo_root / "Tools/ai/runtime_tool/broker/registry.py")
+    broker_tools = broker_tool_names(repo_root / "ia_carmine/runtime/runtime_tool/broker/registry.py")
     ai_tools = sorted(str(key) for key in ai_dispatch)
     validation_tools = sorted(str(key) for key in validation_dispatch)
     command_dispatch = {**validation_dispatch, **ai_dispatch}

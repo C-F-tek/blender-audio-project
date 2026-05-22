@@ -14,7 +14,7 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
         )
     provider_args = [
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "gpu_npu_parallel_orchestrator",
         "--repo-root",
         ".",
@@ -97,7 +97,7 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
         "--context-root",
         "docs",
         "--context-root",
-        "Tools/ai",
+        "ia_carmine",
         "--context-root",
         "Tools/validation",
         "--context-root",
@@ -163,7 +163,7 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
             "Replay GPU planner JSON contract",
             [
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "replay_gpu_planner_json_contract",
                 "--repo-root",
                 ".",
@@ -180,7 +180,7 @@ def run_provider_mesh(ctx: WorkflowContext) -> None:
             "Analyze GPU/NPU run sync",
             [
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "gpu_npu_run_sync_analysis",
                 "--repo-root",
                 ".",

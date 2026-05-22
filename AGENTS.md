@@ -41,10 +41,10 @@ Historical runbooks under `docs/LOCAL_AI_TASKS/**` and session notes under `docs
 | Anti-ambiguity contract | `docs/AI_LIMITATIONS_AND_ANTI_AMBIGUITY_CONTRACT.md` |
 | Model-to-code bridge | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
 | Lane completeness contract | `docs/CORE_LANE_COMPLETENESS_CONTRACT.md` |
-| Operator product entrypoint | `python -m Tools.ai run` |
+| Operator product entrypoint | `python -m ia_carmine.cli run` |
 | Dynamic workflow launcher | `python -m Tools.workflow run_unified_local_ai_refactor` |
 | Main provider center | `Ollama / GPU1 / RTX 5080` |
-| Coworker lane | `GPU0 / OpenVINO` |
+| Coworker lane | `GPU0 / Ollama Vulkan` |
 | Micro-lane | `NPU / OpenVINO` |
 | Deterministic authority | `CPU validators, brokered tools, source inspection` |
 | Legacy domain | Blender audio-reactive scene automation |
@@ -148,7 +148,7 @@ The center is dynamic. The entry and exit must stay controlled, observable and d
 | Department | Role | Must produce |
 |---|---|---|
 | Ollama / main provider | central reasoning, planning, synthesis, candidate generation | structured recommendation/proposal evidence |
-| GPU0 / coworker lane | peer review, OpenVINO/helper workload, discrepancy checks | observable peer evidence, contradiction/refinement notes |
+| GPU0 / coworker lane | peer review through Ollama/Vulkan, discrepancy checks | observable peer evidence, contradiction/refinement notes |
 | NPU / micro-lane | microtask/tool/device provider and diagnostic support | compact micro-provider/audit reports |
 | CPU / validators | deterministic authority | pass/fail/blocked reports |
 
@@ -159,7 +159,7 @@ Ollama is the main center, but not an unchecked source-write authority. GPU0 is 
 Use dispatcher-owned commands instead of launching scattered files by path:
 
 ```powershell
-python -m Tools.ai <tool> [args...]
+python -m ia_carmine.cli <tool> [args...]
 python -m Tools.validation <tool> [args...]
 python -m Tools.workflow <tool> [args...]
 python -m Tools.npu <tool> [args...]
@@ -172,7 +172,7 @@ Area and family navigation:
 
 ```text
 Tools/CONTEXT_INDEX.md
-Tools/ai/CONTEXT_INDEX.md
+ia_carmine/CONTEXT_INDEX.md
 Tools/validation/CONTEXT_INDEX.md
 Tools/workflow/CONTEXT_INDEX.md
 Tools/npu/CONTEXT_INDEX.md
@@ -273,12 +273,12 @@ patch_specs/<bundle>/fragments/*.py
 Standard PatchKit commands:
 
 ```powershell
-python -m Tools.ai apply_patch_bundle `
+python -m ia_carmine.cli apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python -m Tools.ai apply_patch_bundle `
+python -m ia_carmine.cli apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```

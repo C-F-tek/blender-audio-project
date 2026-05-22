@@ -11,20 +11,20 @@ def read_text(path: Path) -> str:
 
 def validate_contract_only(repo_root: Path) -> list[str]:
     files = {
-        "gate": read_text(repo_root / "Tools/ai/heap_runtime/completeness_gate/cli.py"),
-        "run_loop": read_text(repo_root / "Tools/ai/heap_gate/run_loop.py"),
+        "gate": read_text(repo_root / "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py"),
+        "run_loop": read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop.py"),
         "provider_commands": "\n".join(
             (
-                read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py"),
-                read_text(repo_root / "Tools/ai/heap_gate/provider_command_specs.py"),
-                read_text(repo_root / "Tools/ai/heap_gate/provider_time.py"),
+                read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_commands.py"),
+                read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_command_specs.py"),
+                read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_time.py"),
             )
         ),
-        "provider_execution": read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py"),
-        "provider_absorption": read_text(repo_root / "Tools/ai/heap_gate/provider_report_absorption.py"),
-        "startup_context": read_text(repo_root / "Tools/ai/heap_gate/startup_context.py"),
-        "startup_manifest": read_text(repo_root / "Tools/ai/heap_gate/startup_manifest_context.py"),
-        "matrix_lab": read_text(repo_root / "Tools/ai/heap_gate/matrix_lab.py"),
+        "provider_execution": read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_execution.py"),
+        "provider_absorption": read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_report_absorption.py"),
+        "startup_context": read_text(repo_root / "ia_carmine/runtime/heap_gate/startup_context.py"),
+        "startup_manifest": read_text(repo_root / "ia_carmine/runtime/heap_gate/startup_manifest_context.py"),
+        "matrix_lab": read_text(repo_root / "ia_carmine/runtime/heap_gate/matrix_lab.py"),
     }
     checks = {
         "startup_manifest_cli": "--startup-manifest" in files["gate"],

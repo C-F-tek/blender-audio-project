@@ -121,7 +121,7 @@ The smoke `Tools/validation/repository_product/review_pr_final_product_contract_
 <!-- IA-CARMINE-REAL-PRODUCT-SINGLE-ENTRY-EXIT-BEGIN -->
 ## Real product single entry / single exit
 
-The operator-facing entry point is `python -m Tools.ai run`.
+The operator-facing entry point is `python -m ia_carmine.cli run`.
 
 For the first real process-product PR, use `-ProcessGateTask` instead of an external task-generation script. The wrapper creates the ignored task Markdown under `output/local_ai_task_inputs`, delegates the universe between entry and exit to `run_unified_local_ai_refactor.ps1`, and then validates the final review PR product through `check_review_pr_final_product_contract.py`.
 
@@ -135,11 +135,11 @@ When `-CreatePr` is used, final product validation automatically runs in remote 
 <!-- IA-CARMINE-RUNTIME-PEER-EVIDENCE-FEED-BEGIN -->
 ## Runtime peer evidence feed into proposals
 
-`Tools/ai/repository_product/repository_change_proposals/cli.py` reads current-stamp heap/exchange, GPU0, NPU, runtime-correlation and generated patch-spec apply reports when available.
+`ia_carmine/product/repository_product/repository_change_proposals/cli.py` reads current-stamp heap/exchange, GPU0, NPU, runtime-correlation and generated patch-spec apply reports when available.
 
 If those reports prove that the runtime mesh existed but generated patch specs were metadata-only, the expected product proposal is `P-RUNTIME-PEER-EVIDENCE-FEED`. The fallback `P-NEXT-NPU-OBSERVABILITY` remains a backlog/default proposal and must not be treated as successful final product when runtime peer evidence exists.
 
-`Tools/ai/generated_patch_specs/proposal_cli.py` can carry reviewed `concrete_operations` into generated patch specs. Allowed operations remain deterministic and reviewable: `replace_once`, `append_once`, `insert_after_once`, `insert_before_once`, `write_file`.
+`ia_carmine/product/generated_patch_specs/proposal_cli.py` can carry reviewed `concrete_operations` into generated patch specs. Allowed operations remain deterministic and reviewable: `replace_once`, `append_once`, `insert_after_once`, `insert_before_once`, `write_file`.
 
 `Tools/validation/repository_product/repository_change_proposals_runtime_evidence_smoke/cli.py` covers the complete route: runtime evidence -> proposal -> patch spec -> generated patch apply.
 <!-- IA-CARMINE-RUNTIME-PEER-EVIDENCE-FEED-END -->
@@ -149,14 +149,14 @@ If those reports prove that the runtime mesh existed but generated patch specs w
 The operator heap/universe lane has one Python non-GUI surface and one GUI view:
 
 ```text
-python -m Tools.ai run
-python -m Tools.ai operator_product_gui
+python -m ia_carmine.cli run
+python -m ia_carmine.cli operator_product_gui
 ```
 
 The lower-level heap closure remains an internal dispatched tool:
 
 ```text
-python -m Tools.ai heap_context_closure
+python -m ia_carmine.cli heap_context_closure
 ```
 
 Workflow wrappers should call the Python dispatcher instead of direct script paths.

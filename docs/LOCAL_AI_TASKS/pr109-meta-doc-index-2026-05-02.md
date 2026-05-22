@@ -93,6 +93,6 @@ $env:PYTHONPATH = (Get-Location).Path
 Prefer package execution:
 
 ```powershell
-python -m Tools.ai.repository_product.github_evidence_bundle --help
+python -m ia_carmine.product.repository_product.github_evidence_bundle --help
 python -m Tools.validation check_github_evidence_bundle --help
 ```

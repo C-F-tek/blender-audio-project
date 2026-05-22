@@ -42,7 +42,7 @@ def main() -> int:
     result = subprocess.run(
         [
             sys.executable,
-            str(repo_root / "Tools/ai/runtime_universe/unified/run_observer_snapshot/cli.py"),
+            str(repo_root / "ia_carmine/runtime/runtime_universe/unified/run_observer_snapshot/cli.py"),
             "--observer-dir",
             str(observer_dir),
             "--output",

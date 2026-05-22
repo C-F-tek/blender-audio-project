@@ -115,7 +115,7 @@ Then open the nearest family context and dispatcher:
 
 ```text
 ../Tools/CONTEXT_INDEX.md
-../Tools/ai/CONTEXT_INDEX.md
+../ia_carmine/CONTEXT_INDEX.md
 ../Tools/validation/CONTEXT_INDEX.md
 ../Tools/workflow/CONTEXT_INDEX.md
 ../Tools/npu/CONTEXT_INDEX.md

@@ -23,20 +23,20 @@ def import_pipeline_modules(repo_root: Path) -> dict[str, Any]:
     if root_text not in sys.path:
         sys.path.insert(0, root_text)
 
-    from Tools.ai.pipeline.artifact_contracts import planned_outputs, slugify
-    from Tools.ai.pipeline.cli import build_parser
-    from Tools.ai.pipeline.compat import pipeline_step, run_pipeline_step
-    from Tools.ai.pipeline.models import PipelineLane, PipelineStep
-    from Tools.ai.pipeline.orchestrator import run_parallel_steps, run_serial_steps
-    from Tools.ai.pipeline.preflight import preflight
-    from Tools.ai.pipeline.remediation import remedial_steps, remediation_plan_from_requests
-    from Tools.ai.pipeline.schema_report import build_report, empty_failed_report
-    from Tools.ai.pipeline.steps import (
+    from ia_carmine.product.pipeline.artifact_contracts import planned_outputs, slugify
+    from ia_carmine.product.pipeline.cli import build_parser
+    from ia_carmine.product.pipeline.compat import pipeline_step, run_pipeline_step
+    from ia_carmine.product.pipeline.models import PipelineLane, PipelineStep
+    from ia_carmine.product.pipeline.orchestrator import run_parallel_steps, run_serial_steps
+    from ia_carmine.product.pipeline.preflight import preflight
+    from ia_carmine.product.pipeline.remediation import remedial_steps, remediation_plan_from_requests
+    from ia_carmine.product.pipeline.schema_report import build_report, empty_failed_report
+    from ia_carmine.product.pipeline.steps import (
         build_parallel_steps,
         build_serial_steps,
         build_step_commands,
     )
-    from Tools.ai.pipeline.artifact_runner import main as entrypoint_main
+    from ia_carmine.product.pipeline.artifact_runner import main as entrypoint_main
     from Tools.validation._shared.ai_pipeline_report_contracts import validate_ai_pipeline_report_payload
 
     return {

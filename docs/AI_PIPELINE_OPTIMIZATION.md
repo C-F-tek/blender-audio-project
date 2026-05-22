@@ -7,7 +7,7 @@ This additive layer improves AI-assisted artifact production without replacing B
 The current AI artifact pipeline is modularized under:
 
 ```text
-Tools/ai/pipeline/
+ia_carmine/product/pipeline/
 ```
 
 Status marker:
@@ -21,7 +21,7 @@ Read before modifying pipeline behavior:
 ```text
 docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/AI_PIPELINE_ARCHITECTURE.md
-Tools/ai/pipeline/refactor_status.py
+ia_carmine/product/pipeline/refactor_status.py
 ```
 
 ## Rules
@@ -104,25 +104,25 @@ parallel_lanes
 ## Entry point
 
 ```powershell
-python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate
+python -m ia_carmine.cli run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate
 ```
 
 Dry run:
 
 ```powershell
-python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run
+python -m ia_carmine.cli run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run
 ```
 
 Dry run with report file:
 
 ```powershell
-python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
+python -m ia_carmine.cli run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
 ```
 
 Dry-run matrix:
 
 ```powershell
-python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m ia_carmine.cli pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 ## Outputs
@@ -166,7 +166,7 @@ After pipeline changes:
 ```powershell
 python -m Tools.validation check_python_syntax --repo-root .
 python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m ia_carmine.cli pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 The pipeline is additive and can be bypassed by simply not running these tools.

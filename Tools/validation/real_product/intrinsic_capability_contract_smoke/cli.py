@@ -69,7 +69,7 @@ def main() -> int:
         "task_md_input",
         "heap_exchange_activation",
         "gpu1_primary_advisory",
-        "gpu0_openvino_workload",
+        "gpu0_ollama_vulkan_workload",
         "npu_peer_micro_lane",
         "shared_memory_evidence",
         "static_deterministic_script_lane",

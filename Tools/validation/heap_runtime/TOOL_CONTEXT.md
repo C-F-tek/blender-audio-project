@@ -88,4 +88,4 @@ negative preview/rewrite contract evidence
 
 ## Extension notes
 
-When changing heap runtime behavior, add or update a validation in this area before relying on the new behavior in operator flows. Update `Tools/ai/heap_runtime/TOOL_CONTEXT.md` and `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` when semantic meaning changes.
+When changing heap runtime behavior, add or update a validation in this area before relying on the new behavior in operator flows. Update `ia_carmine/runtime/heap_runtime/TOOL_CONTEXT.md` and `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` when semantic meaning changes.

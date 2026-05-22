@@ -38,9 +38,9 @@ operator heap runs and for the repairs applied on `master`.
   provider process collection files.
 - Revision-context fixture blocks now carry `refines_block_id` and
   `resume_from_block_id` for GPU0/NPU causal review/audit tasks.
-- Canonical `python -m Tools.ai run` no longer exposes safe apply; code
+- Canonical `python -m ia_carmine.cli run` no longer exposes safe apply; code
   application remains a separate reviewed code-product boundary.
-- Startup reload now executes `python -m Tools.ai agent_runtime_sqlite_memory
+- Startup reload now executes `python -m ia_carmine.cli agent_runtime_sqlite_memory
   --action remember --scope operational` with a content file. Failure is
   blocking, not degraded.
 - Runtime heap JSONL remains compact, but the SQLite sidecar now stores the

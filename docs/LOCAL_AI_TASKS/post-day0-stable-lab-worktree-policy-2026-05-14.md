@@ -74,9 +74,9 @@ The lab checkout may be force-aligned to the remote PR branch using `git reset -
 During lab sync, Git may first show modified tracked files or untracked files, for example:
 
 ```text
-M Tools/ai/README.md
+M ia_carmine/README.md
 M config/allowlist.json
-Removing Tools/ai/operator_product_launcher.py
+Removing ia_carmine/operator_product_launcher.py
 ```
 
 This is expected when the lab contains residue from previous runs.

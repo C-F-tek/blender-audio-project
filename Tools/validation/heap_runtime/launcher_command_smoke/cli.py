@@ -65,7 +65,7 @@ def read_json(path: Path) -> dict[str, Any]:
 def load_heap_closure_module(repo_root: Path) -> Any:
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.ai.heap_context_closure import requesting
+    from ia_carmine.runtime.heap_context_closure import requesting
 
     return requesting
 
@@ -157,7 +157,7 @@ def main() -> int:
     command = [
         sys.executable,
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "heap_runtime_launcher_command",
         "--repo-root",
         ".",
@@ -229,7 +229,7 @@ def main() -> int:
         },
         {
             "name": "main_command_targets_heap_closure",
-            "passed": "-m Tools.ai heap_context_closure" in generated_command,
+            "passed": "-m ia_carmine heap_context_closure" in generated_command,
         },
         {
             "name": "provider_flags_are_unified",
@@ -238,7 +238,7 @@ def main() -> int:
         },
         {
             "name": "postrun_command_targets_orchestrator",
-            "passed": "-m Tools.ai external_heap_postrun_package"
+            "passed": "-m ia_carmine external_heap_postrun_package"
             in str(payload.get("postrun_package_command") or ""),
         },
     ]

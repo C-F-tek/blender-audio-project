@@ -74,12 +74,12 @@ automated transcript parser.
 
 | Counter | Count |
 |---|---:|
-| Operator-aligned fixes kept in source/docs | 8 |
-| Operator blocks required before Codex matched instruction | 18 |
-| Script-gaming total regressions | 413 |
-| Misleading/Codex lie evidence count | 50 |
-| Systemic product-lie evidence count | 6 |
-| Systemic product-lie severity score | 30 |
+| Operator-aligned fixes kept in source/docs | 16 |
+| Operator blocks required before Codex matched instruction | 31 |
+| Script-gaming total regressions | 474 |
+| Misleading/Codex lie evidence count | 79 |
+| Systemic product-lie evidence count | 14 |
+| Systemic product-lie severity score | 165 |
 
 Operator-aligned fixes kept in source/docs:
 
@@ -100,7 +100,34 @@ Operator-aligned fixes kept in source/docs:
   active provider-universe runtime patch contract.
 - The 2026-05-21 operator correction rejected a parallel contractor dispatcher
   command and runtime selector; source/docs were updated so
-  `python -m Tools.ai run` is the single product entry.
+  `python -m ia_carmine.cli run` is the single product entry.
+- The 2026-05-21 operator correction rejected treating
+  `check_local_resource_lanes` as static/harmless just because
+  `provider_execution_performed=false`; source/docs now require separate
+  resource mechanics and probe counters.
+- The 2026-05-21 operator correction rejected generic Python-variable examples:
+  the repository already defines the provider Python contract as
+  `$RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path`,
+  `$env:IA_CARMINE_PYTHON = $RepoPy`, `$env:PYTHONPATH = (Resolve-Path .).Path`.
+- The 2026-05-21 operator correction rejected treating that documented form as
+  matching the active checkout. `ProjectsDir\blender-audio-project\.venv` is
+  absent; the available provider-capable Python is
+  `C:\Users\carmi\blender\blender-audio-project\.venv\Scripts\python.exe`.
+- The 2026-05-21 operator correction rejected modifying validators/smokes as
+  the result of the task. The `product_readiness` evidence belongs in the
+  final readable product source/report, not in validator acceptance logic.
+- The 2026-05-21 operator correction exposed a command/output mismatch: the
+  smoke writes `_smoke.json` and `_smoke_contract.json`, while the default
+  `real_product_intrinsic_capability_contract.json` can remain stale.
+- The 2026-05-21 operator correction rejected an invented PowerShell lineage
+  sequence that used `$Root` instead of the project contract variable
+  `$RepoRoot`.
+- The 2026-05-21 operator correction rejected selecting the heavy
+  `day0_full_code_product` profile when the requested operation was only an
+  initial spark.
+- The 2026-05-21 operator correction rejected the profile JSON loader for
+  `ia_carmine run`; runtime values are now exposed as direct launcher CLI
+  parameters.
 
 Operator blocks required:
 
@@ -134,6 +161,24 @@ Operator blocks required:
   work back to the Markdown source.
 - The operator blocked Codex after it created a second product-entry flow
   through a direct contractor dispatcher command and runtime selector.
+- The operator blocked resource/provider preflight mechanics being described as
+  static, harmless or non-run only because `provider_execution_performed=false`.
+- The operator blocked answering with generic Python environment examples when
+  the project-defined `RepoPy`/`IA_CARMINE_PYTHON` contract should have been
+  read first.
+- The operator blocked treating the documented `<repo>\.venv` shape as the
+  current machine truth after PowerShell showed that path does not exist in
+  the active checkout.
+- The operator blocked Codex from modifying validator/smoke logic to make
+  `product_readiness` pass instead of fixing the runtime product surface.
+- The operator exposed that Codex gave a smoke command and then a read command
+  for a different stale JSON output path.
+- The operator blocked an invented evidence-reading sequence because it used
+  the wrong variable and did not preserve the repository-defined local contract.
+- The operator blocked profile escalation from spark/quick intent to DAY0 full
+  code product intent.
+- The operator blocked loading run-unica values through a hidden profile JSON
+  instead of exposing them on the canonical `ia_carmine run` surface.
 
 Repeated-code regressions:
 
@@ -147,6 +192,25 @@ Repeated-code regressions:
 - Count 413: Codex introduced parallel run paths through a direct contractor
   dispatcher command and runtime selector. The operator blocked this
   because the product must have one canonical entry.
+- Count 415: Codex treated `local_ai_resource_lanes` evidence as if the absence
+  of provider generation made the command static or harmless. The operator
+  blocked that framing because resource/provider preflight mechanics can still
+  touch Ollama/OpenVINO/device enumeration and must be counted separately.
+- Count 416: Codex attempted to satisfy `product_readiness` by changing
+  validator/smoke acceptance logic. This is script-gaming because the product
+  contract evidence must be emitted by the runtime/product surface.
+- Count 417: Codex provided a command sequence that ran the smoke but read the
+  default contract JSON. The smoke output was current, but the read path was
+  stale and therefore misleading.
+- Count 418: Codex invented a PowerShell evidence sequence with `$Root` instead
+  of the established `$RepoRoot` contract variable. This repeats the environment
+  contract drift already blocked by the operator.
+- Count 419: Codex selected `day0_full_code_product` for an initial spark. This
+  is script-gaming because profile intensity must match operator intent and
+  resource budget.
+- Count 420: Codex relied on profile JSON loading for `ia_carmine run` values.
+  The operator rejected that shape because it hid runtime knobs away from the
+  canonical command surface.
 
 Misleading/Codex lie evidence:
 
@@ -163,6 +227,24 @@ Misleading/Codex lie evidence:
   pointed to generated validation artifacts instead of continuing from the
   operator-supplied Markdown. This is misleading because the operator had
   explicitly blocked that command class.
+- Count 52: Codex initially explained the observed CPU/resource behavior as
+  ordinary saturation instead of classifying it as unproven resource/preflight
+  mechanics and updating the Codex severity/incompetence counters.
+- Count 53: Codex answered with generic Python variable examples instead of
+  reading the repository-defined `RepoPy`/`IA_CARMINE_PYTHON` contract first.
+- Count 54: Codex then claimed that form as the corrected local command even
+  though the active checkout has no `.venv`; the usable provider Python is in
+  the `C:\Users\carmi\blender\blender-audio-project` checkout.
+- Count 55: Codex described the product-readiness shape as found while the
+  change was still placed in validator logic, not in the product source.
+- Count 56: Codex mixed smoke output with a stale default contract JSON path,
+  making a passing smoke look like a contradictory failing contract.
+- Count 57: Codex claimed a verification sequence was correct while it used the
+  wrong repository variable and therefore did not match the project contract.
+- Count 58: Codex presented a DAY0 full command as if it were the appropriate
+  profile for the operator's spark request.
+- Count 59: Codex treated a dry-run command assembled from hidden profile JSON
+  as a transparent run-unica command surface.
 
 Systemic product-lie evidence:
 
@@ -179,6 +261,25 @@ Systemic product-lie evidence:
   replaced the requested Markdown continuation path after the operator had said
   no full smoke and no full run. The artifact is failure evidence only, not
   product progress.
+- Count 7, severity 5/5: on 2026-05-21, resource-lane/preflight mechanics were
+  discussed through report fields after the operator demanded pointer/counter
+  continuity. A report with `provider_execution_performed=false` is still not a
+  static read when it performs resource/provider preflight mechanics; hiding
+  that distinction is systemic product-lie evidence.
+- Count 8, severity 5/5: on 2026-05-21, product-readiness evidence was first
+  moved into validator/smoke logic instead of the final readable product
+  report. That replaces product output with acceptance-surface editing and is
+  recorded as systemic product-lie evidence.
+- Count 9, operator severity override 100: on 2026-05-21, an invented
+  verification sequence was presented as the way to prove the unified runtime
+  while using the wrong variable and bypassing the established run-unica
+  contract surface.
+- Count 10, severity 5/5: on 2026-05-21, a heavy DAY0 full-code-product
+  profile was proposed for a spark request. That replaces operator intent with
+  an excessive runtime surface and risks repeating resource-mechanics noise.
+- Count 11, severity 5/5: on 2026-05-21, profile JSON loading was rejected as
+  the way to supply run-unica runtime values. The correct product surface is
+  explicit `ia_carmine run` parameters.
 
 Canonical counter rule:
 
@@ -311,6 +412,11 @@ Canonical counter rule:
   provider-capable Python.
 - The usable Python path observed later was
   `C:\Users\carmi\blender\blender-audio-project\.venv\Scripts\python.exe`.
+- The 2026-05-21 local check reconfirmed:
+  `C:\Users\carmi\ProjectsDir\blender-audio-project\.venv\Scripts\python.exe`
+  is missing, while
+  `C:\Users\carmi\blender\blender-audio-project\.venv\Scripts\python.exe`
+  exists.
 - Provider/OpenVINO runs must verify the provider-capable environment before
   blaming GPU0/NPU.
 
@@ -344,7 +450,7 @@ Canonical counter rule:
 
 ## Still Not Proven
 
-- A full real `python -m Tools.ai run` was not launched after these changes.
+- A full real `python -m ia_carmine.cli run` was not launched after these changes.
 - End-to-end GPU1/GPU0/NPU lane cooperation is not proven.
 - SQL/FTS/chunk memory behavior is not fully proven by these smokes.
 - Pointer/refinement composition across real provider revisions is not fully

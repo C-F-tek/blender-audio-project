@@ -18,14 +18,14 @@ Questo indice serve a non sovraccaricare ulteriormente `Tools/workflow/README.md
 
 | Concetto | Owner code |
 |---|---|
-| Entrata unica real product | `python -m Tools.ai run` |
+| Entrata unica real product | `python -m ia_carmine.cli run` |
 | Universo heap/exchange | `python -m Tools.workflow run_unified_local_ai_refactor` |
 | Preflight obbligatorio | `Tools/validation/real_product/preflight_gate/cli.py` |
-| GPU0 workload osservabile | `Tools/ai/provider_mesh/openvino_gpu0_workload_report.py` |
-| NPU micro peer diagnostic/report lane | `Tools/ai/provider_mesh/npu_micro_task_companion_report.py` |
-| Empty generated product fail-fast | `Tools/ai/generated_patch_specs/apply_cli.py` |
-| Runtime evidence proposal feed | `Tools/ai/repository_product/repository_change_proposals/cli.py` |
-| Concrete ops into patch specs | `Tools/ai/generated_patch_specs/proposal_cli.py` |
+| GPU0 workload osservabile | `ia_carmine/providers/provider_mesh/openvino_gpu0_workload_report.py` |
+| NPU micro peer diagnostic/report lane | `ia_carmine/providers/provider_mesh/npu_micro_task_companion_report.py` |
+| Empty generated product fail-fast | `ia_carmine/product/generated_patch_specs/apply_cli.py` |
+| Runtime evidence proposal feed | `ia_carmine/product/repository_product/repository_change_proposals/cli.py` |
+| Concrete ops into patch specs | `ia_carmine/product/generated_patch_specs/proposal_cli.py` |
 | Runtime evidence proposal smoke | `Tools/validation/repository_product/repository_change_proposals_runtime_evidence_smoke/cli.py` |
 | Empty product smoke | `Tools/validation/generated_patch_specs/empty_product_smoke/cli.py` |
 | Markdown line-budget policy | `python -m Tools.validation check_file_line_limits` |

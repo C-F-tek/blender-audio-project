@@ -55,35 +55,35 @@ CONTEXT_INDEX.md
 | Dispatcher coverage map | `docs/DISPATCHER_CONTEXT_COVERAGE.md` | complete-enough |
 | Tools global index | `Tools/CONTEXT_INDEX.md` | complete-enough |
 | Tools overview | `Tools/TOOL_CONTEXT.md` | partial |
-| Tools/ai overview | `Tools/ai/TOOL_CONTEXT.md` | partial |
-| Tools/ai family index | `Tools/ai/CONTEXT_INDEX.md` | complete-enough |
-| Tools/ai shared helpers | `Tools/ai/_shared/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai agent context | `Tools/ai/agent_context/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai agent memory | `Tools/ai/agent_memory/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai agent review | `Tools/ai/agent_review/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai AI workload | `Tools/ai/ai_workload/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai code product | `Tools/ai/code_product/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai contractor universe | `Tools/ai/contractor_universe/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai deterministic recommendations | `Tools/ai/deterministic_recommendations/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai external heap | `Tools/ai/external_heap/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai generated patch specs | `Tools/ai/generated_patch_specs/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai heap context memory reload | `Tools/ai/heap_context_memory_reload/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai heap exchange | `Tools/ai/heap_exchange/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai heap final proposals | `Tools/ai/heap_final_proposals/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai heap gate | `Tools/ai/heap_gate/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai heap provider | `Tools/ai/heap_provider/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai heap runtime | `Tools/ai/heap_runtime/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai operator product core | `Tools/ai/operator_product_core/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai patch product | `Tools/ai/patch_product/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai patchkit | `Tools/ai/patchkit/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai pipeline | `Tools/ai/pipeline/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai provider mesh | `Tools/ai/provider_mesh/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai provider runtime blackboard | `Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai repository product | `Tools/ai/repository_product/TOOL_CONTEXT.md` | stub |
-| Tools/ai run command | `Tools/ai/run/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai runtime tool | `Tools/ai/runtime_tool/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai runtime universe | `Tools/ai/runtime_universe/TOOL_CONTEXT.md` | complete-enough |
-| Tools/ai runtime universe unified | `Tools/ai/runtime_universe/unified/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine overview | `ia_carmine/TOOL_CONTEXT.md` | partial |
+| ia_carmine family index | `ia_carmine/CONTEXT_INDEX.md` | complete-enough |
+| ia_carmine shared helpers | `ia_carmine/_shared/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine agent context | `ia_carmine/context/agent_context/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine agent memory | `ia_carmine/memory/agent_memory/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine agent review | `ia_carmine/product/agent_review/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine AI workload | `ia_carmine/product/ai_workload/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine code product | `ia_carmine/product/code_product/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine contractor universe | `ia_carmine/runtime/contractor_universe/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine deterministic recommendations | `ia_carmine/product/deterministic_recommendations/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine external heap | `ia_carmine/runtime/external_heap/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine generated patch specs | `ia_carmine/product/generated_patch_specs/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine heap context memory reload | `ia_carmine/context/heap_context_memory_reload/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine heap exchange | `ia_carmine/runtime/heap_exchange/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine heap final proposals | `ia_carmine/product/heap_final_proposals/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine heap gate | `ia_carmine/runtime/heap_gate/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine heap provider | `ia_carmine/runtime/heap_provider/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine heap runtime | `ia_carmine/runtime/heap_runtime/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine operator product core | `ia_carmine/product/operator_product_core/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine patch product | `ia_carmine/product/patch_product/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine patchkit | `ia_carmine/product/patchkit/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine pipeline | `ia_carmine/product/pipeline/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine provider mesh | `ia_carmine/providers/provider_mesh/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine provider runtime blackboard | `ia_carmine/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine repository product | `ia_carmine/product/repository_product/TOOL_CONTEXT.md` | stub |
+| ia_carmine run command | `ia_carmine/runtime/run/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine runtime tool | `ia_carmine/runtime/runtime_tool/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine runtime universe | `ia_carmine/runtime/runtime_universe/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine runtime universe unified | `ia_carmine/runtime/runtime_universe/unified/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation overview | `Tools/validation/TOOL_CONTEXT.md` | partial |
 | Tools/validation family index | `Tools/validation/CONTEXT_INDEX.md` | complete-enough |
 | Tools/validation agent context | `Tools/validation/agent_context/TOOL_CONTEXT.md` | complete-enough |
@@ -93,6 +93,7 @@ CONTEXT_INDEX.md
 | Tools/validation code product | `Tools/validation/code_product/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation deterministic recommendations | `Tools/validation/deterministic_recommendations/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation docs hygiene | `Tools/validation/docs_hygiene/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation external heap | `Tools/validation/external_heap/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation generated artifacts | `Tools/validation/generated_artifacts/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation generated patch specs | `Tools/validation/generated_patch_specs/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation heap exchange | `Tools/validation/heap_exchange/TOOL_CONTEXT.md` | stub |
@@ -160,11 +161,14 @@ CONTEXT_INDEX.md
 
 ## Known gaps
 
-- `Tools/ai/repository_product/TOOL_CONTEXT.md` is a stub and should be expanded later from local editing if needed.
+- `ia_carmine/product/repository_product/TOOL_CONTEXT.md` is a stub and should be expanded later from local editing if needed.
 - `Tools/docs/_shared/TOOL_CONTEXT.md` could not be created through the remote editor and remains a known stub-missing item.
 - `Tools/validation/heap_final_proposals/TOOL_CONTEXT.md` could not be created through the remote editor and remains a known stub-missing item.
 - Area overview files can remain partial because family indexes now provide direct navigation.
 - Do not claim all 1479 scripts are individually documented. Current strategy documents macro-families and links to dispatch/source files.
+- Some `ia_carmine` modules still import generic report helpers from
+  `Tools.validation._shared.report_utils`; decouple progressively through
+  `ia_carmine._shared.report_io` instead of treating validation as runtime core.
 
 ## Rule
 

@@ -254,11 +254,8 @@ def set_debug_enabled(enabled: bool) -> WorkflowSession:
 
 
 def available_ollama_models() -> list[str]:
-    npu_path = str(NPU_DIR)
-    if npu_path not in sys.path:
-        sys.path.insert(0, npu_path)
     try:
-        from Tools.npu.provider_mesh._shared.ollama_runtime import DEFAULT_BASE_URL, list_models, list_models_from_disk
+        from ia_carmine.providers.ollama import DEFAULT_BASE_URL, list_models, list_models_from_disk
 
         models = list_models(DEFAULT_BASE_URL) or list_models_from_disk()
     except Exception:

@@ -9,7 +9,7 @@ Add compact navigation entrypoints so AI agents and operators can discover conte
 ```text
 CONTEXT_INDEX.md
 Tools/CONTEXT_INDEX.md
-Tools/ai/CONTEXT_INDEX.md
+ia_carmine/CONTEXT_INDEX.md
 Tools/validation/CONTEXT_INDEX.md
 Tools/workflow/CONTEXT_INDEX.md
 Tools/npu/CONTEXT_INDEX.md
@@ -72,7 +72,7 @@ This prevents false claims that every one of the 1479 scripts is individually do
 sync local master
 verify context index and coverage files exist locally
 continue package-level TOOL_CONTEXT.md only for families that cause recurring ambiguity
-expand Tools/ai/repository_product/TOOL_CONTEXT.md later from local editor if needed
+expand ia_carmine/product/repository_product/TOOL_CONTEXT.md later from local editor if needed
 expand stub-missing files later from local editor if needed
 ```
 

@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.heap_exchange.io import load_jsonl
+from ia_carmine.runtime.heap_exchange.io import load_jsonl
 
 try:
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report

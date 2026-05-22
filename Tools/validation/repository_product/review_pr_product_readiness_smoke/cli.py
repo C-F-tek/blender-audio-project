@@ -76,7 +76,7 @@ def args_payload(
     if argv is None:
         argv = [
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "agent_review_prepare_pr",
             "--repo-root",
             ".",
@@ -157,10 +157,10 @@ def main() -> int:
                     apply_product=False,
                     argv=[
                         "-m",
-                        "Tools.ai",
+                        "ia_carmine",
                         "agent_review_prepare_pr",
                         "-m",
-                        "Tools.ai",
+                        "ia_carmine",
                         "agent_review_prepare_pr",
                         "--repo-root",
                         ".",
@@ -181,7 +181,7 @@ def main() -> int:
                     apply_product=False,
                     argv=[
                         "-m",
-                        "Tools.ai",
+                        "ia_carmine",
                         "agent_review_prepare_pr",
                         "--repo-root",
                         ".",

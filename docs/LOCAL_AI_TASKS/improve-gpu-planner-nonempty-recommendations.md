@@ -10,10 +10,10 @@ docs/LOCAL_AI_RUN_BOOTSTRAP.md
 docs/LOCAL_AI_TASKS/README.md
 docs/LOCAL_AI_TASKS/apply-agent-review-doc-patch-plan.md
 docs/LOCAL_VALIDATION_EVIDENCE/agent_review_doc_patch_plan_evidence.md
-Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
-Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
-Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py
-Tools/ai/agent_review/patch_plan/cli.py
+ia_carmine/providers/provider_mesh/gpu_deep_planning_review/cli.py
+ia_carmine/providers/provider_mesh/gpu_deep_planning_supervised/cli.py
+ia_carmine/providers/provider_mesh/gpu_npu_parallel_orchestrator/cli.py
+ia_carmine/product/agent_review/patch_plan/cli.py
 Tools/validation/agent_review/patch_plan_smoke/cli.py
 ```
 
@@ -75,9 +75,9 @@ Do not edit output/** or generated indexes as source.
 ## Candidate target files
 
 ```text
-Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
-Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
-Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py
+ia_carmine/providers/provider_mesh/gpu_deep_planning_review/cli.py
+ia_carmine/providers/provider_mesh/gpu_deep_planning_supervised/cli.py
+ia_carmine/providers/provider_mesh/gpu_npu_parallel_orchestrator/cli.py
 Tools/validation/agent_review/patch_plan_smoke/cli.py
 Tools/validation/agent_review/patch_plan_full_validation/cli.py
 docs/JSON_SCHEMAS.md

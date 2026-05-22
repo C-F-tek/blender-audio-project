@@ -110,7 +110,7 @@ Write-Host "Patch application: disabled"
 
 if (-not $SkipMemoryInventory) {
     Invoke-RepoPython -Label "Agent memory inventory" -ArgsList @(
-        "-m", "Tools.ai", "build_agent_memory_inventory",
+        "-m", "ia_carmine.cli", "build_agent_memory_inventory",
         "--repo-root", ".",
         "--objective", $Objective,
         "--output", $MemoryInventoryJson,
@@ -121,14 +121,14 @@ if (-not $SkipMemoryInventory) {
 }
 
 Invoke-RepoPython -Label "Agnostic tool inventory" -ArgsList @(
-    "-m", "Tools.ai", "build_agent_agnostic_tool_inventory",
+    "-m", "ia_carmine.cli", "build_agent_agnostic_tool_inventory",
     "--repo-root", ".",
     "--output", $ToolInventoryJson,
     "--markdown-output", $ToolInventoryMd
 )
 
 Invoke-RepoPython -Label "Persistent memory status" -ArgsList @(
-    "-m", "Tools.ai", "agent_runtime_sqlite_memory",
+    "-m", "ia_carmine.cli", "agent_runtime_sqlite_memory",
     "--repo-root", ".",
     "--action", "status",
     "--scope", "persistent",
@@ -137,7 +137,7 @@ Invoke-RepoPython -Label "Persistent memory status" -ArgsList @(
 )
 
 Invoke-RepoPython -Label "Operational memory status" -ArgsList @(
-    "-m", "Tools.ai", "agent_runtime_sqlite_memory",
+    "-m", "ia_carmine.cli", "agent_runtime_sqlite_memory",
     "--repo-root", ".",
     "--action", "status",
     "--scope", "operational",
@@ -173,9 +173,9 @@ if (Test-Path $LineCountCsv) {
 
 if (-not $SkipCodeInterpreter) {
     Invoke-RepoPython -Label "Code interpreter/static report" -ArgsList @(
-        "-m", "Tools.ai build_code_interpreter_report",
+        "-m", "ia_carmine build_code_interpreter_report",
         "--repo-root", ".",
-        "--input", "Tools/ai",
+        "--input", "ia_carmine",
         "--input", "Tools/validation",
         "--input", "Tools/workflow",
         "--input", "Tools/npu",
@@ -215,7 +215,7 @@ if (-not $SkipSharedToolboxBundleSmoke) {
 }
 
 Invoke-RepoPython -Label "Memory routing policy" -ArgsList @(
-    "-m", "Tools.ai", "agent_memory_routing_policy",
+    "-m", "ia_carmine.cli", "agent_memory_routing_policy",
     "--repo-root", ".",
     "--objective", $Objective,
     "--profile", "full_refactor",
@@ -225,7 +225,7 @@ Invoke-RepoPython -Label "Memory routing policy" -ArgsList @(
 
 if ($EnableNpuProviderEnvironmentCheck) {
     Invoke-RepoPython -Label "NPU provider environment preflight" -ArgsList @(
-        "-m", "Tools.ai", "check_npu_provider_environment",
+        "-m", "ia_carmine.cli", "check_npu_provider_environment",
         "--repo-root", ".",
         "--output", $NpuEnvJson,
         "--markdown-output", $NpuEnvMd
@@ -236,7 +236,7 @@ if ($EnableNpuProviderEnvironmentCheck) {
 
 if (-not $SkipRefactorDuplicationAudit) {
     $DupArgs = @(
-        "-m", "Tools.ai", "build_refactor_duplication_audit",
+        "-m", "ia_carmine.cli", "build_refactor_duplication_audit",
         "--repo-root", ".",
         "--stamp", $Stamp,
         "--line-count-report", $LineCountJson,
@@ -367,7 +367,7 @@ Add-ExistingPath -List $Artifacts -Path $WorkflowMd
 
 if ($WriteCompactBundle) {
     $BundleArgs = @(
-        "-m", "Tools.ai.build_shared_toolbox_ai_to_ai_bundle",
+        "-m", "ia_carmine.build_shared_toolbox_ai_to_ai_bundle",
         "--repo-root", ".",
         "--stamp", $Stamp,
         "--basename", $BundleBase,

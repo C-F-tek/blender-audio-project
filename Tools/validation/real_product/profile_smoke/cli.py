@@ -37,20 +37,20 @@ def main() -> int:
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
-    dispatch_text = read_text(repo / "Tools/ai/dispatch.py")
-    run_text = read_text(repo / "Tools/ai/run/cli.py")
-    controller_text = read_text(repo / "Tools/ai/operator_product_core/controller.py")
-    runner_text = read_text(repo / "Tools/ai/operator_product_core/runner.py")
-    profiles_text = read_text(repo / "Tools/ai/operator_product_core/profiles.py")
-    view_text = read_text(repo / "Tools/ai/operator_product_core/view/cli.py")
-    profile_doc = read_json(repo / "Tools/ai/run/profiles/heap_runtime_launcher_profiles.json")
+    dispatch_text = read_text(repo / "ia_carmine/dispatch.py")
+    run_text = read_text(repo / "ia_carmine/runtime/run/cli.py")
+    controller_text = read_text(repo / "ia_carmine/product/operator_product_core/controller.py")
+    runner_text = read_text(repo / "ia_carmine/product/operator_product_core/runner.py")
+    profiles_text = read_text(repo / "ia_carmine/product/operator_product_core/profiles.py")
+    view_text = read_text(repo / "ia_carmine/product/operator_product_core/view/cli.py")
+    profile_doc = read_json(repo / "ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json")
     deep_profile = (profile_doc.get("profiles") or {}).get("deep_external_heap", {})
     balanced_profile = (profile_doc.get("profiles") or {}).get("balanced_external_heap", {})
 
     checks = {
-        "run_entrypoint_registered": '"run": "Tools.ai.run.cli:main"' in dispatch_text,
-        "gui_entrypoint_registered": '"operator_product_gui": "Tools.ai.operator_product_core.view.cli:main"' in dispatch_text,
-        "canonical_entrypoint_recorded": "python -m Tools.ai run" in run_text,
+        "run_entrypoint_registered": '"run": "ia_carmine.runtime.run.cli:main"' in dispatch_text,
+        "gui_entrypoint_registered": '"operator_product_gui": "ia_carmine.product.operator_product_core.view.cli:main"' in dispatch_text,
+        "canonical_entrypoint_recorded": "python -m ia_carmine.cli run" in run_text,
         "run_uses_shared_controller": "OperatorProductController" in run_text,
         "gui_uses_same_controller": "OperatorProductController" in view_text,
         "controller_shared_by_cli_and_gui": "run_operator_lab" in controller_text
@@ -63,7 +63,7 @@ def main() -> int:
         "runner_invokes_heap_context_closure": "heap_context_closure" in profiles_text,
         "runner_packages_final_readable_product": "launcher_passed" in runner_text
         and "CODE_PRODUCT_FULL_PATCH.md" in runner_text,
-        "runner_intakes_code_product": "Tools.ai.code_product.artifact_intake" in runner_text,
+        "runner_intakes_code_product": "ia_carmine.product.code_product.artifact_intake" in runner_text,
         "canonical_run_has_no_apply_safe_flag": "--apply-safe" not in run_text
         and "apply_safe=args.apply_safe" not in run_text,
         "run_does_not_expose_skip_preflight": "skip-preflight" not in run_text
@@ -97,8 +97,8 @@ def main() -> int:
         "kind": "real_product_profile_smoke",
         "repo_root": repo.as_posix(),
         "passed": not errors,
-        "canonical_entrypoint": "python -m Tools.ai run",
-        "gui_entrypoint": "python -m Tools.ai operator_product_gui",
+        "canonical_entrypoint": "python -m ia_carmine.cli run",
+        "gui_entrypoint": "python -m ia_carmine.cli operator_product_gui",
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,

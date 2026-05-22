@@ -13,23 +13,23 @@ from pathlib import Path
 CORE_RUNTIME_GUARD = True
 
 try:
-    from Tools.ai.runtime_tool.file_refs import (
+    from ia_carmine.runtime.runtime_tool.file_refs import (
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
     )
-    from Tools.ai.runtime_tool.file_refs.classifier import extract_target_refs, extract_validation_refs
+    from ia_carmine.runtime.runtime_tool.file_refs.classifier import extract_target_refs, extract_validation_refs
     from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.runtime_tool.file_refs import (  # type: ignore
+    from ia_carmine.runtime.runtime_tool.file_refs import (  # type: ignore
         RuntimeConsumer,
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
     )
-    from Tools.ai.runtime_tool.file_refs.classifier import (  # type: ignore
+    from ia_carmine.runtime.runtime_tool.file_refs.classifier import (  # type: ignore
         extract_target_refs,
         extract_validation_refs,
     )

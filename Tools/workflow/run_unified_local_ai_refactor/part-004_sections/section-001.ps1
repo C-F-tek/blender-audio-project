@@ -87,7 +87,7 @@ if ($BuildTaskPatchSuggestionReport -or $ReviewPrApplyDeterministicSuggestions) 
     $TaskSuggestionMd = "$ValidationDir/task_patch_suggestions_${ModeName}_$Stamp.md"
     $PhaseStatus.task_patch_suggestion_report = Invoke-Checked "Build task Markdown patch suggestion report" {
         Invoke-Python @(
-            "-m", "Tools.ai", "build_task_patch_suggestion_report",
+            "-m", "ia_carmine.cli", "build_task_patch_suggestion_report",
             "--repo-root", ".",
             "--task-file", $TaskFile,
             "--Stamp", $Stamp,
@@ -120,7 +120,7 @@ if ($ReviewPrFromGeneratedPatchSpecs) {
         $EffectiveGeneratedPatchSpecsBranch = "codex/generated-patch-specs-review-pr-$Stamp"
     }
     $GeneratedPatchSpecsArgs = @(
-        "-m", "Tools.ai", "generated_patch_specs_apply",
+        "-m", "ia_carmine.cli", "generated_patch_specs_apply",
         "--repo-root", ".",
         "--output", $PatchSuggestionJson,
         "--markdown-output", "$ValidationDir/generated_patch_specs_review_pr_apply_${ModeName}_$Stamp.md",
@@ -141,7 +141,7 @@ if ($ReviewPrFromGeneratedPatchSpecs) {
 $HeapExchangeExitJson = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.json"
 $HeapExchangeExitMd = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.md"
 $HeapExchangeExitArgs = @(
-    "-m", "Tools.ai", "heap_exchange_runtime_exit",
+    "-m", "ia_carmine.cli", "heap_exchange_runtime_exit",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--runtime-entry", $HeapExchangeEntryJson,
@@ -164,7 +164,7 @@ $ContextFiles = Add-ExistingContextFile -Current $ContextFiles -PathValue $HeapE
 if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and -not $ReviewPrFromGeneratedPatchSpecs) {
     $PatchSuggestionJson = "$ValidationDir/patch_suggestion_bundle_apply_${ModeName}_$Stamp.json"
     $PatchSuggestionArgs = @(
-        "-m", "Tools.ai", "apply_patch_suggestion_bundle",
+        "-m", "ia_carmine.cli", "apply_patch_suggestion_bundle",
         "--repo-root", ".",
         "--Stamp", $Stamp,
         "--output", $PatchSuggestionJson
@@ -194,7 +194,7 @@ if (($PrepareReviewPr -or $ReviewPrApplyDeterministicSuggestions) -and -not $Rev
     $HeapExchangeExitMd = Join-Path $AiPacketsDir "heap_exchange_runtime_exit_product.md"
 
     $HeapExchangeExitArgs = @(
-        "-m", "Tools.ai", "heap_exchange_runtime_exit",
+        "-m", "ia_carmine.cli", "heap_exchange_runtime_exit",
         "--repo-root", ".",
         "--stamp", $DataStamp,
         "--runtime-entry", $HeapExchangeEntryJson,

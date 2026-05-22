@@ -117,7 +117,7 @@ def main() -> int:
 
     command = [
         sys.executable,
-        "Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py",
+        "ia_carmine/providers/provider_mesh/gpu_deep_planning_supervised/cli.py",
         "--repo-root",
         ".",
         "--enable-runtime-tool-broker",
@@ -128,7 +128,7 @@ def main() -> int:
     ]
 
     help_text = subprocess.run(
-        [sys.executable, "Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py", "--help"],
+        [sys.executable, "ia_carmine/providers/provider_mesh/gpu_deep_planning_supervised/cli.py", "--help"],
         cwd=repo_root,
         text=True,
         capture_output=True,

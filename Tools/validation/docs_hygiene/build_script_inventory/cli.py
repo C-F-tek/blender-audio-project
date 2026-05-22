@@ -120,7 +120,7 @@ def category_for(rel_path: str) -> str:
         return "validator"
     if rel_path.startswith("Tools/workflow/"):
         return "workflow_runner"
-    if rel_path.startswith("Tools/ai/"):
+    if rel_path.startswith("ia_carmine/"):
         return "ai_tool"
     if rel_path.startswith("Tools/npu/"):
         return "npu_or_provider_tool"

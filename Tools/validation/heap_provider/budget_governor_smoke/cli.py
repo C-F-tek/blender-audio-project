@@ -98,7 +98,7 @@ def main() -> int:
     completed = subprocess.run(
         [
             sys.executable,
-            "Tools/ai/heap_provider/budget_governor/cli.py",
+            "ia_carmine/runtime/heap_provider/budget_governor/cli.py",
             "--repo-root",
             ".",
             "--budget-minutes",

@@ -125,7 +125,7 @@ if (Test-ModeEnabled "chunks") {
 if (Test-ModeEnabled "context_pack") {
     $ContextPackBase = "unified_${ModeName}_context_pack_$Stamp"
     $PhaseStatus.context_pack = Invoke-Checked "Build AI context pack" {
-        Invoke-Python @("-m", "Tools.ai", "build_ai_context_pack", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-dir", $ValidationDir, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "$ContextPackMaxTotalChars", "--max-file-chars", "$ContextPackMaxFileChars")
+        Invoke-Python @("-m", "ia_carmine.cli", "build_ai_context_pack", "--repo-root", ".", "--profile", "core_ai_backend", "--basename", $ContextPackBase, "--evidence-dir", $ValidationDir, "--evidence-basename", "${ContextPackBase}_evidence", "--max-total-chars", "$ContextPackMaxTotalChars", "--max-file-chars", "$ContextPackMaxFileChars")
     } -SoftFail:$ContinueOnValidationError
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.md"
     $ContextFiles = Add-ExistingContextFile $ContextFiles "output/ai_context_packs/$ContextPackBase.json"
@@ -136,7 +136,7 @@ if (Test-ModeEnabled "agent_state") {
     New-Item -ItemType Directory -Force -Path $AgentStateDir | Out-Null
     $AgentStateBase = "unified_${ModeName}_agent_state_$Stamp"
     $AgentArgs = @(
-        "-m", "Tools.ai", "build_agent_state_packet",
+        "-m", "ia_carmine.cli", "build_agent_state_packet",
         "--repo-root", ".",
         "--objective", "Unified local AI refactor run $ModeName",
         "--output-dir", $AgentStateDir,
@@ -181,7 +181,7 @@ if (($BuildWorkloadQualityReport -or ($UsePrimaryAdvisoryProvider -and -not $NoW
 
     if ($NeedProviderWorkloadInputs -and ($RunOllamaProbe -or $RunNpuProbe)) {
         $ProbeArgs = @(
-            "-m", "Tools.ai", "run_local_provider_probe",
+            "-m", "ia_carmine.cli", "run_local_provider_probe",
             "--repo-root", ".",
             "--output", $LocalProviderProbeReport
         )
@@ -268,7 +268,7 @@ $HeapExchangeEntryJson = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.js
 $HeapExchangeEntryMd = Join-Path $AiPacketsDir "heap_exchange_runtime_entry.md"
 $HeapExchangeRuntimeState = Join-Path $AiPacketsDir "heap_exchange_runtime_state.jsonl"
 $HeapExchangeEntryArgs = @(
-    "-m", "Tools.ai", "heap_exchange_runtime_entry",
+    "-m", "ia_carmine.cli", "heap_exchange_runtime_entry",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--task-file", $TaskFile,
@@ -308,7 +308,7 @@ if ($UsePrimaryAdvisoryProvider -and -not $NoWorkloadQuality -and -not (Test-Pat
 $TaskIngressContractJson = Join-Path $AiPacketsDir "task_ingress_contract.json"
 $TaskIngressContractMd = Join-Path $AiPacketsDir "task_ingress_contract.md"
 $TaskIngressArgs = @(
-    "-m", "Tools.ai", "heap_exchange_task_ingress_contract",
+    "-m", "ia_carmine.cli", "heap_exchange_task_ingress_contract",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--task-file", $TaskFile,

@@ -28,8 +28,8 @@ except ImportError:  # pragma: no cover
     )
 
 
-TARGET = Path("Tools/ai/heap_runtime/completeness_gate/cli.py")
-LAUNCHER = Path("Tools/ai/heap_context_closure/cli.py")
+TARGET = Path("ia_carmine/runtime/heap_runtime/completeness_gate/cli.py")
+LAUNCHER = Path("ia_carmine/runtime/heap_context_closure/cli.py")
 
 
 def repo_rel(repo_root: Path, path: Path) -> str:

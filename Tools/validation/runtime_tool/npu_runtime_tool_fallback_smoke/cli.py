@@ -10,22 +10,22 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.provider_mesh.npu_gpu_deep_review_auditor import (
+    from ia_carmine.providers.provider_mesh.npu_gpu_deep_review_auditor import (
         build_npu_deterministic_tool_fallback_requests,
         should_use_npu_deterministic_tool_fallback,
     )
-    from Tools.ai._shared.runtime_tool_guidance import validate_runtime_tool_request_object
+    from ia_carmine._shared.runtime_tool_guidance import validate_runtime_tool_request_object
 except ImportError:
     import sys
 
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.provider_mesh.npu_gpu_deep_review_auditor import (  # type: ignore
+    from ia_carmine.providers.provider_mesh.npu_gpu_deep_review_auditor import (  # type: ignore
         build_npu_deterministic_tool_fallback_requests,
         should_use_npu_deterministic_tool_fallback,
     )
-    from Tools.ai._shared.runtime_tool_guidance import validate_runtime_tool_request_object  # type: ignore
+    from ia_carmine._shared.runtime_tool_guidance import validate_runtime_tool_request_object  # type: ignore
 
 
 def now_iso() -> str:

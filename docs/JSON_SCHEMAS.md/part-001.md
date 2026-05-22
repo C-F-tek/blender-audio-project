@@ -12,7 +12,7 @@ Sorgente indice: [`README.md`](README.md)
 File pattern:
 output/ai_pipeline/full_context_golden_proposals.json
 Producer:
-Tools/ai/build_full_context_golden_proposals.py
+ia_carmine/build_full_context_golden_proposals.py
 Consumer:
 Maintainers, proposal validators and future patch-spec promotion tools.
 Required fields:

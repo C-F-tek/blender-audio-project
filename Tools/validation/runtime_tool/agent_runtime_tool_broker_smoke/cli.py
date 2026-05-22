@@ -10,8 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
-from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
+from ia_carmine.runtime.runtime_tool.broker.executor import build_report as build_broker_report
+from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
 
 
 def now_stamp() -> str:
@@ -75,7 +75,7 @@ def build_smoke_request() -> dict[str, Any]:
                 "id": "tools_inventory",
                 "tool": "build_agent_agnostic_tool_inventory",
                 "reason": "Planner needs to discover reusable tools before proposing refactor work.",
-                "args": {"root": ["Tools/ai", "Tools/validation", "Tools/workflow", "Tools/npu"]},
+                "args": {"root": ["ia_carmine", "Tools/validation", "Tools/workflow", "Tools/npu"]},
             },
             {
                 "id": "line_count",

@@ -99,11 +99,11 @@ def build_fixtures(repo_root: Path, work_dir: Path) -> tuple[Path, Path, Path]:
                 "items": [
                     {
                         "doc": "AGENTS.md",
-                        "reference": "Tools/ai/agent_review/decision_loop_runner/cli.py",
-                        "existing_candidate": "Tools/ai/agent_review/patch_plan/cli.py",
+                        "reference": "ia_carmine/product/agent_review/decision_loop_runner/cli.py",
+                        "existing_candidate": "ia_carmine/product/agent_review/patch_plan/cli.py",
                         "candidate_references": [
-                            "Tools/ai/deterministic_recommendations/cli.py",
-                            "Tools/ai/agent_review/patch_plan/cli.py",
+                            "ia_carmine/product/deterministic_recommendations/cli.py",
+                            "ia_carmine/product/agent_review/patch_plan/cli.py",
                         ],
                         "reason": "Decision loop should turn evidence-ready output into a manual review patch plan.",
                         "confidence": "high",
@@ -204,7 +204,7 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
 
     command = [
         sys.executable,
-        "Tools/ai/agent_review/decision_loop_runner/cli.py",
+        "ia_carmine/product/agent_review/decision_loop_runner/cli.py",
         "--repo-root",
         ".",
         "--evidence",

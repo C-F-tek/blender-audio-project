@@ -38,18 +38,18 @@ final composer package
 
 | Responsibility | Owner |
 |---|---|
-| Standalone launcher / single strict input | `Tools/ai/heap_context_closure/cli.py` |
-| Startup context/memory/tool preload | `Tools/ai/heap_context_memory_reload/cli.py` |
-| Required docs initialization | `Tools/ai/ensure_ai_context_required_files.py` |
-| Startup preload -> heap report reconciliation | `Tools/ai/reconcile_heap_report_with_startup_reload.py` |
-| Heap universe / completeness / provider loop | `Tools/ai/heap_runtime/completeness_gate/cli.py` |
-| Final package assembly | `Tools/ai/heap_final_proposals/cli.py` |
-| Context pack | `Tools/ai/agent_context/ai_context_pack/cli.py` |
-| Tool catalog | `Tools/ai/agent_context/agnostic_tool_inventory/cli.py` |
-| Memory inventory | `Tools/ai/agent_context/memory_inventory/cli.py` |
-| Transient request context | `Tools/ai/agent_context/transient_request_context/cli.py` |
-| Operational SQLite memory | `python -m Tools.ai agent_runtime_sqlite_memory` |
-| Runtime broker | `Tools/ai/runtime_tool/agent_broker.py` |
+| Standalone launcher / single strict input | `ia_carmine/runtime/heap_context_closure/cli.py` |
+| Startup context/memory/tool preload | `ia_carmine/context/heap_context_memory_reload/cli.py` |
+| Required docs initialization | `ia_carmine/ensure_ai_context_required_files.py` |
+| Startup preload -> heap report reconciliation | `ia_carmine/reconcile_heap_report_with_startup_reload.py` |
+| Heap universe / completeness / provider loop | `ia_carmine/runtime/heap_runtime/completeness_gate/cli.py` |
+| Final package assembly | `ia_carmine/product/heap_final_proposals/cli.py` |
+| Context pack | `ia_carmine/context/agent_context/ai_context_pack/cli.py` |
+| Tool catalog | `ia_carmine/context/agent_context/agnostic_tool_inventory/cli.py` |
+| Memory inventory | `ia_carmine/context/agent_context/memory_inventory/cli.py` |
+| Transient request context | `ia_carmine/context/agent_context/transient_request_context/cli.py` |
+| Operational SQLite memory | `python -m ia_carmine.cli agent_runtime_sqlite_memory` |
+| Runtime broker | `ia_carmine/runtime/runtime_tool/agent_broker.py` |
 
 ## Preload surfaces
 

@@ -56,12 +56,12 @@ Review and integrate the project-owned enrichment strategy into the local AI wor
 The local AI must verify how these existing components can work together:
 
 ```text
-Tools/ai/agent_memory/state.py
-Tools/ai/agent_context/state_packet/cli.py
-Tools/ai/review_agent_memory.py
-Tools/ai/agent_memory/policy.py
+ia_carmine/memory/agent_memory/state.py
+ia_carmine/context/agent_context/state_packet/cli.py
+ia_carmine/review_agent_memory.py
+ia_carmine/memory/agent_memory/policy.py
 Tools/npu/provider_mesh/semantic_code_chunks.py
-Tools/ai/agent_context/ai_context_pack/cli.py
+ia_carmine/context/agent_context/ai_context_pack/cli.py
 Tools/workflow/run_local_ai_markdown_task.ps1
 Tools/workflow/run_local_ai_task_via_pipeline.ps1
 Tools/workflow/run_parallel_ai_provider_multistep.ps1
@@ -71,7 +71,7 @@ Tools/workflow/run_post_validation_ai_packet.ps1
 Reference documentation:
 
 ```text
-Tools/ai/README.md
+ia_carmine/README.md
 docs/AI_CHUNKING_STRATEGY.md
 docs/AI_MEMORY_POLICY.md
 docs/AI_SMART_POLICY.md
@@ -100,7 +100,7 @@ master-AI task MD
   -> run_local_ai_markdown_task.ps1 builds local_ai_prompt.md
   -> optional build_semantic_code_chunks.py updates semantic chunk artifacts
   -> optional build_ai_context_pack.py creates bounded task context
-  -> optional `python -m Tools.ai build_agent_state_packet` reads SQLite memory + current files + operator notes
+  -> optional `python -m ia_carmine.cli build_agent_state_packet` reads SQLite memory + current files + operator notes
   -> run_local_ai_task_via_pipeline.ps1 passes prompt + task + enriched context files
   -> optional explicit run_parallel_ai_provider_multistep.ps1 produces provider evidence
   -> run_post_validation_ai_packet.ps1 builds advisory packet/proposals
@@ -183,7 +183,7 @@ If the operator wants to generate enrichment artifacts before this task run, the
 ```powershell
 py -m Tools.npu build_semantic_code_chunks --repo-root .
 
-python -m Tools.ai build_ai_context_pack `
+python -m ia_carmine.cli build_ai_context_pack `
   --repo-root . `
   --profile core_ai_backend `
   --basename enriched_local_ai_core_ai_backend `
@@ -191,7 +191,7 @@ python -m Tools.ai build_ai_context_pack `
   --max-total-chars 96000 `
   --max-file-chars 8000
 
-py -m Tools.ai build_agent_state_packet `
+py -m ia_carmine build_agent_state_packet `
   --repo-root . `
   --objective "Integrate SQLite memory, semantic chunks and context packs into the local AI wrapper/multistep workflow." `
   --memory-db .\indexAI\agent_memory\agent_memory.sqlite `
@@ -201,7 +201,7 @@ py -m Tools.ai build_agent_state_packet `
   --include-file .\docs\LOCAL_AI_RUN_BOOTSTRAP.md `
   --include-file .\docs\LOCAL_AI_WORKFLOW.md `
   --include-file .\docs\AI_CHUNKING_STRATEGY.md `
-  --include-file .\Tools\ai\README.md `
+  --include-file .\ia_carmine\README.md `
   --include-file .\Tools\workflow\run_local_ai_task_via_pipeline.ps1 `
   --include-file .\indexAI\code_chunks\semantic_code_chunks_manifest.json `
   --include-file .\output\ai_context_packs\enriched_local_ai_core_ai_backend.md
@@ -302,7 +302,7 @@ Stop and report if:
 ```text
 AGENTS.md is missing
 LOCAL_AI_RUN_BOOTSTRAP.md is missing
-agent_memory/state.py or `python -m Tools.ai build_agent_state_packet` is missing
+agent_memory/state.py or `python -m ia_carmine.cli build_agent_state_packet` is missing
 semantic chunk builder is missing
 context pack builder is missing
 a proposal requires committing private/local SQLite memory

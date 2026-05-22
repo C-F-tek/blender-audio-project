@@ -58,7 +58,7 @@ The local AI run must use the Markdown request as the task input. Do not rely on
 ## 2. Run NPU/provider preflight
 
 ```powershell
-python -m Tools.ai check_npu_provider_environment `
+python -m ia_carmine.cli check_npu_provider_environment `
   --repo-root . `
   --output ".\output\validation\npu_provider_environment_project_complete_$Stamp.json" `
   --markdown-output ".\output\validation\npu_provider_environment_project_complete_$Stamp.md"
@@ -75,9 +75,9 @@ python -m Tools.validation.docs_hygiene.check_python_syntax `
   --repo-root . `
   --output ".\output\validation\python_syntax_project_complete_$Stamp.json"
 
-python -m Tools.ai build_code_interpreter_report `
+python -m ia_carmine.cli build_code_interpreter_report `
   --repo-root . `
-  --input Tools/ai `
+  --input ia_carmine `
   --input Tools/validation `
   --input Tools/npu `
   --input Tools/workflow `
@@ -99,7 +99,7 @@ renders/**
 ## 4. Run the official GPU/NPU AI-to-AI orchestrator
 
 ```powershell
-python -m Tools.ai run_agent_gpu_npu_parallel_orchestrator `
+python -m ia_carmine.cli run_agent_gpu_npu_parallel_orchestrator `
   --repo-root . `
   --budget-minutes 30 `
   --max-rounds 24 `
@@ -117,7 +117,7 @@ python -m Tools.ai run_agent_gpu_npu_parallel_orchestrator `
   --report-file .\output\ai_packets\gpu_planner_nonempty_recommendations_proposals.json `
   --report-file ".\output\analysis\code_interpreter_project_complete_$Stamp.json" `
   --context-root docs `
-  --context-root Tools\ai `
+  --context-root ia_carmine `
   --context-root Tools\validation `
   --context-root Tools\workflow `
   --context-root Tools\npu `
@@ -162,10 +162,10 @@ $ContextFiles = @(
   ".\docs\LOCAL_AI_TASKS\project-complete-ai-to-ai-review-request.md",
   ".\docs\LOCAL_AI_TASKS\gpu-npu-parallel-evidence-runbook.md",
   ".\docs\LOCAL_AI_TASKS\improve-gpu-planner-nonempty-recommendations.md",
-  ".\Tools\ai\provider_mesh\gpu_npu_parallel_orchestrator\cli.py",
-  ".\Tools\ai\provider_mesh\gpu_deep_planning_review\cli.py",
-  ".\Tools\ai\provider_mesh\gpu_deep_planning_supervised\cli.py",
-  ".\Tools\ai\agent_review\patch_plan\cli.py",
+  ".\ia_carmine\providers\provider_mesh\gpu_npu_parallel_orchestrator\cli.py",
+  ".\ia_carmine\providers\provider_mesh\gpu_deep_planning_review\cli.py",
+  ".\ia_carmine\providers\provider_mesh\gpu_deep_planning_supervised\cli.py",
+  ".\ia_carmine\product\agent_review\patch_plan\cli.py",
   ".\output\analysis\code_interpreter_project_complete_$Stamp.md"
 )
 
@@ -188,7 +188,7 @@ $params = @{
 ## 7. Run fallback manual-review patch-plan and smoke validation
 
 ```powershell
-python -m Tools.ai agent_review_patch_plan `
+python -m ia_carmine.cli agent_review_patch_plan `
   --repo-root . `
   --orchestrator ".\output\ai_pipeline\project_complete_${Stamp}_orchestrator.json" `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `
@@ -222,7 +222,7 @@ $Reports = @(
 "REPORTS:"
 $Reports
 
-python -m Tools.ai.repository_product.github_evidence_bundle `
+python -m ia_carmine.product.repository_product.github_evidence_bundle `
   --repo-root . `
   --basename project_complete_ai_to_ai_bundle_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `

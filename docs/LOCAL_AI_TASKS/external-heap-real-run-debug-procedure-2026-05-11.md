@@ -4,19 +4,19 @@
 
 Questo documento registra la procedura corretta, verificata dalla run locale `heap_context_closure_20260511-192953`, per eseguire una run heap completa e poi il post-run package esterno.
 
-Correzione operativa importante: `Tools/ai/heap_runtime/launcher_command/cli.py` non lancia la run. E' solo un command builder reviewabile.
+Correzione operativa importante: `ia_carmine/runtime/heap_runtime/launcher_command/cli.py` non lancia la run. E' solo un command builder reviewabile.
 
-La run vera e' `Tools/ai/heap_context_closure/cli.py`.
+La run vera e' `ia_carmine/runtime/heap_context_closure/cli.py`.
 
-Il post-run vero e' `Tools/ai/external_heap/postrun_package.py`.
+Il post-run vero e' `ia_carmine/runtime/external_heap/postrun_package/cli.py`.
 
 ## Flusso corretto
 
 ```text
 1. definire richiesta operativa
-2. lanciare direttamente python -m Tools.ai heap_context_closure
+2. lanciare direttamente python -m ia_carmine.cli heap_context_closure
 3. attendere fine run
-4. lanciare python -m Tools.ai external_heap_postrun_package
+4. lanciare python -m ia_carmine.cli external_heap_postrun_package
 5. leggere launcher/composer/provider/pointer/revision/long-response
 ```
 
@@ -25,7 +25,7 @@ Il post-run vero e' `Tools/ai/external_heap/postrun_package.py`.
 Non considerare questo comando una run:
 
 ```powershell
-& $RepoPy -m Tools.ai build_heap_runtime_launcher_command `
+& $RepoPy -m ia_carmine build_heap_runtime_launcher_command `
   --repo-root . `
   --profile balanced_external_heap `
   --request $DebugRequest `
@@ -66,7 +66,7 @@ Regole:
 - se il prodotto non e' accettabile, blocca con reason concreta
 "@
 
-& $RepoPy -m Tools.ai heap_context_closure `
+& $RepoPy -m ia_carmine heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --request $DebugRequest `
@@ -88,7 +88,7 @@ Regole:
 Eseguire solo dopo la fine della run:
 
 ```powershell
-& $RepoPy -m Tools.ai external_heap_postrun_package `
+& $RepoPy -m ia_carmine external_heap_postrun_package `
   --repo-root . `
   --include-rejected-history `
   --include-peer-blocks
@@ -242,6 +242,6 @@ Interpretazione iniziale:
 
 ## Nota sul command builder
 
-`Tools/ai/heap_runtime/launcher_command/cli.py` resta utile per produrre una stringa comando reviewabile e per ispezionare profili/revision context, ma non e' il comando da usare come run effettiva.
+`ia_carmine/runtime/heap_runtime/launcher_command/cli.py` resta utile per produrre una stringa comando reviewabile e per ispezionare profili/revision context, ma non e' il comando da usare come run effettiva.
 
-Per run reali preferire il comando diretto su `python -m Tools.ai heap_context_closure` finche' non verra' introdotto un launcher esecutivo separato.
+Per run reali preferire il comando diretto su `python -m ia_carmine.cli heap_context_closure` finche' non verra' introdotto un launcher esecutivo separato.

@@ -14,7 +14,7 @@ The shared dispatcher implementation is `Tools/tool_dispatch.py`. Area dispatche
 
 | Area | Context file | Canonical command surface | Role |
 | --- | --- | --- | --- |
-| `Tools/ai` | `Tools/ai/TOOL_CONTEXT.md` | `python -m Tools.ai <tool>` | Heap runtime, provider lanes, context/memory, code product, patch product, AI-to-AI bundle artifacts. |
+| `ia_carmine` | `ia_carmine/TOOL_CONTEXT.md` | `python -m ia_carmine.cli <tool>` | Heap runtime, provider lanes, context/memory, code product, patch product, AI-to-AI bundle artifacts. |
 | `Tools/validation` | `Tools/validation/TOOL_CONTEXT.md` | `python -m Tools.validation <tool>` | Validators, smoke tests, gates, contracts, readiness checks. |
 | `Tools/workflow` | `Tools/workflow/TOOL_CONTEXT.md` | `python -m Tools.workflow <tool>` | Operator workflow wrappers, GUI/shell surfaces, startup and orchestration scripts. |
 | `Tools/npu` | `Tools/npu/TOOL_CONTEXT.md` | `python -m Tools.npu <tool>` | NPU/provider mesh support, context builders, music/code/manual packets. |

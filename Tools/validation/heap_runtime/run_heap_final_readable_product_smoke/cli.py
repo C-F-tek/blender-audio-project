@@ -36,11 +36,11 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     virtual_dev_path = run_dir / "broker_bridge" / "tool_outputs" / "smoke_heap_virtual_dev_environment.json"
     debug_lab_path = run_dir / "debug_lab" / "smoke_debug_lab.json"
     diff_artifact = work_dir / "candidate_diffs" / "final_readable_product.diff"
-    full_diff = "diff --git a/Tools/ai/code_product/final_readable_product/cli.py b/Tools/ai/code_product/final_readable_product/cli.py\n@@\n+FULL_DIFF_SENTINEL = 'present only in artifact diff'\n"
+    full_diff = "diff --git a/ia_carmine/product/code_product/final_readable_product/cli.py b/ia_carmine/product/code_product/final_readable_product/cli.py\n@@\n+FULL_DIFF_SENTINEL = 'present only in artifact diff'\n"
     write_text(diff_artifact, full_diff)
     proposal_dir = run_dir / "team_context" / "proposal_iterations"
     provider_dir = run_dir / "provider_teamwork"
-    target = "Tools/ai/code_product/final_readable_product/cli.py"
+    target = "ia_carmine/product/code_product/final_readable_product/cli.py"
     proposal_1 = "smoke:proposal:001"
     proposal_2 = "smoke:proposal:002"
     write_json(
@@ -124,13 +124,13 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "validation_count": 1,
             "targets": [
                 {
-                    "target_file": "Tools/ai/code_product/final_readable_product/cli.py",
+                    "target_file": "ia_carmine/product/code_product/final_readable_product/cli.py",
                     "ast_ok": True,
                     "import_ok": True,
                     "help_ok": True,
                 },
                 {
-                    "target_file": "Tools/ai/_shared/heap_final_readable_synthesis.py",
+                    "target_file": "ia_carmine/_shared/heap_final_readable_synthesis.py",
                     "ast_ok": True,
                     "import_ok": True,
                     "help_ok": True,
@@ -164,32 +164,32 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             },
             "concrete_code_proposals": [
                 {
-                    "target_file": "Tools/ai/code_product/final_readable_product/cli.py",
+                    "target_file": "ia_carmine/product/code_product/final_readable_product/cli.py",
                     "implementation_status": "validated_patch_candidate",
                     "source": "patch_candidate_synthesis",
                     "git_status": "artifact patch candidate",
-                    "code_or_patch_sketch": "diff --git a/Tools/ai/code_product/final_readable_product/cli.py b/Tools/ai/code_product/final_readable_product/cli.py\n@@\n+def build_report(...):\n+    pass\n..." + TRUNCATED_DIFF_MARKER,
+                    "code_or_patch_sketch": "diff --git a/ia_carmine/product/code_product/final_readable_product/cli.py b/ia_carmine/product/code_product/final_readable_product/cli.py\n@@\n+def build_report(...):\n+    pass\n..." + TRUNCATED_DIFF_MARKER,
                     "diff_path": str(diff_artifact),
                     "validation_commands": [
-                        "python -m py_compile Tools/ai/code_product/final_readable_product/cli.py",
+                        "python -m py_compile ia_carmine/product/code_product/final_readable_product/cli.py",
                         "python -m Tools.validation run_heap_final_readable_product_smoke",
                         "git diff --check",
                     ],
                 },
                 {
-                    "target_file": "Tools/ai/heap_context_closure/cli.py",
+                    "target_file": "ia_carmine/runtime/heap_context_closure/cli.py",
                     "implementation_status": "developed_change_present",
-                    "git_status": "M Tools/ai/heap_context_closure/cli.py",
-                    "code_or_patch_sketch": "diff --git a/Tools/ai/heap_context_closure/cli.py b/Tools/ai/heap_context_closure/cli.py\n+    final_readable_product_command = [...]\n",
-                    "validation_commands": ["python -m py_compile Tools/ai/heap_context_closure/cli.py"],
+                    "git_status": "M ia_carmine/runtime/heap_context_closure/cli.py",
+                    "code_or_patch_sketch": "diff --git a/ia_carmine/runtime/heap_context_closure/cli.py b/ia_carmine/runtime/heap_context_closure/cli.py\n+    final_readable_product_command = [...]\n",
+                    "validation_commands": ["python -m py_compile ia_carmine/runtime/heap_context_closure/cli.py"],
                 },
                 {
-                    "target_file": "Tools/ai/_shared/heap_final_code_product.py",
+                    "target_file": "ia_carmine/_shared/heap_final_code_product.py",
                     "implementation_status": "verified_target_no_worktree_diff",
                     "git_status": "",
                     "diff_hunk_count": 0,
                     "code_or_patch_sketch": "",
-                    "validation_commands": ["python -m py_compile Tools/ai/_shared/heap_final_code_product.py"],
+                    "validation_commands": ["python -m py_compile ia_carmine/_shared/heap_final_code_product.py"],
                 },
             ],
         },
@@ -267,9 +267,9 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     causality_json = run_dir / "heap_final_causality_normalized.json"
     pointer_json = run_dir / "external_heap_block_pointer_manifest.json"
     for command in (
-        [sys.executable, "-m", "Tools.ai", "normalize_heap_final_causality", "--composer-json", str(composer_json), "--output", str(causality_json)],
-        [sys.executable, "-m", "Tools.ai", "build_external_heap_block_pointer_manifest", "--repo-root", ".", "--run-dir", str(run_dir)],
-        [sys.executable, "-m", "Tools.ai", "build_external_heap_revision_context", "--pointer-manifest", str(pointer_json), "--composer-json", str(composer_json), "--causality-json", str(causality_json), "--output", str(run_dir / "external_heap_revision_context.json"), "--no-documents-copy"],
+        [sys.executable, "-m", "ia_carmine.cli", "normalize_heap_final_causality", "--composer-json", str(composer_json), "--output", str(causality_json)],
+        [sys.executable, "-m", "ia_carmine.cli", "build_external_heap_block_pointer_manifest", "--repo-root", ".", "--run-dir", str(run_dir)],
+        [sys.executable, "-m", "ia_carmine.cli", "build_external_heap_revision_context", "--pointer-manifest", str(pointer_json), "--composer-json", str(composer_json), "--causality-json", str(causality_json), "--output", str(run_dir / "external_heap_revision_context.json"), "--no-documents-copy"],
     ):
         subprocess.run(command, cwd=repo_root, text=True, capture_output=True, check=False)
     return run_dir, documents_dir
@@ -282,7 +282,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     text = run_dir / "heap_final_readable_product.txt"
     command = [
         sys.executable,
-        "Tools/ai/code_product/final_readable_product/cli.py",
+        "ia_carmine/product/code_product/final_readable_product/cli.py",
         "--repo-root",
         ".",
         "--run-dir",
@@ -332,13 +332,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and final_md.exists()
         and full_code_product.exists()
         and "CODE_PRODUCT_FULL_PATCH" in code_product_body
-        and "Tools/ai/code_product/final_readable_product/cli.py" in code_product_body
+        and "ia_carmine/product/code_product/final_readable_product/cli.py" in code_product_body
         and "FULL_DIFF_SENTINEL" in code_product_body
         and TRUNCATED_DIFF_MARKER not in code_product_body
         and "[code product excerpt truncated" not in body
-        and "Tools/ai/heap_context_closure/cli.py" not in code_product_body
-        and "Tools/ai/_shared/heap_final_code_product.py" not in code_product_body
-        and "Tools/ai/worktree_extra.py" not in code_product_body
+        and "ia_carmine/runtime/heap_context_closure/cli.py" not in code_product_body
+        and "ia_carmine/_shared/heap_final_code_product.py" not in code_product_body
+        and "ia_carmine/worktree_extra.py" not in code_product_body
         and "Worktree diff fallback: `disabled`" in code_product_body
         and "Code product status: `BLOCKED_WITH_CODE_PRODUCT_REVIEW`" in code_product_body
         and "[no worktree diff captured]" not in code_product_body

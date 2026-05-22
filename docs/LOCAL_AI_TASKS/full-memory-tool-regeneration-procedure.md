@@ -61,14 +61,14 @@ promotion requires evidence, manual review and explicit future command
 ## Required tools
 
 ```text
-Tools/ai/runtime_tool/agent_broker.py
-python -m Tools.ai agent_runtime_sqlite_memory
-python -m Tools.ai agent_memory_routing_policy
-Tools/ai/agent_context/memory_inventory/cli.py
-Tools/ai/agent_context/agnostic_tool_inventory/cli.py
-Tools/ai/agent_context/transient_request_context/cli.py
-Tools/ai/code_product/interpreter_report/cli.py
-Tools/ai/repository_product/github_evidence_bundle.py
+ia_carmine/runtime/runtime_tool/agent_broker.py
+python -m ia_carmine.cli agent_runtime_sqlite_memory
+python -m ia_carmine.cli agent_memory_routing_policy
+ia_carmine/context/agent_context/memory_inventory/cli.py
+ia_carmine/context/agent_context/agnostic_tool_inventory/cli.py
+ia_carmine/context/agent_context/transient_request_context/cli.py
+ia_carmine/product/code_product/interpreter_report/cli.py
+ia_carmine/product/repository_product/github_evidence_bundle.py
 Tools/validation/build_python_line_count_csv.py
 python -m Tools.validation check_python_syntax
 python -m Tools.validation check_validation_report_contract

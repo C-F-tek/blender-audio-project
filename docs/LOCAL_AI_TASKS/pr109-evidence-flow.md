@@ -35,7 +35,7 @@ PR: #109
 branch: codex/design-code-patch-plan-lane
 audit note: docs/LOCAL_AI_TASKS/pr109-prelocal-github-only-audit.md
 module execution note: docs/LOCAL_AI_TASKS/pr109-pythonpath-module-execution-note-2026-05-02.md
-wired orchestrator: Tools/ai/repository_product/github_evidence_bundle.py
+wired orchestrator: ia_carmine/product/repository_product/github_evidence_bundle.py
 ```
 
 PR #110 / `codex/refactor-workspace-109` is scratch-only and must not be merged.
@@ -44,7 +44,7 @@ PR #110 / `codex/refactor-workspace-109` is scratch-only and must not be merged.
 
 ```text
 focused run = py_compile + check_python_syntax + static report + bundle validation
-multi run = selected validator batch over Tools/ai and Tools/validation
+multi run = selected validator batch over ia_carmine and Tools/validation
 macro run = broader local validation runner / dry-run matrix when workstation time allows
 ```
 

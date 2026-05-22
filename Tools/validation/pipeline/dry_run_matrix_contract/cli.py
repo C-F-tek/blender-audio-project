@@ -3,7 +3,7 @@
 
 This validator reads the report produced by:
 
-    python -m Tools.ai pipeline_dry_run_matrix
+    python -m ia_carmine.cli pipeline_dry_run_matrix
 
 It checks only the machine-readable report shape and minimal stable fields.
 It does not run Blender, FFmpeg, NPU/GPU workloads or the dry-run matrix itself.

@@ -29,7 +29,7 @@ Add the next non-destructive step after proposal-derived draft patch specs: prom
 
 ```powershell
 python -m Tools.validation check_python_syntax --repo-root .
-python -m Tools.ai generated_patch_specs_promote_draft --repo-root . --draft .\Tools\ai\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
+python -m ia_carmine.cli generated_patch_specs_promote_draft --repo-root . --draft .\ia_carmine\fixtures\patch_spec_review_draft.json --replacement-plan .\ia_carmine\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
 python -m Tools.validation reviewed_patch_specs_check --repo-root . --manifest .\output\patch_specs\reviewed_patch_spec_fixture_manifest.json --output .\output\validation\reviewed_patch_specs.json
 python -m Tools.workflow run_parallel_ai_provider_multistep -Profile npu -RunOllamaProbe -RunNpuProbe -UsePrimaryAdvisoryProvider -Basename patch_spec_review_promotion_gpu_npu_multistep -ProposalBasename patch_spec_review_promotion_gpu_npu_multistep_proposals -EvidenceBasename patch_spec_review_promotion_gpu_npu_multistep_evidence
 ```
@@ -44,7 +44,7 @@ python -m Tools.workflow run_parallel_ai_provider_multistep -Profile npu -RunOll
 
 ## Result
 
-- Added `Tools/ai/generated_patch_specs/review_cli.py` for non-mutating promotion from `proposal_patch_spec_draft` plus `patch_spec_replacement_plan` to `reviewed_patch_spec`.
+- Added `ia_carmine/product/generated_patch_specs/review_cli.py` for non-mutating promotion from `proposal_patch_spec_draft` plus `patch_spec_replacement_plan` to `reviewed_patch_spec`.
 - Added `Tools/validation/generated_patch_specs/reviewed_patch_specs_check/cli.py` to validate reviewed specs and rerun mandatory dry-run.
 - Added deterministic fixtures proving one concrete replacement without modifying the target file.
 - Produced compact GPU/NPU evidence at `docs/LOCAL_VALIDATION_EVIDENCE/patch_spec_review_promotion_gpu_npu_multistep_evidence.json`.

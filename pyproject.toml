@@ -15,7 +15,10 @@ authors = [
 dependencies = [
   "numpy>=1.26,<3",
   "matplotlib>=3.8,<4",
-  "librosa>=0.10,<0.12"
+  "librosa>=0.10,<0.12",
+  "ollama>=0.6,<0.7",
+  "openvino>=2026.1,<2026.2",
+  "openvino-genai>=2026.1,<2026.2"
 ]
 
 [project.optional-dependencies]

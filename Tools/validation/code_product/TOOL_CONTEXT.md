@@ -7,7 +7,7 @@
 It validates code-product state classification described by:
 
 ```text
-Tools/ai/code_product/TOOL_CONTEXT.md
+ia_carmine/product/code_product/TOOL_CONTEXT.md
 docs/REAL_PRODUCT_RUN_MODEL.md
 docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
 docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
@@ -74,4 +74,4 @@ source writes not reported accurately
 - Do not treat provider prose as code-product evidence.
 - Do not treat full-run bundle ZIP existence as product success.
 - Add new checks here when code-product parser or classifier behavior changes.
-- Update `Tools/ai/code_product/TOOL_CONTEXT.md` and `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` when semantic meaning changes.
+- Update `ia_carmine/product/code_product/TOOL_CONTEXT.md` and `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` when semantic meaning changes.

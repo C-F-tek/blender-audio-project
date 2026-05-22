@@ -16,12 +16,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.provider_mesh.gpu_deep_planning_review import extract_valid_tool_requests
+    from ia_carmine.providers.provider_mesh.gpu_deep_planning_review import extract_valid_tool_requests
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.provider_mesh.gpu_deep_planning_review import (
+    from ia_carmine.providers.provider_mesh.gpu_deep_planning_review import (
         extract_valid_tool_requests,  # type: ignore
     )
 

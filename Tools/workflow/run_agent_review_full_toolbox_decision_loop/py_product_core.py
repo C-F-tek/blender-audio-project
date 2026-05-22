@@ -5,7 +5,7 @@ from py_product_common import *  # noqa: F403
 def run_decision_loop(ctx: WorkflowContext) -> None:
     args = [
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "run_agent_review_decision_loop",
         "--repo-root",
         ".",
@@ -113,7 +113,7 @@ def run_runtime_bootstrap(ctx: WorkflowContext) -> None:
         "Runtime tool broker bootstrap activation",
         [
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "agent_runtime_tool_broker",
             "--repo-root",
             ".",
@@ -144,7 +144,7 @@ def run_patch_plan_quality_product_gate(ctx: WorkflowContext) -> None:
     )
     args = [
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "build_patch_plan_quality_product_report",
         "--repo-root",
         ".",

@@ -119,7 +119,7 @@ if ($FullContextGoldenPath) {
         $ChunkQuery = "workflow adapter local ai full context enrichment selected chunks sqlite memory provider multistep proposals validators npu knowledge broker context oracle retrieval ranking"
     }
     if ($ChunkPathBoost.Count -eq 0) {
-        $ChunkPathBoost = @("Tools/workflow", "Tools/ai", "Tools/validation", "Tools/npu")
+        $ChunkPathBoost = @("Tools/workflow", "ia_carmine", "Tools/validation", "Tools/npu")
     }
     if ($MaxSelectedChunks -eq 20) { $MaxSelectedChunks = 24 }
     if ($MaxSelectedChunkChars -eq 24000) { $MaxSelectedChunkChars = 32000 }
@@ -165,7 +165,7 @@ if ($IsRealProductOfficialAdapter) {
     if ($ChunkPathBoost.Count -eq 0) {
         $ChunkPathBoost = @(
             "Tools/workflow",
-            "Tools/ai",
+            "ia_carmine",
             "Tools/validation",
             "docs/LOCAL_AI_TASKS"
         )
@@ -181,11 +181,11 @@ if ($IsRealProductOfficialAdapter) {
         "Tools/workflow/_powershell/run_unified_real_product_pr.ps1",
         "Tools/workflow/_powershell/run_unified_local_ai_refactor.ps1",
         "Tools/workflow/run_local_ai_task_via_pipeline.ps1",
-        "Tools/ai/repository_product/repository_change_proposals/cli.py",
-        "Tools/ai/generated_patch_specs/proposal_cli.py",
-        "Tools/ai/generated_patch_specs/apply_cli.py",
-        "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py",
-        "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py"
+        "ia_carmine/product/repository_product/repository_change_proposals/cli.py",
+        "ia_carmine/product/generated_patch_specs/proposal_cli.py",
+        "ia_carmine/product/generated_patch_specs/apply_cli.py",
+        "ia_carmine/providers/provider_mesh/openvino_gpu0_workload_report/cli.py",
+        "ia_carmine/providers/provider_mesh/npu_micro_task_companion_report/cli.py"
     )
 
     foreach ($ContextPath in $RealProductExtraContextFiles) {

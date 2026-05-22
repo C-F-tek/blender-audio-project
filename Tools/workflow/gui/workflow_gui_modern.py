@@ -194,7 +194,7 @@ class ModernWorkflowGui(LegacyWorkflowGui):
         command = [
             str(wf.python_executable()),
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "run_parallel_artifact_pipeline",
             "--repo-root",
             str(wf.PROJECT_DIR),

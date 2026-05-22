@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from Tools.npu.pipeline import (  # noqa: E402
+from ia_carmine.providers.npu.pipeline import (  # noqa: E402
     COMMON_VALIDATION_REPORT_KEYS,
     DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
     DualPipelinePaths,
@@ -329,13 +329,13 @@ class NpuPipelineHelperTests(unittest.TestCase):
         self.assertEqual(report["stage_count"], 5)
         self.assertEqual(report["enabled_stage_count"], 4)
         boundary = build_helper_boundary_report(
-            package_name="Tools.npu.pipeline",
+            package_name="ia_carmine.providers.npu.pipeline",
             modules=["config", "io_utils"],
             checks={"syntax": True, "imports": True},
         )
         self.assertTrue(helper_boundary_passed(boundary))
         failed = build_helper_boundary_report(
-            package_name="Tools.npu.pipeline",
+            package_name="ia_carmine.providers.npu.pipeline",
             modules=["config"],
             checks={"syntax": False},
         )

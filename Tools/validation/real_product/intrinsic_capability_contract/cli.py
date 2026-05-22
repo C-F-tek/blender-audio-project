@@ -41,26 +41,26 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
-    dispatch = read_text(repo_root / "Tools/ai/dispatch.py")
-    run_cli = read_text(repo_root / "Tools/ai/run/cli.py")
-    profiles = read_text(repo_root / "Tools/ai/run/profiles/heap_runtime_launcher_profiles.json")
-    profile_builder = read_text(repo_root / "Tools/ai/operator_product_core/profiles.py")
-    runner = read_text(repo_root / "Tools/ai/operator_product_core/runner.py")
-    heap_closure = read_text(repo_root / "Tools/ai/heap_context_closure/launcher.py")
-    matrix_lab = read_text(repo_root / "Tools/ai/heap_gate/matrix_lab.py")
-    matrix_evidence = read_text(repo_root / "Tools/ai/heap_gate/matrix_lab_evidence.py")
-    matrix_tool = read_text(repo_root / "Tools/ai/heap_runtime/code_execution_tool/cli.py")
-    synthesis = read_text(repo_root / "Tools/ai/patch_product/candidate_synthesis/cli.py")
+    dispatch = read_text(repo_root / "ia_carmine/dispatch.py")
+    run_cli = read_text(repo_root / "ia_carmine/runtime/run/cli.py")
+    profiles = read_text(repo_root / "ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json")
+    profile_builder = read_text(repo_root / "ia_carmine/product/operator_product_core/profiles.py")
+    runner = read_text(repo_root / "ia_carmine/product/operator_product_core/runner.py")
+    heap_closure = read_text(repo_root / "ia_carmine/runtime/heap_context_closure/launcher.py")
+    matrix_lab = read_text(repo_root / "ia_carmine/runtime/heap_gate/matrix_lab.py")
+    matrix_evidence = read_text(repo_root / "ia_carmine/runtime/heap_gate/matrix_lab_evidence.py")
+    matrix_tool = read_text(repo_root / "ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py")
+    synthesis = read_text(repo_root / "ia_carmine/product/patch_product/candidate_synthesis/cli.py")
     synthesis_evidence = read_text(
-        repo_root / "Tools/ai/patch_product/candidate_synthesis/evidence_diff.py"
+        repo_root / "ia_carmine/product/patch_product/candidate_synthesis/evidence_diff.py"
     )
-    final_product = read_text(repo_root / "Tools/ai/_shared/heap_final_code_product.py")
-    final_readable_product = read_text(repo_root / "Tools/ai/code_product/final_readable_product/cli.py")
-    artifact_intake = read_text(repo_root / "Tools/ai/code_product/artifact_intake/cli.py")
-    prepare = read_text(repo_root / "Tools/ai/agent_review/review_pr_cli.py")
-    provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
-    npu_report = read_text(repo_root / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py")
-    gpu0_report = read_text(repo_root / "Tools/ai/provider_mesh/gpu0_companion_task_lane/cli.py")
+    final_product = read_text(repo_root / "ia_carmine/_shared/heap_final_code_product.py")
+    final_readable_product = read_text(repo_root / "ia_carmine/product/code_product/final_readable_product/cli.py")
+    artifact_intake = read_text(repo_root / "ia_carmine/product/code_product/artifact_intake/cli.py")
+    prepare = read_text(repo_root / "ia_carmine/product/agent_review/review_pr_cli.py")
+    provider_loop = read_text(repo_root / "ia_carmine/_shared/provider_tool_loop.py")
+    npu_report = read_text(repo_root / "ia_carmine/providers/provider_mesh/npu_micro_task_companion_report/cli.py")
+    gpu0_report = read_text(repo_root / "ia_carmine/providers/provider_mesh/ollama_gpu0_peer_report/cli.py")
 
     checks: dict[str, bool] = {
         "task_md_input": has(run_cli, "--request-file")
@@ -71,16 +71,16 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(profiles, "external_heap_block_pointer_v1"),
         "gpu1_primary_advisory": has(profiles, "gpu1_planner")
         and has(provider_loop, "build_heap_patch_proposal_prompt"),
-        "gpu0_openvino_workload": has(profiles, "gpu0_reviewer_refiner")
-        and has(gpu0_report.lower(), "gpu0")
-        and has(provider_loop, "IA_CARMINE_GPU0_COMPANION_MODEL_DIR"),
+        "gpu0_ollama_vulkan_workload": has(profiles, "gpu0_reviewer_refiner")
+        and has(gpu0_report.lower(), "ollama_gpu0_vulkan_required")
+        and has(gpu0_report, "run_ollama_probe"),
         "npu_peer_micro_lane": has(profiles, "npu_auditor")
         and has(npu_report.lower(), "npu")
         and has(provider_loop, "IA_CARMINE_NPU_MODEL_DIR"),
-        "shared_memory_evidence": exists(repo_root, "Tools/ai/agent_memory/sqlite_cli.py")
-        and exists(repo_root, "Tools/ai/agent_context/shared_toolbox_bundle/cli.py"),
+        "shared_memory_evidence": exists(repo_root, "ia_carmine/memory/agent_memory/sqlite_cli.py")
+        and exists(repo_root, "ia_carmine/context/agent_context/shared_toolbox_bundle/cli.py"),
         "static_deterministic_script_lane": exists(
-            repo_root, "Tools/ai/patch_product/candidate_synthesis/cli.py"
+            repo_root, "ia_carmine/product/patch_product/candidate_synthesis/cli.py"
         )
         and has(matrix_lab, "synthesize_patch_candidates")
         and has(matrix_evidence, "patch_candidate_synthesis_passed_count"),
@@ -110,7 +110,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "task_md_input",
         "heap_exchange_activation",
         "gpu1_primary_advisory",
-        "gpu0_openvino_workload",
+        "gpu0_ollama_vulkan_workload",
         "npu_peer_micro_lane",
         "shared_memory_evidence",
         "static_deterministic_script_lane",

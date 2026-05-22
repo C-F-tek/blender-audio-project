@@ -157,13 +157,13 @@ python -m Tools.validation check_ai_dry_run_matrix_cases --repo-root . --output 
 Dry-run matrix:
 
 ```powershell
-python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 8 --repeat-cases 1
+python -m ia_carmine.cli pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 8 --repeat-cases 1
 ```
 
 Stress mode for the workstation:
 
 ```powershell
-python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
+python -m ia_carmine.cli pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 2
 ```
 
 Expected matrix output:
@@ -185,7 +185,7 @@ python -m Tools.validation check_generated_artifact_path_policy --repo-root . --
 Compact evidence bundle for GitHub review:
 
 ```powershell
-python -m Tools.ai build_dry_run_matrix_evidence_bundle --repo-root . --basename ai_pipeline_dry_run_matrix_evidence
+python -m ia_carmine.cli build_dry_run_matrix_evidence_bundle --repo-root . --basename ai_pipeline_dry_run_matrix_evidence
 python -m Tools.validation check_dry_run_matrix_evidence_bundle --repo-root . --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\ai_pipeline_dry_run_matrix_evidence.json --output .\output\validation\dry_run_matrix_evidence_bundle.json
 ```
 
@@ -216,14 +216,14 @@ python -m Tools.validation check_refactor_status_consistency --repo-root . --out
 python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
 python -m Tools.validation policy --repo-root . --output .\output\validation\agent_memory_policy.json
 python -m Tools.validation check_blender_shared_compat_smoke --repo-root . --output .\output\validation\blender_shared_compat_smoke.json
-python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 8 --repeat-cases 1
+python -m ia_carmine.cli pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 8 --repeat-cases 1
 python -m Tools.validation check_ai_pipeline_report_contract --repo-root . --report .\output\ai_pipeline\dry_run_matrix\base\ai_pipeline_dry_run_report.json --require-dry-run --output .\output\validation\ai_pipeline_report_contract.json
 python -m Tools.validation check_ai_dry_run_matrix_contract --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python -m Tools.validation check_ai_dry_run_matrix_outputs --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json
 python -m Tools.validation check_generated_artifact_path_policy --repo-root . --artifact-report .\output\ai_pipeline\dry_run_matrix_report.json --output .\output\validation\generated_artifact_path_policy_from_matrix.json
-python -m Tools.ai build_dry_run_matrix_evidence_bundle --repo-root . --basename ai_pipeline_dry_run_matrix_evidence
+python -m ia_carmine.cli build_dry_run_matrix_evidence_bundle --repo-root . --basename ai_pipeline_dry_run_matrix_evidence
 python -m Tools.validation check_dry_run_matrix_evidence_bundle --repo-root . --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\ai_pipeline_dry_run_matrix_evidence.json --output .\output\validation\dry_run_matrix_evidence_bundle.json
-python -m Tools.ai build_selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
+python -m ia_carmine.cli build_selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
 python -m Tools.validation check_selective_execution_plan --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
 python -m Tools.validation check_package_structure --repo-root . --output .\output\validation\package_structure.json
 python -m Tools.validation check_json_artifacts --repo-root . --output .\output\validation\json_artifacts.json

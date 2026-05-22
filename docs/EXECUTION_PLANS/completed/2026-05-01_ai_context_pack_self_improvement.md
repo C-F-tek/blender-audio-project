@@ -10,7 +10,7 @@ Create the first non-invasive prototype for the repository helping work on itsel
 
 ## Scope
 
-- Add a context-pack builder under `Tools/ai/`.
+- Add a context-pack builder under `ia_carmine/`.
 - Add a context-pack contract validator under `Tools/validation/`.
 - Add stable documentation for profiles, output contracts and guardrails.
 - Generate and commit one compact evidence bundle for `project_self_improvement`.
@@ -31,7 +31,7 @@ Create the first non-invasive prototype for the repository helping work on itsel
 
 ```powershell
 python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
-python -m Tools.ai build_ai_context_pack --repo-root . --profile project_self_improvement
+python -m ia_carmine.cli build_ai_context_pack --repo-root . --profile project_self_improvement
 python -m Tools.validation check_ai_context_pack_contract --repo-root . --pack .\output\ai_context_packs\project_self_improvement.json --evidence .\docs\LOCAL_VALIDATION_EVIDENCE\project_self_improvement_context_pack_evidence.json --output .\output\validation\ai_context_pack_contract.json
 python -m Tools.validation check_json_artifacts --repo-root . --output .\output\validation\json_artifacts.json
 python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json

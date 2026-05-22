@@ -72,7 +72,7 @@ Reason the heap product was not accepted as the final coding answer:
 
 ### 1. Composer Operator Gate
 
-Target: `Tools/ai/heap_final_proposals/cli.py`.
+Target: `ia_carmine/product/heap_final_proposals/cli.py`.
 
 Problem found:
 
@@ -87,7 +87,7 @@ Problem found:
 
 Concrete change:
 
-- Composer now imports proposal gate helpers from `Tools/ai/_shared/heap_proposal_gate.py`.
+- Composer now imports proposal gate helpers from `ia_carmine/_shared/heap_proposal_gate.py`.
 - Proposal loading preserves `response_file_reference_quality`.
 - Raw proposals are passed through deterministic operator gating.
 - The final JSON includes `operator_decision`.
@@ -103,7 +103,7 @@ Acceptance:
 
 Line count after change:
 
-- `Tools/ai/heap_final_proposals/cli.py`: 1147 lines.
+- `ia_carmine/product/heap_final_proposals/cli.py`: 1147 lines.
 
 Residual risk:
 
@@ -113,7 +113,7 @@ Residual risk:
 
 ### 2. Proposal Gate Helper
 
-Target: `Tools/ai/_shared/heap_proposal_gate.py`.
+Target: `ia_carmine/_shared/heap_proposal_gate.py`.
 
 Concrete change:
 
@@ -136,7 +136,7 @@ Acceptance:
 
 Line count:
 
-- `Tools/ai/_shared/heap_proposal_gate.py`: 275 lines.
+- `ia_carmine/_shared/heap_proposal_gate.py`: 275 lines.
 
 ### 3. Proposal Gate Smoke
 
@@ -167,7 +167,7 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
 & $RepoPy -c "import sys; print(sys.executable); import numpy, openvino; from openvino import Core; c=Core(); print(c.available_devices)"
-& $RepoPy -m py_compile .\Tools\ai\heap_final_proposals\cli.py -m Tools.ai heap_proposal_gate .\Tools\validation\test_proposal_gate.py
+& $RepoPy -m py_compile .\ia_carmine\product\heap_final_proposals\cli.py -m ia_carmine heap_proposal_gate .\Tools\validation\test_proposal_gate.py
 & $RepoPy -m Tools.validation test_proposal_gate
 git diff --check
 ```
@@ -187,8 +187,8 @@ Observed:
 
 Commit scope when ready:
 
-- `Tools/ai/heap_final_proposals/cli.py`
-- `Tools/ai/_shared/heap_proposal_gate.py`
+- `ia_carmine/product/heap_final_proposals/cli.py`
+- `ia_carmine/_shared/heap_proposal_gate.py`
 - `Tools/validation/test_proposal_gate.py`
 - this note, if the final-purpose artifact should be tracked.
 
@@ -204,7 +204,7 @@ Do not include:
 
 Target:
 
-- `Tools/ai/heap_context_closure/cli.py`
+- `ia_carmine/runtime/heap_context_closure/cli.py`
 
 Reason:
 
@@ -221,15 +221,15 @@ Concrete change:
 Validation:
 
 ```powershell
-& $RepoPy -m py_compile .\Tools\ai\heap_context_closure\cli.py
-& $RepoPy -m Tools.ai run_heap_runtime_context_closure --repo-root . --python-exe $RepoPy --request-file .\path\to\request.md --skip-preflight --skip-startup-reload --no-documents --timeout-seconds 60
+& $RepoPy -m py_compile .\ia_carmine\runtime\heap_context_closure\cli.py
+& $RepoPy -m ia_carmine run_heap_runtime_context_closure --repo-root . --python-exe $RepoPy --request-file .\path\to\request.md --skip-preflight --skip-startup-reload --no-documents --timeout-seconds 60
 ```
 
 ### P1 - Stop GPU1 from recycling fake sample paths
 
 Target:
 
-- `Tools/ai/heap_runtime/completeness_gate/cli.py`
+- `ia_carmine/runtime/heap_runtime/completeness_gate/cli.py`
 
 Observed failure:
 
@@ -242,8 +242,8 @@ Concrete change:
 
 - In `gpu1_provider_prompt()` or the revision feedback path, add a compact
   current-run target block containing only actual candidate paths:
-  `Tools/ai/heap_final_proposals/cli.py`,
-  `Tools/ai/_shared/heap_proposal_gate.py`,
+  `ia_carmine/product/heap_final_proposals/cli.py`,
+  `ia_carmine/_shared/heap_proposal_gate.py`,
   `Tools/validation/test_proposal_gate.py`.
 - If GPU1 emits any path containing `...`, angle-bracket placeholders, or
   `real_existing_file.py`, force the next provider prompt to require
@@ -255,7 +255,7 @@ Concrete change:
 Validation:
 
 ```powershell
-& $RepoPy -m py_compile .\Tools\ai\heap_runtime\completeness_gate\cli.py
+& $RepoPy -m py_compile .\ia_carmine\runtime\heap_runtime\completeness_gate\cli.py
 & $RepoPy -m Tools.validation run_heap_source_allowlist_contract_smoke --repo-root .
 ```
 
@@ -282,7 +282,7 @@ Concrete choices:
 
 Target:
 
-- `Tools/ai/heap_final_proposals/cli.py`
+- `ia_carmine/product/heap_final_proposals/cli.py`
 
 Reason:
 
@@ -290,15 +290,15 @@ Reason:
 
 Concrete next splits:
 
-- Move document-package writing into `Tools/ai/heap_final_package_writer.py`.
+- Move document-package writing into `ia_carmine/heap_final_package_writer.py`.
 - Move proposal/provider report collection into
-  `Tools/ai/heap_final_report_collectors.py`.
+  `ia_carmine/heap_final_report_collectors.py`.
 - Keep `compose_heap_final_proposals.py` as CLI orchestration only.
 
 Validation:
 
 ```powershell
-& $RepoPy -m py_compile .\Tools\ai\heap_final_proposals\cli.py -m Tools.ai heap_final_package_writer .\Tools\ai\heap_final_report_collectors.py
+& $RepoPy -m py_compile .\ia_carmine\product\heap_final_proposals\cli.py -m ia_carmine heap_final_package_writer .\ia_carmine\heap_final_report_collectors.py
 & $RepoPy -m Tools.validation test_proposal_gate
 git diff --check
 ```

@@ -60,7 +60,7 @@ blockers.
 
 ## Not Finished
 
-- This does not prove a full `python -m Tools.ai run` is healthy.
+- This does not prove a full `python -m ia_carmine.cli run` is healthy.
 - This does not prove GPU0 peer review or NPU micro-provider usefulness on the
   workstation.
 - This does not complete all Deep Research tasks.

@@ -16,7 +16,7 @@ The selective planner reads compact context/evidence artifacts and recommends th
 Build and validate:
 
 ```powershell
-python -m Tools.ai build_selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
+python -m ia_carmine.cli build_selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
 python -m Tools.validation check_selective_execution_plan --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
 ```
 
@@ -64,7 +64,7 @@ The generic proposal validator checks schema shape. The full-context golden prop
 Run after generating deterministic full-context proposals:
 
 ```powershell
-python -m Tools.ai build_full_context_golden_proposals --repo-root . --source-report .\output\local_ai_runs\<run>\pipeline\full_context_golden_local_ai_context_proposals.json --output .\output\ai_pipeline\full_context_golden_proposals.json --markdown-output .\output\ai_pipeline\full_context_golden_proposals.md
+python -m ia_carmine.cli build_full_context_golden_proposals --repo-root . --source-report .\output\local_ai_runs\<run>\pipeline\full_context_golden_local_ai_context_proposals.json --output .\output\ai_pipeline\full_context_golden_proposals.json --markdown-output .\output\ai_pipeline\full_context_golden_proposals.md
 python -m Tools.validation check_repository_change_proposals --repo-root . --proposal .\output\ai_pipeline\full_context_golden_proposals.json --output .\output\validation\full_context_golden_repository_proposals_contract.json
 python -m Tools.validation check_full_context_golden_proposals --repo-root . --proposal .\output\ai_pipeline\full_context_golden_proposals.json --output .\output\validation\full_context_golden_proposals_contract.json --min-proposals 6
 ```
@@ -150,7 +150,7 @@ Proposal-derived patch specs turn validated repository proposals into reviewable
 Generate drafts from a proposal report:
 
 ```powershell
-python -m Tools.ai generated_patch_specs_from_proposals --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output-dir output\patch_specs --basename proposal_patch_specs
+python -m ia_carmine.cli generated_patch_specs_from_proposals --repo-root . --proposal .\output\ai_pipeline\repository_change_proposals.json --output-dir output\patch_specs --basename proposal_patch_specs
 ```
 
 Validate the draft manifest:
@@ -180,7 +180,7 @@ Reviewed patch specs are produced from a draft plus an explicit replacement plan
 Promote the fixture draft with dry-run:
 
 ```powershell
-python -m Tools.ai generated_patch_specs_promote_draft --repo-root . --draft .\Tools\ai\_shared\fixtures\patch_spec_review_draft.json --replacement-plan .\Tools\ai\_shared\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
+python -m ia_carmine.cli generated_patch_specs_promote_draft --repo-root . --draft .\ia_carmine\_shared\fixtures\patch_spec_review_draft.json --replacement-plan .\ia_carmine\_shared\fixtures\patch_spec_review_replacement_plan.json --output-dir output\patch_specs --basename reviewed_patch_spec_fixture
 ```
 
 Validate the reviewed spec:
@@ -196,7 +196,7 @@ AI context packs collect bounded task-scoped repository context, validation comm
 Build the default self-improvement prototype:
 
 ```powershell
-python -m Tools.ai build_ai_context_pack --repo-root . --profile project_self_improvement
+python -m ia_carmine.cli build_ai_context_pack --repo-root . --profile project_self_improvement
 ```
 
 Validate the pack and compact evidence:

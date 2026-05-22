@@ -172,7 +172,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "heap_exchange_runtime_entry",
                 "--repo-root",
                 str(repo),
@@ -190,7 +190,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "heap_exchange_runtime_exit",
                 "--repo-root",
                 str(repo),
@@ -252,7 +252,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "heap_exchange_runtime_entry",
                 "--repo-root",
                 str(repo),
@@ -270,7 +270,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "heap_exchange_runtime_exit",
                 "--repo-root",
                 str(repo),

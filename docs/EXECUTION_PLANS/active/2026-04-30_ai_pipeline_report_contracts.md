@@ -46,7 +46,7 @@ docs/QUALITY_GATE.md
 ```powershell
 python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
 python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\output\validation\ai_pipeline_modules.json
-python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 1
+python -m ia_carmine.cli pipeline_dry_run_matrix --repo-root . --continue-on-error --matrix-workers 12 --repeat-cases 1
 python -m Tools.validation check_ai_pipeline_report_contract --repo-root . --report .\output\ai_pipeline\dry_run_matrix\base\ai_pipeline_dry_run_report.json --require-dry-run --output .\output\validation\ai_pipeline_report_contract.json
 python -m Tools.validation check_ai_dry_run_matrix_contract --repo-root . --output .\output\validation\ai_dry_run_matrix_contract.json
 python -m Tools.validation check_ai_dry_run_matrix_outputs --repo-root . --output .\output\validation\ai_dry_run_matrix_outputs.json

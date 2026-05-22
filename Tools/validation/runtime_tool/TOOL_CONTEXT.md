@@ -7,7 +7,7 @@
 It validates the control-plane/evidence layer described by:
 
 ```text
-Tools/ai/runtime_tool/TOOL_CONTEXT.md
+ia_carmine/runtime/runtime_tool/TOOL_CONTEXT.md
 docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/COMPACT_EVIDENCE_MODEL.md
@@ -61,4 +61,4 @@ Outputs from this area are validation reports. They help confirm that runtime to
 - Keep checks focused and fixture-oriented where possible.
 - Keep runtime reports separate from final product artifacts.
 - Add dispatcher registration when adding new public checks.
-- Update `Tools/ai/runtime_tool/TOOL_CONTEXT.md` and `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` when runtime tool semantics change.
+- Update `ia_carmine/runtime/runtime_tool/TOOL_CONTEXT.md` and `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` when runtime tool semantics change.

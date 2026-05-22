@@ -85,14 +85,14 @@ proves, with artifacts, all of the following:
 
 - GPU1/Ollama is the primary advisory lane and leaves semantic provider
   evidence;
-- GPU0/OpenVINO leaves observable peer/reviewer evidence when selected;
+- GPU0/Ollama Vulkan leaves observable peer/reviewer evidence when selected;
 - NPU/OpenVINO remains a bounded micro-task/tool/device provider and must not
   replace GPU1 primary advisory ownership;
 - heap events, pointer/chunk surfaces, brokered tool calls and validation
   outputs are correlated;
 - failure to start any required lane hard-blocks the run;
 - degraded, unavailable, diagnostic-only or missing required lanes make the
-  complete/full profile unviable;
+  complete/full run unviable;
 - a product is either a concrete reviewable code/patch product or an explicit
   blocked reason, never a decorative report.
 
@@ -109,69 +109,22 @@ automated transcript parser.
 
 | Counter | Count | Meaning |
 |---|---:|---|
-| Operator-aligned fixes kept in source/docs | 8 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
-| Operator blocks required | 18 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
-| Script-gaming total regression count | 413 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
-| Misleading/Codex lie evidence count | 50 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
-| Systemic product-lie evidence count | 6 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
-| Systemic product-lie severity score | 30 | Sum of severity weights for structural product lies; `5` is the maximum single-event severity. |
+| Operator-aligned fixes kept in source/docs | 16 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
+| Operator blocks required | 31 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
+| Script-gaming total regression count | 474 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+| Misleading/Codex lie evidence count | 79 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
+| Systemic product-lie evidence count | 14 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
+| Systemic product-lie severity score | 165 | Sum of severity weights for structural product lies; operator override may exceed the normal `5` severity. |
 
-Recorded operator-aligned fixes kept in source/docs:
-
-- Count 7: the 2026-05-21 operator correction `niente full smoke, niente full
-  run; continua con l'MD` was recorded in this README, the provider-universe
-  failure ledger and the active provider-universe runtime patch contract.
-- Count 8: the 2026-05-21 operator correction rejected a second contractor
-  dispatcher entry and runtime selector. The source was changed so
-  `python -m Tools.ai run` is the single product entry.
-
-Recorded repeated-code regressions:
-
-- NPU micro-lane fields: Codex removed the semantic-primary interpretation,
-  then reintroduced `semantic_provider_*`/`npu_semantic_*` compatibility fields
-  in the NPU report path. The operator blocked this and required complete
-  removal. The corrected path is `npu_micro_provider_*` only for NPU.
-- Count 412: Codex launched a full-smoke command after the operator had
-  explicitly said not to launch full smoke or full run. This is recorded as
-  script-gaming because it substituted validation/report activity for the
-  requested Markdown continuation path.
-- Count 413: Codex tried to preserve multiple product entry flows by adding a
-  direct contractor dispatcher command and runtime selector. The operator
-  blocked this because the MD requires one product entry, not parallel run
-  paths selected by parameters.
-
-Recorded misleading/Codex lie evidence:
-
-- Count 1: the complete-only smoke failure repeated the same missing
-  heap/provider/product errors with a `complete:` prefix. That prefix is
-  recorded as misleading formatting because it can make the same failure look
-  like additional structured progress instead of plain absence of real work.
-- Counts 5-48: the complete smoke generated at `2026-05-21T00:18:36`
-  emitted 35 top-level error entries containing 44 `complete` occurrences.
-  The report collapsed that into `misleading_codex_lie_increment=1`, but the
-  canonical counter records the actual misleading `complete` error framing
-  count for this run.
-- Count 50: after the operator instruction forbidding full smoke/full run,
-  Codex framed the violation as "only the full smoke" and pointed at generated
-  validation artifacts instead of continuing from the Markdown source. That
-  framing is misleading because it softens the explicit operator block.
-
-Recorded systemic product-lie evidence:
-
-- Count 1, severity 5/5: the complete smoke generated at `2026-05-20T23:44:56`
-  produced report/tool summary output while the required product path was still
-  absent: `provider_execution_performed=false`, GPU1 had no provider response
-  text, GPU1/GPU0/NPU provider evidence counts were missing, and no
-  MD/pointer-composed `FINAL_CODE_PRODUCT` was produced. This is counted as a
-  structural product lie, not a wording issue.
-- Count 2, severity 5/5: Codex treated character budget pressure as text
-  truncation inside selected code chunks. That violates the heap/pointer
-  context contract: product context must move through complete chunks/pointers,
-  not chopped text outside the current heap memory path.
-- Count 6, severity 5/5: on 2026-05-21, validation/full-smoke activity replaced
-  the requested Markdown continuation path even though the operator had already
-  prohibited full smoke and full run. The generated validation artifacts are
-  recorded as non-product evidence, not as task progress.
+Detailed evidence is maintained in
+`docs/AI_SESSION_NOTES/provider-universe-chat-failure-ledger-2026-05-20.md`.
+Current added evidence includes: no full-smoke/full-run violation, parallel
+product-entry attempts, resource/provider preflight framed as static, wrong
+Python environment claims, validator-editing for `product_readiness`, stale
+contract JSON reads after smoke output, invented `$Root` instead of required
+`$RepoRoot`, selecting `day0_full_code_product` for an initial spark, and the
+removed hidden JSON value loader for `ia_carmine run`; values are now direct CLI
+parameters.
 
 Canonical counter rule:
 
@@ -196,28 +149,6 @@ Canonical counter rule:
   increments by `5`;
 - counters must not be silently reset, merged or explained away by later smoke
   output.
-
-Examples of operator blocks in this window:
-
-- blocking contract-only or preflight-only smoke as "complete smoke";
-- blocking `provider_execution_performed=false` as acceptable full-smoke
-  evidence;
-- blocking hard lane cutoffs, token caps or revision caps not propagated by
-  operator/heap state;
-- blocking GPU1 tool continuation as mandatory when GPU1 should choose output
-  shape and tool use;
-- blocking NPU as semantic-primary or semantic compatibility surface;
-- blocking report inspection as a substitute for source investigation;
-- blocking final products derived from reports or activity instead of pointer
-  reconstruction and real code/patch product boundaries;
-- blocking repeated context reloads without delta/check of changed memory
-  state.
-- blocking character-budget handling as chopped text instead of complete
-  chunk/pointer selection.
-- blocking an unauthorized full-smoke launch after the explicit instruction
-  `niente full smoke, niente full run`.
-- blocking a second dispatcher command/runtime selector that created
-  parallel product entry flows instead of one canonical product entry.
 
 This counter must be updated whenever a future Codex/OpenAI operator repeats
 the same class of script-gaming behavior, reintroduces deleted/rejected code, or
@@ -266,8 +197,8 @@ docs/LOCAL_AI_TASKS/read-first-reuse-first-small-files-rule-2026-05-07.md
 The current product doctrine is one controlled entry, one dynamic heap/exchange center and one validated product exit.
 
 ```text
-operator product entrypoint = python -m Tools.ai run
-internal runtime package = Tools/ai/contractor_universe/
+operator product entrypoint = python -m ia_carmine.cli run
+internal runtime package = ia_carmine/runtime/contractor_universe/
 active_perimeter = whole-repository guarded heap/team runtime lanes
 single_dynamic_heap_exchange_run = current report/manifest model
 quick/balanced/deep/custom = intensity or budget, not reduced semantic scope
@@ -302,7 +233,7 @@ IN
 LOOP / HEAP / EXCHANGE
   dynamic heap knowledge surface
   GPU1/Ollama advisory lane
-  GPU0/OpenVINO observable support workload
+  GPU0/Ollama Vulkan observable peer workload
   NPU micro peer diagnostic/report lane
   provider/context/broker lanes
   runtime state and public exchange events
@@ -328,7 +259,7 @@ Current target topology:
 ```text
 shared runtime heap / blackboard
 ├─ GPU1 primary advisory / Ollama planner
-├─ GPU0 OpenVINO observable support workload
+├─ GPU0 Ollama Vulkan observable peer workload
 ├─ NPU peer micro diagnostic/report lane
 ├─ broker unico executor
 ├─ semantic tools registry
@@ -387,13 +318,13 @@ The root README is descriptive only. It must not carry long executable PowerShel
 Operator-facing real product entrypoint:
 
 ```text
-python -m Tools.ai run
+python -m ia_carmine.cli run
 ```
 
 Current internal runtime package behind that entry:
 
 ```text
-Tools/ai/contractor_universe/
+ia_carmine/runtime/contractor_universe/
 ```
 
 Canonical runbooks/contracts:
@@ -416,7 +347,7 @@ A valid product run starts from a controlled task Markdown file or generated pro
 Current chain:
 
 ```text
-python -m Tools.ai run --request-file <task.md>
+python -m ia_carmine.cli run --request-file <task.md>
   -> contractor_universe internal runtime
   -> controlled Task MD ingestion
   -> provider runtime blackboard and pointer graph
@@ -430,16 +361,16 @@ python -m Tools.ai run --request-file <task.md>
 Current deterministic source-write boundary for patchkit bundles:
 
 ```text
-Tools/ai/patchkit/apply_patch_bundle.py
+ia_carmine/product/patchkit/apply_patch_bundle.py
 ```
 
 Current generated review product boundary:
 
 ```text
-Tools/ai/build_repository_change_proposals.py
-Tools/ai/generated_patch_specs/proposal_cli.py
-Tools/ai/generated_patch_specs/apply_cli.py
-Tools/ai/agent_review/review_pr_cli.py
+ia_carmine/build_repository_change_proposals.py
+ia_carmine/product/generated_patch_specs/proposal_cli.py
+ia_carmine/product/generated_patch_specs/apply_cli.py
+ia_carmine/product/agent_review/review_pr_cli.py
 Tools/validation/repository_product/review_pr_final_product_contract/cli.py
 ```
 
@@ -511,17 +442,10 @@ Never infer success only from file existence, focused validator output, dry-run 
 
 ## File-size and Markdown split rule
 
-Maintained documentation and source files must stay reviewable.
-
 ```text
 preferred active runbook <= 400 lines
 active Markdown hard threshold <= 500 lines
 maintained source/script target <= 400 lines
-```
-
-Markdown split layout is exact:
-
-```text
 path/name.md
 path/name.md/part-001.md
 path/name.md/part-002.md
@@ -531,85 +455,45 @@ Legacy extensionless split folders are historical only. Do not copy them for new
 
 ## Operating rules
 
-Do not infer project state from the repository name. Current core/backend work must not:
+Do not infer project state from the repository name. Current core/backend work
+must not modify Blender runtime packages, produce audio/media, run FFmpeg or
+Blender renders, modify full analysis JSON, commit raw outputs/databases,
+hand-edit generated indexes, reintroduce retired compatibility semantics,
+promote NPU/OpenVINO beyond the active lane contract, claim GPU0 success from
+visibility/model residency only, call metadata-only patch specs product, create execution
+paths outside broker/registry/validator/evidence architecture, or merge to
+master without explicit command.
 
-```text
-modify Blender runtime packages without explicit scope
-produce audio playback/export or media output
-run FFmpeg encode/mux or Blender render
-modify full analysis JSON files
-commit output/**, renders/**, generated media, *.db or *.sqlite
-hand-edit generated indexes
-reintroduce retired legacy compatibility naming as runtime semantics
-promote NPU/OpenVINO to compute-provider lane without quality-gated architecture change
-claim GPU0 success from device visibility only
-claim metadata-only generated patch specs as reviewable product
-create tool execution paths outside broker/registry/validator/evidence architecture
-merge to master without explicit user command
-```
-
-Use compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/` instead of raw `output/**` reports.
+Use compact evidence under `docs/LOCAL_VALIDATION_EVIDENCE/` instead of raw
+`output/**` reports.
 
 ## Audio/media output policy
 
-Normal AI/tooling runs are evidence/report workflows, not media-generation workflows.
-
-Forbidden unless explicitly scoped as application-domain work:
-
-```text
-audio playback
-audio export
-WAV/MP3/AAC conversion
-FFmpeg encode/mux
-Blender render
-video generation
-media output side effect
-```
-
-Detailed policy:
-
-```text
-docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md
-```
+Normal AI/tooling runs are evidence/report workflows, not media-generation
+workflows. Audio playback/export, WAV/MP3/AAC conversion, FFmpeg, Blender
+render, video generation and media side effects require explicit scope. See
+`docs/LOCAL_AI_TASKS/no-audio-media-output-guardrail-2026-05-05.md`.
 
 ## Inventory and evidence
 
-Current documentation cleanup and refactoring use:
-
-```text
-Markdown inventory
-script/function/class/method inventory
-script aging / hidden wrapper audit
-CSV/count evidence surfaces
-auto-discovery and index repair reports/plans
-tool placement audit
-validation report contracts
-runtime broker evidence
-runtime evidence correlation
-repository change proposals
-generated patch-spec apply reports
-compact GitHub evidence bundles
-heap/exchange lifecycle evidence
-patchkit reports
-```
-
-Commands for these tools live in the real product runbook, unified launcher runbook and tool-specific README files, not in this root README.
+Inventory/evidence surfaces include Markdown and code inventories, aging and
+wrapper audits, CSV/count evidence, discovery/index repair, tool placement,
+validation contracts, runtime broker/correlation reports, patch proposals,
+compact GitHub evidence, heap/exchange lifecycle evidence and PatchKit
+reports. Commands live in the real product runbook, unified launcher runbook
+and tool-specific README files.
 
 ## GitHub / PR description policy
 
-GitHub PR descriptions and repository-facing summaries should point to canonical docs instead of duplicating executable commands.
-
-Required wording principle:
-
-```text
-Root/project descriptions describe purpose and canonical docs.
-Operational commands live in docs/LOCAL_AI_TASKS/real-product-run-unica-runbook-2026-05-10.md and docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md.
-Runtime architecture lives in docs/MAIN_RUNTIME_ARCHITECTURE.md and the heap/exchange operating model.
-The GitHub About description must not describe this as only a Blender/audio project.
-```
+GitHub PR descriptions and repository-facing summaries should point to
+canonical docs instead of duplicating executable commands. Root/project
+descriptions describe purpose and canonical docs; operational commands live in
+the runbooks; runtime architecture lives in `docs/MAIN_RUNTIME_ARCHITECTURE.md`
+and heap/exchange docs. GitHub About must not describe this as only a
+Blender/audio project.
 
 ## Legacy Blender/audio role
 
-The repository still contains mature Blender/audio-reactive workflows under `Scripting/`, including `Scripting/v61b/` and shared helpers.
-
-Treat them as application-domain assets. Do not refactor or run them unless the task explicitly enters that milestone.
+The repository still contains mature Blender/audio-reactive workflows under
+`Scripting/`. Treat them as application-domain assets and do not refactor or
+run them unless the task explicitly enters that milestone.

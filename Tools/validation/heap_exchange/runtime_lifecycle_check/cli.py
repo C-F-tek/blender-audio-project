@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.heap_exchange.io import load_jsonl
+from ia_carmine.runtime.heap_exchange.io import load_jsonl
 
 try:
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
@@ -169,7 +169,7 @@ def main() -> int:
         passed=bool(entry and not entry_error and entry_dynamic),
         expected="heap_exchange_runtime_entry exists and center_is_dynamic=true",
         actual=f"entry_error={entry_error} center_is_dynamic={entry_dynamic}",
-        action="Run python -m Tools.ai heap_exchange_runtime_entry after agent-state/workload routing.",
+        action="Run python -m ia_carmine.cli heap_exchange_runtime_entry after agent-state/workload routing.",
         artifacts=[rel(repo_root, entry_path)],
     )
 

@@ -76,8 +76,8 @@ docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/STANDALONE_HEAP_SURFACE_MODEL.md
 docs/REAL_PRODUCT_RUN_MODEL.md
 docs/COMPACT_EVIDENCE_MODEL.md
-Tools/ai/provider_mesh/TOOL_CONTEXT.md
-Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md
+ia_carmine/providers/provider_mesh/TOOL_CONTEXT.md
+ia_carmine/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md
 Tools/validation/provider_mesh/TOOL_CONTEXT.md
 Tools/npu/provider_mesh/TOOL_CONTEXT.md
 ```

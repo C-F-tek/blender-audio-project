@@ -16,7 +16,7 @@ It acts as a lightweight control app around the workflow:
 
 ## First-wave review
 
-`Tools/ai/review_wave_entrypoints.py` reviews:
+`ia_carmine/review_wave_entrypoints.py` reviews:
 
 - `Tools/workflow/workflow_run/audio_analysis/analyze_cli.py`;
 - `Tools/workflow/workflow_run/audio_analysis/summary_cli.py`.
@@ -59,7 +59,7 @@ output/ai_pipeline/npu_guardrail_action_queue.json
 
 ## Multi-pass behavior
 
-`python -m Tools.ai run_parallel_artifact_pipeline` can consume the action queue and repeat only auto-safe stages:
+`python -m ia_carmine.cli run_parallel_artifact_pipeline` can consume the action queue and repeat only auto-safe stages:
 
 - `enrich_intermediates`;
 - `smart_context_generation`;
@@ -72,7 +72,7 @@ Python/code fixes are intentionally not auto-applied. They remain reviewable req
 ## Recommended command
 
 ```powershell
-py -m Tools.ai run_parallel_artifact_pipeline `
+py -m ia_carmine run_parallel_artifact_pipeline `
   --repo-root . `
   --analysis-json .\output\Feel_The_Light_analysis.json `
   --track-stem "Feel The Light" `

@@ -32,7 +32,7 @@ def run_helper(source_repo: Path, repo: Path, context: dict[str, Any], name: str
     result = subprocess.run(
         [
             sys.executable,
-            str(source_repo / "Tools/ai/runtime_universe/unified/chain_contract_args/cli.py"),
+            str(source_repo / "ia_carmine/runtime/runtime_universe/unified/chain_contract_args/cli.py"),
             "--context",
             str(context_path),
             "--output",

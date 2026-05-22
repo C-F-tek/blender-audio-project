@@ -12,7 +12,7 @@ The first pass documented:
 
 ```text
 Tools/** dispatchers and tool families
-core Tools/ai families
+core ia_carmine families
 root CHATGPT.md contract
 ```
 

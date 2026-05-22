@@ -18,7 +18,7 @@ Current sources:
 ../LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 ../UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ../../Tools/workflow/README.md
-../../Tools/ai/README.md
+../../ia_carmine/README.md
 ```
 
 Use this split only as historical context and compare claims against current source, validation reports, launcher manifests and PR state.

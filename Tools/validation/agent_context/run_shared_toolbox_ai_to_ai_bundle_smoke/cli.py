@@ -17,15 +17,15 @@ from types import SimpleNamespace
 from typing import Any
 
 try:
-    from Tools.ai.agent_context.shared_toolbox_bundle import build_shared_toolbox_bundle
-    from Tools.ai._shared.github_evidence_bundle_io import read_json, repo_relative
+    from ia_carmine.context.agent_context.shared_toolbox_bundle import build_shared_toolbox_bundle
+    from ia_carmine._shared.github_evidence_bundle_io import read_json, repo_relative
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.agent_context.shared_toolbox_bundle import build_shared_toolbox_bundle
-    from Tools.ai._shared.github_evidence_bundle_io import read_json, repo_relative
+    from ia_carmine.context.agent_context.shared_toolbox_bundle import build_shared_toolbox_bundle
+    from ia_carmine._shared.github_evidence_bundle_io import read_json, repo_relative
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
 

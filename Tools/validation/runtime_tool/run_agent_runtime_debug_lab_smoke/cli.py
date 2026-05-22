@@ -10,18 +10,18 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.runtime_tool.agent_runtime_debug_lab.reporting import (
+    from ia_carmine.runtime.runtime_tool.agent_runtime_debug_lab.reporting import (
         render_markdown as render_debug_lab_markdown,
         write_reports as write_debug_lab_reports,
     )
-    from Tools.ai.runtime_tool.agent_runtime_debug_lab.runner import run_request
+    from ia_carmine.runtime.runtime_tool.agent_runtime_debug_lab.runner import run_request
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.ai.runtime_tool.agent_runtime_debug_lab.reporting import (  # type: ignore
+    from ia_carmine.runtime.runtime_tool.agent_runtime_debug_lab.reporting import (  # type: ignore
         render_markdown as render_debug_lab_markdown,
         write_reports as write_debug_lab_reports,
     )
-    from Tools.ai.runtime_tool.agent_runtime_debug_lab.runner import run_request  # type: ignore
+    from ia_carmine.runtime.runtime_tool.agent_runtime_debug_lab.runner import run_request  # type: ignore
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,

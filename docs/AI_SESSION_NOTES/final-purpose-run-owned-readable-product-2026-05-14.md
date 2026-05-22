@@ -34,17 +34,17 @@ It must include:
 The code execution matrix must include the run-owned final readable product path:
 
 ```text
-Tools/ai/assemble_heap_final_readable_product.py
+ia_carmine/assemble_heap_final_readable_product.py
 Tools/validation/run_heap_final_readable_product_smoke.py
-Tools/ai/heap_context_closure/cli.py
-Tools/ai/heap_runtime/completeness_gate/cli.py
-Tools/ai/runtime_tool/agent_broker.py
-Tools/ai/heap_runtime/code_execution_tool/cli.py
-Tools/ai/_shared/heap_code_execution_tool_core.py
-Tools/ai/_shared/heap_final_code_product.py
-Tools/ai/_shared/heap_final_readable_synthesis.py
-Tools/ai/heap_final_proposals/cli.py
-Tools/ai/_shared/heap_proposal_gate.py
+ia_carmine/runtime/heap_context_closure/cli.py
+ia_carmine/runtime/heap_runtime/completeness_gate/cli.py
+ia_carmine/runtime/runtime_tool/agent_broker.py
+ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py
+ia_carmine/_shared/heap_code_execution_tool_core.py
+ia_carmine/_shared/heap_final_code_product.py
+ia_carmine/_shared/heap_final_readable_synthesis.py
+ia_carmine/product/heap_final_proposals/cli.py
+ia_carmine/_shared/heap_proposal_gate.py
 Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py
 Tools/validation/test_proposal_gate.py
 ```

@@ -24,24 +24,24 @@ def main() -> int:
     errors: list[str] = []
     gate = "\n".join(
         [
-            read("Tools/ai/heap_gate/source_refs.py"),
-            read("Tools/ai/heap_gate/provider_context.py"),
-            read("Tools/ai/heap_gate/provider_commands.py"),
-            read("Tools/ai/heap_gate/provider_prompt.py"),
-            read("Tools/ai/heap_gate/provider_prompt_text.py"),
-            read("Tools/ai/heap_gate/provider_refinement.py"),
-            read("Tools/ai/heap_gate/proposal_cycle_b.py"),
+            read("ia_carmine/runtime/heap_gate/source_refs.py"),
+            read("ia_carmine/runtime/heap_gate/provider_context.py"),
+            read("ia_carmine/runtime/heap_gate/provider_commands.py"),
+            read("ia_carmine/runtime/heap_gate/provider_prompt.py"),
+            read("ia_carmine/runtime/heap_gate/provider_prompt_text.py"),
+            read("ia_carmine/runtime/heap_gate/provider_refinement.py"),
+            read("ia_carmine/runtime/heap_gate/proposal_cycle_b.py"),
         ]
     )
-    anchors = read("Tools/ai/_shared/heap_source_anchors.py")
+    anchors = read("ia_carmine/_shared/heap_source_anchors.py")
     contract_text = gate + "\n" + anchors
-    provider_probe = read("Tools/ai/provider_mesh/local_provider_probe/cli.py")
+    provider_probe = read("ia_carmine/providers/provider_mesh/local_provider_probe/cli.py")
     revision = "\n".join(
         [
-            read("Tools/ai/external_heap/revision_context/common.py"),
-            read("Tools/ai/external_heap/revision_context/applicability.py"),
-            read("Tools/ai/external_heap/revision_context/tasks.py"),
-            read("Tools/ai/external_heap/revision_context/report.py"),
+            read("ia_carmine/runtime/external_heap/revision_context/common.py"),
+            read("ia_carmine/runtime/external_heap/revision_context/applicability.py"),
+            read("ia_carmine/runtime/external_heap/revision_context/tasks.py"),
+            read("ia_carmine/runtime/external_heap/revision_context/report.py"),
         ]
     )
 

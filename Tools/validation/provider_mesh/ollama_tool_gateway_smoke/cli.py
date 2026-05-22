@@ -19,7 +19,7 @@ REPO_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORT))
 
-from Tools.ai.provider_mesh.ollama_tool_gateway import common as gateway_common
+from ia_carmine.providers.provider_mesh.ollama_tool_gateway import common as gateway_common
 
 DEFAULT_OUTPUT = "output/validation/ollama_tool_gateway_smoke.json"
 DEFAULT_MARKDOWN = "output/validation/ollama_tool_gateway_smoke.md"

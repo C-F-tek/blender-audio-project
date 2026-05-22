@@ -186,9 +186,9 @@ indexAI/project_code_chunks/**
 ```text
 docs/REAL_PRODUCT_RUN_MODEL.md
 docs/COMPACT_EVIDENCE_MODEL.md
-Tools/ai/code_product/TOOL_CONTEXT.md
-Tools/ai/patch_product/TOOL_CONTEXT.md
-Tools/ai/patchkit/TOOL_CONTEXT.md
+ia_carmine/product/code_product/TOOL_CONTEXT.md
+ia_carmine/product/patch_product/TOOL_CONTEXT.md
+ia_carmine/product/patchkit/TOOL_CONTEXT.md
 Tools/repo_patch_runner/CONTEXT_INDEX.md
 Tools/validation/code_product/TOOL_CONTEXT.md
 Tools/validation/patch_product/TOOL_CONTEXT.md

@@ -19,8 +19,8 @@ The system should not behave as three unrelated assistants. It should behave as 
 | Department | Main role | Expected output |
 | --- | --- | --- |
 | Ollama / main provider | central reasoning, planning, synthesis, candidate generation | advisory evidence, proposed operations, final reasoning inputs |
-| GPU0 / coworker lane | companion reviewer, OpenVINO/helper workload, discrepancy check, peer visibility | peer reports, review evidence, workload proof, contradiction notes |
-| NPU / micro-lane | microtask/tool/device provider, small checks, support evidence | micro reports, device/tool-loop facts, audit notes, guardrail hints |
+| GPU0 / coworker lane | Ollama/Vulkan companion reviewer, discrepancy check, peer visibility | peer reports, review evidence, workload proof, contradiction notes |
+| NPU / micro-lane | OpenVINO microtask/tool/device provider, small checks, support evidence | micro reports, device/tool-loop facts, audit notes, guardrail hints |
 | CPU / validators | deterministic authority, broker, validation, file/source inspection | pass/fail reports, contracts, blocked reasons |
 
 ## Core doctrine
@@ -34,6 +34,31 @@ The heap is the shared memory and evidence surface.
 ```
 
 Ollama may be the main creative/planning center, but it is not allowed to become an unchecked source-writing authority.
+
+CPU is not a provider department. CPU may run scripts, broker/tool dispatch,
+parsers, I/O, orchestration and validators, but complete provider evidence must
+come from accelerator lanes only: Ollama proved GPU residency by `ollama ps`,
+Ollama/Vulkan for GPU0, and OpenVINO `NPU` for NPU. OpenVINO `CPU`,
+OpenVINO GPU0 fallback, heuristic fallback, CPU-only Ollama residency or unproven residency are
+diagnostic evidence and must block complete run-unica provider success.
+
+GPU1/Ollama should request full model-layer GPU offload with
+`--ollama-gpu-layers all` in the canonical run. This is not a count of GPU
+cards; it is the Ollama layer-offload control and maps to `options.num_gpu=-1`
+only at the API edge. If `ollama ps` reports a split such as `36%/64% CPU/GPU`,
+the model is partly resident in system memory. In a complete/run-unica profile,
+GPU1 is viable only when the selected model is proven as `100% GPU`. A split
+`CPU/GPU`, CPU-only residency or unproven residency blocks GPU1; non-strict
+runtime may repair by selecting a smaller installed model that fits in VRAM.
+
+`100% GPU` is residency evidence only. A provider role is counted only when the
+lane reports `provider_work_verified=true`: device detected, model loaded,
+health check passed, workload performed, useful output produced and no blocking
+operator observation. For GPU1 this includes runtime GPU samples during the
+inference window; for GPU0 it includes Ollama/Vulkan provider output;
+for NPU it includes bounded OpenVINO `NPU` micro-provider output. Diagnostics,
+tensor-only workloads, preflight checks and replight handshakes do not create
+product roles.
 
 ## Unified mind rule
 
@@ -50,7 +75,11 @@ same evidence ledger
 
 If lanes operate on different context, the result is not a unified mind. It is only parallel prompting.
 
-Time is part of that shared operational picture. A run budget is a counter used to choose cycles and request a coordinated soft close near the end; it is not a hard lane cutoff. A provider lane that fails to start is a hard universe block, while a started lane must close through heap state, chunks and pointers.
+Time is part of that shared operational picture. A run budget is a counter used
+to choose GPU1 cycles and request a coordinated soft close near the end. GPU0
+and NPU are bounded sidecars with watchdog/timeouts; a selected lane that fails
+to start is a hard universe block, but NPU must not keep the run open as primary
+semantic closer.
 
 Provider revision count is evidence, not a recursion limit. The loop may use it as evidence that revisions happened, but must not stop GPU1 because the count reached an effective maximum.
 
@@ -75,7 +104,8 @@ The final code product must be reconstructed from `previous_block_id`, `refines_
 
 ### Ollama / main provider
 
-Ollama is the central planner and synthesis lane.
+Ollama is the central planner, review opener, tool-calling coordinator and
+closure/synthesis lane.
 
 It should:
 
@@ -86,6 +116,7 @@ explain reasoning at product level
 consume reviewer/auditor feedback
 revise proposals when evidence rejects them
 produce structured recommendation evidence
+emit the final synthesis, blocked continuation or blocked reason
 ```
 
 It must not:
@@ -109,6 +140,7 @@ review or refine provider claims
 check discrepancy and feasibility
 produce peer evidence
 support hardware/runtime visibility
+propose backtrack/refine/resume signals without becoming primary closer
 ```
 
 Useful GPU0 output is structured evidence, not just device presence.
@@ -125,12 +157,18 @@ run bounded OpenVINO device/tool-loop work when selected
 support guardrail and sanity checks
 produce compact reports
 publish `npu_micro_provider_*` evidence when the micro provider runs
+finish through bounded timeout/watchdog and never become primary closer
 ```
 
 NPU must not be documented or reported as the primary semantic provider. It is a
 real bounded micro-provider when selected, but it remains support/micro and does
 not own final product synthesis. NPU reports must use `npu_micro_provider_*`
 fields, not `semantic_provider_*` or `npu_semantic_*` fields.
+
+GPU0/NPU native model/tool-loop timeout is provider failure in complete
+run-unica provider mode. Tensor workload, device visibility or NPU preflight
+alone are diagnostic evidence; they do not satisfy the coworker or micro-lane
+provider contract.
 
 ### CPU / validators
 
@@ -169,6 +207,10 @@ Each provider department must leave evidence:
 ```text
 lane name
 execution requested/performed
+provider backend
+provider compute device
+provider device verified
+CPU fallback not used as provider
 input refs
 output refs
 warnings/errors
@@ -209,8 +251,8 @@ docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/STANDALONE_HEAP_SURFACE_MODEL.md
 docs/REAL_PRODUCT_RUN_MODEL.md
 docs/COMPACT_EVIDENCE_MODEL.md
-Tools/ai/provider_mesh/TOOL_CONTEXT.md
-Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md
+ia_carmine/providers/provider_mesh/TOOL_CONTEXT.md
+ia_carmine/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md
 Tools/validation/provider_mesh/TOOL_CONTEXT.md
 Tools/npu/provider_mesh/TOOL_CONTEXT.md
 ```

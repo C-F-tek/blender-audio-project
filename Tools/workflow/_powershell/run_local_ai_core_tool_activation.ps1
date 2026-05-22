@@ -182,7 +182,7 @@ if (-not $DryRun) {
 
     if ($RunMegalithicReview) {
         Invoke-Checked -Label "Build agnostic agent memory inventory" -Block {
-            & $WorkflowPythonExe -m Tools.ai build_agent_memory_inventory `
+            & $WorkflowPythonExe -m ia_carmine build_agent_memory_inventory `
                 --repo-root . `
                 --memory-db .\indexAI\agent_memory\agent_memory.sqlite `
                 --objective $Objective `
@@ -191,14 +191,14 @@ if (-not $DryRun) {
         }
 
         Invoke-Checked -Label "Build agnostic tool inventory" -Block {
-            & $WorkflowPythonExe -m Tools.ai build_agent_agnostic_tool_inventory `
+            & $WorkflowPythonExe -m ia_carmine build_agent_agnostic_tool_inventory `
                 --repo-root . `
                 --output $AgnosticToolInventoryJson `
                 --markdown-output $AgnosticToolInventoryMd
         }
 
         Invoke-Checked -Label "Build transient request context" -Block {
-            & $WorkflowPythonExe -m Tools.ai build_agent_transient_request_context `
+            & $WorkflowPythonExe -m ia_carmine build_agent_transient_request_context `
                 --repo-root . `
                 --objective $Objective `
                 --memory-note $Objective `
@@ -211,7 +211,7 @@ if (-not $DryRun) {
         }
 
         $MegalithicArgs = @(
-            "-m", "Tools.ai", "run_megalithic_repo_review",
+            "-m", "ia_carmine.cli", "run_megalithic_repo_review",
             "--repo-root", ".",
             "--include-all-docs",
             "--include-all-code",
@@ -234,7 +234,7 @@ if (-not $DryRun) {
             & $WorkflowPythonExe @MegalithicArgs
         }
         Invoke-Checked -Label "Refine megalithic review signals" -Block {
-            & $WorkflowPythonExe -m Tools.ai refine_megalithic_review_signals `
+            & $WorkflowPythonExe -m ia_carmine refine_megalithic_review_signals `
                 --review $MegalithicReviewJson `
                 --proposals $MegalithicReviewProposals `
                 --output $MegalithicRefinedReviewJson `
@@ -242,7 +242,7 @@ if (-not $DryRun) {
                 --markdown-output $MegalithicRefinedReviewMd
         }
         Invoke-Checked -Label "Build megalithic review PR draft artifact" -Block {
-            & $WorkflowPythonExe -m Tools.ai build_megalithic_review_pr_draft `
+            & $WorkflowPythonExe -m ia_carmine build_megalithic_review_pr_draft `
                 --review $MegalithicRefinedReviewJson `
                 --proposals $MegalithicRefinedProposals `
                 --output $MegalithicReviewPrDraft `

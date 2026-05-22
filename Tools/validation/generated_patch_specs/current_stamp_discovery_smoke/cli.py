@@ -120,7 +120,7 @@ def main() -> int:
         output = f"output/validation/generated_patch_specs_review_pr_apply_{current_stamp}.json"
         command = [
             sys.executable,
-            str(source_repo / "Tools/ai/generated_patch_specs/apply_cli.py"),
+            str(source_repo / "ia_carmine/product/generated_patch_specs/apply_cli.py"),
             "--repo-root",
             str(repo),
             "--output",

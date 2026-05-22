@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from Tools.ai.schema_repair import (
+from ia_carmine.validation_contracts.schema_repair import (
     build_schema_repair_retry_prompt,
     should_attempt_schema_repair_retry,
 )

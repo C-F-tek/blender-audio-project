@@ -8,8 +8,8 @@ It validates the patch/source-write boundary described by:
 
 ```text
 docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
-Tools/ai/patch_product/TOOL_CONTEXT.md
-Tools/ai/patchkit/TOOL_CONTEXT.md
+ia_carmine/product/patch_product/TOOL_CONTEXT.md
+ia_carmine/product/patchkit/TOOL_CONTEXT.md
 docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 ```
 

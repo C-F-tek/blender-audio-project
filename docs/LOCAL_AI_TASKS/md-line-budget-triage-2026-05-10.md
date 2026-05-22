@@ -56,7 +56,7 @@ Stop condition:
 
 - non rimuovere anchor `IA-CARMINE-*` senza aggiornare gli smoke che li richiedono.
 
-### `Tools/ai/README.md`
+### `ia_carmine/README.md`
 
 Classificazione:
 
@@ -123,7 +123,7 @@ Per farlo diventare bloccante in una PR dedicata:
 | Priorità | Candidato | Motivo |
 |---|---|---|
 | P1 | `Tools/workflow/README.md` | lungo, ma con anchor validator: split controllato. |
-| P2 | `Tools/ai/README.md` | probabile runbook tecnico cresciuto troppo. |
+| P2 | `ia_carmine/README.md` | probabile runbook tecnico cresciuto troppo. |
 | P2 | `docs/AI_PIPELINE_ARCHITECTURE.md` | possibile documento storico monolitico. |
 | P2 | `docs/AI_ARTIFACT_SCHEMAS.md` | possibile schema doc da indicizzare. |
 | P3 | `docs/README.md` | solo se supera soglia o duplica altri indici. |

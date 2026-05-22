@@ -24,7 +24,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
         "Build AI peer-exchange packet",
         [
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "peer_exchange_packet",
             *common,
             *sum(
@@ -77,7 +77,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
             "GPU0 peer companion worker",
             [
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "run_gpu0_peer_companion_worker",
             "--repo-root",
             ".",
@@ -112,7 +112,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
             "GPU0 peer runtime tool broker",
             [
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "agent_runtime_tool_broker",
             "--repo-root",
             ".",
@@ -143,7 +143,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
             "NPU micro peer assistant",
             [
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "npu_gpu_deep_review_auditor",
                 "--repo-root",
                 ".",
@@ -196,7 +196,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
             "NPU micro runtime tool broker",
             [
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "agent_runtime_tool_broker",
                 "--repo-root",
                 ".",
@@ -235,7 +235,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
         "Finalize AI peer-exchange packet",
         [
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "peer_exchange_packet",
             *common,
             *sum(
@@ -300,7 +300,7 @@ def run_peer_exchange(ctx: WorkflowContext) -> None:
         "Provider runtime heap from peer reports",
         [
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "build_provider_runtime_heap_from_peer_reports",
             "--repo-root",
             ".",

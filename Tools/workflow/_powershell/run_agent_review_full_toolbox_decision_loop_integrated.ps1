@@ -146,7 +146,7 @@ Add-ExistingPath -List $ReportFiles -Path $WorkflowJson
 Add-ExistingPath -List $ReportFiles -Path $DecisionLoopJson
 
 $WarningArgs = @(
-    "-m", "Tools.ai", "agent_review_warning_policy",
+    "-m", "ia_carmine.cli", "agent_review_warning_policy",
     "--repo-root", ".",
     "--decision-report", $DecisionLoopJson,
     "--min-recommendations", "$MinRecommendations",

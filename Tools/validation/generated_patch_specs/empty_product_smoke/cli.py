@@ -70,7 +70,7 @@ def main() -> int:
         out = repo / "output/validation/apply.json"
         cmd = [
             "python",
-            str(source_repo / "Tools/ai/generated_patch_specs/apply_cli.py"),
+            str(source_repo / "ia_carmine/product/generated_patch_specs/apply_cli.py"),
             "--repo-root",
             str(repo),
             "--manifest",

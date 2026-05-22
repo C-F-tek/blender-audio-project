@@ -16,7 +16,7 @@ output/validation/ai_workload_report_quality.json
 Producer:
 Tools/validation/ai_workload/report_quality/cli.py
 Consumer:
-Tools/ai/_shared/workload_quality.py and workload-aware proposal/report builders.
+ia_carmine/_shared/workload_quality.py and workload-aware proposal/report builders.
 Required fields:
 schema_version, kind, repo_root, passed, errors, warnings, provider_execution_performed, source_writes_performed, policy, mode, usable_lanes, unusable_lanes, decision, checks
 Required kind:

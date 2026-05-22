@@ -56,13 +56,14 @@ def generate_scene_chat_reply(
         "output_path": str(output_path),
     }
     try:
-        from Tools.npu.provider_mesh._shared.ollama_runtime import OllamaSession, ollama_runtime_log_path  # type: ignore
+        from ia_carmine.providers.ollama.config import ollama_runtime_log_path
+        from ia_carmine.providers.ollama.session import OllamaSession
 
         with OllamaSession(
             model=model,
             keep_alive="2m",
             shutdown_server=False,
-            unload_model=False,
+            unload_model=True,
             startup_timeout=20.0,
         ) as session:
             reply = session.generate(prompt, max_new_tokens=900, temperature=0.22)

@@ -151,7 +151,7 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     command = [
         sys.executable,
-        "Tools/ai/agent_review/evidence_cli.py",
+        "ia_carmine/product/agent_review/evidence_cli.py",
         "--repo-root",
         ".",
         "--refined-review",

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai._shared.code_patch_plan_common import (
+    from ia_carmine._shared.code_patch_plan_common import (
         normalize_repo_path,
         now_iso,
         read_json_object,
@@ -28,7 +28,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai._shared.code_patch_plan_common import (  # type: ignore
+    from ia_carmine._shared.code_patch_plan_common import (  # type: ignore
         normalize_repo_path,
         now_iso,
         read_json_object,

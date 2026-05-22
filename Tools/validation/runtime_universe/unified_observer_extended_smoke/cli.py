@@ -85,7 +85,7 @@ def main() -> int:
     commands = [
         [
             sys.executable,
-            str(repo_root / "Tools/ai/runtime_universe/unified/ai_conversation_feed/cli.py"),
+            str(repo_root / "ia_carmine/runtime/runtime_universe/unified/ai_conversation_feed/cli.py"),
             "--repo-root",
             str(repo_root),
             "--observer-dir",
@@ -97,7 +97,7 @@ def main() -> int:
         ],
         [
             sys.executable,
-            str(repo_root / "Tools/ai/runtime_universe/unified/raw_debug_good_info_feed/cli.py"),
+            str(repo_root / "ia_carmine/runtime/runtime_universe/unified/raw_debug_good_info_feed/cli.py"),
             "--repo-root",
             str(repo_root),
             "--observer-dir",

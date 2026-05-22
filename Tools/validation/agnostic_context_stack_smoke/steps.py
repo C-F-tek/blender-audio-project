@@ -30,7 +30,7 @@ def build_step_specs(args: argparse.Namespace) -> list[tuple[str, list[str], dic
             [
                 py,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "build_agent_memory_inventory",
                 "--repo-root",
                 ".",
@@ -55,7 +55,7 @@ def build_step_specs(args: argparse.Namespace) -> list[tuple[str, list[str], dic
             "agent_agnostic_tool_inventory",
             [
                 py,
-                "Tools/ai/agent_context/agnostic_tool_inventory/cli.py",
+                "ia_carmine/context/agent_context/agnostic_tool_inventory/cli.py",
                 "--repo-root",
                 ".",
                 "--output",
@@ -75,7 +75,7 @@ def build_step_specs(args: argparse.Namespace) -> list[tuple[str, list[str], dic
             "agent_transient_request_context",
             [
                 py,
-                "Tools/ai/agent_context/transient_request_context/cli.py",
+                "ia_carmine/context/agent_context/transient_request_context/cli.py",
                 "--repo-root",
                 ".",
                 "--objective",
@@ -105,7 +105,7 @@ def build_step_specs(args: argparse.Namespace) -> list[tuple[str, list[str], dic
             [
                 py,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "megalithic_repo_review",
                 "--repo-root",
                 ".",
@@ -145,7 +145,7 @@ def build_step_specs(args: argparse.Namespace) -> list[tuple[str, list[str], dic
             [
                 py,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "megalithic_review_refinement",
                 "--review",
                 review_json,
@@ -173,7 +173,7 @@ def build_step_specs(args: argparse.Namespace) -> list[tuple[str, list[str], dic
             "megalithic_pr_draft",
             [
                 py,
-                "Tools/ai/repository_product/megalithic_review_pr_draft/cli.py",
+                "ia_carmine/product/repository_product/megalithic_review_pr_draft/cli.py",
                 "--review",
                 refined_json,
                 "--proposals",

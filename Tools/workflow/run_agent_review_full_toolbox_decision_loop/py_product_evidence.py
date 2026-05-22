@@ -29,7 +29,7 @@ def run_runtime_flow_map(ctx: WorkflowContext) -> None:
     ]
     args = [
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "runtime_flow_map",
         "--repo-root",
         ".",
@@ -86,7 +86,7 @@ def run_final_product(ctx: WorkflowContext) -> None:
     ]
     args = [
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "build_heap_runtime_product_package",
         "--repo-root",
         ".",
@@ -111,7 +111,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
             "Shared toolbox AI-to-AI bundle",
             [
                 "-m",
-                "Tools.ai.agent_context.shared_toolbox_bundle",
+                "ia_carmine.context.agent_context.shared_toolbox_bundle",
                 "--repo-root",
                 ".",
                 "--stamp",
@@ -181,7 +181,7 @@ def build_evidence_bundle(ctx: WorkflowContext) -> None:
         artifact_paths.append(line_csv)
     args = [
         "-m",
-        "Tools.ai.repository_product.github_evidence_bundle",
+        "ia_carmine.product.repository_product.github_evidence_bundle",
         "--repo-root",
         ".",
         "--basename",

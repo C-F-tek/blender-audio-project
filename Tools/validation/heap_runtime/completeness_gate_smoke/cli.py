@@ -64,7 +64,7 @@ def provider_child_python_and_env(repo_root: Path) -> tuple[str, dict[str, str]]
     repo_path = str(repo_root)
     if repo_path not in sys.path:
         sys.path.insert(0, repo_path)
-    from Tools.ai.provider_mesh.runtime.python_runtime import command_env, resolve_child_python
+    from ia_carmine.providers.provider_mesh.runtime.python_runtime import command_env, resolve_child_python
 
     return resolve_child_python(repo_root), command_env(repo_root)
 
@@ -89,7 +89,7 @@ def run_gate(
     child_python, env = provider_child_python_and_env(repo_root)
     command = [
         child_python,
-        "Tools/ai/heap_runtime/completeness_gate/cli.py",
+        "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py",
         "--repo-root",
         ".",
         "--stamp",

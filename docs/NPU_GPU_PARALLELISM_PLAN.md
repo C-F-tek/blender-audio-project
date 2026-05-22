@@ -7,7 +7,7 @@ The project uses task-level parallelism, not one model split across devices.
 The AI artifact pipeline has a modular schedule layer:
 
 ```text
-Tools/ai/pipeline/scheduler.py
+ia_carmine/product/pipeline/scheduler.py
 ```
 
 Current status marker:
@@ -21,7 +21,7 @@ Read:
 ```text
 docs/AI_PIPELINE_REFACTOR_STATUS.md
 docs/AI_PIPELINE_ARCHITECTURE.md
-Tools/ai/pipeline/refactor_status.py
+ia_carmine/product/pipeline/refactor_status.py
 ```
 
 ## Lanes
@@ -37,7 +37,7 @@ The current scheduler separates ordered serial steps from independent parallel s
 Module:
 
 ```text
-Tools/ai/pipeline/scheduler.py
+ia_carmine/product/pipeline/scheduler.py
 ```
 
 Key objects/functions:
@@ -65,19 +65,19 @@ parallel_lanes
 Single dry run:
 
 ```powershell
-python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --dry-run --write-dry-run-report
+python -m ia_carmine.cli run_parallel_artifact_pipeline --repo-root . --dry-run --write-dry-run-report
 ```
 
 Full dry run with common stages:
 
 ```powershell
-python -m Tools.ai run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
+python -m ia_carmine.cli run_parallel_artifact_pipeline --repo-root . --analysis-json .\output\track_analysis.json --build-chunks --build-music-summary --use-npu --validate --dry-run --write-dry-run-report
 ```
 
 Dry-run matrix:
 
 ```powershell
-python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m ia_carmine.cli pipeline_dry_run_matrix --repo-root . --continue-on-error
 ```
 
 ## Hardware policy

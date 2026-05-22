@@ -11,7 +11,7 @@ Mode: GitHub-only audit.
 Tools and candidate tools are not limited to canonical `Tools/**` paths. Search and placement must include:
 
     Tools/**
-    Tools/ai/**
+    ia_carmine/**
     Tools/validation/**
     Tools/workflow/**
     Tools/npu/**
@@ -29,7 +29,7 @@ Do not promote a file only because it is executable-looking. Do not exclude a fi
       Stable, documented, reusable tool with CLI contract, JSON/MD output, validation and guardrails.
 
     BROKER_TOOL
-      Safe report-only tool allowed in `Tools/ai/runtime_tool/agent_broker.py`.
+      Safe report-only tool allowed in `ia_carmine/runtime/runtime_tool/agent_broker.py`.
 
     FULL_RUN_EVIDENCE
       Tool should feed full-run evidence, production bundle or handoff artifacts.
@@ -80,7 +80,7 @@ Do not promote a file only because it is executable-looking. Do not exclude a fi
 
 ## Runtime broker allowlist — installed tools
 
-Primary source: `Tools/ai/runtime_tool/agent_broker.py`.
+Primary source: `ia_carmine/runtime/runtime_tool/agent_broker.py`.
 
 | Tool | Current level | Placement | Notes |
 |---|---:|---|---|
@@ -116,9 +116,9 @@ These are good candidates for documented project-tool status, but not necessaril
 |---|---:|---|---|
 | `python -m Tools.workflow startup_check` | 2 | CORE_BOOTSTRAP | Promote as project startup diagnostic tool. |
 | `Tools/workflow/startup_preflight.ps1` | 2 | CORE_BOOTSTRAP | Wrapper; document after `python -m Tools.workflow startup_check`. |
-| `Tools/ai/provider_mesh/local_provider_probe.py` | 2 | PROVIDER_DIAGNOSTIC | Canonical provider probe. |
-| `Tools/ai/check_local_resource_lanes.py` | 2 | PROVIDER_DIAGNOSTIC | Local resource-lane checker. |
-| `Tools/ai/build_workload_quality_lane_routing.py` | 2 | PROVIDER_DIAGNOSTIC | Workload quality routing report. |
+| `ia_carmine/providers/provider_mesh/local_provider_probe.py` | 2 | PROVIDER_DIAGNOSTIC | Canonical provider probe. |
+| `ia_carmine/check_local_resource_lanes.py` | 2 | PROVIDER_DIAGNOSTIC | Local resource-lane checker. |
+| `ia_carmine/build_workload_quality_lane_routing.py` | 2 | PROVIDER_DIAGNOSTIC | Workload quality routing report. |
 | `Tools/validation/ai_workload/report_quality/cli.py` | 2 | PROVIDER_DIAGNOSTIC / VALIDATION | Already important; document as quality gate. |
 | `Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Important for broker evidence follow-up. |
 | `Tools/validation/runtime_tool/npu_runtime_tool_execution_smoke/cli.py` | 2 | PROVIDER_DIAGNOSTIC / RUNTIME_BROKER | Runtime execution smoke. |
@@ -130,12 +130,12 @@ These are good candidates for documented project-tool status, but not necessaril
 
 | Path | Proposed level | Placement | Action |
 |---|---:|---|---|
-| `Tools/ai/agent_review/patch_plan/cli.py` | 2 | PATCH_PLAN_SUPPORT | Canonical patch-plan builder. |
-| `Tools/ai/agent_review/code_patch_plan_cli.py` | 2 | PATCH_PLAN_SUPPORT | Code patch-plan lane. |
-| `Tools/ai/code_product/edit_proposal_from_plan/cli.py` | 2 | PATCH_PLAN_SUPPORT | Converts plan to code edit proposal. |
-| `Tools/ai/code_product/patch_artifact_pack/cli.py` | 2 | PATCH_PLAN_SUPPORT / FULL_RUN_EVIDENCE | Artifact pack builder. |
-| `Tools/ai/code_product/patch_docs_followup/cli.py` | 2 | PATCH_PLAN_SUPPORT / DOCS_MAINTENANCE | Docs follow-up builder. |
-| `Tools/ai/merge_ai_candidates.py` | 2 | PATCH_PLAN_SUPPORT | Candidate merge helper; review safety before broker. |
+| `ia_carmine/product/agent_review/patch_plan/cli.py` | 2 | PATCH_PLAN_SUPPORT | Canonical patch-plan builder. |
+| `ia_carmine/product/agent_review/code_patch_plan_cli.py` | 2 | PATCH_PLAN_SUPPORT | Code patch-plan lane. |
+| `ia_carmine/product/code_product/edit_proposal_from_plan/cli.py` | 2 | PATCH_PLAN_SUPPORT | Converts plan to code edit proposal. |
+| `ia_carmine/product/code_product/patch_artifact_pack/cli.py` | 2 | PATCH_PLAN_SUPPORT / FULL_RUN_EVIDENCE | Artifact pack builder. |
+| `ia_carmine/product/code_product/patch_docs_followup/cli.py` | 2 | PATCH_PLAN_SUPPORT / DOCS_MAINTENANCE | Docs follow-up builder. |
+| `ia_carmine/merge_ai_candidates.py` | 2 | PATCH_PLAN_SUPPORT | Candidate merge helper; review safety before broker. |
 | `Tools/validation/run_code_edit_proposal_smoke.py` | 2 | VALIDATION | Smoke for code-edit proposal. |
 | `Tools/validation/agent_review/code_patch_plan_smoke/cli.py` | 2 | VALIDATION | Smoke for code patch plan. |
 | `Tools/validation/agent_review/patch_plan_smoke/cli.py` | 2 | VALIDATION | Smoke for patch-plan builder. |
@@ -172,12 +172,12 @@ These may be useful, but must not be auto-brokered or included in unattended ful
 
 These should be documented as internal components, not promoted directly unless they receive a stable CLI contract.
 
-    Tools/ai/pipeline/*.py
+    ia_carmine/product/pipeline/*.py
     Tools/npu/pipeline/*.py
-    Tools/ai/_shared/workload_quality.py
-    Tools/ai/schema_repair/
-    Tools/ai/agent_memory/policy.py
-    python -m Tools.ai agent_memory_routing_policy
+    ia_carmine/_shared/workload_quality.py
+    ia_carmine/validation_contracts/schema_repair/
+    ia_carmine/memory/agent_memory/policy.py
+    python -m ia_carmine.cli agent_memory_routing_policy
     Tools/validation/_shared/report_utils.py
 
 ## Immediate recommendations
@@ -217,7 +217,7 @@ The registry should include:
 Prioritize:
 
     python -m Tools.workflow startup_check
-    Tools/ai/provider_mesh/local_provider_probe.py
+    ia_carmine/providers/provider_mesh/local_provider_probe.py
     Tools/validation/ai_workload/report_quality/cli.py
     Tools/validation/runtime_tool/orchestrator_gpu_runtime_tool_routing_smoke/cli.py
 

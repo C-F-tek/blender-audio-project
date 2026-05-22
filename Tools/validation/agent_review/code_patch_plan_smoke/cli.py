@@ -17,7 +17,7 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.ai._shared.code_patch_plan_common import (  # noqa: E402
+from ia_carmine._shared.code_patch_plan_common import (  # noqa: E402
     normalize_repo_path,
     read_json_object,
     report_guardrail_errors,
@@ -201,7 +201,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument(
-        "--report", default="Tools/ai/_shared/fixtures/agent_review_code_patch_plan_fixture.json"
+        "--report", default="ia_carmine/_shared/fixtures/agent_review_code_patch_plan_fixture.json"
     )
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()

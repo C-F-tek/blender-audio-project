@@ -12,10 +12,10 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai._shared.process_tree import terminate_process_tree
+    from ia_carmine._shared.process_tree import terminate_process_tree
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
 except ImportError:
-    from Tools.ai._shared.process_tree import terminate_process_tree  # type: ignore
+    from ia_carmine._shared.process_tree import terminate_process_tree  # type: ignore
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
@@ -268,7 +268,7 @@ def main() -> int:
         ),
         (
             "provider_lane_activation",
-            "Tools/ai/provider_mesh/local_resource_lanes_check/cli.py",
+            "ia_carmine/providers/provider_mesh/local_resource_lanes_check/cli.py",
         ),
         ("openvino_peer_topology", "Tools/validation/provider_mesh/openvino_peer_topology_contract_smoke/cli.py"),
         ("review_pr_prepare_args", "Tools/validation/repository_product/review_pr_prepare_args_smoke/cli.py"),

@@ -78,7 +78,7 @@ def build_commands(
             "build_github_evidence_bundle",
             [
                 sys.executable,
-                "Tools/ai/repository_product/github_evidence_bundle/cli.py",
+                "ia_carmine/product/repository_product/github_evidence_bundle/cli.py",
                 "--repo-root",
                 ".",
                 "--basename",

@@ -68,7 +68,7 @@ The report may contain code patch candidates, but those candidates remain manual
 ## Search commands
 
 ```powershell
-Select-String -Path .\Tools\ai\*.py, .\Tools\validation\*.py `
+Select-String -Path .\ia_carmine\*.py, .\Tools\validation\*.py `
   -Pattern "code_patch|patch_application_performed|source_writes_performed|manual_review|apply_mode|proposed_patch|unified_diff|agent_review_code_patch_plan" `
   -CaseSensitive:$false
 
@@ -102,7 +102,7 @@ No source implementation is required for this task.
 A later implementation PR may add:
 
 ```text
-Tools/ai/agent_review/code_patch_plan_cli.py
+ia_carmine/product/agent_review/code_patch_plan_cli.py
 Tools/validation/agent_review/code_patch_plan_smoke/cli.py
 docs/JSON_SCHEMAS.md update
 Tools/validation/README.md update

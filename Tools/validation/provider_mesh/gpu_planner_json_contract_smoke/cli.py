@@ -10,14 +10,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai._shared.gpu_planner_json_contract import result_to_dict, validate_model_response_contract
+    from ia_carmine._shared.gpu_planner_json_contract import result_to_dict, validate_model_response_contract
 except ImportError:  # Script-style execution from Tools/validation.
     import sys
 
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai._shared.gpu_planner_json_contract import (  # type: ignore
+    from ia_carmine._shared.gpu_planner_json_contract import (  # type: ignore
         result_to_dict,
         validate_model_response_contract,
     )
@@ -70,11 +70,11 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
           "id": "gpu_json_001",
           "area": "validation",
           "status": "ready_for_patch_plan",
-          "target_files": ["Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py"],
+          "target_files": ["ia_carmine/providers/provider_mesh/gpu_deep_planning_review/cli.py"],
           "rationale": "contract hardening is isolated",
           "proposed_strategy": "reuse shared parser and validate recommendation schema",
           "risk": "low",
-          "validation_commands": ["python -m py_compile ./Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py"],
+          "validation_commands": ["python -m py_compile ./ia_carmine/providers/provider_mesh/gpu_deep_planning_review/cli.py"],
           "stop_conditions": ["stop if parser invents recommendations"]
         }
       ],

@@ -118,7 +118,7 @@ External vector databases or embedding stores should remain optional providers u
 Review memory regularly with:
 
 ```powershell
-python -m Tools.ai review_agent_memory --repo-root .
+python -m ia_carmine.cli review_agent_memory --repo-root .
 python -m Tools.validation policy --repo-root . --output .\output\validation\agent_memory_policy.json
 ```
 

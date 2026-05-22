@@ -15,7 +15,7 @@ Sorgente indice: [`README.md`](README.md)
 This directory currently has two canonical entrypoints with different ownership:
 
 ```text
-python -m Tools.ai run
+python -m ia_carmine.cli run
 python -m Tools.workflow run_unified_local_ai_refactor
 ```
 
@@ -80,7 +80,7 @@ limitations are backlog to overcome, not reasons to skip available tools
 | Real full product run | `run_unified_real_product_pr.ps1 -ProcessGateTask` or `-TaskFile <md>`; it performs mandatory preflight and delegates to `run_unified_local_ai_refactor.ps1` with the complete heap/exchange product lane. |
 | Single-phase diagnostic | `run_unified_local_ai_refactor.ps1` with `-NoStrictRealRunActivation`. |
 | Heap/exchange lifecycle product path | Real product wrapper or unified launcher with provider/evidence/patch/review lanes selected. |
-| Patchkit source-write boundary | `Tools/ai/patchkit/apply_patch_bundle.py` after a reviewed `patch_specs/<bundle>/bundle.json`. |
+| Patchkit source-write boundary | `ia_carmine/product/patchkit/apply_patch_bundle.py` after a reviewed `patch_specs/<bundle>/bundle.json`. |
 | Markdown-to-review-PR product path | Real product wrapper plus generated patch specs/review PR flags; current owner chain below. |
 | Full-toolbox internals | `python -m Tools.workflow run_agent_review_full_toolbox_decision_loop` and packaged engine. |
 | Script family census | `docs/LOCAL_AI_TASKS/script-census-and-validation-flow-2026-05-07.md`. |
@@ -91,7 +91,7 @@ Do not start a normal workflow from an internal helper unless the launcher/runbo
 ## Real product PR profile
 
 ~~~powershell
-python -m Tools.ai run `
+python -m ia_carmine.cli run `
   -RepoRoot . `
   -ProcessGateTask `
   -RunIntensity custom `
@@ -167,22 +167,22 @@ run_unified_real_product_pr.ps1
   -> mandatory preflight
   -> run_unified_local_ai_refactor.ps1
   -> inventories/context/agent-state/workload-quality
-  -> python -m Tools.ai heap_exchange_runtime_entry
+  -> python -m ia_carmine.cli heap_exchange_runtime_entry
   -> official adapter/provider/patch-spec lanes
-  -> python -m Tools.ai heap_exchange_runtime_exit
+  -> python -m ia_carmine.cli heap_exchange_runtime_exit
   -> Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
-  -> Tools/ai/repository_product/repository_change_proposals/cli.py
-  -> Tools/ai/generated_patch_specs/proposal_cli.py
-  -> Tools/ai/generated_patch_specs/apply_cli.py
-  -> Tools/ai/agent_review/review_pr_cli.py
+  -> ia_carmine/product/repository_product/repository_change_proposals/cli.py
+  -> ia_carmine/product/generated_patch_specs/proposal_cli.py
+  -> ia_carmine/product/generated_patch_specs/apply_cli.py
+  -> ia_carmine/product/agent_review/review_pr_cli.py
   -> Tools/validation/repository_product/review_pr_final_product_contract/cli.py
 ```
 
 Legacy deterministic suggestion bridge remains available:
 
 ```text
-Tools/ai/patch_product/task_patch_suggestion_report.py
-Tools/ai/patch_product/patch_suggestion_bundle/cli.py
+ia_carmine/product/patch_product/task_patch_suggestion_report.py
+ia_carmine/product/patch_product/patch_suggestion_bundle/cli.py
 Tools/validation/patch_product/product_separation/cli.py
 ```
 

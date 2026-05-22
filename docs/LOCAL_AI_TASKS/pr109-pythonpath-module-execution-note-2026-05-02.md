@@ -7,7 +7,7 @@ Document the required Python import context for the modularized PR #109 tools.
 After the GitHub evidence bundle split, some entry points import repository modules with package-style imports such as:
 
 ```python
-from Tools.ai._shared.github_evidence_bundle_artifacts import build_included_artifacts
+from ia_carmine._shared.github_evidence_bundle_artifacts import build_included_artifacts
 ```
 
 When those tools are executed as direct script paths, Python may not include the repository root in `sys.path` and can fail with:
@@ -37,7 +37,7 @@ C:\Users\carmi\blender\blender-audio-project
 Prefer module execution for package-style tools:
 
 ```powershell
-python -m Tools.ai.repository_product.github_evidence_bundle --help
+python -m ia_carmine.product.repository_product.github_evidence_bundle --help
 python -m Tools.validation check_github_evidence_bundle --help
 ```
 
@@ -45,10 +45,10 @@ Use this instead of direct script execution when a tool imports `Tools.*` module
 
 ```powershell
 # Preferred
-python -m Tools.ai.repository_product.github_evidence_bundle ...
+python -m ia_carmine.product.repository_product.github_evidence_bundle ...
 
 # Avoid for modularized Tools.* imports unless PYTHONPATH/import fallback is known good
-python -m Tools.ai build_github_evidence_bundle ...
+python -m ia_carmine.cli build_github_evidence_bundle ...
 ```
 
 ## PR109 bundle rebuild example
@@ -62,7 +62,7 @@ $Reports = @(
   ".\output\analysis\code_interpreter_report_pr109_after_wiring.json"
 ) | Where-Object { Test-Path $_ }
 
-python -m Tools.ai.repository_product.github_evidence_bundle `
+python -m ia_carmine.product.repository_product.github_evidence_bundle `
   --repo-root . `
   --basename pr109_after_wiring_bundle_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `

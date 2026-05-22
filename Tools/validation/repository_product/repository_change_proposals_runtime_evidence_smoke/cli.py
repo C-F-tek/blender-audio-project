@@ -34,12 +34,12 @@ def run(cmd: list[str], cwd: Path) -> dict[str, Any]:
 
 def seed_repo(repo: Path) -> None:
     (repo / "Tools/validation").mkdir(parents=True)
-    (repo / "Tools/ai").mkdir(parents=True)
+    (repo / "ia_carmine").mkdir(parents=True)
     (repo / "Tools/validation/README.md").write_text("# Validation\n", encoding="utf-8")
-    (repo / "Tools/ai/repository_product/repository_change_proposals/cli.py").write_text(
+    (repo / "ia_carmine/product/repository_product/repository_change_proposals/cli.py").write_text(
         "# placeholder\n", encoding="utf-8"
     )
-    (repo / "Tools/ai/generated_patch_specs/proposal_cli.py").write_text(
+    (repo / "ia_carmine/product/generated_patch_specs/proposal_cli.py").write_text(
         "# placeholder\n", encoding="utf-8"
     )
     run(["git", "init"], repo)
@@ -170,7 +170,7 @@ def main() -> int:
         proposals = run(
             [
                 "python",
-                str(source_repo / "Tools/ai/repository_product/repository_change_proposals/cli.py"),
+                str(source_repo / "ia_carmine/product/repository_product/repository_change_proposals/cli.py"),
                 "--repo-root",
                 str(repo),
                 "--profile",
@@ -190,7 +190,7 @@ def main() -> int:
         specs = run(
             [
                 "python",
-                str(source_repo / "Tools/ai/generated_patch_specs/proposal_cli.py"),
+                str(source_repo / "ia_carmine/product/generated_patch_specs/proposal_cli.py"),
                 "--repo-root",
                 str(repo),
                 "--proposal",
@@ -209,7 +209,7 @@ def main() -> int:
         applied = run(
             [
                 "python",
-                str(source_repo / "Tools/ai/generated_patch_specs/apply_cli.py"),
+                str(source_repo / "ia_carmine/product/generated_patch_specs/apply_cli.py"),
                 "--repo-root",
                 str(repo),
                 "--manifest",

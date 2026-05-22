@@ -33,7 +33,7 @@ class MusicContextBridge:
         if not self._ensure_tools_path():
             return {}
         try:
-            from Tools.npu.provider_mesh._shared.ai_memory_context import build_ai_memory_context
+            from ia_carmine.providers.npu.provider_mesh._shared.ai_memory_context import build_ai_memory_context
 
             result = build_ai_memory_context(track_stem=track_stem, output_dir=output_dir)
         except Exception:

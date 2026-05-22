@@ -83,7 +83,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Restore explicit decision metadata and lane role mapping before this validator is used by packet/proposal builders.",
     ),
     CodeContractSpec(
-        path="Tools/ai/_shared/workload_quality.py",
+        path="ia_carmine/_shared/workload_quality.py",
         contract="workload_quality_fail_closed_routing",
         owner_lane="cpu_validation",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),
@@ -100,7 +100,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Ensure known workload reports fail closed when the quality report is missing or unreadable.",
     ),
     CodeContractSpec(
-        path="Tools/ai/repository_product/repository_update_suggestions/cli.py",
+        path="ia_carmine/product/repository_product/repository_update_suggestions/cli.py",
         contract="packet_builder_quality_approved_context_only",
         owner_lane="cpu_packet_builder",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),
@@ -119,7 +119,7 @@ CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
         safe_patch_hint="Keep workload report content filtered by quality routing before it is read into packets.",
     ),
     CodeContractSpec(
-        path="Tools/ai/repository_product/repository_change_proposals/cli.py",
+        path="ia_carmine/product/repository_product/repository_change_proposals/cli.py",
         contract="repository_proposals_quality_gate_evidence",
         owner_lane="cpu_proposal_builder",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),

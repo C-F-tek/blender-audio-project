@@ -86,7 +86,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "heap_exchange_closure_audit",
                 "--repo-root",
                 str(repo),

@@ -75,11 +75,11 @@ output/validation/ai_workload_report_quality.json
 Producer:
 Tools/validation/ai_workload/report_quality/cli.py
 Consumer:
-Tools/ai/_shared/workload_quality.py
-Tools/ai/ai_workload/quality_lane_routing/cli.py
-Tools/ai/repository_product/repository_update_suggestions/cli.py
-Tools/ai/repository_product/repository_change_proposals/cli.py
-Tools/ai/repository_product/github_evidence_bundle/cli.py
+ia_carmine/_shared/workload_quality.py
+ia_carmine/product/ai_workload/quality_lane_routing/cli.py
+ia_carmine/product/repository_product/repository_update_suggestions/cli.py
+ia_carmine/product/repository_product/repository_change_proposals/cli.py
+ia_carmine/product/repository_product/github_evidence_bundle/cli.py
 Required fields:
 schema_version, kind, repo_root, passed, errors, warnings, provider_execution_performed, source_writes_performed, policy, mode, usable_lanes, unusable_lanes, decision, checks
 Required kind:

@@ -91,11 +91,11 @@ def build_report(repo_root: Path, args_report_path: Path) -> dict[str, Any]:
     prepare_reference_count = sum(
         1
         for index, item in enumerate(normalized_argv)
-        if item.endswith("Tools/ai/agent_review/review_pr_cli.py")
+        if item.endswith("ia_carmine/product/agent_review/review_pr_cli.py")
         or (
             item == "agent_review_prepare_pr"
             and index >= 2
-            and normalized_argv[index - 2 : index] == ["-m", "Tools.ai"]
+            and normalized_argv[index - 2 : index] == ["-m", "ia_carmine.cli"]
         )
     )
     prepare_referenced = prepare_reference_count == 1

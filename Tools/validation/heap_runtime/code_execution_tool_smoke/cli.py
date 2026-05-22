@@ -15,15 +15,15 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
-    from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
+    from ia_carmine.runtime.runtime_tool.broker.executor import build_report as build_broker_report
+    from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
     from Tools.validation._shared.report_utils import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report  # type: ignore
-    from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown  # type: ignore
+    from ia_carmine.runtime.runtime_tool.broker.executor import build_report as build_broker_report  # type: ignore
+    from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown as render_broker_markdown  # type: ignore
     from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
 
 
@@ -83,7 +83,7 @@ def run_broker_in_process(
         write_json_report(report, output)
         write_text_report(render_broker_markdown(report), markdown)
         return {
-            "command": ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"],
+            "command": ["in_process", "ia_carmine.runtime.runtime_tool.broker.executor.build_report"],
             "returncode": 0 if report.get("passed") else 2,
             "stdout_tail": json.dumps(
                 {
@@ -98,7 +98,7 @@ def run_broker_in_process(
         }
     except Exception as exc:  # noqa: BLE001
         return {
-            "command": ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"],
+            "command": ["in_process", "ia_carmine.runtime.runtime_tool.broker.executor.build_report"],
             "returncode": 1,
             "stdout_tail": "",
             "stderr_tail": f"{type(exc).__name__}: {exc}",
@@ -152,8 +152,8 @@ def build_broker_request(evidence_report: Path) -> dict[str, Any]:
                 "requirement": "code_execution_matrix",
                 "args": {
                     "target_file": [
-                        "Tools/ai/heap_runtime/code_execution_tool/cli.py",
-                        "Tools/ai/runtime_tool/agent_runtime_debug_lab/policy.py",
+                        "ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py",
+                        "ia_carmine/runtime/runtime_tool/agent_runtime_debug_lab/policy.py",
                         "Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py",
                     ],
                     "validation_script": ["Tools/validation/heap_final_proposals/test_proposal_gate/cli.py"],
@@ -210,13 +210,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     direct = run(
         [
             sys.executable,
-            "Tools/ai/heap_runtime/code_execution_tool/cli.py",
+            "ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py",
             "--repo-root",
             ".",
             "--target-file",
-            "Tools/ai/heap_runtime/code_execution_tool/cli.py",
+            "ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py",
             "--target-file",
-            "Tools/ai/runtime_tool/agent_runtime_debug_lab/policy.py",
+            "ia_carmine/runtime/runtime_tool/agent_runtime_debug_lab/policy.py",
             "--target-file",
             "Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py",
             "--validation-script",

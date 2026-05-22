@@ -137,7 +137,7 @@ def run_smoke(
         command = [
             sys.executable,
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "build_repository_consistency_map",
             "--repo-root",
             ".",
@@ -211,7 +211,7 @@ def main() -> int:
         "--workers",
         type=int,
         default=8,
-        help="Worker count passed to python -m Tools.ai build_repository_consistency_map when not reusing --map-report.",
+        help="Worker count passed to python -m ia_carmine.cli build_repository_consistency_map when not reusing --map-report.",
     )
     parser.add_argument(
         "--map-report",

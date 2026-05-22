@@ -31,7 +31,7 @@ Questa e' ancora una modifica document-only. Nessun provider, nessun Blender/FFm
 Esiste:
 
 ```text
-Tools/ai/reconcile_heap_report_with_startup_reload.py
+ia_carmine/reconcile_heap_report_with_startup_reload.py
 ```
 
 Il tool legge:
@@ -165,7 +165,7 @@ execution.artifact_summaries[].path
 
 ### Evidenza code-driven
 
-`python -m Tools.ai run_heap_runtime_completeness_gate` include tra i requirement base:
+`python -m ia_carmine.cli run_heap_runtime_completeness_gate` include tra i requirement base:
 
 ```text
 operational_memory_write
@@ -175,13 +175,13 @@ operational_memory_search
 `prepare_heap_context_memory_reload.py` esegue in startup:
 
 ```text
-python -m Tools.ai agent_runtime_sqlite_memory --action status --scope operational
-python -m Tools.ai agent_runtime_sqlite_memory --action search --scope operational
+python -m ia_carmine.cli agent_runtime_sqlite_memory --action status --scope operational
+python -m ia_carmine.cli agent_runtime_sqlite_memory --action search --scope operational
 ```
 
 ma non risulta una `remember` operational durante il preload.
 
-`python -m Tools.ai agent_runtime_sqlite_memory` supporta `remember` operational e garantisce che il DB operativo stia sotto `output/**`.
+`python -m ia_carmine.cli agent_runtime_sqlite_memory` supporta `remember` operational e garantisce che il DB operativo stia sotto `output/**`.
 
 ### Problema
 
@@ -212,7 +212,7 @@ Guardrail: DB sotto `output/**`, mai persistent memory salvo conferma esplicita.
 
 ### Evidenza code-driven
 
-`Tools/ai/heap_final_proposals/cli.py` raccoglie:
+`ia_carmine/product/heap_final_proposals/cli.py` raccoglie:
 
 ```text
 startup manifest
@@ -281,7 +281,7 @@ product_signal
 provider_evidence
 ```
 
-La funzione `append_reload_lifecycle_event()` in `python -m Tools.ai run_heap_runtime_completeness_gate` incapsula il reload come payload `kind=memory_context_reload`, ma deve per forza usare uno degli event type generici tramite `append_heap_exchange_event()`.
+La funzione `append_reload_lifecycle_event()` in `python -m ia_carmine.cli run_heap_runtime_completeness_gate` incapsula il reload come payload `kind=memory_context_reload`, ma deve per forza usare uno degli event type generici tramite `append_heap_exchange_event()`.
 
 ### Problema
 

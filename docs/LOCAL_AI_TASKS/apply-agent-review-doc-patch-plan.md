@@ -17,7 +17,7 @@ output/patch_specs/agent_review_patch_plan.md
 If `output/patch_specs/agent_review_patch_plan.*` is missing, regenerate it with:
 
 ```powershell
-python -m Tools.ai agent_review_patch_plan `
+python -m ia_carmine.cli agent_review_patch_plan `
   --repo-root . `
   --orchestrator .\output\ai_pipeline\agent_gpu_npu_parallel_orchestrator_live.json `
   --evidence .\output\ai_pipeline\agent_review_evidence_sufficiency.json `

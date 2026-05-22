@@ -37,8 +37,8 @@ Commit locali gia' pushati dall'utente durante la sessione:
 
 File modificati in queste patch:
 
-- `Tools/ai/heap_runtime/completeness_gate/cli.py`
-- `Tools/ai/provider_mesh/npu_micro_task_companion_report.py`
+- `ia_carmine/runtime/heap_runtime/completeness_gate/cli.py`
+- `ia_carmine/providers/provider_mesh/npu_micro_task_companion_report.py`
 - `Tools/npu/provider_mesh/_shared/npu_runtime.py`
 
 ## Evidenze runtime importanti
@@ -66,7 +66,7 @@ Nota tecnica: `openvino.runtime` non e' disponibile nell'ambiente corrente; il p
 Comando di prova riuscito:
 
 ```powershell
-& $ProjectPython -m Tools.ai build_npu_micro_task_companion_report `
+& $ProjectPython -m ia_carmine build_npu_micro_task_companion_report `
   --repo-root . `
   --request "test npu project env con workload reale su dispositivo NPU" `
   --python-exe $ProjectPython `
@@ -307,16 +307,16 @@ Devono essere usati i tool gia' responsabili della run unica e i loro artifact d
 
 Tool da usare/integrare come fase iniziale:
 
-- `Tools/ai/agent_context/agnostic_tool_inventory/cli.py`
-- `Tools/ai/agent_context/memory_inventory/cli.py`
-- `python -m Tools.ai agent_runtime_sqlite_memory` / runtime sqlite memory wrapper effettivo
-- `Tools/ai/agent_context/transient_request_context/cli.py`
-- `Tools/ai/select_semantic_code_chunks.py`
-- `Tools/ai/agent_context/ai_context_pack/cli.py`
-- `Tools/ai/agent_context/semantic_evidence_chunks/cli.py`
+- `ia_carmine/context/agent_context/agnostic_tool_inventory/cli.py`
+- `ia_carmine/context/agent_context/memory_inventory/cli.py`
+- `python -m ia_carmine.cli agent_runtime_sqlite_memory` / runtime sqlite memory wrapper effettivo
+- `ia_carmine/context/agent_context/transient_request_context/cli.py`
+- `ia_carmine/select_semantic_code_chunks.py`
+- `ia_carmine/context/agent_context/ai_context_pack/cli.py`
+- `ia_carmine/context/agent_context/semantic_evidence_chunks/cli.py`
 - eventuali tool storici della run unica per context pack/evidence bundle/chunk manifest/composer
 
-Il launcher `Tools/ai/heap_context_closure/cli.py` ha iniziato a fare startup reload, ma una run ha fallito cosi':
+Il launcher `ia_carmine/runtime/heap_context_closure/cli.py` ha iniziato a fare startup reload, ma una run ha fallito cosi':
 
 ```text
 startup_reload_performed : true
@@ -398,7 +398,7 @@ Obiettivi patch:
 2. Separare heartbeat da provider revisions.
 3. Rendere GPU0 e NPU lane indipendenti/event-driven, non subordinate alla risposta GPU1.
 4. Pubblicare startup reload come eventi/facts nello heap prima dei provider.
-5. Rendere `python -m Tools.ai heap_context_closure` tollerante a context pack degradato se gli artifact minimi esistono.
+5. Rendere `python -m ia_carmine.cli heap_context_closure` tollerante a context pack degradato se gli artifact minimi esistono.
 6. Fare in modo che NPU workload facts entrino nello heap/shared memory.
 7. Fare in modo che GPU0 produca review strutturata su chunks/source anchors/stub/progress.
 8. Fare in modo che il quality gate, quando trova stub, generi recovery tasks invece di ripetere la stessa pipeline.
@@ -411,9 +411,9 @@ Obiettivi patch:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\heap_runtime\completeness_gate\cli.py `
-  .\Tools\ai\heap_context_closure\cli.py `
-  .\Tools\ai\provider_mesh\npu_micro_task_companion_report.py `
+  .\ia_carmine\runtime\heap_runtime\completeness_gate\cli.py `
+  .\ia_carmine\runtime\heap_context_closure\cli.py `
+  .\ia_carmine\providers\provider_mesh\npu_micro_task_companion_report.py `
   .\Tools\npu\provider_mesh\_shared\npu_runtime.py
 ```
 
@@ -421,7 +421,7 @@ python -m py_compile `
 
 ```powershell
 $ProjectPython = (Resolve-Path .\.venv\Scripts\python.exe).Path
-& $ProjectPython -m Tools.ai build_npu_micro_task_companion_report `
+& $ProjectPython -m ia_carmine build_npu_micro_task_companion_report `
   --repo-root . `
   --request "test npu project env con workload reale su dispositivo NPU" `
   --python-exe $ProjectPython `
@@ -446,7 +446,7 @@ mode                             : npu_openvino_micro_workload
 
 ```powershell
 $ProjectPython = (Resolve-Path .\.venv\Scripts\python.exe).Path
-& $ProjectPython -m Tools.ai heap_context_closure `
+& $ProjectPython -m ia_carmine heap_context_closure `
   --repo-root . `
   --python-exe $ProjectPython `
   --budget-minutes 10 `
@@ -490,7 +490,7 @@ Project: IA-Carmine.
 
 Riprendi esattamente da questo handoff. Non reinventare architettura o stato.
 
-Obiettivo: trasformare `python -m Tools.ai run_heap_runtime_completeness_gate` / `python -m Tools.ai heap_context_closure` da pipeline provider sequenziale a heap blackboard event-driven con heartbeat scheduler.
+Obiettivo: trasformare `python -m ia_carmine.cli run_heap_runtime_completeness_gate` / `python -m ia_carmine.cli heap_context_closure` da pipeline provider sequenziale a heap blackboard event-driven con heartbeat scheduler.
 
 Punti obbligatori:
 - max-iterations = heartbeat heap, non numero di risposte GPU1.

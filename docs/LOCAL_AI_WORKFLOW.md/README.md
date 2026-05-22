@@ -16,7 +16,7 @@ Current sources:
 ../LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ../UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md
 ../../Tools/workflow/README.md
-../../Tools/ai/README.md
+../../ia_carmine/README.md
 ```
 
 Use this split document only as legacy context and compare claims against current source, launcher manifest evidence and the current code-driven maps.

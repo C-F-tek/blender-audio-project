@@ -26,7 +26,7 @@ if (-not (Get-Variable -Name HeapExchangeRuntimeState -ErrorAction SilentlyConti
 
 if (-not (Test-Path -LiteralPath $HeapExchangeEntryJson -PathType Leaf)) {
     $HeapExchangeEntryArgs = @(
-        "-m", "Tools.ai", "heap_exchange_runtime_entry",
+        "-m", "ia_carmine.cli", "heap_exchange_runtime_entry",
         "--repo-root", ".",
         "--stamp", $DataStamp,
         "--task-file", $TaskFile,
@@ -48,7 +48,7 @@ if (-not (Test-Path -LiteralPath $HeapExchangeEntryJson -PathType Leaf)) {
 $HeapPeerRuntimeJson = Join-Path $AiPacketsDir "heap_peer_runtime_manifest.json"
 $HeapPeerRuntimeMd = Join-Path $AiPacketsDir "heap_peer_runtime_manifest.md"
 $HeapPeerRuntimeArgs = @(
-    "-m", "Tools.ai", "heap_exchange_peer_runtime_manifest",
+    "-m", "ia_carmine.cli", "heap_exchange_peer_runtime_manifest",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--runtime-entry", $HeapExchangeEntryJson,
@@ -70,7 +70,7 @@ $PhaseReports.heap_peer_runtime_manifest_markdown = $HeapPeerRuntimeMd
 $HeapExchangeClosureAuditJson = Join-Path $AiPacketsDir "heap_exchange_closure_audit.json"
 $HeapExchangeClosureAuditMd = Join-Path $AiPacketsDir "heap_exchange_closure_audit.md"
 $HeapExchangeClosureAuditArgs = @(
-    "-m", "Tools.ai", "heap_exchange_closure_audit",
+    "-m", "ia_carmine.cli", "heap_exchange_closure_audit",
     "--repo-root", ".",
     "--stamp", $DataStamp,
     "--heap-peer-runtime", $HeapPeerRuntimeJson,
@@ -124,7 +124,7 @@ if ($RunOpenVinoGpu0Workload) {
     $Gpu0ProviderSupportJson = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.json" -f $DataStamp)
     $Gpu0ProviderSupportMd = Join-Path $OutputDir ("validation/openvino_gpu0_provider_support_{0}.md" -f $DataStamp)
     $Gpu0SupportOk = Invoke-Checked "Run OpenVINO GPU.0 provider support lane" {
-        & $ResolvedPythonExe -m Tools.ai build_openvino_gpu0_workload_report `
+        & $ResolvedPythonExe -m ia_carmine build_openvino_gpu0_workload_report `
             --repo-root . `
             --output $Gpu0ProviderSupportJson `
             --markdown-output $Gpu0ProviderSupportMd `
@@ -180,7 +180,7 @@ if ($RunOpenVinoGpu0Workload) {
     $Gpu0Json = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.json" -f $Gpu0Stamp)
     $Gpu0Md = Join-Path $OutputDir ("validation/openvino_gpu0_workload_{0}.md" -f $Gpu0Stamp)
     Invoke-Python @(
-        "-m", "Tools.ai", "build_openvino_gpu0_workload_report",
+        "-m", "ia_carmine.cli", "build_openvino_gpu0_workload_report",
         "--repo-root", ".",
         "--output", $Gpu0Json,
         "--markdown-output", $Gpu0Md

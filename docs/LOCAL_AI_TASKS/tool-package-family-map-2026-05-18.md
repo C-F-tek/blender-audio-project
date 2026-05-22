@@ -4,7 +4,7 @@ This is the post-cleanup source map for `Tools/*` packages. Operators should use
 dispatcher commands, not file-path script invocations:
 
 ```powershell
-python -m Tools.ai <tool>
+python -m ia_carmine.cli <tool>
 python -m Tools.validation <tool>
 python -m Tools.workflow <tool>
 python -m Tools.npu <tool>
@@ -15,7 +15,7 @@ python -m Tools.docs <tool>
 
 | Area | Public surface | Purpose |
 |---|---|---|
-| `Tools.ai` | `python -m Tools.ai run` | Non-GUI operator product run: task Markdown in, final bundle/patch product out. |
+| `ia_carmine` | `python -m ia_carmine.cli run` | Non-GUI operator product run: task Markdown in, final bundle/patch product out. |
 | `Tools.workflow` | `python -m Tools.workflow <tool>` | Human workflow helpers, GUI-adjacent shells, PowerShell-backed operational launchers. |
 | `Tools.validation` | `python -m Tools.validation <tool>` | Validators, smokes and gates grouped by contract family. |
 | `Tools.npu` | `python -m Tools.npu <tool>` | NPU/Ollama support lanes and context builders. |
@@ -25,31 +25,31 @@ python -m Tools.docs <tool>
 
 | Area | Macro package | Owns |
 |---|---|---|
-| `Tools.ai` | `agent_context` | Context packs, semantic chunks, shared toolbox bundles, task context and candidate merge helpers. |
-| `Tools.ai` | `agent_memory` | Runtime memory policy, routing, SQLite-backed memory and memory review helpers. |
-| `Tools.ai` | `agent_review` | Agent review patch plans, evidence sufficiency, warning policy and decision-loop helpers. |
-| `Tools.ai` | `ai_workload` | AI workload quality routing helpers. |
-| `Tools.ai` | `code_product` | Code interpreter reports, artifact intake and generated code-product helpers. |
-| `Tools.ai` | `deterministic_recommendations` | Deterministic recommendation synthesis and evidence-to-recommendation mapping. |
-| `Tools.ai` | `external_heap` | External heap pointers, revision context and postrun package logic. |
-| `Tools.ai` | `heap_context_closure` | Runtime heap/context closure orchestration. |
-| `Tools.ai` | `heap_context_memory_reload` | Heap startup memory reload and reconciliation logic. |
-| `Tools.ai` | `heap_exchange` | Heap exchange entry/exit, closure audit and peer runtime manifests. |
-| `Tools.ai` | `heap_final_proposals` | Final heap proposal composition, causality normalization and operator decision artifacts. |
-| `Tools.ai` | `heap_gate` | Heap gate prompt/runtime contract support. |
-| `Tools.ai` | `heap_provider` | Provider budget and invocation contract helpers. |
-| `Tools.ai` | `heap_runtime` | Heap runtime launcher command, code execution, completeness and virtual environment helpers. |
-| `Tools.ai` | `operator_product_core` | Shared model/controller/profile core for CLI run and GUI view. |
-| `Tools.ai` | `patch_product` | Patch notes, patch plans, task patch suggestions and patch-suggestion bundles. |
-| `Tools.ai` | `patchkit` | Deterministic PatchKit bundle application boundary. |
-| `Tools.ai` | `pipeline` | Pipeline dry-run matrix, artifact runner, validation step and artifact validation helpers. |
-| `Tools.ai` | `provider_mesh` | GPU1/GPU0/NPU provider probes, peers, auditors and provider runtime mesh helpers. |
-| `Tools.ai` | `provider_runtime_blackboard` | Provider runtime blackboard, evidence, peer report and broker bridge helpers. |
-| `Tools.ai` | `repository_product` | GitHub evidence, repository consistency and review PR product builders. |
-| `Tools.ai` | `run` | Canonical non-GUI operator product command. |
-| `Tools.ai` | `runtime_tool` | Broker, allowlist execution and runtime tool evidence. |
-| `Tools.ai` | `runtime_universe` | Unified chain/launcher patches and universe/observer helpers. |
-| `Tools.ai` | `schema_repair` | Provider response schema repair helpers. |
+| `ia_carmine` | `agent_context` | Context packs, semantic chunks, shared toolbox bundles, task context and candidate merge helpers. |
+| `ia_carmine` | `agent_memory` | Runtime memory policy, routing, SQLite-backed memory and memory review helpers. |
+| `ia_carmine` | `agent_review` | Agent review patch plans, evidence sufficiency, warning policy and decision-loop helpers. |
+| `ia_carmine` | `ai_workload` | AI workload quality routing helpers. |
+| `ia_carmine` | `code_product` | Code interpreter reports, artifact intake and generated code-product helpers. |
+| `ia_carmine` | `deterministic_recommendations` | Deterministic recommendation synthesis and evidence-to-recommendation mapping. |
+| `ia_carmine` | `external_heap` | External heap pointers, revision context and postrun package logic. |
+| `ia_carmine` | `heap_context_closure` | Runtime heap/context closure orchestration. |
+| `ia_carmine` | `heap_context_memory_reload` | Heap startup memory reload and reconciliation logic. |
+| `ia_carmine` | `heap_exchange` | Heap exchange entry/exit, closure audit and peer runtime manifests. |
+| `ia_carmine` | `heap_final_proposals` | Final heap proposal composition, causality normalization and operator decision artifacts. |
+| `ia_carmine` | `heap_gate` | Heap gate prompt/runtime contract support. |
+| `ia_carmine` | `heap_provider` | Provider budget and invocation contract helpers. |
+| `ia_carmine` | `heap_runtime` | Heap runtime launcher command, code execution, completeness and virtual environment helpers. |
+| `ia_carmine` | `operator_product_core` | Shared model/controller/profile core for CLI run and GUI view. |
+| `ia_carmine` | `patch_product` | Patch notes, patch plans, task patch suggestions and patch-suggestion bundles. |
+| `ia_carmine` | `patchkit` | Deterministic PatchKit bundle application boundary. |
+| `ia_carmine` | `pipeline` | Pipeline dry-run matrix, artifact runner, validation step and artifact validation helpers. |
+| `ia_carmine` | `provider_mesh` | GPU1/GPU0/NPU provider probes, peers, auditors and provider runtime mesh helpers. |
+| `ia_carmine` | `provider_runtime_blackboard` | Provider runtime blackboard, evidence, peer report and broker bridge helpers. |
+| `ia_carmine` | `repository_product` | GitHub evidence, repository consistency and review PR product builders. |
+| `ia_carmine` | `run` | Canonical non-GUI operator product command. |
+| `ia_carmine` | `runtime_tool` | Broker, allowlist execution and runtime tool evidence. |
+| `ia_carmine` | `runtime_universe` | Unified chain/launcher patches and universe/observer helpers. |
+| `ia_carmine` | `schema_repair` | Provider response schema repair helpers. |
 | `Tools.validation` | `agent_context` | Agent-context contract checks and semantic context smokes. |
 | `Tools.validation` | `agent_memory` | Agent-memory policy and SQLite/routing smokes. |
 | `Tools.validation` | `agent_review` | Agent-review decision loop, patch plan and warning-policy smokes. |
@@ -83,8 +83,8 @@ python -m Tools.docs <tool>
 
 | Path | Role |
 |---|---|
-| `Tools/ai/run/profiles/heap_runtime_launcher_profiles.json` | Runtime profile data owned by the canonical `run` surface. |
-| `Tools/ai/_shared/fixtures/` | Shared test/review fixtures; not a public command package. |
+| `ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json` | Runtime profile data owned by the canonical `run` surface. |
+| `ia_carmine/_shared/fixtures/` | Shared test/review fixtures; not a public command package. |
 | `Tools/npu/context_artifacts/` | Generated local NPU context output; ignored by Git and regenerated by `python -m Tools.npu build_npu_code_context`. |
 
 ## Cleanup Evidence
@@ -114,13 +114,13 @@ placement noise.
 
 | Shared owner | Replaces repeated logic in |
 |---|---|
-| `Tools/ai/agent_review/cli_output.py` and `report_cli_specs.py` | Agent-review evidence and patch-bundle CLI report wiring. |
-| `Tools/ai/generated_patch_specs/cli_specs.py` | Generated patch-spec proposal/review CLI boilerplate. |
-| `Tools/ai/_shared/evidence_item_planning.py` | Doc/code and doc/doc evidence item normalization used by fallback plans and deterministic recommendations. |
-| `Tools/ai/_shared/revision_context_prompt.py` | External heap revision-context prompt rendering for heap closure and launcher command code. |
-| `Tools/ai/_shared/report_markdown.py` | Reusable compact report Markdown sections. |
+| `ia_carmine/product/agent_review/cli_output.py` and `report_cli_specs.py` | Agent-review evidence and patch-bundle CLI report wiring. |
+| `ia_carmine/product/generated_patch_specs/cli_specs.py` | Generated patch-spec proposal/review CLI boilerplate. |
+| `ia_carmine/_shared/evidence_item_planning.py` | Doc/code and doc/doc evidence item normalization used by fallback plans and deterministic recommendations. |
+| `ia_carmine/_shared/revision_context_prompt.py` | External heap revision-context prompt rendering for heap closure and launcher command code. |
+| `ia_carmine/_shared/report_markdown.py` | Reusable compact report Markdown sections. |
 | `Tools/workflow/workflow_run/_shared/artifact_catalog.py` | GUI and shell artifact collection, classification, external-open and size formatting. |
-| `Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/support_lanes.py` | Common GPU0/NPU peer support launch, harvest, runtime event and diagnostic plumbing. |
+| `ia_carmine/providers/provider_mesh/gpu_npu_parallel_orchestrator/support_lanes.py` | Common GPU0/NPU peer support launch, harvest, runtime event and diagnostic plumbing. |
 
 Validation evidence for this pass:
 
@@ -132,7 +132,7 @@ tool_package_family_audit_after_module_cleanup.json: passed=true, finding_count=
 
 ## Macro-Move Evidence
 
-The third cleanup pass removed immediate micro-package strata from `Tools.ai`,
+The third cleanup pass removed immediate micro-package strata from `ia_carmine`,
 `Tools.validation` and `Tools.docs`; the public command names remain dispatcher
 aliases.
 
@@ -149,8 +149,8 @@ The fourth cleanup pass moved profile/fixture data out of top-level package
 slots and removed stale tracked NPU context artifacts.
 
 ```text
-Tools/ai/runtime_profiles/* -> Tools/ai/run/profiles/*
-Tools/ai/fixtures/* -> Tools/ai/_shared/fixtures/*
+ia_carmine/runtime/runtime_profiles/* -> ia_carmine/runtime/run/profiles/*
+ia_carmine/fixtures/* -> ia_carmine/_shared/fixtures/*
 Tools/npu/context_artifacts/* removed from Git tracking and ignored
 tool_root_inventory_final_macro_cleanup.json: package_count=70, root_script_entrypoint_count=0
 ```

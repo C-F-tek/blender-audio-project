@@ -178,7 +178,7 @@ git diff --stat
 | `context_builder.py` | Build compact project/music/context inputs | Should reuse existing context builders where possible. |
 | `prompts.py` | Prompt templates and prompt assembly helpers | Keep prompts versioned and testable as strings. |
 | `providers.py` | Ollama/NPU/provider adapters | Keep provider-specific failures isolated. |
-| `validators.py` | Validate model outputs, required JSON keys and generated artifact destinations | Reuse `Tools/ai/_shared/model_json.py` and generated artifact path policy. |
+| `validators.py` | Validate model outputs, required JSON keys and generated artifact destinations | Reuse `ia_carmine/_shared/model_json.py` and generated artifact path policy. |
 | `artifact_writer.py` | Write generated JSON/Markdown/script artifacts | Keep writes inside allowed generated destinations. |
 | `runner.py` | Orchestrate the staged flow and preserve CLI behavior | Should remain thin after split. |
 | `io_utils.py` | UTF-8 text and JSON-object read/write helpers | Pure helpers; no provider, Blender or model loading. |

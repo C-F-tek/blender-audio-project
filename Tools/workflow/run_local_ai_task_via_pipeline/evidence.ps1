@@ -1,7 +1,7 @@
 if ($BuildEvidence) {
     $ManifestRel = Get-RepoRelativePath $RepoRootPath $ManifestPath
     $EvidenceArgs = @(
-        "-m", "Tools.ai.repository_product.github_evidence_bundle",
+        "-m", "ia_carmine.product.repository_product.github_evidence_bundle",
         "--repo-root", ".",
         "--basename", $EvidenceBasename,
         "--no-auto-discover-selected-chunks-evidence"

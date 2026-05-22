@@ -50,8 +50,8 @@ For complete product-oriented runs, these lanes must be viable:
 | Startup/preload lane | context pack, memory reload, transient context or equivalent startup context evidence |
 | Heap/exchange lane | runtime entry, peer/runtime manifest, exchange/lifecycle evidence, runtime exit |
 | Ollama/main provider lane | provider execution evidence and structured provider output |
-| GPU0 coworker lane | OpenVINO/GPU0 workload evidence plus peer/reviewer evidence when selected by complete profile |
-| NPU micro-lane | NPU microtask/audit evidence when selected by complete profile |
+| GPU0 coworker lane | Ollama GPU0/Vulkan peer workload evidence plus review/refinement evidence when selected by complete profile |
+| NPU micro-lane | OpenVINO NPU microtask/audit evidence when selected by complete profile |
 | Runtime tool/broker lane | broker/tool usage evidence, capability manifest, tool loop evidence or explicit no-tool full-profile contract |
 | CPU/validator lane | validation reports for selected product/runtime contracts |
 | Product boundary lane | code/patch product, explicit no-op/non-applicable product, or blocked product reason |
@@ -101,7 +101,7 @@ missing lane can be ignored without failing completeness
 
 ```text
 Ollama unavailable -> complete run unviable
-GPU0 visible but no workload -> complete run unviable for provider-lane completeness
+GPU0 Ollama/Vulkan visible but no verified workload -> complete run unviable for provider-lane completeness
 NPU unavailable when selected by complete profile -> complete run unviable
 validator unavailable -> product cannot claim validated success
 code product empty -> no-op/non-applicable or blocked product, not apply-ready
@@ -156,14 +156,14 @@ A programming AI must not simplify one model by deleting another. The applicatio
 ## Code/tool areas affected
 
 ```text
-Tools/ai/run/
-Tools/ai/provider_mesh/
-Tools/ai/provider_runtime_blackboard/
-Tools/ai/runtime_tool/
-Tools/ai/heap_exchange/
-Tools/ai/heap_runtime/
-Tools/ai/code_product/
-Tools/ai/patch_product/
+ia_carmine/runtime/run/
+ia_carmine/providers/provider_mesh/
+ia_carmine/runtime/provider_runtime_blackboard/
+ia_carmine/runtime/runtime_tool/
+ia_carmine/runtime/heap_exchange/
+ia_carmine/runtime/heap_runtime/
+ia_carmine/product/code_product/
+ia_carmine/product/patch_product/
 Tools/validation/real_product/
 Tools/validation/provider_mesh/
 Tools/validation/runtime_tool/

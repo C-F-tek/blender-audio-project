@@ -11,14 +11,14 @@ Vincolo operativo confermato: non modificare il formato o il contenuto dell'outp
 - `external_heap_revision_context.json/md`
 - package Documents del vecchio composer
 
-Le patch non toccano `python -m Tools.ai compose_external_heap_block_response`, non cambiano il long response e non modificano il gate.
+Le patch non toccano `python -m ia_carmine.cli compose_external_heap_block_response`, non cambiano il long response e non modificano il gate.
 
 ## Bug 1 — selezione run post-run troppo permissiva
 
 File coinvolto:
 
 ```text
-Tools/ai/external_heap/postrun_package.py
+ia_carmine/runtime/external_heap/postrun_package/cli.py
 ```
 
 Il selettore automatico della run usava la directory piu' recente con nome:
@@ -41,7 +41,7 @@ Questa fixture serve solo per verificare l'injection del revision context nel co
 heap_final_proposal_composer.json
 ```
 
-Rischio: `python -m Tools.ai external_heap_postrun_package`, senza `--run-dir`, poteva selezionare la fixture smoke come latest run e fallire per composer mancante.
+Rischio: `python -m ia_carmine.cli external_heap_postrun_package`, senza `--run-dir`, poteva selezionare la fixture smoke come latest run e fallire per composer mancante.
 
 ### Fix applicato
 
@@ -77,7 +77,7 @@ Se `--run-dir` viene passato esplicitamente, il report usa:
 File coinvolti:
 
 ```text
-Tools/ai/heap_runtime/launcher_command/cli.py
+ia_carmine/runtime/heap_runtime/launcher_command/cli.py
 Tools/validation/heap_runtime/launcher_command_smoke/cli.py
 ```
 
@@ -143,15 +143,15 @@ $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:PYTHONPATH = (Resolve-Path .).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\external_heap\postrun_package.py `
-  .\Tools\ai\heap_runtime\launcher_command\cli.py `
+  .\ia_carmine\runtime\external_heap\postrun_package.py `
+  .\ia_carmine\runtime\heap_runtime\launcher_command\cli.py `
   .\Tools\validation\heap_runtime\launcher_command_smoke\cli.py
 ```
 
 Dopo una run reale heap:
 
 ```powershell
-& $RepoPy -m Tools.ai external_heap_postrun_package `
+& $RepoPy -m ia_carmine external_heap_postrun_package `
   --repo-root . `
   --include-rejected-history `
   --include-peer-blocks
@@ -188,7 +188,7 @@ run_dir_selection_policy : latest_complete_heap_context_closure_with_composer_js
 Controllo command builder:
 
 ```powershell
-& $RepoPy -m Tools.ai build_heap_runtime_launcher_command `
+& $RepoPy -m ia_carmine build_heap_runtime_launcher_command `
   --repo-root . `
   --profile balanced_external_heap `
   --include-postrun-package-command `

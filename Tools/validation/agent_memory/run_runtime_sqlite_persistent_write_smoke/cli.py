@@ -50,7 +50,7 @@ def main() -> int:
     command = [
         sys.executable,
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "agent_runtime_sqlite_memory",
         "--repo-root",
         ".",

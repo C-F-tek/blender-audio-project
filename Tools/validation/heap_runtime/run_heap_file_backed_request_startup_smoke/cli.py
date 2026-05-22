@@ -24,29 +24,29 @@ def main() -> int:
     errors: list[str] = []
     launcher = "\n".join(
         [
-            read("Tools/ai/heap_context_closure/launcher.py"),
-            read("Tools/ai/heap_context_closure/commands.py"),
+            read("ia_carmine/runtime/heap_context_closure/launcher.py"),
+            read("ia_carmine/runtime/heap_context_closure/commands.py"),
         ]
     )
     prepare = "\n".join(
         [
-            read("Tools/ai/heap_context_memory_reload/cli.py"),
-            read("Tools/ai/heap_context_memory_reload/runner.py"),
-            read("Tools/ai/heap_context_memory_reload/memory_write.py"),
+            read("ia_carmine/context/heap_context_memory_reload/cli.py"),
+            read("ia_carmine/context/heap_context_memory_reload/runner.py"),
+            read("ia_carmine/context/heap_context_memory_reload/memory_write.py"),
         ]
     )
     gate = "\n".join(
         [
-            read("Tools/ai/heap_runtime/completeness_gate/cli.py"),
-            read("Tools/ai/heap_gate/runtime_init.py"),
-            read("Tools/ai/heap_gate/runtime_common.py"),
+            read("ia_carmine/runtime/heap_runtime/completeness_gate/cli.py"),
+            read("ia_carmine/runtime/heap_gate/runtime_init.py"),
+            read("ia_carmine/runtime/heap_gate/runtime_common.py"),
         ]
     )
-    transient = read("Tools/ai/agent_context/transient_request_context/cli.py")
+    transient = read("ia_carmine/context/agent_context/transient_request_context/cli.py")
     sqlite_memory = "\n".join(
         [
-            read("Tools/ai/agent_memory/sqlite_cli.py"),
-            read("Tools/ai/agent_memory/sqlite_report.py"),
+            read("ia_carmine/memory/agent_memory/sqlite_cli.py"),
+            read("ia_carmine/memory/agent_memory/sqlite_report.py"),
         ]
     )
 

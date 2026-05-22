@@ -13,13 +13,13 @@ from typing import Any
 CORE_RUNTIME_GUARD = True
 
 try:
-    from Tools.ai._shared.heap_source_anchors import real_source_file_candidates
+    from ia_carmine._shared.heap_source_anchors import real_source_file_candidates
     from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai._shared.heap_source_anchors import real_source_file_candidates  # type: ignore
+    from ia_carmine._shared.heap_source_anchors import real_source_file_candidates  # type: ignore
     from Tools.validation._shared.report_utils import write_json_report  # type: ignore
 
 

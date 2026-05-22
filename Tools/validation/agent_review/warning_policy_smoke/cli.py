@@ -153,7 +153,7 @@ def run_smoke(repo_root: Path, timeout_seconds: int) -> dict[str, Any]:
 
     command = [
         sys.executable,
-        "Tools/ai/agent_review/warning_policy/cli.py",
+        "ia_carmine/product/agent_review/warning_policy/cli.py",
         "--repo-root",
         ".",
         "--decision-report",

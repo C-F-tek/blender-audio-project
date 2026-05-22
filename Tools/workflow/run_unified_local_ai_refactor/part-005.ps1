@@ -93,7 +93,7 @@ if ($BuildRuntimeEvidenceCorrelation -or $PrepareReviewPr) {
     )
 
     $RuntimeFlowArgs = @(
-        "Tools/ai/runtime_universe/flow_map/cli.py",
+        "ia_carmine/runtime/runtime_universe/flow_map/cli.py",
         "--repo-root", ".",
         "--stamp", $DataStamp,
         "--entrypoint", "python -m Tools.workflow run_unified_local_ai_refactor",

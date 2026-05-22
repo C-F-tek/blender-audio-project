@@ -50,7 +50,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "heap_exchange_task_ingress_contract",
                 "--repo-root",
                 str(repo),

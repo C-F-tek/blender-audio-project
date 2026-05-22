@@ -199,14 +199,14 @@ Do not let heap/exchange write source directly unless the operation passes throu
 CONTEXT_INDEX.md
 docs/CONTEXT_COVERAGE_STATUS.md
 docs/DISPATCHER_CONTEXT_COVERAGE.md
-Tools/ai/heap_exchange/TOOL_CONTEXT.md
+ia_carmine/runtime/heap_exchange/TOOL_CONTEXT.md
 Tools/validation/heap_exchange/TOOL_CONTEXT.md
-Tools/ai/heap_runtime/TOOL_CONTEXT.md
-Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md
-Tools/ai/runtime_tool/TOOL_CONTEXT.md
-Tools/ai/code_product/TOOL_CONTEXT.md
-Tools/ai/patch_product/TOOL_CONTEXT.md
-Tools/ai/patchkit/TOOL_CONTEXT.md
+ia_carmine/runtime/heap_runtime/TOOL_CONTEXT.md
+ia_carmine/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md
+ia_carmine/runtime/runtime_tool/TOOL_CONTEXT.md
+ia_carmine/product/code_product/TOOL_CONTEXT.md
+ia_carmine/product/patch_product/TOOL_CONTEXT.md
+ia_carmine/product/patchkit/TOOL_CONTEXT.md
 ```
 
 ## Historical source

@@ -15,7 +15,7 @@ This pass is Markdown/source-planning work only.
 Do not launch from this pass:
 
 ```text
-python -m Tools.ai run
+python -m ia_carmine.cli run
 python -m Tools.validation run_real_product_preflight_gate --complete-provider-smoke
 python -m Tools.validation run_heap_runtime_completeness_gate_smoke
 ```
@@ -46,7 +46,7 @@ do not create parallel run paths with parameter switches
 ```
 
 The product entry remains dispatcher-owned. It must route directly into the
-internal runtime package behind `python -m Tools.ai run`, without treating
+internal runtime package behind `python -m ia_carmine.cli run`, without treating
 smoke/full-run wrappers or parallel dispatcher commands as selectable product
 entry flows.
 
@@ -160,11 +160,11 @@ Required semantics:
 Likely source families:
 
 ```text
-Tools/ai/heap_gate/provider_block_contract.py
-Tools/ai/heap_gate/provider_report_absorption.py
-Tools/ai/heap_gate/tool_broker_native_calls.py
-Tools/ai/_shared/provider_tool_loop.py
-Tools/ai/_shared/provider_ollama_probe.py
+ia_carmine/runtime/heap_gate/provider_block_contract.py
+ia_carmine/runtime/heap_gate/provider_report_absorption.py
+ia_carmine/runtime/heap_gate/tool_broker_native_calls.py
+ia_carmine/_shared/provider_tool_loop.py
+ia_carmine/_shared/provider_ollama_probe.py
 ```
 
 ## Patch Target 2: Stop Nonproductive GPU1 Stall
@@ -194,9 +194,9 @@ publish validation_signal / decision evidence
 Likely source families:
 
 ```text
-Tools/ai/heap_gate/run_loop.py
-Tools/ai/heap_gate/provider_process_collection.py
-Tools/ai/heap_gate/provider_universe_abort.py
+ia_carmine/runtime/heap_gate/run_loop.py
+ia_carmine/runtime/heap_gate/provider_process_collection.py
+ia_carmine/runtime/heap_gate/provider_universe_abort.py
 ```
 
 ## Patch Target 3: GPU1 Partial Checkpoint Or Streaming
@@ -223,10 +223,10 @@ observable before the whole response finishes.
 Likely source families:
 
 ```text
-Tools/npu/provider_mesh/ollama_runtime_core/session.py
-Tools/ai/_shared/provider_ollama_probe.py
-Tools/ai/provider_mesh/
-Tools/ai/heap_gate/provider_report_absorption.py
+ia_carmine/providers/ollama/session.py
+ia_carmine/_shared/provider_ollama_probe.py
+ia_carmine/providers/provider_mesh/
+ia_carmine/runtime/heap_gate/provider_report_absorption.py
 ```
 
 ## Patch Target 4: Heap Index Sidecar
@@ -258,10 +258,10 @@ decisions
 Likely source families:
 
 ```text
-Tools/ai/provider_runtime_blackboard/
-Tools/ai/heap_runtime/
-Tools/ai/runtime_tool/
-Tools/ai/agent_memory/
+ia_carmine/runtime/provider_runtime_blackboard/
+ia_carmine/runtime/heap_runtime/
+ia_carmine/runtime/runtime_tool/
+ia_carmine/memory/agent_memory/
 ```
 
 ## Patch Target 5: Startup Context Must Stay Addressable
@@ -302,7 +302,7 @@ compact existing universe semantics
 Candidate package:
 
 ```text
-Tools/ai/contractor_universe/
+ia_carmine/runtime/contractor_universe/
 ```
 
 Candidate core objects:
@@ -336,7 +336,7 @@ Hard boundaries from the report:
   `blocked_with_reason`.
 
 This track can coexist with the provider-activity/stall fixes above. The
-operator correction requires `python -m Tools.ai run` to route directly to
+operator correction requires `python -m ia_carmine.cli run` to route directly to
 `contractor_universe` with no alternate runtime selector and no second public
 contractor-universe dispatcher entry.
 
@@ -345,8 +345,8 @@ contractor-universe dispatcher entry.
 The next safe step in this pass is source inspection and patch planning only:
 
 ```text
-1. inspect Tools/ai/provider_runtime_blackboard/ for reusable blackboard APIs;
-2. inspect Tools/ai/runtime_universe/ and Tools/ai/heap_gate/ for existing
+1. inspect ia_carmine/runtime/provider_runtime_blackboard/ for reusable blackboard APIs;
+2. inspect ia_carmine/runtime/runtime_universe/ and ia_carmine/runtime/heap_gate/ for existing
    clock, pointer and product assembly contracts;
 3. draft the minimal file list for contractor_universe without editing source;
 4. record conflicts between the report proposal and current dispatcher/source;

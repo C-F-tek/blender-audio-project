@@ -12,14 +12,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.provider_mesh.gpu_npu_parallel_orchestrator import (
+    from ia_carmine.providers.provider_mesh.gpu_npu_parallel_orchestrator import (
         run_npu_runtime_tool_broker_for_audit,
     )
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.provider_mesh.gpu_npu_parallel_orchestrator import (
+    from ia_carmine.providers.provider_mesh.gpu_npu_parallel_orchestrator import (
         run_npu_runtime_tool_broker_for_audit,  # type: ignore
     )
 

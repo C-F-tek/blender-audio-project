@@ -84,7 +84,7 @@ def main() -> int:
         create_json = "output/validation/create_task_patch_suggestion_markdown.json"
         create_cmd = [
             sys.executable,
-            str(source_repo / "Tools/ai/patch_product/task_patch_suggestion_markdown/cli.py"),
+            str(source_repo / "ia_carmine/product/patch_product/task_patch_suggestion_markdown/cli.py"),
             "--repo-root",
             str(repo),
             "--task-file",
@@ -111,7 +111,7 @@ def main() -> int:
 
         report_cmd = [
             sys.executable,
-            str(source_repo / "Tools/ai/patch_product/task_patch_suggestion_report/cli.py"),
+            str(source_repo / "ia_carmine/product/patch_product/task_patch_suggestion_report/cli.py"),
             "--repo-root",
             str(repo),
             "--task-file",
@@ -128,7 +128,7 @@ def main() -> int:
 
         dry_cmd = [
             sys.executable,
-            str(source_repo / "Tools/ai/patch_product/patch_suggestion_bundle/cli.py"),
+            str(source_repo / "ia_carmine/product/patch_product/patch_suggestion_bundle/cli.py"),
             "--repo-root",
             str(repo),
             "--suggestion-report",

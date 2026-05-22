@@ -73,7 +73,7 @@ Write-Host "=== Step 2: parallel provider probes ==="
 # Provider probe background jobs disabled here: provider probe arguments must remain argv-safe.
 if ($RunOllamaProbe -or $RunNpuProbe) {
     $ProbeArgs = @(
-        "-m", "Tools.ai", "run_local_provider_probe",
+        "-m", "ia_carmine.cli", "run_local_provider_probe",
         "--repo-root", ".",
         "--output", $LocalProviderProbeReport
     )
@@ -98,7 +98,7 @@ if ($RunOllamaProbe -or $RunNpuProbe) {
 Write-Host ""
 Write-Host "=== Step 3: quality-based routing and NPU remediation ==="
 $RoutingArgs = @(
-    "-m", "Tools.ai", "build_workload_quality_lane_routing",
+    "-m", "ia_carmine.cli", "build_workload_quality_lane_routing",
     "--repo-root", ".",
     "--quality-report", $QualityReport,
     "--output", $LaneRoutingReport,
@@ -142,7 +142,7 @@ powershell.exe @PacketArgs
 
 Write-Host ""
 Write-Host "=== Step 5: GitHub evidence bundle ==="
-& $ProviderPythonExe -m Tools.ai build_github_evidence_bundle `
+& $ProviderPythonExe -m ia_carmine build_github_evidence_bundle `
     --repo-root . `
     --basename $EvidenceBasename
 

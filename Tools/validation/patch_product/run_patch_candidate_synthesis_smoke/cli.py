@@ -110,16 +110,16 @@ def main() -> int:
     candidate_json = fixture_repo / "output" / "validation" / "patch_candidate_synthesis.json"
     candidate_md = candidate_json.with_suffix(".md")
     evidence_json = fixture_repo / "output" / "validation" / "provider_evidence.json"
-    write_evidence_report(evidence_json, "Tools/ai/fixture_tool.py", before)
+    write_evidence_report(evidence_json, "ia_carmine/fixture_tool.py", before)
     command = [
         sys.executable,
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "synthesize_patch_candidates",
         "--repo-root",
         str(fixture_repo),
         "--target-file",
-        "Tools/ai/fixture_tool.py",
+        "ia_carmine/fixture_tool.py",
         "--operator-request",
         "extract provider unified diff for verified target",
         "--evidence-report",

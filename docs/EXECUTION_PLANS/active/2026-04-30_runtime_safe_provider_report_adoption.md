@@ -57,8 +57,8 @@ Tools/validation/check_provider_result_parsing.py
 Tools/validation/pipeline/npu_pipeline_modules_check/cli.py
 Tools/npu/pipeline/README.md
 docs/JSON_SCHEMAS.md
-Tools/ai/repository_product/repository_change_proposals/cli.py
-Tools/ai/repository_product/repository_update_suggestions/cli.py
+ia_carmine/product/repository_product/repository_change_proposals/cli.py
+ia_carmine/product/repository_product/repository_update_suggestions/cli.py
 ```
 
 ## Validation
@@ -66,7 +66,7 @@ Tools/ai/repository_product/repository_update_suggestions/cli.py
 ```powershell
 python -m Tools.validation check_provider_result_parsing --repo-root . --output .\output\validation\provider_result_parsing.json
 python -m Tools.npu build_provider_result_report --repo-root . --use-samples --output .\output\validation\provider_result_report.json
-python -m Tools.ai run_local_provider_probe --repo-root . --run-ollama --run-npu --output .\output\validation\local_provider_probe.json
+python -m ia_carmine.cli run_local_provider_probe --repo-root . --run-ollama --run-npu --output .\output\validation\local_provider_probe.json
 python -m Tools.workflow run_npu_pipeline_helper_validation
 python -m Tools.workflow run_post_validation_ai_packet -Profile npu -OutputDir output\ai_packets -Basename npu_provider_adoption_after_tests -ProposalBasename npu_provider_adoption_proposals -ReportFile output\validation\provider_result_parsing.json,output\validation\provider_result_report.json,output\validation\local_provider_probe.json,output\validation\npu_runtime_output_manifest.json,output\validation\local_ai_resource_lanes.json
 ```

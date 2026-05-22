@@ -12,13 +12,13 @@ from types import SimpleNamespace
 from typing import Any
 
 try:
-    from Tools.ai.repository_product.refactor_duplication_audit import build_report, render_markdown
+    from ia_carmine.product.repository_product.refactor_duplication_audit import build_report, render_markdown
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.repository_product.refactor_duplication_audit import build_report, render_markdown
+    from ia_carmine.product.repository_product.refactor_duplication_audit import build_report, render_markdown
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 
 
@@ -89,7 +89,7 @@ def smoke_args(repo_root: Path, reports: dict[str, Path]) -> SimpleNamespace:
     return SimpleNamespace(
         repo_root=str(repo_root),
         stamp=SMOKE_STAMP,
-        root=["Tools/ai", "Tools/validation"],
+        root=["ia_carmine", "Tools/validation"],
         report=[],
         line_count_report=[repo_rel(reports["line_count"], repo_root)],
         code_interpreter_report=[repo_rel(reports["code_interpreter"], repo_root)],
@@ -135,7 +135,7 @@ def run_broker_smoke(repo_root: Path, reports: dict[str, Path], stamp: str) -> d
                 "tool": "refactor_duplication_audit",
                 "reason": "Validate that the reusable duplication audit is broker-callable.",
                 "args": {
-                    "root": ["Tools/ai", "Tools/validation"],
+                    "root": ["ia_carmine", "Tools/validation"],
                     "line_count_report": repo_rel(reports["line_count"], repo_root),
                     "code_interpreter_report": repo_rel(reports["code_interpreter"], repo_root),
                     "python_syntax_report": repo_rel(reports["syntax"], repo_root),
@@ -148,7 +148,7 @@ def run_broker_smoke(repo_root: Path, reports: dict[str, Path], stamp: str) -> d
     write_json(request_file, request)
     command = [
         sys.executable,
-        "Tools/ai/runtime_tool/agent_broker/cli.py",
+        "ia_carmine/runtime/runtime_tool/agent_broker/cli.py",
         "--repo-root",
         ".",
         "--request-file",

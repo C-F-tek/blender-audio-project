@@ -20,10 +20,10 @@ except ImportError:  # Allows package-style imports during external checks.
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report  # type: ignore
 
 try:
-    from Tools.ai._shared.github_evidence_bundle_io import repo_relative, split_path_values
+    from ia_carmine._shared.github_evidence_bundle_io import repo_relative, split_path_values
 except ImportError:  # Allows direct execution from Tools/validation on older Python path setups.
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-    from Tools.ai._shared.github_evidence_bundle_io import repo_relative, split_path_values  # type: ignore
+    from ia_carmine._shared.github_evidence_bundle_io import repo_relative, split_path_values  # type: ignore
 
 
 EXPECTED_KIND = "github_validation_evidence_bundle"

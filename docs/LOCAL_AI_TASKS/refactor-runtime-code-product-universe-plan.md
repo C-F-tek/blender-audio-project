@@ -23,22 +23,22 @@ Flusso visto:
 
 ## Bug Architetturali Trovati
 
-- `python -m Tools.ai run_heap_runtime_completeness_gate` usava una lista statica di target matrix.
-- `python -m Tools.ai run_heap_code_execution_tool` considerava concreta solo una modifica gia presente nel worktree.
+- `python -m ia_carmine.cli run_heap_runtime_completeness_gate` usava una lista statica di target matrix.
+- `python -m ia_carmine.cli run_heap_code_execution_tool` considerava concreta solo una modifica gia presente nel worktree.
 - `VALIDATION_COMMANDS` poteva viaggiare vicino a `TARGET_FILES` senza un modello runtime separato.
 - `output/**` e artifact citati dal provider non avevano un tipo che impedisse la promozione a source target.
-- `python -m Tools.ai run_heap_virtual_dev_environment` duplicava regole path/test invece di usare un resolver comune.
+- `python -m ia_carmine.cli run_heap_virtual_dev_environment` duplicava regole path/test invece di usare un resolver comune.
 - `heap_final_code_product.py` distingueva poco tra target verificato, prodotto patchabile e blocco diagnostico.
 - Il provider vedeva allowlist testuale, ma non un riepilogo chiaro del runtime file universe.
 
 ## Refactor Plan
 
-1. Introdurre `Tools/ai/runtime_tool/file_refs/`.
+1. Introdurre `ia_carmine/runtime/runtime_tool/file_refs/`.
    - Ogni ref diventa `RuntimeFileRef`.
    - Campi: repo-relative, absolute path, kind, provenance, status, consumers.
    - Stati: verified, missing, output_only, validation_only, rejected_non_allowlisted.
 
-2. Introdurre `Tools/ai/runtime_universe/`.
+2. Introdurre `ia_carmine/runtime/runtime_universe/`.
    - Indicizza file reali di `Tools/`, `docs/`, `config/`.
    - Indicizza validation/test e artifact `output/validation`.
    - Riassume tool catalog, memory, context, semantic e startup artifacts quando presenti.
@@ -63,16 +63,16 @@ Flusso visto:
 
 ## File Coinvolti
 
-- `Tools/ai/runtime_tool/file_refs/*`
-- `Tools/ai/runtime_universe/*`
-- `Tools/ai/synthesize_patch_candidates.py`
-- `Tools/ai/heap_runtime/code_execution_tool/cli.py`
-- `Tools/ai/_shared/heap_code_execution_tool_core.py`
-- `Tools/ai/heap_runtime/virtual_dev_environment/cli.py`
-- `Tools/ai/runtime_tool/agent_broker.py`
-- `Tools/ai/heap_runtime/completeness_gate/cli.py`
-- `Tools/ai/_shared/heap_final_code_product.py`
-- `Tools/ai/assemble_heap_final_readable_product.py`
+- `ia_carmine/runtime/runtime_tool/file_refs/*`
+- `ia_carmine/runtime/runtime_universe/*`
+- `ia_carmine/synthesize_patch_candidates.py`
+- `ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py`
+- `ia_carmine/_shared/heap_code_execution_tool_core.py`
+- `ia_carmine/runtime/heap_runtime/virtual_dev_environment/cli.py`
+- `ia_carmine/runtime/runtime_tool/agent_broker.py`
+- `ia_carmine/runtime/heap_runtime/completeness_gate/cli.py`
+- `ia_carmine/_shared/heap_final_code_product.py`
+- `ia_carmine/assemble_heap_final_readable_product.py`
 - `Tools/validation/run_runtime_file_refs_smoke.py`
 - `Tools/validation/runtime_universe/runtime_universe_smoke/cli.py`
 - `Tools/validation/run_patch_candidate_synthesis_smoke.py`
@@ -94,4 +94,4 @@ Flusso visto:
 - `python -m Tools.validation run_heap_virtual_dev_environment_smoke --repo-root .`
 - `python -m Tools.validation run_heap_final_readable_product_smoke --repo-root .`
 - `python -m Tools.validation run_operator_product_launcher_smoke --repo-root .`
-- full run finale con `python -m Tools.ai heap_context_closure` attraverso launcher reale.
+- full run finale con `python -m ia_carmine.cli heap_context_closure` attraverso launcher reale.

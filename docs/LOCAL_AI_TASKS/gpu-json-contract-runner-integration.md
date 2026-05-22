@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Plan and validation notes for integrating `Tools.ai._shared.gpu_planner_json_contract.validate_model_response_contract()` into the real GPU planning runners.
+Plan and validation notes for integrating `ia_carmine._shared.gpu_planner_json_contract.validate_model_response_contract()` into the real GPU planning runners.
 
 Target runners:
 
 ```text
-Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
-Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
+ia_carmine/providers/provider_mesh/gpu_deep_planning_review/cli.py
+ia_carmine/providers/provider_mesh/gpu_deep_planning_supervised/cli.py
 ```
 
 ## Current safe bridge
@@ -16,7 +16,7 @@ Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
 Before changing the long-running provider path, use:
 
 ```text
-Tools/ai/provider_mesh/gpu_planner_json_contract_replay.py
+ia_carmine/providers/provider_mesh/gpu_planner_json_contract_replay.py
 ```
 
 This replays already captured GPU planner raw responses through the contract helper.
@@ -26,7 +26,7 @@ It does not run providers and does not write source files.
 ## Command
 
 ```powershell
-python -m Tools.ai replay_gpu_planner_json_contract `
+python -m ia_carmine.cli replay_gpu_planner_json_contract `
   --repo-root . `
   --gpu-report ".\output\ai_pipeline\project_complete_20260502-195523_parallel_gpu.json" `
   --output ".\output\analysis\gpu_json_contract_replay_20260502-195523.json" `

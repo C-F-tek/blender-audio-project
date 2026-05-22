@@ -25,20 +25,20 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     ensure_repo(repo_root)
 
-    from Tools.ai._shared.provider_tool_loop import (
+    from ia_carmine._shared.provider_tool_loop import (
         broker_tool_schemas,
         normalize_ollama_tool_calls,
         openvino_tool_loop_report,
     )
-    from Tools.ai._shared.live_flow_lanes import (
+    from ia_carmine._shared.live_flow_lanes import (
         lane_details,
         merge_provider_statuses,
         support_provider_payload,
     )
-    from Tools.ai.heap_gate.provider_prompt import RuntimeGateProviderPromptMixin
-    from Tools.ai.runtime_tool.broker.runtime_builders import run_heap_code_execution_matrix
-    from Tools.npu.provider_mesh.ollama_runtime_core.session import OllamaSession
-    from Tools.ai._shared.provider_ollama_probe import run_ollama_probe
+    from ia_carmine.runtime.heap_gate.provider_prompt import RuntimeGateProviderPromptMixin
+    from ia_carmine.runtime.runtime_tool.broker.runtime_builders import run_heap_code_execution_matrix
+    from ia_carmine.providers.ollama.session import OllamaSession
+    from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
 
     schemas = broker_tool_schemas()
     errors: list[str] = []
@@ -54,7 +54,7 @@ def main() -> int:
                 {
                     "function": {
                         "name": "run_heap_code_execution_matrix",
-                        "arguments": {"target_file": ["Tools/ai/provider_mesh/local_provider_probe/cli.py"]},
+                        "arguments": {"target_file": ["ia_carmine/providers/provider_mesh/local_provider_probe/cli.py"]},
                     }
                 }
             ]
@@ -68,7 +68,7 @@ def main() -> int:
         repo_root / "output" / "validation" / "provider_tool_loop_smoke",
         "validation_arg_regression",
         {
-            "target_file": ["Tools/ai/provider_mesh/local_provider_probe/cli.py"],
+            "target_file": ["ia_carmine/providers/provider_mesh/local_provider_probe/cli.py"],
             "validation_script": ["Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py"],
             "validation_arg": ["--validate"],
         },
@@ -133,12 +133,12 @@ def main() -> int:
 
     live_ollama: dict[str, object] = {"requested": bool(args.run_live_ollama)}
     if args.run_live_ollama:
-        from Tools.ai.provider_mesh.local_provider_probe import run_ollama_probe
+        from ia_carmine.providers.provider_mesh.local_provider_probe import run_ollama_probe
 
         live_ollama = run_ollama_probe(
             repo_root,
             "qwen3-coder:latest",
-            "TARGET_FILES Tools/ai/provider_mesh/local_provider_probe/cli.py forced concrete delta required. "
+            "TARGET_FILES ia_carmine/providers/provider_mesh/local_provider_probe/cli.py forced concrete delta required. "
             "Use a native tool call to run_heap_code_execution_matrix.",
             max_new_tokens=96,
         )

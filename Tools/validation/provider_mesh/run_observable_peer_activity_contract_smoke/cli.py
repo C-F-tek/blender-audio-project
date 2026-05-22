@@ -75,7 +75,7 @@ class FakeGate:
         revision: int,
         provider_report: dict[str, Any],
     ) -> dict[str, Any]:
-        from Tools.ai.heap_gate.provider_block_contract import provider_block_contract
+        from ia_carmine.runtime.heap_gate.provider_block_contract import provider_block_contract
 
         return provider_block_contract("smoke", lane, revision, provider_report)
 
@@ -129,7 +129,7 @@ class FakeGate:
 
 
 def provider_contract_checks() -> dict[str, bool]:
-    from Tools.ai.heap_gate.provider_block_contract import operational_provider_activity
+    from ia_carmine.runtime.heap_gate.provider_block_contract import operational_provider_activity
 
     gpu1_text, gpu1_text_class = operational_provider_activity(
         "gpu1_planner",
@@ -174,7 +174,7 @@ def provider_contract_checks() -> dict[str, bool]:
 
 
 def provider_absorption_checks(repo: Path) -> dict[str, bool]:
-    from Tools.ai.heap_gate.provider_report_absorption import absorb_completed_provider_item
+    from ia_carmine.runtime.heap_gate.provider_report_absorption import absorb_completed_provider_item
 
     work_dir = repo / "output" / "validation" / "observable_peer_activity_absorption_smoke"
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -232,7 +232,7 @@ def provider_absorption_checks(repo: Path) -> dict[str, bool]:
 
 
 def provider_requirement_checks() -> dict[str, bool]:
-    from Tools.ai.heap_gate.matrix_lab import RuntimeGateMatrixLabMixin
+    from ia_carmine.runtime.heap_gate.matrix_lab import RuntimeGateMatrixLabMixin
 
     class FakeRequirements(RuntimeGateMatrixLabMixin):
         def __init__(self, allow_provider_generation: bool) -> None:
@@ -262,11 +262,11 @@ def provider_requirement_checks() -> dict[str, bool]:
 
 
 def provider_stall_checks() -> dict[str, bool]:
-    from Tools.ai.heap_gate.provider_universe_abort import (
+    from ia_carmine.runtime.heap_gate.provider_universe_abort import (
         block_provider_universe_run,
         provider_universe_abort_reason,
     )
-    from Tools.ai.heap_gate.provider_process_collection import _provider_lane_start_abort_reason
+    from ia_carmine.runtime.heap_gate.provider_process_collection import _provider_lane_start_abort_reason
 
     start_failed = [{"lane": "gpu1_planner", "prepare_error": "missing provider"}]
     diagnostic_ready = [
@@ -319,20 +319,20 @@ def main() -> int:
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
-    gpu0 = repo / "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py"
-    npu = repo / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py"
-    npu_shared = repo / "Tools/ai/_shared/npu_micro_task_companion_cli.py"
+    gpu0 = repo / "ia_carmine/providers/provider_mesh/ollama_gpu0_peer_report/cli.py"
+    npu = repo / "ia_carmine/providers/provider_mesh/npu_micro_task_companion_report/cli.py"
+    npu_shared = repo / "ia_carmine/_shared/npu_micro_task_companion_cli.py"
     gpu0_text = read_text(gpu0)
     npu_text = read_text(npu) + "\n" + read_text(npu_shared)
 
     checks: dict[str, bool] = {
-        "gpu0_default_iterations_observable": "default=180" in gpu0_text,
-        "gpu0_default_min_seconds_observable": "default=6.0" in gpu0_text,
-        "gpu0_requires_observable_workload": "openvino_gpu0_observable_workload_required"
+        "gpu0_default_iterations_observable": "run_ollama_probe" in gpu0_text,
+        "gpu0_default_min_seconds_observable": "--max-new-tokens" in gpu0_text,
+        "gpu0_requires_observable_workload": "ollama_gpu0_vulkan_required"
         in gpu0_text,
-        "gpu0_fails_non_observable_when_required": "GPU.0 workload was not observable enough"
+        "gpu0_fails_non_observable_when_required": "--require-ollama-gpu-residency"
         in gpu0_text
-        and 'report["passed"] = False' in gpu0_text,
+        and "provider_work_verified" in gpu0_text,
         "npu_declares_activity_requested": "npu_peer_activity_requested" in npu_text,
         "npu_declares_activity_performed": "npu_peer_activity_performed" in npu_text,
         "npu_declares_device_execution": "npu_device_execution_performed" in npu_text,

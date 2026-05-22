@@ -19,11 +19,11 @@ for path in (REPO_ROOT, TOOLS_NPU):
     if text not in sys.path:
         sys.path.insert(0, text)
 
-import Tools.npu.dual_ai_pipeline as runtime_pipeline  # noqa: E402
-from Tools.npu.dual_ai_pipeline import common as runtime_common  # noqa: E402
-from Tools.npu.dual_ai_pipeline import writers as runtime_writers  # noqa: E402
+import ia_carmine.providers.npu.dual_ai_pipeline as runtime_pipeline  # noqa: E402
+from ia_carmine.providers.npu.dual_ai_pipeline import common as runtime_common  # noqa: E402
+from ia_carmine.providers.npu.dual_ai_pipeline import writers as runtime_writers  # noqa: E402
 
-from Tools.npu.pipeline import (  # noqa: E402
+from ia_carmine.providers.npu.pipeline import (  # noqa: E402
     DEFAULT_ALLOWED_ARTIFACT_PREFIXES,
     DualPipelinePaths,
     MigrationReadinessCheck,

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.operator_product_core import (
+    from ia_carmine.product.operator_product_core import (
         LauncherConfig,
         analyze_code_product,
         build_heap_command,
@@ -23,7 +23,7 @@ except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.operator_product_core import (  # type: ignore
+    from ia_carmine.product.operator_product_core import (  # type: ignore
         LauncherConfig,
         analyze_code_product,
         build_heap_command,
@@ -193,7 +193,7 @@ def main() -> int:
             "passed": command[:4] == [
                 resolved.python_exe,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "heap_context_closure",
             ],
         },

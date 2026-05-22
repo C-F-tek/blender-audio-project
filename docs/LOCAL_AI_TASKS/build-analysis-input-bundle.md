@@ -39,13 +39,13 @@ native code patch-plan summaries
 Primary bundle builder:
 
 ```text
-Tools/ai/repository_product/github_evidence_bundle.py
+ia_carmine/product/repository_product/github_evidence_bundle.py
 ```
 
 Code patch-plan enrichment post-processor:
 
 ```text
-Tools/ai/repository_product/github_evidence_bundle_code_plan_enrichment.py
+ia_carmine/product/repository_product/github_evidence_bundle_code_plan_enrichment.py
 ```
 
 Relevant bundle options:
@@ -87,7 +87,7 @@ $Reports = @(
   ".\output\validation\docs_contract_drift.json"
 ) | Where-Object { Test-Path $_ }
 
-python -m Tools.ai build_github_evidence_bundle `
+python -m ia_carmine.cli build_github_evidence_bundle `
   --repo-root . `
   --basename macro_pr108_pr109_validation_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
@@ -106,7 +106,7 @@ python -m Tools.ai build_github_evidence_bundle `
 Example:
 
 ```powershell
-python -m Tools.ai build_github_evidence_bundle `
+python -m ia_carmine.cli build_github_evidence_bundle `
   --repo-root . `
   --basename enriched_analysis_review_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
@@ -126,7 +126,7 @@ This keeps raw output files local while preserving review-critical content in a 
 Use this after generating a bundle that references an `agent_review_code_patch_plan` report, especially the static code plan report.
 
 ```powershell
-python -m Tools.ai enrich_github_evidence_bundle_code_plan `
+python -m ia_carmine.cli enrich_github_evidence_bundle_code_plan `
   --repo-root . `
   --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\pr109_static_code_plan_bundle_$Stamp.json"
 ```
@@ -156,7 +156,7 @@ $Reports = @(
   ".\output\patch_specs\agent_review_code_patch_plan_with_static_pr109.json"
 ) | Where-Object { Test-Path $_ }
 
-python -m Tools.ai build_github_evidence_bundle `
+python -m ia_carmine.cli build_github_evidence_bundle `
   --repo-root . `
   --basename pr109_static_code_plan_bundle_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `
@@ -169,7 +169,7 @@ python -m Tools.ai build_github_evidence_bundle `
   --max-included-artifact-chars 12000 `
   --max-included-artifacts 80
 
-python -m Tools.ai enrich_github_evidence_bundle_code_plan `
+python -m ia_carmine.cli enrich_github_evidence_bundle_code_plan `
   --repo-root . `
   --bundle ".\docs\LOCAL_VALIDATION_EVIDENCE\pr109_static_code_plan_bundle_$Stamp.json"
 ```
@@ -179,7 +179,7 @@ python -m Tools.ai enrich_github_evidence_bundle_code_plan `
 Use this when you want only explicitly selected artifacts:
 
 ```powershell
-python -m Tools.ai build_github_evidence_bundle `
+python -m ia_carmine.cli build_github_evidence_bundle `
   --repo-root . `
   --basename explicit_only_bundle_$Stamp `
   --output-dir docs/LOCAL_VALIDATION_EVIDENCE `

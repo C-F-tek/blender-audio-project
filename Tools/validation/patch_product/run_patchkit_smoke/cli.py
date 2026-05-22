@@ -270,7 +270,7 @@ def main() -> int:
     args = parser.parse_args()
 
     source_repo = Path(args.repo_root).resolve()
-    runner = source_repo / "Tools/ai/patchkit/apply_patch_bundle.py"
+    runner = source_repo / "ia_carmine/product/patchkit/apply_patch_bundle.py"
     cases = [
         smoke_insert_idempotent(source_repo, runner),
         smoke_guarded_delete(source_repo, runner),

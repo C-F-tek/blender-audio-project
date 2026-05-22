@@ -312,6 +312,9 @@ The counter must distinguish:
 operator-aligned fixes kept in source/docs
 operator blocks required
 repeated-code regressions
+misleading/Codex lie evidence
+systemic product-lie evidence
+systemic product-lie severity score
 ```
 
 Repeated-code regression means Codex reintroduces a code shape, field, gate,
@@ -320,6 +323,21 @@ already deleted in the current work window.
 
 The count is part of the evidence of Codex operator unreliability. It is not a
 runtime success metric and must not be used to claim progress.
+
+`provider_execution_performed=false` does not prove that a command was static
+or harmless. Resource/provider preflights, including lane availability checks,
+must expose separate mechanics counters when they touch runtime services or
+device enumeration:
+
+```text
+resource_mechanics_performed
+resource_probe_performed
+mechanical_not_static_read
+operator_authorization_required
+```
+
+If Codex hides this distinction, the severity/incompetence counters above must
+be updated instead of explaining the event away.
 
 ## Required behavior when unsure
 

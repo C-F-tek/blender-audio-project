@@ -35,7 +35,7 @@ Do not infer runtime entrypoints from `pyproject.toml` alone. Use current dispat
 
 ```text
 Tools/TOOL_CONTEXT.md
-Tools/ai/dispatch.py
+ia_carmine/dispatch.py
 Tools/validation/dispatch.py
 Tools/workflow/dispatch.py
 ```

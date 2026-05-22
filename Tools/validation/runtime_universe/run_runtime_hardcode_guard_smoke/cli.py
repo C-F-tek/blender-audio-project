@@ -37,34 +37,34 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     files = {
         rel: read(repo_root, rel)
         for rel in (
-            "Tools/ai/heap_runtime/completeness_gate/cli.py",
-            "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
-            "Tools/ai/_shared/heap_code_execution_tool_core.py",
-            "Tools/ai/_shared/heap_final_code_product.py",
-            "Tools/ai/heap_gate/target_planner.py",
-            "Tools/ai/_shared/provider_tool_loop.py",
-            "Tools/ai/runtime_tool/file_refs/allowlist.py",
+            "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py",
+            "ia_carmine/runtime/heap_runtime/virtual_dev_environment/cli.py",
+            "ia_carmine/_shared/heap_code_execution_tool_core.py",
+            "ia_carmine/_shared/heap_final_code_product.py",
+            "ia_carmine/runtime/heap_gate/target_planner.py",
+            "ia_carmine/_shared/provider_tool_loop.py",
+            "ia_carmine/runtime/runtime_tool/file_refs/allowlist.py",
             "Tools/validation/runtime_universe/run_core_runtime_guard_suite/cli.py",
         )
     }
 
-    gate = files["Tools/ai/heap_runtime/completeness_gate/cli.py"]
+    gate = files["ia_carmine/runtime/heap_runtime/completeness_gate/cli.py"]
     for needle in (
-        '"Tools/ai/heap_final_proposals/cli.py"',
-        '"Tools/ai/_shared/heap_proposal_gate.py"',
-        '"Tools/ai/runtime_tool/agent_broker/cli.py"',
+        '"ia_carmine/product/heap_final_proposals/cli.py"',
+        '"ia_carmine/_shared/heap_proposal_gate.py"',
+        '"ia_carmine/runtime/runtime_tool/agent_broker/cli.py"',
     ):
         check_absent(
             gate,
             needle,
-            "Tools/ai/heap_runtime/completeness_gate/cli.py",
+            "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py",
             errors,
             "static matrix target fallback is forbidden",
         )
 
     for rel in (
-        "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
-        "Tools/ai/runtime_tool/agent_runtime_debug_lab/policy.py",
+        "ia_carmine/runtime/heap_runtime/virtual_dev_environment/cli.py",
+        "ia_carmine/runtime/runtime_tool/agent_runtime_debug_lab/policy.py",
     ):
         path = repo_root / rel
         if not path.exists():
@@ -79,36 +79,36 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "Scripting must not be globally denied",
         )
 
-    planner = files["Tools/ai/heap_gate/target_planner.py"]
+    planner = files["ia_carmine/runtime/heap_gate/target_planner.py"]
     check_absent(
         planner,
-        'rel_path.startswith(("Tools/ai/"',
-        "Tools/ai/heap_gate/target_planner.py",
+        'rel_path.startswith(("ia_carmine/"',
+        "ia_carmine/runtime/heap_gate/target_planner.py",
         errors,
-        "target planner must not bias runtime selection toward Tools/ai",
+        "target planner must not bias runtime selection toward ia_carmine",
     )
 
-    provider_loop = files["Tools/ai/_shared/provider_tool_loop.py"]
+    provider_loop = files["ia_carmine/_shared/provider_tool_loop.py"]
     for needle in ('Path.home() / "ProjectsDir"', 'Path.home() / "blender"', 'repo_root.parent / "npu-models"'):
         check_absent(
             provider_loop,
             needle,
-            "Tools/ai/_shared/provider_tool_loop.py",
+            "ia_carmine/_shared/provider_tool_loop.py",
             errors,
             "OpenVINO model discovery must come from runtime env/config, not static fallback dirs",
         )
 
-    allowlist = files["Tools/ai/runtime_tool/file_refs/allowlist.py"]
+    allowlist = files["ia_carmine/runtime/runtime_tool/file_refs/allowlist.py"]
     for needle in ('"Scripting/v61b_backgood/"', '"old script legacy/"', '"Tools/npu/npu_code_chunks/"'):
         check_absent(
             allowlist,
             needle,
-            "Tools/ai/runtime_tool/file_refs/allowlist.py",
+            "ia_carmine/runtime/runtime_tool/file_refs/allowlist.py",
             errors,
             "repo-specific ignored paths must be enforced by git-ignore, not duplicated as target hardcode",
         )
 
-    final_product = files["Tools/ai/_shared/heap_final_code_product.py"]
+    final_product = files["ia_carmine/_shared/heap_final_code_product.py"]
     for needle in (
         "DENY_PRODUCT_PREFIXES",
         "PRODUCT_SUFFIXES",
@@ -122,7 +122,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         check_absent(
             final_product,
             needle,
-            "Tools/ai/_shared/heap_final_code_product.py",
+            "ia_carmine/_shared/heap_final_code_product.py",
             errors,
             "final code product must not use local worktree diff fallback as runtime product",
         )
@@ -136,16 +136,16 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "core guard suite must discover CORE_RUNTIME_GUARD smokes at runtime",
     )
 
-    final_catalog = repo_root / "Tools/ai/heap_final_readable_catalog.py"
+    final_catalog = repo_root / "ia_carmine/heap_final_readable_catalog.py"
     if final_catalog.exists():
         errors.append(
-            "Tools/ai/heap_final_readable_catalog.py: static final-product wording catalog is forbidden"
+            "ia_carmine/heap_final_readable_catalog.py: static final-product wording catalog is forbidden"
         )
 
-    final_synthesis = read(repo_root, "Tools/ai/_shared/heap_final_readable_synthesis.py")
+    final_synthesis = read(repo_root, "ia_carmine/_shared/heap_final_readable_synthesis.py")
     if re.search(r'"Tools/(?:ai|validation)/[^"]+\.py"', final_synthesis):
         errors.append(
-            "Tools/ai/_shared/heap_final_readable_synthesis.py: static target file paths are forbidden"
+            "ia_carmine/_shared/heap_final_readable_synthesis.py: static target file paths are forbidden"
         )
 
     return {

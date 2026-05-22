@@ -42,7 +42,7 @@ if (Test-Path $QualityReport) {
     Write-Host ""
     Write-Host "=== Build workload quality lane routing report ==="
     $RoutingArgs = @(
-        "-m", "Tools.ai", "build_workload_quality_lane_routing",
+        "-m", "ia_carmine.cli", "build_workload_quality_lane_routing",
         "--repo-root", ".",
         "--quality-report", $QualityReport,
         "--output", $LaneRoutingReport,
@@ -90,7 +90,7 @@ if (Test-Path $QualityReport) {
 }
 
 $ArgsList = @(
-    "-m", "Tools.ai", "suggest_repository_updates",
+    "-m", "ia_carmine.cli", "suggest_repository_updates",
     "--repo-root", ".",
     "--profile", $Profile,
     "--output-dir", $OutputDir,
@@ -125,7 +125,7 @@ if ($Model -ne "") {
 & $PacketPythonExe @ArgsList
 
 $ProposalArgs = @(
-    "-m", "Tools.ai", "build_repository_change_proposals",
+    "-m", "ia_carmine.cli", "build_repository_change_proposals",
     "--repo-root", ".",
     "--profile", $Profile,
     "--output-dir", $OutputDir,

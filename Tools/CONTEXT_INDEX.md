@@ -16,7 +16,7 @@ Read these before treating any tool, dispatcher, smoke or provider artifact as p
 
 | Area | Main context | Family index |
 | --- | --- | --- |
-| `Tools/ai` | `Tools/ai/TOOL_CONTEXT.md` | `Tools/ai/CONTEXT_INDEX.md` |
+| `ia_carmine` | `ia_carmine/TOOL_CONTEXT.md` | `ia_carmine/CONTEXT_INDEX.md` |
 | `Tools/validation` | `Tools/validation/TOOL_CONTEXT.md` | `Tools/validation/CONTEXT_INDEX.md` |
 | `Tools/workflow` | `Tools/workflow/TOOL_CONTEXT.md` | `Tools/workflow/CONTEXT_INDEX.md` |
 | `Tools/npu` | `Tools/npu/TOOL_CONTEXT.md` | `Tools/npu/CONTEXT_INDEX.md` |
@@ -33,7 +33,7 @@ python -m Tools.<area> <tool> [args...]
 Dispatchers:
 
 ```text
-Tools/ai/dispatch.py
+ia_carmine/dispatch.py
 Tools/validation/dispatch.py
 Tools/workflow/dispatch.py
 Tools/npu/dispatch.py

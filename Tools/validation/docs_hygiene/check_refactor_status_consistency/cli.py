@@ -16,8 +16,8 @@ from pathlib import Path
 from typing import Any
 
 EXPECTED_STATUS = "modular_schedule_complete_pending_local_validation"
-EXPECTED_ENTRYPOINT = "Tools/ai/pipeline/artifact_runner/cli.py"
-EXPECTED_STATUS_FILE = "Tools/ai/pipeline/refactor_status.py"
+EXPECTED_ENTRYPOINT = "ia_carmine/product/pipeline/artifact_runner/cli.py"
+EXPECTED_STATUS_FILE = "ia_carmine/product/pipeline/refactor_status.py"
 EXPECTED_DOCS = (
     "docs/AI_PIPELINE_REFACTOR_STATUS.md",
     "docs/AI_PIPELINE_ARCHITECTURE.md",
@@ -25,24 +25,24 @@ EXPECTED_DOCS = (
     "AGENTS.md",
 )
 EXPECTED_MODULES = (
-    "Tools/ai/pipeline/defaults.py",
-    "Tools/ai/pipeline/models.py",
-    "Tools/ai/pipeline/runner.py",
-    "Tools/ai/pipeline/compat.py",
-    "Tools/ai/pipeline/artifact_contracts.py",
-    "Tools/ai/pipeline/cli.py",
-    "Tools/ai/pipeline/preflight.py",
-    "Tools/ai/pipeline/steps.py",
-    "Tools/ai/pipeline/scheduler.py",
-    "Tools/ai/pipeline/orchestrator.py",
-    "Tools/ai/pipeline/schema_report.py",
-    "Tools/ai/pipeline/markdown_report.py",
-    "Tools/ai/pipeline/guardrail_models.py",
-    "Tools/ai/pipeline/remediation.py",
-    "Tools/ai/pipeline/refactor_status.py",
-    "Tools/ai/pipeline/artifact_runner/cli.py",
-    "Tools/ai/pipeline/dry_run_matrix/cli.py",
-    "Tools/ai/pipeline/dry_run_matrix/evidence_cli.py",
+    "ia_carmine/product/pipeline/defaults.py",
+    "ia_carmine/product/pipeline/models.py",
+    "ia_carmine/product/pipeline/runner.py",
+    "ia_carmine/product/pipeline/compat.py",
+    "ia_carmine/product/pipeline/artifact_contracts.py",
+    "ia_carmine/product/pipeline/cli.py",
+    "ia_carmine/product/pipeline/preflight.py",
+    "ia_carmine/product/pipeline/steps.py",
+    "ia_carmine/product/pipeline/scheduler.py",
+    "ia_carmine/product/pipeline/orchestrator.py",
+    "ia_carmine/product/pipeline/schema_report.py",
+    "ia_carmine/product/pipeline/markdown_report.py",
+    "ia_carmine/product/pipeline/guardrail_models.py",
+    "ia_carmine/product/pipeline/remediation.py",
+    "ia_carmine/product/pipeline/refactor_status.py",
+    "ia_carmine/product/pipeline/artifact_runner/cli.py",
+    "ia_carmine/product/pipeline/dry_run_matrix/cli.py",
+    "ia_carmine/product/pipeline/dry_run_matrix/evidence_cli.py",
 )
 
 

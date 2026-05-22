@@ -20,7 +20,7 @@ Use those contracts first when you need to decide whether a command, smoke, arti
 
 | Dispatcher | Public command surface | Coverage status |
 | --- | --- | --- |
-| `Tools/ai/dispatch.py` | `python -m Tools.ai <tool>` | macro-families indexed |
+| `ia_carmine/dispatch.py` | `python -m ia_carmine.cli <tool>` | macro-families indexed |
 | `Tools/validation/dispatch.py` | `python -m Tools.validation <tool>` | macro-families indexed |
 | `Tools/workflow/dispatch.py` | `python -m Tools.workflow <tool>` | macro-families indexed |
 | `Tools/npu/dispatch.py` | `python -m Tools.npu <tool>` | macro-families indexed |
@@ -60,11 +60,11 @@ This is enough for orientation. It is not an exhaustive source audit.
 
 | Family | Status | Reason |
 | --- | --- | --- |
-| `Tools/ai/repository_product/TOOL_CONTEXT.md` | stub | detailed remote edit was blocked; file exists as discoverability stub |
+| `ia_carmine/product/repository_product/TOOL_CONTEXT.md` | stub | detailed remote edit was blocked; file exists as discoverability stub |
 | `Tools/docs/_shared/TOOL_CONTEXT.md` | stub-missing | remote creation was blocked |
 | `Tools/validation/heap_final_proposals/TOOL_CONTEXT.md` | stub-missing | remote creation was blocked |
 | `Tools/TOOL_CONTEXT.md` | partial | area indexes now provide finer navigation |
-| `Tools/ai/TOOL_CONTEXT.md` | partial | `Tools/ai/CONTEXT_INDEX.md` provides family navigation |
+| `ia_carmine/TOOL_CONTEXT.md` | partial | `ia_carmine/CONTEXT_INDEX.md` provides family navigation |
 | `Tools/validation/TOOL_CONTEXT.md` | partial | `Tools/validation/CONTEXT_INDEX.md` provides family navigation |
 | `Tools/workflow/TOOL_CONTEXT.md` | partial | `Tools/workflow/CONTEXT_INDEX.md` provides family navigation |
 | `Tools/npu/TOOL_CONTEXT.md` | partial | `Tools/npu/CONTEXT_INDEX.md` provides family navigation |

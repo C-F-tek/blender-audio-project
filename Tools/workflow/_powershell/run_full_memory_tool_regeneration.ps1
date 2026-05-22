@@ -98,7 +98,7 @@ Write-Host "Profile: $Profile"
 Write-Host "Objective: $Objective"
 
 Invoke-RepoPython -Label "Persistent memory inventory" -ArgsList @(
-    "-m", "Tools.ai", "build_agent_memory_inventory",
+    "-m", "ia_carmine.cli", "build_agent_memory_inventory",
     "--repo-root", ".",
     "--objective", $Objective,
     "--output", $MemoryInventoryJson,
@@ -106,14 +106,14 @@ Invoke-RepoPython -Label "Persistent memory inventory" -ArgsList @(
 )
 
 Invoke-RepoPython -Label "Agnostic tool inventory" -ArgsList @(
-    "-m", "Tools.ai", "build_agent_agnostic_tool_inventory",
+    "-m", "ia_carmine.cli", "build_agent_agnostic_tool_inventory",
     "--repo-root", ".",
     "--output", $ToolInventoryJson,
     "--markdown-output", $ToolInventoryMd
 )
 
 Invoke-RepoPython -Label "Persistent SQLite memory status" -ArgsList @(
-    "-m", "Tools.ai", "agent_runtime_sqlite_memory",
+    "-m", "ia_carmine.cli", "agent_runtime_sqlite_memory",
     "--repo-root", ".",
     "--action", "status",
     "--scope", "persistent",
@@ -122,7 +122,7 @@ Invoke-RepoPython -Label "Persistent SQLite memory status" -ArgsList @(
 )
 
 Invoke-RepoPython -Label "Operational SQLite memory status" -ArgsList @(
-    "-m", "Tools.ai", "agent_runtime_sqlite_memory",
+    "-m", "ia_carmine.cli", "agent_runtime_sqlite_memory",
     "--repo-root", ".",
     "--action", "status",
     "--scope", "operational",
@@ -131,7 +131,7 @@ Invoke-RepoPython -Label "Operational SQLite memory status" -ArgsList @(
 )
 
 $PolicyArgs = @(
-    "-m", "Tools.ai", "agent_memory_routing_policy",
+    "-m", "ia_carmine.cli", "agent_memory_routing_policy",
     "--repo-root", ".",
     "--objective", $Objective,
     "--profile", $Profile,
@@ -148,7 +148,7 @@ Invoke-RepoPython -Label "Memory routing policy" -ArgsList $PolicyArgs
 
 if (-not $SkipBroker) {
     Invoke-RepoPython -Label "Runtime tool broker" -ArgsList @(
-        "-m", "Tools.ai", "agent_runtime_tool_broker",
+        "-m", "ia_carmine.cli", "agent_runtime_tool_broker",
         "--repo-root", ".",
         "--request-file", $BrokerRequest,
         "--tool-output-dir", ".\$RunToolDir",
@@ -161,7 +161,7 @@ if (-not $SkipBroker) {
 }
 
 $TransientArgs = @(
-    "-m", "Tools.ai", "build_agent_transient_request_context",
+    "-m", "ia_carmine.cli", "build_agent_transient_request_context",
     "--repo-root", ".",
     "--objective", "Full memory/tool regeneration context for IA-Carmine.",
     "--memory-note", "Persistent memory is read-only. Operational memory is scratch. Runtime tools are brokered by allowlist.",
@@ -188,9 +188,9 @@ Invoke-RepoPython -Label "Full Python line-count inventory" -ArgsList @(
 
 if (-not $SkipCodeInterpreter) {
     Invoke-RepoPython -Label "Code interpreter/static report" -ArgsList @(
-        "-m", "Tools.ai", "build_code_interpreter_report",
+        "-m", "ia_carmine.cli", "build_code_interpreter_report",
         "--repo-root", ".",
-        "--input", "Tools/ai",
+        "--input", "ia_carmine",
         "--input", "Tools/validation",
         "--input", "Tools/workflow",
         "--input", "Tools/npu",
@@ -341,7 +341,7 @@ Add-ExistingPath -List $Artifacts -Path $WorkflowMd
 
 if (-not $SkipBundle) {
     $BundleArgs = @(
-        "-m", "Tools.ai.repository_product.github_evidence_bundle",
+        "-m", "ia_carmine.product.repository_product.github_evidence_bundle",
         "--repo-root", ".",
         "--basename", $BundleBase,
         "--output-dir", $EvidenceDir,

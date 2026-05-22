@@ -48,9 +48,23 @@ heap/exchange worked
 exit product was evaluated
 no concrete deterministic operation candidate exists
 blocked reason is explicit
+continuation pointer or resume context is explicit when available
 ```
 
 This is a valid safe exit. It must not pretend success.
+
+### Blocked continuation product
+
+```text
+provider/pointer evidence exists
+the universe has not reached an approved concrete product
+resume_from_block_id or blocker reason is published
+public Documents package is written
+```
+
+This is the canonical output when GPU1 is blocked, the budget soft-closes or
+the provider graph needs another turn. It is not a code product and must not be
+applied as a patch.
 
 ### Real product run
 
@@ -103,12 +117,26 @@ source-write status unclear
 
 ```text
 GPU/provider lane -> advisory evidence or candidate reasoning
-GPU0/OpenVINO lane -> observable companion/review evidence
-NPU lane -> bounded micro-task/tool/device provider evidence, not primary semantic ownership
+GPU0/Ollama Vulkan lane -> observable companion/review evidence
+NPU/OpenVINO lane -> bounded micro-task/tool/device provider evidence, not primary semantic ownership
 CPU/validator lane -> deterministic checks and contracts
 ```
 
 A lane is not successful because it exists. It is useful when it produces structured evidence.
+
+GPU1/Ollama is the closure owner. Full runs use `--provider-model auto` unless
+the operator selects `--strict-provider-model`. With `--ollama-gpu-layers all`,
+`ollama ps` must prove `100% GPU`; mixed `CPU/GPU`, CPU-only or unproven
+residency blocks GPU1. GPU0/Ollama Vulkan and NPU/OpenVINO are sidecar evidence lanes, but each must
+produce real model/device output when selected; diagnostic tensor/preflight
+evidence alone is not a real product provider lane.
+
+Provider role truth is `provider_work_verified=true`, not device visibility,
+model loading, diagnostics or short handshakes. If provider work is rejected, the
+run exits as blocked with the lane reasons, for example
+`gpu1_no_verified_workload`, `gpu0_ollama_vulkan_no_verified_workload` or
+`npu_micro_provider_not_loaded`, instead of a generic soft-governor or
+no-applicable-code-product status.
 
 ## Review boundary
 
@@ -142,10 +170,10 @@ Commit only source, tests, documentation, selected compact evidence or reviewed 
 ```text
 docs/HEAP_EXCHANGE_USEFUL_MODEL.md
 docs/STANDALONE_HEAP_SURFACE_MODEL.md
-Tools/ai/run/TOOL_CONTEXT.md
-Tools/ai/code_product/TOOL_CONTEXT.md
-Tools/ai/patch_product/TOOL_CONTEXT.md
-Tools/ai/patchkit/TOOL_CONTEXT.md
+ia_carmine/runtime/run/TOOL_CONTEXT.md
+ia_carmine/product/code_product/TOOL_CONTEXT.md
+ia_carmine/product/patch_product/TOOL_CONTEXT.md
+ia_carmine/product/patchkit/TOOL_CONTEXT.md
 Tools/validation/real_product/TOOL_CONTEXT.md
 Tools/validation/generated_patch_specs/TOOL_CONTEXT.md
 Tools/validation/repository_product/TOOL_CONTEXT.md

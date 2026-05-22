@@ -31,7 +31,7 @@ When `-BuildEvidence` is selected, the pipeline adapter builds a compact evidenc
 The bundle is generated with the existing evidence builder:
 
 ```text
-Tools/ai/repository_product/github_evidence_bundle.py
+ia_carmine/product/repository_product/github_evidence_bundle.py
 ```
 
 and validated with:
@@ -166,6 +166,6 @@ The runner passes:
 --no-auto-discover-selected-chunks-evidence
 ```
 
-to `Tools.ai.repository_product.github_evidence_bundle` and adds selected-chunks evidence explicitly only when the current run produced it.
+to `ia_carmine.product.repository_product.github_evidence_bundle` and adds selected-chunks evidence explicitly only when the current run produced it.
 
 This prevents a docs-only smoke without `-BuildSelectedChunksEvidence` from reporting stale `full_context_golden_*selected_chunks_evidence.json` as if it belonged to the current run.

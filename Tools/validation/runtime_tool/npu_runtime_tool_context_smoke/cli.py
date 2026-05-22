@@ -135,7 +135,7 @@ def main() -> int:
 
     command = [
         sys.executable,
-        "Tools/ai/provider_mesh/npu_gpu_deep_review_auditor/cli.py",
+        "ia_carmine/providers/provider_mesh/npu_gpu_deep_review_auditor/cli.py",
         "--repo-root",
         ".",
         "--gpu-review",

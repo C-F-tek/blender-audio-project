@@ -22,12 +22,12 @@ patch_specs/<bundle>/fragments/*.py
 Standard commands:
 
 ```powershell
-python -m Tools.ai apply_patch_bundle `
+python -m ia_carmine.cli apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python -m Tools.ai apply_patch_bundle `
+python -m ia_carmine.cli apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```

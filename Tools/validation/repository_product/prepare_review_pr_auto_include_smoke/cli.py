@@ -140,7 +140,7 @@ def main() -> int:
         command = [
             sys.executable,
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "agent_review_prepare_pr",
             "--repo-root",
             str(repo),

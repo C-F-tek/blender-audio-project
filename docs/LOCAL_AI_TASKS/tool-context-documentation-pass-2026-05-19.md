@@ -17,29 +17,29 @@ No PR is currently open, so this pass is applied directly to `master` by operato
 ```text
 CHATGPT.md
 Tools/TOOL_CONTEXT.md
-Tools/ai/TOOL_CONTEXT.md
+ia_carmine/TOOL_CONTEXT.md
 Tools/validation/TOOL_CONTEXT.md
 Tools/workflow/TOOL_CONTEXT.md
 Tools/npu/TOOL_CONTEXT.md
 Tools/docs/TOOL_CONTEXT.md
 Tools/git/TOOL_CONTEXT.md
 Tools/repo_patch_runner/TOOL_CONTEXT.md
-Tools/ai/agent_context/TOOL_CONTEXT.md
-Tools/ai/agent_memory/TOOL_CONTEXT.md
-Tools/ai/heap_context_memory_reload/TOOL_CONTEXT.md
-Tools/ai/heap_gate/TOOL_CONTEXT.md
-Tools/ai/heap_runtime/TOOL_CONTEXT.md
-Tools/ai/operator_product_core/TOOL_CONTEXT.md
-Tools/ai/provider_mesh/TOOL_CONTEXT.md
-Tools/ai/runtime_tool/TOOL_CONTEXT.md
-Tools/ai/runtime_universe/TOOL_CONTEXT.md
-Tools/ai/code_product/TOOL_CONTEXT.md
-Tools/ai/patch_product/TOOL_CONTEXT.md
-Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md
-Tools/ai/external_heap/TOOL_CONTEXT.md
-Tools/ai/repository_product/TOOL_CONTEXT.md
-Tools/ai/agent_review/TOOL_CONTEXT.md
-Tools/ai/generated_patch_specs/TOOL_CONTEXT.md
+ia_carmine/context/agent_context/TOOL_CONTEXT.md
+ia_carmine/memory/agent_memory/TOOL_CONTEXT.md
+ia_carmine/context/heap_context_memory_reload/TOOL_CONTEXT.md
+ia_carmine/runtime/heap_gate/TOOL_CONTEXT.md
+ia_carmine/runtime/heap_runtime/TOOL_CONTEXT.md
+ia_carmine/product/operator_product_core/TOOL_CONTEXT.md
+ia_carmine/providers/provider_mesh/TOOL_CONTEXT.md
+ia_carmine/runtime/runtime_tool/TOOL_CONTEXT.md
+ia_carmine/runtime/runtime_universe/TOOL_CONTEXT.md
+ia_carmine/product/code_product/TOOL_CONTEXT.md
+ia_carmine/product/patch_product/TOOL_CONTEXT.md
+ia_carmine/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md
+ia_carmine/runtime/external_heap/TOOL_CONTEXT.md
+ia_carmine/product/repository_product/TOOL_CONTEXT.md
+ia_carmine/product/agent_review/TOOL_CONTEXT.md
+ia_carmine/product/generated_patch_specs/TOOL_CONTEXT.md
 Tools/validation/heap_runtime/TOOL_CONTEXT.md
 Tools/validation/runtime_tool/TOOL_CONTEXT.md
 Tools/validation/runtime_universe/TOOL_CONTEXT.md
@@ -53,8 +53,8 @@ Tools/npu/provider_mesh/TOOL_CONTEXT.md
 ```text
 [x] Root contract restored.
 [x] Top-level Tools areas documented.
-[x] Core Tools/ai families documented.
-[x] Second-level Tools/ai families documented.
+[x] Core ia_carmine families documented.
+[x] Second-level ia_carmine families documented.
 [x] Second-level Tools/validation families documented.
 [x] Workflow and NPU package contexts documented.
 ```
@@ -62,7 +62,7 @@ Tools/npu/provider_mesh/TOOL_CONTEXT.md
 ## Remaining candidates
 
 ```text
-more granular package-level contexts under Tools/ai where useful
+more granular package-level contexts under ia_carmine where useful
 more granular validation contexts where useful
 docs/PACKAGE_CREATION_WORKFLOW.md alignment check
 docs/PROJECT_AUDIT.md alignment check

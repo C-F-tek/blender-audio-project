@@ -34,7 +34,7 @@ and categorizes paths such as:
 ```text
 Tools/validation/** -> validator
 Tools/workflow/**   -> workflow_runner
-Tools/ai/**         -> ai_tool
+ia_carmine/**         -> ai_tool
 Tools/npu/**        -> npu_or_provider_tool
 Tools/git/**        -> git_helper
 Scripting/**        -> blender_application_script
@@ -155,11 +155,11 @@ Likely groups to inspect after running the inventory:
 Tools/workflow/run_unified_local_ai_refactor/** split ps1 parts
 Tools/workflow/_powershell/** wrappers
 Tools/validation/** nested validators not yet described
-Tools/ai/provider_runtime_blackboard/**
-Tools/ai/external_heap/**
-Tools/ai/repository_product/**
-Tools/ai/agent_review/**
-Tools/ai/generated_patch_specs/**
+ia_carmine/runtime/provider_runtime_blackboard/**
+ia_carmine/runtime/external_heap/**
+ia_carmine/product/repository_product/**
+ia_carmine/product/agent_review/**
+ia_carmine/product/generated_patch_specs/**
 Scripting/** package-local scripts
 examples/** or root-level scripts, if present
 ```

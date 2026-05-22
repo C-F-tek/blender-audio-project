@@ -277,12 +277,12 @@ what final product or blocked reason was produced?
 
 ```text
 docs/HEAP_EXCHANGE_USEFUL_MODEL.md
-Tools/ai/heap_runtime/TOOL_CONTEXT.md
-Tools/ai/heap_context_memory_reload/TOOL_CONTEXT.md
-Tools/ai/runtime_tool/TOOL_CONTEXT.md
-Tools/ai/provider_runtime_blackboard/TOOL_CONTEXT.md
-Tools/ai/agent_context/TOOL_CONTEXT.md
-Tools/ai/agent_memory/TOOL_CONTEXT.md
+ia_carmine/runtime/heap_runtime/TOOL_CONTEXT.md
+ia_carmine/context/heap_context_memory_reload/TOOL_CONTEXT.md
+ia_carmine/runtime/runtime_tool/TOOL_CONTEXT.md
+ia_carmine/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md
+ia_carmine/context/agent_context/TOOL_CONTEXT.md
+ia_carmine/memory/agent_memory/TOOL_CONTEXT.md
 ```
 
 ## Historical source

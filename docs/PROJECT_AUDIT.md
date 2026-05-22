@@ -22,7 +22,7 @@ Scripting/CONTEXT_INDEX.md
 Current code-driven caveat:
 
 ```text
-Tools/ai/, Tools/validation/, Tools/workflow/, Tools/npu/, Tools/docs/, Tools/git/ and Tools/repo_patch_runner/ expose dispatcher-owned command surfaces.
+ia_carmine/, Tools/validation/, Tools/workflow/, Tools/npu/, Tools/docs/, Tools/git/ and Tools/repo_patch_runner/ expose dispatcher-owned command surfaces.
 Use area CONTEXT_INDEX.md files and dispatch.py files before relying on older task/runbook guidance.
 Current product paths must account for heap/exchange entry, runtime state, exit product, lifecycle validation, patchkit/code-product boundaries and dispatcher-driven coverage.
 ```
@@ -45,7 +45,7 @@ It contains:
 - shared-utility policy under `Scripting/shared/`;
 - a reusable package template under `Scripting/_template_audio_reactive_package/`;
 - AI, NPU and Ollama support tooling under `Tools/npu/`;
-- AI orchestration, context, evidence, patch and review tooling under `Tools/ai/`;
+- AI orchestration, context, evidence, patch and review tooling under `ia_carmine/`;
 - workflow launchers under `Tools/workflow/`;
 - validation and smoke surfaces under `Tools/validation/`;
 - documentation/tool hygiene surfaces under `Tools/docs/`;
@@ -76,7 +76,7 @@ It contains:
 | `docs/CONTEXT_COVERAGE_STATUS.md` | Current context coverage status. |
 | `docs/DISPATCHER_CONTEXT_COVERAGE.md` | Dispatcher-driven tool-family coverage. |
 | `Tools/CONTEXT_INDEX.md` | Current global tool context index. |
-| `Tools/ai/CONTEXT_INDEX.md` | AI tool family navigation. |
+| `ia_carmine/CONTEXT_INDEX.md` | AI tool family navigation. |
 | `Tools/validation/CONTEXT_INDEX.md` | Validation family navigation. |
 | `Tools/workflow/CONTEXT_INDEX.md` | Workflow family navigation. |
 | `Tools/npu/CONTEXT_INDEX.md` | NPU family navigation. |
@@ -86,7 +86,7 @@ It contains:
 | `Scripting/_template_audio_reactive_package/` | Template for future generated packages. |
 | `Scripting/shared/` | Target area for reusable package-agnostic utilities. |
 | `Tools/workflow/` | Current workflow/launcher ownership. |
-| `Tools/ai/` | Current AI orchestration, context, evidence, evidence, heap/exchange, patchkit and review tooling. |
+| `ia_carmine/` | Current AI orchestration, context, evidence, evidence, heap/exchange, patchkit and review tooling. |
 | `Tools/npu/` | Local AI, NPU, context-building, review and implementation tooling. |
 | `Tools/validation/` | Validators, smokes and report-contract checks. |
 | `Tools/docs/` | Documentation hygiene and tool-surface audit helpers. |
@@ -189,7 +189,7 @@ Use it for sound-strip creation, sequencer cleanup, safe node creation and safe 
 Current AI workflow should remain owner-aligned through dispatchers and area context indexes:
 
 ```text
-python -m Tools.ai <tool>
+python -m ia_carmine.cli <tool>
 python -m Tools.validation <tool>
 python -m Tools.workflow <tool>
 python -m Tools.npu <tool>

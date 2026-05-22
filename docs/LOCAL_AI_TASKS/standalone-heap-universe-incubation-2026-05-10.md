@@ -24,17 +24,17 @@ It is not a replacement for `Tools/workflow/run_unified_real_product_pr.ps1`. It
 ## Current owner path
 
 ```text
-Tools/ai/heap_context_closure/cli.py
+ia_carmine/runtime/heap_context_closure/cli.py
 ```
 
 Related helper/tooling surface:
 
 ```text
-Tools/ai/heap_context_memory_reload/cli.py
-Tools/ai/ensure_ai_context_required_files.py
-Tools/ai/reconcile_heap_report_with_startup_reload.py
-Tools/ai/heap_runtime/completeness_gate/cli.py
-Tools/ai/heap_final_proposals/cli.py
+ia_carmine/context/heap_context_memory_reload/cli.py
+ia_carmine/ensure_ai_context_required_files.py
+ia_carmine/reconcile_heap_report_with_startup_reload.py
+ia_carmine/runtime/heap_runtime/completeness_gate/cli.py
+ia_carmine/product/heap_final_proposals/cli.py
 ```
 
 ## Strict input

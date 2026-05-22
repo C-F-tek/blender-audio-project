@@ -17,14 +17,14 @@ The launcher lets the operator choose:
 - final code-product artifact for review/apply.
 
 It does not replace `run_heap_runtime_context_closure.py` or the profile builder.
-It builds on the existing profile file and uses `Tools.ai.code_product.artifact_intake`
+It builds on the existing profile file and uses `ia_carmine.product.code_product.artifact_intake`
 for deterministic review and safe apply.
 
 ## Files
 
 ```text
-Tools/ai/operator_product_core/
-Tools/ai/operator_product_launcher.py
+ia_carmine/product/operator_product_core/
+ia_carmine/operator_product_launcher.py
 Tools/validation/workflow_run/operator_product_launcher_smoke/cli.py
 ```
 
@@ -38,7 +38,7 @@ and only applies sections already classified as safe forward-applicable.
 
 The full run exposed a broker regression from coarse aggregation of child
 `source_writes_performed` / `patch_application_performed` flags. The fix stays
-in `Tools/ai/runtime_tool/agent_broker.py`: child writes under
+in `ia_carmine/runtime/runtime_tool/agent_broker.py`: child writes under
 `output/validation/.../fixture_repo` are fixture evidence, generated
 report/artifact outputs under `output/` or `docs/LOCAL_VALIDATION_EVIDENCE/`
 are not promoted to real repo source writes, and real patch/git/source writes

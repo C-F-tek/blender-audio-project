@@ -30,7 +30,7 @@ def live_signal(
         label,
         [
             "-m",
-            "Tools.ai",
+            "ia_carmine",
             "provider_runtime_live_signals",
             "--repo-root",
             ".",

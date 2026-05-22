@@ -34,9 +34,9 @@ Questa modifica e' document-only. Non esegue provider, non applica patch, non sc
 
 ### Evidenza code-driven
 
-`Tools/ai/heap_context_closure/cli.py` costruisce `startup_context_memory_reload/heap_startup_input_ready_context.md` tramite `Tools/ai/heap_context_memory_reload/cli.py` e lo passa a `Tools/ai/heap_runtime/completeness_gate/cli.py` con `--task-file` quando il file esiste.
+`ia_carmine/runtime/heap_context_closure/cli.py` costruisce `startup_context_memory_reload/heap_startup_input_ready_context.md` tramite `ia_carmine/context/heap_context_memory_reload/cli.py` e lo passa a `ia_carmine/runtime/heap_runtime/completeness_gate/cli.py` con `--task-file` quando il file esiste.
 
-`Tools/ai/heap_runtime/completeness_gate/cli.py` contiene funzioni per lifecycle reload:
+`ia_carmine/runtime/heap_runtime/completeness_gate/cli.py` contiene funzioni per lifecycle reload:
 
 ```text
 publish_startup_memory_context_reload_events()
@@ -95,13 +95,13 @@ semantic chunk refs
 context pack refs/degraded status
 ```
 
-Se il test fallisce, patchare `python -m Tools.ai run_heap_runtime_completeness_gate` per invocare esplicitamente il lifecycle reload in fase init e appendere gli artifact refs come `fact`/`evidence_response` o `provider_evidence`.
+Se il test fallisce, patchare `python -m ia_carmine.cli run_heap_runtime_completeness_gate` per invocare esplicitamente il lifecycle reload in fase init e appendere gli artifact refs come `fact`/`evidence_response` o `provider_evidence`.
 
 ## Finding 2 — `build_ai_context_pack.py`: il failure non e' spiegabile solo con truncation
 
 ### Evidenza code-driven
 
-`Tools/ai/agent_context/ai_context_pack/cli.py` imposta `entry["truncated"] = True` quando un file supera il budget, ma la truncation viene registrata come warning. Il pack fallisce (`passed=false`, return code `2`) quando un required file e' mancante, non incluso, o viola policy.
+`ia_carmine/context/agent_context/ai_context_pack/cli.py` imposta `entry["truncated"] = True` quando un file supera il budget, ma la truncation viene registrata come warning. Il pack fallisce (`passed=false`, return code `2`) quando un required file e' mancante, non incluso, o viola policy.
 
 Evidenza storica gia' versionata:
 
@@ -126,7 +126,7 @@ forbidden path
 
 ### Azione consigliata
 
-In `Tools/ai/heap_context_memory_reload/cli.py`, quando `ai_context_pack_reload` e' degradato, estrarre e riportare nel manifest almeno:
+In `ia_carmine/context/heap_context_memory_reload/cli.py`, quando `ai_context_pack_reload` e' degradato, estrarre e riportare nel manifest almeno:
 
 ```text
 errors
@@ -144,7 +144,7 @@ Il warning deve indicare la causa specifica, non solo `returncode=2`.
 
 ### Evidenza code-driven
 
-`Tools/ai/ensure_ai_context_required_files.py` legge i required files dal profilo di `build_ai_context_pack.py` e inizializza solo documenti Markdown noti e compatti, come:
+`ia_carmine/ensure_ai_context_required_files.py` legge i required files dal profilo di `build_ai_context_pack.py` e inizializza solo documenti Markdown noti e compatti, come:
 
 ```text
 docs/README.md
@@ -235,7 +235,7 @@ almeno nel JSON finale e nel TXT/MD operatore.
 
 ### Evidenza code-driven
 
-`Tools/ai/provider_runtime_blackboard/cli.py` applica `compact_payload(..., max_chars=8000)`. Questo e' un guardrail corretto, ma se si tenta di inserire contenuto lungo direttamente nell'evento heap, l'evento diventa preview/truncated.
+`ia_carmine/runtime/provider_runtime_blackboard/cli.py` applica `compact_payload(..., max_chars=8000)`. Questo e' un guardrail corretto, ma se si tenta di inserire contenuto lungo direttamente nell'evento heap, l'evento diventa preview/truncated.
 
 ### Impatto
 
@@ -258,7 +258,7 @@ Non dumpare integralmente context pack o documenti lunghi dentro singoli eventi 
 
 ### Evidenza code-driven
 
-`Tools/ai/heap_context_memory_reload/cli.py` implementa una selezione deterministica locale `collect_semantic_code_chunks()`. Il broker espone gia' il tool allowlisted:
+`ia_carmine/context/heap_context_memory_reload/cli.py` implementa una selezione deterministica locale `collect_semantic_code_chunks()`. Il broker espone gia' il tool allowlisted:
 
 ```text
 select_semantic_code_chunks
@@ -282,7 +282,7 @@ Scelta consigliata:
 Esistono:
 
 ```text
-python -m Tools.ai heap_exchange_closure_audit
+python -m ia_carmine.cli heap_exchange_closure_audit
 Tools/validation/heap_exchange/closure_audit_smoke/cli.py
 ```
 
@@ -334,10 +334,10 @@ task-file e manifest diventati conoscenza heap consumabile dalle lanes
 ## Prossimi target patch consigliati
 
 ```text
-Tools/ai/heap_runtime/completeness_gate/cli.py
-Tools/ai/heap_context_closure/cli.py
-Tools/ai/heap_context_memory_reload/cli.py
-Tools/ai/heap_final_proposals/cli.py
+ia_carmine/runtime/heap_runtime/completeness_gate/cli.py
+ia_carmine/runtime/heap_context_closure/cli.py
+ia_carmine/context/heap_context_memory_reload/cli.py
+ia_carmine/product/heap_final_proposals/cli.py
 Tools/validation/heap_runtime/completeness_gate_smoke/cli.py
 Tools/validation/run_heap_startup_context_ingestion_smoke.py
 ```
@@ -345,10 +345,10 @@ Tools/validation/run_heap_startup_context_ingestion_smoke.py
 ## Validazione suggerita dopo la prossima patch codice
 
 ```powershell
-python -m py_compile .\Tools\ai\heap_runtime\completeness_gate\cli.py
-python -m py_compile .\Tools\ai\heap_context_closure\cli.py
-python -m py_compile .\Tools\ai\heap_context_memory_reload\cli.py
-python -m py_compile .\Tools\ai\heap_final_proposals\cli.py
+python -m py_compile .\ia_carmine\runtime\heap_runtime\completeness_gate\cli.py
+python -m py_compile .\ia_carmine\runtime\heap_context_closure\cli.py
+python -m py_compile .\ia_carmine\context\heap_context_memory_reload\cli.py
+python -m py_compile .\ia_carmine\product\heap_final_proposals\cli.py
 python -m py_compile .\Tools\validation\run_heap_startup_context_ingestion_smoke.py
 
 python -m Tools.validation run_heap_startup_context_ingestion_smoke --repo-root . --output .\output\validation\heap_startup_context_ingestion_smoke.json

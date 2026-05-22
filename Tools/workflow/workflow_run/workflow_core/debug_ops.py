@@ -1,4 +1,4 @@
-"""Debug and operation-list helpers for the workflow facade."""
+"""Debug and operation-list helpers for the workflow surface."""
 
 from __future__ import annotations
 

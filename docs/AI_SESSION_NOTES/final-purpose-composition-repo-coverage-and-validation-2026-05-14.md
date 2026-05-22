@@ -116,13 +116,13 @@ After Package B:
 
 Changed or candidate code files:
 
-- `Tools/ai/heap_final_proposals/cli.py`: oversized, 1147 lines before the
+- `ia_carmine/product/heap_final_proposals/cli.py`: oversized, 1147 lines before the
   latest wrapper/prompt edits.
-- `Tools/ai/_shared/heap_proposal_gate.py`: under budget.
+- `ia_carmine/_shared/heap_proposal_gate.py`: under budget.
 - `Tools/validation/test_proposal_gate.py`: under budget.
-- `Tools/ai/heap_context_closure/cli.py`: oversized, 945 lines after
+- `ia_carmine/runtime/heap_context_closure/cli.py`: oversized, 945 lines after
   Package B.
-- `Tools/ai/heap_runtime/completeness_gate/cli.py`: heavily oversized,
+- `ia_carmine/runtime/heap_runtime/completeness_gate/cli.py`: heavily oversized,
   4787 lines after Package C.
 
 Decision:
@@ -138,7 +138,7 @@ Required after A/B/C:
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = (Resolve-Path .).Path
-& $RepoPy -m py_compile .\Tools\ai\heap_final_proposals\cli.py -m Tools.ai heap_proposal_gate .\Tools\validation\test_proposal_gate.py -m Tools.ai run_heap_runtime_context_closure .\Tools\ai\heap_runtime\completeness_gate\cli.py
+& $RepoPy -m py_compile .\ia_carmine\product\heap_final_proposals\cli.py -m ia_carmine heap_proposal_gate .\Tools\validation\test_proposal_gate.py -m ia_carmine run_heap_runtime_context_closure .\ia_carmine\runtime\heap_runtime\completeness_gate\cli.py
 & $RepoPy -m Tools.validation test_proposal_gate
 & $RepoPy -m Tools.validation check_docs_links --repo-root . --output output/validation/docs_links_after_final_purpose_apply.json
 git diff --check
@@ -148,11 +148,11 @@ Additional validation after code execution matrix:
 
 ```powershell
 & $RepoPy -m py_compile `
-  .\Tools\ai\heap_runtime\code_execution_tool\cli.py `
-  .\Tools\ai\_shared\heap_code_execution_tool_core.py `
+  .\ia_carmine\runtime\heap_runtime\code_execution_tool\cli.py `
+  .\ia_carmine\_shared\heap_code_execution_tool_core.py `
   .\Tools\validation\heap_runtime\code_execution_tool_smoke\cli.py `
-  .\Tools\ai\runtime_tool\agent_broker.py `
-  .\Tools\ai\heap_runtime\completeness_gate\cli.py
+  .\ia_carmine\runtime\runtime_tool\agent_broker.py `
+  .\ia_carmine\runtime\heap_runtime\completeness_gate\cli.py
 
 & $RepoPy -m Tools.validation run_heap_code_execution_tool_smoke `
   --repo-root . `
@@ -171,7 +171,7 @@ Result:
 Optional request-file smoke:
 
 ```powershell
-& $RepoPy -m Tools.ai run_heap_runtime_context_closure --repo-root . --python-exe $RepoPy --request-file .\docs\AI_SESSION_NOTES\final-purpose-repo-wide-apply-proposal-2026-05-14.md --skip-preflight --skip-startup-reload --no-documents --timeout-seconds 60
+& $RepoPy -m ia_carmine run_heap_runtime_context_closure --repo-root . --python-exe $RepoPy --request-file .\docs\AI_SESSION_NOTES\final-purpose-repo-wide-apply-proposal-2026-05-14.md --skip-preflight --skip-startup-reload --no-documents --timeout-seconds 60
 ```
 
 ## Risks

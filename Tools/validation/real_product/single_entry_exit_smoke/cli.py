@@ -28,19 +28,19 @@ def main() -> int:
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
-    dispatch = read_text(repo / "Tools/ai/dispatch.py")
-    run_cli = read_text(repo / "Tools/ai/run/cli.py")
-    core_cli = read_text(repo / "Tools/ai/operator_product_core/cli.py")
-    controller = read_text(repo / "Tools/ai/operator_product_core/controller.py")
-    runner = read_text(repo / "Tools/ai/operator_product_core/runner.py")
-    gui = read_text(repo / "Tools/ai/operator_product_core/view/cli.py")
+    dispatch = read_text(repo / "ia_carmine/dispatch.py")
+    run_cli = read_text(repo / "ia_carmine/runtime/run/cli.py")
+    core_cli = read_text(repo / "ia_carmine/product/operator_product_core/cli.py")
+    controller = read_text(repo / "ia_carmine/product/operator_product_core/controller.py")
+    runner = read_text(repo / "ia_carmine/product/operator_product_core/runner.py")
+    gui = read_text(repo / "ia_carmine/product/operator_product_core/view/cli.py")
     preflight = read_text(repo / "Tools/validation/real_product/preflight_gate/cli.py")
 
     checks = {
-        "single_non_gui_entrypoint": '"run": "Tools.ai.run.cli:main"' in dispatch,
-        "single_gui_view_entrypoint": '"operator_product_gui": "Tools.ai.operator_product_core.view.cli:main"'
+        "single_non_gui_entrypoint": '"run": "ia_carmine.runtime.run.cli:main"' in dispatch,
+        "single_gui_view_entrypoint": '"operator_product_gui": "ia_carmine.product.operator_product_core.view.cli:main"'
         in dispatch,
-        "run_mentions_canonical_command": "python -m Tools.ai run" in run_cli,
+        "run_mentions_canonical_command": "python -m ia_carmine.cli run" in run_cli,
         "run_builds_launcher_config": "LauncherConfig" in run_cli and "build_config" in run_cli,
         "run_calls_shared_controller": "OperatorProductController(config)" in run_cli,
         "gui_calls_shared_controller": "OperatorProductController(self.config())" in gui,
@@ -50,7 +50,7 @@ def main() -> int:
         and "operator_product_lab_summary.md" in runner,
         "runner_requires_code_product": "CODE_PRODUCT_FULL_PATCH was not produced" in runner,
         "runner_validates_code_product": "code_product_review.json" in runner
-        and "Tools.ai.code_product.artifact_intake" in runner,
+        and "ia_carmine.product.code_product.artifact_intake" in runner,
         "safe_apply_separate_from_canonical_run": "--apply-safe" not in run_cli
         and "--apply-safe" in core_cli
         and "apply_safe_code_product" in controller,

@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from Tools.ai._shared.process_tree import terminate_process_tree
+from ia_carmine._shared.process_tree import terminate_process_tree
 
 
 def outer_watchdog_seconds(timeout_seconds: int) -> int:

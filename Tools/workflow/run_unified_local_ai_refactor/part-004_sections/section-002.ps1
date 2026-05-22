@@ -38,7 +38,7 @@ if ($PrepareReviewPr) {
         ($ReviewPrArgsContext | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $ReviewPrArgsContextJson -Encoding UTF8
 
         $PhaseStatus.review_pr_prepare_args = Invoke-Checked "Build review PR prepare args" {
-            & $ResolvedPythonExe -m Tools.ai build_review_pr_prepare_args `
+            & $ResolvedPythonExe -m ia_carmine build_review_pr_prepare_args `
                 "--context", $ReviewPrArgsContextJson `
                 "--output", $ReviewPrArgsJson
         } -SoftFail:$ContinueOnValidationError
@@ -220,7 +220,7 @@ $UnifiedChainArgsContext = [ordered]@{
 ($UnifiedChainArgsContext | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $UnifiedChainArgsContextJson -Encoding UTF8
 
 $UnifiedChainArgsBuilderOk = Invoke-Checked "Build final unified chain contract args" {
-    & $ResolvedPythonExe -m Tools.ai build_unified_chain_contract_args `
+    & $ResolvedPythonExe -m ia_carmine build_unified_chain_contract_args `
         "--context", $UnifiedChainArgsContextJson `
         "--output", $UnifiedChainArgsJson
 }

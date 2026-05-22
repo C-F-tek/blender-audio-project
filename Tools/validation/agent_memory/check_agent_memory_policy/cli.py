@@ -14,8 +14,8 @@ from typing import Any
 def import_memory_modules(repo_root: Path) -> dict[str, Any]:
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from Tools.ai.agent_memory.policy import evaluate_memory_records, load_records
-    from Tools.ai.agent_memory.state import MemoryRecord
+    from ia_carmine.memory.agent_memory.policy import evaluate_memory_records, load_records
+    from ia_carmine.memory.agent_memory.state import MemoryRecord
 
     return {
         "evaluate_memory_records": evaluate_memory_records,

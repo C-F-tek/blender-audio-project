@@ -62,7 +62,7 @@ docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 WORKFLOW.md
 Tools/workflow/README.md
-Tools/ai/README.md
+ia_carmine/README.md
 ```
 
 Status:
@@ -74,7 +74,7 @@ unified-local-ai-refactor-launcher.md: operator runbook; verify current flags ag
 unified-launcher-parameter-decision-map: current parameter decision map.
 WORKFLOW.md: root workflow policy, updated in PR #251 with heap/exchange product path and patchkit boundary; still has one blocked full-file update follow-up tracked in problems.md.
 Tools/workflow/README.md: updated in PR #251 for lifecycle and patchkit.
-Tools/ai/README.md: updated in PR #251 for lifecycle and patchkit.
+ia_carmine/README.md: updated in PR #251 for lifecycle and patchkit.
 AI_PIPELINE_ARCHITECTURE.md: updated in PR #251 so dry-run pipeline evidence cannot be mistaken for full product proof.
 DATA_FLOW.md: updated in PR #251 to include heap/exchange lifecycle and patchkit.
 AI_ARTIFACT_SCHEMAS.md: updated in PR #251 to include heap/exchange and patchkit artifact families.
@@ -108,7 +108,7 @@ docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
 docs/LOCAL_AI_TASKS/patch-suggestion-bundle-final-phase.md
 docs/LOCAL_AI_TASKS/patch-suggestion-review-workflow-2026-05-07.md
 docs/LOCAL_AI_TASKS/patch-notes-quality-product-2026-05-07.md
-Tools/ai/patchkit/apply_patch_bundle.py
+ia_carmine/product/patchkit/apply_patch_bundle.py
 Tools/validation/run_patchkit_smoke.py
 ```
 

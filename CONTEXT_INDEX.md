@@ -38,7 +38,7 @@ This is the compact navigation entrypoint for AI and operator context.
 | --- | --- |
 | `Tools/CONTEXT_INDEX.md` | Global tool context index. |
 | `Tools/TOOL_CONTEXT.md` | Main tool area overview. |
-| `Tools/ai/CONTEXT_INDEX.md` | AI family context index. |
+| `ia_carmine/CONTEXT_INDEX.md` | AI family context index. |
 | `Tools/validation/CONTEXT_INDEX.md` | Validation family context index. |
 | `Tools/workflow/CONTEXT_INDEX.md` | Workflow family context index. |
 | `Tools/npu/CONTEXT_INDEX.md` | NPU family context index. |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate OpenVINO GPU0/NPU peer topology in the packaged runtime."""
+"""Validate Ollama GPU0/Vulkan and OpenVINO NPU peer topology in runtime."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def ordered_tokens(text: str, *tokens: str) -> bool:
 
 
 def write_markdown(report: dict[str, Any], output: Path) -> str:
-    lines = ["# OpenVINO Peer Topology Contract", "", f"- Passed: `{report.get('passed')}`", ""]
+    lines = ["# Ollama GPU0 / OpenVINO NPU Topology Contract", "", f"- Passed: `{report.get('passed')}`", ""]
     for key in report.get("check_order") or []:
         lines.append(f"- `{key}`: `{report.get(key)}`")
     if report.get("errors"):
@@ -46,79 +46,82 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
-    workloads = read_text(repo_root / "Tools/ai/provider_mesh/hardware_capability/workloads.py")
-    gpu0_companion = read_text(repo_root / "Tools/ai/provider_mesh/gpu0_companion_task_lane/cli.py")
-    gpu0_worker = read_text(repo_root / "Tools/ai/provider_mesh/gpu0_peer_companion_worker/cli.py")
-    npu_companion = read_text(repo_root / "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py")
-    npu_companion_shared = read_text(repo_root / "Tools/ai/_shared/npu_micro_task_companion_cli.py")
-    npu_shared = read_text(repo_root / "Tools/npu/provider_mesh/_shared/npu_runtime.py")
-    provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
+    workloads = read_text(repo_root / "ia_carmine/providers/provider_mesh/hardware_capability/workloads.py")
+    gpu0_companion = read_text(repo_root / "ia_carmine/providers/provider_mesh/gpu0_companion_task_lane/cli.py")
+    gpu0_worker = read_text(repo_root / "ia_carmine/providers/provider_mesh/gpu0_peer_companion_worker/cli.py")
+    npu_companion = read_text(repo_root / "ia_carmine/providers/provider_mesh/npu_micro_task_companion_report/cli.py")
+    npu_companion_shared = read_text(repo_root / "ia_carmine/_shared/npu_micro_task_companion_cli.py")
+    npu_shared = read_text(repo_root / "ia_carmine/providers/npu/provider_mesh/_shared/npu_runtime.py")
+    provider_loop = read_text(repo_root / "ia_carmine/_shared/provider_tool_loop.py")
     provider_commands = "\n".join(
         (
-            read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py"),
-            read_text(repo_root / "Tools/ai/heap_gate/provider_command_specs.py"),
-            read_text(repo_root / "Tools/ai/heap_gate/provider_time.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_commands.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_command_specs.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_time.py"),
         )
     )
-    provider_execution = read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py")
-    provider_absorption = read_text(repo_root / "Tools/ai/heap_gate/provider_report_absorption.py")
-    provider_collection = read_text(repo_root / "Tools/ai/heap_gate/provider_process_collection.py")
+    provider_execution = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_execution.py")
+    provider_absorption = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_report_absorption.py")
+    provider_collection = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_process_collection.py")
     provider_runtime = "\n".join((provider_execution, provider_absorption, provider_collection))
-    provider_teamwork_packet = read_text(repo_root / "Tools/ai/heap_gate/provider_teamwork_packet.py")
-    heap_run_loop = read_text(repo_root / "Tools/ai/heap_gate/run_loop.py")
-    gpu0_workload = read_text(repo_root / "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py")
-    blackboard = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/cli.py")
-    blackboard_common = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/common.py")
-    blackboard_heap = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/heap.py")
-    broker_bridge = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/broker_bridge/cli.py")
-    budget = read_text(repo_root / "Tools/ai/heap_provider/budget_governor/cli.py")
-    invocation = read_text(repo_root / "Tools/ai/heap_provider/invocation_contract/cli.py")
-    profiles = read_text(repo_root / "Tools/ai/run/profiles/heap_runtime_launcher_profiles.json")
+    provider_teamwork_packet = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_teamwork_packet.py")
+    heap_run_loop = read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop.py")
+    gpu0_workload = read_text(repo_root / "ia_carmine/providers/provider_mesh/ollama_gpu0_peer_report/cli.py")
+    blackboard = read_text(repo_root / "ia_carmine/runtime/provider_runtime_blackboard/cli.py")
+    blackboard_common = read_text(repo_root / "ia_carmine/runtime/provider_runtime_blackboard/common.py")
+    blackboard_heap = read_text(repo_root / "ia_carmine/runtime/provider_runtime_blackboard/heap.py")
+    broker_bridge = read_text(repo_root / "ia_carmine/runtime/provider_runtime_blackboard/broker_bridge/cli.py")
+    budget = read_text(repo_root / "ia_carmine/runtime/heap_provider/budget_governor/cli.py")
+    invocation = read_text(repo_root / "ia_carmine/runtime/heap_provider/invocation_contract/cli.py")
+    profiles = read_text(repo_root / "ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json")
     runtime_mesh = read_text(repo_root / "Tools/validation/real_product/runtime_mesh_contract/cli.py")
 
     checks: dict[str, bool] = {
-        "runtime_workload_targets_gpu0_only": has(workloads, '"GPU.0"')
-        and has(workloads, "openvino_gpu0_provider_execution_performed")
-        and has(workloads, "openvino_gpu0_not_primary_advisory"),
-        "gpu1_reserved_from_openvino_workload": has(workloads, "reserved_for_cuda_ollama")
-        and has(workloads, "openvino_gpu1_openvino_workload_allowed")
-        and has(workloads, "no workload was executed on GPU.1"),
+        "ollama_gpu0_vulkan_policy_required": has(
+            read_text(repo_root / "ia_carmine/providers/provider_mesh/hardware_capability/policy.py"),
+            "ollama_gpu0_vulkan",
+        )
+        and has(provider_commands, "ollama_gpu0_vulkan_required_openvino_gpu0_forbidden"),
+        "gpu1_reserved_from_openvino_workload": has(
+            read_text(repo_root / "ia_carmine/providers/provider_mesh/hardware_capability/policy.py"),
+            "reserved_for_cuda_ollama",
+        ),
         "gpu0_peer_command_is_support_lane": exists(
-            repo_root, "Tools/ai/provider_mesh/gpu0_companion_task_lane/cli.py"
+            repo_root, "ia_carmine/providers/provider_mesh/gpu0_companion_task_lane/cli.py"
         )
         and has(gpu0_companion, "companion_worker")
         and has(gpu0_companion, "semantic_evidence_chunks")
-        and has(gpu0_worker, "GPU0 peer emits numeric/tool evidence"),
+        and has(gpu0_worker, "ollama_gpu0_peer_report"),
         "npu_micro_uses_runtime_context_and_tool_broker": exists(
-            repo_root, "Tools/ai/provider_mesh/npu_micro_task_companion_report/cli.py"
+            repo_root, "ia_carmine/providers/provider_mesh/npu_micro_task_companion_report/cli.py"
         )
         and has(npu_companion, "npu_preflight")
         and has(provider_loop, "native_tool_loop_device")
         and has(provider_loop, "tool_calls"),
-        "runtime_heap_records_peer_events": exists(repo_root, "Tools/ai/provider_runtime_blackboard/cli.py")
+        "runtime_heap_records_peer_events": exists(repo_root, "ia_carmine/runtime/provider_runtime_blackboard/cli.py")
         and has(blackboard_common, "broker_request")
         and has(blackboard_common, "product_signal")
         and has(blackboard_heap, "append_event")
         and has(broker_bridge, "provider_runtime_broker_bridge"),
         "budget_governor_defines_lanes": exists(
-            repo_root, "Tools/ai/heap_provider/budget_governor/cli.py"
+            repo_root, "ia_carmine/runtime/heap_provider/budget_governor/cli.py"
         )
         and has(budget, "provider_lanes")
         and has(budget, "gpu1")
         and has(budget, "gpu0")
         and has(budget, "npu"),
         "invocation_contract_defines_evidence_events": exists(
-            repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
+            repo_root, "ia_carmine/runtime/heap_provider/invocation_contract/cli.py"
         )
         and has(invocation, "expected_evidence_event_contract")
         and has(invocation, "broker_request")
         and has(invocation, "product_signal"),
         "orchestrator_launches_gpu0_and_npu_as_peers": exists(
-            repo_root, "Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/cli.py"
+            repo_root, "ia_carmine/providers/provider_mesh/gpu_npu_parallel_orchestrator/cli.py"
         )
-        and exists(repo_root, "Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/gpu_lanes.py")
-        and exists(repo_root, "Tools/ai/provider_mesh/gpu_npu_parallel_orchestrator/npu_micro.py"),
-        "runtime_mesh_requires_heap_gpu0_npu": has(runtime_mesh, "gpu0_openvino_tool_workload")
+        and exists(repo_root, "ia_carmine/providers/provider_mesh/gpu_npu_parallel_orchestrator/gpu_lanes.py")
+        and exists(repo_root, "ia_carmine/providers/provider_mesh/gpu_npu_parallel_orchestrator/npu_micro.py"),
+        "runtime_mesh_requires_heap_gpu0_npu": has(runtime_mesh, "gpu0_ollama_vulkan_tool_workload")
         and has(runtime_mesh, "npu_peer_micro_lane")
         and has(runtime_mesh, "heap_provider_budget_governor")
         and has(runtime_mesh, "heap_provider_invocation_contract"),
@@ -126,20 +129,12 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(profiles, "npu_auditor")
         and has(npu_shared, "NPU"),
         "gpu0_provider_report_contract": exists(
-            repo_root, "Tools/ai/provider_mesh/openvino_gpu0_workload_report/cli.py"
+            repo_root, "ia_carmine/providers/provider_mesh/ollama_gpu0_peer_report/cli.py"
         )
-        and has(gpu0_workload, "provider_execution_performed")
-        and has(gpu0_workload, "device_workload_execution_performed")
-        and has(gpu0_workload, "semantic_provider_execution_performed")
-        and has(gpu0_workload, "--require-semantic-provider")
-        and has(gpu0_workload, "openvino_gpu0_observable_workload_passed")
-        and has(gpu0_workload, "native_tool_loop_provider")
-        and has(gpu0_workload, "native_tool_loop_supported")
-        and has(gpu0_workload, "native_tool_call_count")
-        and has(gpu0_workload, "leader_packet_consumed")
-        and has(gpu0_workload, "leader_packet_heap_universe_contract")
-        and has(gpu0_workload, "leader_packet_pointer_contract")
-        and has(gpu0_workload, "SOURCE_PATH_ALLOWLIST_CONTRACT")
+        and has(gpu0_workload, "run_ollama_probe")
+        and has(gpu0_workload, "ollama_gpu0_vulkan_required")
+        and has(gpu0_workload, "openvino_gpu0_used")
+        and has(gpu0_workload, "--require-ollama-gpu-residency")
         and has(gpu0_workload, "--leader-packet")
         and has(gpu0_workload, "response_text"),
         "npu_provider_report_contract": has(npu_companion_shared, "npu_provider_execution_performed")
@@ -162,15 +157,15 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(npu_companion_shared, "response_text")
         and has(npu_companion, "run_npu_device_workload"),
         "completeness_gate_executes_gpu0_npu_provider_reports": has(
-            provider_commands, "build_openvino_gpu0_workload_report"
+            provider_commands, "build_ollama_gpu0_peer_report"
         )
         and has(provider_commands, "build_npu_micro_task_companion_report")
         and has(provider_commands, '"lane": "gpu0_peer"')
         and has(provider_commands, '"lane": "npu_micro_task_auditor"')
         and has(provider_commands, "provider_execution_performed")
         and has(provider_commands, "npu_micro_provider_execution_performed")
-        and has(provider_absorption, "semantic_provider_execution_performed")
-        and has(provider_commands, "--require-semantic-provider")
+        and has(provider_absorption, "provider_work_verified")
+        and has(provider_commands, "--require-ollama-gpu-residency")
         and has(provider_commands, "--run-device-workload")
         and has(provider_commands, "--tool-loop-max-new-tokens")
         and has(provider_commands, "--leader-packet")
@@ -217,20 +212,20 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(heap_run_loop, "npu_micro_task_evidence_count")
         and has(heap_run_loop, "build_provider_lane_metrics")
         and has(
-            read_text(repo_root / "Tools/ai/heap_gate/run_loop_metrics.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metrics.py"),
             "provider_lane_count",
         )
         and has(
-            read_text(repo_root / "Tools/ai/heap_gate/run_loop_metrics.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metrics.py"),
             "provider_semantic_missing_required_lanes",
         )
         and has(
-            read_text(repo_root / "Tools/ai/heap_gate/run_loop_metrics.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metrics.py"),
             '{"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}',
         ),
     }
     order = [
-        "runtime_workload_targets_gpu0_only",
+        "ollama_gpu0_vulkan_policy_required",
         "gpu1_reserved_from_openvino_workload",
         "gpu0_peer_command_is_support_lane",
         "npu_micro_uses_runtime_context_and_tool_broker",
@@ -246,10 +241,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "provider_teamwork_runs_gpu0_npu_concurrently",
         "heap_metrics_require_gpu0_npu_provider_evidence",
     ]
-    errors = [f"missing openvino peer topology contract: {name}" for name in order if not checks.get(name)]
+    errors = [f"missing ollama/openvino peer topology contract: {name}" for name in order if not checks.get(name)]
     return {
         "schema_version": 1,
-        "kind": "openvino_peer_topology_contract",
+        "kind": "ollama_gpu0_openvino_npu_topology_contract",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": repo_root.as_posix(),
         "check_order": order,

@@ -35,7 +35,7 @@ def run_semantic_chunks(ctx: WorkflowContext) -> None:
         return
     args = [
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "semantic_evidence_chunks",
         "--repo-root",
         ".",

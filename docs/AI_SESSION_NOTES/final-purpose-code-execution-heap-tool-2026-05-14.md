@@ -11,14 +11,14 @@ provider text.
 
 New:
 
-- `Tools/ai/_shared/heap_code_execution_tool_core.py`
-- `Tools/ai/heap_runtime/code_execution_tool/cli.py`
+- `ia_carmine/_shared/heap_code_execution_tool_core.py`
+- `ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py`
 - `Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py`
 
 Updated:
 
-- `Tools/ai/runtime_tool/agent_broker.py`
-- `Tools/ai/heap_runtime/completeness_gate/cli.py`
+- `ia_carmine/runtime/runtime_tool/agent_broker.py`
+- `ia_carmine/runtime/heap_runtime/completeness_gate/cli.py`
 
 ## Runtime Capability
 
@@ -79,11 +79,11 @@ Validated locally:
 
 ```powershell
 & $RepoPy -m py_compile `
-  .\Tools\ai\heap_runtime\code_execution_tool\cli.py `
-  .\Tools\ai\_shared\heap_code_execution_tool_core.py `
+  .\ia_carmine\runtime\heap_runtime\code_execution_tool\cli.py `
+  .\ia_carmine\_shared\heap_code_execution_tool_core.py `
   .\Tools\validation\heap_runtime\code_execution_tool_smoke\cli.py `
-  .\Tools\ai\runtime_tool\agent_broker.py `
-  .\Tools\ai\heap_runtime\completeness_gate\cli.py
+  .\ia_carmine\runtime\runtime_tool\agent_broker.py `
+  .\ia_carmine\runtime\heap_runtime\completeness_gate\cli.py
 
 & $RepoPy -m Tools.validation run_heap_code_execution_tool_smoke `
   --repo-root . `
@@ -102,8 +102,8 @@ Observed:
 
 ## Line Counts
 
-- `Tools/ai/heap_runtime/code_execution_tool/cli.py`: 208 lines.
-- `Tools/ai/_shared/heap_code_execution_tool_core.py`: 317 lines.
+- `ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py`: 208 lines.
+- `ia_carmine/_shared/heap_code_execution_tool_core.py`: 317 lines.
 - `Tools/validation/heap_runtime/code_execution_tool_smoke/cli.py`: 224 lines.
 
 All new files are under the 400-line maintained script target.

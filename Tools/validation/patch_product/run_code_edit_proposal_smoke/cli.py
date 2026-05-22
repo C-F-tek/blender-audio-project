@@ -20,14 +20,14 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[4]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.ai._shared.code_edit_proposal_helpers import (  # noqa: E402
+from ia_carmine._shared.code_edit_proposal_helpers import (  # noqa: E402
     ALLOWED_EDIT_KINDS,
     EDIT_KIND_STRUCTURED,
     EDIT_KIND_UNIFIED_DIFF,
     proposal_summary,
     validate_unified_diff_text,
 )
-from Tools.ai._shared.code_patch_plan_common import (  # noqa: E402
+from ia_carmine._shared.code_patch_plan_common import (  # noqa: E402
     normalize_repo_path,
     read_json_object,
     report_guardrail_errors,
@@ -203,7 +203,7 @@ def resolve_input_path(repo_root: Path, value: str) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--proposal", default="Tools/ai/_shared/fixtures/code_edit_proposal_fixture.json")
+    parser.add_argument("--proposal", default="ia_carmine/_shared/fixtures/code_edit_proposal_fixture.json")
     parser.add_argument("--output", help="Optional JSON report path.")
     args = parser.parse_args()
 

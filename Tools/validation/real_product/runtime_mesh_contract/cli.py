@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the canonical runtime mesh behind ``python -m Tools.ai run``."""
+"""Validate the canonical runtime mesh behind ``python -m ia_carmine.cli run``."""
 
 from __future__ import annotations
 
@@ -46,77 +46,79 @@ def write_markdown(report: dict[str, Any], output: Path) -> str:
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
-    dispatch = read_text(repo_root / "Tools/ai/dispatch.py")
-    run_cli = read_text(repo_root / "Tools/ai/run/cli.py")
-    profiles = read_text(repo_root / "Tools/ai/run/profiles/heap_runtime_launcher_profiles.json")
-    profile_builder = read_text(repo_root / "Tools/ai/operator_product_core/profiles.py")
-    runner = read_text(repo_root / "Tools/ai/operator_product_core/runner.py")
-    heap_gate = read_text(repo_root / "Tools/ai/heap_runtime/completeness_gate/cli.py")
-    heap_run_loop = read_text(repo_root / "Tools/ai/heap_gate/run_loop.py")
-    budget = read_text(repo_root / "Tools/ai/heap_provider/budget_governor/cli.py")
-    invocation = read_text(repo_root / "Tools/ai/heap_provider/invocation_contract/cli.py")
-    product_package = read_text(repo_root / "Tools/ai/heap_runtime/product_package/cli.py")
-    broker_registry = read_text(repo_root / "Tools/ai/runtime_tool/broker/registry.py")
-    broker_builders = read_text(repo_root / "Tools/ai/runtime_tool/broker/runtime_builders.py")
-    broker_bridge = read_text(repo_root / "Tools/ai/provider_runtime_blackboard/broker_bridge/cli.py")
-    memory = read_text(repo_root / "Tools/ai/agent_memory/sqlite_cli.py")
-    flow_map = read_text(repo_root / "Tools/ai/runtime_universe/flow_map/cli.py")
-    matrix = read_text(repo_root / "Tools/ai/heap_gate/matrix_lab.py")
-    matrix_evidence = read_text(repo_root / "Tools/ai/heap_gate/matrix_lab_evidence.py")
-    matrix_tool = read_text(repo_root / "Tools/ai/heap_runtime/code_execution_tool/cli.py")
-    synthesis = read_text(repo_root / "Tools/ai/patch_product/candidate_synthesis/cli.py")
+    dispatch = read_text(repo_root / "ia_carmine/dispatch.py")
+    run_cli = read_text(repo_root / "ia_carmine/runtime/run/cli.py")
+    profiles = read_text(repo_root / "ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json")
+    profile_builder = read_text(repo_root / "ia_carmine/product/operator_product_core/profiles.py")
+    runner = read_text(repo_root / "ia_carmine/product/operator_product_core/runner.py")
+    heap_gate = read_text(repo_root / "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py")
+    heap_run_loop = read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop.py")
+    heap_run_loop_metrics = read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metrics.py")
+    budget = read_text(repo_root / "ia_carmine/runtime/heap_provider/budget_governor/cli.py")
+    invocation = read_text(repo_root / "ia_carmine/runtime/heap_provider/invocation_contract/cli.py")
+    product_package = read_text(repo_root / "ia_carmine/runtime/heap_runtime/product_package/cli.py")
+    broker_registry = read_text(repo_root / "ia_carmine/runtime/runtime_tool/broker/registry.py")
+    broker_builders = read_text(repo_root / "ia_carmine/runtime/runtime_tool/broker/runtime_builders.py")
+    broker_bridge = read_text(repo_root / "ia_carmine/runtime/provider_runtime_blackboard/broker_bridge/cli.py")
+    memory = read_text(repo_root / "ia_carmine/memory/agent_memory/sqlite_cli.py")
+    flow_map = read_text(repo_root / "ia_carmine/runtime/runtime_universe/flow_map/cli.py")
+    matrix = read_text(repo_root / "ia_carmine/runtime/heap_gate/matrix_lab.py")
+    matrix_evidence = read_text(repo_root / "ia_carmine/runtime/heap_gate/matrix_lab_evidence.py")
+    matrix_tool = read_text(repo_root / "ia_carmine/runtime/heap_runtime/code_execution_tool/cli.py")
+    synthesis = read_text(repo_root / "ia_carmine/product/patch_product/candidate_synthesis/cli.py")
     synthesis_evidence = read_text(
-        repo_root / "Tools/ai/patch_product/candidate_synthesis/evidence_diff.py"
+        repo_root / "ia_carmine/product/patch_product/candidate_synthesis/evidence_diff.py"
     )
-    final_product = read_text(repo_root / "Tools/ai/_shared/heap_final_code_product.py")
-    final_readable_product = read_text(repo_root / "Tools/ai/code_product/final_readable_product/cli.py")
-    provider_loop = read_text(repo_root / "Tools/ai/_shared/provider_tool_loop.py")
+    final_product = read_text(repo_root / "ia_carmine/_shared/heap_final_code_product.py")
+    final_readable_product = read_text(repo_root / "ia_carmine/product/code_product/final_readable_product/cli.py")
+    provider_loop = read_text(repo_root / "ia_carmine/_shared/provider_tool_loop.py")
     provider_commands = "\n".join(
         (
-            read_text(repo_root / "Tools/ai/heap_gate/provider_commands.py"),
-            read_text(repo_root / "Tools/ai/heap_gate/provider_command_specs.py"),
-            read_text(repo_root / "Tools/ai/heap_gate/provider_time.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_commands.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_command_specs.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_time.py"),
         )
     )
-    provider_execution = read_text(repo_root / "Tools/ai/heap_gate/provider_execution.py")
-    provider_absorption = read_text(repo_root / "Tools/ai/heap_gate/provider_report_absorption.py")
-    provider_collection = read_text(repo_root / "Tools/ai/heap_gate/provider_process_collection.py")
+    provider_execution = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_execution.py")
+    provider_absorption = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_report_absorption.py")
+    provider_collection = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_process_collection.py")
     provider_runtime = "\n".join((provider_execution, provider_absorption, provider_collection))
-    provider_teamwork_packet = read_text(repo_root / "Tools/ai/heap_gate/provider_teamwork_packet.py")
-    heap_context_launcher = read_text(repo_root / "Tools/ai/heap_context_closure/launcher.py")
-    startup_context = read_text(repo_root / "Tools/ai/heap_gate/startup_context.py")
+    provider_teamwork_packet = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_teamwork_packet.py")
+    heap_context_launcher = read_text(repo_root / "ia_carmine/runtime/heap_context_closure/launcher.py")
+    startup_context = read_text(repo_root / "ia_carmine/runtime/heap_gate/startup_context.py")
     startup_manifest_context = read_text(
-        repo_root / "Tools/ai/heap_gate/startup_manifest_context.py"
+        repo_root / "ia_carmine/runtime/heap_gate/startup_manifest_context.py"
     )
 
     checks: dict[str, bool] = {
         "task_md_in": has(run_cli, "--request-file") and has(profile_builder, "--request-file"),
         "heap_exchange_activation": has(profile_builder, "heap_context_closure")
-        and has(profiles, "universe_enabled")
+        and has(profiles, "universe_roles")
         and has(profiles, "block_pointer_protocol"),
-        "heap_provider_budget_governor": exists(repo_root, "Tools/ai/heap_provider/budget_governor/cli.py")
+        "heap_provider_budget_governor": exists(repo_root, "ia_carmine/runtime/heap_provider/budget_governor/cli.py")
         and has(budget, "ProviderBudgetConfig")
         and has(budget, "provider_lanes"),
         "heap_provider_invocation_contract": exists(
-            repo_root, "Tools/ai/heap_provider/invocation_contract/cli.py"
+            repo_root, "ia_carmine/runtime/heap_provider/invocation_contract/cli.py"
         )
         and has(invocation, "expected_evidence_event_contract")
         and has(invocation, "broker_request"),
         "gpu1_primary_advisory": has(profiles, "gpu1_planner")
         and has(provider_loop, "GPU1 HEAP PARTICIPATION MODE"),
-        "gpu0_openvino_tool_workload": has(profiles, "gpu0_reviewer_refiner")
-        and has(provider_loop, "IA_CARMINE_GPU0_COMPANION_MODEL_DIR"),
+        "gpu0_ollama_vulkan_tool_workload": has(profiles, "gpu0_reviewer_refiner")
+        and has(provider_commands, "build_ollama_gpu0_peer_report")
+        and has(provider_commands, "ollama_gpu0_vulkan_required_openvino_gpu0_forbidden"),
         "npu_peer_micro_lane": has(profiles, "npu_auditor")
         and has(provider_loop, "IA_CARMINE_NPU_MODEL_DIR"),
-        "shared_memory_evidence": exists(repo_root, "Tools/ai/agent_context/shared_toolbox_bundle/cli.py")
-        and exists(repo_root, "Tools/ai/agent_context/semantic_evidence_chunks/cli.py"),
-        "sqlite_runtime_memory": exists(repo_root, "Tools/ai/agent_memory/sqlite_cli.py")
+        "shared_memory_evidence": exists(repo_root, "ia_carmine/context/agent_context/shared_toolbox_bundle/cli.py")
+        and exists(repo_root, "ia_carmine/context/agent_context/semantic_evidence_chunks/cli.py"),
+        "sqlite_runtime_memory": exists(repo_root, "ia_carmine/memory/agent_memory/sqlite_cli.py")
         and "sqlite" in memory.lower(),
         "tool_agnostic_broker": "synthesize_patch_candidates" in broker_registry
         and "run_heap_code_execution_matrix" in broker_registry,
-        "direct_reasoning_assistance": exists(repo_root, "Tools/ai/_shared/runtime_tool_guidance.py")
+        "direct_reasoning_assistance": exists(repo_root, "ia_carmine/_shared/runtime_tool_guidance.py")
         and has(broker_bridge, "provider_runtime_broker_bridge"),
-        "runtime_flow_map_evidence": exists(repo_root, "Tools/ai/runtime_universe/flow_map/cli.py")
+        "runtime_flow_map_evidence": exists(repo_root, "ia_carmine/runtime/runtime_universe/flow_map/cli.py")
         and has(flow_map, "ia_carmine_runtime_flow_build"),
         "static_deterministic_script_lane": has(matrix, "code_execution_matrix_targets")
         and has(matrix_evidence, "code_execution_matrix_metric_count"),
@@ -140,7 +142,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(startup_context, "compact_manifest_context")
         and has(startup_manifest_context, "artifact_reference_only_not_ingested")
         and has(provider_commands, "--startup-manifest"),
-        "heap_runtime_product_package": exists(repo_root, "Tools/ai/heap_runtime/product_package/cli.py")
+        "heap_runtime_product_package": exists(repo_root, "ia_carmine/runtime/heap_runtime/product_package/cli.py")
         and has(product_package, "heap_runtime_product_package"),
         "product_readiness": has(runner, "launcher_passed")
         and has(runner, "code_product_metrics")
@@ -159,7 +161,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "gpu0_npu_provider_contract": exists(
             repo_root, "Tools/validation/provider_mesh/openvino_peer_topology_contract/cli.py"
         )
-        and has(provider_commands, "build_openvino_gpu0_workload_report")
+        and has(provider_commands, "build_ollama_gpu0_peer_report")
         and has(provider_commands, "build_npu_micro_task_companion_report")
         and ordered_tokens(
             provider_commands,
@@ -167,10 +169,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             '"lane": "gpu0_peer"',
             '"lane": "npu_micro_task_auditor"',
         )
-        and has(provider_commands, "--require-semantic-provider")
+        and has(provider_commands, "--require-ollama-gpu-residency")
         and has(provider_commands, "--leader-packet")
-        and has(provider_absorption, "semantic_provider_execution_performed")
-        and has(heap_run_loop, "provider_semantic_missing_required_lanes")
+        and has(provider_absorption, "provider_work_verified")
+        and has(heap_run_loop_metrics, "provider_semantic_missing_required_lanes")
         and has(provider_execution, "provider_launch_manifest")
         and has(provider_execution, "provider_teamwork_leader_packet")
         and has(provider_execution, "build_provider_teamwork_leader_packet")
@@ -193,7 +195,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_teamwork_packet, "artifact_reference_only_not_runtime_database")
         and has(provider_runtime, "started_at")
         and has(provider_absorption, "provider_process_id")
-        and has(provider_runtime, "concurrent_provider_teamwork"),
+        and has(provider_runtime, "provider_teamwork_unified_parallel"),
     }
     order = [
         "task_md_in",
@@ -201,7 +203,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "heap_provider_budget_governor",
         "heap_provider_invocation_contract",
         "gpu1_primary_advisory",
-        "gpu0_openvino_tool_workload",
+        "gpu0_ollama_vulkan_tool_workload",
         "npu_peer_micro_lane",
         "shared_memory_evidence",
         "sqlite_runtime_memory",
@@ -231,7 +233,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "failed_capabilities": [name for name in order if not checks.get(name)],
         "runtime_route": [
             "Task MD IN",
-            "python -m Tools.ai run",
+            "python -m ia_carmine.cli run",
             "heap_context_closure",
             "GPU1/GPU0/NPU provider lanes",
             "runtime broker and deterministic validators",

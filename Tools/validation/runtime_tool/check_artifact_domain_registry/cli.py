@@ -15,8 +15,8 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[4]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.ai._shared.artifact_domain_registry import registry_report, validate_registry  # noqa: E402
-from Tools.ai._shared.code_patch_plan_common import (  # noqa: E402
+from ia_carmine._shared.artifact_domain_registry import registry_report, validate_registry  # noqa: E402
+from ia_carmine._shared.code_patch_plan_common import (  # noqa: E402
     now_iso,
     report_only_guardrails,
     resolve_output_path,

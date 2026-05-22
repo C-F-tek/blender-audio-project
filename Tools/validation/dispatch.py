@@ -10,6 +10,7 @@ from pathlib import Path
 from Tools.tool_dispatch import ToolDispatcher
 
 TOOL_MAIN_TARGETS: dict[str, str] = {
+    "check_ia_carmine_core_refactor_imports": "Tools.validation.core_refactor.import_compat_smoke.cli:main",
     "agent_review_patch_plan_full_validation": "Tools.validation.agent_review.patch_plan_full_validation.cli:main",
     "check_ai_context_pack_contract": "Tools.validation.agent_context.check_ai_context_pack_contract.cli:main",
     "check_ai_dry_run_matrix_cases": "Tools.validation.pipeline.dry_run_matrix_cases.cli:main",
@@ -80,6 +81,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_npu_runtime_tool_fallback_smoke": "Tools.validation.runtime_tool.npu_runtime_tool_fallback_smoke.cli:main",
     "run_npu_tool_request_contract_smoke": "Tools.validation.provider_mesh.npu_tool_request_contract_smoke.cli:main",
     "run_ollama_tool_gateway_smoke": "Tools.validation.provider_mesh.ollama_tool_gateway_smoke.cli:main",
+    "run_ollama_sdk_adapter_smoke": "Tools.validation.provider_mesh.ollama_sdk_adapter_smoke.cli:main",
     "run_openvino_peer_topology_contract_smoke": "Tools.validation.provider_mesh.openvino_peer_topology_contract_smoke.cli:main",
     "run_operator_product_launcher_smoke": "Tools.validation.workflow_run.operator_product_launcher_smoke.cli:main",
     "run_orchestrator_direct_gpu_counter_smoke": "Tools.validation.provider_mesh.orchestrator_direct_gpu_counter_smoke.cli:main",

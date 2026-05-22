@@ -11,13 +11,13 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap
+    from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.provider_runtime_blackboard import ProviderRuntimeHeap  # type: ignore
+    from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap  # type: ignore
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,

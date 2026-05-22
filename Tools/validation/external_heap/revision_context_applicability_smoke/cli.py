@@ -23,12 +23,12 @@ from typing import Any
 CORE_RUNTIME_GUARD = True
 
 try:
-    from Tools.ai.external_heap.revision_context import build_report
+    from ia_carmine.runtime.external_heap.revision_context import build_report
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.external_heap.revision_context import build_report  # type: ignore
+    from ia_carmine.runtime.external_heap.revision_context import build_report  # type: ignore
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -146,7 +146,7 @@ def build_concrete_propagation_fixture() -> tuple[dict[str, Any], dict[str, Any]
     previous_preview = """# HEAP_DELTA_PROPOSAL
 
 TARGET_FILES:
-- Tools/ai/heap_gate/provider_context.py
+- ia_carmine/runtime/heap_gate/provider_context.py
 
 PATCH_SKETCH:
 ```python
@@ -162,7 +162,7 @@ CURRENT_POINTER:
 - resume_from_block_id=proposal_current
 
 TARGET_FILES:
-- Tools/ai/heap_gate/provider_context.py
+- ia_carmine/runtime/heap_gate/provider_context.py
 
 PATCH_SKETCH:
 ```python

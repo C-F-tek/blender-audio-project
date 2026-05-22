@@ -15,7 +15,7 @@ def check_provider_result_parsing(repo_root: Path) -> dict[str, object]:
     if root_text not in sys.path:
         sys.path.insert(0, root_text)
 
-    from Tools.npu.pipeline import (  # noqa: PLC0415
+    from ia_carmine.providers.npu.pipeline import (  # noqa: PLC0415
         build_provider_result_report,
         parse_provider_result,
     )

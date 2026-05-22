@@ -29,7 +29,7 @@ Purpose: local/agent handoff for the run unica real-product contract.
 Patched:
 
 ```text
-Tools/ai/run/cli.py
+ia_carmine/runtime/run/cli.py
 ```
 
 Commit:
@@ -47,7 +47,7 @@ Resulting line count:
 Behavioral intent:
 
 ```text
-python -m Tools.ai run
+python -m ia_carmine.cli run
   -> OperatorProductController
   -> heap_context_closure
   -> run_heap_runtime_completeness_gate
@@ -61,19 +61,19 @@ Expected dry-run report now declares:
 
 ```text
 runtime = heap_context_closure
-internal_runtime = Tools.ai.operator_product_core.OperatorProductController
-heap_runtime = Tools.ai.heap_context_closure
-gate_runtime = Tools.ai.heap_runtime.completeness_gate.HeapRuntimeCompletenessGate
-provider_generation_requested = true when profile forwards --allow-provider-generation
+internal_runtime = ia_carmine.product.operator_product_core.OperatorProductController
+heap_runtime = ia_carmine.runtime.heap_context_closure
+gate_runtime = ia_carmine.runtime.heap_runtime.completeness_gate.HeapRuntimeCompletenessGate
+provider_generation_requested = true when the direct CLI forwards --allow-provider-generation
 required_provider_roles = gpu1_planner, gpu0_reviewer_refiner, npu_auditor
 ```
 
-### 4. P1 NPU workload/profile mismatch patched
+### 4. P1 NPU workload/direct-parameter mismatch patched
 
 Patched:
 
 ```text
-Tools/ai/heap_gate/provider_command_specs.py
+ia_carmine/runtime/heap_gate/provider_command_specs.py
 ```
 
 Commit:
@@ -95,14 +95,14 @@ NPU microtask provider lane remains mandatory in provider generation mode.
 Physical OpenVINO/NPU device workload is controlled by allow_npu_device_workload.
 ```
 
-Before this patch, `provider_command_specs.py` always forwarded `--run-device-workload` to the NPU report tool even when selected profiles declared `allow_npu_device_workload=false`. That made profile semantics inconsistent with runtime behavior.
+Before this patch, `provider_command_specs.py` always forwarded `--run-device-workload` to the NPU report tool even when selected runtime parameters declared `allow_npu_device_workload=false`. That made parameter semantics inconsistent with runtime behavior.
 
 ### 5. P2 provider diff extraction key patched
 
 Patched:
 
 ```text
-Tools/ai/patch_product/candidate_synthesis/evidence_diff.py
+ia_carmine/product/patch_product/candidate_synthesis/evidence_diff.py
 ```
 
 Commit:
@@ -135,9 +135,9 @@ The startup manifest is correctly treated as structured runtime data plane, but 
 Relevant files:
 
 ```text
-Tools/ai/heap_gate/startup_manifest_context.py
-Tools/ai/heap_gate/startup_context.py
-Tools/ai/heap_gate/provider_prompt.py
+ia_carmine/runtime/heap_gate/startup_manifest_context.py
+ia_carmine/runtime/heap_gate/startup_context.py
+ia_carmine/runtime/heap_gate/provider_prompt.py
 ```
 
 ### P2 — Verify GPU1 diff pressure end to end
@@ -151,12 +151,12 @@ GPU1 provider output -> evidence report -> _json_text_sources -> _diff_blocks ->
 Relevant files:
 
 ```text
-Tools/ai/heap_gate/provider_prompt_text.py
-Tools/ai/heap_gate/provider_prompt.py
-Tools/ai/heap_gate/provider_commands.py
-Tools/ai/patch_product/candidate_synthesis/evidence_diff.py
-Tools/ai/_shared/heap_final_code_product.py
-Tools/ai/code_product/final_readable_product/product_contract.py
+ia_carmine/runtime/heap_gate/provider_prompt_text.py
+ia_carmine/runtime/heap_gate/provider_prompt.py
+ia_carmine/runtime/heap_gate/provider_commands.py
+ia_carmine/product/patch_product/candidate_synthesis/evidence_diff.py
+ia_carmine/_shared/heap_final_code_product.py
+ia_carmine/product/code_product/final_readable_product/product_contract.py
 ```
 
 ### P2 — Add focused smoke tests
@@ -164,7 +164,7 @@ Tools/ai/code_product/final_readable_product/product_contract.py
 Recommended smoke coverage:
 
 ```text
-1. dry-run route asserts Tools.ai.run -> heap_context_closure.
+1. dry-run route asserts ia_carmine.runtime.run -> heap_context_closure.
 2. provider_command_specs asserts --run-device-workload appears only when allow_npu_device_workload=true.
 3. evidence_diff asserts patch_sketch_unified_diff JSON field containing a diff --git block is extracted.
 ```
@@ -175,28 +175,28 @@ Run from repository root:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\run\cli.py `
-  .\Tools\ai\heap_gate\provider_command_specs.py `
-  .\Tools\ai\patch_product\candidate_synthesis\evidence_diff.py
+  .\ia_carmine\runtime\run\cli.py `
+  .\ia_carmine\runtime\heap_gate\provider_command_specs.py `
+  .\ia_carmine\product\patch_product\candidate_synthesis\evidence_diff.py
 
-python -m Tools.ai run --dry-run --run-intensity quick
-python -m Tools.ai run --dry-run --run-intensity deep
+python -m ia_carmine.cli run --dry-run
+python -m ia_carmine.cli run --dry-run --allow-provider-generation --max-iterations 2 --max-rounds 8
 ```
 
 Expected dry-run checks:
 
 ```text
 runtime == heap_context_closure
-internal_runtime == Tools.ai.operator_product_core.OperatorProductController
+internal_runtime == ia_carmine.product.operator_product_core.OperatorProductController
 command contains heap_context_closure
-command contains --allow-provider-generation for quick/deep profiles
+command contains --allow-provider-generation only when explicitly requested
 required_provider_roles contains gpu1_planner/gpu0_reviewer_refiner/npu_auditor
 ```
 
 Recommended focused NPU command-spec check:
 
 ```text
-For default deep profile without --allow-npu-device-workload, NPU command must not contain --run-device-workload.
+Without --allow-npu-device-workload, NPU command must not contain --run-device-workload.
 With --allow-npu-device-workload, NPU command must contain --run-device-workload.
 ```
 

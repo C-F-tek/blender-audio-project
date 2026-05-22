@@ -167,7 +167,7 @@ def main() -> int:
     run_dir = write_fixture_run(repo_root)
     command = [
         sys.executable,
-        "Tools/ai/external_heap/postrun_package/cli.py",
+        "ia_carmine/runtime/external_heap/postrun_package/cli.py",
         "--repo-root",
         ".",
         "--run-dir",

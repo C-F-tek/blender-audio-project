@@ -21,7 +21,7 @@ def run_patch_notes_quality_product(ctx: WorkflowContext) -> None:
     )
     args = [
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "build_patch_notes_quality_product",
         "--repo-root",
         ".",

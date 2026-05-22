@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 def area_diversity_smoke() -> dict[str, Any]:
-    from Tools.ai.patch_product.patch_notes_quality_product.scoring import build_patch_notes
+    from ia_carmine.product.patch_product.patch_notes_quality_product.scoring import build_patch_notes
 
     patch_plan = {
         "patch_plans": [
@@ -64,7 +64,7 @@ def python_python_symbol_smoke() -> dict[str, Any]:
     import tempfile
     from pathlib import Path
 
-    from Tools.ai.repository_product.repository_consistency_map.python_inventory import extract_local_import_findings
+    from ia_carmine.product.repository_product.repository_consistency_map.python_inventory import extract_local_import_findings
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -75,8 +75,8 @@ def python_python_symbol_smoke() -> dict[str, Any]:
         (package / "real_module.py").write_text(
             "def existing_symbol():\n    return True\n", encoding="utf-8"
         )
-        tree = ast.parse("from Tools.ai.real_module import missing_symbol\n")
-        findings = extract_local_import_findings(tree, "Tools/ai/consumer.py", root)
+        tree = ast.parse("from ia_carmine.real_module import missing_symbol\n")
+        findings = extract_local_import_findings(tree, "ia_carmine/consumer.py", root)
     kinds = [item.get("kind") for item in findings]
     return {
         "passed": "python_import_symbol_missing" in kinds,
@@ -86,7 +86,7 @@ def python_python_symbol_smoke() -> dict[str, Any]:
 
 
 def patchable_availability_smoke() -> dict[str, Any]:
-    from Tools.ai.patch_product.patch_notes_quality_product.scoring import build_product_sufficiency
+    from ia_carmine.product.patch_product.patch_notes_quality_product.scoring import build_product_sufficiency
 
     task = {
         "title": "ALL_ALL patchable availability smoke",
@@ -160,7 +160,7 @@ def deterministic_doc_python_patchable_smoke() -> dict[str, Any]:
     import tempfile
     from pathlib import Path
 
-    from Tools.ai.deterministic_recommendations import (
+    from ia_carmine.product.deterministic_recommendations import (
         synthesize_from_repository_consistency_maps,
     )
 

@@ -9,7 +9,7 @@ The immediate goal is to reduce ambiguous GPU planner failures by classifying mo
 ## Added helper
 
 ```text
-Tools/ai/_shared/gpu_planner_json_contract.py
+ia_carmine/_shared/gpu_planner_json_contract.py
 ```
 
 The helper is report-only and does not run providers.
@@ -78,8 +78,8 @@ replace local duplicated GPU parse/classification code with gpu_planner_json_con
 Target files:
 
 ```text
-Tools/ai/provider_mesh/gpu_deep_planning_review/cli.py
-Tools/ai/provider_mesh/gpu_deep_planning_supervised/cli.py
+ia_carmine/providers/provider_mesh/gpu_deep_planning_review/cli.py
+ia_carmine/providers/provider_mesh/gpu_deep_planning_supervised/cli.py
 ```
 
 ## Guardrails

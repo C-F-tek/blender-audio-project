@@ -27,7 +27,7 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
             command=[
                 py,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "build_agent_memory_inventory",
                 "--repo-root",
                 ".",
@@ -54,7 +54,7 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
             command=[
                 py,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "megalithic_repo_review",
                 "--repo-root",
                 ".",
@@ -91,7 +91,7 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
             command=[
                 py,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "megalithic_review_refinement",
                 "--review",
                 megalithic_json,
@@ -120,7 +120,7 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
             name="megalithic_pr_draft",
             command=[
                 py,
-                "Tools/ai/repository_product/megalithic_review_pr_draft/cli.py",
+                "ia_carmine/product/repository_product/megalithic_review_pr_draft/cli.py",
                 "--review",
                 refined_json,
                 "--proposals",
@@ -155,7 +155,7 @@ def build_steps(args: argparse.Namespace) -> list[SmokeStep]:
                 command=[
                     py,
                     "-m",
-                    "Tools.ai",
+                    "ia_carmine",
                     "megalithic_repo_review",
                     "--repo-root",
                     ".",

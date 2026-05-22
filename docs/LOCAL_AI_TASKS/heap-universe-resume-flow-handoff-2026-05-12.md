@@ -86,7 +86,7 @@ Branch GitHub:
 codex/heap-universe-resume-docs-fixes
 ```
 
-### 1. `Tools/ai/provider_runtime_blackboard/cli.py`
+### 1. `ia_carmine/runtime/provider_runtime_blackboard/cli.py`
 
 Problema osservato:
 
@@ -95,7 +95,7 @@ ValueError: unsupported provider lane: 'context_memory'
 ValueError: unsupported runtime heap event type: 'startup_task_file_context'
 ```
 
-Causa: `python -m Tools.ai run_heap_runtime_completeness_gate` pubblicava il preload startup come evento causale di heap usando `source="context_memory"` e `event_type="startup_task_file_context"`, ma `ProviderRuntimeHeap` non esponeva ancora quella lane/event type nell'allowlist.
+Causa: `python -m ia_carmine.cli run_heap_runtime_completeness_gate` pubblicava il preload startup come evento causale di heap usando `source="context_memory"` e `event_type="startup_task_file_context"`, ma `ProviderRuntimeHeap` non esponeva ancora quella lane/event type nell'allowlist.
 
 Correzione:
 
@@ -105,7 +105,7 @@ Correzione:
 
 Questa e' la correzione piu' pulita: il preload non deve fingersi broker. Il broker esegue tool; `context_memory` rappresenta il contesto/memoria gia' materializzato nel task-file.
 
-### 2. `python -m Tools.ai build_external_heap_revision_context`
+### 2. `python -m ia_carmine.cli build_external_heap_revision_context`
 
 Problemi osservati:
 
@@ -173,15 +173,15 @@ Compilazione/import:
 
 ```powershell
 & $RepoPy -m py_compile `
-  .\Tools\ai\provider_runtime_blackboard\cli.py `
-  -m Tools.ai build_external_heap_revision_context `
-  .\Tools\ai\external_heap\postrun_package.py `
-  .\Tools\ai\heap_context_closure\cli.py `
-  .\Tools\ai\heap_runtime\completeness_gate\cli.py `
+  .\ia_carmine\runtime\provider_runtime_blackboard\cli.py `
+  -m ia_carmine build_external_heap_revision_context `
+  .\ia_carmine\runtime\external_heap\postrun_package.py `
+  .\ia_carmine\runtime\heap_context_closure\cli.py `
+  .\ia_carmine\runtime\heap_runtime\completeness_gate\cli.py `
   .\Tools\validation\external_heap\revision_context_applicability_smoke\cli.py
 
-& $RepoPy -c "import Tools.ai.build_external_heap_revision_context as m; print('revision_context_import_ok')"
-& $RepoPy -c "from Tools.ai.provider_runtime_heap import normalize_lane, normalize_event_type; print(normalize_lane('context_memory')); print(normalize_event_type('startup_task_file_context'))"
+& $RepoPy -c "import ia_carmine.build_external_heap_revision_context as m; print('revision_context_import_ok')"
+& $RepoPy -c "from ia_carmine.provider_runtime_heap import normalize_lane, normalize_event_type; print(normalize_lane('context_memory')); print(normalize_event_type('startup_task_file_context'))"
 ```
 
 Smoke detector:
@@ -208,7 +208,7 @@ Usare la run locale che ha gia' heap passed:
 ```powershell
 $RunDir = "C:\Users\carmi\blender\blender-audio-project\output\validation\heap_context_closure_20260512-144115"
 
-& $RepoPy -m Tools.ai build_external_heap_revision_context `
+& $RepoPy -m ia_carmine build_external_heap_revision_context `
   --pointer-manifest (Join-Path $RunDir "external_heap_block_pointer_manifest.json") `
   --composer-json (Join-Path $RunDir "heap_final_proposal_composer.json") `
   --causality-json (Join-Path $RunDir "heap_final_causality_normalized.json") `
@@ -260,7 +260,7 @@ $NextStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $RunDir = "C:\Users\carmi\blender\blender-audio-project\output\validation\heap_context_closure_20260512-144115"
 $RevisionContext = Join-Path $RunDir "external_heap_revision_context.json"
 
-& $RepoPy -m Tools.ai heap_context_closure `
+& $RepoPy -m ia_carmine heap_context_closure `
   --repo-root . `
   --python-exe $RepoPy `
   --stamp $NextStamp `
@@ -317,13 +317,13 @@ Al momento dello stato riportato dall'operatore:
 ```text
 git branch --show-current = master
 git status --short:
- M python -m Tools.ai build_external_heap_revision_context
- M Tools/ai/heap_context_memory_reload/cli.py
- M Tools/ai/heap_runtime/completeness_gate/cli.py
- M Tools/ai/heap_context_closure/cli.py
+ M python -m ia_carmine.cli build_external_heap_revision_context
+ M ia_carmine/context/heap_context_memory_reload/cli.py
+ M ia_carmine/runtime/heap_runtime/completeness_gate/cli.py
+ M ia_carmine/runtime/heap_context_closure/cli.py
 ```
 
-La branch GitHub non deve essere applicata alla cieca sopra quei file locali senza prima confrontare diff. In particolare `python -m Tools.ai run_heap_runtime_completeness_gate` locale contiene fix manuali sui publish/eventi startup; la patch GitHub preferisce correggere l'allowlist heap in `provider_runtime_heap.py` cosi' `context_memory` resta una lane reale e non viene degradato a broker.
+La branch GitHub non deve essere applicata alla cieca sopra quei file locali senza prima confrontare diff. In particolare `python -m ia_carmine.cli run_heap_runtime_completeness_gate` locale contiene fix manuali sui publish/eventi startup; la patch GitHub preferisce correggere l'allowlist heap in `provider_runtime_heap.py` cosi' `context_memory` resta una lane reale e non viene degradato a broker.
 
 ## Prossime priorita'
 

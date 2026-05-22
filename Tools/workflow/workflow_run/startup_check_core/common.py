@@ -160,14 +160,13 @@ def check_python_runtime(
 
 def check_ollama(checks: list[Check]) -> None:
     try:
-        from Tools.npu.provider_mesh._shared.ollama_runtime import (
+        from ia_carmine.providers.ollama.config import (
             DEFAULT_BASE_URL,
             find_ollama_exe,
-            is_server_ready,
-            list_models,
             list_models_from_disk,
             start_server,
         )
+        from ia_carmine.providers.ollama import is_server_ready, list_models
 
         exe = find_ollama_exe() or fallback_ollama_exe()
         if exe:

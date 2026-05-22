@@ -13,14 +13,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report
-    from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
+    from ia_carmine.runtime.runtime_tool.broker.executor import build_report as build_broker_report
+    from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.ai.runtime_tool.broker.executor import build_report as build_broker_report  # type: ignore
-    from Tools.ai.runtime_tool.broker.markdown import render_markdown as render_broker_markdown  # type: ignore
+    from ia_carmine.runtime.runtime_tool.broker.executor import build_report as build_broker_report  # type: ignore
+    from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown as render_broker_markdown  # type: ignore
 
 
 def now_stamp() -> str:
@@ -83,7 +83,7 @@ def run_broker_in_process(
         markdown.parent.mkdir(parents=True, exist_ok=True)
         markdown.write_text(render_broker_markdown(report), encoding="utf-8")
         return {
-            "command": ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"],
+            "command": ["in_process", "ia_carmine.runtime.runtime_tool.broker.executor.build_report"],
             "returncode": 0 if report.get("passed") else 2,
             "stdout_tail": json.dumps(
                 {
@@ -98,7 +98,7 @@ def run_broker_in_process(
         }
     except Exception as exc:  # noqa: BLE001
         return {
-            "command": ["in_process", "Tools.ai.runtime_tool.broker.executor.build_report"],
+            "command": ["in_process", "ia_carmine.runtime.runtime_tool.broker.executor.build_report"],
             "returncode": 1,
             "stdout_tail": "",
             "stderr_tail": f"{type(exc).__name__}: {exc}",
@@ -118,8 +118,8 @@ def build_broker_request() -> dict[str, Any]:
                 "reason": "verify broker-callable virtual dev environment",
                 "args": {
                     "target_file": [
-                        "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
-                        "Tools/ai/code_product/final_readable_product/cli.py",
+                        "ia_carmine/runtime/heap_runtime/virtual_dev_environment/cli.py",
+                        "ia_carmine/product/code_product/final_readable_product/cli.py",
                     ],
                     "validation_script": [
                         "Tools/validation/heap_runtime/run_heap_final_readable_product_smoke/cli.py"
@@ -157,13 +157,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     direct = run(
         [
             sys.executable,
-            "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
+            "ia_carmine/runtime/heap_runtime/virtual_dev_environment/cli.py",
             "--repo-root",
             ".",
             "--target-file",
-            "Tools/ai/heap_runtime/virtual_dev_environment/cli.py",
+            "ia_carmine/runtime/heap_runtime/virtual_dev_environment/cli.py",
             "--target-file",
-            "Tools/ai/code_product/final_readable_product/cli.py",
+            "ia_carmine/product/code_product/final_readable_product/cli.py",
             "--validation-script",
             "Tools/validation/heap_runtime/run_heap_final_readable_product_smoke/cli.py",
             "--dynamic-import",

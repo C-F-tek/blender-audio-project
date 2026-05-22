@@ -14,12 +14,12 @@ patch_specs/<bundle>/fragments/*
 and apply it through the reusable OOB runner:
 
 ```powershell
-python -m Tools.ai apply_patch_bundle `
+python -m ia_carmine.cli apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python -m Tools.ai apply_patch_bundle `
+python -m ia_carmine.cli apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -85,11 +85,11 @@ assert_no_naked_throw
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\patchkit\filesystem.py `
-  .\Tools\ai\patchkit\anchors.py `
-  .\Tools\ai\patchkit\powershell.py `
-  .\Tools\ai\patchkit\reports.py `
-  .\Tools\ai\patchkit\apply_patch_bundle.py `
+  .\ia_carmine\product\patchkit\filesystem.py `
+  .\ia_carmine\product\patchkit\anchors.py `
+  .\ia_carmine\product\patchkit\powershell.py `
+  .\ia_carmine\product\patchkit\reports.py `
+  .\ia_carmine\product\patchkit\apply_patch_bundle.py `
   .\Tools\validation\run_patchkit_smoke.py
 
 python -m Tools.validation run_patchkit_smoke `

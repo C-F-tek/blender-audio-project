@@ -23,7 +23,7 @@ def run_case(source_repo: Path, repo: Path, task_rel: str, name: str) -> dict[st
     out = repo / "output/validation" / f"{name}.json"
     cmd = [
         "python",
-        str(source_repo / "Tools/ai/patch_product/task_patch_suggestion_report/cli.py"),
+        str(source_repo / "ia_carmine/product/patch_product/task_patch_suggestion_report/cli.py"),
         "--repo-root",
         str(repo),
         "--task-file",

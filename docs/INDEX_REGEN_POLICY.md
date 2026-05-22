@@ -68,7 +68,7 @@ Regenerate the indexes after changes to any of these areas:
 - package templates;
 - shared utility policies or shared utility code;
 - JSON schema documentation;
-- modular AI artifact pipeline modules under `Tools/ai/pipeline/`.
+- modular AI artifact pipeline modules under `ia_carmine/product/pipeline/`.
 
 ## When regeneration is optional
 
@@ -98,12 +98,12 @@ python -m Tools.validation check_ai_pipeline_modules --repo-root . --output .\ou
 python -m Tools.validation npu_pipeline_modules_check --repo-root . --output .\output\validation\npu_pipeline_modules.json
 python -m Tools.validation check_npu_pipeline_helper_tests --repo-root . --output .\output\validation\npu_pipeline_helper_tests.json
 python -m Tools.validation check_npu_pipeline_docs --repo-root . --output .\output\validation\npu_pipeline_docs.json
-python -m Tools.ai pipeline_dry_run_matrix --repo-root . --continue-on-error
+python -m ia_carmine.cli pipeline_dry_run_matrix --repo-root . --continue-on-error
 python -m Tools.validation check_package_structure --repo-root .
 python -m Tools.validation check_json_artifacts --repo-root .
 ```
 
-For docs-only changes, the AI pipeline matrix can be skipped if no `Tools/ai/` files changed, but run documentation link checks when local execution is available:
+For docs-only changes, the AI pipeline matrix can be skipped if no `ia_carmine/` files changed, but run documentation link checks when local execution is available:
 
 ```powershell
 python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json

@@ -24,12 +24,12 @@ def main() -> int:
     errors: list[str] = []
     gate = "\n".join(
         [
-            read("Tools/ai/heap_gate/provider_commands.py"),
-            read("Tools/ai/heap_gate/provider_prompt_text.py"),
-            read("Tools/ai/heap_gate/provider_refinement.py"),
+            read("ia_carmine/runtime/heap_gate/provider_commands.py"),
+            read("ia_carmine/runtime/heap_gate/provider_prompt_text.py"),
+            read("ia_carmine/runtime/heap_gate/provider_refinement.py"),
         ]
     )
-    revision = read("Tools/ai/external_heap/revision_context/tasks.py")
+    revision = read("ia_carmine/runtime/external_heap/revision_context/tasks.py")
 
     require(
         "tratta candidate_response_preview come esempio negativo" in revision,

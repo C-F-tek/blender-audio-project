@@ -103,7 +103,7 @@ def prepare_command(
     return [
         sys.executable,
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "agent_review_prepare_pr",
         "--repo-root",
         str(repo),
@@ -134,7 +134,7 @@ def auto_include_command(
     return [
         sys.executable,
         "-m",
-        "Tools.ai",
+        "ia_carmine",
         "agent_review_prepare_pr",
         "--repo-root",
         str(repo),

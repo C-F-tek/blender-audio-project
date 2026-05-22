@@ -1,4 +1,4 @@
-"""Compatibility facade for provider mesh phases."""
+"""Compatibility adapter for provider mesh phases."""
 
 from __future__ import annotations
 

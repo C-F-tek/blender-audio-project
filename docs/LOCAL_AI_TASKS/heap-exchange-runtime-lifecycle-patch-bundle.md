@@ -27,11 +27,11 @@ The lifecycle does not prescribe internal reasoning or lane order.
 ## Added tools
 
 ```text
-python -m Tools.ai heap_exchange_runtime_entry
-python -m Tools.ai heap_exchange_runtime_exit
+python -m ia_carmine.cli heap_exchange_runtime_entry
+python -m ia_carmine.cli heap_exchange_runtime_exit
 Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
 Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
-Tools/ai/patch_unified_heap_exchange_lifecycle_wiring.py
+ia_carmine/patch_unified_heap_exchange_lifecycle_wiring.py
 ```
 
 ## Local apply procedure
@@ -43,11 +43,11 @@ git fetch origin
 git switch codex/heap-exchange-runtime-lifecycle
 git pull --ff-only origin codex/heap-exchange-runtime-lifecycle
 
-python -m Tools.ai patch_unified_heap_exchange_lifecycle_wiring `
+python -m ia_carmine.cli patch_unified_heap_exchange_lifecycle_wiring `
   --repo-root . `
   --dry-run
 
-python -m Tools.ai patch_unified_heap_exchange_lifecycle_wiring `
+python -m ia_carmine.cli patch_unified_heap_exchange_lifecycle_wiring `
   --repo-root .
 ```
 
@@ -55,9 +55,9 @@ python -m Tools.ai patch_unified_heap_exchange_lifecycle_wiring `
 
 ```powershell
 python -m py_compile `
-  python -m Tools.ai heap_exchange_runtime_entry `
-  python -m Tools.ai heap_exchange_runtime_exit `
-  .\Tools\ai\patch_unified_heap_exchange_lifecycle_wiring.py `
+  python -m ia_carmine.cli heap_exchange_runtime_entry `
+  python -m ia_carmine.cli heap_exchange_runtime_exit `
+  .\ia_carmine\patch_unified_heap_exchange_lifecycle_wiring.py `
   .\Tools\validation\heap_exchange\runtime_lifecycle_check\cli.py `
   .\Tools\validation\heap_exchange\runtime_lifecycle_smoke\cli.py
 
@@ -114,9 +114,9 @@ Do not commit runtime outputs.
 Allowed product files for this PR:
 
 ```text
-python -m Tools.ai heap_exchange_runtime_entry
-python -m Tools.ai heap_exchange_runtime_exit
-Tools/ai/patch_unified_heap_exchange_lifecycle_wiring.py
+python -m ia_carmine.cli heap_exchange_runtime_entry
+python -m ia_carmine.cli heap_exchange_runtime_exit
+ia_carmine/patch_unified_heap_exchange_lifecycle_wiring.py
 Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
 Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
 Tools/workflow/run_unified_local_ai_refactor.ps1

@@ -94,7 +94,7 @@ def main() -> int:
             [
                 sys.executable,
                 "-m",
-                "Tools.ai",
+                "ia_carmine",
                 "heap_exchange_peer_runtime_manifest",
                 "--repo-root",
                 str(repo),

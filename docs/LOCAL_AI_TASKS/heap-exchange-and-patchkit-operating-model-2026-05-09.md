@@ -19,15 +19,15 @@ Primary files:
 
 ```text
 Tools/workflow/run_unified_local_ai_refactor.ps1
-python -m Tools.ai heap_exchange_runtime_entry
-python -m Tools.ai heap_exchange_runtime_exit
+python -m ia_carmine.cli heap_exchange_runtime_entry
+python -m ia_carmine.cli heap_exchange_runtime_exit
 Tools/validation/heap_exchange/runtime_lifecycle_check/cli.py
 Tools/validation/heap_exchange/runtime_lifecycle_smoke/cli.py
-Tools/ai/patchkit/apply_patch_bundle.py
-Tools/ai/patchkit/filesystem.py
-Tools/ai/patchkit/anchors.py
-Tools/ai/patchkit/powershell.py
-Tools/ai/patchkit/reports.py
+ia_carmine/product/patchkit/apply_patch_bundle.py
+ia_carmine/product/patchkit/filesystem.py
+ia_carmine/product/patchkit/anchors.py
+ia_carmine/product/patchkit/powershell.py
+ia_carmine/product/patchkit/reports.py
 Tools/validation/run_patchkit_smoke.py
 ```
 
@@ -164,12 +164,12 @@ patch_specs/<bundle>/fragments/*.py
 Apply with the reusable runner:
 
 ```powershell
-python -m Tools.ai apply_patch_bundle `
+python -m ia_carmine.cli apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json `
   --dry-run
 
-python -m Tools.ai apply_patch_bundle `
+python -m ia_carmine.cli apply_patch_bundle `
   --repo-root . `
   --bundle .\patch_specs\<bundle>\bundle.json
 ```
@@ -251,8 +251,8 @@ Heap/exchange lifecycle:
 
 ```powershell
 python -m py_compile `
-  python -m Tools.ai heap_exchange_runtime_entry `
-  python -m Tools.ai heap_exchange_runtime_exit `
+  python -m ia_carmine.cli heap_exchange_runtime_entry `
+  python -m ia_carmine.cli heap_exchange_runtime_exit `
   .\Tools\validation\heap_exchange\runtime_lifecycle_check\cli.py `
   .\Tools\validation\heap_exchange\runtime_lifecycle_smoke\cli.py
 
@@ -264,11 +264,11 @@ Patchkit:
 
 ```powershell
 python -m py_compile `
-  .\Tools\ai\patchkit\filesystem.py `
-  .\Tools\ai\patchkit\anchors.py `
-  .\Tools\ai\patchkit\powershell.py `
-  .\Tools\ai\patchkit\reports.py `
-  .\Tools\ai\patchkit\apply_patch_bundle.py `
+  .\ia_carmine\product\patchkit\filesystem.py `
+  .\ia_carmine\product\patchkit\anchors.py `
+  .\ia_carmine\product\patchkit\powershell.py `
+  .\ia_carmine\product\patchkit\reports.py `
+  .\ia_carmine\product\patchkit\apply_patch_bundle.py `
   .\Tools\validation\run_patchkit_smoke.py
 
 python -m Tools.validation run_patchkit_smoke `
@@ -315,7 +315,7 @@ A standalone heap universe lane now exists as an incubation path for the core he
 Current owner path:
 
 ```text
-Tools/ai/heap_context_closure/cli.py
+ia_carmine/runtime/heap_context_closure/cli.py
 ```
 
 Dedicated operating note:

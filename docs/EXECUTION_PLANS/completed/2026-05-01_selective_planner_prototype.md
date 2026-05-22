@@ -34,7 +34,7 @@ The prototype must read existing context/evidence artifacts and produce JSON/Mar
 
 | File | Action | Purpose |
 |---|---|---|
-| `Tools/ai/runtime_universe/selective_execution_plan/cli.py` | add | Build report-only selective execution plans. |
+| `ia_carmine/runtime/runtime_universe/selective_execution_plan/cli.py` | add | Build report-only selective execution plans. |
 | `Tools/validation/check_selective_execution_plan.py` | add | Validate selective plan contract. |
 | `docs/AI_SELECTIVE_PLANNER.md` | add | Stable documentation for the prototype. |
 | `docs/EXECUTION_PLANS/active/2026-05-01_selective_planner_prototype.md` | add | Durable task control for this PR. |
@@ -60,7 +60,7 @@ output/validation/selective_execution_plan.json
 
 ```powershell
 python -m Tools.validation check_python_syntax --repo-root . --output .\output\validation\python_syntax.json
-python -m Tools.ai build_selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
+python -m ia_carmine.cli build_selective_execution_plan --repo-root . --output .\output\ai_pipeline\selective_execution_plan.json --markdown-output .\output\ai_pipeline\selective_execution_plan.md
 python -m Tools.validation check_selective_execution_plan --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json
 python -m Tools.validation check_json_artifacts --repo-root . --output .\output\validation\json_artifacts.json
 python -m Tools.validation check_docs_links --repo-root . --output .\output\validation\docs_links.json
@@ -84,7 +84,7 @@ python -m Tools.workflow run_parallel_ai_provider_multistep `
   -ProposalBasename parallel_gpu_npu_selective_planner_real_proposals `
   -EvidenceBasename parallel_gpu_npu_selective_planner_real_evidence
 
-python -m Tools.ai build_github_evidence_bundle --repo-root . --basename parallel_gpu_npu_selective_planner_real_evidence
+python -m ia_carmine.cli build_github_evidence_bundle --repo-root . --basename parallel_gpu_npu_selective_planner_real_evidence
 python -m Tools.validation check_github_evidence_bundle --repo-root . --output .\output\validation\github_evidence_bundle.json
 python -m Tools.validation check_validation_report_contract --repo-root . --output .\output\validation\validation_report_contract.json
 ```

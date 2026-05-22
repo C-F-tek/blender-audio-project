@@ -26,7 +26,7 @@ def build_fixtures(repo_root: Path, stamp: str) -> dict[str, str]:
                     "id": "smoke_plan_001",
                     "area": "ai-quality",
                     "status": "ready_for_manual_review",
-                    "target_files": ["Tools/ai/patch_product/patch_plan_quality_product_report/cli.py"],
+                    "target_files": ["ia_carmine/product/patch_product/patch_plan_quality_product_report/cli.py"],
                     "rationale": "Verify that generated patch notes can summarize an existing quality product lane.",
                     "edit_strategy": "Add report-only product evidence and keep patch application separate.",
                     "source_evidence": {"smoke": True},

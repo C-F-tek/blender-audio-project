@@ -4,7 +4,7 @@
 
 `Tools/workflow/workflow_run` contains workflow-facing Python packages for startup checks, smart context, workflow shells, diagnostics, local artifact reset, Git helper integration and local workflow utilities.
 
-This area supports operator workflows and local orchestration surfaces. It is separate from the core AI heap runtime implementation under `Tools/ai`.
+This area supports operator workflows and local orchestration surfaces. It is separate from the core AI heap runtime implementation under `ia_carmine`.
 
 ## Responsibilities
 
@@ -35,7 +35,7 @@ python -m Tools.workflow scene_spec ...
 ## Workflow model
 
 ```text
-operator/local request -> workflow helper -> Tools.ai or Scripting package as needed
+operator/local request -> workflow helper -> ia_carmine or Scripting package as needed
 ```
 
 Workflow helpers should coordinate existing tools rather than duplicate heap runtime logic.
@@ -53,7 +53,7 @@ workflow shell logs when explicitly produced
 ## Boundaries
 
 - Workflow code should remain a thin coordination layer.
-- Heavy AI runtime behavior belongs under `Tools/ai`.
+- Heavy AI runtime behavior belongs under `ia_carmine`.
 - Blender/media execution requires explicit application-domain task scope.
 - Git operations should remain explicit and operator-driven.
 

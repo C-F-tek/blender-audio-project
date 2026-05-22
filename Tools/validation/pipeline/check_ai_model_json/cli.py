@@ -17,7 +17,7 @@ def import_model_json(repo_root: Path) -> dict[str, Any]:
     if root_text not in sys.path:
         sys.path.insert(0, root_text)
 
-    from Tools.ai._shared.model_json import (  # type: ignore
+    from ia_carmine._shared.model_json import (  # type: ignore
         ModelJsonParseError,
         extract_json_candidate,
         parse_model_json,
@@ -25,7 +25,7 @@ def import_model_json(repo_root: Path) -> dict[str, Any]:
         repair_common_model_json,
         strip_markdown_json_fence,
     )
-    from Tools.npu.provider_mesh._shared.ollama_runtime import parse_json_response, strip_json_fence  # type: ignore
+    from ia_carmine.providers.ollama.json_response import parse_json_response, strip_json_fence  # type: ignore
 
     return {
         "ModelJsonParseError": ModelJsonParseError,

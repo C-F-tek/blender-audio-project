@@ -23,7 +23,7 @@ Tools/validation/run_patchkit_bundle_contract_smoke.py
 
 ## Purpose
 
-The validator checks that a `patch_specs/<bundle>/bundle.json` is structurally safe before it reaches `Tools/ai/patchkit/apply_patch_bundle.py`.
+The validator checks that a `patch_specs/<bundle>/bundle.json` is structurally safe before it reaches `ia_carmine/product/patchkit/apply_patch_bundle.py`.
 
 It does not:
 

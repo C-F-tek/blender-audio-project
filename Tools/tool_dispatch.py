@@ -23,8 +23,10 @@ class ToolDispatcher:
         package_dir: Path,
         targets: dict[str, str],
         label: str,
+        display_package: str | None = None,
     ) -> None:
         self.package = package
+        self.display_package = display_package or package
         self.package_dir = package_dir
         self.targets = targets
         self.label = label
@@ -87,7 +89,7 @@ class ToolDispatcher:
 
         def run_powershell_tool() -> int:
             if tool_args and tool_args[0] in {"--help", "-h"}:
-                print(f"Usage: python -m {self.package} {name} [native PowerShell args...]")
+                print(f"Usage: python -m {self.display_package} {name} [native PowerShell args...]")
                 print(f"Implementation: {script_path.relative_to(self.package_dir.parents[1])}")
                 return 0
             env = os.environ.copy()
@@ -128,7 +130,7 @@ class ToolDispatcher:
 
     def main(self, argv: list[str] | None = None) -> int:
         args = list(sys.argv[1:] if argv is None else argv)
-        usage = f"python -m {self.package} <tool> [tool args...]"
+        usage = f"python -m {self.display_package} <tool> [tool args...]"
         if not args or args[0] in {"--help", "-h"}:
             print(f"Usage: {usage}")
             print(f"Available {self.label} tools:")
@@ -149,6 +151,6 @@ class ToolDispatcher:
             return 2
 
         name = self.normalize_tool_name(raw_tool)
-        sys.argv = [f"python -m {self.package} {name}", *tool_args]
+        sys.argv = [f"python -m {self.display_package} {name}", *tool_args]
         result = tool_main()
         return int(result or 0)

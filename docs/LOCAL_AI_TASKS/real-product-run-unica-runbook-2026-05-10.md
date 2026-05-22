@@ -6,7 +6,7 @@ Questo documento fotografa la struttura reale dopo la chiusura della catena PR #
 
 Entrata e uscita sono invece rigide:
 
-- entrata unica: `python -m Tools.ai run`;
+- entrata unica: `python -m ia_carmine.cli run`;
 - centro dinamico: `python -m Tools.workflow run_unified_local_ai_refactor`;
 - uscita unica: review PR product validato da final product contract.
 
@@ -131,7 +131,7 @@ ollama show qwen2.5-coder:14b | Out-Host
 $Stamp = "heap_exchange_process_gate_$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 $Branch = "CARMINEai/heap-exchange-process-gate-$Stamp"
 
-& $RepoPy -m Tools.ai run `
+& $RepoPy -m ia_carmine run `
   -RepoRoot "." `
   -ProcessGateTask `
   -TaskBranch $Branch `
@@ -170,9 +170,9 @@ $Branch = "CARMINEai/heap-exchange-process-gate-$Stamp"
 $RepoPy = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
 & $RepoPy -m py_compile `
-  .\Tools\ai\repository_product\repository_change_proposals\cli.py `
-  .\Tools\ai\generated_patch_specs\proposal_cli.py `
-  .\Tools\ai\generated_patch_specs\apply_cli.py `
+  .\ia_carmine\product\repository_product\repository_change_proposals\cli.py `
+  .\ia_carmine\product\generated_patch_specs\proposal_cli.py `
+  .\ia_carmine\product\generated_patch_specs\apply_cli.py `
   .\Tools\validation\repository_product\repository_change_proposals_runtime_evidence_smoke\cli.py `
   .\Tools\validation\generated_patch_specs\empty_product_smoke\cli.py
 
@@ -207,7 +207,7 @@ git diff --check
 A new standalone heap universe lane is being incubated outside the full run.
 
 ```text
-Tools/ai/heap_context_closure/cli.py
+ia_carmine/runtime/heap_context_closure/cli.py
 ```
 
 Purpose:
@@ -233,7 +233,7 @@ Until those criteria are stable, the full run remains the product path and the s
 The closure run must also emit a run-owned readable final product after composer and external post-run packaging:
 
 ```text
-Tools/ai/assemble_heap_final_readable_product.py
+ia_carmine/assemble_heap_final_readable_product.py
 ```
 
 The expected operator surface is `FINAL_READABLE_PRODUCT.md`, `FINAL_READABLE_PRODUCT.txt`, `FINAL_READABLE_PRODUCT.json`, `CODE_PRODUCT_FULL_PATCH.md` and the adjacent Documents ZIP produced by the run. A package without this reassembled decision document and full available code product is incomplete evidence, even when proposal chunks and revision context files exist.

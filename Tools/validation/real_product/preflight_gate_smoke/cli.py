@@ -9,10 +9,10 @@ import sys
 from pathlib import Path
 
 try:
-    from Tools.ai._shared.process_tree import terminate_process_tree
+    from ia_carmine._shared.process_tree import terminate_process_tree
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 except ImportError:
-    from Tools.ai._shared.process_tree import terminate_process_tree  # type: ignore
+    from ia_carmine._shared.process_tree import terminate_process_tree  # type: ignore
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report  # type: ignore
 
 

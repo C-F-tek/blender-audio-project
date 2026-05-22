@@ -31,7 +31,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = resolve_repo_root(args.repo_root)
-    from Tools.ai.provider_mesh.npu_gpu_deep_review_auditor import extract_npu_tool_requests_from_text
+    from ia_carmine.providers.provider_mesh.npu_gpu_deep_review_auditor import extract_npu_tool_requests_from_text
 
     sample = 'NPU audit result.\n\n```json\n{\n  "tool_requests": [\n    {"id": "npu_need_syntax", "tool": "check_python_syntax", "reason": "Validate syntax before review", "args": {}},\n    {"id": "npu_bad", "tool": "free_shell", "reason": "Should be blocked", "args": {}}\n  ]\n}\n```\n'
     valid, errors = extract_npu_tool_requests_from_text(sample, max_requests=8)

@@ -85,9 +85,9 @@ Before reading the runtime ZIP, code/docs inspection suggests one safe candidate
 
 ```text
 centralize report/evidence helper functions in Tools/validation/_shared/report_utils.py
-reuse them from Tools/ai/runtime_tool/usage_evidence/cli.py
-reuse them from Tools/ai/agent_context/shared_toolbox_bundle/cli.py
-then evaluate Tools/ai/agent_context/shared_toolbox_bundle/cli.py separately
+reuse them from ia_carmine/runtime/runtime_tool/usage_evidence/cli.py
+reuse them from ia_carmine/context/agent_context/shared_toolbox_bundle/cli.py
+then evaluate ia_carmine/context/agent_context/shared_toolbox_bundle/cli.py separately
 ```
 
 This is only a candidate. The bundle decision loop and patch plan remain the source of truth for final selection.

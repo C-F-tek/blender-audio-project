@@ -15,7 +15,7 @@ WORKFLOW.md come processo operativo root
 PROJECT_STATUS_POINT.md come stato operativo
 AI_PIPELINE_REFACTOR_STATUS.md come status marker
 AI_PIPELINE_ARCHITECTURE.md come mappa architetturale
-Tools/ai/pipeline/ come architettura modulare
+ia_carmine/product/pipeline/ come architettura modulare
 Tools/npu/pipeline/ come helper package app-agnostico in staged decomposition
 pipeline_dry_run_matrix come validazione planned-only ripetibile
 run_unified_local_ai_refactor.ps1 come launcher unico

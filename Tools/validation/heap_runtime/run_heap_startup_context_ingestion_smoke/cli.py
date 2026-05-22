@@ -37,21 +37,21 @@ except ImportError:  # pragma: no cover
 
 
 SOURCE_FILES = {
-    "launcher": "Tools/ai/heap_context_closure/launcher.py",
-    "gate": "Tools/ai/heap_runtime/completeness_gate/cli.py",
-    "gate_startup": "Tools/ai/heap_gate/startup_context.py",
-    "gate_startup_manifest": "Tools/ai/heap_gate/startup_manifest_context.py",
-    "gate_loop": "Tools/ai/heap_gate/loop_steps.py",
-    "preload": "Tools/ai/heap_context_memory_reload/cli.py",
-    "preload_runner": "Tools/ai/heap_context_memory_reload/runner.py",
-    "preload_delta": "Tools/ai/heap_context_memory_reload/delta.py",
-    "preload_builders": "Tools/ai/heap_context_memory_reload/builders.py",
-    "preload_manifest": "Tools/ai/heap_context_memory_reload/manifest.py",
-    "preload_task_docs": "Tools/ai/heap_context_memory_reload/task_docs.py",
-    "preload_memory_write": "Tools/ai/heap_context_memory_reload/memory_write.py",
-    "sqlite_store": "Tools/ai/agent_memory/sqlite_store.py",
-    "reconciler": "Tools/ai/heap_context_memory_reload/reconcile_report/cli.py",
-    "composer": "Tools/ai/heap_final_proposals/cli.py",
+    "launcher": "ia_carmine/runtime/heap_context_closure/launcher.py",
+    "gate": "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py",
+    "gate_startup": "ia_carmine/runtime/heap_gate/startup_context.py",
+    "gate_startup_manifest": "ia_carmine/runtime/heap_gate/startup_manifest_context.py",
+    "gate_loop": "ia_carmine/runtime/heap_gate/loop_steps.py",
+    "preload": "ia_carmine/context/heap_context_memory_reload/cli.py",
+    "preload_runner": "ia_carmine/context/heap_context_memory_reload/runner.py",
+    "preload_delta": "ia_carmine/context/heap_context_memory_reload/delta.py",
+    "preload_builders": "ia_carmine/context/heap_context_memory_reload/builders.py",
+    "preload_manifest": "ia_carmine/context/heap_context_memory_reload/manifest.py",
+    "preload_task_docs": "ia_carmine/context/heap_context_memory_reload/task_docs.py",
+    "preload_memory_write": "ia_carmine/context/heap_context_memory_reload/memory_write.py",
+    "sqlite_store": "ia_carmine/memory/agent_memory/sqlite_store.py",
+    "reconciler": "ia_carmine/context/heap_context_memory_reload/reconcile_report/cli.py",
+    "composer": "ia_carmine/product/heap_final_proposals/cli.py",
 }
 
 
@@ -296,7 +296,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         passed=operational_write_signal,
         severity="critical",
         evidence="BASE_REQUIREMENTS contains operational_memory_write; startup must execute the dispatcher SQLite remember path before provider loop",
-        recommendation="Run python -m Tools.ai agent_runtime_sqlite_memory --action remember --scope operational with a content-file and make failure blocking, not degraded.",
+        recommendation="Run python -m ia_carmine.cli agent_runtime_sqlite_memory --action remember --scope operational with a content-file and make failure blocking, not degraded.",
     )
 
     delta_reload_signal = bool(
@@ -325,7 +325,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         or "startup_context_seen_before_first_provider" in composer,
         severity="warning",
         evidence="composer packages reports after the fact; it should expose whether startup context was causally seen before provider output",
-        recommendation="Add product_causality_passed plus startup/provider ordering flags to python -m Tools.ai heap_final_proposals.",
+        recommendation="Add product_causality_passed plus startup/provider ordering flags to python -m ia_carmine.cli heap_final_proposals.",
     )
 
     critical_failures = [

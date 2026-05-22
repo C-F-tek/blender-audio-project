@@ -16,9 +16,9 @@ The repository has a deterministic intake tool that can:
 ## Tools
 
 ```text
-python -m Tools.ai.code_product.artifact_intake
-Tools/ai/code_product/artifact_intake/apply.py
-Tools/ai/code_product/artifact_intake/report.py
+python -m ia_carmine.product.code_product.artifact_intake
+ia_carmine/product/code_product/artifact_intake/apply.py
+ia_carmine/product/code_product/artifact_intake/report.py
 Tools/validation/run_code_product_artifact_intake_smoke.py
 ```
 
@@ -61,10 +61,10 @@ The artifact is already represented in `master` by Day 0. No safe source write w
 ## Validation
 
 ```text
-python -m py_compile Tools/ai/runtime_tool/agent_broker.py python -m Tools.ai.code_product.artifact_intake Tools/ai/code_product/artifact_intake/apply.py -m Tools.ai report Tools/validation/run_code_product_artifact_intake_smoke.py
+python -m py_compile ia_carmine/runtime/runtime_tool/agent_broker.py python -m ia_carmine.product.code_product.artifact_intake ia_carmine/product/code_product/artifact_intake/apply.py -m ia_carmine report Tools/validation/run_code_product_artifact_intake_smoke.py
 python -m Tools.validation run_code_product_artifact_intake_smoke --repo-root . --timeout-seconds 120
-python python -m Tools.ai.code_product.artifact_intake --repo-root . --code-product <CODE_PRODUCT_FULL_PATCH.md> --apply-safe --require-all-integrated
-python -m Tools.ai agent_runtime_tool_broker --repo-root . --request-file output/validation/code_product_intake_broker_request_20260514.json --timeout-seconds 180
+python python -m ia_carmine.product.code_product.artifact_intake --repo-root . --code-product <CODE_PRODUCT_FULL_PATCH.md> --apply-safe --require-all-integrated
+python -m ia_carmine.cli agent_runtime_tool_broker --repo-root . --request-file output/validation/code_product_intake_broker_request_20260514.json --timeout-seconds 180
 git diff --check
 ```
 

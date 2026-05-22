@@ -162,7 +162,7 @@ bundle hides which earlier bundle it supersedes
 A future report-only tool may inventory this directory and propose cleanup candidates:
 
 ```text
-Tools/ai/analyze_evidence_bundle_retention.py
+ia_carmine/analyze_evidence_bundle_retention.py
 ```
 
 It should only report candidates. It must not delete files automatically.

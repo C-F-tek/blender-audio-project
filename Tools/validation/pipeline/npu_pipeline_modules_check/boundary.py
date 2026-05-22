@@ -65,7 +65,7 @@ def build_boundary_context(context: dict[str, object]) -> dict[str, object]:
     runtime_artifact_write_report = context["runtime_artifact_write_report"]
     repo_root = context["repo_root"]
     boundary_report = build_helper_boundary_report(
-        package_name="Tools.npu.pipeline",
+        package_name="ia_carmine.providers.npu.pipeline",
         modules=[
             "artifact_paths",
             "artifact_writer",
