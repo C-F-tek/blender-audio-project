@@ -45,7 +45,7 @@ def run_proposal_cli() -> int:
     parser.add_argument(
         "--require-provider-execution",
         action="store_true",
-        help="Fail unless the proposal report proves provider_execution_performed=true.",
+        help="Fail unless the proposal report proves provider_work_verified=true.",
     )
     args = parser.parse_args()
 

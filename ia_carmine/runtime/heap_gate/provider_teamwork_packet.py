@@ -232,7 +232,7 @@ def build_provider_teamwork_leader_packet(
         },
         "runtime_heap_refs": heap_paths,
         "broker_tool_catalog": gate.broker_tool_catalog_summary(
-            max_items=max(1, safe_int(getattr(gate.args, "tool_catalog_limit", 24), 24))
+            max_items=_provider_packet_tool_catalog_limit(gate)
         ),
         "broker_tool_evidence": gate.tool_evidence_summary(events, max_items=12),
         "source_allowlist_contract": gate.render_source_allowlist_contract(limit=32),
@@ -241,3 +241,9 @@ def build_provider_teamwork_leader_packet(
         "revision_feedback": str(gate.provider_revision_feedback or ""),
         "leader_prompt_excerpt": leader_prompt[:6000],
     }
+
+
+def _provider_packet_tool_catalog_limit(gate: Any) -> int:
+    limit = max(1, safe_int(getattr(gate.args, "tool_catalog_limit", 24), 24))
+    cap = safe_int(getattr(gate.args, "provider_prompt_tool_catalog_cap", 0), 0)
+    return min(limit, cap) if cap > 0 else limit

@@ -17,6 +17,15 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
 )
 from ia_carmine.runtime.heap_gate.matrix_lab_evidence import RuntimeGateMatrixLabEvidenceMixin
 
+PROVIDER_CONSUMABLE_REQUIREMENTS = {
+    "runtime_file_refs",
+    "startup_memory_index_batch",
+    "provider_input_memory_index_batch",
+    "virtual_dev_environment",
+    "code_execution_matrix",
+    "runtime_debug_lab_execution",
+}
+
 
 class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
     def runtime_debug_lab_required(self) -> bool:
@@ -102,16 +111,124 @@ class RuntimeGateMatrixLabMixin(RuntimeGateMatrixLabEvidenceMixin):
         return self.implementation_output_required() or any(hint in text for hint in hints)
 
     def provider_revision_evidence_ready(self, events: list[dict[str, Any]]) -> bool:
-        """Delay provider rewrites until matrix/lab evidence has entered the heap."""
-        if self.virtual_dev_environment_required() and not self.virtual_dev_environment_passed(
-            events
-        ):
-            return False
-        if self.code_execution_matrix_required() and not self.code_execution_matrix_passed(events):
-            return False
-        if self.runtime_debug_lab_required() and not self.runtime_debug_lab_passed(events):
-            return False
-        return True
+        """Return True when requested provider-consumable evidence has responded.
+
+        This is deliberately weaker than final product readiness. Matrix, virtual
+        dev and debug-lab failures are useful GPU1 feedback; only pending broker
+        work blocks the next provider revision.
+        """
+        for item in self.next_unattempted_plan_items(events):
+            requirement = str(item.get("requirement") or "")
+            if requirement in PROVIDER_CONSUMABLE_REQUIREMENTS:
+                return False
+        return not self.provider_consumable_evidence_status(events).get("pending")
+
+    def provider_consumable_evidence_status(
+        self, events: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        pending_events = list(getattr(self.heap, "pending_broker_requests", lambda: [])())
+        requested: list[str] = []
+        pending: list[dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
+        for event in events:
+            if event.get("event_type") not in {"broker_request", "broker_result"}:
+                continue
+            payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+            requirement = self._provider_consumable_requirement(payload)
+            if not requirement:
+                continue
+            if requirement not in requested:
+                requested.append(requirement)
+            if event.get("event_type") == "broker_result":
+                results.append(payload)
+        for event in pending_events:
+            payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+            requirement = self._provider_consumable_requirement(payload)
+            if not requirement:
+                continue
+            if requirement not in requested:
+                requested.append(requirement)
+            pending.append(
+                {
+                    "id": str(event.get("correlation_id") or payload.get("id") or ""),
+                    "tool": str(payload.get("tool") or ""),
+                    "requirement": requirement,
+                }
+            )
+        resolved = sorted(
+            {
+                self._provider_consumable_requirement(result)
+                for result in results
+                if self._provider_consumable_requirement(result)
+            }
+        )
+        return {
+            "provider_consumable_evidence_requested": requested,
+            "provider_consumable_evidence_resolved": resolved,
+            "provider_consumable_evidence_pending": pending,
+            "pending": bool(pending),
+            "complete_or_failed_with_report": bool(requested) and not pending,
+        }
+
+    def provider_consumable_evidence_feedback(
+        self, events: list[dict[str, Any]],
+        max_items: int = 8,
+    ) -> str:
+        lines: list[str] = []
+        for payload in self.broker_results(events):
+            requirement = self._provider_consumable_requirement(payload)
+            if not requirement:
+                continue
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            refs = [
+                str(outputs.get(key) or "")
+                for key in (
+                    "json_report",
+                    "markdown_report",
+                    "request_file",
+                    "debug_lab_report",
+                    "debug_lab_markdown",
+                )
+                if str(outputs.get(key) or "").strip()
+            ]
+            summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+            lines.append(
+                "- {tool}->{requirement} rc={rc} refs={refs} summary={summary}".format(
+                    tool=payload.get("tool"),
+                    requirement=requirement,
+                    rc=payload.get("returncode"),
+                    refs=";".join(refs[:3]) or str(payload.get("broker_report") or ""),
+                    summary=summary,
+                )
+            )
+            if len(lines) >= max_items:
+                break
+        if not lines:
+            return ""
+        return "\n".join(
+            [
+                "PROVIDER_CONSUMABLE_BROKER_EVIDENCE:",
+                "- These broker results are input to the next GPU1 pointer revision, not post-provider decoration.",
+                *lines,
+            ]
+        )
+
+    def _provider_consumable_requirement(self, payload: dict[str, Any]) -> str:
+        requirement = str(
+            payload.get("requirement")
+            or self.requirement_for_tool(str(payload.get("tool") or ""))
+        )
+        if requirement == "runtime_debug_lab":
+            requirement = "runtime_debug_lab_execution"
+        if requirement in PROVIDER_CONSUMABLE_REQUIREMENTS:
+            return requirement
+        tool = str(payload.get("tool") or "")
+        if tool == "runtime_sqlite_memory" and requirement in {
+            "startup_memory_index_batch",
+            "provider_input_memory_index_batch",
+        }:
+            return requirement
+        return ""
 
     def virtual_dev_environment_targets(self) -> list[str]:
         return [

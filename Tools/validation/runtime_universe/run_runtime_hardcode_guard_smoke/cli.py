@@ -42,6 +42,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "ia_carmine/_shared/heap_code_execution_tool_core.py",
             "ia_carmine/_shared/heap_final_code_product.py",
             "ia_carmine/runtime/heap_gate/target_planner.py",
+            "ia_carmine/runtime/heap_gate/provider_command_specs.py",
+            "ia_carmine/runtime/heap_gate/provider_context.py",
+            "ia_carmine/runtime/heap_gate/tool_plan_builder.py",
+            "ia_carmine/context/heap_context_memory_reload/runner.py",
             "ia_carmine/_shared/provider_tool_loop.py",
             "ia_carmine/runtime/runtime_tool/file_refs/allowlist.py",
             "Tools/validation/runtime_universe/run_core_runtime_guard_suite/cli.py",
@@ -146,6 +150,60 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     if re.search(r'"Tools/(?:ai|validation)/[^"]+\.py"', final_synthesis):
         errors.append(
             "ia_carmine/_shared/heap_final_readable_synthesis.py: static target file paths are forbidden"
+        )
+
+    provider_specs = files["ia_carmine/runtime/heap_gate/provider_command_specs.py"]
+    for needle in (
+        "IA_CARMINE_GPU1_MODEL",
+        "IA_CARMINE_GPU0_MODEL",
+        "IA_CARMINE_GPU0_OLLAMA_BASE_URL",
+        "IA_CARMINE_GPU0_VULKAN_VISIBLE_DEVICES",
+        "IA_CARMINE_GPU1_OLLAMA_BASE_URL",
+    ):
+        check_absent(
+            provider_specs,
+            needle,
+            "ia_carmine/runtime/heap_gate/provider_command_specs.py",
+            errors,
+            "provider model/URL/device values must come from explicit resolved CLI config",
+        )
+
+    tool_plan = files["ia_carmine/runtime/heap_gate/tool_plan_builder.py"]
+    for needle in (
+        '"output/ai_runtime_memory/rag/rag.sqlite"',
+        '"http://127.0.0.1:11434"',
+        '"bge-m3"',
+        '["tools/ai", "tools/npu", "tools/workflow"]',
+        '["ia_carmine", "Tools/workflow", "Tools/npu"]',
+    ):
+        check_absent(
+            tool_plan,
+            needle,
+            "ia_carmine/runtime/heap_gate/tool_plan_builder.py",
+            errors,
+            "RAG/tooling roots must come from explicit resolved CLI config",
+        )
+
+    provider_context = files["ia_carmine/runtime/heap_gate/provider_context.py"]
+    check_absent(
+        provider_context,
+        "min(24",
+        "ia_carmine/runtime/heap_gate/provider_context.py",
+        errors,
+        "provider prompt tool catalog limit must not clamp to an unreported local constant",
+    )
+
+    startup_runner = files["ia_carmine/context/heap_context_memory_reload/runner.py"]
+    for needle in (
+        "max_workers=4",
+        '"heap context memory reload provider proposal GPU0 NPU"',
+    ):
+        check_absent(
+            startup_runner,
+            needle,
+            "ia_carmine/context/heap_context_memory_reload/runner.py",
+            errors,
+            "startup workers/query must come from explicit resolved CLI config",
         )
 
     return {

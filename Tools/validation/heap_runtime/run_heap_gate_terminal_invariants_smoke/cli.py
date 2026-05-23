@@ -14,12 +14,14 @@ CORE_RUNTIME_GUARD = True
 
 try:
     from ia_carmine.runtime.heap_gate.terminal_invariants import evaluate_terminal_invariants
+    from ia_carmine.runtime.heap_gate.pointer_soft_lock import pointer_closure_summary
     from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from ia_carmine.runtime.heap_gate.terminal_invariants import evaluate_terminal_invariants  # type: ignore
+    from ia_carmine.runtime.heap_gate.pointer_soft_lock import pointer_closure_summary  # type: ignore
     from Tools.validation._shared.report_utils import write_json_report  # type: ignore
 
 
@@ -61,6 +63,9 @@ def ready_metrics() -> dict[str, Any]:
         "latest_gpu0_effective_decision": "congruent",
         "latest_gpu0_checked_current_packet": True,
         "latest_gpu0_packet_stale_after_gpu1_packet_rewrite": False,
+        "latest_gpu1_block_requires_gpu0_review": True,
+        "latest_gpu1_block_reviewed_by_gpu0": True,
+        "gpu0_review_invalid_requires_gpu1_retry": False,
         "latest_gpu0_role_decision": "agree_close",
         "latest_gpu0_veto_reasons": [],
         "latest_gpu0_incongruence_reasons": [],
@@ -285,8 +290,50 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     )
     gpu0_stale_packet = ready_metrics()
     gpu0_stale_packet["latest_gpu0_packet_stale_after_gpu1_packet_rewrite"] = True
+    gpu0_stale_packet["latest_gpu1_block_reviewed_by_gpu0"] = False
     gpu0_stale_packet_errors = evaluate_terminal_invariants(
         metrics=gpu0_stale_packet,
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
+    gpu0_missing_review = ready_metrics()
+    gpu0_missing_review["latest_gpu1_block_reviewed_by_gpu0"] = False
+    gpu0_missing_review["gpu0_review_invalid_requires_gpu1_retry"] = True
+    gpu0_missing_review_errors = evaluate_terminal_invariants(
+        metrics=gpu0_missing_review,
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
+    soft_lock_closed_refine = ready_metrics()
+    soft_lock_closed_refine["soft_lock_state"] = "closed"
+    soft_lock_closed_refine["closure_quorum_status"] = "targeted_refine_allowed"
+    soft_lock_closed_refine_errors = evaluate_terminal_invariants(
+        metrics=soft_lock_closed_refine,
+        missing_requirements=[],
+        lane_gate_passed=True,
+        degraded_lanes=[],
+        final_bridge_reports=["output/validation/broker.json"],
+        allow_provider_generation=True,
+        provider_execution_performed=True,
+        detailed_output_expected=True,
+    )
+    deferred_zero_open = ready_metrics()
+    deferred_zero_open["open_pointer_count_final"] = 0
+    deferred_zero_open["pointer_closure_table"] = [
+        {"pointer_id": "smoke:gpu0:000", "closure_status": "deferred_to_resume"}
+    ]
+    deferred_zero_open_errors = evaluate_terminal_invariants(
+        metrics=deferred_zero_open,
         missing_requirements=[],
         lane_gate_passed=True,
         degraded_lanes=[],
@@ -452,6 +499,15 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         for error in gpu0_stale_packet_errors
     ):
         errors.append("ready metric set must reject stale GPU0 review after GPU1 packet rewrite")
+    if not any(
+        "gpu0_review_invalid_requires_gpu1_retry" in error
+        for error in gpu0_missing_review_errors
+    ):
+        errors.append("ready metric set must reject GPU1 block without a current GPU0 review")
+    if not any("soft_lock_closed_with_targeted_refine_allowed" in error for error in soft_lock_closed_refine_errors):
+        errors.append("terminal invariants must reject closed soft-lock with targeted refine")
+    if not any("open_pointer_count_zero_with_deferred_pointer_edges" in error for error in deferred_zero_open_errors):
+        errors.append("terminal invariants must reject zero open count with deferred pointer edges")
     if not any("gpu1_refine_not_linked_to_gpu0_veto" in error for error in gpu1_unlinked_refine_errors):
         errors.append("ready metric set must reject unlinked GPU1 refine after GPU0 veto")
     if not any("gpu1_leader_missing" in error for error in leader_missing_errors):
@@ -501,6 +557,41 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
             errors.append(f"missing expected terminal invariant: {fragment}")
     if not any("semantic GPU0/NPU model execution" in error for error in peer_degraded_errors):
         errors.append("ready metric set must reject missing GPU0/NPU semantic execution")
+    gpu0_refine_pointer = pointer_closure_summary(
+        [
+            {
+                "id": "smoke:proposal:000",
+                "role": "gpu1_planner",
+                "accepted": True,
+                "quality_passed": True,
+                "gpu1_closure_decision_packet": {"kind": "gpu1_closure_decision_packet"},
+            },
+            {
+                "id": "smoke:gpu0:000",
+                "role": "gpu0_reviewer_refiner",
+                "provider_work_verified": True,
+                "gpu0_secondary_schema_valid": True,
+                "gpu0_checked_current_packet": True,
+                "reviewed_gpu1_block_id": "smoke:proposal:000",
+                "reviewed_revision": "0",
+                "review_target_pointer": "smoke:proposal:000",
+                "gpu0_effective_decision": "refine_required",
+                "role_decision": "refine_once",
+            },
+        ]
+    )
+    if int(gpu0_refine_pointer.get("open_pointer_count_final") or 0) <= 0:
+        errors.append("pointer closure must not close a GPU1 product on GPU0 refine_required")
+    gpu1_refine_status = next(
+        (
+            str(row.get("closure_status") or "")
+            for row in gpu0_refine_pointer.get("pointer_closure_table", [])
+            if row.get("pointer_id") == "smoke:proposal:000"
+        ),
+        "",
+    )
+    if gpu1_refine_status == "merged_into_final_product":
+        errors.append("GPU0 refine_required must not satisfy GPU1 close-review contract")
     arbiter_product = (repo_root / "ia_carmine/runtime/heap_gate/arbiter_product.py").read_text(
         encoding="utf-8", errors="replace"
     )
@@ -538,6 +629,12 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "gpu0_wrong_packet_errors": gpu0_wrong_packet_errors,
         "gpu0_stale_packet_error_count": len(gpu0_stale_packet_errors),
         "gpu0_stale_packet_errors": gpu0_stale_packet_errors,
+        "gpu0_missing_review_error_count": len(gpu0_missing_review_errors),
+        "gpu0_missing_review_errors": gpu0_missing_review_errors,
+        "soft_lock_closed_refine_error_count": len(soft_lock_closed_refine_errors),
+        "soft_lock_closed_refine_errors": soft_lock_closed_refine_errors,
+        "deferred_zero_open_error_count": len(deferred_zero_open_errors),
+        "deferred_zero_open_errors": deferred_zero_open_errors,
         "gpu1_unlinked_refine_error_count": len(gpu1_unlinked_refine_errors),
         "gpu1_unlinked_refine_errors": gpu1_unlinked_refine_errors,
         "leader_missing_error_count": len(leader_missing_errors),

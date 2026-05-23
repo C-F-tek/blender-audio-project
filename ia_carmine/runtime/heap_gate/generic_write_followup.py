@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from ia_carmine.runtime.heap_gate.runtime_common import Any, provider_heap_lane, read_json, safe_int
 
-GENERIC_WRITE_CAPTURE_LANES = {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}
+GENERIC_WRITE_CAPTURE_LANES = {"gpu1_planner"}
 OPERATIVE_GENERIC_WRITE_LANES = GENERIC_WRITE_CAPTURE_LANES
-PEER_GENERIC_WRITE_LANES = {"gpu0_peer", "npu_micro_task_auditor"}
+PEER_GENERIC_WRITE_LANES: set[str] = set()
 GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS = 3
 
 

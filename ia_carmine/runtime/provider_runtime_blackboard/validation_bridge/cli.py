@@ -13,6 +13,7 @@ from typing import Any
 
 try:
     from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap
+    from ia_carmine._shared.provider_work_verification import provider_work_status
     from Tools.validation._shared.report_utils import (
         resolve_output_path,
         write_json_report,
@@ -23,6 +24,7 @@ except ImportError:
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap  # type: ignore
+    from ia_carmine._shared.provider_work_verification import provider_work_status  # type: ignore
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
@@ -74,16 +76,26 @@ def report_payload(
     repo_root: Path, path: Path, data: dict[str, Any], read_error: str
 ) -> dict[str, Any]:
     guardrails = data.get("guardrails") if isinstance(data.get("guardrails"), dict) else {}
+    lane = str(data.get("lane") or data.get("provider_id") or "")
+    provider_work_verified = bool(
+        data.get("provider_work_verified")
+        or (lane and provider_work_status(lane=lane, report=data).get("provider_work_verified"))
+    )
+    provider_execution_claim_seen = bool(
+        data.get("provider_execution_performed")
+        or data.get("provider_execution_attempted")
+        or data.get("provider_io_observed")
+        or guardrails.get("provider_execution_performed")
+    )
     return {
         "source_report": repo_rel(repo_root, path),
         "kind": data.get("kind"),
         "passed": data.get("passed"),
         "errors": data.get("errors", [read_error] if read_error else []),
         "warnings": data.get("warnings", []),
-        "provider_execution_performed": bool(
-            data.get("provider_execution_performed")
-            or guardrails.get("provider_execution_performed")
-        ),
+        "provider_execution_claim_seen": provider_execution_claim_seen,
+        "provider_work_verified": provider_work_verified,
+        "provider_execution_performed": provider_work_verified,
         "patch_application_performed": bool(
             data.get("patch_application_performed") or guardrails.get("patch_application_performed")
         ),

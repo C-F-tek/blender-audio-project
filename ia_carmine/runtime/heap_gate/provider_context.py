@@ -319,7 +319,10 @@ class RuntimeGateProviderContextMixin:
             "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         )
         team_context = self.team_context_summary(max_chars=2400)
-        tool_catalog_limit = min(24, max(1, safe_int(getattr(self.args, "tool_catalog_limit", 24), 24)))
+        tool_catalog_limit = max(1, safe_int(getattr(self.args, "tool_catalog_limit", 0), 0))
+        tool_catalog_cap = safe_int(getattr(self.args, "provider_prompt_tool_catalog_cap", 0), 0)
+        if tool_catalog_cap > 0:
+            tool_catalog_limit = min(tool_catalog_limit, tool_catalog_cap)
         tool_catalog = self.broker_tool_catalog_summary(max_items=tool_catalog_limit)
         source_candidates = (
             "\n".join(f"- {item}" for item in self.real_source_file_candidates(limit=32))

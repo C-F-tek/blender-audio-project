@@ -246,11 +246,13 @@ def main() -> int:
                     "startup preload was degraded; reconciliation did not prove provider consumption"
                 )
         if missing:
-            heap["product_status"] = "blocked_with_reason"
+            product_status_suggestion = "blocked_with_reason"
         elif not heap.get("proposal_iteration_artifacts") and not heap.get("provider_results"):
-            heap["product_status"] = "blocked_waiting_for_provider_or_proposal"
+            product_status_suggestion = "blocked_waiting_for_provider_or_proposal"
         else:
-            heap["product_status"] = heap.get("product_status") or "ready"
+            product_status_suggestion = heap.get("product_status") or "ready"
+        heap["startup_reconciliation_product_status_suggestion"] = product_status_suggestion
+        heap["startup_reconciliation_does_not_mutate_product_status"] = True
         write_json(heap_report_path, heap)
 
     report = {
@@ -270,6 +272,12 @@ def main() -> int:
         "requirements_completed_from_startup": completed_from_preload,
         "remaining_missing_requirements": (
             heap.get("missing_requirements") if isinstance(heap, dict) else []
+        ),
+        "product_status_preserved": heap.get("product_status") if isinstance(heap, dict) else "",
+        "product_status_suggestion": (
+            heap.get("startup_reconciliation_product_status_suggestion")
+            if isinstance(heap, dict)
+            else ""
         ),
         "artifact_ref_count": len(artifact_refs),
         "artifact_refs": artifact_refs,

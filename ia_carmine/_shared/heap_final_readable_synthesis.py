@@ -288,6 +288,14 @@ def gpu1_raw_evidence_summary(run_dir: Path) -> list[str]:
         return ["Nessun testo raw GPU1 trovato nei report della run."]
     return lines
 
+def pointer_graph_chain_summary(metrics: dict[str, Any], pointer: dict[str, Any], soft_lock_state: dict[str, Any]) -> list[str]:
+    deferred_count = sum(1 for row in as_list(pointer.get("pointer_closure_table")) if str(as_dict(row).get("closure_status") or "") == "deferred_to_resume")
+    return [
+        f"GPU1 block/revision: `{metrics.get('latest_gpu1_block_id') or 'not_available'}` / `{metrics.get('latest_gpu1_revision') or 'not_available'}`; packet valid: `{metrics.get('gpu1_closure_decision_packet_valid')}`; requires GPU0 review: `{metrics.get('latest_gpu1_block_requires_gpu0_review')}`.",
+        f"GPU0 current review: `{metrics.get('latest_gpu1_block_reviewed_by_gpu0')}`; schema valid: `{metrics.get('gpu0_secondary_schema_valid')}`; stale: `{metrics.get('latest_gpu0_packet_stale_after_gpu1_packet_rewrite')}`; expected block/revision: `{metrics.get('latest_gpu0_expected_gpu1_block_id')}` / `{metrics.get('latest_gpu0_expected_gpu1_revision')}`.",
+        f"GPU0 retry reason: `{metrics.get('latest_gpu0_decision_override_reason') or soft_lock_state.get('gpu0_closure_reason') or 'not_available'}`; recovery required/attempted: `{metrics.get('provider_recovery_required')}` / `{metrics.get('provider_recovery_attempted')}`; chain: `{metrics.get('provider_recovery_chain') or []}`; deferred/open: `{deferred_count}` / `{soft_lock_state.get('open_pointer_count_final')}`.",
+        "Regola: i salti pointer restano ammessi; solo un subgrafo candidato con review GPU0 corrente e peer consumati puo' chiudere.",
+    ]
 
 def peer_followup_summary(metrics: dict[str, Any], pointer: dict[str, Any]) -> list[str]:
     product = as_dict(
@@ -316,7 +324,7 @@ def peer_followup_summary(metrics: dict[str, Any], pointer: dict[str, Any]) -> l
         f"GPU0 peer follow-up pending: `{gpu0_count}`.",
         f"NPU peer follow-up pending: `{npu_count}`.",
         f"Ultimo peer pending block: `{latest.get('pointer_id') or 'not_available'}`.",
-        "Azione richiesta: `next GPU1 revision must consume this peer evidence`.",
+        f"Azione richiesta: `gpu1_recovery_revision` se sidecar/review pendenti; next revision `{metrics.get('next_gpu1_recovery_revision') or 0}`; budget exhausted `{metrics.get('provider_revision_budget_exhausted')}`.",
         "Regola: GPU0/NPU possono produrre peer/refinement/veto/evidence, ma non chiudono mai il prodotto senza un blocco GPU1 successivo collegato.",
     ]
 
@@ -330,26 +338,28 @@ def provider_hierarchy_summary(metrics: dict[str, Any]) -> list[str]:
     def budget(lane: str) -> str:
         data = as_dict(lane_budgets.get(lane))
         if data.get("ollama_num_ctx"):
-            return f"ctx={data.get('ollama_num_ctx')}, max_new_tokens={data.get('max_new_tokens')}"
+            return f"ctx={data.get('ollama_num_ctx')}, max_new_tokens={data.get('max_new_tokens')} source={data.get('max_new_tokens_source') or 'unknown'} override={data.get('max_new_tokens_override_path') or 'unknown'}"
         if data.get("max_prompt_chars"):
             return (
                 f"prompt_chars={data.get('max_prompt_chars')}, "
                 f"context_chars={data.get('max_context_chars')}, "
-                f"max_new_tokens={data.get('max_new_tokens')}"
+                f"max_new_tokens={data.get('max_new_tokens')} source={data.get('max_new_tokens_source') or 'unknown'} override={data.get('max_new_tokens_override_path') or 'unknown'}"
             )
         return "not_available"
     return [
-        f"Context hierarchy valid: `{metrics.get('context_hierarchy_valid')}`.",
-        f"GPU1 replight valid: `{metrics.get('gpu1_replight_valid')}`; solo health/residency, mai leadership.",
+        f"Context budget hierarchy valid: `{metrics.get('context_hierarchy_valid')}`; scope=`{metrics.get('context_hierarchy_scope') or 'budget_only_not_workload_or_leadership'}`; operator effective config: `{metrics.get('operator_effective_provider_config') or {}}`.",
+        f"GPU1/NVIDIA identity: `{metrics.get('gpu1_lane_identity') or 'GPU1/NVIDIA primary Ollama lane'}`.",
+        f"GPU1 replight health/residency only: `{metrics.get('gpu1_replight_valid')}`; scope=`{metrics.get('gpu1_replight_scope') or 'health_residency_only'}`; mai leadership/prodotto.",
         f"GPU1 boot leader ready: `{metrics.get('gpu1_boot_leader_ready')}`; autorizza solo avvio sidecar.",
         f"GPU1 primary workload: `{metrics.get('gpu1_primary_workload_valid')}`; chars=`{metrics.get('gpu1_primary_workload_chars')}`, tokens=`{metrics.get('gpu1_primary_workload_tokens')}`.",
         f"GPU1 primary evidence: `{metrics.get('gpu1_primary_evidence_valid')}`; source=`{metrics.get('gpu1_primary_evidence_source') or 'not_available'}`; leader_source=`{metrics.get('leader_source') or 'none'}`; gpu1_native_tool_call_count=`{metrics.get('gpu1_native_tool_call_count')}`.",
-        f"Sidecar start policy: `{metrics.get('sidecars_start_policy') or 'not_available'}`; Parallel provider overlap seconds=`{metrics.get('parallel_provider_overlap_seconds')}`.",
+        f"Parallel provider overlap / sidecar scope mode: `{metrics.get('sidecar_scope_mode') or 'packet_review_only'}`; start policy=`{metrics.get('sidecars_start_policy') or 'not_available'}`; overlap=`{metrics.get('parallel_provider_overlap_seconds')}`; gpu1_idle_after_primary_seconds=`{metrics.get('gpu1_idle_after_primary_seconds')}`; sidecar_alone_after_gpu1_seconds=`{metrics.get('sidecar_alone_after_gpu1_seconds')}`.",
+        f"GPU1 recovery/congruence: attempted=`{metrics.get('gpu1_recovery_attempted') or metrics.get('provider_recovery_attempted')}`; congruence_check=`{metrics.get('gpu1_congruence_check_performed')}`; sidecar_invalid=`{metrics.get('sidecar_invalid')}`; sidecar_incongruent=`{metrics.get('sidecar_incongruent')}`.",
         f"GPU1 leader valid: `{metrics.get('gpu1_leader_valid')}`; leader block id: `{metrics.get('gpu1_leader_block_id') or 'not_available'}`.",
         f"GPU1/NVIDIA: lane_tier=`{lane_tiers.get('gpu1_planner') or 'primary'}`, authority=`{authority.get('gpu1_planner') or 'leader'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('gpu1_planner')}`.",
         f"GPU0/Vulkan: lane_tier=`{lane_tiers.get('gpu0_peer') or 'coworker_medium'}`, authority=`{authority.get('gpu0_peer') or 'coworker'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('gpu0_peer')}`.",
         f"NPU/OpenVINO: lane_tier=`{lane_tiers.get('npu_micro_task_auditor') or 'micro_fast'}`, authority=`{authority.get('npu_micro_task_auditor') or 'micro_tool'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('npu_micro_task_auditor')}`.",
-        f"Consumed peer block ids: `{consumed}`.",
+        f"Consumed peer block ids: `{consumed}`; roles observed/verified/invalid: `{metrics.get('roles_observed') or []}` / `{metrics.get('roles_verified') or []}` / `{metrics.get('roles_observed_invalid') or []}`.",
         f"GPU1 consumed GPU0 peer: `{metrics.get('gpu1_consumed_gpu0_peer')}`; GPU1 consumed NPU peer: `{metrics.get('gpu1_consumed_npu_peer')}`.",
         f"GPU1 consumed generic_write block ids: `{metrics.get('gpu1_consumed_generic_write_block_ids') or []}`.",
         "Device identity map: `" + _device_identity_map_text(device_map) + "`.",
@@ -657,6 +667,7 @@ def render_markdown(
             "## Catena raw GPU1 -> packet CPU -> GPU0 -> quorum",
             "",
             *[f"- {line}" for line in gpu1_raw_evidence_summary(run_dir)],
+            *[f"- {line}" for line in pointer_graph_chain_summary(metrics, pointer, soft_lock_state)],
             "",
             "## Perche il provider non si applica",
             "",
@@ -665,8 +676,7 @@ def render_markdown(
             "## Validazione",
             "",
             *[
-                f"- {line}"
-                for line in validation_summary(
+                f"- {line}" for line in validation_summary(
                     run_dir=run_dir, gate=gate, matrix=matrix, matrix_path=matrix_path
                 )
             ],

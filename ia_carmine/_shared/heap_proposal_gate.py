@@ -112,7 +112,14 @@ def proposal_gate_targets(proposal: dict[str, Any]) -> list[str]:
         normalized = normalize_repo_path(value)
         if is_reviewable_target_path(normalized) and normalized not in targets:
             targets.append(normalized)
-    for key in ("anchored_source_candidates", "target_files", "target_paths"):
+    preferred = proposal.get("verified_declared_target_files")
+    if isinstance(preferred, list):
+        for value in preferred:
+            normalized = normalize_repo_path(value)
+            if is_reviewable_target_path(normalized) and normalized not in targets:
+                targets.append(normalized)
+        return targets
+    for key in ("target_files", "target_paths"):
         values = proposal.get(key)
         if not isinstance(values, list):
             continue
@@ -120,20 +127,6 @@ def proposal_gate_targets(proposal: dict[str, Any]) -> list[str]:
             normalized = normalize_repo_path(value)
             if is_reviewable_target_path(normalized) and normalized not in targets:
                 targets.append(normalized)
-    quality = proposal.get("response_file_reference_quality")
-    if isinstance(quality, dict):
-        for key in (
-            "existing_source_file_refs",
-            "resolved_source_file_refs",
-            "source_file_refs",
-        ):
-            values = quality.get(key)
-            if not isinstance(values, list):
-                continue
-            for value in values:
-                normalized = normalize_repo_path(value)
-                if is_reviewable_target_path(normalized) and normalized not in targets:
-                    targets.append(normalized)
     return targets
 
 

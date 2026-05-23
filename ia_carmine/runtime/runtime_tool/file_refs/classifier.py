@@ -10,6 +10,12 @@ FILE_REF_RE = re.compile(
 )
 SECTION_RE = re.compile(r"(?im)^\s*(?P<name>[A-Z_ ]{3,}):\s*(?P<body>.*)$")
 HEADING_RE = re.compile(r"(?im)^\s*#{1,6}\s*(?P<name>[A-Z_ ]{3,})(?:\s*$|[:=])")
+VALIDATION_COMMAND_RE = re.compile(
+    r"^(?:&\s*)?(?:"
+    r"(?:\$[A-Za-z_][A-Za-z0-9_]*|python|py|pytest|pwsh|powershell|bash|sh|cmd|uv|ruff|mypy|npm|npx)"
+    r")\b",
+    re.IGNORECASE,
+)
 
 
 def unique_ordered(values: Iterable[str]) -> list[str]:
@@ -78,12 +84,38 @@ def extract_target_refs(text: str) -> list[str]:
 
 
 def extract_validation_refs(text: str) -> list[str]:
-    refs = extract_section_refs(text, "VALIDATION_COMMANDS")
-    refs.extend(
-        match.group("path")
-        for match in re.finditer(
-            r"(?P<path>(?:\.\/)?(?:Tools|tools)/validation/[A-Za-z0-9_./() -]+\.py)",
-            str(text or ""),
-        )
-    )
-    return unique_ordered(refs)
+    commands: list[str] = []
+    for block in _section_blocks(text, "VALIDATION_COMMANDS"):
+        for line in block.splitlines():
+            cleaned = _clean_validation_line(line)
+            if not cleaned or _is_bare_file_ref(cleaned):
+                continue
+            if VALIDATION_COMMAND_RE.match(cleaned):
+                commands.append(cleaned)
+    return unique_ordered(commands)
+
+
+def extract_rejected_validation_refs(text: str) -> list[str]:
+    rejected: list[str] = []
+    for block in _section_blocks(text, "VALIDATION_COMMANDS"):
+        for line in block.splitlines():
+            cleaned = _clean_validation_line(line)
+            if cleaned and _is_bare_file_ref(cleaned):
+                rejected.append(cleaned)
+    return unique_ordered(rejected)
+
+
+def _clean_validation_line(line: str) -> str:
+    cleaned = str(line or "").strip()
+    if not cleaned or cleaned.startswith("```"):
+        return ""
+    cleaned = re.sub(r"^\s*(?:[-*]|\d+[.)])\s*", "", cleaned).strip()
+    return cleaned.strip("`'\" ")
+
+
+def _is_bare_file_ref(value: str) -> bool:
+    cleaned = value.strip().strip("`'\"")
+    if not cleaned or re.search(r"\s", cleaned):
+        return False
+    refs = extract_file_refs(cleaned)
+    return len(refs) == 1 and refs[0].strip("./") == cleaned.strip("./")

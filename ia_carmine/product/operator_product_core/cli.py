@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--npu-model-dir", default="")
     parser.add_argument("--operator-gpu-observation", default="")
     parser.add_argument("--max-new-tokens", type=int, default=900)
+    parser.add_argument("--gpu0-max-new-tokens", type=int, default=0)
     parser.add_argument("--allow-provider-generation", action="store_true", default=True)
     parser.add_argument("--startup-max-memory-chars", type=int, default=0)
     parser.add_argument("--startup-max-context-files", type=int, default=0)
@@ -89,6 +90,7 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         npu_model_dir=args.npu_model_dir,
         operator_gpu_observation=args.operator_gpu_observation,
         max_new_tokens=args.max_new_tokens,
+        gpu0_max_new_tokens=args.gpu0_max_new_tokens,
         startup_max_memory_chars=args.startup_max_memory_chars or 32000,
         startup_max_context_files=args.startup_max_context_files or 48,
         startup_scan_context_files=args.startup_scan_context_files or 48,

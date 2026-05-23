@@ -50,6 +50,7 @@ def parse_gpu0_secondary_response(
     *,
     fallback_block_id: str = "",
     fallback_revision: str = "",
+    fallback_packet_fingerprint: str = "",
 ) -> dict[str, Any]:
     raw_text = str(text or "").strip()
     parsed = _parse_json_object(raw_text)
@@ -58,6 +59,7 @@ def parse_gpu0_secondary_response(
             raw_text,
             fallback_block_id=fallback_block_id,
             fallback_revision=fallback_revision,
+            fallback_packet_fingerprint=fallback_packet_fingerprint,
             reason="gpu0_secondary_schema_invalid",
         )
 
@@ -67,6 +69,7 @@ def parse_gpu0_secondary_response(
             raw_text,
             fallback_block_id=fallback_block_id,
             fallback_revision=fallback_revision,
+            fallback_packet_fingerprint=fallback_packet_fingerprint,
             reason="gpu0_secondary_decision_invalid",
         )
 
@@ -89,14 +92,42 @@ def parse_gpu0_secondary_response(
         "checked_block_id": str(
             parsed.get("checked_block_id")
             or parsed.get("reviewed_gpu1_block_id")
+            or parsed.get("review_target_pointer")
             or parsed.get("refines_block_id")
             or fallback_block_id
             or ""
         ),
         "checked_gpu1_revision": str(
             parsed.get("checked_gpu1_revision")
+            or parsed.get("reviewed_revision")
             or parsed.get("review_for_gpu1_cycle")
             or fallback_revision
+            or ""
+        ),
+        "reviewed_gpu1_block_id": str(
+            parsed.get("reviewed_gpu1_block_id")
+            or parsed.get("checked_block_id")
+            or fallback_block_id
+            or ""
+        ),
+        "reviewed_revision": str(
+            parsed.get("reviewed_revision")
+            or parsed.get("checked_gpu1_revision")
+            or parsed.get("review_for_gpu1_cycle")
+            or fallback_revision
+            or ""
+        ),
+        "review_target_pointer": str(
+            parsed.get("review_target_pointer")
+            or parsed.get("reviewed_gpu1_block_id")
+            or parsed.get("checked_block_id")
+            or fallback_block_id
+            or ""
+        ),
+        "reviewed_packet_fingerprint": str(
+            parsed.get("reviewed_packet_fingerprint")
+            or parsed.get("packet_fingerprint")
+            or fallback_packet_fingerprint
             or ""
         ),
         "missing_required_sections": _string_list(
@@ -133,6 +164,24 @@ def bind_gpu0_secondary_to_gpu1_packet(
     result["gpu1_closure_decision_packet_fingerprint"] = gpu1_packet_fingerprint(packet)
     result["expected_gpu1_block_id"] = str(packet.get("gpu1_block_id") or "")
     result["expected_gpu1_revision"] = str(packet.get("gpu1_revision") or "")
+    result["expected_packet_fingerprint"] = gpu1_packet_fingerprint(packet)
+    if not str(result.get("checked_block_id") or "") and result["expected_gpu1_block_id"]:
+        result["checked_block_id"] = result["expected_gpu1_block_id"]
+    if not str(result.get("checked_gpu1_revision") or "") and result["expected_gpu1_revision"]:
+        result["checked_gpu1_revision"] = result["expected_gpu1_revision"]
+    if not str(result.get("reviewed_packet_fingerprint") or "") and result["expected_packet_fingerprint"]:
+        result["reviewed_packet_fingerprint"] = result["expected_packet_fingerprint"]
+    result["reviewed_gpu1_block_id"] = str(
+        result.get("reviewed_gpu1_block_id") or result.get("checked_block_id") or ""
+    )
+    result["reviewed_revision"] = str(
+        result.get("reviewed_revision") or result.get("checked_gpu1_revision") or ""
+    )
+    result["review_target_pointer"] = str(
+        result.get("review_target_pointer")
+        or result.get("checked_block_id")
+        or result["expected_gpu1_block_id"]
+    )
     if not packet or not result["gpu1_closure_decision_packet_valid"]:
         return _invalidate_bound_decision(
             result,
@@ -175,6 +224,7 @@ def invalid_gpu0_secondary_decision(
     *,
     fallback_block_id: str = "",
     fallback_revision: str = "",
+    fallback_packet_fingerprint: str = "",
     reason: str,
 ) -> dict[str, Any]:
     return {
@@ -184,8 +234,13 @@ def invalid_gpu0_secondary_decision(
         "gpu0_model_decision": "",
         "gpu0_effective_decision": "refine_required",
         "role_decision": "refine_once",
+        "gpu0_review_invalid_requires_gpu1_retry": True,
         "checked_block_id": str(fallback_block_id or ""),
         "checked_gpu1_revision": str(fallback_revision or ""),
+        "reviewed_gpu1_block_id": str(fallback_block_id or ""),
+        "reviewed_revision": str(fallback_revision or ""),
+        "review_target_pointer": str(fallback_block_id or ""),
+        "reviewed_packet_fingerprint": str(fallback_packet_fingerprint or ""),
         "missing_required_sections": [],
         "incongruence_reasons": [],
         "veto_reasons": [reason],
@@ -208,6 +263,11 @@ def gpu0_secondary_decision_text(payload: dict[str, Any]) -> str:
         "checked_gpu1_revision": payload.get("checked_gpu1_revision") or "",
         "expected_gpu1_block_id": payload.get("expected_gpu1_block_id") or "",
         "expected_gpu1_revision": payload.get("expected_gpu1_revision") or "",
+        "expected_packet_fingerprint": payload.get("expected_packet_fingerprint") or "",
+        "reviewed_gpu1_block_id": payload.get("reviewed_gpu1_block_id") or "",
+        "reviewed_revision": payload.get("reviewed_revision") or "",
+        "review_target_pointer": payload.get("review_target_pointer") or "",
+        "reviewed_packet_fingerprint": payload.get("reviewed_packet_fingerprint") or "",
         "gpu1_closure_decision_packet_present": payload.get(
             "gpu1_closure_decision_packet_present"
         ) is True,
@@ -215,6 +275,7 @@ def gpu0_secondary_decision_text(payload: dict[str, Any]) -> str:
             "gpu1_closure_decision_packet_valid"
         ) is True,
         "gpu0_checked_current_packet": payload.get("gpu0_checked_current_packet") is True,
+        "gpu0_review_invalid_requires_gpu1_retry": payload.get("gpu0_review_invalid_requires_gpu1_retry") is True,
         "gpu0_unanchored_reasons": payload.get("gpu0_unanchored_reasons") or [],
         "missing_required_sections": payload.get("missing_required_sections") or [],
         "incongruence_reasons": payload.get("incongruence_reasons") or [],
@@ -236,8 +297,23 @@ def gpu0_secondary_reason(payload: dict[str, Any]) -> str:
 
 def _invalidate_bound_decision(payload: dict[str, Any], reason: str) -> dict[str, Any]:
     result = dict(payload)
+    expected_block = str(result.get("expected_gpu1_block_id") or "")
+    expected_revision = str(result.get("expected_gpu1_revision") or "")
+    expected_fingerprint = str(result.get("expected_packet_fingerprint") or "")
+    if expected_block:
+        result["review_target_pointer"] = str(result.get("review_target_pointer") or expected_block)
+        result["reviewed_gpu1_block_id"] = str(result.get("reviewed_gpu1_block_id") or expected_block)
+        result["checked_block_id"] = str(result.get("checked_block_id") or expected_block)
+    if expected_revision:
+        result["reviewed_revision"] = str(result.get("reviewed_revision") or expected_revision)
+        result["checked_gpu1_revision"] = str(result.get("checked_gpu1_revision") or expected_revision)
+    if expected_fingerprint:
+        result["reviewed_packet_fingerprint"] = str(
+            result.get("reviewed_packet_fingerprint") or expected_fingerprint
+        )
     result["gpu0_secondary_schema_valid"] = False
     result["gpu0_decision_override_reason"] = reason
+    result["gpu0_review_invalid_requires_gpu1_retry"] = True
     result["gpu0_effective_decision"] = "refine_required"
     result["gpu0_decision"] = "refine_required"
     result["role_decision"] = "refine_once"
@@ -247,7 +323,7 @@ def _invalidate_bound_decision(payload: dict[str, Any], reason: str) -> dict[str
         veto.append(reason)
     result["veto_reasons"] = veto
     result["required_gpu1_next_action"] = (
-        "GPU1 must publish a valid current gpu1_closure_decision_packet before GPU0 can evaluate."
+        "GPU1 must retry the review target pointer with a current post-gate packet."
     )
     return result
 

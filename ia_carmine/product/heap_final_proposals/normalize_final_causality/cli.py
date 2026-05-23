@@ -21,6 +21,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.provider_work_verification import provider_work_status
+
 
 def read_json(path: Path) -> dict[str, Any]:
     try:
@@ -126,54 +128,41 @@ def provider_execution_performed(composer: dict[str, Any]) -> bool:
         if isinstance(composer.get("real_run_output_contract"), dict)
         else {}
     )
-    if any(
-        normalize_bool(value)
-        for value in (
-            composer.get("provider_execution_performed"),
-            metrics.get("provider_execution_performed"),
-            output_contract.get("provider_execution_performed"),
-        )
+    providers = [item for item in composer.get("provider_reports") or [] if isinstance(item, dict)]
+    if providers:
+        return any(_provider_work_verified(provider) for provider in providers)
+    for value in (
+        composer.get("provider_work_verified"),
+        metrics.get("provider_work_verified"),
+        output_contract.get("provider_work_verified"),
     ):
-        return True
-    for provider in composer.get("provider_reports") or []:
-        if not isinstance(provider, dict):
-            continue
-        workload = (
-            provider.get("npu_device_workload")
-            if isinstance(provider.get("npu_device_workload"), dict)
-            else {}
-        )
-        if (
-            mapping_has_execution_evidence(provider)
-            or normalize_bool(workload.get("performed"))
-            or text_has_execution_evidence(str(provider.get("response_text") or ""))
-        ):
+        if normalize_bool(value):
             return True
     for audit in composer.get("npu_audits") or []:
         if not isinstance(audit, dict):
             continue
-        workload = (
-            audit.get("npu_device_workload")
-            if isinstance(audit.get("npu_device_workload"), dict)
-            else {}
-        )
-        if (
-            mapping_has_execution_evidence(audit)
-            or normalize_bool(workload.get("performed"))
-            or text_has_execution_evidence(
-                str(
-                    audit.get("summary")
-                    or audit.get("response_text")
-                    or audit.get("micro_task_piece")
-                    or ""
-                )
-            )
-        ):
+        if _provider_work_verified(audit, lane="npu_micro_task_auditor"):
             return True
     return False
 
 
-def compute_causal_chain(composer: dict[str, Any]) -> dict[str, Any]:
+def _provider_work_verified(provider: dict[str, Any], lane: str = "") -> bool:
+    provider_lane = str(
+        lane
+        or provider.get("lane")
+        or provider.get("provider_id")
+        or provider.get("report_kind")
+        or provider.get("kind")
+        or ""
+    )
+    status = provider_work_status(lane=provider_lane, report=provider)
+    return bool(status.get("provider_work_verified"))
+
+
+def compute_causal_chain(
+    composer: dict[str, Any],
+    pointer_manifest: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     reasons: list[str] = []
     startup = (
         composer.get("startup_manifest")
@@ -211,6 +200,24 @@ def compute_causal_chain(composer: dict[str, Any]) -> dict[str, Any]:
         reasons.append("NPU audit/workload evidence missing")
     if reconciliation and reconciliation.get("passed") is not True:
         reasons.append("startup reconciliation did not pass")
+    if pointer_manifest:
+        open_count = int(pointer_manifest.get("open_pointer_count_final") or 0)
+        provider_rejections = (
+            pointer_manifest.get("provider_rejections")
+            if isinstance(pointer_manifest.get("provider_rejections"), list)
+            else []
+        )
+        provider_rejection_reasons = (
+            pointer_manifest.get("provider_rejection_reasons")
+            if isinstance(pointer_manifest.get("provider_rejection_reasons"), list)
+            else []
+        )
+        if pointer_manifest.get("passed") is not True:
+            reasons.append("external pointer manifest did not pass")
+        if pointer_manifest.get("all_pointers_closed") is False or open_count > 0:
+            reasons.append(f"pointer manifest has open pointers: {open_count}")
+        if provider_rejections or provider_rejection_reasons:
+            reasons.append("pointer manifest has provider rejections")
 
     status = "passed" if not reasons else "failed"
     return {
@@ -221,6 +228,13 @@ def compute_causal_chain(composer: dict[str, Any]) -> dict[str, Any]:
         "proposal_count": proposal_count,
         "gpu0_review_count": gpu0_count,
         "npu_audit_count": npu_count,
+        "pointer_manifest_checked": bool(pointer_manifest),
+        "pointer_manifest_passed": (
+            pointer_manifest.get("passed") if pointer_manifest else None
+        ),
+        "open_pointer_count_final": (
+            pointer_manifest.get("open_pointer_count_final") if pointer_manifest else None
+        ),
         "reasons": reasons,
     }
 
@@ -267,8 +281,12 @@ def compute_product_acceptance(composer: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_report(composer: dict[str, Any], composer_path: Path) -> dict[str, Any]:
-    causal_chain = compute_causal_chain(composer)
+def build_report(
+    composer: dict[str, Any],
+    composer_path: Path,
+    pointer_manifest: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    causal_chain = compute_causal_chain(composer, pointer_manifest)
     product_acceptance = compute_product_acceptance(composer)
     return {
         "schema_version": 1,
@@ -326,6 +344,7 @@ def render_markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--composer-json", required=True)
+    parser.add_argument("--pointer-manifest", default="")
     parser.add_argument("--output", default="")
     parser.add_argument("--markdown-output", default="")
     args = parser.parse_args()
@@ -334,6 +353,13 @@ def main() -> int:
     composer = read_json(composer_path)
     if not composer:
         raise SystemExit(f"composer JSON unreadable or empty: {composer_path}")
+    pointer_manifest = (
+        read_json(Path(args.pointer_manifest).resolve()) if args.pointer_manifest else {}
+    )
+    if not pointer_manifest:
+        pointer_manifest = read_json(
+            composer_path.with_name("external_heap_block_pointer_manifest.json")
+        )
     output = (
         Path(args.output).resolve()
         if args.output
@@ -342,7 +368,7 @@ def main() -> int:
     markdown_output = (
         Path(args.markdown_output).resolve() if args.markdown_output else output.with_suffix(".md")
     )
-    report = build_report(composer, composer_path)
+    report = build_report(composer, composer_path, pointer_manifest or None)
     write_json(output, report)
     markdown_output.parent.mkdir(parents=True, exist_ok=True)
     markdown_output.write_text(render_markdown(report), encoding="utf-8")

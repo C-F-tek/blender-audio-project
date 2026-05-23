@@ -17,11 +17,16 @@ from pathlib import Path
 
 from ia_carmine._shared.live_flow_monitor import CRLF_WARNING_RE
 from ia_carmine.product.operator_product_core import LauncherConfig, OperatorProductController
-from ia_carmine.product.operator_product_core.profiles import apply_profile_to_args
 from ia_carmine.product.operator_product_core.io_utils import now_stamp
 from ia_carmine.product.operator_product_core.direct_command import resolve_config, resolve_project_python
 from ia_carmine.runtime.run.dry_run_report import dry_run_report
 from ia_carmine.runtime.run.preflight_files import PRODUCT_PREFLIGHT_FILES
+from ia_carmine.runtime.run.universe_config import (
+    ResolvedUniverseRunConfig,
+    apply_resolved_config_to_args,
+    launcher_config_metadata,
+    resolve_universe_config,
+)
 
 DEFAULT_TASK_FILE = "IA-Carmine_GUI_launcher_final_code_product_task.md"
 DEFAULT_INTERMEDIATE_ROOT = "output/validation/operator_product_launcher_lab"
@@ -121,8 +126,9 @@ def preflight(repo_root: Path, python_exe: str) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-RepoRoot", "--repo-root", dest="repo_root", default=".")
-    parser.add_argument("--profile", default="")
-    parser.add_argument("--profiles-file", default="")
+    parser.add_argument("--print-effective-config", action="store_true")
+    parser.add_argument("--emit-expanded-command", action="store_true")
+    parser.add_argument("--effective-config-output", default="")
     parser.add_argument(
         "-TaskFile",
         "--request-file",
@@ -136,102 +142,122 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--final-root", default="")
     parser.add_argument("-PythonExe", "--python-exe", dest="python_exe", default="")
     parser.add_argument("-Stamp", "--stamp", dest="stamp", default="")
-    parser.add_argument("--budget-minutes", type=int, default=5)
-    parser.add_argument("--max-iterations", type=int, default=2)
-    parser.add_argument("--min-runtime-rounds", type=int, default=1)
-    parser.add_argument("--min-proposal-iterations", type=int, default=0)
-    parser.add_argument("--max-rounds", type=int, default=8)
-    parser.add_argument("--max-provider-revisions", type=int, default=2)
-    parser.add_argument("--preflight-timeout-seconds", type=int, default=90)
+    parser.add_argument("--budget-minutes", type=int, default=None)
+    parser.add_argument("--max-iterations", type=int, default=None)
+    parser.add_argument("--min-runtime-rounds", type=int, default=None)
+    parser.add_argument("--min-proposal-iterations", type=int, default=None)
+    parser.add_argument("--max-rounds", type=int, default=None)
+    parser.add_argument("--files-per-round", type=int, default=None)
+    parser.add_argument("--max-provider-revisions", type=int, default=None)
+    parser.add_argument("--preflight-timeout-seconds", type=int, default=None)
     parser.add_argument(
         "-Model",
         "--model",
         "--provider-model",
         dest="provider_model",
-        default="auto",
+        default=None,
         help="Required for real provider runs: explicit GPU1/Ollama model for the heap provider lane.",
     )
+    parser.add_argument("--gpu1-base-url", default=None)
+    parser.add_argument("--gpu0-model", default=None)
+    parser.add_argument("--gpu0-base-url", default=None)
+    parser.add_argument("--gpu0-vulkan-visible-devices", default=None)
     parser.add_argument("--strict-provider-model", action="store_true")
-    parser.add_argument("-MaxNewTokens", "--max-new-tokens", dest="max_new_tokens", type=int, default=900)
-    parser.add_argument("--ollama-num-ctx", dest="ollama_num_ctx", type=int, default=16384)
-    parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default="all")
+    parser.add_argument("-MaxNewTokens", "--max-new-tokens", dest="max_new_tokens", type=int, default=None)
+    parser.add_argument("--gpu0-max-new-tokens", dest="gpu0_max_new_tokens", type=int, default=None)
+    parser.add_argument("--ollama-num-ctx", dest="ollama_num_ctx", type=int, default=None)
+    parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default=None)
     parser.add_argument("--ollama-num-thread", dest="ollama_num_thread", type=int, default=None)
-    parser.add_argument("--ollama-context-candidates", default="8192,4096")
-    parser.add_argument("--gpu0-model-dir", default="")
-    parser.add_argument("--npu-model-dir", default="")
-    parser.add_argument("--operator-gpu-observation", default="")
-    parser.add_argument("-KeepAlive", "--keep-alive", dest="keep_alive", default="120s")
-    parser.add_argument("--gpu0-iterations", dest="gpu0_iterations", type=int, default=16)
-    parser.add_argument("--gpu0-min-seconds", dest="gpu0_min_seconds", type=float, default=0.1)
-    parser.add_argument("--npu-micro-timeout-seconds", dest="npu_micro_timeout_seconds", type=int, default=60)
-    parser.add_argument("--npu-max-context-chars", dest="npu_max_context_chars", type=int, default=8000)
-    parser.add_argument("--npu-max-prompt-chars", dest="npu_max_prompt_chars", type=int, default=1200)
-    parser.add_argument("--npu-max-new-tokens", dest="npu_max_new_tokens", type=int, default=384)
-    parser.add_argument("--npu-device-workload-seconds", type=float, default=3.0)
-    parser.add_argument("--npu-device-workload-iterations", type=int, default=2500)
-    parser.add_argument("--startup-max-memory-chars", type=int, default=32000)
-    parser.add_argument("--startup-max-context-files", type=int, default=48)
-    parser.add_argument("--startup-scan-context-files", type=int, default=48)
-    parser.add_argument("--startup-max-chars-per-file", type=int, default=8000)
-    parser.add_argument("--rag-db", default="output/ai_runtime_memory/rag/rag.sqlite")
-    parser.add_argument("--rag-index-policy", choices=("auto", "always", "never"), default="auto")
-    parser.add_argument("--rag-embedding-endpoint", default="http://127.0.0.1:11434")
-    parser.add_argument("--rag-embedding-model", default="bge-m3")
-    parser.add_argument("--rag-ingest-batch-size", type=int, default=8)
-    parser.add_argument("--rag-embed-smoke-batch-size", type=int, default=8)
-    parser.add_argument("--rag-chunk-min-chars", type=int, default=1500)
-    parser.add_argument("--rag-chunk-max-chars", type=int, default=4000)
-    parser.add_argument("--rag-chunk-overlap-chars", type=int, default=300)
-    parser.add_argument("--rag-max-file-size", type=int, default=250000)
-    parser.add_argument("--rag-top-k", type=int, default=20)
-    parser.add_argument("--rag-char-budget", type=int, default=32000)
-    parser.add_argument("--context-document-count", dest="context_document_count", type=int, default=24)
+    parser.add_argument("--ollama-context-candidates", default=None)
+    parser.add_argument("--gpu0-model-dir", default=None)
+    parser.add_argument("--npu-model-dir", default=None)
+    parser.add_argument("--operator-gpu-observation", default=None)
+    parser.add_argument("-KeepAlive", "--keep-alive", dest="keep_alive", default=None)
+    parser.add_argument("--gpu0-iterations", dest="gpu0_iterations", type=int, default=None)
+    parser.add_argument("--gpu0-min-seconds", dest="gpu0_min_seconds", type=float, default=None)
+    parser.add_argument("--npu-micro-timeout-seconds", dest="npu_micro_timeout_seconds", type=int, default=None)
+    parser.add_argument("--npu-max-context-chars", dest="npu_max_context_chars", type=int, default=None)
+    parser.add_argument("--npu-max-prompt-chars", dest="npu_max_prompt_chars", type=int, default=None)
+    parser.add_argument("--npu-max-new-tokens", dest="npu_max_new_tokens", type=int, default=None)
+    parser.add_argument("--npu-device-workload-seconds", type=float, default=None)
+    parser.add_argument("--npu-device-workload-iterations", type=int, default=None)
+    parser.add_argument("--startup-max-memory-chars", type=int, default=None)
+    parser.add_argument("--startup-max-context-files", type=int, default=None)
+    parser.add_argument("--startup-scan-context-files", type=int, default=None)
+    parser.add_argument("--startup-max-chars-per-file", type=int, default=None)
+    parser.add_argument("--rag-db", default=None)
+    parser.add_argument("--rag-index-policy", choices=("auto", "always", "never"), default=None)
+    parser.add_argument("--rag-embedding-endpoint", default=None)
+    parser.add_argument("--rag-embedding-model", default=None)
+    parser.add_argument("--rag-ingest-batch-size", type=int, default=None)
+    parser.add_argument("--rag-embed-smoke-batch-size", type=int, default=None)
+    parser.add_argument("--rag-chunk-min-chars", type=int, default=None)
+    parser.add_argument("--rag-chunk-max-chars", type=int, default=None)
+    parser.add_argument("--rag-chunk-overlap-chars", type=int, default=None)
+    parser.add_argument("--rag-max-file-size", type=int, default=None)
+    parser.add_argument("--rag-top-k", type=int, default=None)
+    parser.add_argument("--rag-char-budget", type=int, default=None)
+    parser.add_argument("--rag-allow-missing-embeddings", action="store_true")
+    parser.add_argument("--context-document-count", dest="context_document_count", type=int, default=None)
     parser.add_argument(
         "--context-document-preview-chars",
         dest="context_document_preview_chars",
         type=int,
-        default=1200,
+        default=None,
     )
-    parser.add_argument("--semantic-code-chunk-limit", dest="semantic_code_chunk_limit", type=int, default=32)
+    parser.add_argument("--semantic-code-chunk-limit", dest="semantic_code_chunk_limit", type=int, default=None)
     parser.add_argument(
         "--semantic-code-chunk-preview-chars",
         dest="semantic_code_chunk_preview_chars",
         type=int,
-        default=1400,
+        default=None,
     )
     parser.add_argument(
         "--semantic-evidence-chunk-limit",
         dest="semantic_evidence_chunk_limit",
         type=int,
-        default=24,
+        default=None,
     )
-    parser.add_argument("--memory-search-limit", dest="memory_search_limit", type=int, default=12)
-    parser.add_argument("--tool-catalog-limit", dest="tool_catalog_limit", type=int, default=80)
+    parser.add_argument("--memory-search-limit", dest="memory_search_limit", type=int, default=None)
+    parser.add_argument("--tool-catalog-limit", dest="tool_catalog_limit", type=int, default=None)
+    parser.add_argument("--startup-provider-input-workers", type=int, default=None)
+    parser.add_argument("--startup-required-context-profile", default=None)
+    parser.add_argument(
+        "--startup-operational-memory-query",
+        default=None,
+    )
+    parser.add_argument("--startup-operational-memory-limit", type=int, default=None)
+    parser.add_argument("--tool-inventory-roots", default=None)
+    parser.add_argument("--semantic-path-boosts", default=None)
+    parser.add_argument("--ai-context-pack-profile", default=None)
+    parser.add_argument("--code-interpreter-inputs", default=None)
+    parser.add_argument("--duplication-audit-roots", default=None)
+    parser.add_argument("--provider-prompt-tool-catalog-cap", type=int, default=None)
     parser.add_argument(
         "--allow-provider-generation",
         action="store_true",
-        default=True,
+        default=False,
         help="Compatibility flag; real runs request GPU1/GPU0/NPU provider generation by default.",
     )
     parser.add_argument(
         "--require-ollama-gpu-residency",
         action="store_true",
-        default=True,
+        default=False,
         help="Canonical run requires ollama ps accelerator proof for GPU1; CPU-only fallback is blocked.",
     )
     parser.add_argument(
         "--allow-npu-device-workload",
         dest="allow_npu_device_workload",
         action="store_true",
-        default=True,
+        default=False,
         help="Opt in to bounded NPU device workload; semantic NPU audit still runs without it.",
     )
     parser.add_argument("--skip-startup-reload", action="store_true")
     parser.add_argument("--strict-startup-reload", action="store_true")
     parser.add_argument("--no-documents", action="store_true")
-    parser.add_argument("--revision-context", default="auto_latest")
-    parser.add_argument("--revision-context-max-tasks", type=int, default=6)
-    parser.add_argument("--timeout-seconds", type=int, default=600)
+    parser.add_argument("--revision-context", default=None)
+    parser.add_argument("--revision-context-max-tasks", type=int, default=None)
+    parser.add_argument("--timeout-seconds", type=int, default=None)
     parser.add_argument("--git-sync", action="store_true")
     parser.add_argument("--branch", default=DEFAULT_BRANCH)
     parser.add_argument("-DryRun", "--dry-run", dest="dry_run", action="store_true")
@@ -262,10 +288,15 @@ def resolve_request_file(args: argparse.Namespace, repo_root: Path, stamp: str) 
     return default_task_md()
 
 
-def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> LauncherConfig:
-    normalize_provider_keep_alive(args)
+def build_config(
+    args: argparse.Namespace,
+    repo_root: Path,
+    stamp: str,
+    resolved_universe: ResolvedUniverseRunConfig,
+) -> LauncherConfig:
     request_file = resolve_request_file(args, repo_root, stamp)
     final_root = Path(args.final_root) if args.final_root else default_final_root(stamp)
+    metadata = launcher_config_metadata(resolved_universe)
     return LauncherConfig(
         repo_root=repo_root,
         request_file=request_file,
@@ -280,11 +311,16 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         min_runtime_rounds=args.min_runtime_rounds,
         min_proposal_iterations=args.min_proposal_iterations,
         max_rounds=args.max_rounds,
+        files_per_round=args.files_per_round,
         max_provider_revisions=args.max_provider_revisions,
         timeout_seconds=args.timeout_seconds,
         preflight_timeout_seconds=args.preflight_timeout_seconds,
         provider_model=args.provider_model,
         strict_provider_model=args.strict_provider_model,
+        gpu1_base_url=args.gpu1_base_url,
+        gpu0_model=args.gpu0_model,
+        gpu0_base_url=args.gpu0_base_url,
+        gpu0_vulkan_visible_devices=args.gpu0_vulkan_visible_devices,
         ollama_num_ctx=args.ollama_num_ctx,
         ollama_gpu_layers=args.ollama_gpu_layers,
         ollama_num_thread=args.ollama_num_thread,
@@ -293,6 +329,7 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         npu_model_dir=args.npu_model_dir,
         operator_gpu_observation=args.operator_gpu_observation,
         max_new_tokens=args.max_new_tokens,
+        gpu0_max_new_tokens=args.gpu0_max_new_tokens,
         keep_alive=args.keep_alive,
         gpu0_iterations=args.gpu0_iterations,
         gpu0_min_seconds=args.gpu0_min_seconds,
@@ -318,7 +355,7 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         rag_max_file_size=args.rag_max_file_size,
         rag_top_k=args.rag_top_k,
         rag_char_budget=args.rag_char_budget,
-        rag_allow_missing_embeddings=False,
+        rag_allow_missing_embeddings=args.rag_allow_missing_embeddings,
         context_document_count=args.context_document_count,
         context_document_preview_chars=args.context_document_preview_chars,
         semantic_code_chunk_limit=args.semantic_code_chunk_limit,
@@ -327,21 +364,25 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         memory_search_limit=args.memory_search_limit,
         tool_catalog_limit=args.tool_catalog_limit,
         revision_context_max_tasks=args.revision_context_max_tasks,
+        startup_provider_input_workers=args.startup_provider_input_workers,
+        startup_required_context_profile=args.startup_required_context_profile,
+        startup_operational_memory_query=args.startup_operational_memory_query,
+        startup_operational_memory_limit=args.startup_operational_memory_limit,
+        tool_inventory_roots=args.tool_inventory_roots,
+        semantic_path_boosts=args.semantic_path_boosts,
+        ai_context_pack_profile=args.ai_context_pack_profile,
+        code_interpreter_inputs=args.code_interpreter_inputs,
+        duplication_audit_roots=args.duplication_audit_roots,
+        provider_prompt_tool_catalog_cap=args.provider_prompt_tool_catalog_cap,
         allow_provider_generation=args.allow_provider_generation,
         require_ollama_gpu_residency=args.require_ollama_gpu_residency,
         allow_npu_device_workload=args.allow_npu_device_workload,
         skip_startup_reload=args.skip_startup_reload,
         strict_startup_reload=args.strict_startup_reload,
         no_documents=args.no_documents,
+        effective_universe_config=metadata["effective_universe_config"],
+        field_sources=metadata["field_sources"],
     )
-
-
-def normalize_provider_keep_alive(args: argparse.Namespace) -> None:
-    if not bool(getattr(args, "allow_provider_generation", False)):
-        return
-    value = str(getattr(args, "keep_alive", "") or "").strip().lower()
-    if value in {"", "0", "0s", "0m", "0h"}:
-        args.keep_alive = "120s"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -349,25 +390,42 @@ def main(argv: list[str] | None = None) -> int:
     raw_argv = list(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(raw_argv)
     repo_root = Path(args.repo_root).resolve()
-    apply_profile_to_args(args, repo_root, provided_dests(parser, raw_argv))
+    supplied_dests = provided_dests(parser, raw_argv)
+    resolved_universe = resolve_universe_config(
+        repo_root=repo_root,
+        args=args,
+        provided_dests=supplied_dests,
+    )
+    apply_resolved_config_to_args(args, resolved_universe)
 
     stamp = args.stamp or now_stamp()
-    config = build_config(args, repo_root, stamp)
+    config = build_config(args, repo_root, stamp, resolved_universe)
     cfg = resolve_config(config)
     python_exe = resolve_project_python(repo_root, args.python_exe)
+    plan_only = bool(args.dry_run or args.print_effective_config or args.emit_expanded_command)
 
-    if not cfg.request_file.exists() and not args.dry_run:
+    if not cfg.request_file.exists() and not plan_only:
         raise SystemExit(f"Task markdown not found: {cfg.request_file}")
     if args.git_sync:
-        if args.dry_run:
+        if plan_only:
             print(f"[dry-run] would sync origin/{args.branch}")
         else:
             git_sync(repo_root, args.branch)
-    if not args.dry_run:
+    if not plan_only:
         preflight(repo_root, python_exe)
 
-    if args.dry_run:
-        print(json.dumps(dry_run_report(config), indent=2, ensure_ascii=False))
+    if plan_only:
+        report = dry_run_report(config)
+        if args.effective_config_output:
+            output = Path(args.effective_config_output)
+            if not output.is_absolute():
+                output = repo_root / output
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        if args.print_effective_config or args.emit_expanded_command or args.dry_run:
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+        if args.print_effective_config or args.emit_expanded_command:
+            return 0
         return 0
 
     controller = OperatorProductController(config)

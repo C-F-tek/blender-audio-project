@@ -29,7 +29,9 @@ def render_leader_peer_prompt(request: str, leader_packet: dict) -> str:
         part
         for part in (
             "NPU peer micro lane. Consume the GPU1 primary advisor leader packet.",
-            f"OPERATOR_REQUEST: {request}",
+            "SIDECAR_SCOPE_MODE: packet_review_only",
+            "SCOPE_RULE: audit only the current GPU1 packet; do not explore broadly, synthesize a final product, or propose a complete alternate plan.",
+            "OPERATOR_REQUEST: omitted_when_leader_packet_present",
             f"GPU1_LEADER_ROLE: {leader_packet.get('role')}",
             f"SAME_HEAP_TEAMWORK_CONTRACT: {contract_text}",
             f"HEAP_UNIVERSE_CONTRACT: {leader_packet.get('heap_universe_contract')}",
@@ -45,6 +47,9 @@ def render_leader_peer_prompt(request: str, leader_packet: dict) -> str:
 
 
 def select_npu_micro_task(request: str, leader_packet: dict, task_preview: str) -> str:
+    if leader_packet:
+        request = ""
+        task_preview = ""
     text = "\n".join(
         (
             request or "",
@@ -68,10 +73,14 @@ def render_npu_micro_prompt(
     micro_task_kind: str,
 ) -> str:
     leader_context = render_leader_peer_prompt(request, leader_packet)
+    request_context = "" if leader_packet else (request or "")[:900]
+    task_context = "" if leader_packet else (task_preview or "")[:900]
     return "\n".join(
         [
             "IA-Carmine NPU bounded micro-task lane.",
             "You are not the primary planner and you do not write a patch.",
+            "SIDECAR_SCOPE_MODE=packet_review_only",
+            "Audit only the current GPU1 leader packet. Do not perform broad exploration, final synthesis, or alternate full planning.",
             "Perform exactly one closed textual micro-audit.",
             "Allowed MICRO_TASK values: " + ",".join(NPU_MICRO_TASK_KINDS),
             f"MICRO_TASK={micro_task_kind}",
@@ -84,9 +93,9 @@ def render_npu_micro_prompt(
             "If context is insufficient, return DECISION=NPU_NO_ACTION immediately.",
             "Do not continue searching and do not produce long prose.",
             "REQUEST_CONTEXT:",
-            (request or "")[:900],
+            request_context,
             "TASK_PREVIEW:",
-            (task_preview or "")[:900],
+            task_context,
             "LEADER_PACKET_CONTEXT:",
             leader_context[:1200],
         ]

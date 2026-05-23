@@ -1,6 +1,38 @@
 from __future__ import annotations
 
 from .common import *  # noqa: F403
+from ia_carmine._shared.provider_work_verification import provider_work_status
+
+
+def _provider_lane(data: dict[str, Any]) -> str:
+    lane = str(data.get("lane") or data.get("provider_id") or "").strip()
+    if lane:
+        return lane
+    kind = str(data.get("kind") or "").strip()
+    if kind == "gpu0_peer_response":
+        return "gpu0_peer"
+    if kind in {"npu_gpu_deep_review_audit", "npu_micro_task_auditor"}:
+        return "npu_micro_task_auditor"
+    if kind in {"local_provider_probe", "gpu1_primary_advisory"}:
+        return "gpu1_planner"
+    return ""
+
+
+def _provider_execution_claim_seen(data: dict[str, Any]) -> bool:
+    return bool(
+        data.get("provider_execution_performed")
+        or data.get("provider_execution_attempted")
+        or data.get("provider_io_observed")
+    )
+
+
+def _provider_work_verified(data: dict[str, Any]) -> bool:
+    if data.get("provider_work_verified") is True:
+        return True
+    lane = _provider_lane(data)
+    if not lane:
+        return False
+    return bool(provider_work_status(lane=lane, report=data).get("provider_work_verified"))
 
 def extract_full_run_patch_plan_summary(repo_root: Path, report_paths: list[str]) -> dict[str, Any]:
     # Promote full-run patch-plan summary into the production bundle final summary.
@@ -20,7 +52,9 @@ def extract_full_run_patch_plan_summary(repo_root: Path, report_paths: list[str]
             "patch_plan_count": data.get("patch_plan_count") or len(summary_items),
             "fallback_used": data.get("fallback_used"),
             "manual_review_required": data.get("manual_review_required"),
-            "provider_execution_performed": data.get("provider_execution_performed"),
+            "provider_execution_claim_seen": _provider_execution_claim_seen(data),
+            "provider_work_verified": _provider_work_verified(data),
+            "provider_execution_performed": _provider_work_verified(data),
             "patch_application_performed": data.get("patch_application_performed"),
             "source_writes_performed": data.get("source_writes_performed"),
             "summary_count": len(summary_items),
@@ -44,6 +78,7 @@ def extract_provider_diagnostics_summary(
     # Summarize provider/GPU/NPU diagnostics without hiding recovered failures.
     diagnostics: list[dict[str, Any]] = []
     provider_execution_seen = False
+    provider_execution_claim_seen = False
     gpu_primary_advisory_succeeded = False
     deterministic_recovery_used = False
 
@@ -55,8 +90,9 @@ def extract_provider_diagnostics_summary(
 
         kind = str(data.get("kind") or "")
         passed = data.get("passed")
-        provider_execution_seen = (
-            provider_execution_seen or data.get("provider_execution_performed") is True
+        provider_execution_seen = provider_execution_seen or _provider_work_verified(data)
+        provider_execution_claim_seen = (
+            provider_execution_claim_seen or _provider_execution_claim_seen(data)
         )
 
         if kind in {
@@ -81,7 +117,9 @@ def extract_provider_diagnostics_summary(
                     "kind": kind,
                     "passed": passed,
                     "provider_execution_requested": data.get("provider_execution_requested"),
-                    "provider_execution_performed": data.get("provider_execution_performed"),
+                    "provider_execution_claim_seen": _provider_execution_claim_seen(data),
+                    "provider_work_verified": _provider_work_verified(data),
+                    "provider_execution_performed": _provider_work_verified(data),
                     "classification": data.get("classification"),
                     "classifications": (
                         data.get("classifications")
@@ -142,6 +180,7 @@ def extract_provider_diagnostics_summary(
     provider_failure_detected = any(item.get("passed") is False for item in diagnostics)
     return {
         "provider_execution_seen": provider_execution_seen,
+        "provider_execution_claim_seen": provider_execution_claim_seen,
         "gpu_primary_advisory_succeeded": gpu_primary_advisory_succeeded,
         "provider_failure_detected": provider_failure_detected,
         "deterministic_recovery_used": deterministic_recovery_used,
@@ -149,6 +188,7 @@ def extract_provider_diagnostics_summary(
         **classify_provider_advisory_state(
             {
                 "provider_execution_seen": provider_execution_seen,
+                "provider_execution_claim_seen": provider_execution_claim_seen,
                 "gpu_primary_advisory_succeeded": gpu_primary_advisory_succeeded,
                 "provider_failure_detected": provider_failure_detected,
                 "deterministic_recovery_used": deterministic_recovery_used,
@@ -239,7 +279,7 @@ def extract_peer_mesh_product_state(
         if kind == "gpu1_primary_advisory" and item.get("passed") is True:
             add_unique(operational_lanes, "gpu1_ollama_primary_advisory")
         if kind == "gpu0_peer_response":
-            if item.get("provider_execution_performed") is True:
+            if item.get("provider_work_verified") is True:
                 add_unique(operational_lanes, "gpu0_openvino_peer_companion")
                 add_unique(support_lanes, "gpu0_openvino_numeric_tool_peer")
             if "gpu0_peer_semantic_model_unconfigured" in classifications:

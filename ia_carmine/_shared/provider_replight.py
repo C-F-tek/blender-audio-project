@@ -136,7 +136,11 @@ def _provider_loaded(
             provider_model
             and generated_phrase
             and report.get("passed") is not False
-            and report.get("provider_execution_performed") is True
+            and (
+                report.get("provider_execution_attempted") is True
+                or report.get("provider_io_observed") is True
+                or report.get("provider_execution_performed") is True
+            )
             and report.get("provider_device_verified") is True
             and report.get("ollama_full_gpu_verified") is True
             and report.get("done") is True

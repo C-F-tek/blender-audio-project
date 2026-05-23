@@ -88,6 +88,12 @@ def run_provider_role_coexistence_preflight(
     gpu1_model = _gpu1_model(gate)
     gpu1_ctx = int(getattr(gate, "selected_ollama_num_ctx", 0) or gate.args.ollama_num_ctx)
     gpu1_base_url = _gpu1_base_url(gate)
+    gpu0_model = str(getattr(gate.args, "gpu0_model", "") or "").strip()
+    gpu0_base_url = str(getattr(gate.args, "gpu0_base_url", "") or "").strip()
+    gpu0_vulkan_devices = str(getattr(gate.args, "gpu0_vulkan_visible_devices", "") or "").strip()
+    keep_alive = str(getattr(gate.args, "keep_alive", "") or "").strip()
+    if not gpu0_model or not gpu0_base_url or not gpu0_vulkan_devices or not keep_alive:
+        raise RuntimeError("provider coexistence preflight requires explicit GPU0/base URL/device/keep_alive config")
     command = [
         gate.child_python(),
         "-m",
@@ -100,11 +106,13 @@ def run_provider_role_coexistence_preflight(
         "--gpu1-model",
         gpu1_model,
         "--gpu0-model",
-        _gpu0_model(),
+        gpu0_model,
+        "--gpu0-base-url",
+        gpu0_base_url,
         "--gpu0-vulkan-visible-devices",
-        _gpu0_vulkan_devices(),
+        gpu0_vulkan_devices,
         "--keep-alive",
-        "120s",
+        keep_alive,
         "--num-ctx",
         str(gpu1_ctx),
         "--max-new-tokens",
@@ -172,16 +180,11 @@ def _error_lane(error: str) -> str:
 
 
 def _gpu0_model() -> str:
-    import os
-
-    return str(os.environ.get("IA_CARMINE_GPU0_MODEL") or "qwen3:1.7b")
+    raise RuntimeError("gpu0 model must be read from gate args")
 
 
 def _gpu1_model(gate: Any) -> str:
-    import os
-
     candidates = [
-        os.environ.get("IA_CARMINE_GPU1_MODEL"),
         getattr(gate, "selected_provider_model", ""),
     ]
     for report in getattr(gate, "provider_replight_reports", []) or []:
@@ -211,16 +214,8 @@ def _gpu1_model(gate: Any) -> str:
 
 
 def _gpu1_base_url(gate: Any) -> str:
-    import os
-
-    return str(
-        os.environ.get("IA_CARMINE_GPU1_OLLAMA_BASE_URL")
-        or getattr(gate.args, "gpu1_base_url", "")
-        or ""
-    )
+    return str(getattr(gate.args, "gpu1_base_url", "") or "")
 
 
 def _gpu0_vulkan_devices() -> str:
-    import os
-
-    return str(os.environ.get("IA_CARMINE_GPU0_VULKAN_VISIBLE_DEVICES") or "auto")
+    raise RuntimeError("gpu0 vulkan device selection must be read from gate args")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -153,6 +154,7 @@ def parsed_contract_fields(
     native_tool_calls: list[dict[str, Any]],
     extract_target_refs,
     extract_validation_refs,
+    extract_rejected_validation_refs=None,
 ) -> dict[str, Any]:
     response_text = str(
         parsed_json.get("response_text")
@@ -179,14 +181,56 @@ def parsed_contract_fields(
     validation_commands = _list_or_empty(
         parsed_json.get("validation_commands") or parsed_json.get("VALIDATION_COMMANDS")
     )
+    parsed_validation_commands, rejected_json_validation_refs = _split_validation_commands(
+        validation_commands
+    )
+    text_validation_commands = extract_validation_refs(response_text)
+    rejected_validation_refs = list(rejected_json_validation_refs)
+    if extract_rejected_validation_refs is not None:
+        rejected_validation_refs.extend(extract_rejected_validation_refs(response_text))
     return {
         "response_text": response_text,
         "textual_tool_calls": textual_tool_calls,
         "target_files": target_files or extract_target_refs(response_text),
-        "validation_commands": validation_commands or extract_validation_refs(response_text),
+        "validation_commands": parsed_validation_commands or text_validation_commands,
+        "rejected_validation_refs": _unique_ordered(rejected_validation_refs),
         "empty_output": not response_text.strip() and not native_tool_calls,
     }
 
 
 def _list_or_empty(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
+
+
+_VALIDATION_COMMAND_RE = re.compile(
+    r"^(?:&\s*)?(?:"
+    r"(?:\$[A-Za-z_][A-Za-z0-9_]*|python|py|pytest|pwsh|powershell|bash|sh|cmd|uv|ruff|mypy|npm|npx)"
+    r")\b",
+    re.IGNORECASE,
+)
+_BARE_FILE_REF_RE = re.compile(
+    r"^(?:\.\/)?(?:ia_carmine|Tools|tools|docs|CHATGPT|Scripting|scripts|patch_specs|config|examples|assets|\.github|output|indexAI|renders)/"
+    r"[A-Za-z0-9_./() -]+\.(?:py|ps1|md|json|txt|yml|yaml|toml|diff|patch|csv|tsv|svg|png|jpg|jpeg|webp|wav|mp3|mp4)$"
+)
+
+
+def _split_validation_commands(values: list[Any]) -> tuple[list[str], list[str]]:
+    commands: list[str] = []
+    rejected: list[str] = []
+    for value in values:
+        text = str(value or "").strip().strip("`'\" ")
+        if not text:
+            continue
+        if _VALIDATION_COMMAND_RE.match(text):
+            commands.append(text)
+        elif _BARE_FILE_REF_RE.match(text):
+            rejected.append(text)
+    return _unique_ordered(commands), _unique_ordered(rejected)
+
+
+def _unique_ordered(values: list[str]) -> list[str]:
+    out: list[str] = []
+    for value in values:
+        if value and value not in out:
+            out.append(value)
+    return out

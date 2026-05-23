@@ -48,6 +48,8 @@ def _provider_recovery_tasks(
     pointer: dict[str, Any],
     linked_gpu0: list[dict[str, Any]],
     linked_npu: list[dict[str, Any]],
+    *,
+    proposals_present: bool = False,
 ) -> list[dict[str, Any]]:
     gpu1 = _latest_provider_block(pointer, "gpu1_planner")
     if not gpu1:
@@ -57,7 +59,11 @@ def _provider_recovery_tasks(
         {
             "task_id": f"recover_missing_proposal_from_{source_id}",
             "role": "gpu1_planner",
-            "task_type": "recover_missing_proposal_chunk",
+            "task_type": (
+                "gpu1_congruence_check_after_sidecar_join"
+                if proposals_present
+                else "recover_missing_proposal_chunk"
+            ),
             "source_block_id": source_id,
             "target_block_id": source_id,
             "resume_from_block_id": source_id,
@@ -69,11 +75,12 @@ def _provider_recovery_tasks(
             ],
             "plan_is_not_final_product": True,
             "instruction": (
-                "Resume from the provider evidence block, consume startup chunks/memory/tool "
-                "refs and emit a real HEAP_DELTA_PROPOSAL or NO_PATCHABLE_TARGET. The first "
-                "turn may be PLAN_THEN_PROPOSAL only when it explains the complete steps needed "
-                "before code, but that plan is evidence, not final product. Do not discard the "
-                "full operator request and do not invent a code product."
+                "Run GPU1 congruence recovery on the current pointer graph. Consume GPU0/NPU "
+                "sidecar block ids, decide whether the previous GPU1/proposal block remains "
+                "valid or needs revision, and preserve previous/refines/resume. If context must "
+                "propagate backward, use pointer jump/backrefinement and return to resume_from_block_id. "
+                "Emit a real HEAP_DELTA_PROPOSAL or NO_PATCHABLE_TARGET; a first-turn plan is evidence, "
+                "not final product."
             ),
         }
     ]
@@ -120,6 +127,26 @@ def _provider_recovery_tasks(
     return tasks
 
 
+def _provider_recovery_needed(
+    pointer: dict[str, Any],
+    proposals: list[dict[str, Any]],
+    gpu0: list[dict[str, Any]],
+    npu: list[dict[str, Any]],
+) -> bool:
+    if not normalize_bool(pointer.get("provider_execution_performed")):
+        return False
+    if pointer.get("provider_recovery_required") is True:
+        return True
+    if as_list(pointer.get("provider_rejections")) or as_list(pointer.get("provider_rejection_reasons")):
+        return True
+    if proposals and any(
+        str(block.get("closure_status") or "") == "deferred_to_resume"
+        for block in as_list(pointer.get("pointer_closure_table"))
+    ):
+        return True
+    return bool((gpu0 or npu) and proposals and int(pointer.get("open_pointer_count") or 0) > 0)
+
+
 def build_report(
     pointer: dict[str, Any], composer: dict[str, Any], causality: dict[str, Any]
 ) -> dict[str, Any]:
@@ -131,14 +158,25 @@ def build_report(
     gpu1_tasks = build_gpu1_tasks(proposals, composer)
     peer_tasks = build_peer_tasks(proposals, linked_gpu0, linked_npu)
     provider_recovery_tasks = (
-        [] if proposals else _provider_recovery_tasks(pointer, linked_gpu0, linked_npu)
+        _provider_recovery_tasks(
+            pointer,
+            linked_gpu0 or gpu0,
+            linked_npu or npu,
+            proposals_present=bool(proposals),
+        )
+        if _provider_recovery_needed(pointer, proposals, gpu0, npu)
+        else []
     )
     all_tasks = gpu1_tasks + peer_tasks + provider_recovery_tasks
     candidate_summary = candidate_applicability_summary(all_tasks)
     if provider_recovery_tasks:
         candidate_summary = dict(candidate_summary)
         candidate_summary["requires_concrete_rewrite"] = False
-        candidate_summary["priority_next_action"] = "recover_missing_proposal_chunk"
+        candidate_summary["priority_next_action"] = (
+            "gpu1_congruence_check_after_sidecar_join"
+            if proposals
+            else "recover_missing_proposal_chunk"
+        )
     terminal_no_patchable = terminal_no_patchable_target_summary(proposals)
     if terminal_no_patchable.get("all_proposals_terminal_no_patchable_target"):
         candidate_summary = dict(candidate_summary)
@@ -201,12 +239,32 @@ def build_report(
         warnings.append(
             "revision context is non-operational: source run had no linked provider/pointer blocks"
         )
+    required_roles = ("gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor")
+    roles_present = {str(item) for item in as_list(pointer.get("roles_present"))}
+    computed_missing_roles = [role for role in required_roles if role not in roles_present]
+    missing_roles = as_list(pointer.get("missing_roles")) or computed_missing_roles
+    all_roles_present = bool(
+        normalize_bool(pointer.get("all_roles_present")) or not computed_missing_roles
+    )
+    contract_errors: list[str] = []
+    if not operational_revision_context:
+        contract_errors.append("operational_revision_context=false")
+    if missing_roles:
+        contract_errors.append("missing required roles: " + ",".join(str(item) for item in missing_roles))
+    if provider_rejections or provider_rejection_reasons:
+        contract_errors.append("provider rejections present")
+    if not all_roles_present:
+        contract_errors.append("not all required roles present")
+    contract_passed = not contract_errors
     return {
         "schema_version": 1,
         "kind": "external_heap_revision_context",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "protocol": "external_heap_revision_context_v1",
-        "passed": True,
+        "passed": contract_passed,
+        "report_written": True,
+        "contract_passed": contract_passed,
+        "contract_errors": contract_errors,
         "operational_revision_context": operational_revision_context,
         "proposal_graph_operational": proposal_graph_operational,
         "provider_graph_operational": provider_graph_operational,
@@ -225,7 +283,8 @@ def build_report(
         "pointer_block_count": pointer.get("block_count"),
         "pointer_max_blocks_applied": pointer_limited,
         "roles_present": pointer.get("roles_present"),
-        "all_roles_present": pointer.get("all_roles_present", pointer.get("roles_present")),
+        "all_roles_present": all_roles_present,
+        "missing_roles": missing_roles,
         "provider_verified_count": pointer.get("provider_verified_count"),
         "provider_rejected_count": pointer.get("provider_rejected_count"),
         "provider_rejections": provider_rejections,
@@ -279,9 +338,9 @@ def build_report(
             "necessario, deve generare un task di propagazione sui blocchi precedenti, far rivalutare in parallelo GPU0/NPU, "
             "poi riprendere dal resume_from_block_id mantenendo la catena next/previous/refines. Se requires_concrete_rewrite=true, "
             "prima deve riscrivere i candidati non concreti e non propagare simboli da sketch o stub. "
-            "GPU0 puo' aggiungere informazioni coerenti ai pointer, proporre salti di propagazione per testo/script/modifiche "
-            "e poi tornare al blocco principale. Se una risposta parziale viene bocciata, il ciclo riparte con evidenza "
-            "della risposta sbagliata e richiesta esplicita di cambiare tipologia. Il primo giro GPU1 puo' essere PLAN_THEN_PROPOSAL "
+            "GPU0/NPU restano sidecar packet_review_only: possono produrre review/audit del packet GPU1 corrente, non sintesi finale "
+            "o piano alternativo completo. Se una risposta sidecar e' incoerente, GPU1 deve consumarne il block id, fare check di congruenza, "
+            "decidere se avanzare o revisionare, e preservare previous/refines/resume. Il primo giro GPU1 puo' essere PLAN_THEN_PROPOSAL "
             "quando serve spiegare i passi completi, ma resta evidenza e non prodotto. "
             "La riscrittura deve usare solo source path repo-relative verificati/allowlisted; se il target non e' verificabile, "
             "deve produrre EXIT_DECISION=NO_PATCHABLE_TARGET invece di inventare path. Non usare placeholder <id-or-empty>."

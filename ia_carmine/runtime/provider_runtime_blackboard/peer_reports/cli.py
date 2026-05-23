@@ -17,6 +17,7 @@ from typing import Any
 
 try:
     from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict
+    from ia_carmine._shared.provider_work_verification import provider_work_status
     from Tools.validation._shared.report_utils import (
         resolve_output_path,
         write_json_report,
@@ -27,6 +28,7 @@ except ImportError:
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict  # type: ignore
+    from ia_carmine._shared.provider_work_verification import provider_work_status  # type: ignore
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
@@ -70,6 +72,21 @@ def first_present(*values: Any) -> Any:
         if value not in (None, "", [], {}):
             return value
     return ""
+
+
+def provider_verified(lane: str, report: dict[str, Any]) -> bool:
+    return bool(
+        report.get("provider_work_verified")
+        or provider_work_status(lane=lane, report=report).get("provider_work_verified")
+    )
+
+
+def provider_claim_seen(report: dict[str, Any]) -> bool:
+    return bool(
+        report.get("provider_execution_performed")
+        or report.get("provider_execution_attempted")
+        or report.get("provider_io_observed")
+    )
 
 
 def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
@@ -127,7 +144,9 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                     "objective": "GPU1 primary planner requests coworker evidence from GPU0 through shared runtime heap.",
                     "gpu1_report": existing_report(repo_root, args.gpu1_report),
                     "gpu1_passed": gpu1.get("passed"),
-                    "gpu1_provider_execution_performed": gpu1.get("provider_execution_performed"),
+                    "gpu1_provider_execution_claim_seen": provider_claim_seen(gpu1),
+                    "gpu1_provider_work_verified": provider_verified("gpu1_planner", gpu1),
+                    "gpu1_provider_execution_performed": provider_verified("gpu1_planner", gpu1),
                     "recommendation_count": first_present(
                         gpu1.get("recommendation_count"),
                         (
@@ -152,7 +171,9 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                     "summary": "GPU0 coworker response is available as provider peer evidence.",
                     "gpu0_report": existing_report(repo_root, args.gpu0_report),
                     "gpu0_passed": gpu0.get("passed"),
-                    "gpu0_provider_execution_performed": gpu0.get("provider_execution_performed"),
+                    "gpu0_provider_execution_claim_seen": provider_claim_seen(gpu0),
+                    "gpu0_provider_work_verified": provider_verified("gpu0_peer", gpu0),
+                    "gpu0_provider_execution_performed": provider_verified("gpu0_peer", gpu0),
                     "tool_request_count": first_present(
                         gpu0.get("tool_request_count"),
                         (
@@ -259,7 +280,11 @@ def append_from_reports(args: argparse.Namespace) -> dict[str, Any]:
                     "npu_report": existing_report(repo_root, args.npu_report),
                     "npu_passed": npu.get("passed"),
                     "provider_execution_requested": npu.get("provider_execution_requested"),
-                    "provider_execution_performed": npu.get("provider_execution_performed"),
+                    "provider_execution_claim_seen": provider_claim_seen(npu),
+                    "provider_work_verified": provider_verified("npu_micro_task_auditor", npu),
+                    "provider_execution_performed": provider_verified(
+                        "npu_micro_task_auditor", npu
+                    ),
                     "non_blocking": first_present(npu.get("non_blocking"), True),
                     "tool_request_count": npu.get("tool_request_count"),
                     "product_pass_blocker": npu.get("product_pass_blocker"),

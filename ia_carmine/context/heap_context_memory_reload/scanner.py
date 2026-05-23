@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 from ia_carmine.context.heap_context_memory_reload.common import (
     CANONICAL_CONTEXT_FILES,
@@ -79,3 +80,39 @@ def repo_scan_semantic_candidates(repo_root: Path, *, max_files: int) -> list[Pa
 
 def existing_context_files(repo_root: Path, max_files: int = 240) -> list[str]:
     return repo_scan_context_files(repo_root, max_files=max_files)
+
+
+def context_files_from_scan(scan_index: dict[str, Any], *, repo_root: Path, max_files: int) -> list[str]:
+    priority_names = {"AGENTS.md", "README.md", "WORKFLOW.md"}
+    by_path = {
+        str(item.get("path") or ""): item
+        for item in scan_index.get("files", [])
+        if isinstance(item, dict)
+    }
+    selected: list[str] = []
+    for rel_path in CANONICAL_CONTEXT_FILES:
+        if rel_path in by_path and rel_path not in selected:
+            selected.append(rel_path)
+    markdown_paths = sorted(
+        rel_path
+        for rel_path, item in by_path.items()
+        if str(item.get("suffix") or "").lower() == ".md"
+    )
+    for rel_path in markdown_paths:
+        path = repo_root / rel_path
+        if path.name in priority_names or rel_path.startswith("docs/"):
+            if rel_path not in selected:
+                selected.append(rel_path)
+        if len(selected) >= max_files:
+            break
+    return selected[:max_files]
+
+
+def semantic_candidates_from_scan(scan_index: dict[str, Any], *, repo_root: Path, max_files: int) -> list[Path]:
+    suffixes = {".py", ".ps1", ".md", ".json", ".yml", ".yaml", ".toml"}
+    paths = [
+        repo_root / str(item.get("path") or "")
+        for item in scan_index.get("files", [])
+        if isinstance(item, dict) and str(item.get("suffix") or "").lower() in suffixes
+    ]
+    return paths[:max_files]

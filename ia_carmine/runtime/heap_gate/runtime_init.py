@@ -99,6 +99,8 @@ class RuntimeGateInitMixin:
         self.provider_execution_performed = False
         self.provider_revision_count = 0
         self.provider_revision_feedback = ""
+        self.provider_recovery_attempt_count = 0
+        self.provider_recovery_last_status: dict[str, Any] = {}
         self.provider_universe_blocked_reason = ""
         self.gpu1_replight_valid = False
         self.gpu1_boot_leader_ready = False
@@ -110,6 +112,9 @@ class RuntimeGateInitMixin:
         self.leader_source = "none"
         self.sidecars_start_policy = ""
         self.parallel_provider_overlap_seconds = 0.0
+        self.gpu1_idle_after_primary_seconds = 0.0
+        self.sidecar_alone_after_gpu1_seconds = 0.0
+        self.provider_sidecar_scope_mode = "packet_review_only"
         self.provider_native_tool_call_ids: set[str] = set()
         self.errors: list[str] = []
         self.warnings: list[str] = []

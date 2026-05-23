@@ -437,7 +437,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "documents_outputs": documents_outputs,
         "documents_zip": documents_zip,
         "zip_member_count": zip_member_count,
-        "provider_execution_performed": pointer.get("provider_execution_performed", gate.get("provider_execution_performed")),
+        "provider_execution_performed": pointer.get("provider_execution_performed"),
         "patch_application_performed": gate.get("patch_application_performed"),
         "source_writes_performed": gate.get("source_writes_performed"),
     }

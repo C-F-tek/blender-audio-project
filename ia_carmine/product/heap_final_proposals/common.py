@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.provider_work_verification import provider_work_status
+
 EXECUTION_TRUE_PATTERNS = (
     re.compile(
         r"\b(provider_execution_performed|gpu0_provider_execution_performed|gpu1_provider_execution_performed|npu_provider_execution_performed|workload_performed)\b\s*[:=]\s*true\b",
@@ -103,9 +105,14 @@ def text_has_execution_evidence(text: str) -> bool:
 
 
 def provider_report_execution_performed(data: dict[str, Any]) -> bool:
-    return mapping_has_execution_evidence(data) or text_has_execution_evidence(
-        str(data.get("response_text") or "")
+    lane = str(
+        data.get("lane")
+        or data.get("provider_id")
+        or data.get("report_kind")
+        or data.get("kind")
+        or ""
     )
+    return bool(provider_work_status(lane=lane, report=data).get("provider_work_verified"))
 
 
 def discover_run_dir(repo_root: Path, report_file: str, run_dir: str) -> Path:

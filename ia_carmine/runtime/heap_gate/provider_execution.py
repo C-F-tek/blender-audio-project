@@ -30,6 +30,7 @@ from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
 from ia_carmine.runtime.heap_gate.provider_universe_abort import (
     block_provider_universe_run,
     primary_provider_block_reason,
+    recoverable_sidecar_failure_reason,
 )
 
 
@@ -395,9 +396,14 @@ class RuntimeGateProviderExecutionMixin:
                 revision,
                 on_completed=absorb,
             )
+            self.provider_sidecar_scope_mode = "packet_review_only"
             self.parallel_provider_overlap_seconds = provider_overlap_seconds(
                 primary_items, sidecar_items
             )
+            self.gpu1_idle_after_primary_seconds = _gpu1_idle_after_primary_seconds(
+                primary_items, sidecar_items
+            )
+            self.sidecar_alone_after_gpu1_seconds = self.gpu1_idle_after_primary_seconds
             if (
                 sidecar_items
                 and self.parallel_provider_overlap_seconds <= 0
@@ -417,6 +423,9 @@ class RuntimeGateProviderExecutionMixin:
                         item.get("provider_report")
                         for item in prepared
                         if isinstance(item.get("provider_report"), dict)
+                        and not recoverable_sidecar_failure_reason(
+                            item, item.get("provider_report")
+                        )
                     ]
                 )
             )
@@ -616,3 +625,28 @@ class RuntimeGateProviderExecutionMixin:
         return self.capture_gpu1_primary_evidence_after_provider_join(
             leader_report, round_id
         )
+
+
+def _gpu1_idle_after_primary_seconds(
+    primary_items: list[dict[str, Any]],
+    sidecar_items: list[dict[str, Any]],
+) -> float:
+    primary_done = max(
+        (
+            float(item.get("completed_perf") or 0.0)
+            for item in primary_items
+            if item.get("completed_perf") is not None
+        ),
+        default=0.0,
+    )
+    sidecar_done = max(
+        (
+            float(item.get("completed_perf") or 0.0)
+            for item in sidecar_items
+            if item.get("completed_perf") is not None
+        ),
+        default=0.0,
+    )
+    if not primary_done or not sidecar_done:
+        return 0.0
+    return round(max(0.0, sidecar_done - primary_done), 6)

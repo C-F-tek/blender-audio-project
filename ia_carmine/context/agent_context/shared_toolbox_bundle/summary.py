@@ -53,6 +53,7 @@ def build_final_summary(
         "recommended_next_task_md": recommended_next_task_md,
         "compact_bundle_paths": bundle_paths,
         "provider_execution_performed": bool(facts.get("provider_execution_performed")),
+        "provider_execution_claim_seen": bool(facts.get("provider_execution_claim_seen")),
         "provider_diagnostics": provider_diagnostics,
         "peer_mesh_product_state": peer_mesh_product_state,
         "provider_broker_loop_product_state": provider_broker_loop_product_state,
@@ -112,6 +113,7 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
         "stamp",
         "passed",
         "provider_execution_performed",
+        "provider_execution_claim_seen",
         "patch_application_performed",
         "source_writes_performed",
         "sqlite_write_performed",
@@ -124,6 +126,9 @@ def render_final_summary_markdown(summary: dict[str, Any]) -> str:
     lines.append("")
     provider = summary.get("provider_diagnostics") or {}
     lines.append(f"- Provider execution seen: `{provider.get('provider_execution_seen')}`")
+    lines.append(
+        f"- Provider execution claim seen: `{provider.get('provider_execution_claim_seen')}`"
+    )
     lines.append(
         f"- GPU primary advisory succeeded: `{provider.get('gpu_primary_advisory_succeeded')}`"
     )

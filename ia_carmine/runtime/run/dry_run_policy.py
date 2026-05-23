@@ -5,7 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 
-def dry_run_contract_policy() -> dict[str, Any]:
+def dry_run_contract_policy(
+    *,
+    gpu1_base_url: str | None,
+    gpu0_base_url: str | None,
+    keep_alive: str | None,
+) -> dict[str, Any]:
     return {
         "provider_role_policy": {
             "closure_owner": "gpu1_planner",
@@ -37,9 +42,22 @@ def dry_run_contract_policy() -> dict[str, Any]:
         },
         "provider_boot_gate_policy": {
             "required_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
-            "gpu1": "ollama_11434_tiny_generate_keep_alive_120s",
-            "gpu0": "ollama_vulkan_11435_tiny_generate_keep_alive_120s",
-            "npu": "openvino_NPU_model_load_probe_bounded",
+            "gpu1": {
+                "backend": "ollama",
+                "base_url": gpu1_base_url,
+                "keep_alive": keep_alive,
+                "source": "cli_arg",
+            },
+            "gpu0": {
+                "backend": "ollama_vulkan",
+                "base_url": gpu0_base_url,
+                "keep_alive": keep_alive,
+                "source": "cli_arg",
+            },
+            "npu": {
+                "backend": "openvino_NPU",
+                "source": "cli_arg",
+            },
             "workload_verified_at_boot": False,
             "failure_exit": "provider_boot_gate_failed",
         },

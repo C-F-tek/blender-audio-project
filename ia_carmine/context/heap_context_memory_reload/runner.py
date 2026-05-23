@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from argparse import Namespace
+from concurrent.futures import ThreadPoolExecutor
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +18,23 @@ from ia_carmine.context.heap_context_memory_reload.manifest import build_manifes
 from ia_carmine.context.heap_context_memory_reload.memory_write import build_final_task_markdown, run_operational_memory_write
 from ia_carmine.context.heap_context_memory_reload import rag_startup
 from ia_carmine.context.heap_context_memory_reload.runner_state import ReloadRun
-from ia_carmine.context.heap_context_memory_reload.scanner import existing_context_files
+from ia_carmine.context.heap_context_memory_reload.scanner import context_files_from_scan
+from ia_carmine.context.heap_context_memory_reload.startup_scan import (
+    build_startup_repo_scan_index,
+    scan_digest_for_paths,
+    scan_entries_by_path,
+)
+
+
+STARTUP_PARALLEL_REQUIREMENT_ORDER = {
+    "required_context_files": 10,
+    "repo_docs_map": 20,
+    "semantic_code_chunks": 30,
+    "tool_catalog": 40,
+    "shared_memory": 50,
+    "operational_memory_status": 60,
+    "operational_memory_search": 70,
+}
 
 
 def record_inprocess_tool(
@@ -59,10 +77,9 @@ def record_inprocess_tool(
 def run_reload(state: ReloadRun) -> int:
     state.output_dir.mkdir(parents=True, exist_ok=True)
     _run_required_context(state)
-    _build_context_maps(state)
-    _run_tool_catalog(state)
-    _run_memory_inventory(state)
-    _run_operational_memory_reads(state)
+    _build_startup_repo_scan(state)
+    _run_parallel_provider_input_lanes(state)
+    _sort_startup_commands(state)
     _run_transient_context(state)
     _run_ai_context_pack(state)
     rag_startup.ensure_rag_index_current(state, record_tool=record_inprocess_tool)
@@ -88,6 +105,23 @@ def run_reload(state: ReloadRun) -> int:
         context_pack_result=state.context_pack_result,
         strict_ai_context_pack=bool(state.args.strict_ai_context_pack),
         strict_startup_reload=bool(state.args.strict_startup_reload),
+        startup_effective_config={
+            "startup_provider_input_workers": int(
+                getattr(state.args, "startup_provider_input_workers", 0) or 0
+            ),
+            "startup_required_context_profile": str(
+                getattr(state.args, "startup_required_context_profile", "") or ""
+            ),
+            "startup_operational_memory_query": str(
+                getattr(state.args, "startup_operational_memory_query", "") or ""
+            ),
+            "startup_operational_memory_limit": int(
+                getattr(state.args, "startup_operational_memory_limit", 0) or 0
+            ),
+            "parallel_provider_input_lanes": state.artifacts.get(
+                "startup_parallel_provider_input_lanes", ""
+            ),
+        },
     )
     manifest_path = state.output_dir / "heap_context_memory_reload_manifest.json"
     manifest_md = state.output_dir / "heap_context_memory_reload_manifest.md"
@@ -97,6 +131,42 @@ def run_reload(state: ReloadRun) -> int:
     print(json.dumps(print_payload, indent=2, ensure_ascii=False))
     strict_startup = bool(state.args.strict_startup_reload or state.args.strict_ai_context_pack)
     return 0 if manifest["passed"] or (manifest["input_ready_before_heap"] and not strict_startup) else 2
+
+
+def _build_startup_repo_scan(state: ReloadRun) -> None:
+    state.repo_scan_index = build_startup_repo_scan_index(
+        state.repo_root,
+        state.output_dir,
+        max_hash_size=max(1, int(state.args.rag_max_file_size)),
+    )
+    scan_path = state.output_dir / "startup_repo_scan_index.json"
+    state.artifacts["startup_repo_scan_index_json"] = repo_rel(state.repo_root, scan_path)
+
+
+def _run_parallel_provider_input_lanes(state: ReloadRun) -> None:
+    workers = max(1, int(getattr(state.args, "startup_provider_input_workers", 0) or 0))
+    with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="startup-provider-input") as pool:
+        futures = [
+            pool.submit(_build_context_maps, state),
+            pool.submit(_run_tool_catalog, state),
+            pool.submit(_run_memory_inventory, state),
+            pool.submit(_run_operational_memory_reads, state),
+        ]
+        for future in futures:
+            future.result()
+    state.artifacts["startup_parallel_provider_input_lanes"] = (
+        "repo_docs_map,semantic_code_chunks,tool_catalog,shared_memory,"
+        "operational_memory_status,operational_memory_search"
+    )
+
+
+def _sort_startup_commands(state: ReloadRun) -> None:
+    state.commands.sort(
+        key=lambda item: (
+            STARTUP_PARALLEL_REQUIREMENT_ORDER.get(str(item.get("requirement") or ""), 1000),
+            str(item.get("name") or ""),
+        )
+    )
 
 
 def _run_required_context(state: ReloadRun) -> None:
@@ -112,7 +182,7 @@ def _run_required_context(state: ReloadRun) -> None:
                 "--repo-root",
                 ".",
                 "--profile",
-                "project_self_improvement",
+                str(state.args.startup_required_context_profile),
                 "--output",
                 str(context_json),
                 "--markdown-output",
@@ -131,8 +201,9 @@ def _run_required_context(state: ReloadRun) -> None:
 
 
 def _build_context_maps(state: ReloadRun) -> None:
-    state.context_files = existing_context_files(
-        state.repo_root,
+    state.context_files = context_files_from_scan(
+        state.repo_scan_index,
+        repo_root=state.repo_root,
         max_files=state.args.startup_scan_context_files,
     )
     build_context_delta(state)
@@ -145,6 +216,7 @@ def _build_context_maps(state: ReloadRun) -> None:
             state.output_dir,
             changed_paths=changed_paths,
             delta_active=delta_active,
+            scan_index=state.repo_scan_index,
         )
     )
     state.artifacts.update(
@@ -156,6 +228,7 @@ def _build_context_maps(state: ReloadRun) -> None:
             preview_chars=max(1, state.args.max_chars_per_file),
             changed_paths=changed_paths,
             delta_active=delta_active,
+            scan_index=state.repo_scan_index,
         )
     )
 
@@ -163,6 +236,12 @@ def _build_context_maps(state: ReloadRun) -> None:
 def _run_tool_catalog(state: ReloadRun) -> None:
     tool_catalog_json = state.output_dir / "startup_tool_catalog.json"
     tool_catalog_md = state.output_dir / "startup_tool_catalog.md"
+    cache_hit = _try_restore_tool_catalog_cache(state, tool_catalog_json, tool_catalog_md)
+    if cache_hit:
+        state.commands.append(cache_hit)
+        state.artifacts["tool_catalog_json"] = repo_rel(state.repo_root, tool_catalog_json)
+        state.artifacts["tool_catalog_markdown"] = repo_rel(state.repo_root, tool_catalog_md)
+        return
     state.commands.append(
         run_tool(
             [
@@ -184,8 +263,115 @@ def _run_tool_catalog(state: ReloadRun) -> None:
             artifact_paths=[tool_catalog_json, tool_catalog_md],
         )
     )
+    _store_tool_catalog_cache(state, tool_catalog_json, tool_catalog_md, state.commands[-1])
     state.artifacts["tool_catalog_json"] = repo_rel(state.repo_root, tool_catalog_json)
     state.artifacts["tool_catalog_markdown"] = repo_rel(state.repo_root, tool_catalog_md)
+
+
+def _tool_catalog_cache_paths(state: ReloadRun) -> tuple[Path, Path, Path]:
+    cache_dir = state.repo_root / "output" / "ai_runtime_memory" / "startup_tool_catalog_cache"
+    return cache_dir / "startup_tool_catalog.json", cache_dir / "startup_tool_catalog.md", cache_dir / "meta.json"
+
+
+def _tool_catalog_dependency_digest(state: ReloadRun) -> tuple[str, int]:
+    entries = scan_entries_by_path(state.repo_scan_index)
+    relevant = [
+        item
+        for rel_path, item in entries.items()
+        if rel_path.startswith("Tools/")
+        or (
+            rel_path.startswith("ia_carmine/")
+            and (
+                rel_path.endswith("/cli.py")
+                or rel_path.endswith("/dispatch.py")
+                or rel_path.endswith("/TOOL_CONTEXT.md")
+                or rel_path.endswith("/CONTEXT_INDEX.md")
+            )
+        )
+    ]
+    return scan_digest_for_paths(relevant), len(relevant)
+
+
+def _try_restore_tool_catalog_cache(
+    state: ReloadRun, tool_catalog_json: Path, tool_catalog_md: Path
+) -> dict[str, Any] | None:
+    cache_json, cache_md, cache_meta = _tool_catalog_cache_paths(state)
+    digest, dependency_count = _tool_catalog_dependency_digest(state)
+    meta = read_json(cache_meta)
+    miss_reason = ""
+    if not meta:
+        miss_reason = "cache_meta_missing"
+    elif meta.get("dependency_digest") != digest:
+        miss_reason = "dependency_digest_changed"
+    elif not cache_json.exists() or not cache_md.exists():
+        miss_reason = "cached_artifact_missing"
+    if miss_reason:
+        state.artifacts["tool_catalog_cache_hit"] = "False"
+        state.artifacts["tool_catalog_cache_miss_reason"] = miss_reason
+        return None
+    tool_catalog_json.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(cache_json, tool_catalog_json)
+    shutil.copyfile(cache_md, tool_catalog_md)
+    artifacts = [summarize_artifact(path, state.repo_root) for path in [tool_catalog_json, tool_catalog_md]]
+    result = {
+        "name": "tool_catalog_reload",
+        "requirement": "tool_catalog",
+        "required": True,
+        "command": ["cache_hit", "startup_tool_catalog_cache"],
+        "returncode": 0,
+        "passed": True,
+        "effective_passed": True,
+        "degraded": False,
+        "hard_failed": False,
+        "artifact_useful": True,
+        "artifact_paths": [item["path"] for item in artifacts],
+        "existing_artifact_paths": [item["path"] for item in artifacts if item.get("exists")],
+        "useful_artifact_paths": [item["path"] for item in artifacts if item.get("useful")],
+        "artifact_summaries": artifacts,
+        "stdout_tail": json.dumps(
+            {
+                "cache_hit": True,
+                "source_run": meta.get("source_run"),
+                "dependency_count": dependency_count,
+            },
+            ensure_ascii=False,
+        ),
+        "stderr_tail": "",
+        "cache_hit": True,
+        "cache_miss_reason": "",
+        "source_run": str(meta.get("source_run") or ""),
+    }
+    state.artifacts["tool_catalog_cache_hit"] = "True"
+    state.artifacts["tool_catalog_cache_source_run"] = result["source_run"]
+    return result
+
+
+def _store_tool_catalog_cache(
+    state: ReloadRun, tool_catalog_json: Path, tool_catalog_md: Path, result: dict[str, Any]
+) -> None:
+    cache_json, cache_md, cache_meta = _tool_catalog_cache_paths(state)
+    digest, dependency_count = _tool_catalog_dependency_digest(state)
+    if not result.get("effective_passed") or not tool_catalog_json.exists() or not tool_catalog_md.exists():
+        return
+    cache_json.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(tool_catalog_json, cache_json)
+    shutil.copyfile(tool_catalog_md, cache_md)
+    write_json(
+        cache_meta,
+        {
+            "schema_version": 1,
+            "kind": "startup_tool_catalog_cache_meta",
+            "source_run": state.stamp,
+            "dependency_digest": digest,
+            "dependency_count": dependency_count,
+            "json_path": repo_rel(state.repo_root, cache_json),
+            "markdown_path": repo_rel(state.repo_root, cache_md),
+        },
+    )
+    result["cache_hit"] = False
+    result["cache_miss_reason"] = state.artifacts.get("tool_catalog_cache_miss_reason", "cache_populated")
+    result["source_run"] = state.stamp
+    state.artifacts["tool_catalog_cache_hit"] = "False"
 
 
 def _run_memory_inventory(state: ReloadRun) -> None:
@@ -248,7 +434,12 @@ def _run_operational_memory_reads(state: ReloadRun) -> None:
     _run_memory_action(
         state,
         "search",
-        ["--query", "heap context memory reload provider proposal GPU0 NPU", "--limit", "20"],
+        [
+            "--query",
+            str(state.args.startup_operational_memory_query),
+            "--limit",
+            str(state.args.startup_operational_memory_limit),
+        ],
         search_json,
         search_md,
         "operational_memory_search",

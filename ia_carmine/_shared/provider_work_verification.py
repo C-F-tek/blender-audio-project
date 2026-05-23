@@ -61,15 +61,77 @@ def provider_work_status(
     else:
         status = _generic_status(report)
 
+    workload_passed = bool(
+        status.get("device_detected")
+        and status.get("model_loaded")
+        and status.get("workload_performed")
+        and status.get("useful_output_produced")
+    )
+    semantic_contract_passed = bool(
+        status.get("provider_work_verified")
+        and _semantic_contract_passed(provider_id, report)
+    )
+    provider_requirement_complete = bool(workload_passed and semantic_contract_passed)
+    status["workload_passed"] = workload_passed
+    status["semantic_contract_passed"] = semantic_contract_passed
+    status["provider_requirement_complete"] = provider_requirement_complete
+    status["provider_work_verified"] = provider_requirement_complete
+    explicit_rejection = str(report.get("provider_rejection_reason") or "").strip()
+    if explicit_rejection:
+        status["provider_work_verified"] = False
+        status["provider_requirement_complete"] = False
+        status["semantic_contract_passed"] = False
+        status["provider_rejection_reason"] = explicit_rejection
+
     status["provider_id"] = provider_id
     status["provider_role"] = role
-    status["provider_role_counted"] = bool(status["provider_work_verified"])
-    status["provider_rejection_reason"] = (
-        "" if status["provider_work_verified"] else status["provider_rejection_reason"]
-    )
+    status["provider_role_counted"] = bool(status["provider_requirement_complete"])
+    base_rejection_reason = str(status.get("provider_rejection_reason") or "").strip()
+    generic_rejection_reasons = {
+        "",
+        "provider_no_verified_workload",
+        "gpu1_no_verified_workload",
+        "gpu0_ollama_vulkan_no_verified_workload",
+        "npu_micro_provider_not_verified",
+    }
+    if status["provider_requirement_complete"]:
+        rejection_reason = ""
+    elif workload_passed and not semantic_contract_passed:
+        rejection_reason = (
+            base_rejection_reason
+            if base_rejection_reason not in generic_rejection_reasons
+            else "provider_semantic_contract_failed"
+        )
+    else:
+        rejection_reason = base_rejection_reason or "provider_semantic_contract_failed"
+    status["provider_rejection_reason"] = rejection_reason
     status["role_rejection_reason"] = status["provider_rejection_reason"]
     status["provider_stage"] = stage(status)
     return status
+
+
+def _semantic_contract_passed(provider_id: str, report: dict[str, Any]) -> bool:
+    if provider_id == "npu_micro_task_auditor":
+        if normalize_bool(report.get("npu_peer_followup_required")):
+            return False
+        if str(report.get("npu_native_tool_loop_error") or "").strip():
+            return False
+    if provider_id == "gpu1_planner":
+        for key in (
+            "quality_passed",
+            "proposal_quality_passed",
+            "semantic_contract_passed",
+            "provider_requirement_complete",
+        ):
+            if key in report and normalize_bool(report.get(key)) is False:
+                return False
+        for key in ("implementation_quality", "proposal_progress", "response_file_reference_quality"):
+            value = report.get(key)
+            if isinstance(value, dict) and value.get("passed") is False:
+                return False
+        if normalize_bool(report.get("proposal_requires_refinement")):
+            return False
+    return True
 
 
 def provider_rejection_record(
@@ -87,6 +149,9 @@ def provider_rejection_record(
         "health_check_passed": status["health_check_passed"],
         "workload_performed": status["workload_performed"],
         "useful_output_produced": status["useful_output_produced"],
+        "workload_passed": status["workload_passed"],
+        "semantic_contract_passed": status["semantic_contract_passed"],
+        "provider_requirement_complete": status["provider_requirement_complete"],
         "provider_work_verified": status["provider_work_verified"],
         "provider_role_counted": status["provider_role_counted"],
         "npu_peer_evidence_verified": status.get("npu_peer_evidence_verified", False),
@@ -188,6 +253,7 @@ def _gpu0_ollama_status(report: dict[str, Any]) -> dict[str, Any]:
         and (token_count > 0 or normalize_bool(report.get("provider_loaded")))
     )
     compute_verified = normalize_bool(report.get("ollama_compute_verified"))
+    schema_valid = report.get("gpu0_secondary_schema_valid") is True
     workload = bool(
         compute_verified
         or (
@@ -206,9 +272,24 @@ def _gpu0_ollama_status(report: dict[str, Any]) -> dict[str, Any]:
         and not operator_blocked
         and not normalize_bool(report.get("replight_mode"))
         and compute_verified
+        and schema_valid
         and token_count >= MIN_GPU1_WORK_TOKENS
         and useful_output
     )
+    rejection_reason = gpu0_ollama_rejection_reason(
+        response_text=response_text,
+        token_count=token_count,
+        residency_verified=residency_verified,
+        vulkan_lane=vulkan_lane,
+        model_loaded=model_loaded,
+        useful_output=useful_output,
+        compute_verified=compute_verified,
+        operator_blocked=operator_blocked,
+    )
+    if not schema_valid and not rejection_reason.startswith("gpu0_ollama_vulkan_"):
+        rejection_reason = "gpu0_secondary_schema_invalid"
+    elif not schema_valid and residency_verified and vulkan_lane and model_loaded and compute_verified:
+        rejection_reason = "gpu0_secondary_schema_invalid"
     return {
         "device_detected": residency_verified and vulkan_lane,
         "model_loaded": model_loaded,
@@ -216,16 +297,7 @@ def _gpu0_ollama_status(report: dict[str, Any]) -> dict[str, Any]:
         "workload_performed": workload,
         "useful_output_produced": useful_output,
         "provider_work_verified": verified,
-        "provider_rejection_reason": gpu0_ollama_rejection_reason(
-            response_text=response_text,
-            token_count=token_count,
-            residency_verified=residency_verified,
-            vulkan_lane=vulkan_lane,
-            model_loaded=model_loaded,
-            useful_output=useful_output,
-            compute_verified=compute_verified,
-            operator_blocked=operator_blocked,
-        ),
+        "provider_rejection_reason": rejection_reason,
     }
 
 

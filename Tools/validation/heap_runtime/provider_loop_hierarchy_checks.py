@@ -11,7 +11,6 @@ from typing import Any
 def run_provider_loop_hierarchy_checks(repo_root: Path) -> dict[str, Any]:
     from ia_carmine.runtime.heap_gate.provider_command_specs import build_provider_command_specs
     from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
-        GPU1_OPERATIONAL_MODEL,
         GPU1_LANE,
         gpu0_ollama_num_ctx,
     )
@@ -34,8 +33,8 @@ def run_provider_loop_hierarchy_checks(repo_root: Path) -> dict[str, Any]:
     gpu1 = specs.get(GPU1_LANE, {})
     gpu0 = specs.get(GPU0_LANE, {})
     npu = specs.get(NPU_LANE, {})
-    if gpu1.get("provider_model") != GPU1_OPERATIONAL_MODEL:
-        errors.append(f"GPU1 operational model is not {GPU1_OPERATIONAL_MODEL}")
+    if gpu1.get("provider_model") != args.provider_model:
+        errors.append(f"GPU1 provider model is not explicit args.provider_model={args.provider_model}")
     if gpu1.get("lane_tier") != "primary" or gpu1.get("authority") != "leader":
         errors.append("GPU1 is not marked as primary leader")
     if gpu0.get("lane_tier") != "coworker_medium" or gpu0.get("authority") != "coworker":
@@ -111,6 +110,9 @@ def _args() -> SimpleNamespace:
         budget_minutes=5,
         gpu0_iterations=16,
         gpu0_min_seconds=0.1,
+        gpu0_base_url="http://127.0.0.1:11435",
+        gpu0_model="qwen3:1.7b",
+        gpu0_vulkan_visible_devices="1",
         keep_alive="120s",
         max_new_tokens=900,
         npu_device_workload_iterations=2500,
@@ -122,6 +124,8 @@ def _args() -> SimpleNamespace:
         ollama_context_candidates="8192,4096",
         ollama_gpu_layers="all",
         ollama_num_ctx=8192,
+        gpu0_max_new_tokens=256,
+        gpu1_base_url="http://127.0.0.1:11434",
         operator_gpu_observation="",
         provider_model="qwen3-coder:latest",
         request_file="",

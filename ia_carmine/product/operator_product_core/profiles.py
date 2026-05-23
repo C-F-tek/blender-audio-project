@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-DEFAULT_PROFILE = "deep_external_heap"
 PROFILE_FILE = Path("ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json")
 PROFILE_RUNTIME_ROUTE = "heap_context_closure"
 PROFILE_REQUEST_FLAG = "--request-file"
@@ -38,9 +37,11 @@ def select_profile(
     name: str = "",
     profiles_file: Path | None = None,
 ) -> dict[str, Any]:
+    if not name:
+        raise SystemExit("profile selection must be explicit; pass --profile <name>")
     doc = load_profiles(repo_root, profiles_file)
     profiles = doc.get("profiles") if isinstance(doc.get("profiles"), dict) else {}
-    selected = name or str(doc.get("default_profile") or DEFAULT_PROFILE)
+    selected = str(name)
     profile = profiles.get(selected)
     if not isinstance(profile, dict):
         available = ", ".join(sorted(profiles)) or "<none>"

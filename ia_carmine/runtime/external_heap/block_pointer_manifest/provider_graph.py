@@ -57,6 +57,14 @@ SKIP_KINDS = {
     "provider_teamwork_leader_packet",
 }
 GENERIC_REPORT_ROLES = {"primary", "peer", "micro", "provider", "worker", "auditor"}
+PROVIDER_OBSERVED_STATUS_KEYS = (
+    "device_detected",
+    "model_loaded",
+    "health_check_passed",
+    "workload_performed",
+    "useful_output_produced",
+    "provider_work_verified",
+)
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -194,6 +202,10 @@ def _append_block(blocks: list[dict[str, Any]], block: dict[str, Any]) -> None:
         blocks.append(block)
 
 
+def _provider_role_observed(status: dict[str, Any]) -> bool:
+    return any(_normalize_bool(status.get(key)) for key in PROVIDER_OBSERVED_STATUS_KEYS)
+
+
 def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> list[dict[str, Any]]:
     """Build provider evidence blocks as a navigable GPU1 -> GPU0 -> NPU graph.
 
@@ -210,8 +222,13 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
         role, block_type = _canonical_role(data, path)
         lane = _lane_for_role(role)
         work_status = provider_work_status(lane=lane, report=data, default_role=role)
-        if not work_status["provider_work_verified"]:
+        verified = bool(work_status["provider_work_verified"])
+        observed = _provider_role_observed(work_status)
+        sidecar_role = role in {"gpu0_reviewer_refiner", "npu_auditor"}
+        if not verified and not (sidecar_role and observed):
             continue
+        if not verified and sidecar_role:
+            block_type = "observed_invalid_provider_evidence"
         text = _preview_text(data, max_block_chars)
         block_id = str(data.get("provider_block_id") or data.get("block_id") or "").strip()
         if not block_id:
@@ -219,7 +236,13 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
         proposal_block_id = str(data.get("proposal_block_id") or "")
         refines_id = str(data.get("refines_block_id") or proposal_block_id)
         if role in {"gpu0_reviewer_refiner", "npu_auditor"} and not refines_id:
-            refines_id = latest_gpu1_id or previous_id
+            refines_id = str(
+                data.get("review_target_pointer")
+                or data.get("checked_block_id")
+                or data.get("reviewed_gpu1_block_id")
+                or latest_gpu1_id
+                or previous_id
+            )
         resume_id = str(data.get("resume_from_block_id") or proposal_block_id or refines_id)
         if not resume_id and role != "gpu1_planner":
             resume_id = latest_gpu1_id or previous_id
@@ -239,17 +262,48 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             "decision": data.get("decision"),
             "exit_decision": data.get("exit_decision"),
             "quality_passed": data.get("passed"),
-            "provider_execution_performed": True,
+            "provider_execution_performed": bool(verified),
             "provider_stage": work_status["provider_stage"],
             "device_detected": work_status["device_detected"],
             "model_loaded": work_status["model_loaded"],
             "health_check_passed": work_status["health_check_passed"],
             "workload_performed": work_status["workload_performed"],
             "useful_output_produced": work_status["useful_output_produced"],
-            "provider_work_verified": True,
-            "provider_role_counted": True,
-            "provider_rejection_reason": "",
-            "role_rejection_reason": "",
+            "provider_work_verified": verified,
+            "provider_role_counted": verified,
+            "provider_role_observed": observed or verified,
+            "provider_role_observation_status": "verified" if verified else "observed_invalid",
+            "provider_rejection_reason": "" if verified else work_status["provider_rejection_reason"],
+            "role_rejection_reason": "" if verified else work_status["role_rejection_reason"],
+            "invalid_role": bool(not verified and observed),
+            "sidecar_invalid": bool(not verified and sidecar_role),
+            "sidecar_incongruent": bool(
+                str(
+                    data.get("gpu0_effective_decision")
+                    or data.get("gpu0_decision")
+                    or ""
+                ).lower()
+                == "incongruent"
+            ),
+            "gpu0_review_not_required": role == "gpu1_planner",
+            "gpu0_secondary_schema_valid": data.get("gpu0_secondary_schema_valid"),
+            "gpu0_checked_current_packet": data.get("gpu0_checked_current_packet"),
+            "role_decision": data.get("role_decision"),
+            "gpu0_decision": data.get("gpu0_decision"),
+            "gpu0_effective_decision": data.get("gpu0_effective_decision"),
+            "checked_block_id": data.get("checked_block_id"),
+            "checked_gpu1_revision": data.get("checked_gpu1_revision"),
+            "reviewed_gpu1_block_id": data.get("reviewed_gpu1_block_id"),
+            "reviewed_revision": data.get("reviewed_revision"),
+            "review_target_pointer": data.get("review_target_pointer") or refines_id,
+            "gpu1_closure_decision_packet_fingerprint": data.get(
+                "gpu1_closure_decision_packet_fingerprint"
+            ),
+            "expected_packet_fingerprint": data.get("expected_packet_fingerprint"),
+            "reviewed_packet_fingerprint": data.get("reviewed_packet_fingerprint"),
+            "gpu0_review_invalid_requires_gpu1_retry": data.get(
+                "gpu0_review_invalid_requires_gpu1_retry"
+            ),
             "native_tool_call_count": data.get("native_tool_call_count", 0),
             "npu_peer_evidence_verified": data.get("npu_peer_evidence_verified"),
             "npu_native_tool_loop_error": data.get("npu_native_tool_loop_error"),
@@ -298,14 +352,19 @@ def provider_rejections(repo_root: Path, run_dir: Path) -> list[dict[str, Any]]:
         status = provider_work_status(lane=lane, report=data, default_role=role)
         if status["provider_work_verified"]:
             continue
-        rejections.append(
-            provider_rejection_record(
-                path=_repo_rel(repo_root, path),
-                lane=lane,
-                report=data,
-                default_role=role,
-            )
+        record = provider_rejection_record(
+            path=_repo_rel(repo_root, path),
+            lane=lane,
+            report=data,
+            default_role=role,
         )
+        observed = _provider_role_observed(status)
+        record["provider_role_observed"] = observed
+        record["provider_role_observation_status"] = (
+            "observed_invalid" if observed else "not_observed"
+        )
+        record["invalid_role"] = observed
+        rejections.append(record)
     return rejections
 
 

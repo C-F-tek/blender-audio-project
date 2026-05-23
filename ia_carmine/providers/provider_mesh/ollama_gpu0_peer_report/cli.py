@@ -92,11 +92,18 @@ def render_peer_prompt(_request: str, leader_packet: dict[str, Any]) -> str:
         "closure owner and product author. You may evaluate only the post-gate "
         "GPU1_CLOSURE_DECISION_PACKET below. Do not use operator request text, "
         "historical context, target-file guesses, strategy, patches, generic_write, "
-        "or NPU output as a decision source. Return exactly one JSON object and "
+        "or NPU output as a decision source. Do not perform broad exploration, "
+        "final synthesis, product closure, or a complete alternate plan. "
+        "Return exactly one JSON object and "
         "nothing else.\n\n"
+        "BROKER_NATIVE_TOOL_RULE: GPU0 may use the broker/native schema only for "
+        "peer_refinement, veto, evidence_request, or generic_write peer evidence; "
+        "generic_write can never close the product and always requires a later "
+        "GPU1 pointer block to consume it.\n\n"
         "Required JSON keys: gpu0_decision, checked_block_id, checked_gpu1_revision, "
-        "missing_required_sections, incongruence_reasons, veto_reasons, "
-        "required_gpu1_next_action.\n"
+        "reviewed_gpu1_block_id, reviewed_revision, packet_fingerprint, "
+        "review_target_pointer, missing_required_sections, incongruence_reasons, "
+        "veto_reasons, required_gpu1_next_action.\n"
         "gpu0_decision must be exactly one of: congruent, veto, refine_required, "
         "incongruent.\n"
         f"checked_block_id must equal: {expected_block}\n"
@@ -361,6 +368,7 @@ def main() -> int:
         raw_response_text,
         fallback_block_id=_leader_block_id(leader_packet),
         fallback_revision=_leader_revision(leader_packet),
+        fallback_packet_fingerprint=str(gpu1_packet.get("packet_fingerprint") or ""),
     )
     gpu0_secondary = bind_gpu0_secondary_to_gpu1_packet(gpu0_secondary, leader_packet)
     report["gpu0_raw_response_text"] = raw_response_text
@@ -368,6 +376,10 @@ def main() -> int:
     report["gpu1_closure_decision_packet_present"] = bool(gpu1_packet)
     report["gpu1_closure_decision_packet_valid"] = gpu1_decision_packet_valid(gpu1_packet)
     report["gpu0_prompt_scope"] = "post_gate_gpu1_closure_decision_packet_only"
+    report["sidecar_scope_mode"] = "packet_review_only"
+    report["sidecar_scope_contract"] = (
+        "review_current_gpu1_packet_only_no_broad_exploration_no_final_synthesis"
+    )
     report["gpu0_one_execution_per_packet"] = True
     report.update(gpu0_secondary)
     report["response_text"] = gpu0_secondary_decision_text(gpu0_secondary)
@@ -398,6 +410,7 @@ def main() -> int:
                 "gpu0_ollama_vulkan_no_verified_workload",
                 "gpu0_ollama_vulkan_unavailable",
                 "gpu0_vulkan_server_not_ready",
+                *({"gpu0_secondary_schema_invalid"} if schema_valid else set()),
             }
         ]
     report.update(
@@ -444,10 +457,19 @@ def main() -> int:
         report["provider_rejection_reason"] = "gpu0_secondary_schema_invalid"
         report["product_blocked_reason"] = "gpu0_secondary_schema_invalid"
     else:
+        gpu0_decision = str(
+            report.get("gpu0_effective_decision") or report.get("gpu0_decision") or ""
+        ).strip().lower()
         report["provider_work_verified"] = True
         report["provider_role_counted"] = True
         report["provider_rejection_reason"] = ""
         report["product_blocked_reason"] = ""
+        report["sidecar_incongruent"] = gpu0_decision == "incongruent"
+        report["sidecar_product_block_reason"] = (
+            "gpu0_secondary_decision_incongruent"
+            if report["sidecar_incongruent"]
+            else ""
+        )
         report["passed"] = not bool(report.get("errors"))
     if gpu0_server.get("started") and not args.keep_gpu0_vulkan_server and not args.defer_unload:
         report["gpu0_vulkan_server_stop"] = stop_gpu0_vulkan_server(args.base_url)

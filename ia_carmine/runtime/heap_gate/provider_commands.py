@@ -2,6 +2,7 @@ from __future__ import annotations
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, repo_rel, subprocess
 from ia_carmine.runtime.heap_gate.provider_command_specs import build_provider_command_specs
 from ia_carmine.runtime.heap_gate.provider_time import build_provider_time_counter_contract
+from ia_carmine._shared.provider_work_verification import provider_work_status
 def _empty_report_value(value: Any) -> bool:
     return value is None or value == "" or value == [] or value == {}
 class RuntimeGateProviderCommandsMixin:
@@ -49,8 +50,10 @@ class RuntimeGateProviderCommandsMixin:
         absorb_tool_loop(report_data)
         backend = str(report_data.get("provider_backend") or "").strip().lower()
         compute_device = str(report_data.get("provider_compute_device") or "")
-        provider_execution = bool(
+        provider_execution_attempted = bool(
             report_data.get("provider_execution_performed")
+            or report_data.get("provider_execution_attempted")
+            or report_data.get("provider_io_observed")
             or (
                 lane == "gpu0_peer"
                 and backend == "ollama"
@@ -66,6 +69,7 @@ class RuntimeGateProviderCommandsMixin:
                 )
             )
         )
+        provider_execution = False
         device_workload_execution = bool(
             report_data.get("device_workload_execution_performed")
             or (
@@ -81,8 +85,6 @@ class RuntimeGateProviderCommandsMixin:
             lane == "npu_micro_task_auditor"
             and report_data.get("npu_micro_provider_execution_performed")
         )
-        if provider_execution or semantic_provider_execution or npu_micro_provider_execution:
-            self.provider_execution_performed = True
         errors = report_data.get("errors") if isinstance(report_data.get("errors"), list) else []
         warnings = (
             report_data.get("warnings") if isinstance(report_data.get("warnings"), list) else []
@@ -129,6 +131,8 @@ class RuntimeGateProviderCommandsMixin:
                         "vulkan_vendor_id",
                         "device_identity_verified",
                         "provider_execution_performed",
+                        "provider_execution_attempted",
+                        "provider_io_observed",
                         "cpu_provider_fallback_performed",
                         "provider_replight_required",
                         "provider_id",
@@ -175,6 +179,27 @@ class RuntimeGateProviderCommandsMixin:
                             report_data[key] = lane_report.get(key)
                     if response_text:
                         break
+        provider_execution_attempted = bool(
+            provider_execution_attempted
+            or report_data.get("provider_execution_attempted")
+            or report_data.get("provider_io_observed")
+            or report_data.get("provider_execution_performed")
+        )
+        provider_execution_claim_seen = provider_execution_attempted
+        verified_status = provider_work_status(
+            lane=lane,
+            report=report_data,
+            default_role=str(spec.get("provider_role") or spec.get("role") or ""),
+        )
+        provider_execution = bool(verified_status.get("provider_work_verified"))
+        report_data["provider_work_verified"] = provider_execution
+        report_data["provider_rejection_reason"] = verified_status.get(
+            "provider_rejection_reason"
+        )
+        report_data["provider_stage"] = verified_status.get("provider_stage")
+        report_data["provider_execution_claim_seen"] = provider_execution_claim_seen
+        if lane == "gpu1_planner" and provider_execution:
+            self.provider_execution_performed = True
         summary = {
             "lane": lane,
             "role": spec.get("role"),
@@ -183,6 +208,9 @@ class RuntimeGateProviderCommandsMixin:
             "returncode": completed.returncode,
             "passed": completed.returncode == 0 and report_data.get("passed") is True,
             "provider_execution_performed": provider_execution,
+            "provider_execution_claim_seen": provider_execution_claim_seen,
+            "provider_execution_attempted": provider_execution_attempted,
+            "provider_io_observed": provider_execution_attempted,
             "provider_backend": report_data.get("provider_backend"),
             "provider_compute_device": report_data.get("provider_compute_device"),
             "provider_device_verified": report_data.get("provider_device_verified"),

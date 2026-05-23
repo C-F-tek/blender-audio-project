@@ -53,6 +53,7 @@ def build_manifest(
     context_pack_result: dict[str, Any],
     strict_ai_context_pack: bool,
     strict_startup_reload: bool,
+    startup_effective_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     required, optional, blocking, degraded, optional_failed = requirement_status(commands)
     startup_reload_degraded = bool(degraded or optional_failed)
@@ -64,6 +65,7 @@ def build_manifest(
     rag_pack = artifact_json(repo_root, artifacts, "rag_context_pack_json")
     rag_ingest = artifact_json(repo_root, artifacts, "rag_repo_ingest_json")
     unified_pack = artifact_json(repo_root, artifacts, "startup_context_pack_json")
+    startup_scan = artifact_json(repo_root, artifacts, "startup_repo_scan_index_json")
     rag_index_ready = rag_ingest.get("rag_index_ready") is True
     rag_repo_ingest_passed = rag_ingest.get("passed") is True
     missing_embedding_count_after = as_int(rag_ingest.get("missing_embedding_count_after"))
@@ -86,6 +88,14 @@ def build_manifest(
         "request_sha256": sha256_text(request_text),
         "request_preview": request_text[:4000],
         "context_delta": context_delta,
+        "startup_repo_scan_index": {
+            "path": artifacts.get("startup_repo_scan_index_json", ""),
+            "file_count": startup_scan.get("file_count", 0),
+            "changed_file_count": startup_scan.get("changed_file_count", 0),
+            "unchanged_ref_only_count": startup_scan.get("unchanged_ref_only_count", 0),
+            "deleted_file_count": startup_scan.get("deleted_file_count", 0),
+            "discovery_mode": startup_scan.get("discovery_mode", ""),
+        },
         "context_reload_mode": context_delta.get("reload_mode", ""),
         "changed_context_file_count": context_delta.get("changed_context_file_count", 0),
         "unchanged_context_file_count": context_delta.get("unchanged_context_file_count", 0),
@@ -111,6 +121,7 @@ def build_manifest(
         "source_writes_performed": False,
         "context_file_count": len(context_files),
         "context_files": context_files,
+        "startup_effective_config": startup_effective_config or {},
         "artifacts": artifacts,
         "tool_executions": commands,
         "startup_warnings": warnings,
@@ -146,6 +157,10 @@ def build_manifest(
             "advisory_context_pack_non_blocking": not bool(strict_ai_context_pack),
             "final_composer_required": True,
             "memory_reload_uses_delta": bool(context_delta),
+            "startup_repo_scan_index_loaded": bool(startup_scan),
+            "startup_tool_catalog_cache_hit": artifacts.get("tool_catalog_cache_hit", ""),
+            "parallel_provider_input_lanes": artifacts.get("startup_parallel_provider_input_lanes", ""),
+            "startup_effective_config": startup_effective_config or {},
             "unchanged_context_refs_not_reloaded_as_previews": (
                 context_delta.get("unchanged_preview_policy")
                 == "omit_unchanged_bounded_previews_use_file_refs"
@@ -176,6 +191,8 @@ def build_print_payload(manifest: dict[str, Any], repo_root: Path, manifest_path
         "request_sha256": manifest.get("request_sha256", ""),
         "context_file_count": manifest.get("context_file_count", 0),
         "context_reload_mode": manifest.get("context_reload_mode", ""),
+        "startup_repo_scan_file_count": manifest.get("startup_repo_scan_index", {}).get("file_count", 0),
+        "startup_repo_scan_changed_file_count": manifest.get("startup_repo_scan_index", {}).get("changed_file_count", 0),
         "changed_context_file_count": manifest.get("changed_context_file_count", 0),
         "unchanged_context_file_count": manifest.get("unchanged_context_file_count", 0),
         "artifact_count": len(manifest.get("artifacts", {})),
@@ -183,6 +200,7 @@ def build_print_payload(manifest: dict[str, Any], repo_root: Path, manifest_path
         "blocking_requirements": manifest.get("blocking_requirements", []),
         "degraded_requirements": manifest.get("degraded_requirements", []),
         "optional_failed_requirements": manifest.get("optional_failed_requirements", []),
+        "startup_effective_config": manifest.get("startup_effective_config", {}),
         "manifest": repo_rel(repo_root, manifest_path),
         "markdown": repo_rel(repo_root, manifest_md),
         "heap_task_file": manifest.get("heap_task_file", ""),

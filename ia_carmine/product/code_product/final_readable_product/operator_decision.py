@@ -22,11 +22,13 @@ def write_operator_decision(
     write_text: Any,
 ) -> None:
     replight_lines = [
-        "provider_replight:",
+        "provider_replight_health_residency_only:",
         *[
             (
                 f"- {_as_dict(item).get('lane')}: passed={_as_dict(item).get('replight_passed')} "
                 f"loaded={_as_dict(item).get('provider_loaded')} model={_as_dict(item).get('provider_model')} "
+                f"work_verified={_as_dict(item).get('provider_work_verified')} "
+                f"stage={_as_dict(item).get('provider_stage')} "
                 f"reason={_as_dict(item).get('replight_blocked_reason')}"
             )
             for item in provider_replight_reports

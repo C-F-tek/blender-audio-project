@@ -18,6 +18,7 @@ from typing import Any
 
 try:
     from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict
+    from ia_carmine._shared.provider_work_verification import provider_work_status
     from Tools.validation._shared.report_utils import (
         resolve_output_path,
         write_json_report,
@@ -28,6 +29,7 @@ except ImportError:
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict  # type: ignore
+    from ia_carmine._shared.provider_work_verification import provider_work_status  # type: ignore
     from Tools.validation._shared.report_utils import (  # type: ignore
         resolve_output_path,
         write_json_report,
@@ -65,6 +67,21 @@ def existing(repo_root: Path, path_text: str) -> str:
         return ""
     path = Path(path_text)
     return repo_rel(repo_root, path) if path.exists() else path_text
+
+
+def provider_verified(lane: str, report: dict[str, Any]) -> bool:
+    return bool(
+        report.get("provider_work_verified")
+        or provider_work_status(lane=lane, report=report).get("provider_work_verified")
+    )
+
+
+def provider_claim_seen(report: dict[str, Any]) -> bool:
+    return bool(
+        report.get("provider_execution_performed")
+        or report.get("provider_execution_attempted")
+        or report.get("provider_io_observed")
+    )
 
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
@@ -112,8 +129,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                         "gpu1_report": existing(repo_root, args.gpu1_report),
                         "gpu0_task_packet": existing(repo_root, args.gpu0_task_packet),
                         "gpu1_passed": gpu1.get("passed"),
-                        "gpu1_provider_execution_performed": gpu1.get(
-                            "provider_execution_performed"
+                        "gpu1_provider_execution_claim_seen": provider_claim_seen(gpu1),
+                        "gpu1_provider_work_verified": provider_verified("gpu1_planner", gpu1),
+                        "gpu1_provider_execution_performed": provider_verified(
+                            "gpu1_planner", gpu1
                         ),
                         "task_count": task_packet.get("task_count"),
                         "direct_execution": False,
@@ -192,7 +211,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                         "npu_report": existing(repo_root, args.npu_report),
                         "npu_passed": npu.get("passed"),
                         "provider_execution_requested": npu.get("provider_execution_requested"),
-                        "provider_execution_performed": npu.get("provider_execution_performed"),
+                        "provider_execution_claim_seen": provider_claim_seen(npu),
+                        "provider_work_verified": provider_verified(
+                            "npu_micro_task_auditor", npu
+                        ),
+                        "provider_execution_performed": provider_verified(
+                            "npu_micro_task_auditor", npu
+                        ),
                         "non_blocking": npu.get("non_blocking"),
                         "tool_request_count": npu.get("tool_request_count"),
                         "product_pass_blocker": npu.get("product_pass_blocker"),

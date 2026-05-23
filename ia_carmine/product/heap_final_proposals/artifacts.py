@@ -12,6 +12,14 @@ from ia_carmine.product.heap_final_proposals.common import (
     repo_rel,
 )
 
+PROVIDER_REPORT_LANES = {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}
+PROVIDER_REPORT_SKIP_KINDS = {
+    "provider_launch_manifest",
+    "provider_role_coexistence",
+    "provider_runtime_plan",
+    "provider_teamwork_leader_packet",
+}
+
 
 def append_artifact_ref(refs: list[str], value: Any) -> None:
     if not isinstance(value, str) or not value.strip():
@@ -79,9 +87,9 @@ def compute_product_causality(
     )
     artifact_refs = startup_artifact_refs(startup_manifest, report)
     provider_execution = bool(
-        report.get("provider_execution_performed")
-        or metrics.get("provider_execution_performed")
-        or output_contract.get("provider_execution_performed")
+        report.get("provider_work_verified")
+        or metrics.get("provider_work_verified")
+        or output_contract.get("provider_work_verified")
         or any(item.get("provider_execution_performed") for item in provider_reports)
     )
     proposal_artifacts = (
@@ -166,6 +174,7 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
                 "name": json_path.name,
                 "json_path": json_path,
                 "markdown_path": md_path if md_path.exists() else None,
+                "block_id": data.get("block_id"),
                 "revision": data.get("revision"),
                 "source": data.get("source"),
                 "quality_passed": data.get("quality_passed"),
@@ -182,6 +191,14 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
                 "implementation_quality": impl,
                 "proposal_progress": progress,
                 "response_file_reference_quality": data.get("response_file_reference_quality", {}),
+                "target_files": data.get("target_files", []),
+                "declared_target_files": data.get("declared_target_files", []),
+                "verified_declared_target_files": data.get("verified_declared_target_files", []),
+                "allowlist_candidate_files": data.get("allowlist_candidate_files", []),
+                "rejected_unverified_refs": data.get("rejected_unverified_refs", []),
+                "validation_commands": data.get("validation_commands", []),
+                "rejected_validation_refs": data.get("rejected_validation_refs", []),
+                "provider_execution_performed": data.get("provider_execution_performed", False),
                 "gpu0_review": data.get("gpu0_review", []),
                 "npu_micro_task_piece": data.get("npu_micro_task_piece", []),
                 "npu_workload_audit": data.get("npu_workload_audit", {}),
@@ -199,6 +216,8 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
         return reports
     for path in sorted(provider_dir.glob("*.json")):
         data = read_json(path)
+        if _skip_provider_report(path, data):
+            continue
         lane = (
             data.get("lane")
             or data.get("role")
@@ -220,6 +239,40 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
             }
         )
     return reports
+
+
+def _skip_provider_report(path: Path, data: dict[str, Any]) -> bool:
+    name = path.name
+    kind = str(data.get("kind") or data.get("report_kind") or "").strip()
+    if kind in PROVIDER_REPORT_SKIP_KINDS:
+        return True
+    if name.startswith(("provider_launch_manifest", "provider_runtime_plan")):
+        return True
+    if name.startswith("provider_teamwork_leader_packet"):
+        return True
+    if "provider_replight" in name or data.get("replight_mode") is True:
+        return True
+    lane = str(
+        data.get("provider_id")
+        or data.get("lane")
+        or data.get("requirement")
+        or data.get("role")
+        or ""
+    ).strip()
+    if lane in PROVIDER_REPORT_LANES:
+        return False
+    stem_lane = _lane_from_provider_report_name(path.name)
+    return stem_lane not in PROVIDER_REPORT_LANES
+
+
+def _lane_from_provider_report_name(name: str) -> str:
+    if name.startswith("gpu1_"):
+        return "gpu1_planner"
+    if name.startswith("gpu0_"):
+        return "gpu0_peer"
+    if name.startswith("npu_"):
+        return "npu_micro_task_auditor"
+    return ""
 
 
 def flatten_quality_blockers(

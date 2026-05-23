@@ -1,6 +1,38 @@
 from __future__ import annotations
 
 from .common import *  # noqa: F403
+from ia_carmine._shared.provider_work_verification import provider_work_status
+
+
+def _provider_lane(data: dict[str, Any]) -> str:
+    lane = str(data.get("lane") or data.get("provider_id") or "").strip()
+    if lane:
+        return lane
+    kind = str(data.get("kind") or "").strip()
+    if kind == "gpu0_peer_response":
+        return "gpu0_peer"
+    if kind in {"npu_gpu_deep_review_audit", "npu_micro_task_auditor"}:
+        return "npu_micro_task_auditor"
+    if kind in {"local_provider_probe", "gpu1_primary_advisory"}:
+        return "gpu1_planner"
+    return ""
+
+
+def _provider_execution_claim_seen(data: dict[str, Any]) -> bool:
+    return bool(
+        data.get("provider_execution_performed")
+        or data.get("provider_execution_attempted")
+        or data.get("provider_io_observed")
+    )
+
+
+def _provider_work_verified(data: dict[str, Any]) -> bool:
+    if data.get("provider_work_verified") is True:
+        return True
+    lane = _provider_lane(data)
+    if not lane:
+        return False
+    return bool(provider_work_status(lane=lane, report=data).get("provider_work_verified"))
 
 def read_json_object(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     """Read a JSON object while reusing shared evidence-bundle IO helpers."""
@@ -63,6 +95,7 @@ def collect_report_facts(repo_root: Path, report_paths: list[str]) -> dict[str, 
     errors: list[str] = []
     warnings: list[str] = []
     provider_execution_performed = False
+    provider_execution_claim_seen = False
     patch_application_performed = False
     source_writes_performed = False
     sqlite_write_performed = False
@@ -84,8 +117,9 @@ def collect_report_facts(repo_root: Path, report_paths: list[str]) -> dict[str, 
             entry["parse_error"] = parse_error
             warnings.append(f"{entry['path']}: {parse_error}")
         if data:
-            provider_execution_performed = (
-                provider_execution_performed or data.get("provider_execution_performed") is True
+            provider_execution_performed = provider_execution_performed or _provider_work_verified(data)
+            provider_execution_claim_seen = (
+                provider_execution_claim_seen or _provider_execution_claim_seen(data)
             )
             patch_application_performed = (
                 patch_application_performed or data.get("patch_application_performed") is True
@@ -133,6 +167,7 @@ def collect_report_facts(repo_root: Path, report_paths: list[str]) -> dict[str, 
         "errors": errors,
         "warnings": warnings,
         "provider_execution_performed": provider_execution_performed,
+        "provider_execution_claim_seen": provider_execution_claim_seen,
         "patch_application_performed": patch_application_performed,
         "source_writes_performed": source_writes_performed,
         "sqlite_write_performed": sqlite_write_performed,

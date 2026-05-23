@@ -14,6 +14,8 @@ def provider_replight_table(gate: dict[str, Any]) -> list[str]:
     lines = [
         "## Provider replight",
         "",
+        "Replight indica solo health/residency/loading. Il lavoro reale resta nei campi `Work verified`, `Stage` e nelle metriche GPU1 primary.",
+        "",
         "| Provider | Modello | Backend/device | Stage | Loaded | Work verified | Rejection | Token | Esito |",
         "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]

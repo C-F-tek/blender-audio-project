@@ -21,6 +21,8 @@ LANE_POLICY_KEYS = (
     "sidecar_lane",
     "micro_audit_only",
     "reviewer_refiner",
+    "sidecar_scope_mode",
+    "sidecar_scope_contract",
     "native_tool_calling_policy",
     "delta_context_mode",
     "npu_micro_timeout_enforced",

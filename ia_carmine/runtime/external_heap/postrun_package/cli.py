@@ -174,21 +174,6 @@ def main() -> int:
     commands: list[tuple[str, list[str]]] = []
     commands.append(
         (
-            "normalize_causality",
-            [
-                project_python,
-                "-m",
-                "ia_carmine",
-                "normalize_heap_final_causality",
-                "--composer-json",
-                str(composer_json),
-                "--output",
-                str(causality_json),
-            ],
-        )
-    )
-    commands.append(
-        (
             "build_pointer_manifest",
             [
                 project_python,
@@ -203,6 +188,23 @@ def main() -> int:
                 str(args.max_block_chars),
                 "--max-blocks",
                 str(args.max_blocks),
+            ],
+        )
+    )
+    commands.append(
+        (
+            "normalize_causality",
+            [
+                project_python,
+                "-m",
+                "ia_carmine",
+                "normalize_heap_final_causality",
+                "--composer-json",
+                str(composer_json),
+                "--pointer-manifest",
+                str(pointer_json),
+                "--output",
+                str(causality_json),
             ],
         )
     )

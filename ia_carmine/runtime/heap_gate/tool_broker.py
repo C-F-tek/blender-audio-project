@@ -3,6 +3,7 @@ from __future__ import annotations
 from ia_carmine.runtime.heap_gate.runtime_common import (
     BASE_REQUIREMENTS,
     PROVIDER_REQUIREMENTS,
+    PROVIDER_START_REQUIREMENTS,
     REQUIREMENT_ORDER,
     Any,
     append_unique,
@@ -12,13 +13,32 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
     repo_rel,
     safe_int,
 )
-from ia_carmine.runtime.heap_gate.tool_plan_builder import build_tool_plan
+from ia_carmine.runtime.heap_gate.tool_plan_builder import (
+    STARTUP_MEMORY_INDEX_BATCH_REQUIREMENT,
+    build_tool_plan,
+)
 from ia_carmine.runtime.heap_gate.tool_broker_evidence import semantic_evidence_sources
 from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
     provider_plan_item_for_tool_call,
     publish_provider_native_tool_calls,
 )
+from ia_carmine._shared.provider_work_verification import provider_work_status
 TOOL_REQUIREMENT_FALLBACKS = {"agent_runtime_debug_lab": "runtime_debug_lab", "ai_context_pack": "ai_context_pack", "build_agent_agnostic_tool_inventory": "tool_catalog", "build_agent_memory_inventory": "shared_memory", "build_agent_transient_request_context": "shared_context_chunks", "build_code_interpreter_report": "code_interpreter_evidence", "check_python_syntax": "python_syntax_evidence", "generic_write": "generic_write_refinement", "rag_context_pack": "rag_context_pack", "refactor_duplication_audit": "refactor_duplication_audit_evidence", "run_heap_code_execution_matrix": "code_execution_matrix", "run_heap_code_execution_tool": "code_execution_matrix", "run_heap_virtual_dev_environment": "virtual_dev_environment", "runtime_file_refs": "runtime_file_refs", "select_semantic_code_chunks": "semantic_code_chunks", "semantic_evidence_chunks": "semantic_evidence_chunks"}
+PROVIDER_INPUT_MEMORY_INDEX_BATCH_REQUIREMENT = STARTUP_MEMORY_INDEX_BATCH_REQUIREMENT
+PROVIDER_INPUT_HARD_REQUIREMENTS = (
+    "runtime_file_refs",
+    PROVIDER_INPUT_MEMORY_INDEX_BATCH_REQUIREMENT,
+)
+
+
+def _compact_json_value(value: Any, limit: int = 900) -> Any:
+    if not isinstance(value, (dict, list)):
+        text = str(value or "")
+        return text[:limit] if len(text) > limit else value
+    text = json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+    return text[:limit] if len(text) > limit else value
+
+
 class RuntimeGateToolBrokerMixin:
     def broker_result_digest(self, payload: dict[str, Any]) -> str:
         normalized = {
@@ -109,7 +129,10 @@ class RuntimeGateToolBrokerMixin:
             if requirement != "unknown":
                 completed.add(requirement)
         for provider_report in self.provider_reports:
-            if provider_report.get("passed") is not True:
+            lane = str(provider_report.get("lane") or provider_report.get("provider_id") or "")
+            if not provider_work_status(lane=lane, report=provider_report).get(
+                "provider_work_verified"
+            ):
                 continue
             requirement = str(provider_report.get("requirement") or "")
             if requirement in REQUIREMENT_ORDER:
@@ -132,8 +155,74 @@ class RuntimeGateToolBrokerMixin:
         return attempted
 
     def missing_requirements(self, events: list[dict[str, Any]]) -> list[str]:
+        return self.unattempted_requirements(events)
+
+    def unattempted_requirements(self, events: list[dict[str, Any]]) -> list[str]:
+        attempted = self.attempted_requirements(events)
+        order = list(self.required_requirements_order())
+        if self.provider_input_gate_enabled():
+            for requirement in PROVIDER_INPUT_HARD_REQUIREMENTS:
+                if requirement not in order:
+                    order.append(requirement)
+        return [item for item in order if item not in attempted]
+
+    def failed_requirements(self, events: list[dict[str, Any]]) -> list[str]:
         completed = self.completed_requirements(events)
-        return [item for item in self.required_requirements_order() if item not in completed]
+        attempted = self.attempted_requirements(events)
+        order = list(self.required_requirements_order())
+        if self.provider_input_gate_enabled():
+            for requirement in PROVIDER_INPUT_HARD_REQUIREMENTS:
+                if requirement not in order:
+                    order.append(requirement)
+        return [item for item in order if item in attempted and item not in completed]
+
+    def unsatisfied_requirements(self, events: list[dict[str, Any]]) -> list[str]:
+        completed = self.completed_requirements(events)
+        order = list(self.required_requirements_order())
+        if self.provider_input_gate_enabled():
+            for requirement in PROVIDER_INPUT_HARD_REQUIREMENTS:
+                if requirement not in order:
+                    order.append(requirement)
+        return [item for item in order if item not in completed]
+
+    def provider_input_gate_enabled(self) -> bool:
+        return bool(getattr(self.args, "allow_provider_generation", False))
+
+    def pre_provider_hard_requirements(self) -> tuple[str, ...]:
+        if not self.provider_input_gate_enabled():
+            return tuple(BASE_REQUIREMENTS)
+        return tuple(
+            dict.fromkeys(
+                [
+                    *BASE_REQUIREMENTS,
+                    PROVIDER_INPUT_MEMORY_INDEX_BATCH_REQUIREMENT,
+                ]
+            )
+        )
+
+    def provider_input_hard_requirements(self) -> tuple[str, ...]:
+        if not self.provider_input_gate_enabled():
+            return tuple(PROVIDER_START_REQUIREMENTS)
+        return tuple(
+            dict.fromkeys(
+                [
+                    *PROVIDER_START_REQUIREMENTS,
+                    *PROVIDER_INPUT_HARD_REQUIREMENTS,
+                ]
+            )
+        )
+
+    def base_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
+        completed = self.completed_requirements(events)
+        return all(req in completed for req in self.pre_provider_hard_requirements())
+
+    def startup_base_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
+        completed = self.completed_requirements(events)
+        return all(req in completed for req in BASE_REQUIREMENTS)
+
+    def provider_start_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
+        completed = self.completed_requirements(events)
+        return all(req in completed for req in self.provider_input_hard_requirements())
 
     def broker_output_refs(self, events: list[dict[str, Any]]) -> list[str]:
         refs: list[str] = []
@@ -196,6 +285,8 @@ class RuntimeGateToolBrokerMixin:
             refs = self.broker_output_refs(events)
             if refs:
                 args["content"] = "\n".join(refs[:40])
+        if item.get("requirement") == PROVIDER_INPUT_MEMORY_INDEX_BATCH_REQUIREMENT:
+            args["content"] = self.provider_input_memory_batch_content(events)
         if item.get("requirement") == "refactor_duplication_audit_evidence":
             refs = [ref for ref in self.broker_output_refs(events) if ref.endswith(".json")]
             if refs:
@@ -225,15 +316,30 @@ class RuntimeGateToolBrokerMixin:
         if not pending:
             return []
         required = set(self.required_requirements_order())
-        base_pending = [item for item in pending if item["requirement"] in BASE_REQUIREMENTS]
+        base_pending = [
+            item
+            for item in pending
+            if item["requirement"] in BASE_REQUIREMENTS
+            and item["requirement"] != PROVIDER_INPUT_MEMORY_INDEX_BATCH_REQUIREMENT
+        ]
         if base_pending:
             pending = base_pending
-        elif (
-            self.args.allow_provider_generation
-            and not self.provider_reports
-            and self.base_requirements_complete(events)
-        ):
-            return []
+        elif self.args.allow_provider_generation and not self.provider_reports:
+            baseline_pending = [item for item in pending if item.get("pre_provider_baseline")]
+            if baseline_pending:
+                pending = baseline_pending
+            else:
+                provider_input_pending = [
+                    item
+                    for item in pending
+                    if item["requirement"] in PROVIDER_INPUT_HARD_REQUIREMENTS
+                ]
+                if provider_input_pending:
+                    pending = provider_input_pending
+                elif self.provider_start_requirements_complete(events):
+                    return []
+                elif self.startup_base_requirements_complete(events):
+                    return []
         else:
             required_pending = [item for item in pending if item["requirement"] in required]
             if required_pending:
@@ -306,75 +412,6 @@ class RuntimeGateToolBrokerMixin:
                     round_id=round_id,
                 )
                 existing_ids.add(evidence_id)
-            tool_name = str(payload.get("tool") or "")
-            memory_request_id = f"{self.stamp}:sqlite-index:{digest}"
-            already_requested = any(
-                request.get("id") == memory_request_id
-                for request in self.state.get("tool_requests", [])
-            ) or any(
-                str(result.get("request_id") or "") == memory_request_id
-                for result in self.broker_results(events)
-            )
-            if tool_name and tool_name != "runtime_sqlite_memory" and not already_requested:
-                memory_need = {
-                    "id": f"need_operational_memory_index_{digest}",
-                    "owner": "deterministic",
-                    "kind": "broker_result_memory_index",
-                    "target": "runtime_sqlite_memory",
-                    "requirement": "tool_evidence_memory_write",
-                    "reason": "index broker result as operational SQLite/FTS evidence ref",
-                    "provider_block_id": payload.get("provider_block_id"),
-                    "proposal_block_id": payload.get("proposal_block_id"),
-                    "round": round_id,
-                }
-                append_unique(self.state["needs"], memory_need)
-                self.publish(
-                    "deterministic",
-                    "need",
-                    memory_need,
-                    target="broker",
-                    correlation_id=memory_request_id,
-                    round_id=round_id,
-                )
-                memory_request = {
-                    "id": memory_request_id,
-                    "tool": "runtime_sqlite_memory",
-                    "args": {
-                        "action": "remember",
-                        "scope": "operational",
-                        "summary": f"broker evidence ref: {tool_name}/{requirement}",
-                        "content": json.dumps(
-                            {
-                                "tool": tool_name,
-                                "requirement": requirement,
-                                "outputs": payload.get("outputs"),
-                                "summary": payload.get("summary"),
-                                "provider_block_id": payload.get("provider_block_id"),
-                                "proposal_block_id": payload.get("proposal_block_id"),
-                                "broker_report": payload.get("broker_report"),
-                            },
-                            ensure_ascii=False,
-                            default=str,
-                        ),
-                        "role": "heap_runtime_tool_evidence",
-                        "tag": ["heap", "tool_evidence", requirement],
-                    },
-                    "reason": "index broker result as operational SQLite/FTS evidence ref",
-                    "requirement": "tool_evidence_memory_write",
-                    "nonblocking": True,
-                    "provider_block_id": payload.get("provider_block_id"),
-                    "proposal_block_id": payload.get("proposal_block_id"),
-                }
-                append_unique(self.state["tool_requests"], memory_request)
-                self.publish(
-                    "deterministic",
-                    "broker_request",
-                    memory_request,
-                    target="broker",
-                    correlation_id=memory_request_id,
-                    round_id=round_id,
-                )
-                self.tool_request_count += 1
         for requirement in REQUIREMENT_ORDER:
             if requirement not in completed or requirement in existing:
                 continue
@@ -394,3 +431,91 @@ class RuntimeGateToolBrokerMixin:
                 correlation_id=f"{self.stamp}:shared:{requirement}",
                 round_id=round_id,
             )
+        self.publish_provider_input_readiness(round_id, events)
+
+    def provider_input_memory_batch_payload(self, events: list[dict[str, Any]]) -> dict[str, Any]:
+        artifact_refs: list[dict[str, Any]] = []
+        completed = sorted(self.completed_requirements(events))
+        for payload in self.broker_results(events):
+            if payload.get("blocked"):
+                continue
+            if safe_int(payload.get("returncode"), default=1) != 0:
+                continue
+            requirement = str(
+                payload.get("requirement")
+                or self.requirement_for_tool(str(payload.get("tool") or ""))
+            )
+            if requirement in {"unknown", PROVIDER_INPUT_MEMORY_INDEX_BATCH_REQUIREMENT}:
+                continue
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            artifact_refs.append(
+                {
+                    "tool": str(payload.get("tool") or ""),
+                    "requirement": requirement,
+                    "digest": self.broker_result_digest(payload),
+                    "outputs": {
+                        key: value
+                        for key, value in outputs.items()
+                        if str(value or "").strip()
+                    },
+                    "summary": _compact_json_value(payload.get("summary"), 700),
+                    "broker_report": str(payload.get("broker_report") or ""),
+                }
+            )
+        return {
+            "schema_version": 1,
+            "kind": PROVIDER_INPUT_MEMORY_INDEX_BATCH_REQUIREMENT,
+            "stamp": self.stamp,
+            "purpose": "single pre-provider SQLite/FTS5 index batch for provider-consumable evidence",
+            "hard_gates": list(self.provider_input_hard_requirements()),
+            "completed_requirements": completed,
+            "artifact_ref_count": len(artifact_refs),
+            "artifact_refs": artifact_refs[:80],
+            "runtime_file_refs_required": "runtime_file_refs" in self.provider_input_hard_requirements(),
+            "post_provider_validation_boundary": {
+                "code_execution_matrix": "final_product_validation_after_provider_proposal",
+            },
+        }
+
+    def provider_input_memory_batch_content(self, events: list[dict[str, Any]]) -> str:
+        return json.dumps(
+            self.provider_input_memory_batch_payload(events),
+            ensure_ascii=False,
+            sort_keys=True,
+            default=str,
+        )
+
+    def publish_provider_input_readiness(
+        self, round_id: int, events: list[dict[str, Any]]
+    ) -> None:
+        if not self.provider_input_gate_enabled():
+            return
+        completed = self.completed_requirements(events)
+        hard_requirements = list(self.provider_input_hard_requirements())
+        missing = [item for item in hard_requirements if item not in completed]
+        signature = (tuple(sorted(completed)), tuple(missing))
+        if getattr(self, "_provider_input_readiness_signature", None) == signature:
+            return
+        self._provider_input_readiness_signature = signature
+        payload = {
+            "id": f"{self.stamp}:provider_input_readiness",
+            "kind": "provider_input_readiness",
+            "provider_consumable_evidence_ready": not missing,
+            "provider_start_hard_requirements": hard_requirements,
+            "provider_start_missing_requirements": missing,
+            "runtime_file_refs_ready": "runtime_file_refs" in completed,
+            "memory_index_batch_ready": (
+                PROVIDER_INPUT_MEMORY_INDEX_BATCH_REQUIREMENT in completed
+            ),
+            "post_provider_validation_boundary": (
+                "code_execution_matrix remains final product validation after provider proposal"
+            ),
+        }
+        self.publish(
+            "deterministic",
+            "validation_signal",
+            payload,
+            target="gpu1",
+            correlation_id=f"{self.stamp}:provider-input-readiness",
+            round_id=round_id,
+        )

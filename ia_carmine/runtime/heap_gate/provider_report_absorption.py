@@ -57,6 +57,11 @@ def absorb_completed_provider_item(
     provider_report["delta_context_mode"] = item.get("delta_context_mode")
     provider_report["npu_micro_timeout_enforced"] = item.get("npu_micro_timeout_enforced")
     provider_report["time_counter_contract"] = item.get("time_counter_contract")
+    provider_report["sidecar_scope_mode"] = (
+        item.get("sidecar_scope_mode")
+        or ("packet_review_only" if lane in {"gpu0_peer", "npu_micro_task_auditor"} else "")
+    )
+    provider_report["sidecar_scope_contract"] = item.get("sidecar_scope_contract") or ""
     for key in (
         "provider_backend",
         "provider_compute_device",
@@ -106,7 +111,13 @@ def absorb_completed_provider_item(
         "checked_gpu1_revision",
         "expected_gpu1_block_id",
         "expected_gpu1_revision",
+        "expected_packet_fingerprint",
+        "reviewed_gpu1_block_id",
+        "reviewed_revision",
+        "review_target_pointer",
+        "reviewed_packet_fingerprint",
         "gpu0_checked_current_packet",
+        "gpu0_review_invalid_requires_gpu1_retry",
         "gpu0_unanchored_reasons",
         "gpu0_decision_override_reason",
         "gpu1_closure_decision_packet",
@@ -124,6 +135,12 @@ def absorb_completed_provider_item(
         "free_text_used_as_decision",
         "gpu0_raw_response_text",
         "gpu0_server_evidence_source",
+        "sidecar_scope_mode",
+        "sidecar_scope_contract",
+        "sidecar_invalid",
+        "sidecar_incongruent",
+        "sidecar_product_block_reason",
+        "sidecar_recoverable_failure_reason",
     ):
         if key in report_data:
             provider_report[key] = report_data.get(key)
@@ -160,11 +177,52 @@ def absorb_completed_provider_item(
         provider_report["peer_attempt_id"] = provider_report.get("provider_block_id")
         provider_report["final_source_allowed"] = False
         provider_report["cannot_open_revision"] = True
+        provider_report["sidecar_target_pointer"] = (
+            provider_report.get("review_target_pointer")
+            or provider_report.get("reviewed_gpu1_block_id")
+            or provider_report.get("checked_block_id")
+            or provider_report.get("expected_gpu1_block_id")
+            or ""
+        )
+        provider_report["sidecar_incongruent"] = (
+            str(
+                provider_report.get("gpu0_effective_decision")
+                or provider_report.get("gpu0_decision")
+                or ""
+            ).strip().lower()
+            == "incongruent"
+        )
+        provider_report["sidecar_invalid"] = bool(
+            provider_report.get("gpu0_secondary_schema_valid") is not True
+            or provider_report.get("provider_rejection_reason")
+            or provider_report.get("product_blocked_reason")
+        )
     elif lane == "npu_micro_task_auditor":
         provider_report["audit_for_gpu1_cycle"] = revision
         provider_report["peer_attempt_id"] = provider_report.get("provider_block_id")
         provider_report["npu_lane_contract"] = "microtask_tool_calling_openvino"
         provider_report["npu_decision_authority"] = "non_closer"
+        npu_audit = (
+            provider_report.get("npu_operational_audit")
+            if isinstance(provider_report.get("npu_operational_audit"), dict)
+            else {}
+        )
+        provider_report["sidecar_target_pointer"] = (
+            provider_report.get("refines_block_id")
+            or provider_report.get("resume_from_block_id")
+            or ""
+        )
+        provider_report["sidecar_incongruent"] = False
+        provider_report["sidecar_invalid"] = bool(
+            provider_report.get("provider_rejection_reason")
+            or provider_report.get("product_blocked_reason")
+            or provider_report.get("provider_work_verified") is False
+            or str(npu_audit.get("decision") or "").lower().startswith("reject")
+        )
+    if lane in {"gpu0_peer", "npu_micro_task_auditor"}:
+        provider_report["sidecar_recoverable_failure_reason"] = _sidecar_failure_reason(
+            lane, provider_report
+        )
     provider_report["report_passed"] = bool(provider_report.get("passed"))
     provider_report["diagnostic_only"] = not bool(
         provider_report.get("operational_provider_activity")
@@ -273,6 +331,13 @@ def _publish_provider_report(
             "context_budget": provider_report.get("context_budget"),
             "sidecar_lane": provider_report.get("sidecar_lane"),
             "micro_audit_only": provider_report.get("micro_audit_only"),
+            "sidecar_scope_mode": provider_report.get("sidecar_scope_mode"),
+            "sidecar_invalid": provider_report.get("sidecar_invalid"),
+            "sidecar_incongruent": provider_report.get("sidecar_incongruent"),
+            "sidecar_recoverable_failure_reason": provider_report.get(
+                "sidecar_recoverable_failure_reason"
+            ),
+            "sidecar_target_pointer": provider_report.get("sidecar_target_pointer"),
             "native_tool_calling_policy": provider_report.get("native_tool_calling_policy"),
             "delta_context_mode": provider_report.get("delta_context_mode"),
             "provider_process_id": provider_report.get("provider_process_id"),
@@ -413,7 +478,15 @@ def _provider_peer_block_payload(
         "checked_gpu1_revision": provider_report.get("checked_gpu1_revision"),
         "expected_gpu1_block_id": provider_report.get("expected_gpu1_block_id"),
         "expected_gpu1_revision": provider_report.get("expected_gpu1_revision"),
+        "expected_packet_fingerprint": provider_report.get("expected_packet_fingerprint"),
+        "reviewed_gpu1_block_id": provider_report.get("reviewed_gpu1_block_id"),
+        "reviewed_revision": provider_report.get("reviewed_revision"),
+        "review_target_pointer": provider_report.get("review_target_pointer"),
+        "reviewed_packet_fingerprint": provider_report.get("reviewed_packet_fingerprint"),
         "gpu0_checked_current_packet": provider_report.get("gpu0_checked_current_packet"),
+        "gpu0_review_invalid_requires_gpu1_retry": provider_report.get(
+            "gpu0_review_invalid_requires_gpu1_retry"
+        ),
         "gpu0_unanchored_reasons": provider_report.get("gpu0_unanchored_reasons") or [],
         "gpu0_decision_override_reason": provider_report.get("gpu0_decision_override_reason"),
         "gpu1_closure_decision_packet": provider_report.get("gpu1_closure_decision_packet"),
@@ -428,6 +501,13 @@ def _provider_peer_block_payload(
         "incongruence_reasons": provider_report.get("incongruence_reasons") or [],
         "npu_lane_contract": provider_report.get("npu_lane_contract"),
         "npu_decision_authority": provider_report.get("npu_decision_authority"),
+        "sidecar_scope_mode": provider_report.get("sidecar_scope_mode"),
+        "sidecar_invalid": provider_report.get("sidecar_invalid"),
+        "sidecar_incongruent": provider_report.get("sidecar_incongruent"),
+        "sidecar_recoverable_failure_reason": provider_report.get(
+            "sidecar_recoverable_failure_reason"
+        ),
+        "sidecar_target_pointer": provider_report.get("sidecar_target_pointer"),
     }
     if lane == "npu_micro_task_auditor":
         payload["npu_micro_provider_execution_performed"] = provider_report.get(
@@ -438,6 +518,25 @@ def _provider_peer_block_payload(
             "semantic_provider_execution_performed"
         )
     return payload
+
+
+def _sidecar_failure_reason(lane: str, provider_report: dict[str, Any]) -> str:
+    if lane == "gpu0_peer":
+        if provider_report.get("sidecar_incongruent"):
+            return "sidecar_incongruent:gpu0_peer"
+        if provider_report.get("sidecar_invalid"):
+            return str(
+                provider_report.get("provider_rejection_reason")
+                or provider_report.get("product_blocked_reason")
+                or "sidecar_invalid:gpu0_peer"
+            )
+    if lane == "npu_micro_task_auditor" and provider_report.get("sidecar_invalid"):
+        return str(
+            provider_report.get("provider_rejection_reason")
+            or provider_report.get("product_blocked_reason")
+            or "sidecar_invalid:npu_micro_task_auditor"
+        )
+    return ""
 
 
 def _publish_claim(
@@ -496,6 +595,13 @@ def _publish_claim(
             "gpu1_closure_decision_packet_fingerprint"
         ),
         "gpu0_prompt_scope": provider_report.get("gpu0_prompt_scope"),
+        "sidecar_scope_mode": provider_report.get("sidecar_scope_mode"),
+        "sidecar_invalid": provider_report.get("sidecar_invalid"),
+        "sidecar_incongruent": provider_report.get("sidecar_incongruent"),
+        "sidecar_recoverable_failure_reason": provider_report.get(
+            "sidecar_recoverable_failure_reason"
+        ),
+        "sidecar_target_pointer": provider_report.get("sidecar_target_pointer"),
         "leader_packet": provider_report.get("leader_packet"),
         "observed_request": gate.request_text(),
         "observed_response": provider_report.get("response_text") or gate.response_text(),

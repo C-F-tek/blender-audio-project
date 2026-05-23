@@ -361,8 +361,21 @@ class RuntimeGateProviderPromptMixin:
             )
             secondary = parse_gpu0_secondary_response(
                 raw_free_text,
-                fallback_block_id=str(provider_report.get("review_for_gpu1_cycle") or ""),
+                fallback_block_id=str(
+                    provider_report.get("review_target_pointer")
+                    or provider_report.get("reviewed_gpu1_block_id")
+                    or provider_report.get("checked_block_id")
+                    or provider_report.get("expected_gpu1_block_id")
+                    or gpu1_packet.get("gpu1_block_id")
+                    or ""
+                ),
                 fallback_revision=str(revision),
+                fallback_packet_fingerprint=str(
+                    provider_report.get("reviewed_packet_fingerprint")
+                    or provider_report.get("expected_packet_fingerprint")
+                    or gpu1_packet.get("packet_fingerprint")
+                    or ""
+                ),
             )
             if provider_report.get("gpu0_secondary_schema_valid") is True:
                 secondary.update(

@@ -16,6 +16,7 @@ from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
     gpu1_packets_equivalent,
 )
 from ia_carmine.runtime.heap_gate.runtime_common import Any, safe_dict, safe_int
+from ia_carmine._shared.provider_work_verification import provider_work_status
 
 
 def build_provider_lane_metrics(
@@ -43,6 +44,75 @@ def build_provider_lane_metrics(
     )
     gpu0_report = provider_reports_by_lane.get(GPU0_LANE, {})
     latest_gpu0_reviewed_packet = extract_gpu1_closure_decision_packet(gpu0_report)
+    latest_gpu1_packet_valid = gpu1_decision_packet_valid(latest_gpu1_packet)
+    latest_gpu1_block_id = str(latest_gpu1_packet.get("gpu1_block_id") or "")
+    latest_gpu1_revision = str(latest_gpu1_packet.get("gpu1_revision") or "")
+    latest_gpu1_fingerprint = str(latest_gpu1_packet.get("packet_fingerprint") or "")
+    latest_gpu0_reviewed_fingerprint = str(
+        gpu0_report.get("reviewed_packet_fingerprint")
+        or gpu0_review.get("reviewed_packet_fingerprint")
+        or gpu0_report.get("expected_packet_fingerprint")
+        or gpu0_review.get("expected_packet_fingerprint")
+        or latest_gpu0_reviewed_packet.get("packet_fingerprint")
+        or ""
+    )
+    latest_gpu0_checked_block_id = str(
+        gpu0_report.get("reviewed_gpu1_block_id")
+        or gpu0_review.get("reviewed_gpu1_block_id")
+        or gpu0_report.get("checked_block_id")
+        or gpu0_review.get("checked_block_id")
+        or gpu0_report.get("expected_gpu1_block_id")
+        or gpu0_review.get("expected_gpu1_block_id")
+        or gpu0_report.get("review_target_pointer")
+        or gpu0_review.get("review_target_pointer")
+        or ""
+    )
+    latest_gpu0_checked_revision = str(
+        gpu0_report.get("reviewed_revision")
+        or gpu0_review.get("reviewed_revision")
+        or gpu0_report.get("checked_gpu1_revision")
+        or gpu0_review.get("checked_gpu1_revision")
+        or gpu0_report.get("expected_gpu1_revision")
+        or gpu0_review.get("expected_gpu1_revision")
+        or ""
+    )
+    gpu0_secondary_schema_valid = gpu0_report.get("gpu0_secondary_schema_valid") is True or (
+        gpu0_review.get("gpu0_secondary_schema_valid") is True
+    )
+    latest_gpu0_checked_current_packet = bool(
+        gpu0_report.get("gpu0_checked_current_packet")
+        or gpu0_review.get("gpu0_checked_current_packet")
+    )
+    latest_gpu0_packet_stale = bool(
+        latest_gpu1_packet
+        and (
+            (
+                latest_gpu0_reviewed_fingerprint
+                and latest_gpu0_reviewed_fingerprint != latest_gpu1_fingerprint
+            )
+            or (
+                latest_gpu0_reviewed_packet
+                and not gpu1_packets_equivalent(latest_gpu0_reviewed_packet, latest_gpu1_packet)
+            )
+            or (
+                latest_gpu0_checked_block_id
+                and latest_gpu0_checked_block_id != latest_gpu1_block_id
+            )
+            or (
+                latest_gpu0_checked_revision
+                and latest_gpu0_checked_revision != latest_gpu1_revision
+            )
+        )
+    )
+    latest_gpu1_block_reviewed_by_gpu0 = bool(
+        latest_gpu1_packet_valid
+        and gpu0_secondary_schema_valid
+        and latest_gpu0_checked_current_packet
+        and latest_gpu0_checked_block_id == latest_gpu1_block_id
+        and latest_gpu0_checked_revision == latest_gpu1_revision
+        and latest_gpu0_reviewed_fingerprint == latest_gpu1_fingerprint
+        and not latest_gpu0_packet_stale
+    )
     gpu0_decision = normalize_gpu0_decision(
         gpu0_report.get("gpu0_effective_decision")
         or gpu0_report.get("gpu0_decision")
@@ -175,7 +245,12 @@ def build_provider_lane_metrics(
         "gpu0_context_budget": context_payload.get("gpu0_context_budget"),
         "npu_context_budget": context_payload.get("npu_context_budget"),
         "context_hierarchy_valid": context_payload.get("context_hierarchy_valid"),
+        "context_hierarchy_label": context_payload.get("context_hierarchy_label"),
+        "context_hierarchy_scope": context_payload.get("context_hierarchy_scope"),
         "context_hierarchy_rule": context_payload.get("context_hierarchy_rule"),
+        "operator_effective_provider_config": context_payload.get("operator_effective_config"),
+        "gpu1_lane_identity": context_payload.get("gpu1_lane_identity"),
+        "gpu1_replight_scope": context_payload.get("gpu1_replight_scope"),
         "gpu1_replight_valid": bool(getattr(owner, "gpu1_replight_valid", False)),
         "gpu1_boot_leader_ready": bool(
             getattr(owner, "gpu1_boot_leader_ready", False)
@@ -199,8 +274,17 @@ def build_provider_lane_metrics(
         "sidecars_start_policy": str(
             getattr(owner, "sidecars_start_policy", "") or ""
         ),
+        "sidecar_scope_mode": str(
+            getattr(owner, "provider_sidecar_scope_mode", "") or "packet_review_only"
+        ),
         "parallel_provider_overlap_seconds": getattr(
             owner, "parallel_provider_overlap_seconds", 0.0
+        ),
+        "gpu1_idle_after_primary_seconds": getattr(
+            owner, "gpu1_idle_after_primary_seconds", 0.0
+        ),
+        "sidecar_alone_after_gpu1_seconds": getattr(
+            owner, "sidecar_alone_after_gpu1_seconds", 0.0
         ),
         "provider_lane_workload_metrics": _lane_workload_metrics(latest_provider_reports),
         "device_identity_map": _device_identity_map(latest_provider_reports),
@@ -246,8 +330,8 @@ def build_provider_lane_metrics(
             latest_gpu1_packet
         ),
         "latest_gpu1_decision": str(latest_gpu1_packet.get("gpu1_decision") or ""),
-        "latest_gpu1_block_id": str(latest_gpu1_packet.get("gpu1_block_id") or ""),
-        "latest_gpu1_revision": str(latest_gpu1_packet.get("gpu1_revision") or ""),
+        "latest_gpu1_block_id": latest_gpu1_block_id,
+        "latest_gpu1_revision": latest_gpu1_revision,
         "latest_gpu1_refine_continuity": (
             latest_proposal.get("gpu1_refine_continuity")
             if isinstance(latest_proposal.get("gpu1_refine_continuity"), dict)
@@ -261,9 +345,35 @@ def build_provider_lane_metrics(
             if isinstance(latest_proposal.get("target_files"), list)
             else []
         ),
-        "gpu0_secondary_schema_valid": gpu0_report.get("gpu0_secondary_schema_valid") is True
-        or gpu0_review.get("gpu0_secondary_schema_valid") is True,
+        "gpu0_secondary_schema_valid": gpu0_secondary_schema_valid,
+        "latest_gpu1_block_requires_gpu0_review": bool(latest_gpu1_packet),
+        "latest_gpu1_block_reviewed_by_gpu0": latest_gpu1_block_reviewed_by_gpu0,
+        "gpu0_review_invalid_requires_gpu1_retry": bool(
+            latest_gpu1_packet and not latest_gpu1_block_reviewed_by_gpu0
+        ),
         "latest_gpu0_review_decision": gpu0_decision,
+        "sidecar_incongruent": bool(
+            gpu0_decision == "incongruent"
+            or gpu0_report.get("sidecar_incongruent")
+            or npu_report.get("sidecar_incongruent")
+        ),
+        "sidecar_invalid": bool(
+            gpu0_report.get("sidecar_invalid")
+            or npu_report.get("sidecar_invalid")
+            or gpu0_report.get("provider_rejection_reason")
+            or npu_report.get("provider_rejection_reason")
+        ),
+        "gpu1_congruence_check_performed": bool(
+            getattr(owner, "provider_recovery_attempt_count", 0)
+            or any(
+                str(report.get("lane") or "") == GPU1_LANE
+                and safe_int(report.get("revision")) > max(
+                    safe_int(gpu0_report.get("revision")),
+                    safe_int(npu_report.get("revision")),
+                )
+                for report in owner.provider_reports
+            )
+        ),
         "latest_gpu0_model_decision": normalize_gpu0_decision(
             gpu0_report.get("gpu0_model_decision")
             or gpu0_review.get("gpu0_model_decision")
@@ -272,30 +382,19 @@ def build_provider_lane_metrics(
         "latest_gpu0_role_decision": str(
             gpu0_report.get("role_decision") or gpu0_review.get("role_decision") or ""
         ),
-        "latest_gpu0_checked_current_packet": bool(
-            gpu0_report.get("gpu0_checked_current_packet")
-            or gpu0_review.get("gpu0_checked_current_packet")
-        ),
-        "latest_gpu0_packet_stale_after_gpu1_packet_rewrite": bool(
-            latest_gpu0_reviewed_packet
-            and latest_gpu1_packet
-            and not gpu1_packets_equivalent(latest_gpu0_reviewed_packet, latest_gpu1_packet)
-        ),
+        "latest_gpu0_checked_current_packet": latest_gpu0_checked_current_packet,
+        "latest_gpu0_packet_stale_after_gpu1_packet_rewrite": latest_gpu0_packet_stale,
         "latest_gpu0_reviewed_packet_fingerprint": str(
-            latest_gpu0_reviewed_packet.get("packet_fingerprint") or ""
+            latest_gpu0_reviewed_fingerprint
         ),
         "latest_gpu1_packet_fingerprint": str(
-            latest_gpu1_packet.get("packet_fingerprint") or ""
+            latest_gpu1_fingerprint
         ),
         "latest_gpu0_expected_gpu1_block_id": str(
-            gpu0_report.get("expected_gpu1_block_id")
-            or gpu0_review.get("expected_gpu1_block_id")
-            or ""
+            latest_gpu0_checked_block_id
         ),
         "latest_gpu0_expected_gpu1_revision": str(
-            gpu0_report.get("expected_gpu1_revision")
-            or gpu0_review.get("expected_gpu1_revision")
-            or ""
+            latest_gpu0_checked_revision
         ),
         "latest_gpu0_unanchored_reasons": (
             gpu0_report.get("gpu0_unanchored_reasons")
@@ -383,17 +482,7 @@ def _lane_has_model_execution(reports: list[dict[str, Any]], lane: str) -> bool:
     for report in reversed(reports):
         if str(report.get("lane") or "") != lane:
             continue
-        if report.get("semantic_provider_execution_performed"):
-            return True
-        if report.get("provider_execution_performed"):
-            return True
-        if report.get("provider_work_verified"):
-            return True
-        if report.get("operational_provider_activity"):
-            return True
-        if str(report.get("provider_backend") or "").lower() == "ollama" and str(
-            report.get("response_text") or ""
-        ).strip():
+        if provider_work_status(lane=lane, report=report).get("provider_work_verified"):
             return True
     return False
 

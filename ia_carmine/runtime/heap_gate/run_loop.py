@@ -10,7 +10,11 @@ from ia_carmine.runtime.heap_gate.generic_write_followup import (
     npu_peer_followup_pending_count,
 )
 from ia_carmine.runtime.heap_gate.run_loop_metrics import build_provider_lane_metrics
-from ia_carmine.runtime.heap_gate.runtime_common import Any, PROVIDER_START_REQUIREMENTS, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
+from ia_carmine.runtime.heap_gate.provider_recovery import (
+    maybe_run_provider_recovery,
+    provider_recovery_status,
+)
+from ia_carmine.runtime.heap_gate.runtime_common import Any, PROVIDER_REQUIREMENTS, PROVIDER_START_REQUIREMENTS, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
 class RuntimeGateRunLoopMixin:
     def run(self) -> dict[str, Any]:
         self.bootstrap()
@@ -47,7 +51,20 @@ class RuntimeGateRunLoopMixin:
                         events=events,
                         source="gpu1_initial",
                     )
+                events = maybe_run_provider_recovery(self, round_id, events)
                 events = maybe_run_generic_write_followup(self, round_id, events)
+                if self.provider_universe_blocked_reason:
+                    break
+            if self.provider_reports:
+                events = self.drain_provider_consumable_evidence(round_id, events)
+                if self.heap.pending_broker_requests():
+                    if self.runtime_soft_close_reached():
+                        self.errors.append(
+                            "pending_provider_consumable_broker_request_unresolved"
+                        )
+                        break
+                    continue
+                events = maybe_run_provider_recovery(self, round_id, events)
                 if self.provider_universe_blocked_reason:
                     break
             if (
@@ -60,9 +77,15 @@ class RuntimeGateRunLoopMixin:
                     if self.heap.pending_broker_requests():
                         self.run_bridge()
                     events = self.read_events()
+                events = maybe_run_provider_recovery(self, round_id, events)
                 events = maybe_run_generic_write_followup(self, round_id, events)
                 if self.provider_universe_blocked_reason:
                     break
+            if self.heap.pending_broker_requests():
+                if self.runtime_soft_close_reached():
+                    self.errors.append("pending_broker_request_unresolved_before_arbiter")
+                    break
+                continue
             self.critic_step(round_id, events)
             self.arbiter_step(round_id, events)
             if self.state["product"].get("status") in {"ready", "blocked_with_reason"} and self.minimum_runtime_depth_satisfied(round_id):
@@ -107,6 +130,9 @@ class RuntimeGateRunLoopMixin:
             requirement for requirement in completed_all if requirement not in required_set
         ]
         missing = self.missing_requirements(final_events)
+        unattempted = self.unattempted_requirements(final_events)
+        failed_requirements = self.failed_requirements(final_events)
+        unsatisfied_requirements = self.unsatisfied_requirements(final_events)
         provider_launch_started = self.provider_launch_started(final_events)
         pre_provider_phase = bool(
             self.args.allow_provider_generation
@@ -135,9 +161,27 @@ class RuntimeGateRunLoopMixin:
             str(item.get("lane") or "unknown"): item for item in self.provider_reports
         }
         latest_provider_reports = list(provider_reports_by_lane.values())
+        requirement_lanes = {
+            "gpu1_provider_planner": "gpu1_planner",
+            "gpu0_provider_peer": "gpu0_peer",
+            "npu_micro_task_auditor": "npu_micro_task_auditor",
+        }
+        provider_lane_evidence_counts = {
+            requirement: sum(
+                1
+                for report in self.provider_reports
+                if str(report.get("requirement") or "") == requirement
+                or str(report.get("lane") or report.get("provider_id") or "")
+                == requirement_lanes.get(requirement)
+            )
+            for requirement in PROVIDER_REQUIREMENTS
+        }
+        provider_lane_evidence_count = sum(provider_lane_evidence_counts.values())
         provider_lane_metrics = build_provider_lane_metrics(
             self, provider_reports_by_lane, latest_provider_reports
         )
+        provider_recovery_metrics = provider_recovery_status(self, final_events)
+        provider_consumable_metrics = self.provider_consumable_evidence_status(final_events)
         soft_lock_state = runtime_soft_lock_state(self, final_events)
         generic_write_product = generic_write_document_product(self, final_events)
         metrics = {
@@ -159,6 +203,9 @@ class RuntimeGateRunLoopMixin:
             "completed_requirements": completed,
             "optional_completed_requirements": optional_completed,
             "missing_requirements": missing,
+            "unattempted_requirements": unattempted,
+            "failed_requirements": failed_requirements,
+            "unsatisfied_requirements": unsatisfied_requirements,
             "request_input": self.request_text(),
             "response_text": final_response_text,
             "provider_raw_response_text": self.response_text(),
@@ -241,9 +288,17 @@ class RuntimeGateRunLoopMixin:
             "refactor_duplication_audit_count": 1 if "refactor_duplication_audit_evidence" in completed_set else 0,
             "virtual_dev_environment_count": (1 if "virtual_dev_environment" in completed else 0),
             "code_execution_matrix_count": (1 if "code_execution_matrix" in completed else 0),
-            "gpu1_provider_evidence_count": (1 if "gpu1_provider_planner" in completed else 0),
-            "gpu0_provider_evidence_count": (1 if "gpu0_provider_peer" in completed else 0),
-            "npu_micro_task_evidence_count": (1 if "npu_micro_task_auditor" in completed else 0),
+            "gpu1_provider_evidence_count": provider_lane_evidence_counts.get(
+                "gpu1_provider_planner", 0
+            ),
+            "gpu0_provider_evidence_count": provider_lane_evidence_counts.get(
+                "gpu0_provider_peer", 0
+            ),
+            "npu_micro_task_evidence_count": provider_lane_evidence_counts.get(
+                "npu_micro_task_auditor", 0
+            ),
+            "provider_lane_evidence_count": provider_lane_evidence_count,
+            "provider_lane_evidence_counts_by_requirement": provider_lane_evidence_counts,
             "provider_result_count": len(self.provider_reports),
             "provider_launch_started": provider_launch_started,
             "pre_provider_phase": pre_provider_phase,
@@ -254,6 +309,15 @@ class RuntimeGateRunLoopMixin:
             "provider_revision_counter_semantics": (
                 "positive_evidence_counter_not_loop_cutoff"
             ),
+            "provider_consumable_evidence": provider_consumable_metrics,
+            "provider_consumable_evidence_pending": provider_consumable_metrics.get("pending"),
+            "provider_consumable_evidence_requested": provider_consumable_metrics.get(
+                "provider_consumable_evidence_requested"
+            ),
+            "provider_consumable_evidence_resolved": provider_consumable_metrics.get(
+                "provider_consumable_evidence_resolved"
+            ),
+            **provider_recovery_metrics,
             **soft_lock_state,
             "provider_model_required": bool(self.args.allow_provider_generation),
             "provider_model_explicit": bool(str(getattr(self.args, "provider_model", "")).strip()),
@@ -262,7 +326,7 @@ class RuntimeGateRunLoopMixin:
                 getattr(self.args, "ollama_gpu_layers", "") or "all"
             ),
             **provider_lane_metrics,
-            "budget_exhausted": bool(missing and self.runtime_soft_close_reached()),
+            "budget_exhausted": bool(unsatisfied_requirements and self.runtime_soft_close_reached()),
             "invocation_contract_ready": bool(self.invocation_contract.get("passed")),
             "invocation_gate_decision": safe_dict(
                 self.invocation_contract.get("real_run_gate")
@@ -299,7 +363,7 @@ class RuntimeGateRunLoopMixin:
         self.errors.extend(
             evaluate_terminal_invariants(
                 metrics=metrics,
-                missing_requirements=missing,
+                missing_requirements=unsatisfied_requirements,
                 lane_gate_passed=bool(lane_gate["passed"]),
                 degraded_lanes=list(lane_gate["unviable_lanes"]),
                 final_bridge_reports=final_bridge_reports,
@@ -391,6 +455,9 @@ class RuntimeGateRunLoopMixin:
                 "pointer_closure_table": metrics.get("pointer_closure_table"),
                 "completed_requirements": completed,
                 "missing_requirements": missing,
+                "unattempted_requirements": unattempted,
+                "failed_requirements": failed_requirements,
+                "unsatisfied_requirements": unsatisfied_requirements,
             },
             "provider_execution_performed": self.provider_execution_performed,
             "patch_application_performed": False,
@@ -412,3 +479,37 @@ class RuntimeGateRunLoopMixin:
             [path for path in self.proposal_iteration_artifacts() if str(path).endswith(".json")]
         )
         return round_id >= min_rounds and proposal_json_count >= min_proposals
+
+    def drain_provider_consumable_evidence(
+        self, round_id: int, events: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Resolve broker evidence that GPU1 can consume before a revision."""
+        for _ in range(4):
+            status = self.provider_consumable_evidence_status(events)
+            if not status.get("pending"):
+                break
+            self.run_bridge()
+            events = self.read_events()
+            self.publish_shared_evidence_facts(round_id, events)
+            events = self.read_events()
+        feedback = self.provider_consumable_evidence_feedback(events)
+        if feedback and feedback not in str(self.provider_revision_feedback or ""):
+            self.provider_revision_feedback = "\n\n".join(
+                part
+                for part in (str(self.provider_revision_feedback or "").strip(), feedback)
+                if part
+            )
+            self.publish(
+                "deterministic",
+                "validation_signal",
+                {
+                    "id": f"{self.stamp}:provider_consumable_evidence_ready:{round_id}",
+                    "kind": "provider_consumable_evidence_ready",
+                    **self.provider_consumable_evidence_status(events),
+                    "feedback": feedback,
+                },
+                target="gpu1",
+                correlation_id=f"{self.stamp}:provider-consumable-ready:{round_id}",
+                round_id=round_id,
+            )
+        return events

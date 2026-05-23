@@ -100,8 +100,8 @@ def main() -> int:
             default_role="npu_auditor",
         )
     )
-    report["provider_execution_performed"] = bool(report["provider_work_verified"])
-    report["npu_provider_execution_performed"] = bool(report["provider_work_verified"])
+    report["provider_execution_performed"] = bool(report.get("workload_passed"))
+    report["npu_provider_execution_performed"] = bool(report.get("workload_passed"))
     if not report["provider_work_verified"]:
         report.setdefault("errors", []).append(str(report["provider_rejection_reason"]))
         report["passed"] = False
@@ -261,6 +261,10 @@ def _report(
         "passed": npu_real_provider_performed,
         "provider_execution_performed": npu_real_provider_performed,
         "mode": "peer_micro_audit",
+        "sidecar_scope_mode": "packet_review_only",
+        "sidecar_scope_contract": (
+            "audit_current_gpu1_packet_only_no_broad_exploration_no_final_synthesis"
+        ),
         "npu_lane_contract": "microtask_tool_calling_openvino",
         "npu_decision_authority": "non_closer",
         "diagnostic_only": not npu_real_provider_performed,
@@ -362,7 +366,7 @@ def _report(
         "npu_device_execution_performed": npu_device_verified,
         "npu_provider_execution_performed": npu_real_provider_performed,
         "npu_activity_classification": role_response["role_decision"],
-        "npu_activity_limit": "NPU lane is a real bounded micro-task provider: it runs micro audit, device workload and micro tool-loop when selected. It remains support/micro and does not own the final product.",
+        "npu_activity_limit": "NPU lane is a real bounded micro-task provider: it audits the current GPU1 packet only, runs device workload/tool-loop evidence when selected, and never owns final synthesis or product closure.",
         "recommendations": [{"id": "npu_companion_policy", "summary": response_text, "classification": "SAFE_MECHANICAL"}],
         "guardrails": {
             "legacy_npu_auditor_used": False,

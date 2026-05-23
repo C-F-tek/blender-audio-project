@@ -1,6 +1,11 @@
 """Provider-universe abort helpers for heap runtime gate."""
 from __future__ import annotations
+from ia_carmine.runtime.heap_gate.arbiter_product import publish_candidate_operation
 from ia_carmine.runtime.heap_gate.runtime_common import Any, now_iso, repo_rel, subprocess
+
+
+PRIMARY_LANE = "gpu1_planner"
+RECOVERABLE_SIDECAR_LANES = {"gpu0_peer", "npu_micro_task_auditor"}
 
 
 def provider_universe_abort_reason(prepared: list[dict[str, Any]]) -> str:
@@ -10,6 +15,8 @@ def provider_universe_abort_reason(prepared: list[dict[str, Any]]) -> str:
             continue
         status = str(report.get("status") or "")
         if status in {"failed", "non_operational"}:
+            if recoverable_sidecar_failure_reason(item, report):
+                continue
             exact = str(
                 report.get("product_blocked_reason")
                 or report.get("provider_activity_classification")
@@ -21,9 +28,78 @@ def provider_universe_abort_reason(prepared: list[dict[str, Any]]) -> str:
     return ""
 
 
+def recoverable_sidecar_failure_reason(
+    item: dict[str, Any] | None,
+    report: dict[str, Any] | None = None,
+) -> str:
+    """Return a recoverable sidecar reason instead of a hard universe abort.
+
+    GPU0/NPU are evidence sidecars. Once a sidecar produced observable work for a
+    GPU1 packet, incoherent or invalid output must be consumed by a later GPU1
+    congruence/recovery revision, not converted into a terminal provider abort.
+    """
+    item = item if isinstance(item, dict) else {}
+    report = report if isinstance(report, dict) else item.get("provider_report")
+    report = report if isinstance(report, dict) else {}
+    lane = str(report.get("lane") or item.get("lane") or report.get("provider_id") or "")
+    if lane not in RECOVERABLE_SIDECAR_LANES:
+        return ""
+    if not _sidecar_observed_work(report):
+        return ""
+    if lane == "gpu0_peer":
+        decision = str(
+            report.get("gpu0_effective_decision")
+            or report.get("gpu0_decision")
+            or ""
+        ).strip().lower()
+        if decision == "incongruent":
+            return "sidecar_incongruent:gpu0_peer"
+        if report.get("gpu0_secondary_schema_valid") is not True:
+            return "sidecar_invalid:gpu0_peer"
+        if decision in {"veto", "refine_required"}:
+            return f"sidecar_incongruent:gpu0_peer:{decision}"
+    if lane == "npu_micro_task_auditor":
+        audit = report.get("npu_operational_audit")
+        audit = audit if isinstance(audit, dict) else {}
+        decision = str(audit.get("decision") or report.get("npu_micro_decision") or "").lower()
+        if (
+            report.get("provider_rejection_reason")
+            or report.get("provider_work_verified") is False
+            or report.get("semantic_contract_passed") is False
+            or decision.startswith("reject")
+            or "reject_until" in str(report.get("response_text") or "").lower()
+        ):
+            return "sidecar_invalid:npu_micro_task_auditor"
+    exact = str(
+        report.get("provider_rejection_reason")
+        or report.get("product_blocked_reason")
+        or ""
+    ).strip()
+    status = str(report.get("status") or "").strip()
+    if exact:
+        return f"sidecar_invalid:{lane}:{exact}"
+    if status in {"failed", "non_operational"}:
+        return f"sidecar_invalid:{lane}:{status}"
+    return ""
+
+
+def _sidecar_observed_work(report: dict[str, Any]) -> bool:
+    return bool(
+        report.get("provider_execution_performed")
+        or report.get("operational_provider_activity")
+        or report.get("provider_loaded")
+        or report.get("npu_peer_evidence_verified")
+        or report.get("npu_peer_activity_performed")
+        or report.get("npu_device_workload_performed")
+        or report.get("gpu0_secondary_schema_valid") is not None
+        or str(report.get("response_text") or "").strip()
+        or str(report.get("gpu0_raw_response_text") or "").strip()
+    )
+
+
 def primary_provider_report(prepared: list[dict[str, Any]]) -> dict[str, Any]:
     for item in prepared:
-        if item.get("lane") == "gpu1_planner" and isinstance(item.get("provider_report"), dict):
+        if item.get("lane") == PRIMARY_LANE and isinstance(item.get("provider_report"), dict):
             return item["provider_report"]
     return {}
 
@@ -115,6 +191,10 @@ def block_provider_universe_run(gate: Any, reason: str, round_id: int, revision:
         correlation_id=f"{gate.stamp}:provider-universe-product-blocked",
         round_id=round_id,
     )
+    gate.state.setdefault("candidate_operations", [])
+    if not hasattr(gate, "candidate_operation_count"):
+        gate.candidate_operation_count = 0
+    publish_candidate_operation(gate, ready=False, missing=[reason], round_id=round_id)
 
 
 def _failed_provider_from_reason(reason: str) -> str:

@@ -8,7 +8,7 @@ from typing import Any
 
 from .chunking import ChunkPolicy
 from .common import DEFAULT_MAX_FILE_SIZE, read_text, sha256_text
-from .repo_files import list_repo_text_files
+from .repo_files import list_repo_text_files, list_repo_text_files_from_scan
 from .schema import integrity_check
 from .store import connect, missing_embedding_chunks, status
 
@@ -27,6 +27,33 @@ def candidate_content_hashes(repo_root: Path, *, max_file_size: int) -> tuple[di
     return hashes, warnings
 
 
+def candidate_file_signatures(
+    repo_root: Path, *, max_file_size: int, scan_index: dict[str, Any] | None = None
+) -> tuple[dict[str, dict[str, Any]], list[str]]:
+    if scan_index:
+        files, _skipped, warnings = list_repo_text_files_from_scan(
+            repo_root, scan_index, max_file_size=max(1, int(max_file_size))
+        )
+    else:
+        files, _skipped, warnings = list_repo_text_files(
+            repo_root, max_file_size=max(1, int(max_file_size))
+        )
+    signatures: dict[str, dict[str, Any]] = {}
+    for item in files:
+        try:
+            mtime_ns = int(item.path.stat().st_mtime_ns)
+        except OSError as exc:
+            warnings.append(f"{item.rel_path}: stat_failed:{type(exc).__name__}")
+            continue
+        signatures[item.rel_path] = {
+            "file_size": int(item.size_bytes),
+            "mtime_ns": mtime_ns,
+            "suffix": item.suffix,
+            "path": item.path,
+        }
+    return signatures, warnings
+
+
 def inspect_index(
     *,
     repo_root: Path,
@@ -35,14 +62,21 @@ def inspect_index(
     embedding_endpoint: str,
     max_file_size: int = DEFAULT_MAX_FILE_SIZE,
     chunk_policy: ChunkPolicy | None = None,
+    scan_index: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     policy = (chunk_policy or ChunkPolicy()).normalized()
-    candidates, warnings = candidate_content_hashes(repo_root, max_file_size=max_file_size)
+    candidates, warnings = candidate_file_signatures(
+        repo_root,
+        max_file_size=max_file_size,
+        scan_index=scan_index,
+    )
+    candidate_hash_read_count = 0
     report: dict[str, Any] = {
         "schema_version": 1,
         "kind": "rag_index_status",
         "db_path": str(db_path),
         "candidate_file_count": len(candidates),
+        "startup_repo_scan_index_used": bool(scan_index),
         "candidate_policy": {
             "max_file_size": int(max_file_size),
             "chunk_policy_hash": policy.policy_hash(),
@@ -56,6 +90,8 @@ def inspect_index(
         "changed_document_paths": [],
         "removed_document_paths": [],
         "missing_embedding_count": 0,
+        "candidate_hash_read_count": 0,
+        "stat_unchanged_document_count": 0,
         "rag_index_ready": False,
         "action": "needs_ingest",
     }
@@ -77,9 +113,9 @@ def inspect_index(
         return report
     with closing(connect(db_path)) as conn:
         rows = conn.execute(
-            "SELECT source_path, content_hash FROM rag_documents WHERE status='active'"
+            "SELECT source_path, file_size, mtime_ns, content_hash FROM rag_documents WHERE status='active'"
         ).fetchall()
-        active_docs = {str(row["source_path"]): str(row["content_hash"]) for row in rows}
+        active_docs = {str(row["source_path"]): dict(row) for row in rows}
         db_status = status(conn)
         missing_embeddings = missing_embedding_chunks(
             conn, model=embedding_model, endpoint=embedding_endpoint
@@ -87,9 +123,26 @@ def inspect_index(
     candidate_paths = set(candidates)
     active_paths = set(active_docs)
     missing_paths = sorted(candidate_paths - active_paths)
-    changed_paths = sorted(
-        path for path in candidate_paths & active_paths if active_docs.get(path) != candidates[path]
-    )
+    changed_paths: list[str] = []
+    hash_changed_count = 0
+    stat_unchanged = 0
+    for path in sorted(candidate_paths & active_paths):
+        active_doc = active_docs.get(path) or {}
+        candidate = candidates.get(path) or {}
+        if int(active_doc.get("file_size") or 0) == int(candidate.get("file_size") or 0) and int(
+            active_doc.get("mtime_ns") or 0
+        ) == int(candidate.get("mtime_ns") or 0):
+            stat_unchanged += 1
+            continue
+        text, error = read_text(Path(candidate.get("path")))
+        candidate_hash_read_count += 1
+        if error:
+            warnings.append(f"{path}: {error}")
+            changed_paths.append(path)
+            continue
+        if sha256_text(text) != str(active_doc.get("content_hash") or ""):
+            hash_changed_count += 1
+        changed_paths.append(path)
     removed_paths = sorted(active_paths - candidate_paths)
     report.update(
         {
@@ -101,6 +154,9 @@ def inspect_index(
             "changed_document_paths": changed_paths[:80],
             "removed_document_paths": removed_paths[:80],
             "missing_embedding_count": len(missing_embeddings),
+            "candidate_hash_read_count": candidate_hash_read_count,
+            "stat_unchanged_document_count": stat_unchanged,
+            "hash_changed_document_count": hash_changed_count,
         }
     )
     if not db_status.get("document_count"):

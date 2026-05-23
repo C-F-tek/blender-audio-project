@@ -36,6 +36,12 @@ def lane_details(run_status: dict[str, Any]) -> str:
         model_text = f",model={_short_label(model, 28)}" if model else ""
         device = str(item.get("provider_compute_device") or "").strip()
         device_text = f",dev={_short_label(device, 24)}" if device else ""
+        identity_label = str(item.get("gpu1_lane_identity") or "").strip()
+        identity_label_text = (
+            f",identity={_short_label(identity_label, 24)}"
+            if identity_label and lane == "gpu1_planner"
+            else ""
+        )
         verified = item.get("provider_device_verified")
         verified_text = f",devok={_bool_marker(verified)}" if verified not in ("", None) else ""
         identity = item.get("device_identity_verified")
@@ -73,7 +79,15 @@ def lane_details(run_status: dict[str, Any]) -> str:
         diagnostic = item.get("diagnostic_only")
         diagnostic_text = f",diag={_bool_marker(diagnostic)}" if diagnostic not in ("", None) else ""
         replight = item.get("replight_passed")
-        replight_text = f",replight={_bool_marker(replight)}" if replight not in ("", None) else ""
+        replight_text = (
+            f",replight_health={_bool_marker(replight)}"
+            if replight not in ("", None)
+            else ""
+        )
+        sidecar_scope = str(item.get("sidecar_scope_mode") or "").strip()
+        sidecar_scope_text = (
+            f",scope={_short_label(sidecar_scope, 20)}" if sidecar_scope else ""
+        )
         loaded = item.get("provider_loaded")
         loaded_text = f",loaded={_bool_marker(loaded)}" if loaded not in ("", None) else ""
         completion_tokens = item.get("completion_token_count")
@@ -90,10 +104,10 @@ def lane_details(run_status: dict[str, Any]) -> str:
         output_text = f",out={output}" if output else ""
         parts.append(
             f"{lane}[{status}{role_text}{tier_text}{authority_text}{context_text}{owner_text}"
-            f"{model_text}{device_text}{verified_text}{elapsed_text}{budget_text}{soft_text}"
+            f"{model_text}{device_text}{identity_label_text}{verified_text}{elapsed_text}{budget_text}{soft_text}"
             f"{watchdog_text}{pid_text}{identity_text}{backend_text}{windows_text}{semantic_text}"
             f"{operational_text}{primary_evidence_text}{leader_source_text}"
-            f"{diagnostic_text}{replight_text}{loaded_text}{token_text}"
+            f"{diagnostic_text}{replight_text}{sidecar_scope_text}{loaded_text}{token_text}"
             f"{native_text}{partial_text}{response_text}"
             f"{class_text}{output_text}]"
         )
@@ -123,9 +137,11 @@ def provider_status(path: Path) -> list[dict[str, Any]]:
         lane = str(data.get("provider_id") or data.get("lane") or lane_from_name(item.name))
         if support_provider_payload(lane, data):
             continue
+        is_replight = provider_status_is_replight(item.name, data)
         result.append(
             {
                 "lane": lane,
+                "is_replight": is_replight,
                 "status": data.get("status") or ("written" if data else "pending"),
                 "passed": data.get("passed"),
                 "selected_model": data.get("provider_model") or data.get("selected_model") or data.get("model"),
@@ -136,6 +152,12 @@ def provider_status(path: Path) -> list[dict[str, Any]]:
                 "context_budget": data.get("context_budget"),
                 "provider_backend": data.get("provider_backend"),
                 "provider_compute_device": data.get("provider_compute_device"),
+                "gpu1_lane_identity": data.get("gpu1_lane_identity")
+                or (
+                    "GPU1/NVIDIA primary Ollama lane"
+                    if lane == "gpu1_planner"
+                    else ""
+                ),
                 "provider_device_verified": data.get("provider_device_verified"),
                 "logical_lane": data.get("logical_lane"),
                 "provider_backend_device_id": data.get("provider_backend_device_id"),
@@ -154,6 +176,7 @@ def provider_status(path: Path) -> list[dict[str, Any]]:
                 "leader_source": data.get("leader_source"),
                 "diagnostic_only": data.get("diagnostic_only"),
                 "replight_passed": data.get("replight_passed"),
+                "sidecar_scope_mode": data.get("sidecar_scope_mode"),
                 "provider_loaded": data.get("provider_loaded"),
                 "generated_phrase": data.get("generated_phrase"),
                 "completion_token_count": data.get("completion_token_count"),
@@ -161,6 +184,8 @@ def provider_status(path: Path) -> list[dict[str, Any]]:
                 "native_tool_call_count": data.get("native_tool_call_count"),
                 "partial_response_chars": data.get("partial_response_chars"),
                 "response_chars": response_chars(data),
+                "replight_output": str(item) if is_replight else data.get("replight_output"),
+                "replight_response_chars": response_chars(data) if is_replight else data.get("replight_response_chars"),
                 "budget_counter_seconds": data.get("budget_counter_seconds"),
                 "soft_close_after_seconds": data.get("soft_close_after_seconds"),
                 "watchdog_timeout_seconds": data.get("watchdog_timeout_seconds"),
@@ -179,10 +204,45 @@ def merge_provider_statuses(
         if not lane or support_provider_payload(lane, item):
             continue
         current = merged.get(lane, {})
+        if item.get("is_replight") and current and not current.get("is_replight"):
+            _merge_replight_fields(current, item)
+            current["source"] = "heap_event+artifact"
+            merged[lane] = current
+            continue
+        if current.get("is_replight") and not item.get("is_replight"):
+            replight_fields = _replight_fields(current)
+            current = {key: value for key, value in item.items() if value not in ("", None)}
+            current.update(replight_fields)
+            current["is_replight"] = False
+            current["source"] = "heap_event+artifact"
+            merged[lane] = current
+            continue
         current.update({key: value for key, value in item.items() if value not in ("", None)})
         current["source"] = "heap_event+artifact" if lane in merged else item.get("source", "artifact")
         merged[lane] = current
     return [merged[key] for key in sorted(merged)]
+
+
+def provider_status_is_replight(name: str, data: dict[str, Any]) -> bool:
+    return "replight" in name or data.get("replight_mode") is True
+
+
+def _replight_fields(item: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in {
+            "replight_passed": item.get("replight_passed"),
+            "replight_output": item.get("replight_output") or item.get("output"),
+            "replight_response_chars": item.get("replight_response_chars")
+            or item.get("response_chars"),
+            "replight_provider_loaded": item.get("provider_loaded"),
+        }.items()
+        if value not in ("", None)
+    }
+
+
+def _merge_replight_fields(current: dict[str, Any], item: dict[str, Any]) -> None:
+    current.update(_replight_fields(item))
 
 
 def lane_from_name(name: str) -> str:

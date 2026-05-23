@@ -15,11 +15,8 @@ PRIMARY_NATIVE_TOOL_CALL_LANES = {"gpu1_planner"}
 PEER_NATIVE_TOOL_CALL_LANES = {"gpu0_peer"}
 OPERATIVE_NATIVE_TOOL_CALL_LANES = PRIMARY_NATIVE_TOOL_CALL_LANES | PEER_NATIVE_TOOL_CALL_LANES
 DIAGNOSTIC_NATIVE_TOOL_CALL_LANES = {"npu_micro_task_auditor"}
-NO_TOOL_GENERIC_WRITE_CAPTURE_LANES = (
-    PRIMARY_NATIVE_TOOL_CALL_LANES
-    | PEER_NATIVE_TOOL_CALL_LANES
-    | DIAGNOSTIC_NATIVE_TOOL_CALL_LANES
-)
+SIDECAR_NATIVE_TOOL_CALL_LANES = PEER_NATIVE_TOOL_CALL_LANES | DIAGNOSTIC_NATIVE_TOOL_CALL_LANES
+NO_TOOL_GENERIC_WRITE_CAPTURE_LANES = PRIMARY_NATIVE_TOOL_CALL_LANES
 EVIDENCE_ENRICHED_TOOLS = {
     "generic_write",
     "run_heap_code_execution_matrix",
@@ -94,6 +91,11 @@ def _publish_report_native_tool_calls(
         if unique_id in owner.provider_native_tool_call_ids:
             continue
         owner.provider_native_tool_call_ids.add(unique_id)
+        if tool_name == "generic_write" and lane in SIDECAR_NATIVE_TOOL_CALL_LANES:
+            _publish_sidecar_generic_write_non_decision(
+                owner, source, lane, output, call, unique_id, round_id
+            )
+            continue
         if lane not in OPERATIVE_NATIVE_TOOL_CALL_LANES:
             _publish_peer_native_call_diagnostic(
                 owner, source, lane, output, call, unique_id, round_id
@@ -109,6 +111,8 @@ def _publish_report_native_tool_calls(
         published += 1
     if not calls and _report_has_useful_no_tool_text(report):
         published += _publish_no_tool_generic_write_capture(owner, report, output, round_id, events)
+    elif not calls and lane in SIDECAR_NATIVE_TOOL_CALL_LANES and str(report.get("response_text") or "").strip():
+        _publish_sidecar_free_text_raw_evidence(owner, report, output, round_id)
     return published
 
 
@@ -240,6 +244,65 @@ def _publish_peer_native_call_diagnostic(
         },
         target="deterministic",
         correlation_id=unique_id,
+        round_id=round_id,
+    )
+
+
+def _publish_sidecar_generic_write_non_decision(
+    owner: Any,
+    source: str,
+    lane: str,
+    output: str,
+    call: dict[str, Any],
+    unique_id: str,
+    round_id: int,
+) -> None:
+    owner.publish(
+        source,
+        "validation_signal",
+        {
+            "kind": "sidecar_generic_write_non_decision",
+            "lane": lane,
+            "tool_call": call,
+            "provider_report": output,
+            "sidecar_scope_mode": "packet_review_only",
+            "raw_evidence_non_decision": True,
+            "gpu1_followup_required": True,
+            "policy": (
+                "GPU0/NPU sidecars cannot promote free-form generic_write as an "
+                "operative product channel. They must emit packet-bound review, "
+                "veto or evidence_request data for GPU1 to consume."
+            ),
+        },
+        target="deterministic",
+        correlation_id=unique_id,
+        round_id=round_id,
+    )
+
+
+def _publish_sidecar_free_text_raw_evidence(
+    owner: Any,
+    report: dict[str, Any],
+    output: str,
+    round_id: int,
+) -> None:
+    lane = str(report.get("lane") or "provider")
+    owner.publish(
+        provider_heap_lane(lane),
+        "validation_signal",
+        {
+            "kind": "sidecar_free_text_raw_evidence_non_decision",
+            "lane": lane,
+            "provider_report": output,
+            "provider_block_id": report.get("provider_block_id"),
+            "proposal_block_id": report.get("proposal_block_id"),
+            "revision": report.get("revision"),
+            "sidecar_scope_mode": "packet_review_only",
+            "raw_evidence_non_decision": True,
+            "gpu1_followup_required": True,
+        },
+        target="deterministic",
+        correlation_id=f"{output}:{lane}:free-text-non-decision",
         round_id=round_id,
     )
 

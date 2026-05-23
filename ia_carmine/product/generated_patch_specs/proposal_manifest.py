@@ -27,6 +27,7 @@ def render_manifest_markdown(manifest: dict[str, Any]) -> str:
     lines.append(f"- Concrete spec count: `{manifest['concrete_spec_count']}`")
     lines.append(f"- Skipped target count: `{manifest['skipped_target_count']}`")
     lines.append(f"- Provider execution performed: `{manifest['provider_execution_performed']}`")
+    lines.append(f"- Provider execution claim seen: `{manifest['provider_execution_claim_seen']}`")
     lines.append("")
     lines.append("## Specs")
     lines.append("")
@@ -73,24 +74,36 @@ def build_patch_specs(
     if proposal_report.get("apply_mode") != EXPECTED_APPLY_MODE:
         errors.append("proposal report apply_mode must be manual_review_only")
 
-    proposal_report_provider_execution_seen = bool(
+    proposal_report_provider_execution_claim_seen = bool(
         proposal_report.get("provider_execution_performed")
+        or proposal_report.get("provider_execution_attempted")
+        or proposal_report.get("provider_io_observed")
     )
+    proposal_report_provider_execution_seen = bool(proposal_report.get("provider_work_verified"))
 
     proposals = proposal_report.get("proposals")
     if not isinstance(proposals, list):
         errors.append("proposal report proposals must be a list")
         proposals = []
 
+    provider_execution_claim_seen = proposal_report_provider_execution_claim_seen or any(
+        bool(
+            item.get("provider_execution_performed")
+            or item.get("provider_execution_attempted")
+            or item.get("provider_io_observed")
+        )
+        for item in proposals
+        if isinstance(item, dict)
+    )
     provider_execution_seen = proposal_report_provider_execution_seen or any(
-        bool(item.get("provider_execution_performed"))
+        bool(item.get("provider_work_verified"))
         for item in proposals
         if isinstance(item, dict)
     )
     if require_provider_execution and not provider_execution_seen:
         errors.append(
             "provider execution is required for real-product generated patch specs; "
-            "proposal report did not prove provider_execution_performed=true"
+            "proposal report did not prove provider_work_verified=true"
         )
 
     spec_dir = output_dir / basename
@@ -163,6 +176,8 @@ def build_patch_specs(
         "errors": errors,
         "warnings": warnings,
         "provider_execution_performed": provider_execution_seen,
+        "provider_execution_claim_seen": provider_execution_claim_seen,
+        "provider_work_verified": provider_execution_seen,
         "provider_execution_required": bool(require_provider_execution),
         "concrete_patch_specs_required": bool(require_concrete),
         "metadata_fallback_enabled": not bool(require_concrete),

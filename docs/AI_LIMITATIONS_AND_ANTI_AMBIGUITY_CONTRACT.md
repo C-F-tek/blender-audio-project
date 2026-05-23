@@ -118,6 +118,42 @@ no diagnostic-only product success
 no continued peer-lane work after provider-universe unviability
 ```
 
+## Explicit operator config rule
+
+Operator-facing Universo IA runtime parameters must enter through the canonical
+CLI flags and be visible before execution. A missing required parameter stops
+the run before provider execution.
+
+Valid:
+
+```text
+python -m ia_carmine.cli run ...explicit flags...
+python -m ia_carmine.cli run ...explicit flags... --print-effective-config
+python -m ia_carmine.cli run --emit-expanded-command
+```
+
+Invalid:
+
+```text
+hidden/autoloaded JSON
+operator config JSON as a parameter source
+operator run profile/preset as a parameter source
+environment-only provider defaults
+runtime-invented model, URL, token, memory, RAG or tooling values
+child commands relying on divergent local parameter values
+```
+
+The dry-run/effective-config report must expose:
+
+```text
+effective_universe_config
+field_sources
+expanded_heap_command
+```
+
+If a required operator-facing parameter is missing, the run must stop before
+provider execution instead of filling a silent value.
+
 ## Smoke overfitting failure
 
 A narrow smoke proves only the property it checks.

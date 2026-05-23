@@ -22,6 +22,7 @@ It should run before provider planning so GPU/NPU lanes consume real context, to
 Typical startup outputs include JSON/Markdown reports such as:
 
 ```text
+startup_repo_scan_index.json
 startup_required_ai_context_files.*
 startup_repo_docs_map.*
 startup_tool_catalog.*
@@ -55,3 +56,5 @@ python -m ia_carmine.cli reconcile_heap_report_with_startup_reload ...
 ## Extension notes
 
 When adding new preload sources, expose them as structured report sections and guardrails. Avoid adding ad-hoc provider prompts that bypass the startup manifest/task file.
+
+Startup reload should prefer the single `startup_repo_scan_index.json` surface for file refs, delta status and top-level partitions. Heavy artifacts may use cache hits only when the scan digest for their dependency family is unchanged; reports must say `cache_hit`, `cache_miss_reason` and `source_run` when applicable.

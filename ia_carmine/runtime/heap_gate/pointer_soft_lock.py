@@ -55,11 +55,14 @@ def pointer_closure_summary(
         resume_from_block_id=resume_from_block_id,
         closure_evidence_block_id=closure_evidence_block_id,
     )
-    open_rows = [row for row in table if row.get("closure_status") == "open"]
+    open_rows = [row for row in table if _row_keeps_soft_lock_open(row)]
     return {
         "pointer_closure_table": table,
         "open_pointer_count": len(open_rows),
         "open_pointer_count_final": len(open_rows),
+        "deferred_pointer_count": sum(
+            1 for row in table if row.get("closure_status") == "deferred_to_resume"
+        ),
         "all_pointers_closed": not open_rows,
         "soft_lock_state": "closed" if not open_rows else "closing_open_pointers",
     }
@@ -202,11 +205,25 @@ def soft_lock_state_from_reports(
         or metrics.get("open_pointer_count_final")
         or 0
     )
-    return {
-        "soft_lock_state": revision.get("soft_lock_state")
+    table_pending_count = sum(1 for row in table if _row_keeps_soft_lock_open(_as_dict(row)))
+    if table_pending_count > open_count:
+        open_count = table_pending_count
+    closure_status = (
+        revision.get("closure_quorum_status")
+        or pointer.get("closure_quorum_status")
+        or metrics.get("closure_quorum_status", "")
+    )
+    raw_soft_lock_state = (
+        revision.get("soft_lock_state")
         or pointer.get("soft_lock_state")
         or metrics.get("soft_lock_state")
-        or ("closing_open_pointers" if open_count else "closed"),
+        or ""
+    )
+    soft_lock_state = raw_soft_lock_state or ("closing_open_pointers" if open_count else "closed")
+    if open_count or closure_status == "targeted_refine_allowed":
+        soft_lock_state = "closing_open_pointers"
+    return {
+        "soft_lock_state": soft_lock_state,
         "soft_lock_extension_count": metrics.get("soft_lock_extension_count", 0),
         "open_pointer_count_before_soft_lock": metrics.get("open_pointer_count_before_soft_lock"),
         "open_pointer_count_after_each_extension": metrics.get(
@@ -228,9 +245,7 @@ def soft_lock_state_from_reports(
         "cpu_closure_validation": revision.get("cpu_closure_validation")
         or pointer.get("cpu_closure_validation")
         or metrics.get("cpu_closure_validation", ""),
-        "closure_quorum_status": revision.get("closure_quorum_status")
-        or pointer.get("closure_quorum_status")
-        or metrics.get("closure_quorum_status", ""),
+        "closure_quorum_status": closure_status,
         "closure_quorum_reason": revision.get("closure_quorum_reason")
         or pointer.get("closure_quorum_reason")
         or metrics.get("closure_quorum_reason", ""),
@@ -258,9 +273,20 @@ def _runtime_pointer_blocks(owner: Any) -> list[dict[str, Any]]:
                     "reject_reason": data.get("reject_reason", ""),
                     "exit_decision": data.get("exit_decision", ""),
                     "resume_from_block_id": data.get("resume_from_block_id", ""),
+                    "consumed_block_ids": data.get("consumed_block_ids", []),
                     "blocked_reason": data.get("closure_quorum_reason", ""),
+                    "gpu1_closure_decision_packet": data.get(
+                        "gpu1_closure_decision_packet"
+                    ),
                 }
             )
+    for report in getattr(owner, "provider_reports", []) or []:
+        block = _provider_report_pointer_block(report)
+        if block and not any(
+            str(existing.get("id") or existing.get("block_id") or "") == block["id"]
+            for existing in blocks
+        ):
+            blocks.append(block)
     return blocks
 
 
@@ -275,18 +301,33 @@ def _closure_entry(
     pointer_id = str(block.get("id") or block.get("block_id") or "")
     role = str(block.get("role") or block.get("source_role") or "")
     resume = str(block.get("resume_from_block_id") or resume_from_block_id or "")
-    accepted = bool(block.get("accepted") or block.get("quality_passed"))
+    accepted = bool(
+        block.get("accepted")
+        or block.get("quality_passed")
+        or block.get("provider_work_verified")
+    )
     reason = str(block.get("reject_reason") or block.get("blocked_reason") or "")
     exit_decision = str(block.get("exit_decision") or "").upper()
     superseded = _superseded_by(pointer_id, blocks)
     peer_needs_gpu1_consumption = bool(
         accepted and role in PEER_POINTER_ROLES and not _peer_consumed_by_gpu1(pointer_id, blocks)
     )
+    gpu1_needs_gpu0_review = bool(
+        accepted
+        and role == "gpu1_planner"
+        and _gpu1_block_requires_gpu0_review(block)
+        and not _gpu1_block_has_valid_gpu0_review(pointer_id, blocks)
+    )
     if peer_needs_gpu1_consumption:
         status = "deferred_to_resume"
         included = False
         resume = resume or pointer_id
         reason = reason or f"{role}_followup_pending_gpu1_consumption"
+    elif gpu1_needs_gpu0_review:
+        status = "deferred_to_resume"
+        included = False
+        resume = resume or pointer_id
+        reason = reason or "gpu1_block_missing_required_gpu0_review_once"
     elif accepted:
         status = "merged_into_final_product"
         included = True
@@ -330,6 +371,127 @@ def _closure_entry(
     }
 
 
+def _row_keeps_soft_lock_open(row: dict[str, Any]) -> bool:
+    status = str(row.get("closure_status") or "")
+    if status == "open":
+        return True
+    if status != "deferred_to_resume":
+        return False
+    reason = str(row.get("closure_reason") or "")
+    role = str(row.get("source_role") or "")
+    return bool(
+        role in PEER_POINTER_ROLES
+        or "gpu1_block_missing_required_gpu0_review_once" in reason
+        or "followup_pending_gpu1_consumption" in reason
+        or row.get("resume_from_block_id")
+    )
+
+
+def _gpu1_block_requires_gpu0_review(block: dict[str, Any]) -> bool:
+    if str(block.get("role") or block.get("source_role") or "") != "gpu1_planner":
+        return False
+    if block.get("gpu0_review_not_required") is True:
+        return False
+    return bool(
+        block.get("gpu1_closure_decision_packet")
+        or block.get("accepted")
+        or block.get("quality_passed")
+    )
+
+
+def _gpu1_block_has_valid_gpu0_review(pointer_id: str, blocks: list[dict[str, Any]]) -> bool:
+    if not pointer_id:
+        return False
+    for block in blocks:
+        role = str(block.get("role") or block.get("source_role") or "")
+        if role != "gpu0_reviewer_refiner":
+            continue
+        targets = {
+            str(block.get("refines_block_id") or ""),
+            str(block.get("resume_from_block_id") or ""),
+            str(block.get("checked_block_id") or ""),
+            str(block.get("reviewed_gpu1_block_id") or ""),
+            str(block.get("review_target_pointer") or ""),
+        }
+        if pointer_id not in targets:
+            continue
+        if block.get("provider_rejection_reason"):
+            continue
+        if block.get("gpu0_secondary_schema_valid") is not True:
+            continue
+        if block.get("gpu0_checked_current_packet") is not True:
+            continue
+        if not _gpu0_review_agrees_close(block):
+            continue
+        if not bool(block.get("accepted") or block.get("provider_work_verified")):
+            continue
+        return True
+    return False
+
+
+def _gpu0_review_agrees_close(block: dict[str, Any]) -> bool:
+    decision_values = {
+        str(block.get("role_decision") or "").strip().lower(),
+        str(block.get("gpu0_effective_decision") or "").strip().lower(),
+        str(block.get("gpu0_decision") or "").strip().lower(),
+    }
+    return bool("agree_close" in decision_values or "congruent" in decision_values)
+
+
+def _provider_report_pointer_block(report: dict[str, Any]) -> dict[str, Any]:
+    lane = str(report.get("lane") or report.get("provider_id") or "")
+    role = {
+        "gpu1_planner": "gpu1_planner",
+        "gpu0_peer": "gpu0_reviewer_refiner",
+        "npu_micro_task_auditor": "npu_auditor",
+    }.get(lane, "")
+    if not role:
+        return {}
+    pointer_id = str(
+        report.get("provider_block_id")
+        or report.get("block_id")
+        or ""
+    )
+    if not pointer_id:
+        return {}
+    accepted = bool(
+        report.get("provider_work_verified")
+        or (role == "npu_auditor" and report.get("npu_peer_evidence_verified"))
+    )
+    refines = str(
+        report.get("refines_block_id")
+        or report.get("review_target_pointer")
+        or report.get("checked_block_id")
+        or report.get("proposal_block_id")
+        or ""
+    )
+    return {
+        "id": pointer_id,
+        "role": role,
+        "accepted": accepted,
+        "quality_passed": accepted,
+        "refines_block_id": refines,
+        "resume_from_block_id": str(report.get("resume_from_block_id") or refines),
+        "blocked_reason": str(
+            report.get("provider_rejection_reason")
+            or report.get("product_blocked_reason")
+            or ""
+        ),
+        "provider_rejection_reason": str(report.get("provider_rejection_reason") or ""),
+        "provider_work_verified": report.get("provider_work_verified"),
+        "gpu0_review_not_required": role == "gpu1_planner",
+        "gpu0_secondary_schema_valid": report.get("gpu0_secondary_schema_valid"),
+        "gpu0_checked_current_packet": report.get("gpu0_checked_current_packet"),
+        "role_decision": report.get("role_decision"),
+        "gpu0_decision": report.get("gpu0_decision"),
+        "gpu0_effective_decision": report.get("gpu0_effective_decision"),
+        "checked_block_id": report.get("checked_block_id"),
+        "reviewed_gpu1_block_id": report.get("reviewed_gpu1_block_id"),
+        "review_target_pointer": report.get("review_target_pointer"),
+        "gpu1_closure_decision_packet": report.get("gpu1_closure_decision_packet"),
+    }
+
+
 def _superseded_by(pointer_id: str, blocks: list[dict[str, Any]]) -> str:
     for block in blocks:
         if str(block.get("refines_block_id") or "") == pointer_id:
@@ -340,16 +502,7 @@ def _superseded_by(pointer_id: str, blocks: list[dict[str, Any]]) -> str:
 def _peer_consumed_by_gpu1(pointer_id: str, blocks: list[dict[str, Any]]) -> bool:
     if not pointer_id:
         return False
-    peer_index = next(
-        (
-            index
-            for index, block in enumerate(blocks)
-            if str(block.get("id") or block.get("block_id") or "") == pointer_id
-        ),
-        -1,
-    )
-    candidate_blocks = blocks[peer_index + 1 :] if peer_index >= 0 else []
-    for block in candidate_blocks:
+    for block in blocks:
         role = str(block.get("role") or block.get("source_role") or "")
         if role != "gpu1_planner":
             continue

@@ -15,6 +15,7 @@ from ia_carmine._shared.github_evidence_bundle_io import (
     resolve_repo_path,
     split_path_values,
 )
+from ia_carmine._shared.provider_work_verification import provider_work_status
 
 CORE_SUMMARY_KEYS = (
     "usable_lanes",
@@ -76,6 +77,37 @@ PATCH_NOTE_CORE_FIELDS = (
 )
 
 
+def _provider_lane(data: dict[str, Any]) -> str:
+    lane = str(data.get("lane") or data.get("provider_id") or "").strip()
+    if lane:
+        return lane
+    kind = str(data.get("kind") or "").strip()
+    if kind == "gpu0_peer_response":
+        return "gpu0_peer"
+    if kind in {"npu_gpu_deep_review_audit", "npu_micro_task_auditor"}:
+        return "npu_micro_task_auditor"
+    if kind in {"local_provider_probe", "gpu1_primary_advisory"}:
+        return "gpu1_planner"
+    return ""
+
+
+def _provider_execution_claim_seen(data: dict[str, Any]) -> bool:
+    return bool(
+        data.get("provider_execution_performed")
+        or data.get("provider_execution_attempted")
+        or data.get("provider_io_observed")
+    )
+
+
+def _provider_work_verified(data: dict[str, Any]) -> bool:
+    if data.get("provider_work_verified") is True:
+        return True
+    lane = _provider_lane(data)
+    if not lane:
+        return False
+    return bool(provider_work_status(lane=lane, report=data).get("provider_work_verified"))
+
+
 def compact_patch_plan(plan: dict[str, Any]) -> dict[str, Any]:
     """Return compact patch-plan metadata for bundle summaries."""
     return {
@@ -127,7 +159,9 @@ def summarize_patch_plan_report(data: dict[str, Any]) -> dict[str, Any] | None:
         "patch_plan_count": data.get("patch_plan_count", len(patch_plans)),
         "fallback_used": decision.get("fallback_used"),
         "manual_review_required": decision.get("manual_review_required"),
-        "provider_execution_performed": data.get("provider_execution_performed"),
+        "provider_execution_claim_seen": _provider_execution_claim_seen(data),
+        "provider_work_verified": _provider_work_verified(data),
+        "provider_execution_performed": _provider_work_verified(data),
         "patch_application_performed": data.get("patch_application_performed"),
         "source_writes_performed": data.get("source_writes_performed"),
         "plans": [compact_patch_plan(plan) for plan in patch_plans if isinstance(plan, dict)],
@@ -278,7 +312,9 @@ def base_report_summary(data: dict[str, Any]) -> dict[str, Any]:
         "schema_version": data.get("schema_version"),
         "kind": data.get("kind"),
         "passed": data.get("passed"),
-        "provider_execution_performed": data.get("provider_execution_performed"),
+        "provider_execution_claim_seen": _provider_execution_claim_seen(data),
+        "provider_work_verified": _provider_work_verified(data),
+        "provider_execution_performed": _provider_work_verified(data),
         "patch_application_performed": data.get("patch_application_performed"),
         "source_writes_performed": data.get("source_writes_performed"),
         "errors": compact_value(data.get("errors") or []),
@@ -341,7 +377,9 @@ def summarize_selected_chunks_evidence(path: Path, repo_root: Path) -> dict[str,
         "schema_version": data.get("schema_version"),
         "kind": data.get("kind"),
         "passed": data.get("passed"),
-        "provider_execution_performed": data.get("provider_execution_performed"),
+        "provider_execution_claim_seen": _provider_execution_claim_seen(data),
+        "provider_work_verified": _provider_work_verified(data),
+        "provider_execution_performed": _provider_work_verified(data),
         "source_writes_performed": data.get("source_writes_performed"),
         "selected_count": data.get("selected_count"),
         "total_selected_chars": data.get("total_selected_chars"),

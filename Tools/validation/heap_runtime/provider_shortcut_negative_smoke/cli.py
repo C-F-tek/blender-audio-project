@@ -1,0 +1,387 @@
+#!/usr/bin/env python3
+"""Negative smoke for provider execution and sidecar shortcut regressions."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
+from typing import Any
+
+from ia_carmine.product.heap_final_proposals.common import (
+    provider_report_execution_performed,
+)
+from ia_carmine.product.heap_final_proposals.normalize_final_causality.cli import (
+    provider_execution_performed as causality_provider_execution_performed,
+)
+from ia_carmine.product.code_product.final_readable_product.product_contract import (
+    final_product_blockers,
+)
+from ia_carmine.product.generated_patch_specs.proposal_common import (
+    EXPECTED_APPLY_MODE,
+    EXPECTED_PROPOSAL_KIND,
+)
+from ia_carmine.product.generated_patch_specs.proposal_manifest import build_patch_specs
+from ia_carmine.context.heap_context_memory_reload.manifest import build_manifest
+from ia_carmine.runtime.external_heap.block_pointer_manifest.provider_graph import (
+    provider_blocks,
+)
+from ia_carmine.runtime.heap_gate.run_loop_metrics import _lane_has_model_execution
+from ia_carmine.runtime.heap_gate.proposal_cycle_a import RuntimeGateProposalCycleAMixin
+from ia_carmine.runtime.heap_gate.provider_teamwork_packet import (
+    _provider_packet_tool_catalog_limit,
+)
+from ia_carmine.runtime.heap_gate.tool_broker import RuntimeGateToolBrokerMixin
+from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
+    publish_provider_native_tool_calls,
+)
+
+
+def run_smoke(repo_root: Path) -> dict[str, Any]:
+    errors: list[str] = []
+    fake_unverified = {
+        "lane": "gpu1_planner",
+        "response_text": "provider_execution_performed=true but this is only prose",
+        "provider_work_verified": False,
+    }
+    if provider_report_execution_performed(fake_unverified):
+        errors.append("composer accepted response_text/provider_execution_performed=true as execution")
+    if causality_provider_execution_performed({"provider_reports": [fake_unverified]}):
+        errors.append("causality accepted unverified provider report as execution")
+    owner = SimpleNamespace(provider_reports=[fake_unverified])
+    if RuntimeGateProposalCycleAMixin.provider_work_verified_for_revision(owner, 0):
+        errors.append("proposal cycle accepted non-empty provider_reports as execution")
+    attempted_not_verified = {
+        "lane": "gpu1_planner",
+        "provider_backend": "ollama",
+        "provider_execution_attempted": True,
+        "provider_io_observed": True,
+        "provider_execution_performed": False,
+        "provider_work_verified": False,
+        "response_text": "GPU1 text exists but compute/semantic proof is missing.",
+    }
+    if _lane_has_model_execution([attempted_not_verified], "gpu1_planner"):
+        errors.append("lane metrics accepted attempted/raw response as verified model execution")
+    blockers = _weak_gate_final_product_blockers()
+    if not any("verified pointer evidence" in item for item in blockers):
+        errors.append("final product accepted weak gate provider_execution_performed fallback")
+    if not _generated_patch_specs_reject_raw_provider_claim(repo_root):
+        errors.append("generated patch specs accepted raw provider_execution_performed claim")
+    graph = _build_pointer_graph()
+    invalid_blocks = [
+        block
+        for block in graph
+        if block.get("block_type") == "observed_invalid_provider_evidence"
+    ]
+    if len(invalid_blocks) != 2:
+        errors.append(f"expected two observed-invalid sidecar blocks, got {len(invalid_blocks)}")
+    if any(block.get("provider_role_counted") for block in invalid_blocks):
+        errors.append("observed-invalid sidecar block counted as verified role")
+    if any(not block.get("refines_block_id") for block in invalid_blocks):
+        errors.append("observed-invalid sidecar block is not linked to GPU1/proposal pointer")
+    if _sidecar_generic_write_published():
+        errors.append("GPU0/NPU generic_write entered operative broker requests")
+    if _provider_packet_tool_catalog_limit(
+        SimpleNamespace(args=SimpleNamespace(tool_catalog_limit=80, provider_prompt_tool_catalog_cap=20))
+    ) != 20:
+        errors.append("provider teamwork packet ignores provider_prompt_tool_catalog_cap")
+    if _profile_caps_are_unbounded(repo_root):
+        errors.append("heap runtime launcher profiles still default provider_prompt_tool_catalog_cap to 0")
+    if not _startup_manifest_carries_effective_config(repo_root):
+        errors.append("startup manifest does not expose startup_effective_config")
+    requirement_report = _requirement_semantics_report()
+    if requirement_report.get("missing_requirements"):
+        errors.append("attempted sidecar requirements were reported as missing")
+    expected_failed = {"gpu0_provider_peer", "npu_micro_task_auditor"}
+    if set(requirement_report.get("failed_requirements") or []) != expected_failed:
+        errors.append("attempted sidecar failures were not separated from missing requirements")
+    return {
+        "schema_version": 1,
+        "kind": "provider_shortcut_negative_smoke",
+        "passed": not errors,
+        "errors": errors,
+        "requirement_semantics": requirement_report,
+    }
+
+
+def _weak_gate_final_product_blockers() -> list[str]:
+    with TemporaryDirectory(prefix="provider-shortcut-contract-") as tmp:
+        markdown = Path(tmp) / "FINAL.md"
+        markdown.write_text("ok", encoding="utf-8")
+        return final_product_blockers(
+            markdown_output=markdown,
+            final_document_status="APPLY_REVIEW_READY",
+            concrete_code_proposal_count=1,
+            code_product_metrics={
+                "diff_git_blocks": 1,
+                "empty_code_product_marker": False,
+                "no_applicable_marker": False,
+                "truncation_marker": False,
+            },
+            code_product_ready=True,
+            pointer={
+                "passed": True,
+                "edge_count": 1,
+                "all_roles_present": [
+                    "gpu1_planner",
+                    "gpu0_reviewer_refiner",
+                    "npu_auditor",
+                ],
+                "provider_execution_performed": False,
+            },
+            revision={"linked_gpu0_block_count": 1, "linked_npu_block_count": 1},
+            matrix={"passed": True},
+            gate={"provider_execution_performed": True},
+        )
+
+
+def _generated_patch_specs_reject_raw_provider_claim(repo_root: Path) -> bool:
+    with TemporaryDirectory(prefix="provider-shortcut-patch-spec-") as tmp:
+        root = Path(tmp)
+        proposal = root / "proposal.json"
+        proposal.write_text(
+            json.dumps(
+                {
+                    "kind": EXPECTED_PROPOSAL_KIND,
+                    "apply_mode": EXPECTED_APPLY_MODE,
+                    "provider_execution_performed": True,
+                    "provider_work_verified": False,
+                    "proposals": [],
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        manifest = build_patch_specs(
+            repo_root=repo_root,
+            proposal_path=proposal,
+            output_dir=root / "out",
+            basename="smoke",
+            max_proposals=None,
+            require_provider_execution=True,
+        )
+    return (
+        manifest.get("provider_execution_claim_seen") is True
+        and manifest.get("provider_execution_performed") is False
+        and manifest.get("passed") is False
+        and any("provider_work_verified=true" in str(item) for item in manifest.get("errors") or [])
+    )
+
+
+def _requirement_semantics_report() -> dict[str, Any]:
+    owner = _FakeRequirementOwner(
+        [
+            {
+                "lane": "gpu0_peer",
+                "requirement": "gpu0_provider_peer",
+                "provider_backend": "ollama",
+                "provider_compute_device": "ollama/gpu0-vulkan",
+                "provider_execution_performed": True,
+                "provider_work_verified": False,
+                "response_text": "sidecar observed but invalid",
+            },
+            {
+                "lane": "npu_micro_task_auditor",
+                "requirement": "npu_micro_task_auditor",
+                "provider_execution_performed": True,
+                "provider_work_verified": False,
+                "response_text": "sidecar observed but invalid",
+            },
+        ]
+    )
+    return {
+        "missing_requirements": owner.missing_requirements([]),
+        "unattempted_requirements": owner.unattempted_requirements([]),
+        "failed_requirements": owner.failed_requirements([]),
+        "unsatisfied_requirements": owner.unsatisfied_requirements([]),
+    }
+
+
+def _profile_caps_are_unbounded(repo_root: Path) -> bool:
+    profile = repo_root / "ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json"
+    try:
+        data = json.loads(profile.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return True
+    text = json.dumps(data)
+    return '"provider_prompt_tool_catalog_cap": 0' in text
+
+
+def _startup_manifest_carries_effective_config(repo_root: Path) -> bool:
+    with TemporaryDirectory(prefix="provider-shortcut-startup-config-") as tmp:
+        root = Path(tmp)
+        task_file = root / "task.md"
+        task_file.write_text("task", encoding="utf-8")
+        effective = {
+            "startup_provider_input_workers": 7,
+            "startup_required_context_profile": "project_self_improvement",
+            "startup_operational_memory_query": "smoke query",
+            "startup_operational_memory_limit": 3,
+            "parallel_provider_input_lanes": "repo_docs_map,tool_catalog",
+        }
+        manifest = build_manifest(
+            stamp="smoke",
+            repo_root=repo_root,
+            project_python="python",
+            request_text="request",
+            context_files=["AGENTS.md"],
+            artifacts={
+                "heap_task_file": "task.md",
+                "startup_parallel_provider_input_lanes": effective[
+                    "parallel_provider_input_lanes"
+                ],
+            },
+            commands=[],
+            warnings=[],
+            task_file=task_file,
+            context_delta={},
+            context_pack_result={"artifact_useful": True},
+            strict_ai_context_pack=False,
+            strict_startup_reload=False,
+            startup_effective_config=effective,
+        )
+    return (
+        manifest.get("startup_effective_config") == effective
+        and manifest.get("contract", {}).get("startup_effective_config") == effective
+    )
+
+
+def _build_pointer_graph() -> list[dict[str, Any]]:
+    with TemporaryDirectory(prefix="provider-shortcut-graph-") as tmp:
+        root = Path(tmp)
+        provider_dir = root / "provider_teamwork"
+        provider_dir.mkdir()
+        _write(provider_dir / "gpu1.json", _gpu1_report())
+        _write(provider_dir / "gpu0.json", _gpu0_incongruent_report())
+        _write(provider_dir / "npu.json", _npu_invalid_report())
+        return provider_blocks(root, root, 4000)
+
+
+def _sidecar_generic_write_published() -> bool:
+    owner = _FakeNativeOwner(
+        [
+            _tool_report("gpu0_peer", "gpu0.json"),
+            _tool_report("npu_micro_task_auditor", "npu.json"),
+        ]
+    )
+    publish_provider_native_tool_calls(owner, 1, [])
+    return bool(owner.state["tool_requests"])
+
+
+def _gpu1_report() -> dict[str, Any]:
+    return {
+        "lane": "gpu1_planner",
+        "provider_block_id": "gpu1:000",
+        "provider_model": "qwen2.5-coder:14b",
+        "provider_loaded": True,
+        "done": True,
+        "completion_token_count": 240,
+        "ollama_residency_verified": True,
+        "ollama_compute_verified": True,
+        "response_text": "GPU1 primary packet with enough concrete words for useful evidence.",
+    }
+
+
+def _gpu0_incongruent_report() -> dict[str, Any]:
+    return {
+        "lane": "gpu0_peer",
+        "provider_backend": "ollama",
+        "provider_compute_device": "ollama/gpu0-vulkan",
+        "provider_block_id": "gpu0:000",
+        "provider_model": "qwen3:1.7b",
+        "provider_loaded": True,
+        "completion_token_count": 220,
+        "ollama_residency_verified": True,
+        "ollama_compute_verified": True,
+        "gpu0_secondary_schema_valid": False,
+        "gpu0_effective_decision": "incongruent",
+        "checked_block_id": "gpu1:000",
+        "response_text": "GPU0 sidecar says incongruent evidence for the current GPU1 packet.",
+    }
+
+
+def _npu_invalid_report() -> dict[str, Any]:
+    return {
+        "lane": "npu_micro_task_auditor",
+        "provider_block_id": "npu:000",
+        "provider_compute_device": "openvino/NPU",
+        "provider_device_verified": True,
+        "npu_peer_evidence_verified": True,
+        "npu_peer_followup_required": True,
+        "response_text": "NPU sidecar reject until guardrails and validation are concrete.",
+    }
+
+
+def _tool_report(lane: str, output: str) -> dict[str, Any]:
+    return {
+        "lane": lane,
+        "output": output,
+        "revision": 0,
+        "response_text": f"{lane} sidecar text",
+        "tool_calls": [{"id": f"{lane}_generic", "tool": "generic_write", "args": {}}],
+    }
+
+
+def _write(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+class _FakeNativeOwner:
+    def __init__(self, provider_reports: list[dict[str, Any]]) -> None:
+        self.stamp = "smoke"
+        self.args = SimpleNamespace(request_file="")
+        self.provider_native_tool_call_ids: set[str] = set()
+        self.state = {"needs": [], "tool_requests": []}
+        self.tool_request_count = 0
+        self.errors: list[str] = []
+        self.published: list[dict[str, Any]] = []
+        self.provider_reports = provider_reports
+
+    def tool_plan(self) -> list[dict[str, Any]]:
+        return []
+
+    def enrich_plan_item_args(self, item: dict[str, Any], _events: list[dict[str, Any]]) -> dict[str, Any]:
+        return dict(item)
+
+    def provider_plan_item_for_tool_call(self, call: dict[str, Any], events: list[dict[str, Any]]) -> dict[str, Any] | None:
+        from ia_carmine.runtime.heap_gate.tool_broker_native_calls import provider_plan_item_for_tool_call
+
+        return provider_plan_item_for_tool_call(self, call, events)
+
+    def proposal_iteration_artifacts(self) -> list[str]:
+        return []
+
+    def request_text(self) -> str:
+        return "smoke request"
+
+    def publish(self, source: str, event_type: str, payload: dict[str, Any], **kwargs: Any) -> None:
+        self.published.append({"source": source, "event_type": event_type, "payload": payload, **kwargs})
+
+
+class _FakeRequirementOwner(RuntimeGateToolBrokerMixin):
+    def __init__(self, provider_reports: list[dict[str, Any]]) -> None:
+        self.provider_reports = provider_reports
+        self.args = SimpleNamespace(allow_provider_generation=False)
+
+    def required_requirements_order(self) -> tuple[str, ...]:
+        return ("gpu0_provider_peer", "npu_micro_task_auditor")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--output", default="")
+    args = parser.parse_args()
+    report = run_smoke(Path(args.repo_root).resolve())
+    if args.output:
+        output = (Path(args.repo_root) / args.output).resolve()
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return 0 if report["passed"] else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

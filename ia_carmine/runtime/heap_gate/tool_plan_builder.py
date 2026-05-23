@@ -7,6 +7,8 @@ from hashlib import sha256
 from ia_carmine.runtime.heap_gate.runtime_common import Any, repo_rel
 from ia_carmine.runtime.heap_gate.target_planner import request_focus_text
 
+STARTUP_MEMORY_INDEX_BATCH_REQUIREMENT = "startup_memory_index_batch"
+
 
 def bounded_text(value: str, limit: int = 1200) -> str:
     text = " ".join(str(value or "").split())
@@ -34,6 +36,13 @@ def positive_arg(owner: Any, name: str, default: int) -> int:
     return max(1, value)
 
 
+def csv_arg(owner: Any, name: str) -> list[str]:
+    raw = str(getattr(owner.args, name, "") or "").strip()
+    if not raw:
+        raise RuntimeError(f"missing explicit tool-plan runtime parameter: {name}")
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
 def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
     context_dir = owner.runtime_context_dir()
     request = owner.request_text()
@@ -49,6 +58,13 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
     code_preview = positive_arg(
         owner, "semantic_code_chunk_preview_chars", owner.args.max_chars_per_file
     )
+    tool_roots = csv_arg(owner, "tool_inventory_roots")
+    semantic_path_boosts = csv_arg(owner, "semantic_path_boosts")
+    code_interpreter_inputs = csv_arg(owner, "code_interpreter_inputs")
+    duplication_audit_roots = csv_arg(owner, "duplication_audit_roots")
+    ai_context_pack_profile = str(getattr(owner.args, "ai_context_pack_profile", "") or "").strip()
+    if not ai_context_pack_profile:
+        raise RuntimeError("missing explicit tool-plan runtime parameter: ai_context_pack_profile")
     startup_text_files: list[str] = []
     operator_request_file = str(getattr(owner.args, "request_file", "") or "").strip()
     if operator_request_file:
@@ -90,13 +106,31 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             runtime_ref_text.append(objective)
     if runtime_ref_text:
         runtime_file_ref_args["text"] = runtime_ref_text
+    startup_memory_index_content = json_dumps_compact(
+        {
+            "kind": "startup_memory_index_batch",
+            "request_file": operator_request_file,
+            "request_query": query,
+            "startup_text_files": startup_text_files,
+            "runtime_file_ref_args": runtime_file_ref_args,
+            "memory_surfaces": [
+                "persistent_memory_status",
+                "persistent_memory_search",
+                "operational_memory_write",
+                "operational_memory_search",
+                "volatile_startup_artifact_refs",
+                "raw_startup_context_refs",
+            ],
+            "startup_artifacts": artifacts if isinstance(artifacts, dict) else {},
+        }
+    )
     plan = [
         {
             "stage": 1,
             "requirement": "tool_catalog",
             "id": "tool-catalog-inventory",
             "tool": "build_agent_agnostic_tool_inventory",
-            "args": {"root": ["tools/ai", "tools/workflow", "tools/npu"]},
+            "args": {"root": tool_roots},
             "reason": "discover allowlisted project tools before deciding product readiness",
         },
         {
@@ -186,7 +220,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
                 "max_chunks": code_chunk_limit,
                 "max_total_chars": code_chunk_limit * code_preview,
                 "max_excerpt_chars": code_preview,
-                "path_boost": ["tools/ai", "tools/npu", "tools/workflow"],
+                "path_boost": semantic_path_boosts,
             },
             "reason": "select bounded semantic code chunks so provider lanes share connected logical context",
         },
@@ -196,7 +230,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "id": "ai-context-pack",
             "tool": "ai_context_pack",
             "args": {
-                "profile": "core_ai_backend",
+                "profile": ai_context_pack_profile,
                 "basename": f"heap_runtime_context_pack_{owner.stamp}",
                 "output_dir": repo_rel(owner.repo_root, context_dir / "ai_context_pack"),
                 "evidence_dir": repo_rel(owner.repo_root, context_dir / "ai_context_pack_evidence"),
@@ -214,11 +248,11 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "args": {
                 "query": query,
                 "task_file": operator_request_file,
-                "db": "output/ai_runtime_memory/rag/rag.sqlite",
+                "db": str(getattr(owner.args, "rag_db", "") or ""),
                 "top_k": code_chunk_limit,
                 "char_budget": context_count * context_preview,
-                "embedding_endpoint": "http://127.0.0.1:11434",
-                "embedding_model": "bge-m3",
+                "embedding_endpoint": str(getattr(owner.args, "rag_embedding_endpoint", "") or ""),
+                "embedding_model": str(getattr(owner.args, "rag_embedding_model", "") or ""),
             },
             "reason": "retrieve SQLite/FTS5/vector RAG context as a heap-visible context_pack artifact",
         },
@@ -247,7 +281,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "requirement": "code_interpreter_evidence",
             "id": "code-interpreter-evidence",
             "tool": "build_code_interpreter_report",
-            "args": {"input": ["ia_carmine", "Tools/workflow", "Tools/npu"]},
+            "args": {"input": code_interpreter_inputs},
             "reason": "broker existing static interpretation evidence for later memory/chunk consumption",
             "nonblocking": True,
             "post_provider": True,
@@ -267,20 +301,62 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "tool": "runtime_file_refs",
             "args": runtime_file_ref_args,
             "reason": "resolve operator/startup/provider-visible file refs before provider synthesis and matrix/lab consumption",
+            "pre_provider_hard_gate": True,
+            "provider_consumable_evidence": True,
         },
         {
             "stage": 3,
             "requirement": "refactor_duplication_audit_evidence",
             "id": "refactor-duplication-audit-evidence",
             "tool": "refactor_duplication_audit",
-            "args": {"root": ["ia_carmine", "Tools/workflow", "Tools/npu"]},
+            "args": {"root": duplication_audit_roots},
             "reason": "broker existing duplication/refactor evidence for provider and matrix context",
             "nonblocking": True,
             "post_provider": True,
         },
     ]
+    if getattr(owner.args, "allow_provider_generation", False):
+        plan.append(
+            {
+                "stage": 5,
+                "requirement": STARTUP_MEMORY_INDEX_BATCH_REQUIREMENT,
+                "id": "startup-memory-index-batch",
+                "tool": "runtime_sqlite_memory",
+                "args": {
+                    "action": "remember",
+                    "scope": "operational",
+                    "summary": "provider input startup evidence batch",
+                    "content": startup_memory_index_content,
+                    "role": "heap_runtime_provider_input_batch",
+                    "tag": ["heap", "provider_input", "startup_index"],
+                },
+                "reason": (
+                    "write one operational SQLite/FTS5 startup evidence index batch "
+                    "for provider-consumable file refs, context refs and memory refs"
+                ),
+                "pre_provider_hard_gate": True,
+                "provider_consumable_evidence": True,
+            }
+        )
+
+    for item in [
+        *owner.virtual_dev_environment_plan_items(context_dir, request),
+        *owner.runtime_debug_lab_plan_items(context_dir, request),
+    ]:
+        item["pre_provider_baseline"] = True
+        item["provider_consumable_evidence"] = True
+        item["final_product_validation"] = False
+        plan.append(item)
+
     if getattr(owner, "provider_reports", []):
-        plan.extend(owner.virtual_dev_environment_plan_items(context_dir, request))
-        plan.extend(owner.code_execution_matrix_plan_items(context_dir, request))
-        plan.extend(owner.runtime_debug_lab_plan_items(context_dir, request))
+        for item in owner.code_execution_matrix_plan_items(context_dir, request):
+            item["post_provider"] = True
+            item["final_product_validation"] = True
+            plan.append(item)
     return plan
+
+
+def json_dumps_compact(value: Any) -> str:
+    import json
+
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)

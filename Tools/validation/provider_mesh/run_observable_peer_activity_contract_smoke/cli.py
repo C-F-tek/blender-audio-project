@@ -393,15 +393,13 @@ def gpu0_quorum_checks() -> dict[str, bool]:
         "gpu0_quorum_veto_blocks": veto[0] == "veto_with_reason",
         "gpu0_quorum_refine_requests_once": refine[0] == "refine_once",
         "gpu0_quorum_invalid_schema_refines_once": invalid[0] == "refine_once",
-        "gpu0_quorum_missing_packet_not_evaluated": missing_packet[0]
-        == "not_evaluated_waiting_for_gpu1_decision"
-        and missing_packet[1] == "gpu0_review_missing_gpu1_packet",
+        "gpu0_quorum_missing_packet_requests_retry": missing_packet[0] == "refine_once"
+        and "gpu0_review_missing_gpu1_packet" in missing_packet[1],
         "gpu0_quorum_missing_latest_packet_not_evaluated": missing_latest_packet[0]
         == "not_evaluated_waiting_for_gpu1_decision",
         "gpu0_quorum_wrong_packet_refines_once": mismatch[0] == "refine_once",
-        "gpu0_quorum_stale_pre_gate_packet_not_agree": stale[0]
-        == "not_evaluated_waiting_for_gpu1_decision"
-        and stale[1] == "gpu0_review_stale_after_gpu1_packet_rewrite",
+        "gpu0_quorum_stale_pre_gate_packet_requests_retry": stale[0] == "refine_once"
+        and "gpu0_review_stale_after_gpu1_packet_rewrite" in stale[1],
         "gpu0_quorum_free_prose_does_not_agree": free_prose[0] == "refine_once",
     }
 
@@ -429,6 +427,28 @@ def closure_quorum_pre_provider_checks() -> dict[str, bool]:
             "gpu0_closure_agreement"
         )
         == "",
+    }
+
+
+def provider_work_count_checks() -> dict[str, bool]:
+    from ia_carmine._shared.provider_work_verification import provider_work_status
+
+    report = {
+        "provider_backend": "ollama",
+        "provider_compute_device": "ollama/gpu0-vulkan",
+        "ollama_residency_verified": True,
+        "ollama_compute_verified": True,
+        "selected_model": "qwen3:1.7b",
+        "completion_token_count": 96,
+        "response_text": '{"gpu0_decision":"refine_required"}',
+        "gpu0_secondary_schema_valid": False,
+        "provider_rejection_reason": "gpu0_secondary_schema_invalid",
+    }
+    status = provider_work_status(lane="gpu0_peer", report=report)
+    return {
+        "gpu0_schema_invalid_not_provider_verified": status.get("provider_work_verified")
+        is False
+        and status.get("provider_rejection_reason") == "gpu0_secondary_schema_invalid",
     }
 
 
@@ -601,6 +621,7 @@ def main() -> int:
     checks.update(gpu0_secondary_schema_checks())
     checks.update(gpu0_quorum_checks())
     checks.update(closure_quorum_pre_provider_checks())
+    checks.update(provider_work_count_checks())
     checks.update(provider_absorption_checks(repo))
     checks.update(provider_requirement_checks())
     checks.update(provider_stall_checks())

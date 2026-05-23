@@ -102,6 +102,7 @@ def _check_boot_handoff(repo_root: Path) -> dict[str, Any]:
 def _check_gpu0_command_contract(repo_root: Path) -> dict[str, Any]:
     gpu0 = _read(repo_root, "ia_carmine/providers/provider_mesh/ollama_gpu0_peer_report/cli.py")
     specs = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_command_specs.py")
+    metrics = _read(repo_root, "ia_carmine/runtime/heap_gate/run_loop_metrics.py")
     errors: list[str] = []
     if "--startup-manifest" not in gpu0:
         errors.append("GPU0 CLI does not accept --startup-manifest")
@@ -121,8 +122,21 @@ def _check_gpu0_command_contract(repo_root: Path) -> dict[str, Any]:
         errors.append("GPU0 spec does not expose provider_model for cleanup")
     if "--defer-unload" not in specs:
         errors.append("runtime GPU0 command does not defer model unload until cleanup")
+    if "gpu0-sidecar-timeout-seconds" in specs or "gpu0_sidecar_timeout_seconds" in specs:
+        errors.append("runtime added forbidden GPU0 sidecar timeout truncation flag")
+    if "packet_review_only" not in specs or "sidecar_scope_mode" not in specs:
+        errors.append("runtime sidecar command specs do not expose packet_review_only scope")
+    for marker in (
+        "gpu1_idle_after_primary_seconds",
+        "sidecar_alone_after_gpu1_seconds",
+        "gpu1_congruence_check_performed",
+    ):
+        if marker not in metrics:
+            errors.append(f"provider lane metrics missing {marker}")
     if "args.defer_unload" not in gpu0:
         errors.append("GPU0 CLI does not support provider-cycle unload deferral")
+    if "final synthesis" not in gpu0 or "complete alternate plan" not in gpu0:
+        errors.append("GPU0 prompt does not forbid final synthesis / alternate full planning")
     if 'report.get("ollama_unload_verified")' in _extract_function(gpu0, "_gpu0_workload_verified"):
         errors.append("GPU0 workload verification still requires unload as proof")
     return {"name": "gpu0_command_contract", "errors": errors}
@@ -180,6 +194,8 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
         errors.append("terminal invariants do not block pending generic_write/GPU0/NPU follow-up")
     if "same_tool_schema_peer_only" not in team_packet:
         errors.append("provider teamwork packet does not scope GPU0 as peer-only same-schema lane")
+    if "_provider_packet_tool_catalog_limit" not in team_packet or "provider_prompt_tool_catalog_cap" not in team_packet:
+        errors.append("provider teamwork packet ignores provider_prompt_tool_catalog_cap")
     errors.extend(_probe_native_tool_routing())
     errors.extend(_probe_no_tool_generic_write_capture())
     errors.extend(_probe_generic_write_broker_metadata_args(repo_root))
@@ -208,27 +224,22 @@ def _probe_native_tool_routing() -> list[str]:
         item
         for item in owner.published
         if item.get("event_type") == "validation_signal"
-        and item.get("payload", {}).get("kind") == "provider_peer_native_tool_call_diagnostic_only"
+        and item.get("payload", {}).get("kind")
+        in {"provider_peer_native_tool_call_diagnostic_only", "sidecar_generic_write_non_decision"}
     ]
     errors: list[str] = []
-    if published != 2:
-        errors.append(f"expected two operative GPU1/GPU0 broker requests, got {published}")
-    if lanes != ["gpu1_planner", "gpu0_peer"]:
-        errors.append(f"expected GPU1/GPU0 tool request lanes, got {lanes}")
+    if published != 1:
+        errors.append(f"expected one operative GPU1 broker request, got {published}")
+    if lanes != ["gpu1_planner"]:
+        errors.append(f"expected only GPU1 generic_write request lane, got {lanes}")
     gpu1_request = owner.state["tool_requests"][0] if owner.state["tool_requests"] else {}
-    gpu0_request = owner.state["tool_requests"][1] if len(owner.state["tool_requests"]) > 1 else {}
     if gpu1_request.get("tool_result_scope") != "primary_product_evidence":
         errors.append("GPU1 native request is not scoped as primary product evidence")
     if gpu1_request.get("gpu1_followup_required"):
         errors.append("GPU1 native request incorrectly requires a later GPU1 follow-up")
-    if gpu0_request.get("tool_result_scope") != "gpu0_peer_evidence_only":
-        errors.append("GPU0 native request is not scoped as peer-only evidence")
-    if gpu0_request.get("gpu1_followup_required") is not True:
-        errors.append("GPU0 native request does not require later GPU1 consumption")
-    if gpu0_request.get("cannot_close_product") is not True:
-        errors.append("GPU0 native request can incorrectly close product")
-    if not diagnostics or diagnostics[0].get("payload", {}).get("lane") != "npu_micro_task_auditor":
-        errors.append("NPU native call did not become diagnostic evidence only")
+    diagnostic_lanes = [item.get("payload", {}).get("lane") for item in diagnostics]
+    if diagnostic_lanes != ["gpu0_peer", "npu_micro_task_auditor"]:
+        errors.append(f"sidecar generic_write calls did not stay diagnostic: {diagnostic_lanes}")
     return errors
 
 
@@ -247,22 +258,19 @@ def _probe_no_tool_generic_write_capture() -> list[str]:
     lanes = [item.get("lane") for item in requests]
     capture_modes = [item.get("args", {}).get("capture_mode") for item in requests]
     errors: list[str] = []
-    if published != 3:
-        errors.append(f"expected three no-tool generic_write captures, got {published}")
-    if lanes != ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"]:
-        errors.append(f"expected GPU1/GPU0/NPU no-tool capture lanes, got {lanes}")
-    if capture_modes != ["no_tool_capture", "no_tool_capture", "no_tool_capture"]:
+    if published != 1:
+        errors.append(f"expected one GPU1 no-tool generic_write capture, got {published}")
+    if lanes != ["gpu1_planner"]:
+        errors.append(f"expected only GPU1 no-tool capture lane, got {lanes}")
+    if capture_modes != ["no_tool_capture"]:
         errors.append(f"expected no_tool_capture modes, got {capture_modes}")
-    gpu0_request = requests[1] if len(requests) > 1 else {}
-    npu_request = requests[2] if len(requests) > 2 else {}
-    if gpu0_request.get("tool_result_scope") != "gpu0_peer_evidence_only":
-        errors.append("GPU0 no-tool capture is not peer-only evidence")
-    if gpu0_request.get("gpu1_followup_required") is not True:
-        errors.append("GPU0 no-tool capture does not force GPU1 follow-up")
-    if npu_request.get("tool_result_scope") != "diagnostic_veto_evidence":
-        errors.append("NPU no-tool capture is not diagnostic peer evidence")
-    if npu_request.get("gpu1_followup_required") is not True:
-        errors.append("NPU no-tool capture does not force GPU1 follow-up")
+    raw_lanes = [
+        item.get("payload", {}).get("lane")
+        for item in owner.published
+        if item.get("payload", {}).get("kind") == "sidecar_free_text_raw_evidence_non_decision"
+    ]
+    if raw_lanes != ["gpu0_peer", "npu_micro_task_auditor"]:
+        errors.append(f"sidecar no-tool prose did not stay raw evidence: {raw_lanes}")
     return errors
 
 
@@ -421,8 +429,14 @@ def _probe_npu_peer_evidence_timeout() -> list[str]:
     }
     status = provider_work_status(lane="npu_micro_task_auditor", report=report)
     errors: list[str] = []
-    if status.get("provider_work_verified") is not True:
-        errors.append("NPU peer evidence with workload+micro-audit did not count as verified")
+    if status.get("workload_passed") is not True:
+        errors.append("NPU peer evidence with workload+micro-audit did not count as workload")
+    if status.get("semantic_contract_passed") is not False:
+        errors.append("NPU follow-up pending/timeout should not pass semantic contract")
+    if status.get("provider_requirement_complete") is not False:
+        errors.append("NPU follow-up pending/timeout should not complete provider requirement")
+    if status.get("provider_work_verified") is not False:
+        errors.append("provider_work_verified must remain an alias of provider_requirement_complete")
     if status.get("provider_role") != "npu_auditor":
         errors.append("verified NPU peer evidence did not count as npu_auditor")
     if report.get("npu_micro_provider_model_loaded") is not False:
@@ -457,9 +471,9 @@ def _probe_npu_generic_write_result_hydration() -> list[str]:
         broker_payload = {"tool": "generic_write", "lane": None, "revision": None, "gpu1_followup_required": None, "blocked": False, "returncode": 0, "summary": {"passed": True}, "outputs": {"json_report": "generic.json"}, "errors": []}
         product = generic_write_document_product(owner, [{"event_type": "broker_result", "payload": broker_payload}])
         checks = [
-            ("npu_micro_task_auditor" in product.get("generic_write_lanes", []), "hydrated generic_write product does not count NPU lane"),
-            (product.get("npu_peer_followup_pending_count") == 1, "hydrated NPU generic_write did not force GPU1 follow-up"),
-            ("MICRO_TASK=target_reference_audit" in str(product.get("captures")), "hydrated NPU generic_write did not preserve NPU prose"),
+            ("npu_micro_task_auditor" not in product.get("generic_write_lanes", []), "NPU generic_write was incorrectly counted as operative"),
+            (product.get("npu_peer_followup_pending_count") == 0, "NPU generic_write still creates generic_write follow-up"),
+            ("MICRO_TASK=target_reference_audit" not in str(product.get("captures")), "NPU generic_write prose entered product captures"),
         ]
         errors.extend(message for passed, message in checks if not passed)
     return errors

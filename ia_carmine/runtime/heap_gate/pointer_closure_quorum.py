@@ -201,15 +201,15 @@ def gpu0_closure_agreement(
         )
     gpu0 = _latest_lane_report(provider_reports, "gpu0_peer")
     if not gpu0:
-        return "", "GPU0 closure report missing"
+        return "refine_once", _gpu0_retry_reason(packet, "gpu0_review_missing_for_current_pointer")
     if gpu0.get("provider_device_verified") is not True:
-        return "veto_with_reason", "GPU0 device evidence is not verified"
+        return "refine_once", _gpu0_retry_reason(packet, "gpu0_device_evidence_not_verified")
     if not (
         gpu0.get("operational_provider_activity")
         or gpu0.get("provider_execution_performed")
         or gpu0.get("device_workload_execution_performed")
     ):
-        return "veto_with_reason", "GPU0 report is not operational evidence"
+        return "refine_once", _gpu0_retry_reason(packet, "gpu0_report_not_operational_evidence")
 
     review = gpu0.get("gpu0_operational_review")
     review = review if isinstance(review, dict) else {}
@@ -224,23 +224,23 @@ def gpu0_closure_agreement(
         return "refine_once", "; ".join(veto_reasons[:4])
     if gpu0.get("gpu0_secondary_schema_valid") is not True:
         if "gpu0_checked_wrong_gpu1_packet" in (gpu0.get("veto_reasons") or []):
-            return "refine_once", "gpu0_checked_wrong_gpu1_packet"
+            return "refine_once", _gpu0_retry_reason(packet, "gpu0_checked_wrong_gpu1_packet")
         if not targeted_used:
-            return "refine_once", "GPU0 secondary decision schema is invalid or missing"
+            return "refine_once", _gpu0_retry_reason(
+                packet,
+                "gpu0_review_invalid_requires_gpu1_retry",
+            )
         return "veto_with_reason", "GPU0 secondary decision schema stayed invalid after refinement"
     if str(gpu0.get("checked_block_id") or "") != str(packet.get("gpu1_block_id") or ""):
-        return "refine_once", "gpu0_checked_wrong_gpu1_packet"
+        return "refine_once", _gpu0_retry_reason(packet, "gpu0_checked_wrong_gpu1_packet")
     if str(gpu0.get("checked_gpu1_revision") or "") != str(packet.get("gpu1_revision") or ""):
-        return "refine_once", "gpu0_checked_wrong_gpu1_packet"
+        return "refine_once", _gpu0_retry_reason(packet, "gpu0_checked_wrong_gpu1_packet")
     reviewed_packet = extract_gpu1_closure_decision_packet(gpu0)
     if not reviewed_packet:
-        return (
-            "not_evaluated_waiting_for_gpu1_decision",
-            "gpu0_review_missing_gpu1_packet",
-        )
+        return "refine_once", _gpu0_retry_reason(packet, "gpu0_review_missing_gpu1_packet")
     if not gpu1_packets_equivalent(reviewed_packet, packet):
-        return (
-            "not_evaluated_waiting_for_gpu1_decision",
+        return "refine_once", _gpu0_retry_reason(
+            packet,
             "gpu0_review_stale_after_gpu1_packet_rewrite",
         )
     if gpu0.get("gpu0_unanchored_reasons") and normalize_gpu0_decision(gpu0.get("gpu0_model_decision")) in {
@@ -267,6 +267,15 @@ def gpu0_closure_agreement(
             return "refine_once", reason or f"GPU0 requested {decision}"
         return "veto_with_reason", reason or f"GPU0 still reports {decision} after refinement"
     return "veto_with_reason", "GPU0 structured decision is invalid"
+
+
+def _gpu0_retry_reason(packet: dict[str, Any], reason: str) -> str:
+    pointer = str(packet.get("gpu1_block_id") or "")
+    revision = str(packet.get("gpu1_revision") or "")
+    suffix = f":pointer={pointer}" if pointer else ""
+    if revision:
+        suffix += f":revision={revision}"
+    return f"{reason}{suffix}"
 
 
 def npu_closure_advisory(provider_reports: list[dict[str, Any]]) -> str:

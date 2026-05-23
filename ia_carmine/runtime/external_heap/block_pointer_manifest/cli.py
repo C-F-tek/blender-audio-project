@@ -200,6 +200,8 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             "gpu1_block_ref": data.get("gpu1_block_ref"),
             "gpu0_review_block_refs": data.get("gpu0_review_block_refs") if isinstance(data.get("gpu0_review_block_refs"), list) else [],
             "npu_audit_block_refs": data.get("npu_audit_block_refs") if isinstance(data.get("npu_audit_block_refs"), list) else [],
+            "consumed_block_ids": data.get("consumed_block_ids") if isinstance(data.get("consumed_block_ids"), list) else [],
+            "gpu1_closure_decision_packet": data.get("gpu1_closure_decision_packet"),
             "quality_passed": data.get("quality_passed"),
             "accepted": data.get("quality_passed") is True,
             "soft_lock_closure_owner_decision": data.get(
@@ -230,7 +232,7 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
                 "navigation_role": "proposal_chain",
                 "can_continue_to_next": True,
                 "can_backrefine": bool(previous_id),
-                "requires_review": data.get("quality_passed") is not True,
+                "requires_review": data.get("quality_passed") is True,
             },
         }
         if previous_id:
@@ -263,6 +265,7 @@ def block_resource_mechanics_performed(block: dict[str, Any]) -> bool:
 def build_pointer_edges(blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
     ids = {str(block.get("block_id")) for block in blocks}
     edges: list[dict[str, str]] = []
+    seen_edges: set[tuple[str, str, str]] = set()
     for block in blocks:
         source = str(block.get("block_id") or "")
         for field, edge_type in (
@@ -272,7 +275,9 @@ def build_pointer_edges(blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
             ("resume_from_block_id", "resume_from"),
         ):
             target = str(block.get(field) or "")
-            if source and target and target in ids:
+            key = (source, target, edge_type)
+            if source and target and target in ids and target != source and key not in seen_edges:
+                seen_edges.add(key)
                 edges.append(
                     {
                         "source_block_id": source,
@@ -307,6 +312,22 @@ def build_report(
             if block.get("role") and normalize_bool(block.get("provider_role_counted"))
         }
     )
+    roles_verified = sorted(
+        {
+            str(block.get("role"))
+            for block in source_providers
+            if block.get("role") and normalize_bool(block.get("provider_role_counted"))
+        }
+    )
+    invalid_roles = sorted(
+        {
+            str(item.get("provider_role"))
+            for item in rejected_providers
+            if item.get("provider_role") and normalize_bool(item.get("provider_role_observed"))
+        }
+    )
+    roles_observed = sorted(set(roles_verified) | set(invalid_roles))
+    roles_observed_invalid = invalid_roles
     accepted_blocks = [block for block in blocks if block.get("accepted") is True]
     rejected_blocks = [
         block
@@ -321,7 +342,7 @@ def build_report(
         if block.get("block_type") == "proposal_chunk" and block.get("accepted") is not True
     ]
     provider_mode_observed = bool(source_providers or rejected_providers)
-    provider_roles = {str(block.get("role") or "") for block in source_providers}
+    provider_roles = set(roles_verified)
     unlinked_peer_blocks = [
         block.get("block_id")
         for block in source_providers
@@ -337,7 +358,8 @@ def build_report(
     resource_mechanics_block_count = sum(
         1 for block in all_blocks if block_resource_mechanics_performed(block)
     )
-    provider_missing_roles = sorted(set(DEFAULT_ROLES) - provider_roles)
+    provider_missing_roles = sorted(set(DEFAULT_ROLES) - set(roles_observed))
+    provider_unverified_roles = sorted((set(DEFAULT_ROLES) & set(roles_observed)) - provider_roles)
     provider_rejection_reasons = sorted(
         {
             str(item.get("provider_rejection_reason") or "")
@@ -348,6 +370,7 @@ def build_report(
     provider_graph_recoverable = bool(
         provider_mode_observed
         and not provider_missing_roles
+        and not provider_unverified_roles
         and int(len(edges)) > 0
         and provider_execution_performed
         and not unlinked_peer_blocks
@@ -364,6 +387,8 @@ def build_report(
     if provider_mode_observed:
         if provider_missing_roles:
             errors.append(f"provider roles missing from graph: {provider_missing_roles}")
+        if provider_unverified_roles:
+            errors.append(f"provider roles observed but not verified: {provider_unverified_roles}")
         if provider_rejection_reasons:
             errors.append("provider work rejected: " + ",".join(provider_rejection_reasons))
         if unlinked_peer_blocks:
@@ -393,6 +418,12 @@ def build_report(
         "roles_expected": list(DEFAULT_ROLES),
         "roles_present": roles_present,
         "all_roles_present": all_roles_present,
+        "roles_observed": roles_observed,
+        "roles_verified": roles_verified,
+        "roles_observed_invalid": roles_observed_invalid,
+        "invalid_roles": invalid_roles,
+        "provider_missing_roles": provider_missing_roles,
+        "provider_unverified_roles": provider_unverified_roles,
         "provider_verified_count": len(source_providers),
         "provider_rejected_count": len(rejected_providers),
         "provider_rejections": rejected_providers,

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from ia_carmine.runtime.heap_context_closure.product_state import build_product_state
+from ia_carmine.runtime.heap_gate.gpu1_closure_packet import build_gpu1_closure_decision_packet
 
 TRUNCATED_DIFF_MARKER = "[diff " + "truncated]"
 def now_stamp() -> str:
@@ -46,6 +47,23 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     target = "ia_carmine/product/code_product/final_readable_product/cli.py"
     proposal_1 = "smoke:proposal:001"
     proposal_2 = "smoke:proposal:002"
+    proposal_2_response = "TARGET_FILES:\n- " + target + "\nPATCH_SKETCH_UNIFIED_DIFF:\n" + full_diff
+    gpu1_packet = build_gpu1_closure_decision_packet(
+        gpu1_block_id=proposal_2,
+        gpu1_revision=2,
+        gpu1_decision="finalize_product",
+        target_files=[target],
+        quality_passed=True,
+        evidence_refs=[repo_rel(repo_root, matrix_path), "smoke:gpu1:002"],
+        exit_decision="PATCHABLE_TARGET",
+        pointer_action="RESUME_FORWARD",
+        refines_block_id=proposal_1,
+        consumed_gpu0_block_ids=["smoke:gpu0:002"],
+        consumed_npu_block_ids=["smoke:npu:002"],
+        response_text=proposal_2_response,
+        source="cpu_post_gate_smoke",
+    )
+    packet_fingerprint = str(gpu1_packet.get("packet_fingerprint") or "")
     write_json(
         proposal_dir / "heap_proposal_revision_001.json",
         {
@@ -83,11 +101,13 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "gpu1_block_ref": "smoke:gpu1:002",
             "gpu0_review_block_refs": ["smoke:gpu0:002"],
             "npu_audit_block_refs": ["smoke:npu:002"],
+            "consumed_block_ids": ["smoke:gpu0:002", "smoke:npu:002"],
             "broker_result_refs": [repo_rel(repo_root, matrix_path)],
             "matrix_report_refs": [repo_rel(repo_root, matrix_path)],
+            "gpu1_closure_decision_packet": gpu1_packet,
             "quality_passed": True,
             "accepted": True,
-            "response_text": "TARGET_FILES:\n- " + target + "\nPATCH_SKETCH_UNIFIED_DIFF:\n" + full_diff,
+            "response_text": proposal_2_response,
         },
     )
     for lane, role, block_type, block_id, action in (
@@ -122,6 +142,22 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     "done": True,
                     "eval_count": 96,
                     "provider_model": "qwen3:1.7b",
+                    "gpu0_secondary_schema_valid": True,
+                    "gpu0_checked_current_packet": True,
+                    "checked_block_id": proposal_2,
+                    "checked_gpu1_revision": "2",
+                    "expected_gpu1_block_id": proposal_2,
+                    "expected_gpu1_revision": "2",
+                    "reviewed_gpu1_block_id": proposal_2,
+                    "reviewed_revision": "2",
+                    "review_target_pointer": proposal_2,
+                    "expected_packet_fingerprint": packet_fingerprint,
+                    "reviewed_packet_fingerprint": packet_fingerprint,
+                    "gpu1_closure_decision_packet_fingerprint": packet_fingerprint,
+                    "gpu1_closure_decision_packet": gpu1_packet,
+                    "gpu0_decision": "congruent",
+                    "gpu0_effective_decision": "congruent",
+                    "role_decision": "agree_close",
                 }
             )
         else:
@@ -136,11 +172,11 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     "npu_device_workload_requested": True,
                     "npu_device_workload_performed": True,
                     "npu_micro_audit_performed": True,
-                    "npu_micro_provider_model_loaded": False,
-                    "npu_micro_provider_execution_performed": False,
-                    "npu_native_tool_loop_error": "openvino_native_tool_loop_timeout",
+                    "npu_micro_provider_model_loaded": True,
+                    "npu_micro_provider_execution_performed": True,
+                    "npu_native_tool_loop_error": "",
                     "npu_native_tool_loop_required": False,
-                    "npu_peer_followup_required": True,
+                    "npu_peer_followup_required": False,
                 }
             )
         write_json(
@@ -306,8 +342,8 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "runtime_debug_lab_passed": True,
                 "virtual_dev_environment_passed": True,
                 "virtual_dev_environment_reports": [repo_rel(repo_root, virtual_dev_path)],
-                "generic_write_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
-                "generic_write_no_tool_capture_count": 3,
+                "generic_write_lanes": ["gpu1_planner"],
+                "generic_write_no_tool_capture_count": 1,
                 "generic_write_capture_failed_count": 1,
                 "lane_tiers": {
                     "gpu1_planner": "primary",
@@ -359,6 +395,29 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "gpu1_primary_workload_tokens": 180,
                 "gpu1_leader_valid": True,
                 "gpu1_leader_block_id": "smoke:gpu1:002",
+                "soft_lock_closure_owner_decision": "finalize_product",
+                "gpu0_closure_agreement": "agree_close",
+                "npu_closure_advisory": "evidence_ready_non_closer",
+                "cpu_closure_validation": "ready_to_close",
+                "closure_quorum_status": "ready_to_close",
+                "closure_quorum_reason": "candidate subgraph has current GPU0 review and consumed peers",
+                "gpu1_closure_decision_packet": gpu1_packet,
+                "gpu1_closure_decision_packet_valid": True,
+                "latest_gpu1_decision": "finalize_product",
+                "latest_gpu1_block_id": proposal_2,
+                "latest_gpu1_revision": "2",
+                "latest_gpu1_block_requires_gpu0_review": True,
+                "latest_gpu1_block_reviewed_by_gpu0": True,
+                "gpu0_review_invalid_requires_gpu1_retry": False,
+                "gpu0_secondary_schema_valid": True,
+                "latest_gpu0_effective_decision": "congruent",
+                "latest_gpu0_role_decision": "agree_close",
+                "latest_gpu0_checked_current_packet": True,
+                "latest_gpu0_packet_stale_after_gpu1_packet_rewrite": False,
+                "latest_gpu0_reviewed_packet_fingerprint": packet_fingerprint,
+                "latest_gpu1_packet_fingerprint": packet_fingerprint,
+                "latest_gpu0_expected_gpu1_block_id": proposal_2,
+                "latest_gpu0_expected_gpu1_revision": "2",
                 "consumed_peer_block_ids": ["smoke:gpu0:002", "smoke:npu:002"],
                 "gpu1_consumed_gpu0_peer": True,
                 "gpu1_consumed_npu_peer": True,
@@ -366,25 +425,19 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "npu_peer_followup_pending_count": 1,
                 "generic_write_refined_product": {
                     "eligible": False,
-                    "capture_count": 3,
-                    "generic_write_no_tool_capture_count": 3,
-                    "generic_write_capture_failed_count": 1,
-                    "generic_write_capture_failures": [
-                        {
-                            "lane": "npu_micro_task_auditor",
-                            "revision": 1,
-                            "errors": ["generic_write: unsupported args smoke fixture"],
-                        }
-                    ],
-                    "generic_write_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
-                    "gpu0_peer_followup_pending_count": 1,
-                    "npu_peer_followup_pending_count": 1,
+                    "capture_count": 1,
+                    "generic_write_no_tool_capture_count": 1,
+                    "generic_write_capture_failed_count": 0,
+                    "generic_write_capture_failures": [],
+                    "generic_write_lanes": ["gpu1_planner"],
+                    "gpu0_peer_followup_pending_count": 0,
+                    "npu_peer_followup_pending_count": 0,
                     "latest_consumed_by_gpu1": False,
                     "captures": [
                         {
-                            "lane": "npu_micro_task_auditor",
+                            "lane": "gpu1_planner",
                             "revision": 2,
-                            "provider_response_excerpt": "MICRO_TASK=target_reference_audit DECISION=NPU_TIMEOUT_BOUNDARY",
+                            "provider_response_excerpt": "GPU1 refined product evidence after sidecar congruence check",
                         }
                     ],
                 },
@@ -446,7 +499,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     zip_path = Path(str(documents_dir) + ".zip")
     body = final_md.read_text(encoding="utf-8-sig") if final_md.exists() else ""
     code_product_body = full_code_product.read_text(encoding="utf-8-sig") if full_code_product.exists() else ""
-    required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore", "Peer follow-up pending", "MICRO_TASK=target_reference_audit", "Capture failed", "Gerarchia GPU1/GPU0/NPU", "GPU1 primary workload", "GPU1 primary evidence", "Generic write", "GPU1/NVIDIA", "GPU0/Vulkan", "coworker_medium", "NPU/OpenVINO", "micro_fast", "context_budget", "Parallel provider overlap", "Device identity map"]
+    required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore", "Peer follow-up pending", "Capture failed", "Gerarchia GPU1/GPU0/NPU", "GPU1 primary workload", "GPU1 primary evidence", "Generic write", "GPU1/NVIDIA", "GPU0/Vulkan", "coworker_medium", "NPU/OpenVINO", "micro_fast", "context_budget", "Parallel provider overlap", "Device identity map"]
     missing = [phrase for phrase in required_phrases if phrase not in body]
     pointer_reconstruction = (
         product.get("pointer_reconstruction")
@@ -498,6 +551,13 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and "ia_carmine/worktree_extra.py" not in code_product_body
         and "Final assembler worktree fallback: `disabled`" in code_product_body
         and "Code product status: `BLOCKED_WITH_CODE_PRODUCT_REVIEW`" in code_product_body
+        and product.get("soft_lock_closure_owner_decision") == "finalize_product"
+        and product.get("gpu0_closure_agreement") == "agree_close"
+        and product.get("closure_quorum_status") == "ready_to_close"
+        and "gpu1_decision_missing" not in body
+        and "not_evaluated_waiting_for_gpu1_decision" not in body
+        and "GPU1 block/revision: `smoke:proposal:002` / `2`" in body
+        and "GPU0 current review: `True`" in body
         and "[no worktree diff captured]" not in code_product_body
         and zip_path.exists()
         and not missing

@@ -7,8 +7,6 @@ from typing import Any
 GPU1_LANE = "gpu1_planner"
 GPU0_LANE = "gpu0_peer"
 NPU_LANE = "npu_micro_task_auditor"
-GPU1_OPERATIONAL_MODEL = "qwen2.5-coder:14b"
-GPU0_OPERATIONAL_MODEL = "qwen3:1.7b"
 CLOSURE_OWNER = GPU1_LANE
 
 _LANE_HIERARCHY: dict[str, dict[str, Any]] = {
@@ -46,20 +44,72 @@ def lane_hierarchy(lane: str) -> dict[str, Any]:
 
 def preferred_gpu1_model(requested: str | None, *, strict: bool = False) -> str:
     model = str(requested or "").strip()
-    if strict and model and model.lower() != "auto":
+    if model and model.lower() != "auto":
         return model
-    return GPU1_OPERATIONAL_MODEL
+    raise RuntimeError("missing explicit GPU1 provider model; pass --provider-model")
 
 
 def gpu0_ollama_num_ctx(gpu1_ctx: Any) -> int:
     try:
         parsed = int(gpu1_ctx or 0)
     except (TypeError, ValueError):
-        parsed = 8192
+        raise RuntimeError("missing explicit GPU1 context budget; pass --ollama-num-ctx")
     parsed = max(1024, parsed)
     if parsed <= 2048:
         return 1024
     return max(1024, min(2048, parsed - 1024))
+
+
+def gpu0_max_new_tokens_config(args: Any) -> dict[str, Any]:
+    cli_value = _positive_int(getattr(args, "gpu0_max_new_tokens", 0))
+    if not cli_value:
+        raise RuntimeError("missing explicit GPU0 token budget; pass --gpu0-max-new-tokens")
+    value = cli_value
+    source = "cli_arg"
+    override_path = "--gpu0-max-new-tokens"
+    max_new = _positive_int(getattr(args, "max_new_tokens", 0)) or value
+    return {
+        "effective_value": max(32, min(max_new, value)),
+        "source": source,
+        "override_path": override_path,
+    }
+
+
+def gpu0_max_new_tokens(args: Any) -> int:
+    return int(gpu0_max_new_tokens_config(args)["effective_value"])
+
+
+def operator_effective_config(args: Any, *, gpu1_ctx: int, gpu0_ctx: int) -> dict[str, Any]:
+    gpu0_tokens = gpu0_max_new_tokens_config(args)
+    return {
+        "gpu1.ollama_num_ctx": _cfg(gpu1_ctx, "explicit_cli_surface", "--ollama-num-ctx"),
+        "gpu1.max_new_tokens": _cfg(
+            _positive_int(getattr(args, "max_new_tokens", 0)), "explicit_cli_surface", "--max-new-tokens"
+        ),
+        "gpu0.ollama_num_ctx": _cfg(gpu0_ctx, "derived_from_gpu1_ctx", "--ollama-num-ctx"),
+        "gpu0.max_new_tokens": gpu0_tokens,
+        "npu.max_context_chars": _cfg(
+            _positive_int(getattr(args, "npu_max_context_chars", 0)),
+            "explicit_cli_surface",
+            "--npu-max-context-chars",
+        ),
+        "npu.max_prompt_chars": _cfg(
+            _positive_int(getattr(args, "npu_max_prompt_chars", 0)),
+            "explicit_cli_surface",
+            "--npu-max-prompt-chars",
+        ),
+        "npu.max_new_tokens": _cfg(
+            _positive_int(getattr(args, "npu_max_new_tokens", 0)),
+            "explicit_cli_surface",
+            "--npu-max-new-tokens",
+        ),
+        "max_provider_revisions": _cfg(
+            _positive_int(getattr(args, "max_provider_revisions", 0)),
+            "explicit_cli_surface",
+            "--max-provider-revisions",
+        ),
+        "keep_alive": _cfg(str(getattr(args, "keep_alive", "") or ""), "explicit_cli_surface", "--keep-alive"),
+    }
 
 
 def lane_context_budget(
@@ -74,13 +124,18 @@ def lane_context_budget(
             "kind": "ollama_context_budget",
             "ollama_num_ctx": int(gpu1_ctx),
             "max_new_tokens": int(getattr(args, "max_new_tokens", 0) or 0),
+            "max_new_tokens_source": "explicit_cli_surface",
+            "max_new_tokens_override_path": "--max-new-tokens",
             "relative_size": "maximum",
         }
     if lane == GPU0_LANE:
+        gpu0_tokens = gpu0_max_new_tokens_config(args)
         return {
             "kind": "ollama_context_budget",
             "ollama_num_ctx": int(gpu0_ctx),
-            "max_new_tokens": int(min(int(getattr(args, "max_new_tokens", 0) or 0), 96)),
+            "max_new_tokens": int(gpu0_tokens["effective_value"]),
+            "max_new_tokens_source": gpu0_tokens["source"],
+            "max_new_tokens_override_path": gpu0_tokens["override_path"],
             "relative_size": "short_secondary_packet_only",
         }
     if lane == NPU_LANE:
@@ -89,6 +144,8 @@ def lane_context_budget(
             "max_context_chars": int(getattr(args, "npu_max_context_chars", 0) or 0),
             "max_prompt_chars": int(getattr(args, "npu_max_prompt_chars", 0) or 0),
             "max_new_tokens": int(getattr(args, "npu_max_new_tokens", 0) or 0),
+            "max_new_tokens_source": "explicit_cli_surface",
+            "max_new_tokens_override_path": "--npu-max-new-tokens",
             "relative_size": "short_micro",
         }
     return {}
@@ -111,5 +168,28 @@ def context_hierarchy_payload(args: Any, *, gpu1_ctx: Any | None = None) -> dict
             NPU_LANE, gpu1_ctx=effective_gpu1_ctx, gpu0_ctx=effective_gpu0_ctx, args=args
         ),
         "context_hierarchy_valid": valid,
+        "context_hierarchy_label": "context budget hierarchy valid",
+        "context_hierarchy_scope": "budget_only_not_workload_or_leadership",
+        "gpu1_lane_identity": "GPU1/NVIDIA primary Ollama lane",
+        "gpu1_replight_scope": "health_residency_only",
         "context_hierarchy_rule": "gpu1_ctx > gpu0_ctx and npu uses short prompt/context chars",
+        "operator_effective_config": operator_effective_config(
+            args, gpu1_ctx=effective_gpu1_ctx, gpu0_ctx=effective_gpu0_ctx
+        ),
+    }
+
+
+def _positive_int(value: Any) -> int:
+    try:
+        parsed = int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+    return parsed if parsed > 0 else 0
+
+
+def _cfg(value: Any, source: str, override_path: str) -> dict[str, Any]:
+    return {
+        "effective_value": value,
+        "source": source,
+        "override_path": override_path,
     }

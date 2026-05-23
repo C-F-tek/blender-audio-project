@@ -22,3 +22,4 @@ class ReloadRun:
     context_files: list[str] = field(default_factory=list)
     context_pack_result: dict[str, Any] = field(default_factory=dict)
     context_delta: dict[str, Any] = field(default_factory=dict)
+    repo_scan_index: dict[str, Any] = field(default_factory=dict)

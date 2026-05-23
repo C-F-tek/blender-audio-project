@@ -13,6 +13,7 @@ from ia_carmine.runtime.heap_gate.generic_write_followup import (
     npu_peer_followup_pending_count,
 )
 from ia_carmine.runtime.heap_gate.pointer_soft_lock import runtime_soft_lock_state
+from ia_carmine.runtime.heap_gate.provider_recovery import provider_recovery_status
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     PROVIDER_START_REQUIREMENTS,
@@ -30,6 +31,18 @@ def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) ->
     bridge_refs = owner.bridge_report_refs(events)
     effective_tool_execution_count = owner.effective_tool_execution_count(events)
     generic_product_ready = generic_write_document_product_eligible(owner, events)
+    pending_broker_requests = list(
+        getattr(getattr(owner, "heap", None), "pending_broker_requests", lambda: [])()
+    )
+    if pending_broker_requests:
+        return
+    provider_consumable_status = (
+        owner.provider_consumable_evidence_status(events)
+        if hasattr(owner, "provider_consumable_evidence_status")
+        else {}
+    )
+    if provider_consumable_status.get("pending"):
+        return
     if ready and effective_tool_execution_count <= 0:
         missing = [*missing, "broker_tool_execution"]
         ready = False
@@ -43,7 +56,25 @@ def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) ->
     if ready and not file_quality.get("passed") and not generic_product_ready:
         missing = [*missing, "verified_unambiguous_source_refs"]
         ready = False
+    provider_reports = getattr(owner, "provider_reports", []) or []
     soft_lock_state = runtime_soft_lock_state(owner, events)
+    recovery_state = provider_recovery_status(owner, events) if provider_reports else {}
+    if recovery_state.get("provider_recovery_required"):
+        missing = list(
+            dict.fromkeys(
+                [
+                    *missing,
+                    "gpu1_recovery_revision"
+                    if not recovery_state.get("provider_recovery_attempted")
+                    else "provider_recovery_budget_exhausted"
+                    if recovery_state.get("provider_revision_budget_exhausted")
+                    else "sidecar_recovery_edges_pending",
+                ]
+            )
+        )
+        ready = False
+        if not recovery_state.get("provider_revision_budget_exhausted"):
+            return
     if ready and int(soft_lock_state.get("open_pointer_count_final") or 0) > 0:
         missing = [*missing, "open_pointer_closure"]
         ready = False
@@ -53,7 +84,6 @@ def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) ->
         "blocked_continuation_ready",
         "blocked_with_reason",
     }
-    provider_reports = getattr(owner, "provider_reports", []) or []
     provider_started = bool(provider_reports) or bool(
         getattr(owner, "provider_launch_started", lambda _events: False)(events)
     )

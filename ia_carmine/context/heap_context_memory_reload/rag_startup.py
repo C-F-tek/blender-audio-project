@@ -290,6 +290,7 @@ def ensure_rag_index_current(state: ReloadRun, *, record_tool: RecordTool) -> No
         embedding_endpoint=str(state.args.rag_embedding_endpoint),
         max_file_size=int(state.args.rag_max_file_size),
         chunk_policy=_rag_chunk_policy(state),
+        scan_index=state.repo_scan_index,
     )
     if status_report.get("action") == "block":
         write_startup_progress(
@@ -384,6 +385,8 @@ def ensure_rag_index_current(state: ReloadRun, *, record_tool: RecordTool) -> No
         str(state.args.rag_chunk_overlap_chars),
         "--max-file-size",
         str(state.args.rag_max_file_size),
+        "--startup-scan-index",
+        str(state.output_dir / "startup_repo_scan_index.json"),
         "--output",
         str(ingest_json),
         "--markdown-output",

@@ -20,6 +20,7 @@ from .common import (
     db_path_warning,
     language_for_suffix,
     now_iso,
+    read_json,
     read_text,
     repo_rel,
     resolve_repo_path,
@@ -28,6 +29,7 @@ from .common import (
 )
 from .embedding import embed_batch, validate_vector
 from .repo_files import list_repo_text_files
+from .repo_files import list_repo_text_files_from_scan
 from .schema import ensure_schema, integrity_check
 from .store import (
     connect,
@@ -52,6 +54,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--chunk-max-chars", type=int, default=DEFAULT_CHUNK_MAX_CHARS)
     parser.add_argument("--chunk-overlap-chars", type=int, default=DEFAULT_CHUNK_OVERLAP_CHARS)
     parser.add_argument("--max-file-size", type=int, default=DEFAULT_MAX_FILE_SIZE)
+    parser.add_argument("--startup-scan-index", default="")
     parser.add_argument("--skip-embeddings", action="store_true")
     parser.add_argument("--require-embeddings", action="store_true")
     parser.add_argument("--allow-missing-embeddings", action="store_true")
@@ -69,7 +72,10 @@ def render_markdown(report: dict) -> str:
         f"- RAG index ready: `{report.get('rag_index_ready')}`",
         f"- DB: `{report.get('db_path')}`",
         f"- Files indexed: `{report.get('indexed_file_count')}`",
+        f"- Files read: `{report.get('read_file_count')}`",
+        f"- Files chunked: `{report.get('chunked_file_count')}`",
         f"- Chunks indexed: `{report.get('chunk_count')}`",
+        f"- Unchanged ref-only files: `{report.get('unchanged_ref_only_document_count')}`",
         f"- Embeddings written: `{report.get('embedding_written_count')}`",
         f"- Missing embeddings after: `{report.get('missing_embedding_count_after')}`",
         f"- SQLite integrity: `{report.get('sqlite_integrity_check')}`",
@@ -358,9 +364,17 @@ def main() -> int:
     if warning:
         warnings.append(warning)
     ensure_schema(db_path)
-    files, skipped, discover_warnings = list_repo_text_files(
-        repo_root, max_file_size=max(1, int(args.max_file_size))
-    )
+    startup_scan = read_json(Path(args.startup_scan_index)) if args.startup_scan_index else {}
+    if startup_scan:
+        files, skipped, discover_warnings = list_repo_text_files_from_scan(
+            repo_root,
+            startup_scan,
+            max_file_size=max(1, int(args.max_file_size)),
+        )
+    else:
+        files, skipped, discover_warnings = list_repo_text_files(
+            repo_root, max_file_size=max(1, int(args.max_file_size))
+        )
     warnings.extend(discover_warnings)
     policy = ChunkPolicy(
         min_chars=args.chunk_min_chars,
@@ -371,11 +385,31 @@ def main() -> int:
     chunk_count = 0
     changed_documents = 0
     unchanged_documents = 0
+    unchanged_ref_only_documents = 0
+    read_file_count = 0
+    chunked_file_count = 0
     indexed_source_paths: set[str] = set()
     read_warnings: list[str] = []
     with connect(db_path) as conn:
+        active_rows = conn.execute(
+            "SELECT source_path, file_size, mtime_ns, content_hash FROM rag_documents WHERE status='active'"
+        ).fetchall()
+        active_docs = {str(row["source_path"]): dict(row) for row in active_rows}
         for item in files:
+            indexed_source_paths.add(item.rel_path)
+            active_doc = active_docs.get(item.rel_path)
+            if active_doc and int(active_doc.get("file_size") or 0) == int(item.size_bytes):
+                try:
+                    current_mtime = int(item.path.stat().st_mtime_ns)
+                except OSError:
+                    current_mtime = 0
+                if current_mtime and current_mtime == int(active_doc.get("mtime_ns") or 0):
+                    unchanged_documents += 1
+                    unchanged_ref_only_documents += 1
+                    indexed += 1
+                    continue
             text, read_error = read_text(item.path)
+            read_file_count += 1
             if read_error:
                 read_warnings.append(f"{item.rel_path}: {read_error}")
             if not text.strip():
@@ -388,6 +422,7 @@ def main() -> int:
                 policy=policy,
                 metadata={"language": language_for_suffix(item.suffix)},
             )
+            chunked_file_count += 1
             result = upsert_document_chunks(
                 conn,
                 source_path=item.rel_path,
@@ -426,7 +461,7 @@ def main() -> int:
             model=args.embedding_model,
             endpoint=args.embedding_endpoint,
         )
-        if missing_after and not args.skip_embeddings:
+        if missing_after and not args.skip_embeddings and embedding_failures:
             rescue_args = argparse.Namespace(**vars(args))
             rescue_args.batch_size = 1
             rescue_args.final_singleton_retry_delays = [1.0, 3.0, 6.0]
@@ -513,14 +548,19 @@ def main() -> int:
         "patch_application_performed": False,
         "source_writes_performed": False,
         "db_path": repo_rel(repo_root, db_path),
+        "startup_repo_scan_index_used": bool(startup_scan),
+        "startup_repo_scan_file_count": int(startup_scan.get("file_count") or 0),
         "sqlite_integrity_check": integrity,
         "indexed_file_count": indexed,
+        "read_file_count": read_file_count,
+        "chunked_file_count": chunked_file_count,
         "candidate_file_count": len(files),
         "skipped_file_count": len(skipped),
         "skipped_files_sample": skipped[:80],
         "chunk_count": chunk_count,
         "changed_document_count": changed_documents,
         "unchanged_document_count": unchanged_documents,
+        "unchanged_ref_only_document_count": unchanged_ref_only_documents,
         "removed_document_count": removed_documents,
         "missing_embedding_count_before": len(missing_before),
         "missing_embedding_count_after": len(missing_after),

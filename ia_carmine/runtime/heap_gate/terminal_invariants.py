@@ -129,6 +129,19 @@ def evaluate_terminal_invariants(
         errors.append(
             "gpu1_leader_missing: GPU0/NPU sidecar evidence requires a prior valid GPU1 leader packet/proposal"
         )
+    if allow_provider_generation and not pre_provider:
+        if (
+            metrics.get("soft_lock_state") == "closed"
+            and metrics.get("closure_quorum_status") == "targeted_refine_allowed"
+        ):
+            errors.append("soft_lock_closed_with_targeted_refine_allowed")
+        pointer_rows = metrics.get("pointer_closure_table")
+        pointer_rows = pointer_rows if isinstance(pointer_rows, list) else []
+        if safe_int(metrics.get("open_pointer_count_final")) <= 0 and any(
+            isinstance(row, dict) and row.get("closure_status") == "deferred_to_resume"
+            for row in pointer_rows
+        ):
+            errors.append("open_pointer_count_zero_with_deferred_pointer_edges")
     if allow_provider_generation and not pre_provider and detailed_output_expected:
         if metrics.get("product_status") != "ready":
             errors.append(
@@ -156,6 +169,13 @@ def evaluate_terminal_invariants(
             errors.append(
                 "GPU1/pointer proposal quality failed; provider prose cannot pass as product"
             )
+        if metrics.get("provider_recovery_required") and not generic_product_ready:
+            if not metrics.get("provider_recovery_attempted") and not metrics.get(
+                "provider_revision_budget_exhausted"
+            ):
+                errors.append("gpu1_recovery_revision_missing_after_sidecar_join")
+            if metrics.get("product_status") == "ready":
+                errors.append("ready product_status is forbidden while provider recovery edges are pending")
         if metrics.get("latest_proposal_quality_passed") is False and not generic_product_ready:
             errors.append(
                 "latest proposal iteration was rejected by same-heap quality gate: "
@@ -184,6 +204,12 @@ def evaluate_terminal_invariants(
             and not generic_product_ready
         ):
             errors.append("gpu0_review_stale_after_gpu1_packet_rewrite")
+        if (
+            metrics.get("latest_gpu1_block_requires_gpu0_review") is True
+            and metrics.get("latest_gpu1_block_reviewed_by_gpu0") is not True
+            and not generic_product_ready
+        ):
+            errors.append("gpu0_review_invalid_requires_gpu1_retry")
         if (
             metrics.get("latest_gpu0_free_text_used_as_product")
             or metrics.get("latest_gpu0_free_text_used_as_decision")

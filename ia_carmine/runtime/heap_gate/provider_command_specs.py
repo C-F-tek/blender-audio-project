@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import os
 import json
 from typing import Any
 
 from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
-    GPU0_OPERATIONAL_MODEL,
     GPU0_LANE,
     GPU1_LANE,
     NPU_LANE,
+    gpu0_max_new_tokens,
     gpu0_ollama_num_ctx,
     lane_context_budget,
     lane_hierarchy,
@@ -63,17 +62,20 @@ def _npu_device_workload_args(gate: Any) -> list[str]:
 
 def _provider_keep_alive(gate: Any) -> str:
     value = str(getattr(gate.args, "keep_alive", "") or "").strip().lower()
-    if value in {"", "0", "0s", "0m", "0h"} and bool(
-        getattr(gate.args, "allow_provider_generation", False)
-    ):
-        return "120s"
-    return str(getattr(gate.args, "keep_alive", "") or "120s")
+    if not value:
+        raise RuntimeError("missing explicit provider runtime parameter: keep_alive")
+    return str(getattr(gate.args, "keep_alive", ""))
+
+
+def _required_config_value(args: Any, name: str) -> str:
+    value = str(getattr(args, name, "") or "").strip()
+    if not value:
+        raise RuntimeError(f"missing explicit provider runtime parameter: {name}")
+    return value
 
 
 def _gpu0_max_new_tokens(gate: Any) -> int:
-    env_value = str(os.environ.get("IA_CARMINE_GPU0_MAX_NEW_TOKENS") or "").strip()
-    default = int(env_value) if env_value.isdigit() and int(env_value) > 0 else 96
-    return max(32, min(int(gate.args.max_new_tokens), default))
+    return gpu0_max_new_tokens(gate.args)
 
 
 def _coexistence_evidence_path(work_dir: Path, revision: int) -> Path:
@@ -196,20 +198,18 @@ def build_provider_command_specs(
     npu_tool_timeout = lane_times["npu_micro_task_auditor"].get(
         "native_tool_timeout_seconds", npu_timeout
     )
+    configured_gpu1_model = _required_config_value(gate.args, "provider_model")
     gpu1_model = str(
         getattr(gate, "selected_provider_model", "")
-        or os.environ.get("IA_CARMINE_GPU1_MODEL")
         or preferred_gpu1_model(
-            getattr(gate.args, "provider_model", ""),
+            configured_gpu1_model,
             strict=bool(getattr(gate.args, "strict_provider_model", False)),
         )
     )
-    gpu0_model = str(os.environ.get("IA_CARMINE_GPU0_MODEL") or GPU0_OPERATIONAL_MODEL)
-    gpu0_base_url = str(
-        os.environ.get("IA_CARMINE_GPU0_OLLAMA_BASE_URL") or "http://127.0.0.1:11435"
-    )
-    gpu0_vulkan_devices = str(os.environ.get("IA_CARMINE_GPU0_VULKAN_VISIBLE_DEVICES") or "auto")
-    gpu1_base_url = str(os.environ.get("IA_CARMINE_GPU1_OLLAMA_BASE_URL") or "")
+    gpu0_model = _required_config_value(gate.args, "gpu0_model")
+    gpu0_base_url = _required_config_value(gate.args, "gpu0_base_url")
+    gpu0_vulkan_devices = _required_config_value(gate.args, "gpu0_vulkan_visible_devices")
+    gpu1_base_url = _required_config_value(gate.args, "gpu1_base_url")
     gpu1_ctx = int(getattr(gate, "selected_ollama_num_ctx", 0) or gate.args.ollama_num_ctx)
     gpu0_ctx = gpu0_ollama_num_ctx(gpu1_ctx)
     keep_alive = _provider_keep_alive(gate)
@@ -226,7 +226,7 @@ def build_provider_command_specs(
             "output": gpu1_json,
             "provider_model": gpu1_model,
             "provider_backend": "ollama",
-            "provider_base_url": gpu1_base_url or "http://127.0.0.1:11434",
+            "provider_base_url": gpu1_base_url,
             "provider_compute_device": "ollama/gpu1",
             "provider_device_policy": "ollama_gpu_accelerator_residency_cpu_only_blocked",
             **_gpu1_device_identity(),
@@ -280,6 +280,10 @@ def build_provider_command_specs(
             "provider_device_policy": "ollama_gpu0_vulkan_required_openvino_gpu0_forbidden",
             **gpu0_identity,
             "provider_max_new_tokens": _gpu0_max_new_tokens(gate),
+            "sidecar_scope_mode": "packet_review_only",
+            "sidecar_scope_contract": (
+                "review_current_gpu1_packet_only_no_broad_exploration_no_final_synthesis"
+            ),
             **_time_fields(lane_times["gpu0_peer"]),
             "command": [
                 gate.child_python(),
@@ -331,6 +335,10 @@ def build_provider_command_specs(
             "provider_compute_device": "openvino/NPU",
             "provider_device_policy": "openvino_NPU_only_cpu_not_provider",
             **_npu_device_identity(),
+            "sidecar_scope_mode": "packet_review_only",
+            "sidecar_scope_contract": (
+                "micro_audit_current_gpu1_packet_only_no_broad_exploration_no_final_synthesis"
+            ),
             **_time_fields(lane_times["npu_micro_task_auditor"]),
             "command": [
                 gate.child_python(),

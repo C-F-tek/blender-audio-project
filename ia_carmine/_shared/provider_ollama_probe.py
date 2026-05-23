@@ -47,7 +47,7 @@ def run_ollama_probe(
         prompt_explicitly_requires_tool_call,
     )
     from ia_carmine.providers.ollama import DEFAULT_BASE_URL, OllamaSession, is_server_ready, list_models, list_models_from_disk  # noqa: PLC0415
-    from ia_carmine.runtime.runtime_tool.file_refs.classifier import extract_target_refs, extract_validation_refs  # noqa: PLC0415
+    from ia_carmine.runtime.runtime_tool.file_refs.classifier import extract_rejected_validation_refs, extract_target_refs, extract_validation_refs  # noqa: PLC0415
     from ia_carmine.providers.npu.pipeline import parse_provider_result  # noqa: PLC0415
     started = time.perf_counter()
     provider_lane = str(lane or "gpu1_planner").strip()
@@ -258,11 +258,13 @@ def run_ollama_probe(
         native_tool_calls=native_tool_calls,
         extract_target_refs=extract_target_refs,
         extract_validation_refs=extract_validation_refs,
+        extract_rejected_validation_refs=extract_rejected_validation_refs,
     )
     response_text = parsed_fields["response_text"]
     textual_tool_calls = parsed_fields["textual_tool_calls"]
     target_files = parsed_fields["target_files"]
     validation_commands = parsed_fields["validation_commands"]
+    rejected_validation_refs = parsed_fields["rejected_validation_refs"]
     empty_output = parsed_fields["empty_output"]
     response_likely_incomplete = bool(
         heap_delta_text_required and is_response_likely_incomplete(response_text)
@@ -277,6 +279,11 @@ def run_ollama_probe(
         native_classification = "ollama_native_tool_not_selected_for_heap_delta"
         warnings.append(
             "Heap/code-product provider task did not emit a native broker tool_call; text heap delta remains authoritative."
+        )
+    if rejected_validation_refs:
+        warnings.append(
+            "Rejected bare file refs in VALIDATION_COMMANDS: "
+            + ", ".join(str(item) for item in rejected_validation_refs[:6])
         )
     elif heap_patch_prompt_required(prompt or ""):
         native_classification = "ollama_native_tool_not_requested_text_delta_primary"
@@ -355,13 +362,15 @@ def run_ollama_probe(
         default_role=provider_role,
     )
     provider_work_verified = bool(work_status.get("provider_work_verified"))
-    provider_execution_performed = bool(
+    provider_execution_attempted = bool(
         response_text
         or prompt_attempts
         or generation_stats.get("eval_count")
         or generation_stats.get("prompt_eval_count")
         or generation_stats.get("total_duration")
     )
+    provider_io_observed = provider_execution_attempted
+    provider_execution_performed = provider_work_verified
     if not provider_work_verified and work_status.get("provider_rejection_reason"):
         target = warnings if replight_mode else errors
         target.append(str(work_status["provider_rejection_reason"]))
@@ -376,6 +385,8 @@ def run_ollama_probe(
             **gpu_runtime_summary,
             **work_status,
             "provider_execution_performed": provider_execution_performed,
+            "provider_execution_attempted": provider_execution_attempted,
+            "provider_io_observed": provider_io_observed,
             "ollama_residency_verified": ollama_residency_verified,
             "ollama_compute_verified": ollama_compute_verified,
             "selected_model": selected_model,

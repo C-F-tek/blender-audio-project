@@ -56,7 +56,7 @@ def main() -> int:
         "controller_shared_by_cli_and_gui": "run_operator_lab" in controller_text
         and "review_code_product" in controller_text,
         "task_markdown_required_for_execution": "Task markdown not found" in run_text
-        and "not args.dry_run" in run_text,
+        and "not plan_only" in run_text,
         "preflight_compiles_product_modules": "py_compile" in run_text
         and "PREFLIGHT_FILES" in run_text,
         "preflight_runs_git_diff_check": 'git", "diff", "--check"' in run_text,
@@ -71,7 +71,7 @@ def main() -> int:
         "no_merge_or_force_push": "git merge" not in run_text
         and "git push --force" not in run_text
         and "--force-with-lease" not in run_text,
-        "profiles_file_has_default": profile_doc.get("default_profile") == "deep_external_heap",
+        "profiles_file_has_no_implicit_default": "default_profile" not in profile_doc,
         "balanced_profile_provider_enabled": balanced_profile.get("allow_provider_generation") is True,
         "deep_profile_matches_manual_budget": deep_profile.get("budget_minutes") == 20
         and deep_profile.get("max_iterations") == 80

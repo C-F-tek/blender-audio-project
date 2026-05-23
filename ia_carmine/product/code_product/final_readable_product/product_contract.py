@@ -78,8 +78,8 @@ def final_product_blockers(
         blockers.append("revision context has no linked GPU0 review/refinement block")
     if revision_linked_count(revision, "linked_npu_block_count", "npu_block_count") <= 0:
         blockers.append("revision context has no linked NPU audit block")
-    if not truthy(pointer.get("provider_execution_performed")) and not truthy(gate.get("provider_execution_performed")):
-        blockers.append("provider execution is not proven by runtime/pointer evidence")
+    if not truthy(pointer.get("provider_execution_performed")):
+        blockers.append("provider execution is not proven by verified pointer evidence")
     if matrix and matrix.get("passed") is not True:
         blockers.append("code execution matrix did not pass")
     if not markdown_output.exists():

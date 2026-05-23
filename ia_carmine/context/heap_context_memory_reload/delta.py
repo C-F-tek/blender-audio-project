@@ -9,6 +9,7 @@ from typing import Any
 
 from ia_carmine.context.heap_context_memory_reload.common import read_json, repo_rel, sha256_text, write_json
 from ia_carmine.context.heap_context_memory_reload.runner_state import ReloadRun
+from ia_carmine.context.heap_context_memory_reload.startup_scan import scan_entries_by_path
 
 
 def context_signature(repo_root: Path, rel_path: str) -> dict[str, Any]:
@@ -32,7 +33,23 @@ def digest_context(request_text: str, signatures: list[dict[str, Any]]) -> str:
 
 
 def build_context_delta(state: ReloadRun) -> None:
-    signatures = [context_signature(state.repo_root, path) for path in state.context_files]
+    scan_by_path = scan_entries_by_path(state.repo_scan_index)
+    signatures = []
+    for path in state.context_files:
+        scan_entry = scan_by_path.get(path)
+        if scan_entry:
+            signatures.append(
+                {
+                    "path": path,
+                    "exists": True,
+                    "size_bytes": int(scan_entry.get("size_bytes") or 0),
+                    "mtime_ns": int(scan_entry.get("mtime_ns") or 0),
+                    "content_hash": str(scan_entry.get("content_hash") or ""),
+                    "delta_status": str(scan_entry.get("delta_status") or ""),
+                }
+            )
+        else:
+            signatures.append(context_signature(state.repo_root, path))
     current_digest = digest_context(state.request_text, signatures)
     cache = state.repo_root / "output" / "ai_runtime_memory" / "startup_context_digest.json"
     previous = read_json(cache)

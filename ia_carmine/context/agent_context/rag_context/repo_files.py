@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from typing import Any
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -110,3 +111,35 @@ def list_repo_text_files(
         )
     return files, skipped, warnings
 
+
+def list_repo_text_files_from_scan(
+    repo_root: Path,
+    scan_index: dict[str, Any],
+    *,
+    max_file_size: int = DEFAULT_MAX_FILE_SIZE,
+) -> tuple[list[RepoFile], list[dict[str, str]], list[str]]:
+    files: list[RepoFile] = []
+    skipped: list[dict[str, str]] = []
+    warnings: list[str] = []
+    seen: set[str] = set()
+    for item in scan_index.get("files", []):
+        if not isinstance(item, dict):
+            continue
+        normalized = str(item.get("path") or "").replace("\\", "/")
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        path = (repo_root / normalized).resolve(strict=False)
+        ok, reason = is_text_candidate(normalized, path, max_file_size)
+        if not ok:
+            skipped.append({"path": normalized, "reason": reason})
+            continue
+        files.append(
+            RepoFile(
+                path=path,
+                rel_path=normalized,
+                size_bytes=int(item.get("size_bytes") or path.stat().st_size),
+                suffix=str(item.get("suffix") or path.suffix).lower(),
+            )
+        )
+    return sorted(files, key=lambda value: value.rel_path), skipped, warnings

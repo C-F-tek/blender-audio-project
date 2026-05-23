@@ -125,9 +125,17 @@ def ollama_gpu_primary_advisory(reports: list[dict[str, Any]]) -> bool:
 
 
 def provider_execution_seen(reports: list[dict[str, Any]]) -> bool:
-    """Return whether any summarized report performed provider execution."""
+    """Return whether any summarized report proves verified provider work."""
     return any(
-        item.get("summary", {}).get("provider_execution_performed") is True for item in reports
+        item.get("summary", {}).get("provider_work_verified") is True for item in reports
+    )
+
+
+def provider_execution_claim_seen(reports: list[dict[str, Any]]) -> bool:
+    """Return whether any summarized report only claimed or attempted provider I/O."""
+    return any(
+        item.get("summary", {}).get("provider_execution_claim_seen") is True
+        for item in reports
     )
 
 
@@ -147,6 +155,7 @@ def build_decision(
         "ollama_gpu_primary_advisory": ollama_gpu_primary_advisory(reports),
         "npu_excluded_when_unusable": npu_excluded_when_unusable(reports),
         "provider_execution_seen": provider_execution_seen(reports),
+        "provider_execution_claim_seen": provider_execution_claim_seen(reports),
         "selected_chunks_evidence_seen": selected_chunks_evidence_seen(selected_chunks_evidence),
         "selected_chunks_built": selected_chunks_built(selected_chunks_evidence),
         "budget_respected": selected_chunks_budget_respected(selected_chunks_evidence),

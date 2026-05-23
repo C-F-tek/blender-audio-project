@@ -170,6 +170,13 @@ def run_heap(config: LauncherConfig, timeout: int | None = None) -> dict[str, An
             reason="operator product wrapper observed failed or incomplete heap closure",
         )
     summary = read_json_quiet(summary_path)
+    if isinstance(summary, dict):
+        if cfg.effective_universe_config is not None:
+            summary["effective_universe_config"] = cfg.effective_universe_config
+        if cfg.field_sources is not None:
+            summary["field_sources"] = cfg.field_sources
+        if summary_path.exists():
+            write_json(summary_path, summary)
     provider_requested = "--allow-provider-generation" in command
     product_blocked_reason = blocked_reason(summary, result)
     product_status = str(summary.get("product_status") or "").strip()
@@ -185,6 +192,8 @@ def run_heap(config: LauncherConfig, timeout: int | None = None) -> dict[str, An
         "intermediate_run_dir": str(run_dir),
         "final_root": str(cfg.final_root),
         "public_documents_root": str(default_public_documents_root(cfg.stamp)),
+        "effective_universe_config": cfg.effective_universe_config or {},
+        "field_sources": cfg.field_sources or {},
         "launcher_summary": str(summary_path) if summary_path.exists() else "",
         "code_product": discover_code_product(run_dir, summary),
         "provider_generation_required": True,
@@ -298,6 +307,8 @@ def run_operator_lab(
         "intermediate_run_dir": str(run_dir),
         "final_root": str(cfg.final_root),
         "public_documents_root": str(default_public_documents_root(cfg.stamp)),
+        "effective_universe_config": cfg.effective_universe_config or {},
+        "field_sources": cfg.field_sources or {},
         "code_product": code_product_raw,
         "code_product_metrics": metrics,
         "provider_generation_required": True,

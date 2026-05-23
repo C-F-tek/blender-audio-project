@@ -16,6 +16,8 @@ _REPORT_KEYS = (
     "work_status",
     "provider_work_verified",
     "provider_execution_performed",
+    "provider_execution_attempted",
+    "provider_io_observed",
     "generation_stats",
     "replight",
     "replight_mode",
@@ -44,6 +46,7 @@ _REPORT_KEYS = (
     "raw_chat_response",
     "target_files",
     "validation_commands",
+    "rejected_validation_refs",
     "models",
     "is_server_ready",
     "empty_output",
@@ -82,6 +85,8 @@ def build_ollama_probe_report(ctx: dict[str, Any]) -> dict[str, Any]:
         "role": ctx["provider_role"],
         "passed": ctx["passed"],
         "provider_execution_performed": bool(ctx["provider_execution_performed"]),
+        "provider_execution_attempted": bool(ctx["provider_execution_attempted"]),
+        "provider_io_observed": bool(ctx["provider_io_observed"]),
         "require_ollama_gpu_residency": bool(ctx["require_gpu_residency"]),
         **ctx["residency"],
         **selection,
@@ -137,6 +142,9 @@ def build_ollama_probe_report(ctx: dict[str, Any]) -> dict[str, Any]:
         "target_files": [str(item) for item in ctx["target_files"] if str(item).strip()],
         "validation_commands": [
             str(item) for item in ctx["validation_commands"] if str(item).strip()
+        ],
+        "rejected_validation_refs": [
+            str(item) for item in ctx["rejected_validation_refs"] if str(item).strip()
         ],
         "model_count": len(ctx["models"]),
         "server_ready": bool(ctx["server_ready"]),

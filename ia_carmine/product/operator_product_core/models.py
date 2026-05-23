@@ -14,10 +14,15 @@ CLI_VALUE_KEYS = {
     "min_runtime_rounds": "--min-runtime-rounds",
     "min_proposal_iterations": "--min-proposal-iterations",
     "max_rounds": "--max-rounds",
+    "files_per_round": "--files-per-round",
     "max_provider_revisions": "--max-provider-revisions",
     "timeout_seconds": "--timeout-seconds",
     "preflight_timeout_seconds": "--preflight-timeout-seconds",
     "provider_model": "--provider-model",
+    "gpu1_base_url": "--gpu1-base-url",
+    "gpu0_model": "--gpu0-model",
+    "gpu0_base_url": "--gpu0-base-url",
+    "gpu0_vulkan_visible_devices": "--gpu0-vulkan-visible-devices",
     "ollama_num_ctx": "--ollama-num-ctx",
     "ollama_gpu_layers": "--ollama-gpu-layers",
     "ollama_num_thread": "--ollama-num-thread",
@@ -26,6 +31,7 @@ CLI_VALUE_KEYS = {
     "npu_model_dir": "--npu-model-dir",
     "operator_gpu_observation": "--operator-gpu-observation",
     "max_new_tokens": "--max-new-tokens",
+    "gpu0_max_new_tokens": "--gpu0-max-new-tokens",
     "keep_alive": "--keep-alive",
     "gpu0_iterations": "--gpu0-iterations",
     "gpu0_min_seconds": "--gpu0-min-seconds",
@@ -59,6 +65,16 @@ CLI_VALUE_KEYS = {
     "memory_search_limit": "--memory-search-limit",
     "tool_catalog_limit": "--tool-catalog-limit",
     "revision_context_max_tasks": "--revision-context-max-tasks",
+    "startup_provider_input_workers": "--startup-provider-input-workers",
+    "startup_required_context_profile": "--startup-required-context-profile",
+    "startup_operational_memory_query": "--startup-operational-memory-query",
+    "startup_operational_memory_limit": "--startup-operational-memory-limit",
+    "tool_inventory_roots": "--tool-inventory-roots",
+    "semantic_path_boosts": "--semantic-path-boosts",
+    "ai_context_pack_profile": "--ai-context-pack-profile",
+    "code_interpreter_inputs": "--code-interpreter-inputs",
+    "duplication_audit_roots": "--duplication-audit-roots",
+    "provider_prompt_tool_catalog_cap": "--provider-prompt-tool-catalog-cap",
 }
 
 CLI_FLAG_KEYS = {
@@ -82,62 +98,80 @@ class LauncherConfig:
     run_label: str = DEFAULT_RUN_LABEL
     python_exe: str = ""
     stamp: str = ""
-    revision_context: str = "auto_latest"
-    budget_minutes: int = 5
-    max_iterations: int = 2
-    min_runtime_rounds: int = 1
-    min_proposal_iterations: int = 0
-    max_rounds: int = 8
-    max_provider_revisions: int = 2
-    timeout_seconds: int = 600
-    preflight_timeout_seconds: int = 90
-    provider_model: str = "auto"
-    ollama_num_ctx: int = 16384
-    ollama_gpu_layers: str = "all"
+    revision_context: str | None = None
+    budget_minutes: int | None = None
+    max_iterations: int | None = None
+    min_runtime_rounds: int | None = None
+    min_proposal_iterations: int | None = None
+    max_rounds: int | None = None
+    files_per_round: int | None = None
+    max_provider_revisions: int | None = None
+    timeout_seconds: int | None = None
+    preflight_timeout_seconds: int | None = None
+    provider_model: str | None = None
+    gpu1_base_url: str | None = None
+    gpu0_model: str | None = None
+    gpu0_base_url: str | None = None
+    gpu0_vulkan_visible_devices: str | None = None
+    ollama_num_ctx: int | None = None
+    ollama_gpu_layers: str | None = None
     ollama_num_thread: int | None = None
-    ollama_context_candidates: str = "8192,4096"
-    strict_provider_model: bool = False
-    gpu0_model_dir: str = ""
-    npu_model_dir: str = ""
-    operator_gpu_observation: str = ""
-    max_new_tokens: int = 900
-    keep_alive: str = "120s"
-    gpu0_iterations: int = 16
-    gpu0_min_seconds: float = 0.1
-    npu_micro_timeout_seconds: int = 60
-    npu_max_context_chars: int = 8000
-    npu_max_prompt_chars: int = 1200
-    npu_max_new_tokens: int = 384
-    npu_device_workload_seconds: float = 3.0
-    npu_device_workload_iterations: int = 2500
-    startup_max_memory_chars: int = 32000
-    startup_max_context_files: int = 48
-    startup_scan_context_files: int = 48
-    startup_max_chars_per_file: int = 8000
-    rag_db: str = "output/ai_runtime_memory/rag/rag.sqlite"
-    rag_index_policy: str = "auto"
-    rag_embedding_endpoint: str = "http://127.0.0.1:11434"
-    rag_embedding_model: str = "bge-m3"
-    rag_ingest_batch_size: int = 8
-    rag_embed_smoke_batch_size: int = 8
-    rag_chunk_min_chars: int = 1500
-    rag_chunk_max_chars: int = 4000
-    rag_chunk_overlap_chars: int = 300
-    rag_max_file_size: int = 250000
-    rag_top_k: int = 20
-    rag_char_budget: int = 32000
-    rag_allow_missing_embeddings: bool = False
-    context_document_count: int = 24
-    context_document_preview_chars: int = 1200
-    semantic_code_chunk_limit: int = 32
-    semantic_code_chunk_preview_chars: int = 1400
-    semantic_evidence_chunk_limit: int = 24
-    memory_search_limit: int = 12
-    tool_catalog_limit: int = 80
-    revision_context_max_tasks: int = 6
-    allow_provider_generation: bool = True
-    require_ollama_gpu_residency: bool = True
-    allow_npu_device_workload: bool = True
-    skip_startup_reload: bool = False
-    strict_startup_reload: bool = False
-    no_documents: bool = False
+    ollama_context_candidates: str | None = None
+    strict_provider_model: bool | None = None
+    gpu0_model_dir: str | None = None
+    npu_model_dir: str | None = None
+    operator_gpu_observation: str | None = None
+    max_new_tokens: int | None = None
+    gpu0_max_new_tokens: int | None = None
+    keep_alive: str | None = None
+    gpu0_iterations: int | None = None
+    gpu0_min_seconds: float | None = None
+    npu_micro_timeout_seconds: int | None = None
+    npu_max_context_chars: int | None = None
+    npu_max_prompt_chars: int | None = None
+    npu_max_new_tokens: int | None = None
+    npu_device_workload_seconds: float | None = None
+    npu_device_workload_iterations: int | None = None
+    startup_max_memory_chars: int | None = None
+    startup_max_context_files: int | None = None
+    startup_scan_context_files: int | None = None
+    startup_max_chars_per_file: int | None = None
+    rag_db: str | None = None
+    rag_index_policy: str | None = None
+    rag_embedding_endpoint: str | None = None
+    rag_embedding_model: str | None = None
+    rag_ingest_batch_size: int | None = None
+    rag_embed_smoke_batch_size: int | None = None
+    rag_chunk_min_chars: int | None = None
+    rag_chunk_max_chars: int | None = None
+    rag_chunk_overlap_chars: int | None = None
+    rag_max_file_size: int | None = None
+    rag_top_k: int | None = None
+    rag_char_budget: int | None = None
+    rag_allow_missing_embeddings: bool | None = None
+    context_document_count: int | None = None
+    context_document_preview_chars: int | None = None
+    semantic_code_chunk_limit: int | None = None
+    semantic_code_chunk_preview_chars: int | None = None
+    semantic_evidence_chunk_limit: int | None = None
+    memory_search_limit: int | None = None
+    tool_catalog_limit: int | None = None
+    revision_context_max_tasks: int | None = None
+    startup_provider_input_workers: int | None = None
+    startup_required_context_profile: str | None = None
+    startup_operational_memory_query: str | None = None
+    startup_operational_memory_limit: int | None = None
+    tool_inventory_roots: str | None = None
+    semantic_path_boosts: str | None = None
+    ai_context_pack_profile: str | None = None
+    code_interpreter_inputs: str | None = None
+    duplication_audit_roots: str | None = None
+    provider_prompt_tool_catalog_cap: int | None = None
+    allow_provider_generation: bool | None = None
+    require_ollama_gpu_residency: bool | None = None
+    allow_npu_device_workload: bool | None = None
+    skip_startup_reload: bool | None = None
+    strict_startup_reload: bool | None = None
+    no_documents: bool | None = None
+    effective_universe_config: dict[str, Any] | None = None
+    field_sources: dict[str, str] | None = None

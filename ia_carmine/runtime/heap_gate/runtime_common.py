@@ -138,6 +138,7 @@ REQUIREMENT_ORDER = (
     "rag_context_pack",
     "semantic_evidence_chunks",
     "runtime_file_refs",
+    "startup_memory_index_batch",
     "gpu0_provider_peer",
     "npu_micro_task_auditor",
     "gpu1_provider_planner",
@@ -156,10 +157,12 @@ BASE_REQUIREMENTS = (
     "rag_context_pack",
     "semantic_evidence_chunks",
     "runtime_file_refs",
+    "startup_memory_index_batch",
 )
 
 PROVIDER_START_REQUIREMENTS = (
     "operational_memory_write",
+    "startup_memory_index_batch",
     "semantic_code_chunks",
     "shared_context_chunks",
     "runtime_file_refs",
@@ -220,6 +223,7 @@ MEMORY_CONTEXT_RELOAD_REQUIREMENTS = {
     "rag_context_pack": "rag_context_pack_reload",
     "semantic_evidence_chunks": "semantic_evidence_reload",
     "runtime_file_refs": "runtime_file_refs_reload",
+    "startup_memory_index_batch": "startup_memory_index_batch_reload",
     "virtual_dev_environment": "virtual_dev_environment_reload",
     "code_execution_matrix": "code_execution_matrix_reload",
     "runtime_debug_lab_execution": "runtime_debug_lab_reload",

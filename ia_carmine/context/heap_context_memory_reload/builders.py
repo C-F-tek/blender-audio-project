@@ -12,7 +12,8 @@ from ia_carmine.context.heap_context_memory_reload.common import (
     write_json,
     write_markdown,
 )
-from ia_carmine.context.heap_context_memory_reload.scanner import repo_scan_semantic_candidates
+from ia_carmine.context.heap_context_memory_reload.scanner import repo_scan_semantic_candidates, semantic_candidates_from_scan
+from ia_carmine.context.heap_context_memory_reload.startup_scan import scan_entries_by_path
 
 STARTUP_SEMANTIC_PREVIEW_CHUNK_LIMIT = 80
 STARTUP_SEMANTIC_PREVIEW_CHARS = 1600
@@ -31,11 +32,14 @@ def build_repo_docs_map(
     *,
     changed_paths: set[str] | None = None,
     delta_active: bool = False,
+    scan_index: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     changed_paths = changed_paths or set()
+    scan_by_path = scan_entries_by_path(scan_index or {})
     docs = []
     for index, rel_path in enumerate(context_files):
         full = repo_root / rel_path
+        scan_entry = scan_by_path.get(rel_path, {})
         preview_included = index < STARTUP_DOCS_MAP_PREVIEW_LIMIT and (
             not delta_active or rel_path in changed_paths
         )
@@ -43,7 +47,9 @@ def build_repo_docs_map(
         docs.append(
             {
                 "path": rel_path,
-                "size_bytes": full.stat().st_size if full.exists() else 0,
+                "size_bytes": int(scan_entry.get("size_bytes") or (full.stat().st_size if full.exists() else 0)),
+                "mtime_ns": int(scan_entry.get("mtime_ns") or 0),
+                "top_level_partition": str(scan_entry.get("top_level_partition") or ""),
                 "delta_status": (
                     "changed_or_new"
                     if not delta_active or rel_path in changed_paths
@@ -65,6 +71,8 @@ def build_repo_docs_map(
         "source_writes_performed": False,
         "document_count": len(docs),
         "delta_active": bool(delta_active),
+        "startup_repo_scan_index_used": bool(scan_index),
+        "startup_repo_scan_file_count": int((scan_index or {}).get("file_count") or 0),
         "changed_document_count": sum(1 for item in docs if item["delta_status"] == "changed_or_new"),
         "unchanged_ref_only_count": sum(1 for item in docs if item["delta_status"] == "unchanged_ref_only"),
         "live_artifact_policy": "all_context_paths_indexed; bounded previews only",
@@ -128,14 +136,20 @@ def collect_semantic_code_chunks(
     *,
     changed_paths: set[str] | None = None,
     delta_active: bool = False,
+    scan_index: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     changed_paths = changed_paths or set()
+    scan_by_path = scan_entries_by_path(scan_index or {})
     keywords = [
         part.lower()
         for part in request.replace("_", " ").replace("-", " ").split()
         if len(part) >= 4
     ]
-    candidates = repo_scan_semantic_candidates(repo_root, max_files=max(1000, limit * 80))
+    candidates = (
+        semantic_candidates_from_scan(scan_index, repo_root=repo_root, max_files=max(1000, limit * 80))
+        if scan_index
+        else repo_scan_semantic_candidates(repo_root, max_files=max(1000, limit * 80))
+    )
     ranked = sorted(
         ((_semantic_score(repo_root, path, keywords), path) for path in candidates),
         key=lambda item: (-item[0], repo_rel(repo_root, item[1])),
@@ -144,6 +158,7 @@ def collect_semantic_code_chunks(
     stored_preview_chars = max(1, min(preview_chars, STARTUP_SEMANTIC_PREVIEW_CHARS))
     for index, (score, path) in enumerate(ranked[:limit]):
         rel = repo_rel(repo_root, path)
+        scan_entry = scan_by_path.get(rel, {})
         preview_included = index < STARTUP_SEMANTIC_PREVIEW_CHUNK_LIMIT and (
             not delta_active or rel in changed_paths
         )
@@ -152,7 +167,9 @@ def collect_semantic_code_chunks(
             {
                 "path": rel,
                 "score": score,
-                "size_bytes": path.stat().st_size if path.exists() else 0,
+                "size_bytes": int(scan_entry.get("size_bytes") or (path.stat().st_size if path.exists() else 0)),
+                "mtime_ns": int(scan_entry.get("mtime_ns") or 0),
+                "top_level_partition": str(scan_entry.get("top_level_partition") or ""),
                 "delta_status": (
                     "changed_or_new"
                     if not delta_active or rel in changed_paths
@@ -173,6 +190,8 @@ def collect_semantic_code_chunks(
         "source_writes_performed": False,
         "chunk_count": len(chunks),
         "delta_active": bool(delta_active),
+        "startup_repo_scan_index_used": bool(scan_index),
+        "startup_repo_scan_file_count": int((scan_index or {}).get("file_count") or 0),
         "changed_chunk_count": sum(1 for item in chunks if item["delta_status"] == "changed_or_new"),
         "unchanged_ref_only_count": sum(1 for item in chunks if item["delta_status"] == "unchanged_ref_only"),
         "selection_policy": "deterministic_path_keyword_ranker",
