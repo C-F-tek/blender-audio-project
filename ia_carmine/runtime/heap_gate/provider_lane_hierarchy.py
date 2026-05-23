@@ -49,15 +49,15 @@ def preferred_gpu1_model(requested: str | None, *, strict: bool = False) -> str:
     raise RuntimeError("missing explicit GPU1 provider model; pass --provider-model")
 
 
-def gpu0_ollama_num_ctx(gpu1_ctx: Any) -> int:
-    try:
-        parsed = int(gpu1_ctx or 0)
-    except (TypeError, ValueError):
-        raise RuntimeError("missing explicit GPU1 context budget; pass --ollama-num-ctx")
-    parsed = max(1024, parsed)
-    if parsed <= 2048:
-        return 1024
-    return max(1024, min(2048, parsed - 1024))
+def gpu0_ollama_num_ctx_config(args: Any) -> dict[str, Any]:
+    cli_value = _positive_int(getattr(args, "gpu0_ollama_num_ctx", 0))
+    if not cli_value:
+        raise RuntimeError("missing explicit GPU0 context budget; pass --gpu0-ollama-num-ctx")
+    return _cfg(cli_value, "cli_arg", "--gpu0-ollama-num-ctx")
+
+
+def gpu0_ollama_num_ctx(args: Any) -> int:
+    return int(gpu0_ollama_num_ctx_config(args)["effective_value"])
 
 
 def gpu0_max_new_tokens_config(args: Any) -> dict[str, Any]:
@@ -86,7 +86,7 @@ def operator_effective_config(args: Any, *, gpu1_ctx: int, gpu0_ctx: int) -> dic
         "gpu1.max_new_tokens": _cfg(
             _positive_int(getattr(args, "max_new_tokens", 0)), "explicit_cli_surface", "--max-new-tokens"
         ),
-        "gpu0.ollama_num_ctx": _cfg(gpu0_ctx, "derived_from_gpu1_ctx", "--ollama-num-ctx"),
+        "gpu0.ollama_num_ctx": _cfg(gpu0_ctx, "cli_arg", "--gpu0-ollama-num-ctx"),
         "gpu0.max_new_tokens": gpu0_tokens,
         "npu.max_context_chars": _cfg(
             _positive_int(getattr(args, "npu_max_context_chars", 0)),
@@ -152,8 +152,10 @@ def lane_context_budget(
 
 
 def context_hierarchy_payload(args: Any, *, gpu1_ctx: Any | None = None) -> dict[str, Any]:
-    effective_gpu1_ctx = int(gpu1_ctx or getattr(args, "ollama_num_ctx", 0) or 8192)
-    effective_gpu0_ctx = gpu0_ollama_num_ctx(effective_gpu1_ctx)
+    effective_gpu1_ctx = _positive_int(gpu1_ctx or getattr(args, "ollama_num_ctx", 0))
+    if not effective_gpu1_ctx:
+        raise RuntimeError("missing explicit GPU1 context budget; pass --ollama-num-ctx")
+    effective_gpu0_ctx = gpu0_ollama_num_ctx(args)
     npu_prompt = int(getattr(args, "npu_max_prompt_chars", 0) or 0)
     npu_context = int(getattr(args, "npu_max_context_chars", 0) or 0)
     valid = bool(effective_gpu1_ctx > effective_gpu0_ctx >= 1024 and 0 < npu_prompt <= npu_context)

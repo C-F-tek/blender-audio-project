@@ -84,17 +84,41 @@ def recoverable_sidecar_failure_reason(
 
 
 def _sidecar_observed_work(report: dict[str, Any]) -> bool:
-    return bool(
-        report.get("provider_execution_performed")
+    lane_specific_compute = bool(
+        report.get("provider_work_verified")
+        or report.get("provider_execution_performed")
         or report.get("operational_provider_activity")
-        or report.get("provider_loaded")
         or report.get("npu_peer_evidence_verified")
         or report.get("npu_peer_activity_performed")
         or report.get("npu_device_workload_performed")
-        or report.get("gpu0_secondary_schema_valid") is not None
-        or str(report.get("response_text") or "").strip()
-        or str(report.get("gpu0_raw_response_text") or "").strip()
+        or report.get("npu_micro_provider_execution_performed")
+        or report.get("npu_provider_execution_performed")
+        or report.get("semantic_provider_execution_performed")
+        or report.get("native_tool_loop_performed")
+        or report.get("ollama_compute_verified")
     )
+    token_compute = bool(
+        (
+            _positive_count(report.get("completion_token_count"))
+            or _positive_count(report.get("prompt_token_count"))
+            or _positive_count(report.get("eval_count"))
+            or _positive_count(report.get("prompt_eval_count"))
+        )
+        and (
+            report.get("provider_device_verified")
+            or report.get("device_identity_verified")
+            or report.get("provider_backend_device_id")
+            or report.get("provider_compute_device")
+        )
+    )
+    return bool(lane_specific_compute or token_compute)
+
+
+def _positive_count(value: Any) -> bool:
+    try:
+        return int(value or 0) > 0
+    except (TypeError, ValueError):
+        return False
 
 
 def primary_provider_report(prepared: list[dict[str, Any]]) -> dict[str, Any]:
@@ -142,6 +166,24 @@ def block_provider_universe_run(gate: Any, reason: str, round_id: int, revision:
     gate.provider_universe_blocked_reason = reason
     if reason not in gate.errors:
         gate.errors.append(reason)
+    if _provider_recovery_should_run_before_terminal_product(gate):
+        signal = {
+            "id": "provider_universe_block_deferred_for_gpu1_recovery",
+            "from": "provider_universe",
+            "decision": "defer_terminal_block_until_gpu1_recovery",
+            "reason": reason,
+            "revision": revision,
+            "round": round_id,
+        }
+        gate.publish(
+            "deterministic",
+            "validation_signal",
+            signal,
+            target="gpu1",
+            correlation_id=f"{gate.stamp}:provider-universe-recovery-deferred",
+            round_id=round_id,
+        )
+        return
     decision = {
         "id": "provider_universe_blocked",
         "from": "provider_universe",
@@ -195,6 +237,21 @@ def block_provider_universe_run(gate: Any, reason: str, round_id: int, revision:
     if not hasattr(gate, "candidate_operation_count"):
         gate.candidate_operation_count = 0
     publish_candidate_operation(gate, ready=False, missing=[reason], round_id=round_id)
+
+
+def _provider_recovery_should_run_before_terminal_product(gate: Any) -> bool:
+    try:
+        from ia_carmine.runtime.heap_gate.provider_recovery import provider_recovery_status
+
+        status = provider_recovery_status(gate, gate.read_events())
+    except Exception:
+        return False
+    return bool(
+        status.get("provider_recovery_required")
+        and status.get("sidecar_recoverable_failure")
+        and not status.get("provider_recovery_attempted")
+        and not status.get("provider_revision_budget_exhausted")
+    )
 
 
 def _failed_provider_from_reason(reason: str) -> str:

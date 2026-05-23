@@ -12,7 +12,6 @@ def run_provider_loop_hierarchy_checks(repo_root: Path) -> dict[str, Any]:
     from ia_carmine.runtime.heap_gate.provider_command_specs import build_provider_command_specs
     from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
         GPU1_LANE,
-        gpu0_ollama_num_ctx,
     )
     from ia_carmine.runtime.heap_gate.provider_lane_policy import (
         GPU0_LANE,
@@ -49,8 +48,8 @@ def run_provider_loop_hierarchy_checks(repo_root: Path) -> dict[str, Any]:
     gpu0_ctx = int(gpu0.get("context_budget", {}).get("ollama_num_ctx") or 0)
     if gpu0_ctx <= 0 or gpu1_ctx <= gpu0_ctx:
         errors.append(f"context hierarchy invalid: gpu1_ctx={gpu1_ctx}, gpu0_ctx={gpu0_ctx}")
-    if gpu0_ctx != gpu0_ollama_num_ctx(gpu1_ctx):
-        errors.append("GPU0 context budget does not use the medium coworker default")
+    if gpu0_ctx != args.gpu0_ollama_num_ctx:
+        errors.append("GPU0 context budget does not use explicit --gpu0-ollama-num-ctx")
     gpu0_command = [str(item) for item in gpu0.get("command", [])]
     if "--strict-provider-model" not in gpu0_command:
         errors.append("GPU0 coworker command can silently switch away from qwen3:1.7b")
@@ -124,6 +123,7 @@ def _args() -> SimpleNamespace:
         ollama_context_candidates="8192,4096",
         ollama_gpu_layers="all",
         ollama_num_ctx=8192,
+        gpu0_ollama_num_ctx=2048,
         gpu0_max_new_tokens=256,
         gpu1_base_url="http://127.0.0.1:11434",
         operator_gpu_observation="",

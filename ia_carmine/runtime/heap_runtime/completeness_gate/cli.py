@@ -181,6 +181,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-new-tokens", type=int, default=None)
     parser.add_argument("--gpu0-max-new-tokens", type=int, default=None)
     parser.add_argument("--ollama-num-ctx", type=int, default=None)
+    parser.add_argument("--gpu0-ollama-num-ctx", type=int, default=None)
     parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default="")
     parser.add_argument("--ollama-num-thread", type=int, default=None)
     parser.add_argument("--ollama-context-candidates", default="")

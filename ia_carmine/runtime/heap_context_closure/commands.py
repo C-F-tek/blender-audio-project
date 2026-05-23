@@ -100,6 +100,8 @@ def heap_command(args: Any, state: dict[str, Any]) -> list[str]:
         str(args.max_provider_revisions),
         "--ollama-num-ctx",
         str(args.ollama_num_ctx),
+        "--gpu0-ollama-num-ctx",
+        str(getattr(args, "gpu0_ollama_num_ctx", 0) or 0),
         "--ollama-gpu-layers",
         str(args.ollama_gpu_layers or "all"),
         "--ollama-context-candidates",

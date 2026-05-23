@@ -20,10 +20,6 @@ from ia_carmine.runtime.heap_gate.matrix_lab_evidence import RuntimeGateMatrixLa
 PROVIDER_CONSUMABLE_REQUIREMENTS = {
     "runtime_file_refs",
     "startup_memory_index_batch",
-    "provider_input_memory_index_batch",
-    "virtual_dev_environment",
-    "code_execution_matrix",
-    "runtime_debug_lab_execution",
 }
 
 

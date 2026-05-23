@@ -260,6 +260,17 @@ def _consumed_generic_write_refs(owner: Any) -> set[str]:
 
 
 def generic_write_document_product_eligible(owner: Any, events: list[dict[str, Any]]) -> bool:
+    results = passed_generic_write_results(events, owner=owner)
+    if len(results) < GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS:
+        return False
+    consumed_refs = _consumed_generic_write_refs(owner)
+    matched_refs = {
+        _generic_write_ref_id(owner, payload)
+        for payload in results
+        if _generic_write_ref_id(owner, payload) in consumed_refs
+    }
+    if len(matched_refs) < GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS:
+        return False
     if generic_write_consumed_round_count(owner, events) < GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS:
         return False
     if generic_write_followup_pending_count(owner, events) > 0:
@@ -440,6 +451,18 @@ def maybe_run_generic_write_followup(
     )
     owner.run_provider_teamwork(round_id, revision=next_revision)
     _mark_generic_write_consumed_by_gpu1(owner, payload, next_revision)
+    consumed_refs = list(getattr(owner, "gpu1_consumed_generic_write_block_ids", []) or [])
+    owner.append_heap_exchange_event(
+        {
+            "kind": "generic_write_consumed_by_gpu1",
+            "lane": provider_heap_lane("gpu1_planner"),
+            "round": round_id,
+            "source_lane": source_lane,
+            "source_revision": source_revision,
+            "gpu1_revision": next_revision,
+            "consumed_generic_write_refs": consumed_refs,
+        }
+    )
     updated = owner.read_events()
     if owner.publish_provider_native_tool_calls(round_id, updated):
         if owner.heap.pending_broker_requests():

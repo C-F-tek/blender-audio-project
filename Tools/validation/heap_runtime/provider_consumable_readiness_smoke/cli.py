@@ -58,14 +58,19 @@ class _Gate(RuntimeGateMatrixLabMixin):
 
 
 def _event(event_type: str, requirement: str, *, returncode: int = 0) -> dict[str, Any]:
+    tool = "run_heap_code_execution_matrix"
+    if requirement in {"startup_memory_index_batch", "provider_input_memory_index_batch"}:
+        tool = "runtime_sqlite_memory"
+    elif requirement == "runtime_file_refs":
+        tool = "runtime_file_refs"
+    elif requirement == "runtime_debug_lab_execution":
+        tool = "agent_runtime_debug_lab"
     return {
         "event_type": event_type,
         "correlation_id": f"req:{requirement}",
         "payload": {
             "id": f"req:{requirement}",
-            "tool": "run_heap_code_execution_matrix"
-            if requirement == "code_execution_matrix"
-            else "runtime_sqlite_memory",
+            "tool": tool,
             "requirement": requirement,
             "returncode": returncode,
             "outputs": {"json_report": f"output/validation/{requirement}.json"},
@@ -79,23 +84,29 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     arbiter = _read(repo_root, "ia_carmine/runtime/heap_gate/arbiter_step.py")
     broker = _read(repo_root, "ia_carmine/runtime/heap_gate/tool_broker.py")
     plan = _read(repo_root, "ia_carmine/runtime/heap_gate/tool_plan_builder.py")
-    pending_request = _event("broker_request", "code_execution_matrix")
-    pending_gate = _Gate(pending=[pending_request])
+    pending_matrix_request = _event("broker_request", "code_execution_matrix")
+    pending_startup_request = _event("broker_request", STARTUP_MEMORY_INDEX_BATCH_REQUIREMENT)
+    pending_matrix_gate = _Gate(pending=[pending_matrix_request])
+    pending_startup_gate = _Gate(pending=[pending_startup_request])
     failed_result_gate = _Gate()
     unattempted_gate = _Gate(
-        unattempted=[{"requirement": "runtime_debug_lab_execution"}]
+        unattempted=[{"requirement": "runtime_file_refs"}]
     )
-    failed_result = _event("broker_result", "code_execution_matrix", returncode=2)
+    failed_result = _event("broker_result", STARTUP_MEMORY_INDEX_BATCH_REQUIREMENT, returncode=2)
     checks = {
         "startup_batch_in_base_requirements": STARTUP_MEMORY_INDEX_BATCH_REQUIREMENT
         in BASE_REQUIREMENTS,
         "startup_batch_in_provider_start": STARTUP_MEMORY_INDEX_BATCH_REQUIREMENT
         in PROVIDER_START_REQUIREMENTS,
-        "pending_provider_consumable_blocks_revision": pending_gate.provider_revision_evidence_ready(
+        "pending_matrix_does_not_block_provider_revision": pending_matrix_gate.provider_revision_evidence_ready(
+            []
+        )
+        is True,
+        "pending_startup_batch_blocks_provider_revision": pending_startup_gate.provider_revision_evidence_ready(
             []
         )
         is False,
-        "failed_result_is_consumable_feedback": failed_result_gate.provider_revision_evidence_ready(
+        "failed_startup_result_is_consumable_feedback": failed_result_gate.provider_revision_evidence_ready(
             [failed_result]
         )
         is True,
@@ -119,7 +130,9 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         )
         >= 2
         and "startup-memory-index-batch" in plan,
-        "baseline_lab_can_be_pre_provider": "pre_provider_baseline" in plan,
+        "baseline_lab_is_not_pre_provider": "pre_provider_baseline" not in plan,
+        "virtual_debug_are_post_provider_feedback": "provider_feedback_evidence" in plan
+        and "post_provider" in plan,
     }
     return {
         "schema_version": 1,

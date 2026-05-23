@@ -185,6 +185,7 @@ def main() -> int:
         gpu0_base_url="http://127.0.0.1:11435",
         gpu0_vulkan_visible_devices="1",
         ollama_num_ctx=4096,
+        gpu0_ollama_num_ctx=2048,
         ollama_gpu_layers="all",
         ollama_context_candidates="4096",
         npu_model_dir="C:/explicit/npu-model",

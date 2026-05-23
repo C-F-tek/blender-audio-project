@@ -339,16 +339,15 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             }
         )
 
-    for item in [
-        *owner.virtual_dev_environment_plan_items(context_dir, request),
-        *owner.runtime_debug_lab_plan_items(context_dir, request),
-    ]:
-        item["pre_provider_baseline"] = True
-        item["provider_consumable_evidence"] = True
-        item["final_product_validation"] = False
-        plan.append(item)
-
     if getattr(owner, "provider_reports", []):
+        for item in [
+            *owner.virtual_dev_environment_plan_items(context_dir, request),
+            *owner.runtime_debug_lab_plan_items(context_dir, request),
+        ]:
+            item["post_provider"] = True
+            item["provider_feedback_evidence"] = True
+            item["final_product_validation"] = False
+            plan.append(item)
         for item in owner.code_execution_matrix_plan_items(context_dir, request):
             item["post_provider"] = True
             item["final_product_validation"] = True

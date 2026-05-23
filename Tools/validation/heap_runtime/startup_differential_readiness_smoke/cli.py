@@ -16,6 +16,7 @@ from typing import Any
 
 from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
 from ia_carmine.context.heap_context_memory_reload.common import write_json
+from ia_carmine.context.heap_context_memory_reload.delta import build_context_delta
 from ia_carmine.context.heap_context_memory_reload.runner import (
     _store_tool_catalog_cache,
     _try_restore_tool_catalog_cache,
@@ -82,6 +83,12 @@ def _state(repo: Path, output_dir: Path, scan_index: dict[str, Any], stamp: str)
     )
 
 
+def _delta_state(repo: Path, output_dir: Path, scan_index: dict[str, Any], stamp: str) -> ReloadRun:
+    state = _state(repo, output_dir, scan_index, stamp)
+    state.context_files = [f"docs/file_{index:03d}.md" for index in range(100)]
+    return state
+
+
 def run_smoke() -> dict[str, Any]:
     checks: dict[str, bool] = {}
     details: dict[str, Any] = {}
@@ -102,10 +109,24 @@ def run_smoke() -> dict[str, Any]:
             second_scan = build_startup_repo_scan_index(repo, second_dir, max_hash_size=250000)
             second_scan_path = second_dir / "startup_repo_scan_index.json"
             second_ingest = _ingest(repo, second_scan_path, second_dir / "rag_ingest.json")
+            delta_first_state = _delta_state(
+                repo, repo / "output" / "delta_first", second_scan, "delta-first"
+            )
+            delta_first_state.output_dir.mkdir(parents=True, exist_ok=True)
+            build_context_delta(delta_first_state)
+            delta_second_state = _delta_state(
+                repo, repo / "output" / "delta_second", second_scan, "delta-second"
+            )
+            delta_second_state.output_dir.mkdir(parents=True, exist_ok=True)
+            build_context_delta(delta_second_state)
             checks["delta_scan_one_changed"] = (
                 second_scan.get("changed_file_count") == 1
                 and second_scan.get("unchanged_ref_only_count", 0) >= 100
                 and second_scan.get("changed_files") == ["docs/file_042.md"]
+            )
+            checks["build_context_delta_second_run_has_unchanged"] = (
+                delta_second_state.context_delta.get("unchanged_context_file_count", 0) > 0
+                and delta_second_state.context_delta.get("changed_context_file_count") == 0
             )
             checks["rag_reads_only_changed"] = (
                 second_ingest.get("read_file_count") == 1
@@ -150,6 +171,20 @@ def run_smoke() -> dict[str, Any]:
                 "tool_catalog_cache": {
                     "cache_hit": restored.get("cache_hit") if restored else False,
                     "source_run": restored.get("source_run") if restored else "",
+                },
+                "context_delta": {
+                    "first_changed": delta_first_state.context_delta.get(
+                        "changed_context_file_count"
+                    ),
+                    "second_changed": delta_second_state.context_delta.get(
+                        "changed_context_file_count"
+                    ),
+                    "second_unchanged": delta_second_state.context_delta.get(
+                        "unchanged_context_file_count"
+                    ),
+                    "diagnostic_sample": (
+                        delta_second_state.context_delta.get("context_file_diagnostics") or []
+                    )[:3],
                 },
             }
     except Exception as exc:  # noqa: BLE001

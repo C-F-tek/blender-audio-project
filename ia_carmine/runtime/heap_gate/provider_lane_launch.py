@@ -82,6 +82,9 @@ def write_provider_launch_manifest(
             ),
             "production_provider_window": metrics,
             "all_selected_lanes_joined": metrics.get("all_selected_lanes_joined"),
+            "gpu1_idle_after_primary_seconds": metrics.get(
+                "gpu1_idle_after_primary_seconds"
+            ),
             "sidecar_alone_after_gpu1_seconds": metrics.get(
                 "sidecar_alone_after_gpu1_seconds"
             ),
@@ -169,6 +172,7 @@ def _parallel_window_metrics(prepared: list[dict[str, Any]]) -> dict[str, Any]:
             prepared and all(item.get("completed") is not None for item in prepared)
         ),
         "start_skew_seconds": start_skews,
+        "gpu1_idle_after_primary_seconds": round(sidecar_alone, 6),
         "sidecar_alone_after_gpu1_seconds": round(sidecar_alone, 6),
     }
 

@@ -6,7 +6,6 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
     DEFAULT_BRIDGE_DIR,
     DEFAULT_BRIDGE_JSON,
     DEFAULT_BRIDGE_MD,
-    PROVIDER_START_REQUIREMENTS,
     Any,
     append_unique,
     command_env,
@@ -276,5 +275,3 @@ class RuntimeGateLoopStepsMixin:
         run_arbiter_step(self, round_id, events)
     def base_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
         return all(req in self.completed_requirements(events) for req in BASE_REQUIREMENTS)
-    def provider_start_requirements_complete(self, events: list[dict[str, Any]]) -> bool:
-        return all(req in self.completed_requirements(events) for req in PROVIDER_START_REQUIREMENTS)

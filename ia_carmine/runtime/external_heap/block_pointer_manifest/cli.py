@@ -251,10 +251,7 @@ def block_provider_execution_performed(block: dict[str, Any]) -> bool:
     graph. Their presence is required for the final product, but it must not be
     used as proof that a provider or hardware workload actually executed.
     """
-    if normalize_bool(block.get("provider_execution_performed")):
-        return True
-    preview = str(block.get("preview") or "")
-    return text_has_execution_evidence(preview)
+    return bool(normalize_bool(block.get("provider_work_verified")))
 
 
 def block_resource_mechanics_performed(block: dict[str, Any]) -> bool:
@@ -343,6 +340,12 @@ def build_report(
     ]
     provider_mode_observed = bool(source_providers or rejected_providers)
     provider_roles = set(roles_verified)
+    verified_provider_blocks = [
+        block
+        for block in source_providers
+        if normalize_bool(block.get("provider_work_verified"))
+        and normalize_bool(block.get("provider_role_counted"))
+    ]
     unlinked_peer_blocks = [
         block.get("block_id")
         for block in source_providers
@@ -424,7 +427,7 @@ def build_report(
         "invalid_roles": invalid_roles,
         "provider_missing_roles": provider_missing_roles,
         "provider_unverified_roles": provider_unverified_roles,
-        "provider_verified_count": len(source_providers),
+        "provider_verified_count": len(verified_provider_blocks),
         "provider_rejected_count": len(rejected_providers),
         "provider_rejections": rejected_providers,
         "provider_rejection_reasons": provider_rejection_reasons,

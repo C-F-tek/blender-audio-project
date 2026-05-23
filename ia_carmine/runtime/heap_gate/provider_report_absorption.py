@@ -227,7 +227,22 @@ def absorb_completed_provider_item(
     provider_report["diagnostic_only"] = not bool(
         provider_report.get("operational_provider_activity")
     )
-    provider_report["status"] = "ready" if completed.returncode == 0 else "failed"
+    rejection_reason = str(
+        provider_report.get("provider_rejection_reason")
+        or provider_report.get("product_blocked_reason")
+        or ""
+    ).strip()
+    work_ready = bool(
+        completed.returncode == 0
+        and provider_report.get("passed") is True
+        and provider_report.get("provider_work_verified") is True
+        and not rejection_reason
+    )
+    provider_report["process_status"] = "completed" if completed.returncode == 0 else "failed"
+    provider_report["work_status"] = (
+        "ready" if work_ready else "rejected" if rejection_reason else "unverified"
+    )
+    provider_report["status"] = provider_report["work_status"]
     normalized_output = dict(report_data) if isinstance(report_data, dict) else {}
     normalized_output.update(provider_report)
     write_json_report(normalized_output, Path(spec["output"]))

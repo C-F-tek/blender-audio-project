@@ -24,6 +24,7 @@ CLI_VALUE_KEYS = {
     "gpu0_base_url": "--gpu0-base-url",
     "gpu0_vulkan_visible_devices": "--gpu0-vulkan-visible-devices",
     "ollama_num_ctx": "--ollama-num-ctx",
+    "gpu0_ollama_num_ctx": "--gpu0-ollama-num-ctx",
     "ollama_gpu_layers": "--ollama-gpu-layers",
     "ollama_num_thread": "--ollama-num-thread",
     "ollama_context_candidates": "--ollama-context-candidates",
@@ -114,6 +115,7 @@ class LauncherConfig:
     gpu0_base_url: str | None = None
     gpu0_vulkan_visible_devices: str | None = None
     ollama_num_ctx: int | None = None
+    gpu0_ollama_num_ctx: int | None = None
     ollama_gpu_layers: str | None = None
     ollama_num_thread: int | None = None
     ollama_context_candidates: str | None = None

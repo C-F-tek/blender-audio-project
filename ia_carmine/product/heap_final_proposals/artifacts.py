@@ -90,7 +90,7 @@ def compute_product_causality(
         report.get("provider_work_verified")
         or metrics.get("provider_work_verified")
         or output_contract.get("provider_work_verified")
-        or any(item.get("provider_execution_performed") for item in provider_reports)
+        or any(item.get("provider_work_verified") for item in provider_reports)
     )
     proposal_artifacts = (
         report.get("proposal_iteration_artifacts")
@@ -232,6 +232,7 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
                 "lane": lane,
                 "passed": data.get("passed"),
                 "provider_execution_performed": provider_report_execution_performed(data),
+                "provider_work_verified": provider_report_execution_performed(data),
                 "response_text": data.get("response_text", ""),
                 "npu_device_workload": data.get("npu_device_workload"),
                 "warnings": data.get("warnings", []),

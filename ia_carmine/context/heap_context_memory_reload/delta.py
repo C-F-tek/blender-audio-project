@@ -35,9 +35,16 @@ def digest_context(request_text: str, signatures: list[dict[str, Any]]) -> str:
 def build_context_delta(state: ReloadRun) -> None:
     scan_by_path = scan_entries_by_path(state.repo_scan_index)
     signatures = []
+    diagnostics: list[dict[str, Any]] = []
     for path in state.context_files:
         scan_entry = scan_by_path.get(path)
         if scan_entry:
+            diagnostics.append(
+                {
+                    "path": path,
+                    "delta_status": str(scan_entry.get("delta_status") or ""),
+                }
+            )
             signatures.append(
                 {
                     "path": path,
@@ -45,7 +52,6 @@ def build_context_delta(state: ReloadRun) -> None:
                     "size_bytes": int(scan_entry.get("size_bytes") or 0),
                     "mtime_ns": int(scan_entry.get("mtime_ns") or 0),
                     "content_hash": str(scan_entry.get("content_hash") or ""),
-                    "delta_status": str(scan_entry.get("delta_status") or ""),
                 }
             )
         else:
@@ -62,7 +68,7 @@ def build_context_delta(state: ReloadRun) -> None:
     unchanged_count = 0
     for item in signatures:
         rel_path = str(item.get("path") or "")
-        if previous_by_path.get(rel_path) == item:
+        if _comparison_signature(previous_by_path.get(rel_path)) == _comparison_signature(item):
             unchanged_count += 1
         else:
             changed.append(rel_path)
@@ -80,9 +86,18 @@ def build_context_delta(state: ReloadRun) -> None:
         "changed_context_files": changed[:240],
         "unchanged_preview_policy": "omit_unchanged_bounded_previews_use_file_refs",
         "context_file_signatures": signatures,
+        "context_file_diagnostics": diagnostics,
     }
     delta_path = state.output_dir / "startup_context_delta.json"
     write_json(delta_path, state.context_delta)
     cache.parent.mkdir(parents=True, exist_ok=True)
     write_json(cache, state.context_delta)
     state.artifacts["startup_context_delta_json"] = repo_rel(state.repo_root, delta_path)
+
+
+def _comparison_signature(item: Any) -> dict[str, Any]:
+    if not isinstance(item, dict):
+        return {}
+    signature = dict(item)
+    signature.pop("delta_status", None)
+    return signature

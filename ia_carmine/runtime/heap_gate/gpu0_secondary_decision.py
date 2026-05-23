@@ -82,6 +82,53 @@ def parse_gpu0_secondary_response(
     if decision == "incongruent" and not incongruence_reasons:
         incongruence_reasons = ["gpu0_incongruent_without_reasons"]
 
+    checked_block_id = str(
+        parsed.get("checked_block_id")
+        or parsed.get("reviewed_gpu1_block_id")
+        or parsed.get("review_target_pointer")
+        or parsed.get("refines_block_id")
+        or ""
+    )
+    checked_revision = str(
+        parsed.get("checked_gpu1_revision")
+        or parsed.get("reviewed_revision")
+        or parsed.get("review_for_gpu1_cycle")
+        or ""
+    )
+    reviewed_fingerprint = str(
+        parsed.get("reviewed_packet_fingerprint") or parsed.get("packet_fingerprint") or ""
+    )
+    missing_required_fields = [
+        name
+        for name, value in (
+            ("checked_block_id", checked_block_id),
+            ("checked_gpu1_revision", checked_revision),
+            ("reviewed_packet_fingerprint", reviewed_fingerprint),
+        )
+        if not value
+    ]
+    if missing_required_fields:
+        invalid = invalid_gpu0_secondary_decision(
+            raw_text,
+            fallback_block_id=fallback_block_id,
+            fallback_revision=fallback_revision,
+            fallback_packet_fingerprint=fallback_packet_fingerprint,
+            reason="gpu0_secondary_required_fields_missing",
+        )
+        invalid["missing_required_fields"] = missing_required_fields
+        invalid["gpu0_model_decision"] = decision
+        invalid["gpu0_decision"] = "refine_required"
+        invalid["incongruence_reasons"] = incongruence_reasons
+        invalid["veto_reasons"] = list(
+            dict.fromkeys(
+                [
+                    *veto_reasons,
+                    "gpu0_secondary_required_fields_missing",
+                ]
+            )
+        )
+        return invalid
+
     payload = {
         "gpu0_secondary_schema_valid": True,
         "gpu0_role": GPU0_ROLE,
@@ -89,47 +136,27 @@ def parse_gpu0_secondary_response(
         "gpu0_model_decision": decision,
         "gpu0_effective_decision": decision,
         "role_decision": gpu0_role_decision(decision),
-        "checked_block_id": str(
-            parsed.get("checked_block_id")
-            or parsed.get("reviewed_gpu1_block_id")
-            or parsed.get("review_target_pointer")
-            or parsed.get("refines_block_id")
-            or fallback_block_id
-            or ""
-        ),
-        "checked_gpu1_revision": str(
-            parsed.get("checked_gpu1_revision")
-            or parsed.get("reviewed_revision")
-            or parsed.get("review_for_gpu1_cycle")
-            or fallback_revision
-            or ""
-        ),
+        "checked_block_id": checked_block_id,
+        "checked_gpu1_revision": checked_revision,
         "reviewed_gpu1_block_id": str(
             parsed.get("reviewed_gpu1_block_id")
             or parsed.get("checked_block_id")
-            or fallback_block_id
             or ""
         ),
         "reviewed_revision": str(
             parsed.get("reviewed_revision")
             or parsed.get("checked_gpu1_revision")
             or parsed.get("review_for_gpu1_cycle")
-            or fallback_revision
             or ""
         ),
         "review_target_pointer": str(
             parsed.get("review_target_pointer")
             or parsed.get("reviewed_gpu1_block_id")
             or parsed.get("checked_block_id")
-            or fallback_block_id
             or ""
         ),
-        "reviewed_packet_fingerprint": str(
-            parsed.get("reviewed_packet_fingerprint")
-            or parsed.get("packet_fingerprint")
-            or fallback_packet_fingerprint
-            or ""
-        ),
+        "reviewed_packet_fingerprint": reviewed_fingerprint,
+        "missing_required_fields": [],
         "missing_required_sections": _string_list(
             parsed.get("missing_required_sections") or parsed.get("missing_delta_sections")
         ),
@@ -165,12 +192,6 @@ def bind_gpu0_secondary_to_gpu1_packet(
     result["expected_gpu1_block_id"] = str(packet.get("gpu1_block_id") or "")
     result["expected_gpu1_revision"] = str(packet.get("gpu1_revision") or "")
     result["expected_packet_fingerprint"] = gpu1_packet_fingerprint(packet)
-    if not str(result.get("checked_block_id") or "") and result["expected_gpu1_block_id"]:
-        result["checked_block_id"] = result["expected_gpu1_block_id"]
-    if not str(result.get("checked_gpu1_revision") or "") and result["expected_gpu1_revision"]:
-        result["checked_gpu1_revision"] = result["expected_gpu1_revision"]
-    if not str(result.get("reviewed_packet_fingerprint") or "") and result["expected_packet_fingerprint"]:
-        result["reviewed_packet_fingerprint"] = result["expected_packet_fingerprint"]
     result["reviewed_gpu1_block_id"] = str(
         result.get("reviewed_gpu1_block_id") or result.get("checked_block_id") or ""
     )
@@ -187,11 +208,33 @@ def bind_gpu0_secondary_to_gpu1_packet(
             result,
             "gpu0_veto_not_allowed_without_gpu1_decision",
         )
+    if result.get("gpu0_secondary_schema_valid") is not True:
+        reasons = _string_list(result.get("veto_reasons"))
+        reason = reasons[-1] if reasons else "gpu0_secondary_schema_invalid"
+        return _invalidate_bound_decision(result, reason)
 
     checked_block = str(result.get("checked_block_id") or "")
     checked_revision = str(result.get("checked_gpu1_revision") or "")
+    reviewed_fingerprint = str(result.get("reviewed_packet_fingerprint") or "")
+    missing_required_fields = [
+        name
+        for name, value in (
+            ("checked_block_id", checked_block),
+            ("checked_gpu1_revision", checked_revision),
+            ("reviewed_packet_fingerprint", reviewed_fingerprint),
+        )
+        if not value
+    ]
+    if missing_required_fields:
+        result["missing_required_fields"] = missing_required_fields
+        return _invalidate_bound_decision(result, "gpu0_secondary_required_fields_missing")
     if checked_block != result["expected_gpu1_block_id"] or checked_revision != result["expected_gpu1_revision"]:
         return _invalidate_bound_decision(result, "gpu0_checked_wrong_gpu1_packet")
+    if reviewed_fingerprint != result["expected_packet_fingerprint"]:
+        return _invalidate_bound_decision(
+            result,
+            "gpu0_checked_wrong_gpu1_packet_fingerprint",
+        )
 
     result["gpu0_checked_current_packet"] = True
     model_decision = normalize_gpu0_decision(
@@ -241,6 +284,7 @@ def invalid_gpu0_secondary_decision(
         "reviewed_revision": str(fallback_revision or ""),
         "review_target_pointer": str(fallback_block_id or ""),
         "reviewed_packet_fingerprint": str(fallback_packet_fingerprint or ""),
+        "missing_required_fields": [],
         "missing_required_sections": [],
         "incongruence_reasons": [],
         "veto_reasons": [reason],
@@ -268,6 +312,7 @@ def gpu0_secondary_decision_text(payload: dict[str, Any]) -> str:
         "reviewed_revision": payload.get("reviewed_revision") or "",
         "review_target_pointer": payload.get("review_target_pointer") or "",
         "reviewed_packet_fingerprint": payload.get("reviewed_packet_fingerprint") or "",
+        "missing_required_fields": payload.get("missing_required_fields") or [],
         "gpu1_closure_decision_packet_present": payload.get(
             "gpu1_closure_decision_packet_present"
         ) is True,
@@ -303,14 +348,10 @@ def _invalidate_bound_decision(payload: dict[str, Any], reason: str) -> dict[str
     if expected_block:
         result["review_target_pointer"] = str(result.get("review_target_pointer") or expected_block)
         result["reviewed_gpu1_block_id"] = str(result.get("reviewed_gpu1_block_id") or expected_block)
-        result["checked_block_id"] = str(result.get("checked_block_id") or expected_block)
     if expected_revision:
         result["reviewed_revision"] = str(result.get("reviewed_revision") or expected_revision)
-        result["checked_gpu1_revision"] = str(result.get("checked_gpu1_revision") or expected_revision)
     if expected_fingerprint:
-        result["reviewed_packet_fingerprint"] = str(
-            result.get("reviewed_packet_fingerprint") or expected_fingerprint
-        )
+        result["expected_packet_fingerprint"] = expected_fingerprint
     result["gpu0_secondary_schema_valid"] = False
     result["gpu0_decision_override_reason"] = reason
     result["gpu0_review_invalid_requires_gpu1_retry"] = True

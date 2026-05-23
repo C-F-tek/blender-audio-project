@@ -12,11 +12,21 @@ from ia_carmine.runtime.heap_gate.runtime_common import Any
 
 RECOVERY_REASON_GPU0_INVALID = "gpu0_review_invalid_requires_gpu1_retry"
 RECOVERY_REASON_GPU0_WRONG_PACKET = "gpu0_checked_wrong_gpu1_packet"
+RECOVERY_REASON_GPU0_VETO = "veto"
 RECOVERY_REASON_GPU0_REFINE = "refine_required"
 RECOVERY_REASON_NPU_PENDING = "npu_followup_pending"
 RECOVERY_REASON_REJECTED_PROPOSAL = "rejected_gpu1_proposal"
 RECOVERY_REASON_SIDECAR_INVALID = "sidecar_invalid"
 RECOVERY_REASON_SIDECAR_INCONGRUENT = "sidecar_incongruent"
+RECOVERABLE_PROVIDER_RECOVERY_REASONS = {
+    RECOVERY_REASON_GPU0_INVALID,
+    RECOVERY_REASON_GPU0_WRONG_PACKET,
+    RECOVERY_REASON_GPU0_VETO,
+    RECOVERY_REASON_GPU0_REFINE,
+    RECOVERY_REASON_NPU_PENDING,
+    RECOVERY_REASON_SIDECAR_INVALID,
+    RECOVERY_REASON_SIDECAR_INCONGRUENT,
+}
 
 
 def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -83,6 +93,7 @@ def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[s
     )
     recovery_required = bool(reasons)
     attempted_count = int(getattr(owner, "provider_recovery_attempt_count", 0) or 0)
+    recovery_attempted = bool(attempted_count or attempted_revisions)
     next_revision = max(int(getattr(owner, "provider_revision_count", 0) or 0), latest_seen_revision) + 1
     max_revisions = int(getattr(owner.args, "max_provider_revisions", 0) or 0)
     budget_exhausted = recovery_required and max_revisions >= 0 and next_revision > max_revisions
@@ -91,8 +102,8 @@ def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[s
         "provider_recovery_required": recovery_required,
         "provider_recovery_reason": reasons[0] if reasons else "",
         "provider_recovery_reasons": reasons,
-        "provider_recovery_attempted": bool(attempted_count or attempted_revisions),
-        "gpu1_recovery_attempted": bool(attempted_count or attempted_revisions),
+        "provider_recovery_attempted": recovery_attempted,
+        "gpu1_recovery_attempted": recovery_attempted,
         "provider_recovery_attempt_count": attempted_count,
         "provider_revision_budget_exhausted": budget_exhausted,
         "next_gpu1_recovery_revision": next_revision if recovery_required else 0,
@@ -104,11 +115,11 @@ def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[s
         "sidecar_invalid": any(reason == RECOVERY_REASON_SIDECAR_INVALID for reason in reasons),
         "sidecar_incongruent": any(reason == RECOVERY_REASON_SIDECAR_INCONGRUENT for reason in reasons),
         "sidecar_recoverable_failure": any(
-            reason in {RECOVERY_REASON_SIDECAR_INVALID, RECOVERY_REASON_SIDECAR_INCONGRUENT}
+            reason in RECOVERABLE_PROVIDER_RECOVERY_REASONS
             for reason in reasons
         ),
         "gpu1_congruence_check_required": recovery_required,
-        "gpu1_congruence_check_performed": bool(attempted_count or attempted_revisions),
+        "gpu1_congruence_check_performed": recovery_attempted,
         "unconsumed_peer_block_ids": unconsumed_peer_blocks,
         "roles_observed": roles_observed,
         "roles_verified": roles_verified,
@@ -116,7 +127,7 @@ def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[s
         "provider_recovery_chain": [
             "gpu1_initial",
             "gpu0_npu_sidecar_join",
-            "gpu1_recovery_attempted" if attempted_count else "gpu1_recovery_missing",
+            "gpu1_recovery_attempted" if recovery_attempted else "gpu1_recovery_missing",
         ],
     }
 

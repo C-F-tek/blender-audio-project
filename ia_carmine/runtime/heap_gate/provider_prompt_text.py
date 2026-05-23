@@ -12,7 +12,7 @@ POINTER_DELTA_PROTOCOL = (
     "- Se introduci import, simboli, schema field, CLI flag o contratti, crea PROPAGATION_TASKS e usa BACKTRACK_PROPAGATE.\n"
     "- Dopo la propagazione torna avanti con RESUME_FORWARD usando resume_from_block_id.\n"
     "- GPU1 e' leader: puo' saltare indietro sui previous_block_id/refines_block_id, comandare task di propagazione e poi riprendere dal resume_from_block_id.\n"
-    "- GPU0 e NPU sono peer paralleli: possono saltare su previous_block_id/refines_block_id/resume_from_block_id per review, audit e refinement tasks.\n"
+    "- GPU0 e NPU sono sidecar packet_review_only: fanno review/audit del packet GPU1 corrente; GPU1 esegue eventuali jump/backrefinement e poi riprende da resume_from_block_id.\n"
     "- GPU1 non aspetta passivamente GPU0/NPU: assegna loro peer recheck/audit sui blocchi impattati, consuma il loro veto come segnale heap e comanda la sintesi finale.\n"
     "- Se il giro precedente GPU0 ha veto/refine_required/incongruent, questa revisione GPU1 deve dichiarare refines_block_id=<previous_gpu1_block_id> e consumed_gpu0_block_id=<previous_gpu0_block_id>; senza questi campi il giro e' scollegato e fallisce con gpu1_refine_not_linked_to_gpu0_veto.\n"
     "- Ogni revisione GPU1 deve materializzare un packet decisionale implicito: gpu1_decision=finalize_product | needs_refine | blocked_continuation | no_patchable_target, block id corrente, revision, target_files, reject_reasons, evidence_refs.\n"

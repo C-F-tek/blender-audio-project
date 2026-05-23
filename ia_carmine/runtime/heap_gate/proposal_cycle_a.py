@@ -17,6 +17,7 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
     Path,
     re,
     repo_rel,
+    safe_int,
     write_json_report,
     write_text_report,
 )
@@ -41,6 +42,7 @@ from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
     derive_gpu1_decision,
 )
 from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import normalize_gpu0_decision
+from ia_carmine.runtime.heap_gate.generic_write_followup import passed_generic_write_results
 from ia_carmine._shared.provider_work_verification import provider_work_status
 
 
@@ -65,39 +67,34 @@ class RuntimeGateProposalCycleAMixin:
     def provider_block_refs_for_revision(self, revision: int) -> dict[str, list[str]]:
         refs = {"gpu1": [], "gpu0": [], "npu": []}
         for report in self.provider_reports:
-            try:
-                report_revision = int(report.get("revision") or 0)
-            except (TypeError, ValueError):
-                report_revision = 0
+            report_revision = safe_int(report.get("revision"), default=0)
             if report_revision != int(revision):
                 continue
             block_id = str(report.get("provider_block_id") or report.get("block_id") or "")
             if not block_id:
                 continue
             lane = str(report.get("lane") or "")
+            if lane in {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"} and not self._verified_provider_ref(
+                lane, report
+            ):
+                continue
             if lane == "gpu1_planner":
                 refs["gpu1"].append(block_id)
             elif lane == "gpu0_peer":
                 refs["gpu0"].append(block_id)
             elif lane == "npu_micro_task_auditor":
                 refs["npu"].append(block_id)
-        if int(revision) > 0 and not refs["npu"]:
-            for report in reversed(self.provider_reports):
-                if report.get("lane") != "npu_micro_task_auditor":
-                    continue
-                try:
-                    report_revision = int(report.get("revision") or 0)
-                except (TypeError, ValueError):
-                    report_revision = 0
-                if report_revision >= int(revision):
-                    continue
-                if not (report.get("passed") and report.get("operational_provider_activity")):
-                    continue
-                block_id = str(report.get("provider_block_id") or report.get("block_id") or "")
-                if block_id:
-                    refs["npu"].append(block_id)
-                    break
         return refs
+
+    def _verified_provider_ref(self, lane: str, report: dict[str, Any]) -> bool:
+        status = provider_work_status(lane=lane, report=report)
+        rejection = (
+            str(report.get("provider_rejection_reason") or "").strip()
+            or str(report.get("product_blocked_reason") or "").strip()
+            or str(status.get("provider_rejection_reason") or "").strip()
+            or str(status.get("role_rejection_reason") or "").strip()
+        )
+        return bool(status.get("provider_work_verified") and not rejection)
 
     def gpu1_output_gate_for_revision(self, revision: int) -> dict[str, Any]:
         issues: list[str] = []
@@ -156,29 +153,49 @@ class RuntimeGateProposalCycleAMixin:
 
     def generic_write_refs_for_revision(self, events: list[dict[str, Any]], revision: int) -> list[str]:
         refs: list[str] = []
-        for event in events:
-            payload = event.get("payload") if isinstance(event.get("payload"), dict) else event
-            text = " ".join(
-                str(payload.get(key) or "")
-                for key in ("kind", "tool", "tool_name", "output", "path", "source_file")
-            )
-            if "generic_write" not in text:
+        for payload in passed_generic_write_results(events, owner=self):
+            if safe_int(payload.get("revision"), default=-1) != int(revision):
                 continue
-            ref = str(payload.get("output") or payload.get("path") or payload.get("source_file") or "")
+            if str(payload.get("lane") or "") != "gpu1_planner":
+                continue
+            outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+            ref = str(
+                outputs.get("json_report")
+                or payload.get("output")
+                or payload.get("path")
+                or payload.get("source_file")
+                or payload.get("source_provider_block_id")
+                or ""
+            )
             if ref and ref not in refs:
                 refs.append(ref)
         for report in self.provider_reports:
-            try:
-                report_revision = int(report.get("revision") or 0)
-            except (TypeError, ValueError):
-                report_revision = 0
+            report_revision = safe_int(report.get("revision"), default=0)
             if report_revision != int(revision):
                 continue
             if str(report.get("leader_source") or "") == "generic_write":
+                if not self._verified_provider_ref("gpu1_planner", report):
+                    continue
                 ref = str(report.get("output") or "")
                 if ref and ref not in refs:
                     refs.append(ref)
         return refs
+
+    def proposal_consumed_npu_block_ids(
+        self, response_text: str, provider_block_refs: dict[str, list[str]]
+    ) -> list[str]:
+        values: list[str] = []
+        for field in ("consumed_npu_block_id", "consumed_npu_block_ids"):
+            raw = self.proposal_pointer_field(response_text, field)
+            if not raw:
+                continue
+            cleaned = raw.strip().strip("[]")
+            for item in re.split(r"[,;\s]+", cleaned):
+                value = item.strip().strip("'\"")
+                if value and value not in values:
+                    values.append(value)
+        allowed = set(provider_block_refs.get("npu") or [])
+        return [item for item in values if item in allowed]
 
     def proposal_target_files(
         self,
@@ -426,6 +443,10 @@ class RuntimeGateProposalCycleAMixin:
         declared_consumed_gpu0_block_id = self.proposal_pointer_field(
             response_text, "consumed_gpu0_block_id"
         )
+        declared_consumed_npu_block_ids = self.proposal_consumed_npu_block_ids(
+            response_text,
+            provider_block_refs,
+        )
         missing_link_reasons: list[str] = []
         if not provider_block_refs["gpu1"]:
             missing_link_reasons.append("missing linked GPU1 provider block")
@@ -484,6 +505,11 @@ class RuntimeGateProposalCycleAMixin:
             *self.code_execution_matrix_reports(events),
         ]
         generic_write_refs = self.generic_write_refs_for_revision(events, revision)
+        consumed_generic_write_refs = [
+            str(item)
+            for item in (getattr(self, "gpu1_consumed_generic_write_block_ids", []) or [])
+            if str(item).strip()
+        ]
         gpu1_packet = build_gpu1_closure_decision_packet(
             gpu1_block_id=block_id,
             gpu1_revision=revision,
@@ -493,6 +519,7 @@ class RuntimeGateProposalCycleAMixin:
             reject_reasons=[str(item) for item in reject_reasons if str(item).strip()],
             evidence_refs=evidence_refs,
             generic_write_refs=generic_write_refs,
+            consumed_generic_write_refs=consumed_generic_write_refs,
             exit_decision=exit_decision,
             pointer_action=pointer_action,
             refines_block_id=declared_refines_block_id,
@@ -500,7 +527,7 @@ class RuntimeGateProposalCycleAMixin:
             consumed_gpu0_block_ids=(
                 [declared_consumed_gpu0_block_id] if declared_consumed_gpu0_block_id else []
             ),
-            consumed_npu_block_ids=[],
+            consumed_npu_block_ids=declared_consumed_npu_block_ids,
             response_text=response_text,
             source="proposal_cycle_a",
         )
@@ -553,6 +580,7 @@ class RuntimeGateProposalCycleAMixin:
             "broker_result_refs": self.broker_output_refs(events),
             "matrix_report_refs": self.code_execution_matrix_reports(events),
             "generic_write_refs": generic_write_refs,
+            "consumed_generic_write_refs": consumed_generic_write_refs,
             "linked_provider_block_gate": linked_provider_block_gate,
             "gpu1_output_gate": gpu1_output_gate,
             "quality_passed": quality_passed,

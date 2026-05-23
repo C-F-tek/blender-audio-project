@@ -30,6 +30,9 @@ from ia_carmine.runtime.external_heap.block_pointer_manifest.provider_graph impo
 )
 from ia_carmine.runtime.heap_gate.run_loop_metrics import _lane_has_model_execution
 from ia_carmine.runtime.heap_gate.proposal_cycle_a import RuntimeGateProposalCycleAMixin
+from ia_carmine.runtime.heap_gate.generic_write_followup import (
+    generic_write_document_product_eligible,
+)
 from ia_carmine.runtime.heap_gate.provider_teamwork_packet import (
     _provider_packet_tool_catalog_limit,
 )
@@ -67,6 +70,9 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     blockers = _weak_gate_final_product_blockers()
     if not any("verified pointer evidence" in item for item in blockers):
         errors.append("final product accepted weak gate provider_execution_performed fallback")
+    gate_failed_blockers = _gate_failed_final_product_blockers()
+    if not any("heap runtime completeness gate did not pass" in item for item in gate_failed_blockers):
+        errors.append("final readable product ignored failed heap gate")
     if not _generated_patch_specs_reject_raw_provider_claim(repo_root):
         errors.append("generated patch specs accepted raw provider_execution_performed claim")
     graph = _build_pointer_graph()
@@ -83,6 +89,12 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         errors.append("observed-invalid sidecar block is not linked to GPU1/proposal pointer")
     if _sidecar_generic_write_published():
         errors.append("GPU0/NPU generic_write entered operative broker requests")
+    if not _npu_revision_refs_are_current_only():
+        errors.append("proposal cycle backfilled stale NPU ref from a previous revision")
+    if not _generic_write_requires_matching_current_consumed_refs():
+        errors.append("generic_write product eligibility accepted stale consumed refs")
+    if not _generic_write_consumption_persisted_in_packet_source(repo_root):
+        errors.append("generic_write consumed refs are not persisted into GPU1 packet/artifact")
     if _provider_packet_tool_catalog_limit(
         SimpleNamespace(args=SimpleNamespace(tool_catalog_limit=80, provider_prompt_tool_catalog_cap=20))
     ) != 20:
@@ -134,6 +146,37 @@ def _weak_gate_final_product_blockers() -> list[str]:
             revision={"linked_gpu0_block_count": 1, "linked_npu_block_count": 1},
             matrix={"passed": True},
             gate={"provider_execution_performed": True},
+        )
+
+
+def _gate_failed_final_product_blockers() -> list[str]:
+    with TemporaryDirectory(prefix="provider-shortcut-gate-failed-") as tmp:
+        markdown = Path(tmp) / "FINAL.md"
+        markdown.write_text("ok", encoding="utf-8")
+        return final_product_blockers(
+            markdown_output=markdown,
+            final_document_status="APPLY_REVIEW_READY",
+            concrete_code_proposal_count=1,
+            code_product_metrics={
+                "diff_git_blocks": 1,
+                "empty_code_product_marker": False,
+                "no_applicable_marker": False,
+                "truncation_marker": False,
+            },
+            code_product_ready=True,
+            pointer={
+                "passed": True,
+                "edge_count": 1,
+                "all_roles_present": [
+                    "gpu1_planner",
+                    "gpu0_reviewer_refiner",
+                    "npu_auditor",
+                ],
+                "provider_execution_performed": True,
+            },
+            revision={"linked_gpu0_block_count": 1, "linked_npu_block_count": 1},
+            matrix={"passed": True},
+            gate={"passed": False, "errors": ["heap_failed"]},
         )
 
 
@@ -268,6 +311,117 @@ def _sidecar_generic_write_published() -> bool:
     )
     publish_provider_native_tool_calls(owner, 1, [])
     return bool(owner.state["tool_requests"])
+
+
+def _npu_revision_refs_are_current_only() -> bool:
+    class _ProposalOwner(RuntimeGateProposalCycleAMixin):
+        def __init__(self) -> None:
+            self.provider_reports = [
+            {
+                "lane": "gpu1_planner",
+                "revision": 1,
+                "provider_block_id": "gpu1:001",
+                "provider_device_verified": True,
+                "provider_loaded": True,
+                "done": True,
+                "completion_token_count": 260,
+                "ollama_compute_verified": True,
+                "response_text": "GPU1 verified current packet with enough concrete content for execution.",
+            },
+            {
+                "lane": "gpu0_peer",
+                "revision": 1,
+                "provider_block_id": "gpu0:001",
+                "provider_backend": "ollama",
+                "provider_compute_device": "ollama/gpu0-vulkan",
+                "provider_model": "qwen3:1.7b",
+                "provider_device_verified": True,
+                "provider_loaded": True,
+                "completion_token_count": 260,
+                "ollama_compute_verified": True,
+                "gpu0_secondary_schema_valid": True,
+                "response_text": "GPU0 verified packet review with structured current packet evidence.",
+            },
+            {
+                "lane": "npu_micro_task_auditor",
+                "revision": 0,
+                "provider_block_id": "npu:000",
+                "provider_execution_performed": True,
+                "provider_work_verified": False,
+                "npu_peer_evidence_verified": True,
+            },
+            ]
+
+    owner = _ProposalOwner()
+    refs = RuntimeGateProposalCycleAMixin.provider_block_refs_for_revision(owner, 1)
+    return refs.get("gpu1") == ["gpu1:001"] and refs.get("gpu0") == ["gpu0:001"] and refs.get("npu") == []
+
+
+def _generic_write_requires_matching_current_consumed_refs() -> bool:
+    with TemporaryDirectory(prefix="provider-shortcut-generic-write-") as tmp:
+        root = Path(tmp)
+        events: list[dict[str, Any]] = []
+        for index in range(3):
+            report_path = root / f"generic_{index}.json"
+            report_path.write_text(
+                json.dumps(
+                    {
+                        "source_lane": "gpu1_planner",
+                        "source_revision": 2,
+                        "source_provider_passed": True,
+                        "source_provider_execution_performed": True,
+                        "source_provider_work_verified": True,
+                        "source_provider_block_id": f"current:{index}",
+                        "capture_mode": "tool_call",
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            events.append(
+                {
+                    "event_type": "broker_result",
+                    "payload": {
+                        "tool": "generic_write",
+                        "returncode": 0,
+                        "summary": {"passed": True},
+                        "outputs": {"json_report": report_path.name},
+                    },
+                }
+            )
+
+        owner = SimpleNamespace(
+            repo_root=root,
+            gpu1_consumed_generic_write_block_ids=["old:0", "old:1", "old:2"],
+            provider_reports=[],
+            broker_result_digest=lambda payload: "fallback",
+        )
+        stale_allowed = generic_write_document_product_eligible(owner, events)
+        owner.gpu1_consumed_generic_write_block_ids = [
+            "current:0",
+            "current:1",
+            "current:2",
+        ]
+        current_allowed = generic_write_document_product_eligible(owner, events)
+        return stale_allowed is False and current_allowed is True
+
+
+def _generic_write_consumption_persisted_in_packet_source(repo_root: Path) -> bool:
+    packet_source = (repo_root / "ia_carmine/runtime/heap_gate/gpu1_closure_packet.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    proposal_source = (repo_root / "ia_carmine/runtime/heap_gate/proposal_cycle_a.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    followup_source = (repo_root / "ia_carmine/runtime/heap_gate/generic_write_followup.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    return bool(
+        "consumed_generic_write_refs" in packet_source
+        and "consumed_generic_write_refs=consumed_generic_write_refs" in proposal_source
+        and '"consumed_generic_write_refs": consumed_generic_write_refs' in proposal_source
+        and "generic_write_consumed_by_gpu1" in followup_source
+    )
 
 
 def _gpu1_report() -> dict[str, Any]:

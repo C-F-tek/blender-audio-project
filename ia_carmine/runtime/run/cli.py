@@ -166,6 +166,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-MaxNewTokens", "--max-new-tokens", dest="max_new_tokens", type=int, default=None)
     parser.add_argument("--gpu0-max-new-tokens", dest="gpu0_max_new_tokens", type=int, default=None)
     parser.add_argument("--ollama-num-ctx", dest="ollama_num_ctx", type=int, default=None)
+    parser.add_argument("--gpu0-ollama-num-ctx", dest="gpu0_ollama_num_ctx", type=int, default=None)
     parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default=None)
     parser.add_argument("--ollama-num-thread", dest="ollama_num_thread", type=int, default=None)
     parser.add_argument("--ollama-context-candidates", default=None)
@@ -322,6 +323,7 @@ def build_config(
         gpu0_base_url=args.gpu0_base_url,
         gpu0_vulkan_visible_devices=args.gpu0_vulkan_visible_devices,
         ollama_num_ctx=args.ollama_num_ctx,
+        gpu0_ollama_num_ctx=args.gpu0_ollama_num_ctx,
         ollama_gpu_layers=args.ollama_gpu_layers,
         ollama_num_thread=args.ollama_num_thread,
         ollama_context_candidates=args.ollama_context_candidates,

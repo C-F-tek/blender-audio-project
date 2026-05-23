@@ -211,7 +211,7 @@ def build_provider_command_specs(
     gpu0_vulkan_devices = _required_config_value(gate.args, "gpu0_vulkan_visible_devices")
     gpu1_base_url = _required_config_value(gate.args, "gpu1_base_url")
     gpu1_ctx = int(getattr(gate, "selected_ollama_num_ctx", 0) or gate.args.ollama_num_ctx)
-    gpu0_ctx = gpu0_ollama_num_ctx(gpu1_ctx)
+    gpu0_ctx = gpu0_ollama_num_ctx(gate.args)
     keep_alive = _provider_keep_alive(gate)
     gpu0_identity = _gpu0_device_identity(gate, coexistence_evidence)
     specs = [

@@ -50,6 +50,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-new-tokens", type=int, default=None)
     parser.add_argument("--gpu0-max-new-tokens", type=int, default=None)
     parser.add_argument("--keep-alive", default="")
+    parser.add_argument("--gpu0-ollama-num-ctx", type=int, default=None)
     parser.add_argument("--gpu0-iterations", type=int, default=None)
     parser.add_argument("--gpu0-min-seconds", type=float, default=None)
     parser.add_argument("--npu-micro-timeout-seconds", type=int, default=None)

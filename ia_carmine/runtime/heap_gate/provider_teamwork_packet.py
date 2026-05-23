@@ -193,8 +193,8 @@ def build_provider_teamwork_leader_packet(
             "NPU native tool calls are diagnostic/veto evidence only and never drive broker execution.",
             "GPU0 and NPU remain parallel peer lanes inside the same heap, not alternate product routes.",
             "GPU1 must consume GPU0/NPU peer evidence before final synthesis.",
-            "GPU0 and NPU are bounded sidecars: their watchdogs prevent them from holding closure ownership.",
-            "The time input is a shared counter for GPU1 closure; sidecars publish bounded evidence or timeout reports.",
+            "GPU0 and NPU are packet_review_only sidecars: their scope prevents them from holding closure ownership.",
+            "The time input is a shared counter for GPU1 closure; sidecars publish structured packet review/audit evidence for GPU1 consumption.",
         ],
         "pointer_contract": {
             "previous_block_id": "navigate backward through persisted proposal blocks",

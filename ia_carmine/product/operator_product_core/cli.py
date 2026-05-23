@@ -24,7 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--final-root", default="")
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--stamp", default="")
-    parser.add_argument("--revision-context", default="auto_latest")
+    parser.add_argument("--revision-context", default="")
     parser.add_argument("--code-product", default="")
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--run-and-review", action="store_true")
@@ -32,32 +32,81 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--apply-safe", action="store_true")
     parser.add_argument("--confirm", default="")
     parser.add_argument("--require-all-integrated", action="store_true")
-    parser.add_argument("--timeout-seconds", type=int, default=3600)
-    parser.add_argument("--budget-minutes", type=int, default=5)
-    parser.add_argument("--max-iterations", type=int, default=2)
-    parser.add_argument("--max-rounds", type=int, default=8)
-    parser.add_argument("--max-provider-revisions", type=int, default=2)
-    parser.add_argument("--preflight-timeout-seconds", type=int, default=90)
-    parser.add_argument("--provider-model", default="auto")
+    parser.add_argument("--timeout-seconds", type=int, default=None)
+    parser.add_argument("--budget-minutes", type=int, default=None)
+    parser.add_argument("--max-iterations", type=int, default=None)
+    parser.add_argument("--min-runtime-rounds", type=int, default=None)
+    parser.add_argument("--min-proposal-iterations", type=int, default=None)
+    parser.add_argument("--max-rounds", type=int, default=None)
+    parser.add_argument("--files-per-round", type=int, default=None)
+    parser.add_argument("--max-provider-revisions", type=int, default=None)
+    parser.add_argument("--preflight-timeout-seconds", type=int, default=None)
+    parser.add_argument("--provider-model", default=None)
+    parser.add_argument("--gpu1-base-url", default=None)
+    parser.add_argument("--gpu0-model", default=None)
+    parser.add_argument("--gpu0-base-url", default=None)
+    parser.add_argument("--gpu0-vulkan-visible-devices", default=None)
     parser.add_argument("--strict-provider-model", action="store_true")
-    parser.add_argument("--ollama-context-candidates", default="8192,4096")
-    parser.add_argument("--gpu0-model-dir", default="")
-    parser.add_argument("--npu-model-dir", default="")
-    parser.add_argument("--operator-gpu-observation", default="")
-    parser.add_argument("--max-new-tokens", type=int, default=900)
-    parser.add_argument("--gpu0-max-new-tokens", type=int, default=0)
-    parser.add_argument("--allow-provider-generation", action="store_true", default=True)
-    parser.add_argument("--startup-max-memory-chars", type=int, default=0)
-    parser.add_argument("--startup-max-context-files", type=int, default=0)
-    parser.add_argument("--startup-scan-context-files", type=int, default=0)
-    parser.add_argument("--startup-max-chars-per-file", type=int, default=0)
-    parser.add_argument("--context-document-count", type=int, default=0)
-    parser.add_argument("--context-document-preview-chars", type=int, default=0)
-    parser.add_argument("--semantic-code-chunk-limit", type=int, default=0)
-    parser.add_argument("--semantic-code-chunk-preview-chars", type=int, default=0)
-    parser.add_argument("--semantic-evidence-chunk-limit", type=int, default=0)
-    parser.add_argument("--memory-search-limit", type=int, default=0)
-    parser.add_argument("--tool-catalog-limit", type=int, default=0)
+    parser.add_argument("--ollama-num-ctx", type=int, default=None)
+    parser.add_argument("--gpu0-ollama-num-ctx", type=int, default=None)
+    parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default=None)
+    parser.add_argument("--ollama-num-thread", type=int, default=None)
+    parser.add_argument("--ollama-context-candidates", default=None)
+    parser.add_argument("--gpu0-model-dir", default=None)
+    parser.add_argument("--npu-model-dir", default=None)
+    parser.add_argument("--operator-gpu-observation", default=None)
+    parser.add_argument("--max-new-tokens", type=int, default=None)
+    parser.add_argument("--gpu0-max-new-tokens", type=int, default=None)
+    parser.add_argument("--keep-alive", default=None)
+    parser.add_argument("--gpu0-iterations", type=int, default=None)
+    parser.add_argument("--gpu0-min-seconds", type=float, default=None)
+    parser.add_argument("--npu-micro-timeout-seconds", type=int, default=None)
+    parser.add_argument("--npu-max-context-chars", type=int, default=None)
+    parser.add_argument("--npu-max-prompt-chars", type=int, default=None)
+    parser.add_argument("--npu-max-new-tokens", type=int, default=None)
+    parser.add_argument("--npu-device-workload-seconds", type=float, default=None)
+    parser.add_argument("--npu-device-workload-iterations", type=int, default=None)
+    parser.add_argument("--startup-max-memory-chars", type=int, default=None)
+    parser.add_argument("--startup-max-context-files", type=int, default=None)
+    parser.add_argument("--startup-scan-context-files", type=int, default=None)
+    parser.add_argument("--startup-max-chars-per-file", type=int, default=None)
+    parser.add_argument("--rag-db", default=None)
+    parser.add_argument("--rag-index-policy", choices=("auto", "always", "never"), default=None)
+    parser.add_argument("--rag-embedding-endpoint", default=None)
+    parser.add_argument("--rag-embedding-model", default=None)
+    parser.add_argument("--rag-ingest-batch-size", type=int, default=None)
+    parser.add_argument("--rag-embed-smoke-batch-size", type=int, default=None)
+    parser.add_argument("--rag-chunk-min-chars", type=int, default=None)
+    parser.add_argument("--rag-chunk-max-chars", type=int, default=None)
+    parser.add_argument("--rag-chunk-overlap-chars", type=int, default=None)
+    parser.add_argument("--rag-max-file-size", type=int, default=None)
+    parser.add_argument("--rag-top-k", type=int, default=None)
+    parser.add_argument("--rag-char-budget", type=int, default=None)
+    parser.add_argument("--rag-allow-missing-embeddings", action="store_true")
+    parser.add_argument("--context-document-count", type=int, default=None)
+    parser.add_argument("--context-document-preview-chars", type=int, default=None)
+    parser.add_argument("--semantic-code-chunk-limit", type=int, default=None)
+    parser.add_argument("--semantic-code-chunk-preview-chars", type=int, default=None)
+    parser.add_argument("--semantic-evidence-chunk-limit", type=int, default=None)
+    parser.add_argument("--memory-search-limit", type=int, default=None)
+    parser.add_argument("--tool-catalog-limit", type=int, default=None)
+    parser.add_argument("--revision-context-max-tasks", type=int, default=None)
+    parser.add_argument("--startup-provider-input-workers", type=int, default=None)
+    parser.add_argument("--startup-required-context-profile", default=None)
+    parser.add_argument("--startup-operational-memory-query", default=None)
+    parser.add_argument("--startup-operational-memory-limit", type=int, default=None)
+    parser.add_argument("--tool-inventory-roots", default=None)
+    parser.add_argument("--semantic-path-boosts", default=None)
+    parser.add_argument("--ai-context-pack-profile", default=None)
+    parser.add_argument("--code-interpreter-inputs", default=None)
+    parser.add_argument("--duplication-audit-roots", default=None)
+    parser.add_argument("--provider-prompt-tool-catalog-cap", type=int, default=None)
+    parser.add_argument("--allow-provider-generation", action="store_true", default=False)
+    parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=False)
+    parser.add_argument("--allow-npu-device-workload", action="store_true", default=False)
+    parser.add_argument("--skip-startup-reload", action="store_true", default=False)
+    parser.add_argument("--strict-startup-reload", action="store_true", default=False)
+    parser.add_argument("--no-documents", action="store_true", default=False)
     return parser.parse_args()
 
 
@@ -79,30 +128,79 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         revision_context=args.revision_context,
         budget_minutes=args.budget_minutes,
         max_iterations=args.max_iterations,
+        min_runtime_rounds=args.min_runtime_rounds,
+        min_proposal_iterations=args.min_proposal_iterations,
         max_rounds=args.max_rounds,
+        files_per_round=args.files_per_round,
         max_provider_revisions=args.max_provider_revisions,
         timeout_seconds=args.timeout_seconds,
         preflight_timeout_seconds=args.preflight_timeout_seconds,
         provider_model=args.provider_model,
+        gpu1_base_url=args.gpu1_base_url,
+        gpu0_model=args.gpu0_model,
+        gpu0_base_url=args.gpu0_base_url,
+        gpu0_vulkan_visible_devices=args.gpu0_vulkan_visible_devices,
         strict_provider_model=args.strict_provider_model,
+        ollama_num_ctx=args.ollama_num_ctx,
+        gpu0_ollama_num_ctx=args.gpu0_ollama_num_ctx,
+        ollama_gpu_layers=args.ollama_gpu_layers,
+        ollama_num_thread=args.ollama_num_thread,
         ollama_context_candidates=args.ollama_context_candidates,
         gpu0_model_dir=args.gpu0_model_dir,
         npu_model_dir=args.npu_model_dir,
         operator_gpu_observation=args.operator_gpu_observation,
         max_new_tokens=args.max_new_tokens,
         gpu0_max_new_tokens=args.gpu0_max_new_tokens,
-        startup_max_memory_chars=args.startup_max_memory_chars or 32000,
-        startup_max_context_files=args.startup_max_context_files or 48,
-        startup_scan_context_files=args.startup_scan_context_files or 48,
-        startup_max_chars_per_file=args.startup_max_chars_per_file or 8000,
-        context_document_count=args.context_document_count or 24,
-        context_document_preview_chars=args.context_document_preview_chars or 1200,
-        semantic_code_chunk_limit=args.semantic_code_chunk_limit or 32,
-        semantic_code_chunk_preview_chars=args.semantic_code_chunk_preview_chars or 1400,
-        semantic_evidence_chunk_limit=args.semantic_evidence_chunk_limit or 24,
-        memory_search_limit=args.memory_search_limit or 12,
-        tool_catalog_limit=args.tool_catalog_limit or 80,
+        keep_alive=args.keep_alive,
+        gpu0_iterations=args.gpu0_iterations,
+        gpu0_min_seconds=args.gpu0_min_seconds,
+        npu_micro_timeout_seconds=args.npu_micro_timeout_seconds,
+        npu_max_context_chars=args.npu_max_context_chars,
+        npu_max_prompt_chars=args.npu_max_prompt_chars,
+        npu_max_new_tokens=args.npu_max_new_tokens,
+        npu_device_workload_seconds=args.npu_device_workload_seconds,
+        npu_device_workload_iterations=args.npu_device_workload_iterations,
+        startup_max_memory_chars=args.startup_max_memory_chars,
+        startup_max_context_files=args.startup_max_context_files,
+        startup_scan_context_files=args.startup_scan_context_files,
+        startup_max_chars_per_file=args.startup_max_chars_per_file,
+        rag_db=args.rag_db,
+        rag_index_policy=args.rag_index_policy,
+        rag_embedding_endpoint=args.rag_embedding_endpoint,
+        rag_embedding_model=args.rag_embedding_model,
+        rag_ingest_batch_size=args.rag_ingest_batch_size,
+        rag_embed_smoke_batch_size=args.rag_embed_smoke_batch_size,
+        rag_chunk_min_chars=args.rag_chunk_min_chars,
+        rag_chunk_max_chars=args.rag_chunk_max_chars,
+        rag_chunk_overlap_chars=args.rag_chunk_overlap_chars,
+        rag_max_file_size=args.rag_max_file_size,
+        rag_top_k=args.rag_top_k,
+        rag_char_budget=args.rag_char_budget,
+        rag_allow_missing_embeddings=args.rag_allow_missing_embeddings,
+        context_document_count=args.context_document_count,
+        context_document_preview_chars=args.context_document_preview_chars,
+        semantic_code_chunk_limit=args.semantic_code_chunk_limit,
+        semantic_code_chunk_preview_chars=args.semantic_code_chunk_preview_chars,
+        semantic_evidence_chunk_limit=args.semantic_evidence_chunk_limit,
+        memory_search_limit=args.memory_search_limit,
+        tool_catalog_limit=args.tool_catalog_limit,
+        revision_context_max_tasks=args.revision_context_max_tasks,
+        startup_provider_input_workers=args.startup_provider_input_workers,
+        startup_required_context_profile=args.startup_required_context_profile,
+        startup_operational_memory_query=args.startup_operational_memory_query,
+        startup_operational_memory_limit=args.startup_operational_memory_limit,
+        tool_inventory_roots=args.tool_inventory_roots,
+        semantic_path_boosts=args.semantic_path_boosts,
+        ai_context_pack_profile=args.ai_context_pack_profile,
+        code_interpreter_inputs=args.code_interpreter_inputs,
+        duplication_audit_roots=args.duplication_audit_roots,
+        provider_prompt_tool_catalog_cap=args.provider_prompt_tool_catalog_cap,
         allow_provider_generation=args.allow_provider_generation,
+        require_ollama_gpu_residency=args.require_ollama_gpu_residency,
+        allow_npu_device_workload=args.allow_npu_device_workload,
+        skip_startup_reload=args.skip_startup_reload,
+        strict_startup_reload=args.strict_startup_reload,
+        no_documents=args.no_documents,
     )
 
 

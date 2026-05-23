@@ -470,6 +470,11 @@ def main() -> int:
             if report["sidecar_incongruent"]
             else ""
         )
+        report["errors"] = [
+            error
+            for error in report.get("errors", [])
+            if error != "gpu0_secondary_schema_invalid"
+        ]
         report["passed"] = not bool(report.get("errors"))
     if gpu0_server.get("started") and not args.keep_gpu0_vulkan_server and not args.defer_unload:
         report["gpu0_vulkan_server_stop"] = stop_gpu0_vulkan_server(args.base_url)

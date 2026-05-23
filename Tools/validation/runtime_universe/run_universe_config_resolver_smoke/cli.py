@@ -99,6 +99,8 @@ def main() -> int:
         "1",
         "--ollama-num-ctx",
         "16384",
+        "--gpu0-ollama-num-ctx",
+        "2048",
         "--ollama-gpu-layers",
         "all",
         "--ollama-context-candidates",
@@ -228,8 +230,10 @@ def main() -> int:
             "name": "cli_source_recorded",
             "passed": sources.get("provider_model") == "cli_arg"
             and sources.get("files_per_round") == "cli_arg"
+            and sources.get("gpu0_ollama_num_ctx") == "cli_arg"
             and effective.get("provider_model") == "qwen2.5-coder:14b"
-            and effective.get("files_per_round") == 4,
+            and effective.get("files_per_round") == 4
+            and effective.get("gpu0_ollama_num_ctx") == 2048,
         },
         {
             "name": "files_per_round_propagated_to_expanded_command",

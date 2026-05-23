@@ -25,6 +25,7 @@ from ia_carmine.runtime.heap_gate.provider_recovery import (
     provider_recovery_status,
 )
 from ia_carmine.runtime.heap_gate.provider_universe_abort import (
+    block_provider_universe_run,
     provider_universe_abort_reason,
     recoverable_sidecar_failure_reason,
 )
@@ -42,6 +43,7 @@ class _Args:
     max_new_tokens = 900
     gpu0_max_new_tokens = 256
     ollama_num_ctx = 16384
+    gpu0_ollama_num_ctx = 2048
     npu_max_context_chars = 8000
     npu_max_prompt_chars = 1200
     npu_max_new_tokens = 384
@@ -60,11 +62,18 @@ class _Owner:
             response_text="raw gpu1 evidence",
             source="smoke",
         )
+        fingerprint = str(packet.get("packet_fingerprint") or "")
         parsed = parse_gpu0_secondary_response(
-            '{"gpu0_decision":"incongruent","checked_block_id":"smoke:gpu1:000"}',
+            (
+                '{"gpu0_decision":"incongruent","checked_block_id":"smoke:gpu1:000",'
+                '"checked_gpu1_revision":"0","reviewed_packet_fingerprint":"%s",'
+                '"incongruence_reasons":["source_refs_missing"],'
+                '"required_gpu1_next_action":"GPU1 congruence check"}'
+            )
+            % fingerprint,
             fallback_block_id="smoke:gpu1:000",
             fallback_revision="0",
-            fallback_packet_fingerprint=str(packet.get("packet_fingerprint") or ""),
+            fallback_packet_fingerprint=fingerprint,
         )
         gpu0 = bind_gpu0_secondary_to_gpu1_packet(
             parsed,
@@ -77,6 +86,7 @@ class _Owner:
         self.provider_recovery_attempt_count = 0
         self.provider_revision_feedback = ""
         self.provider_universe_blocked_reason = ""
+        self.errors: list[str] = []
         self.provider_reports: list[dict[str, Any]] = [
             {
                 "lane": "gpu1_planner",
@@ -90,7 +100,8 @@ class _Owner:
                 "lane": "gpu0_peer",
                 "revision": 0,
                 "provider_block_id": "smoke:gpu0:000",
-                "provider_work_verified": False,
+                "provider_work_verified": True,
+                "provider_role_counted": True,
                 "provider_execution_performed": True,
                 "response_text": "truncated json",
                 **gpu0,
@@ -177,6 +188,23 @@ def run_smoke() -> dict[str, Any]:
     sidecar_reason = recoverable_sidecar_failure_reason(
         {"lane": "gpu0_peer", "provider_report": owner.provider_reports[1]}
     )
+    loaded_only_reason = recoverable_sidecar_failure_reason(
+        {
+            "lane": "gpu0_peer",
+            "provider_report": {
+                "lane": "gpu0_peer",
+                "status": "failed",
+                "provider_loaded": True,
+                "gpu0_secondary_schema_valid": False,
+                "response_text": "raw prose without compute proof",
+            },
+        }
+    )
+    blocked_owner = _Owner()
+    blocked_owner.provider_universe_blocked_reason = "blocked_with_reason"
+    maybe_run_provider_recovery(blocked_owner, 1, [])
+    deferred_block_owner = _Owner()
+    block_provider_universe_run(deferred_block_owner, "gpu0_peer_followup_pending", 1, 0)
     events_after = maybe_run_provider_recovery(owner, 1, [])
     status_after = provider_recovery_status(owner, events_after)
     config = context_hierarchy_payload(owner.args, gpu1_ctx=owner.args.ollama_num_ctx)
@@ -197,6 +225,18 @@ def run_smoke() -> dict[str, Any]:
             "sidecar_incongruent"
         )
         or str(sidecar_reason).startswith("sidecar_invalid"),
+        "loaded_only_sidecar_does_not_trigger_recovery": loaded_only_reason == "",
+        "blocked_reason_does_not_skip_recoverable_sidecar": blocked_owner.provider_recovery_attempt_count
+        == 1,
+        "terminal_product_deferred_until_gpu1_recovery": not any(
+            item.get("kind") == "product_signal" for item in deferred_block_owner.published
+        )
+        and any(
+            item.get("kind") == "validation_signal"
+            and item.get("payload", {}).get("decision")
+            == "defer_terminal_block_until_gpu1_recovery"
+            for item in deferred_block_owner.published
+        ),
         "gpu1_recovery_attempted": owner.provider_recovery_attempt_count == 1,
         "gpu1_recovery_attempted_metric": status_after.get("gpu1_recovery_attempted") is True,
         "gpu1_congruence_check_performed": status_after.get("gpu1_congruence_check_performed")
@@ -208,6 +248,11 @@ def run_smoke() -> dict[str, Any]:
         == "smoke:gpu1:000",
         "gpu0_budget_operator_visible": gpu0_max_new_tokens(owner.args) == 256
         and config["operator_effective_config"]["gpu0.max_new_tokens"]["source"] == "cli_arg",
+        "gpu0_ctx_operator_visible": (
+            config["operator_effective_config"]["gpu0.ollama_num_ctx"]["effective_value"]
+            == 2048
+            and config["operator_effective_config"]["gpu0.ollama_num_ctx"]["source"] == "cli_arg"
+        ),
         "status_after_still_graph_based": status_after.get("provider_recovery_required") is True,
     }
     return {

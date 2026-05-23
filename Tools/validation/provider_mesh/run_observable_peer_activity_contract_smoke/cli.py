@@ -245,14 +245,16 @@ def gpu0_secondary_schema_checks() -> dict[str, bool]:
 
     decisions = {}
     for decision in ("congruent", "veto", "refine_required", "incongruent"):
+        fingerprint = str(packet.get("packet_fingerprint") or "")
         parsed = parse_gpu0_secondary_response(
             (
                 '{"gpu0_decision": "%s", "checked_block_id": "b1", '
-                '"checked_gpu1_revision": "2", "missing_required_sections": [], '
+                '"checked_gpu1_revision": "2", "reviewed_packet_fingerprint": "%s", '
+                '"missing_required_sections": [], '
                 '"incongruence_reasons": ["needs target"], "veto_reasons": ["needs target"], '
                 '"required_gpu1_next_action": "act"}'
             )
-            % decision
+            % (decision, fingerprint)
         )
         bound = bind_gpu0_secondary_to_gpu1_packet(
             parsed,
@@ -271,7 +273,8 @@ def gpu0_secondary_schema_checks() -> dict[str, bool]:
         parse_gpu0_secondary_response(
             (
                 '{"gpu0_decision": "veto", "checked_block_id": "old", '
-                '"checked_gpu1_revision": "1", "missing_required_sections": [], '
+                '"checked_gpu1_revision": "1", "reviewed_packet_fingerprint": "oldfp", '
+                '"missing_required_sections": [], '
                 '"incongruence_reasons": [], "veto_reasons": ["needs target"], '
                 '"required_gpu1_next_action": "act"}'
             )
@@ -282,9 +285,33 @@ def gpu0_secondary_schema_checks() -> dict[str, bool]:
         parse_gpu0_secondary_response(
             (
                 '{"gpu0_decision": "veto", "checked_block_id": "b1", '
-                '"checked_gpu1_revision": "2", "missing_required_sections": [], '
+                '"checked_gpu1_revision": "2", "reviewed_packet_fingerprint": "%s", '
+                '"missing_required_sections": [], '
                 '"incongruence_reasons": [], "veto_reasons": ["product_readiness"], '
                 '"required_gpu1_next_action": "act"}'
+            )
+            % str(packet.get("packet_fingerprint") or "")
+        ),
+        {"gpu1_closure_decision_packet": packet},
+    )
+    missing_fingerprint = bind_gpu0_secondary_to_gpu1_packet(
+        parse_gpu0_secondary_response(
+            (
+                '{"gpu0_decision": "congruent", "checked_block_id": "b1", '
+                '"checked_gpu1_revision": "2", "missing_required_sections": [], '
+                '"incongruence_reasons": [], "veto_reasons": [], '
+                '"required_gpu1_next_action": "act"}'
+            )
+        ),
+        {"gpu1_closure_decision_packet": packet},
+    )
+    fingerprint_mismatch = bind_gpu0_secondary_to_gpu1_packet(
+        parse_gpu0_secondary_response(
+            (
+                '{"gpu0_decision": "congruent", "checked_block_id": "b1", '
+                '"checked_gpu1_revision": "2", "reviewed_packet_fingerprint": "wrong", '
+                '"missing_required_sections": [], "incongruence_reasons": [], '
+                '"veto_reasons": [], "required_gpu1_next_action": "act"}'
             )
         ),
         {"gpu1_closure_decision_packet": packet},
@@ -302,6 +329,18 @@ def gpu0_secondary_schema_checks() -> dict[str, bool]:
         "gpu0_schema_rejects_wrong_gpu1_packet": mismatch.get("gpu0_secondary_schema_valid")
         is False
         and "gpu0_checked_wrong_gpu1_packet" in (mismatch.get("veto_reasons") or []),
+        "gpu0_schema_rejects_missing_packet_fingerprint": missing_fingerprint.get(
+            "gpu0_secondary_schema_valid"
+        )
+        is False
+        and "gpu0_secondary_required_fields_missing"
+        in (missing_fingerprint.get("veto_reasons") or []),
+        "gpu0_schema_rejects_wrong_packet_fingerprint": fingerprint_mismatch.get(
+            "gpu0_secondary_schema_valid"
+        )
+        is False
+        and "gpu0_checked_wrong_gpu1_packet_fingerprint"
+        in (fingerprint_mismatch.get("veto_reasons") or []),
         "gpu0_unanchored_reason_cannot_veto_final": unanchored.get("gpu0_decision")
         == "congruent"
         and unanchored.get("gpu0_decision_override_reason") == "gpu0_unanchored_reason",
@@ -503,7 +542,8 @@ def provider_absorption_checks(repo: Path) -> dict[str, bool]:
         and report.get("report_passed") is True,
         "diagnostic_only_true": report.get("diagnostic_only") is True,
         "diagnostic_not_operational": report.get("operational_provider_activity") is False,
-        "diagnostic_status_ready": report.get("status") == "ready",
+        "diagnostic_status_not_ready": report.get("status") != "ready"
+        and report.get("work_status") == "unverified",
         "diagnostic_provider_evidence_published": "provider_evidence" in event_types,
         "diagnostic_peer_block_not_published": "provider_peer_block" not in event_types,
         "diagnostic_product_not_blocked": gate.state["product"].get("status") == "not_ready",

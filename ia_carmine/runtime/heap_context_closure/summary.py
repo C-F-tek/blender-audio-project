@@ -117,6 +117,7 @@ def build_launcher_summary(args: Any, state: dict[str, Any]) -> dict[str, Any]:
         ),
         "startup_task_file": str(state["startup_task_file"]) if state["startup_task_file"].exists() else "",
         "startup_artifacts": _dict_or_empty(startup_payload.get("artifacts")),
+        "startup_effective_config": _dict_or_empty(startup_payload.get("startup_effective_config")),
         "startup_artifact_ref_count": len(startup_artifact_refs(startup_payload)),
         "startup_blocking_requirements": _list_or_empty(
             startup_payload.get("blocking_requirements")

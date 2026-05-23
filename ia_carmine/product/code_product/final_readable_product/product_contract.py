@@ -57,6 +57,11 @@ def final_product_blockers(
     gate: dict[str, Any],
 ) -> list[str]:
     blockers: list[str] = []
+    if gate and gate.get("passed") is False:
+        blockers.append("heap runtime completeness gate did not pass")
+    gate_errors = gate.get("errors") if isinstance(gate.get("errors"), list) else []
+    if gate_errors:
+        blockers.append("heap runtime completeness gate reported errors")
     if not pointer:
         blockers.append("external heap pointer manifest is missing")
     elif not truthy(pointer.get("passed")):

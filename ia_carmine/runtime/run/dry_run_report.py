@@ -96,6 +96,7 @@ def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
                 "gpu0_base_url",
                 "gpu0_vulkan_visible_devices",
                 "ollama_num_ctx",
+                "gpu0_ollama_num_ctx",
                 "ollama_num_thread",
                 "ollama_context_candidates",
                 "max_new_tokens",

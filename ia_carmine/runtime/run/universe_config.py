@@ -38,6 +38,7 @@ class UniverseRunConfig:
     gpu0_base_url: str | None = None
     gpu0_vulkan_visible_devices: str | None = None
     ollama_num_ctx: int | None = None
+    gpu0_ollama_num_ctx: int | None = None
     ollama_gpu_layers: str | None = None
     ollama_num_thread: int | None = None
     ollama_context_candidates: str | None = None
@@ -109,6 +110,7 @@ INT_FIELDS = {
     "preflight_timeout_seconds",
     "revision_context_max_tasks",
     "ollama_num_ctx",
+    "gpu0_ollama_num_ctx",
     "ollama_num_thread",
     "max_new_tokens",
     "gpu0_max_new_tokens",

@@ -29,6 +29,11 @@ class _Args:
     semantic_code_chunk_preview_chars = 1200
     semantic_evidence_chunk_limit = 8
     memory_search_limit = 4
+    tool_inventory_roots = "Tools,ia_carmine"
+    semantic_path_boosts = "ia_carmine/runtime/heap_gate,ia_carmine/runtime/run"
+    code_interpreter_inputs = "ia_carmine,Tools"
+    duplication_audit_roots = "ia_carmine,Tools"
+    ai_context_pack_profile = "core_ai_backend"
     timeout_seconds = 120
 
 
@@ -195,6 +200,12 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         for item in pre_provider_plan
         if item.get("pre_provider_baseline")
     }
+    pre_provider_post_validation_requirements = {
+        item.get("requirement")
+        for item in pre_provider_plan
+        if item.get("requirement")
+        in {"virtual_dev_environment", "runtime_debug_lab_execution", "code_execution_matrix"}
+    }
     code_matrix_before_provider = [
         item for item in pre_provider_plan if item.get("requirement") == "code_execution_matrix"
     ]
@@ -210,13 +221,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     ]
     first_after_base = owner.next_unattempted_plan_items(base_events)
 
-    baseline_events = [
-        *base_events,
-        _broker_event("virtual_dev_environment", "run_heap_virtual_dev_environment"),
-        _broker_event("runtime_debug_lab_execution", "agent_runtime_debug_lab"),
-    ]
-    after_baseline = owner.next_unattempted_plan_items(baseline_events)
-    batch_item = after_baseline[0] if after_baseline else {}
+    batch_item = first_after_base[0] if first_after_base else {}
     batch_content = str((batch_item.get("args") or {}).get("content") or "{}")
     try:
         batch_payload = json.loads(batch_content)
@@ -224,7 +229,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         batch_payload = {}
 
     batch_events = [
-        *baseline_events,
+        *base_events,
         _broker_event(
         batch_requirement,
         "runtime_sqlite_memory",
@@ -237,36 +242,56 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     code_matrix_after_provider = [
         item for item in post_provider_plan if item.get("requirement") == "code_execution_matrix"
     ]
+    post_provider_feedback = [
+        item
+        for item in post_provider_plan
+        if item.get("requirement") in {"virtual_dev_environment", "runtime_debug_lab_execution"}
+    ]
+    source_text = "\n".join(
+        [
+            (repo_root / "ia_carmine/runtime/heap_gate/tool_broker.py").read_text(
+                encoding="utf-8", errors="replace"
+            ),
+            (repo_root / "ia_carmine/runtime/heap_gate/loop_steps.py").read_text(
+                encoding="utf-8", errors="replace"
+            ),
+        ]
+    )
 
     checks = {
         "single_batch_plan_item": len(batch_items) == 1
         and batch_items[0].get("tool") == "runtime_sqlite_memory",
         "runtime_file_refs_hard_gate": bool(runtime_refs)
         and runtime_refs[0].get("pre_provider_hard_gate") is True,
-        "baseline_tools_pre_provider": baseline_requirements
-        == {"virtual_dev_environment", "runtime_debug_lab_execution"},
+        "no_baseline_tools_pre_provider": baseline_requirements == set()
+        and pre_provider_post_validation_requirements == set(),
         "code_matrix_not_pre_provider": not code_matrix_before_provider,
         "no_per_artifact_sqlite_requests": not per_artifact_memory_requests,
-        "baseline_runs_before_batch": {
+        "startup_batch_runs_after_base": {
             item.get("requirement") for item in first_after_base
-        }
-        == {"virtual_dev_environment", "runtime_debug_lab_execution"},
-        "batch_runs_after_baseline": batch_item.get("requirement")
-        == batch_requirement,
-        "batch_indexes_runtime_refs_and_baseline": {
+        } == {batch_requirement},
+        "batch_indexes_runtime_refs": {
             item.get("requirement") for item in batch_payload.get("artifact_refs", [])
-        }.issuperset(
-            {"runtime_file_refs", "virtual_dev_environment", "runtime_debug_lab_execution"}
-        ),
+        }.issuperset({"runtime_file_refs"}),
         "provider_gate_waits_for_batch": not owner.provider_start_requirements_complete(
-            baseline_events
+            base_events
         ),
         "provider_gate_ready_after_batch": owner.provider_start_requirements_complete(
             batch_events
         ),
+        "virtual_debug_post_provider_feedback": {
+            item.get("requirement") for item in post_provider_feedback
+        }
+        == {"virtual_dev_environment", "runtime_debug_lab_execution"}
+        and all(item.get("post_provider") for item in post_provider_feedback)
+        and all(item.get("provider_feedback_evidence") for item in post_provider_feedback),
         "code_matrix_post_provider_final_validation": bool(code_matrix_after_provider)
         and code_matrix_after_provider[0].get("post_provider") is True
         and code_matrix_after_provider[0].get("final_product_validation") is True,
+        "single_provider_start_requirements_complete_method": source_text.count(
+            "def provider_start_requirements_complete"
+        )
+        == 1,
     }
     return {
         "schema_version": 1,

@@ -22,7 +22,7 @@ def lane_details(run_status: dict[str, Any]) -> str:
         lane = str(item.get("lane") or "").strip()
         if not lane or support_provider_payload(lane, item):
             continue
-        status = item.get("status") or item.get("passed") or "?"
+        status = item.get("work_status") or item.get("status") or item.get("passed") or "?"
         role_text = f",role={lane_role(lane)}"
         tier = str(item.get("lane_tier") or "").strip()
         tier_text = f",tier={_short_label(tier, 18)}" if tier else ""
@@ -138,12 +138,23 @@ def provider_status(path: Path) -> list[dict[str, Any]]:
         if support_provider_payload(lane, data):
             continue
         is_replight = provider_status_is_replight(item.name, data)
+        work_status = data.get("work_status")
+        if not work_status and data.get("status") == "ready" and data.get("provider_work_verified") is not True:
+            work_status = (
+                "rejected"
+                if data.get("provider_rejection_reason") or data.get("product_blocked_reason")
+                else "unverified"
+            )
         result.append(
             {
                 "lane": lane,
                 "is_replight": is_replight,
-                "status": data.get("status") or ("written" if data else "pending"),
+                "status": work_status or data.get("status") or ("written" if data else "pending"),
+                "process_status": data.get("process_status"),
+                "work_status": work_status,
                 "passed": data.get("passed"),
+                "provider_work_verified": data.get("provider_work_verified"),
+                "provider_rejection_reason": data.get("provider_rejection_reason"),
                 "selected_model": data.get("provider_model") or data.get("selected_model") or data.get("model"),
                 "semantic_provider_execution_performed": data.get("semantic_provider_execution_performed"),
                 "lane_tier": data.get("lane_tier"),
