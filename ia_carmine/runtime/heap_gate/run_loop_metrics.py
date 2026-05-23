@@ -2,6 +2,19 @@
 
 from __future__ import annotations
 
+from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
+    GPU0_LANE,
+    GPU1_LANE,
+    NPU_LANE,
+    context_hierarchy_payload,
+    lane_hierarchy,
+)
+from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import normalize_gpu0_decision
+from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
+    extract_gpu1_closure_decision_packet,
+    gpu1_decision_packet_valid,
+    gpu1_packets_equivalent,
+)
 from ia_carmine.runtime.heap_gate.runtime_common import Any, safe_dict, safe_int
 
 
@@ -16,25 +29,33 @@ def build_provider_lane_metrics(
         else set()
     )
     lane_names = sorted(provider_reports_by_lane)
-    semantic_required = {"gpu0_peer"} if owner.args.allow_provider_generation else set()
+    semantic_required = {GPU0_LANE} if owner.args.allow_provider_generation else set()
     semantic_missing = sorted(
         lane
         for lane in semantic_required
         if lane in provider_reports_by_lane
-        and not provider_reports_by_lane.get(lane, {}).get(
-            "semantic_provider_execution_performed"
-        )
+        and not _lane_has_model_execution(owner.provider_reports, lane)
     )
     latest_proposal = owner.latest_proposal_iteration_report()
+    latest_gpu1_packet = extract_gpu1_closure_decision_packet(latest_proposal)
     gpu0_review = safe_dict(
         provider_reports_by_lane.get("gpu0_peer", {}).get("gpu0_operational_review")
+    )
+    gpu0_report = provider_reports_by_lane.get(GPU0_LANE, {})
+    latest_gpu0_reviewed_packet = extract_gpu1_closure_decision_packet(gpu0_report)
+    gpu0_decision = normalize_gpu0_decision(
+        gpu0_report.get("gpu0_effective_decision")
+        or gpu0_report.get("gpu0_decision")
+        or gpu0_review.get("gpu0_effective_decision")
+        or gpu0_review.get("gpu0_decision")
+        or gpu0_review.get("decision")
     )
     npu_audit = safe_dict(
         provider_reports_by_lane.get("npu_micro_task_auditor", {}).get(
             "npu_operational_audit"
         )
     )
-    npu_report = provider_reports_by_lane.get("npu_micro_task_auditor", {})
+    npu_report = provider_reports_by_lane.get(NPU_LANE, {})
     npu_micro_activity_ok = bool(
         npu_report.get("npu_peer_evidence_verified")
         or npu_report.get("npu_peer_activity_performed")
@@ -42,11 +63,23 @@ def build_provider_lane_metrics(
         or npu_report.get("npu_device_execution_performed")
         or npu_report.get("operational_provider_activity")
     )
-    lane_authority = {
-        "gpu1_planner": "primary_open_review_close_synthesis",
-        "gpu0_peer": "reviewer_refiner_not_primary_closer",
-        "npu_micro_task_auditor": "microtask_tool_auditor_not_primary_closer",
+    hierarchy = {
+        lane: lane_hierarchy(lane)
+        for lane in (GPU1_LANE, GPU0_LANE, NPU_LANE)
     }
+    lane_authority = {lane: data.get("authority") for lane, data in hierarchy.items()}
+    context_payload = context_hierarchy_payload(
+        owner.args, gpu1_ctx=getattr(owner, "selected_ollama_num_ctx", None)
+    )
+    consumed_peer_block_ids = _consumed_peer_block_ids(owner.provider_reports)
+    latest_gpu1_report = next(
+        (
+            item
+            for item in reversed(latest_provider_reports)
+            if str(item.get("lane") or "") == GPU1_LANE
+        ),
+        {},
+    )
     replight_reports = list(getattr(owner, "provider_replight_reports", []) or [])
     replight_reports.extend(
         item for item in latest_provider_reports if item.get("replight_passed") is not None
@@ -59,6 +92,9 @@ def build_provider_lane_metrics(
         "provider_execution_performed": owner.provider_execution_performed,
         "provider_native_tool_call_count": sum(
             safe_int(item.get("native_tool_call_count")) for item in latest_provider_reports
+        ),
+        "gpu1_native_tool_call_count": safe_int(
+            latest_gpu1_report.get("native_tool_call_count")
         ),
         "provider_textual_tool_call_count": sum(
             safe_int(item.get("textual_tool_call_count")) for item in latest_provider_reports
@@ -128,7 +164,58 @@ def build_provider_lane_metrics(
             for item in replight_reports
         ],
         "closure_owner": "gpu1_planner",
+        "lane_tiers": {lane: data.get("lane_tier") for lane, data in hierarchy.items()},
         "lane_authority": lane_authority,
+        "lane_context_budgets": {
+            "gpu1_planner": context_payload.get("gpu1_context_budget"),
+            "gpu0_peer": context_payload.get("gpu0_context_budget"),
+            "npu_micro_task_auditor": context_payload.get("npu_context_budget"),
+        },
+        "gpu1_context_budget": context_payload.get("gpu1_context_budget"),
+        "gpu0_context_budget": context_payload.get("gpu0_context_budget"),
+        "npu_context_budget": context_payload.get("npu_context_budget"),
+        "context_hierarchy_valid": context_payload.get("context_hierarchy_valid"),
+        "context_hierarchy_rule": context_payload.get("context_hierarchy_rule"),
+        "gpu1_replight_valid": bool(getattr(owner, "gpu1_replight_valid", False)),
+        "gpu1_boot_leader_ready": bool(
+            getattr(owner, "gpu1_boot_leader_ready", False)
+        ),
+        "gpu1_primary_workload_valid": bool(
+            getattr(owner, "gpu1_primary_workload_valid", False)
+        ),
+        "gpu1_primary_evidence_valid": bool(
+            getattr(owner, "gpu1_primary_evidence_valid", False)
+        ),
+        "gpu1_primary_evidence_source": str(
+            getattr(owner, "gpu1_primary_evidence_source", "") or ""
+        ),
+        "gpu1_primary_workload_chars": safe_int(
+            getattr(owner, "gpu1_primary_workload_chars", 0)
+        ),
+        "gpu1_primary_workload_tokens": safe_int(
+            getattr(owner, "gpu1_primary_workload_tokens", 0)
+        ),
+        "leader_source": str(getattr(owner, "leader_source", "") or "none"),
+        "sidecars_start_policy": str(
+            getattr(owner, "sidecars_start_policy", "") or ""
+        ),
+        "parallel_provider_overlap_seconds": getattr(
+            owner, "parallel_provider_overlap_seconds", 0.0
+        ),
+        "provider_lane_workload_metrics": _lane_workload_metrics(latest_provider_reports),
+        "device_identity_map": _device_identity_map(latest_provider_reports),
+        "gpu1_leader_valid": bool(getattr(owner, "gpu1_leader_valid", False)),
+        "gpu1_leader_block_id": str(getattr(owner, "gpu1_leader_block_id", "") or ""),
+        "gpu1_consumed_generic_write_block_ids": list(
+            getattr(owner, "gpu1_consumed_generic_write_block_ids", []) or []
+        ),
+        "consumed_peer_block_ids": consumed_peer_block_ids,
+        "gpu1_consumed_gpu0_peer": bool(
+            any(str(block).find(":gpu0_peer:") >= 0 for block in consumed_peer_block_ids)
+        ),
+        "gpu1_consumed_npu_peer": bool(
+            any(str(block).find(":npu_micro_task_auditor:") >= 0 for block in consumed_peer_block_ids)
+        ),
         "native_tool_calling_policy": {
             "gpu1_planner": "may_drive_broker_native_tool_calls_and_own_final_synthesis",
             "gpu0_peer": "same_tool_schema_peer_only_requires_later_gpu1_consumption",
@@ -154,6 +241,18 @@ def build_provider_lane_metrics(
         "latest_proposal_quality_passed": (
             latest_proposal.get("quality_passed") if latest_proposal else None
         ),
+        "gpu1_closure_decision_packet": latest_gpu1_packet,
+        "gpu1_closure_decision_packet_valid": gpu1_decision_packet_valid(
+            latest_gpu1_packet
+        ),
+        "latest_gpu1_decision": str(latest_gpu1_packet.get("gpu1_decision") or ""),
+        "latest_gpu1_block_id": str(latest_gpu1_packet.get("gpu1_block_id") or ""),
+        "latest_gpu1_revision": str(latest_gpu1_packet.get("gpu1_revision") or ""),
+        "latest_gpu1_refine_continuity": (
+            latest_proposal.get("gpu1_refine_continuity")
+            if isinstance(latest_proposal.get("gpu1_refine_continuity"), dict)
+            else {}
+        ),
         "latest_proposal_reject_reason": str(latest_proposal.get("reject_reason") or ""),
         "latest_proposal_pointer_action": str(latest_proposal.get("pointer_action") or ""),
         "latest_proposal_exit_decision": str(latest_proposal.get("exit_decision") or ""),
@@ -162,13 +261,91 @@ def build_provider_lane_metrics(
             if isinstance(latest_proposal.get("target_files"), list)
             else []
         ),
-        "latest_gpu0_review_decision": str(gpu0_review.get("decision") or ""),
+        "gpu0_secondary_schema_valid": gpu0_report.get("gpu0_secondary_schema_valid") is True
+        or gpu0_review.get("gpu0_secondary_schema_valid") is True,
+        "latest_gpu0_review_decision": gpu0_decision,
+        "latest_gpu0_model_decision": normalize_gpu0_decision(
+            gpu0_report.get("gpu0_model_decision")
+            or gpu0_review.get("gpu0_model_decision")
+        ),
+        "latest_gpu0_effective_decision": gpu0_decision,
+        "latest_gpu0_role_decision": str(
+            gpu0_report.get("role_decision") or gpu0_review.get("role_decision") or ""
+        ),
+        "latest_gpu0_checked_current_packet": bool(
+            gpu0_report.get("gpu0_checked_current_packet")
+            or gpu0_review.get("gpu0_checked_current_packet")
+        ),
+        "latest_gpu0_packet_stale_after_gpu1_packet_rewrite": bool(
+            latest_gpu0_reviewed_packet
+            and latest_gpu1_packet
+            and not gpu1_packets_equivalent(latest_gpu0_reviewed_packet, latest_gpu1_packet)
+        ),
+        "latest_gpu0_reviewed_packet_fingerprint": str(
+            latest_gpu0_reviewed_packet.get("packet_fingerprint") or ""
+        ),
+        "latest_gpu1_packet_fingerprint": str(
+            latest_gpu1_packet.get("packet_fingerprint") or ""
+        ),
+        "latest_gpu0_expected_gpu1_block_id": str(
+            gpu0_report.get("expected_gpu1_block_id")
+            or gpu0_review.get("expected_gpu1_block_id")
+            or ""
+        ),
+        "latest_gpu0_expected_gpu1_revision": str(
+            gpu0_report.get("expected_gpu1_revision")
+            or gpu0_review.get("expected_gpu1_revision")
+            or ""
+        ),
+        "latest_gpu0_unanchored_reasons": (
+            gpu0_report.get("gpu0_unanchored_reasons")
+            if isinstance(gpu0_report.get("gpu0_unanchored_reasons"), list)
+            else (
+                gpu0_review.get("gpu0_unanchored_reasons")
+                if isinstance(gpu0_review.get("gpu0_unanchored_reasons"), list)
+                else []
+            )
+        ),
+        "latest_gpu0_decision_override_reason": str(
+            gpu0_report.get("gpu0_decision_override_reason")
+            or gpu0_review.get("gpu0_decision_override_reason")
+            or ""
+        ),
+        "latest_gpu0_veto_reasons": (
+            gpu0_report.get("veto_reasons")
+            if isinstance(gpu0_report.get("veto_reasons"), list)
+            else (
+                gpu0_review.get("veto_reasons")
+                if isinstance(gpu0_review.get("veto_reasons"), list)
+                else []
+            )
+        ),
+        "latest_gpu0_incongruence_reasons": (
+            gpu0_report.get("incongruence_reasons")
+            if isinstance(gpu0_report.get("incongruence_reasons"), list)
+            else (
+                gpu0_review.get("incongruence_reasons")
+                if isinstance(gpu0_review.get("incongruence_reasons"), list)
+                else []
+            )
+        ),
+        "latest_gpu0_free_text_used_as_product": bool(
+            gpu0_report.get("free_text_used_as_product")
+            or gpu0_review.get("free_text_used_as_product")
+        ),
+        "latest_gpu0_free_text_used_as_decision": bool(
+            gpu0_report.get("free_text_used_as_decision")
+            or gpu0_review.get("free_text_used_as_decision")
+        ),
         "latest_gpu0_missing_delta_sections": (
             gpu0_review.get("missing_delta_sections")
             if isinstance(gpu0_review.get("missing_delta_sections"), list)
             else []
         ),
         "latest_npu_audit_decision": str(npu_audit.get("decision") or ""),
+        "npu_lane_contract": str(
+            npu_report.get("npu_lane_contract") or "microtask_tool_calling_openvino"
+        ),
         "npu_micro_activity_ok": npu_micro_activity_ok,
     }
 
@@ -177,3 +354,92 @@ def _native_tool_loop_required(lane: str, report: dict[str, Any]) -> bool:
     if lane == "npu_micro_task_auditor":
         return bool(report.get("npu_native_tool_loop_required"))
     return True
+
+
+def _device_identity_map(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for report in reports:
+        lane = str(report.get("lane") or "").strip()
+        if lane not in {GPU1_LANE, GPU0_LANE, NPU_LANE}:
+            continue
+        items.append(
+            {
+                "logical_lane": report.get("logical_lane") or lane,
+                "provider_compute_device": report.get("provider_compute_device"),
+                "provider_backend_device_id": report.get("provider_backend_device_id"),
+                "windows_task_manager_device_hint": report.get(
+                    "windows_task_manager_device_hint"
+                ),
+                "vulkan_visible_device": report.get("vulkan_visible_device"),
+                "vulkan_device_name": report.get("vulkan_device_name"),
+                "vulkan_vendor_id": report.get("vulkan_vendor_id"),
+                "device_identity_verified": report.get("device_identity_verified"),
+            }
+        )
+    return items
+
+
+def _lane_has_model_execution(reports: list[dict[str, Any]], lane: str) -> bool:
+    for report in reversed(reports):
+        if str(report.get("lane") or "") != lane:
+            continue
+        if report.get("semantic_provider_execution_performed"):
+            return True
+        if report.get("provider_execution_performed"):
+            return True
+        if report.get("provider_work_verified"):
+            return True
+        if report.get("operational_provider_activity"):
+            return True
+        if str(report.get("provider_backend") or "").lower() == "ollama" and str(
+            report.get("response_text") or ""
+        ).strip():
+            return True
+    return False
+
+
+def _consumed_peer_block_ids(reports: list[dict[str, Any]]) -> list[str]:
+    for report in reversed(reports):
+        if str(report.get("lane") or "") != GPU1_LANE:
+            continue
+        for key in (
+            "gpu1_consumed_peer_block_ids",
+            "consumed_peer_block_ids",
+            "consumed_gpu0_review_block_ids",
+        ):
+            refs = report.get(key)
+            if isinstance(refs, list):
+                return [str(item) for item in refs if str(item).strip()]
+    return []
+
+
+def _lane_workload_metrics(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    metrics: list[dict[str, Any]] = []
+    for report in reports:
+        lane = str(report.get("lane") or "")
+        if lane not in {GPU1_LANE, GPU0_LANE, NPU_LANE}:
+            continue
+        metrics.append(
+            {
+                "lane": lane,
+                "provider_cycle_id": report.get("provider_cycle_id")
+                if report.get("provider_cycle_id") is not None
+                else report.get("revision"),
+                "workload_elapsed_seconds": report.get("elapsed_seconds"),
+                "prompt_eval_count": report.get("prompt_eval_count")
+                or report.get("prompt_token_count"),
+                "eval_count": report.get("eval_count")
+                or report.get("completion_token_count"),
+                "work_verified": bool(
+                    report.get("provider_work_verified")
+                    or report.get("gpu1_primary_workload_valid")
+                    or report.get("npu_peer_evidence_verified")
+                ),
+                "accepted_by_gpu1": bool(
+                    lane == GPU1_LANE
+                    or str(report.get("provider_block_id") or "")
+                    in _consumed_peer_block_ids(reports)
+                ),
+            }
+        )
+    return metrics

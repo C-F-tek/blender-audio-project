@@ -9,6 +9,18 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from typing import Any
 
+from Tools.validation.heap_runtime.provider_loop_hierarchy_checks import (
+    run_provider_loop_hierarchy_checks,
+)
+from Tools.validation.heap_runtime.provider_loop_primary_evidence_checks import run_provider_loop_primary_evidence_checks
+from Tools.validation.heap_runtime.provider_loop_tail_checks import (
+    check_bounded_npu_micro_tasks,
+    check_external_heap_health_report_filter,
+    check_final_cleanup,
+    check_gpu1_workload_absorption,
+    check_rejected_gpu1_retry_contract,
+)
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -24,11 +36,13 @@ def main() -> int:
         _check_ollama_native_tool_lane_contract(repo_root),
         _check_vulkan_identity_contract(repo_root),
         _check_provider_residency_lifecycle(repo_root),
-        _check_gpu1_workload_absorption(repo_root),
-        _check_rejected_gpu1_retry_contract(repo_root),
-        _check_external_heap_health_report_filter(repo_root),
-        _check_bounded_npu_micro_tasks(repo_root),
-        _check_final_cleanup(repo_root),
+        run_provider_loop_hierarchy_checks(repo_root),
+        run_provider_loop_primary_evidence_checks(repo_root),
+        check_gpu1_workload_absorption(repo_root),
+        check_rejected_gpu1_retry_contract(repo_root),
+        check_external_heap_health_report_filter(repo_root),
+        check_bounded_npu_micro_tasks(repo_root),
+        check_final_cleanup(repo_root),
     ]
     errors = [error for check in checks for error in check.get("errors", [])]
     report = {
@@ -97,6 +111,8 @@ def _check_gpu0_command_contract(repo_root: Path) -> dict[str, Any]:
         errors.append("GPU0 CLI does not ingest startup manifest context")
     if "--server-evidence" not in specs:
         errors.append("runtime GPU0 command does not pass boot handoff evidence")
+    if "_gpu0_server_evidence_path" not in specs:
+        errors.append("runtime GPU0 command does not inherit prior GPU0 server evidence")
     if "_gpu0_max_new_tokens" not in specs:
         errors.append("runtime GPU0 command does not bound peer max_new_tokens separately")
     if "--restart-gpu0-vulkan-server" in specs:
@@ -137,6 +153,10 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
         errors.append("native tool router does not stamp lane authority on broker requests")
     if "generic_write_refinement" not in native:
         errors.append("generic_write native call is not mapped to refinement evidence")
+    registry = _read(repo_root, "ia_carmine/runtime/runtime_tool/broker/registry.py")
+    for arg in ("source_revision", "gpu1_followup_required", "peer_followup_required", "provider_role"):
+        if arg not in registry:
+            errors.append(f"generic_write broker registry does not allow {arg}")
     if "generic_write" not in loop or "run_heap_virtual_dev_environment" not in loop:
         errors.append("Ollama native tool list does not expose generic_write/dev/matrix tools")
     for source, name in ((provider_context, "GPU1 prompt"), (gpu0, "GPU0 prompt")):
@@ -162,6 +182,7 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
         errors.append("provider teamwork packet does not scope GPU0 as peer-only same-schema lane")
     errors.extend(_probe_native_tool_routing())
     errors.extend(_probe_no_tool_generic_write_capture())
+    errors.extend(_probe_generic_write_broker_metadata_args(repo_root))
     errors.extend(_probe_npu_peer_evidence_timeout())
     errors.extend(_probe_npu_generic_write_result_hydration())
     errors.extend(_probe_generic_write_no_tool_product())
@@ -242,6 +263,73 @@ def _probe_no_tool_generic_write_capture() -> list[str]:
         errors.append("NPU no-tool capture is not diagnostic peer evidence")
     if npu_request.get("gpu1_followup_required") is not True:
         errors.append("NPU no-tool capture does not force GPU1 follow-up")
+    return errors
+
+
+def _probe_generic_write_broker_metadata_args(repo_root: Path) -> list[str]:
+    from ia_carmine.runtime.runtime_tool.broker.executor import build_report
+
+    errors: list[str] = []
+    with TemporaryDirectory(prefix="generic-write-broker-") as tmp:
+        root = Path(tmp)
+        request = root / "request.md"
+        provider = root / "provider.json"
+        request.write_text("operator request", encoding="utf-8")
+        provider.write_text(
+            json.dumps(
+                {
+                    "lane": "npu_micro_task_auditor",
+                    "revision": 0,
+                    "provider_role": "npu_auditor",
+                    "response_text": "MICRO_TASK=target_reference_audit\nDECISION=NPU_TIMEOUT_BOUNDARY",
+                    "tool_calls": [],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        report = build_report(
+            SimpleNamespace(
+                repo_root=str(repo_root),
+                request_data={
+                    "kind": "agent_runtime_tool_requests",
+                    "tool_requests": [
+                        {
+                            "id": "generic-write-metadata",
+                            "tool": "generic_write",
+                            "requirement": "generic_write_refinement",
+                            "args": {
+                                "request_file": str(request),
+                                "provider_report": str(provider),
+                                "proposal_text": "MICRO_TASK=target_reference_audit",
+                                "capture_mode": "no_tool_capture",
+                                "source_lane": "npu_micro_task_auditor",
+                                "source_revision": "0",
+                                "gpu1_followup_required": "true",
+                                "peer_followup_required": "true",
+                                "provider_role": "npu_auditor",
+                                "reason": "smoke metadata args",
+                            },
+                        }
+                    ],
+                },
+                request_packet=None,
+                request_json="",
+                request_file="",
+                stamp="generic-write-broker-smoke",
+                tool_output_dir=str(root / "tool_outputs"),
+                timeout_seconds=30,
+                dry_run=False,
+            )
+        )
+        result = (report.get("tool_results") or [{}])[0]
+        error_text = " ".join(str(item) for item in result.get("errors", []))
+        if "unsupported args" in error_text:
+            errors.append("generic_write broker still rejects metadata args")
+        if result.get("executed") is not True or result.get("returncode") != 0:
+            errors.append(f"generic_write broker metadata args did not execute cleanly: {result.get('errors')}")
+        if not result.get("outputs", {}).get("json_report"):
+            errors.append("generic_write broker metadata args did not produce json_report")
     return errors
 
 
@@ -348,7 +436,15 @@ def _probe_npu_generic_write_result_hydration() -> list[str]:
     errors: list[str] = []
     with TemporaryDirectory(prefix="npu-generic-write-hydration-") as tmp:
         root = Path(tmp)
-        provider = {"lane": "npu_micro_task_auditor", "revision": 0, "response_text": "MICRO_TASK=target_reference_audit\nDECISION=NPU_TIMEOUT_BOUNDARY"}
+        provider = {
+            "lane": "npu_micro_task_auditor",
+            "revision": 0,
+            "provider_block_id": "npu:0",
+            "passed": True,
+            "provider_execution_performed": True,
+            "provider_work_verified": True,
+            "response_text": "MICRO_TASK=target_reference_audit\nDECISION=NPU_TIMEOUT_BOUNDARY",
+        }
         (root / "npu.json").write_text(json.dumps(provider), encoding="utf-8")
         report = {"passed": True, "source_lane": provider["lane"], "provider_report": "npu.json", "capture_mode": "no_tool_capture", "provider_summary": provider, "provider_response_excerpt": provider["response_text"]}
         (root / "generic.json").write_text(json.dumps(report), encoding="utf-8")
@@ -401,6 +497,9 @@ def _probe_generic_write_no_tool_product() -> list[str]:
                 "lane": "gpu1_planner",
                 "revision": revision,
                 "provider_block_id": f"gpu1:{revision}",
+                "passed": True,
+                "provider_execution_performed": True,
+                "provider_work_verified": True,
                 "response_text": f"provider prose output {revision}\n```python\nprint({revision})\n```",
                 "native_tool_call_count": 0,
             }
@@ -446,6 +545,7 @@ def _probe_generic_write_no_tool_product() -> list[str]:
         owner = Owner()
         owner.repo_root = root
         owner.provider_reports = [{"lane": "gpu1_planner", "revision": 3}]
+        owner.gpu1_consumed_generic_write_block_ids = ["gpu1:0", "gpu1:1", "gpu1:2"]
         product = generic_write_document_product(owner, events)
         if not product.get("eligible"):
             errors.append("three consumed generic_write captures did not become eligible")
@@ -550,130 +650,6 @@ def _check_provider_residency_lifecycle(repo_root: Path) -> dict[str, Any]:
     if "model unload and GPU0 `11435` shutdown are final cleanup" not in mesh_context:
         errors.append("provider mesh context does not document final cleanup residency")
     return {"name": "provider_residency_lifecycle", "errors": errors}
-
-
-def _check_gpu1_workload_absorption(repo_root: Path) -> dict[str, Any]:
-    local_probe = _read(repo_root, "ia_carmine/providers/provider_mesh/local_provider_probe/cli.py")
-    commands = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_commands.py")
-    provider_context = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_context.py")
-    provider_prompt_text = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_prompt_text.py")
-    errors: list[str] = []
-    if "mirror_single_provider_lane" not in local_probe or "args.run_ollama" not in local_probe:
-        errors.append("GPU1 provider wrapper still mirrors only replight lanes")
-    for marker in ("response_text", "target_files", "validation_commands", "provider_work_verified"):
-        if marker not in local_probe:
-            errors.append(f"local provider probe does not mirror {marker}")
-    if "lane_report_lane in {\"ollama\", lane}" not in commands:
-        errors.append("runtime summarizer does not absorb lane-specific Ollama reports")
-    if "_empty_report_value" not in commands:
-        errors.append("runtime summarizer cannot overwrite empty top-level wrapper fields")
-    if "--defer-unload" not in _read(repo_root, "ia_carmine/runtime/heap_gate/provider_command_specs.py"):
-        errors.append("GPU1 provider loop does not defer model unload until cleanup")
-    if "runtime_file_refs/SOURCE_PATH_ALLOWLIST_CONTRACT" not in provider_context:
-        errors.append("GPU1 prompt does not anchor target files to runtime_file_refs allowlist")
-    if "basename o path ricordati ma non allowlisted" not in provider_prompt_text:
-        errors.append("GPU1 pointer protocol does not forbid remembered basename targets")
-    return {"name": "gpu1_workload_absorption", "errors": errors}
-
-
-def _check_rejected_gpu1_retry_contract(repo_root: Path) -> dict[str, Any]:
-    refinement = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_refinement.py")
-    run_loop = _read(repo_root, "ia_carmine/runtime/heap_gate/run_loop.py")
-    terminal = _read(repo_root, "ia_carmine/runtime/heap_gate/terminal_invariants.py")
-    errors: list[str] = []
-    for marker in (
-        "latest_rejected_proposal_requires_retry",
-        "REJECTED_GPU1_BLOCK_RETRY_REQUIRED",
-        "validator_action=generate_new_gpu1_revision_for_same_block",
-        "run_provider_teamwork(round_id, revision=self.provider_revision_count)",
-    ):
-        if marker not in refinement:
-            errors.append(f"GPU1 retry contract missing {marker}")
-    if "and self.provider_revision_evidence_ready(events)" not in run_loop:
-        errors.append("run loop does not require matrix/lab evidence before GPU1 retry")
-    if "or self.latest_rejected_proposal_requires_retry()" in run_loop:
-        errors.append("run loop bypasses required matrix/lab evidence for rejected GPU1 retry")
-    if "mandatory provider revision retry" not in terminal:
-        errors.append("terminal invariants do not block rejected proposal without retry")
-    errors.extend(_probe_rejected_gpu1_retry_helper())
-    return {"name": "rejected_gpu1_retry_contract", "errors": errors}
-
-
-def _probe_rejected_gpu1_retry_helper() -> list[str]:
-    from ia_carmine.runtime.heap_gate.provider_refinement import RuntimeGateProviderRefinementMixin
-
-    class FakeGate(RuntimeGateProviderRefinementMixin):
-        provider_universe_blocked_reason = ""
-
-        def __init__(self, report: dict[str, Any], blocked: str = "") -> None:
-            self.report = report
-            self.provider_universe_blocked_reason = blocked
-
-        def latest_proposal_iteration_report(self) -> dict[str, Any]:
-            return self.report
-
-    rejected = {"quality_passed": False, "exit_decision": "PATCHABLE_TARGET"}
-    terminal = {
-        "quality_passed": False,
-        "exit_decision": "NO_PATCHABLE_TARGET",
-        "response_text": "BLOCKED_NO_VERIFIED_TARGET_REASON: no target",
-    }
-    errors: list[str] = []
-    if not FakeGate(rejected).latest_rejected_proposal_requires_retry():
-        errors.append("fake rejected GPU1 proposal did not require retry")
-    if FakeGate(terminal).latest_rejected_proposal_requires_retry():
-        errors.append("valid NO_PATCHABLE_TARGET proposal still required retry")
-    if FakeGate(rejected, blocked="gpu0_ollama_vulkan_required").latest_rejected_proposal_requires_retry():
-        errors.append("provider failure did not suppress retry requirement")
-    return errors
-
-
-def _check_external_heap_health_report_filter(repo_root: Path) -> dict[str, Any]:
-    graph = _read(repo_root, "ia_carmine/runtime/external_heap/block_pointer_manifest/provider_graph.py")
-    errors: list[str] = []
-    if "provider_role_coexistence" not in graph:
-        errors.append("external heap provider graph may still count boot coexistence as provider work")
-    if "provider_replight" not in graph or "replight_mode" not in graph:
-        errors.append("external heap provider graph may still count replight health reports as provider work")
-    return {"name": "external_heap_health_report_filter", "errors": errors}
-
-
-def _check_bounded_npu_micro_tasks(repo_root: Path) -> dict[str, Any]:
-    npu = (
-        _read(repo_root, "ia_carmine/_shared/npu_micro_task_companion_cli.py")
-        + "\n"
-        + _read(repo_root, "ia_carmine/_shared/npu_micro_task_contract.py")
-    )
-    errors: list[str] = []
-    for marker in (
-        "section_presence_audit",
-        "target_reference_audit",
-        "validation_command_audit",
-        "risk_guardrail_audit",
-        "NPU_DONE",
-        "NPU_REJECT",
-        "NPU_NO_ACTION",
-        "NPU_TIMEOUT_BOUNDARY",
-        "MICRO_TASK=",
-        "CHECKED=",
-        "FINDINGS=",
-        "DECISION=",
-        "REASON=",
-    ):
-        if marker not in npu:
-            errors.append(f"NPU micro-task contract missing {marker}")
-    return {"name": "bounded_npu_micro_tasks", "errors": errors}
-
-
-def _check_final_cleanup(repo_root: Path) -> dict[str, Any]:
-    launcher = _read(repo_root, "ia_carmine/runtime/heap_context_closure/launcher.py")
-    common = _read(repo_root, "ia_carmine/runtime/heap_context_closure/common.py")
-    errors: list[str] = []
-    if "heap command completed provider cleanup" not in launcher:
-        errors.append("launcher does not run provider cleanup after successful heap command")
-    if "provider_base_url" not in common or "_stop_gpu0_vulkan_server" not in common:
-        errors.append("provider cleanup does not know GPU0 base URL/server stop")
-    return {"name": "final_cleanup", "errors": errors}
 
 
 def _read(repo_root: Path, rel: str) -> str:

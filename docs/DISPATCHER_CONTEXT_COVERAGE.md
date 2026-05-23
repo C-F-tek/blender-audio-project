@@ -56,6 +56,9 @@ source/dispatcher fallback instruction
 
 This is enough for orientation. It is not an exhaustive source audit.
 
+Internal RAG context commands are covered by the `ia_carmine/context/agent_context`
+macro-family and validation coverage is under `Tools/validation/agent_context`.
+
 ## Known non-complete items
 
 | Family | Status | Reason |

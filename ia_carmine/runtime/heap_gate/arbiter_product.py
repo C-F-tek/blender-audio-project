@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ia_carmine.runtime.heap_gate.runtime_common import Any, append_unique, repo_rel
 from ia_carmine.runtime.heap_gate.generic_write_followup import generic_write_document_product
+from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import context_hierarchy_payload
 
 
 def build_arbiter_product(
@@ -26,6 +27,27 @@ def build_arbiter_product(
         peer_reasons.append("gpu0_peer_followup_pending")
     if int(generic_product.get("npu_peer_followup_pending_count") or 0) > 0:
         peer_reasons.append("npu_peer_followup_pending")
+    if int(generic_product.get("generic_write_capture_failed_count") or 0) > 0:
+        peer_reasons.append("generic_write_capture_failed")
+    if bool(getattr(owner.args, "allow_provider_generation", False)):
+        if context_hierarchy_payload(
+            owner.args, gpu1_ctx=getattr(owner, "selected_ollama_num_ctx", None)
+        ).get("context_hierarchy_valid") is not True:
+            peer_reasons.append("context_hierarchy_invalid")
+        if getattr(owner, "gpu1_primary_workload_valid", None) is False:
+            peer_reasons.append("gpu1_primary_workload_missing")
+        if getattr(owner, "gpu1_primary_evidence_valid", None) is False:
+            peer_reasons.append("gpu1_primary_evidence_missing")
+        if getattr(owner, "gpu1_leader_valid", None) is False:
+            peer_reasons.append("gpu1_leader_missing")
+        if (
+            getattr(owner, "gpu1_boot_leader_ready", False) is True
+            and str(getattr(owner, "sidecars_start_policy", "") or "")
+            == "after_gpu1_residency_handshake"
+            and float(getattr(owner, "parallel_provider_overlap_seconds", 0.0) or 0.0)
+            <= 0.0
+        ):
+            peer_reasons.append("parallelism_lost_by_serial_leader_gate")
     blocked_reason = (
         ",".join(peer_reasons)
         or soft_lock_state.get("closure_quorum_reason")

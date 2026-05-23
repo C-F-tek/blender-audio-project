@@ -81,6 +81,8 @@ def run_step(
     env = dict(os.environ)
     env["PYTHONPATH"] = str(repo_root)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env.setdefault("IA_CARMINE_PYTHON", sys.executable)
+    env.setdefault("SPAZIOTEMPO_NPU_PYTHON", sys.executable)
 
     process: subprocess.Popen[str] | None = None
     timed_out = False

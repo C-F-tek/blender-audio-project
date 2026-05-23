@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-GPU1_LANE = "gpu1_planner"
-GPU0_LANE = "gpu0_peer"
-NPU_LANE = "npu_micro_task_auditor"
+from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
+    CLOSURE_OWNER,
+    GPU0_LANE,
+    GPU1_LANE,
+    NPU_LANE,
+    lane_hierarchy,
+)
 
 
 def _int_value(value: Any, default: int, minimum: int = 0) -> int:
@@ -54,7 +58,7 @@ def build_provider_time_counter_contract(args: Any) -> dict[str, Any]:
         "memory_release_policy": "per_revision_release_only_for_finished_child_processes; ollama_model_unload_only_at_provider_production_cycle_cleanup",
         "lane_start_failure_policy": "abort_universe",
         "active_lane_failure_policy": "block_universe_but_join_active_lanes",
-        "closure_owner": GPU1_LANE,
+        "closure_owner": CLOSURE_OWNER,
         "sidecar_lanes": [GPU0_LANE, NPU_LANE],
     }
 
@@ -70,9 +74,10 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
     return {
         GPU1_LANE: {
             **contract,
+            **lane_hierarchy(GPU1_LANE),
             "lane": GPU1_LANE,
             "lane_authority": "primary_open_review_close_synthesis",
-            "closure_owner": True,
+            "lane_is_closure_owner": True,
             "primary_closer": True,
             "sidecar_lane": False,
             "lane_watchdog_seconds": 0,
@@ -82,6 +87,7 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
         },
         GPU0_LANE: {
             **contract,
+            **lane_hierarchy(GPU0_LANE),
             "lane": GPU0_LANE,
             "budget_counter_seconds": gpu0_budget,
             "soft_close_after_seconds": _soft_close_for_budget(gpu0_budget),
@@ -94,7 +100,7 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
             "native_tool_timeout_seconds": gpu0_tool_timeout,
             "sidecar_join_after_primary_seconds": 0,
             "lane_authority": "coworker_reviewer_refiner_not_primary_closer",
-            "closure_owner": False,
+            "lane_is_closure_owner": False,
             "primary_closer": False,
             "sidecar_lane": True,
             "reviewer_refiner": True,
@@ -104,6 +110,7 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
         },
         NPU_LANE: {
             **contract,
+            **lane_hierarchy(NPU_LANE),
             "lane": NPU_LANE,
             "budget_counter_seconds": npu_budget,
             "soft_close_after_seconds": _soft_close_for_budget(npu_budget),
@@ -118,7 +125,7 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
             "requested_npu_seconds": npu_requested,
             "npu_micro_timeout_enforced": True,
             "lane_authority": "microtask_tool_auditor_not_primary_closer",
-            "closure_owner": False,
+            "lane_is_closure_owner": False,
             "primary_closer": False,
             "sidecar_lane": True,
             "micro_audit_only": True,

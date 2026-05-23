@@ -60,6 +60,9 @@ def provider_python(repo_root: Path) -> Path:
     candidate = repo_root / (".venv/Scripts/python.exe" if os.name == "nt" else ".venv/bin/python")
     if candidate.exists():
         return candidate
+    current = Path(sys.executable).resolve()
+    if current.exists():
+        return current
     from ia_carmine.providers.npu.provider_mesh._shared.npu_runtime import DEFAULT_NPU_PYTHON  # noqa: PLC0415
 
     return DEFAULT_NPU_PYTHON

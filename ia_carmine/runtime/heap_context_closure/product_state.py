@@ -53,6 +53,12 @@ def build_product_state(
         final_payload=final_payload,
         external_contract=external_contract,
     )
+    soft_close_reason = _soft_close_reason(
+        approved=approved,
+        continuation_required=continuation_required,
+        blocked_reason=blocked_reason,
+        final_payload=final_payload,
+    )
     return {
         "canonical_product_path": code_product_contract.get("path", ""),
         "product_kind": product_kind,
@@ -75,9 +81,7 @@ def build_product_state(
         "resume_from_block_id": external_contract.get("resume_from_block_id", ""),
         "latest_block_id": external_contract.get("latest_block_id", ""),
         "continuation_required": continuation_required,
-        "soft_close_reason": (
-            "runtime_soft_governor_left_resume_pointer" if continuation_required else ""
-        ),
+        "soft_close_reason": soft_close_reason,
         "runtime_governor_semantics": (
             "budget_iterations_rounds_and_provider_revisions_are_soft_governors"
         ),
@@ -94,6 +98,9 @@ def _blocked_reason(
 ) -> str:
     if approved:
         return ""
+    final_reason = _final_payload_reason(final_payload)
+    if final_reason and final_reason != "runtime_soft_governor_left_resume_pointer":
+        return final_reason
     provider_reasons = [
         str(item)
         for item in (external_contract.get("provider_rejection_reasons") or [])
@@ -107,10 +114,35 @@ def _blocked_reason(
     if missing_roles and not external_contract.get("provider_execution_performed"):
         return "provider_runtime_missing_verified_roles:" + ",".join(missing_roles)
     if continuation_required:
-        return "runtime_soft_governor_left_resume_pointer"
+        return final_reason or "runtime_soft_governor_left_resume_pointer"
     blocking = final_payload.get("blocking_reasons")
     if isinstance(blocking, list) and blocking:
         return str(blocking[0])
     if launcher_contract_errors:
         return launcher_contract_errors[0]
     return "runtime_product_not_approved"
+
+
+def _soft_close_reason(
+    *,
+    approved: bool,
+    continuation_required: bool,
+    blocked_reason: str,
+    final_payload: dict[str, Any],
+) -> str:
+    if approved:
+        return ""
+    final_reason = _final_payload_reason(final_payload)
+    if final_reason and final_reason != "runtime_soft_governor_left_resume_pointer":
+        return final_reason
+    if continuation_required:
+        return blocked_reason or final_reason or "runtime_soft_governor_left_resume_pointer"
+    return ""
+
+
+def _final_payload_reason(final_payload: dict[str, Any]) -> str:
+    for key in ("product_blocked_reason", "soft_close_reason"):
+        value = str(final_payload.get(key) or "").strip()
+        if value:
+            return value
+    return ""

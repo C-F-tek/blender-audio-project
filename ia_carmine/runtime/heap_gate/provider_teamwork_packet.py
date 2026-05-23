@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from ia_carmine.runtime.contractor_universe.surface import build_contractor_universe_surface_contract
+from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
+    extract_gpu1_closure_decision_packet,
+)
+from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import context_hierarchy_payload, lane_hierarchy
 from ia_carmine.runtime.heap_gate.provider_time import build_provider_lane_time_contracts
 from ia_carmine.runtime.heap_gate.runtime_common import Any, now_iso, repo_rel, safe_dict, safe_int
 
@@ -14,8 +18,12 @@ def _compact_artifacts(artifacts: dict[str, Any], limit: int = 24) -> dict[str, 
         "tool_catalog_markdown",
         "operational_memory_search_json",
         "operational_memory_search_markdown",
+        "startup_context_pack_json",
+        "startup_context_pack_markdown",
         "semantic_code_chunks_json",
         "semantic_code_chunks_markdown",
+        "rag_context_pack_json",
+        "rag_context_pack_markdown",
         "semantic_evidence_chunks_json",
         "semantic_evidence_chunks_markdown",
         "ai_context_pack_json",
@@ -91,6 +99,13 @@ def build_provider_teamwork_leader_packet(
         "gpu0_peer": "reviewer_refiner_not_primary_closer",
         "npu_micro_task_auditor": "microtask_tool_auditor_not_primary_closer",
     }
+    lane_hierarchy_payload = {
+        lane: lane_hierarchy(lane)
+        for lane in ("gpu1_planner", "gpu0_peer", "npu_micro_task_auditor")
+    }
+    context_hierarchy = context_hierarchy_payload(
+        gate.args, gpu1_ctx=getattr(gate, "selected_ollama_num_ctx", None)
+    )
     return {
         "kind": "provider_teamwork_leader_packet",
         "role": "gpu1_primary_advisory_leader",
@@ -107,6 +122,22 @@ def build_provider_teamwork_leader_packet(
             ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
         ),
         "lane_authority": lane_authority,
+        "lane_hierarchy": lane_hierarchy_payload,
+        "context_hierarchy": context_hierarchy,
+        "gpu1_leader_block_id": str(getattr(gate, "gpu1_leader_block_id", "") or ""),
+        "gpu1_closure_decision_packet": extract_gpu1_closure_decision_packet(
+            getattr(gate, "current_gpu1_closure_decision_packet", {}) or {}
+        ),
+        "gpu1_closure_packet_contract": {
+            "required_before_gpu0_quorum": True,
+            "gpu0_input_scope": "post_gate_gpu1_closure_decision_packet_only",
+            "pre_gate_provider_packets_are_evidence_only": True,
+            "pre_gate_review_invalid_if_post_gate_packet_changes": True,
+            "gpu0_free_text_product_allowed": False,
+            "gpu0_free_text_decision_allowed": False,
+            "generic_write_decision_allowed": False,
+        },
+        "consumed_peer_block_ids": [],
         "native_tool_calling_policy": {
             "gpu1_planner": "open_revision_drive_broker_tools_and_own_final_synthesis",
             "gpu0_peer": "same_tool_schema_peer_only_refinement_veto_evidence_requires_later_gpu1_consumption",
@@ -152,10 +183,10 @@ def build_provider_teamwork_leader_packet(
         "time_counter_contract": time_contract,
         "lane_time_contracts": lane_time_contracts,
         "same_heap_teamwork_contract": [
-            "GPU1 is the primary advisor/leader and must produce file-grounded proposal blocks.",
-            "GPU0 is a stronger peer/reviewer/refiner lane and may do more sophisticated support work than NPU.",
-            "NPU is a micro/audit lane and must not become the primary advisory or broker-driving center.",
-            "All provider lanes start in the same provider universe; failure to start any selected lane blocks the universe.",
+            "GPU1/NVIDIA is the primary advisor/leader, has the largest Ollama context budget, and must produce file-grounded proposal blocks.",
+            "GPU0/Vulkan is a coworker_medium peer/reviewer/refiner lane: useful text is evidence, but it has lower authority and a smaller Ollama context budget than GPU1.",
+            "NPU/OpenVINO is a micro_fast audit/tool lane with short prompt/context; it must rerun as fresh micro evidence for each revision that selects it.",
+            "GPU0 and NPU start only after a valid GPU1 leader packet/proposal exists; failure to start any selected lane blocks the universe.",
             "GPU1 commands final synthesis and integrates GPU0/NPU vetoes and refinement signals.",
             "GPU1 is the primary Ollama broker-driving lane and owns final synthesis.",
             "GPU0 uses the same Ollama native tool-call schema, but every result is peer refinement/veto/evidence and requires a later GPU1 consumption turn.",

@@ -34,7 +34,7 @@ def run_helper(source_repo: Path, repo: Path, context: dict[str, Any], name: str
         [
             sys.executable,
             "-m",
-            "ia_carmine",
+            "ia_carmine.cli",
             "build_review_pr_prepare_args",
             "--context",
             str(context_path),

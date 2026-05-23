@@ -100,6 +100,16 @@ class RuntimeGateInitMixin:
         self.provider_revision_count = 0
         self.provider_revision_feedback = ""
         self.provider_universe_blocked_reason = ""
+        self.gpu1_replight_valid = False
+        self.gpu1_boot_leader_ready = False
+        self.gpu1_primary_workload_valid = False
+        self.gpu1_primary_evidence_valid = False
+        self.gpu1_primary_evidence_source = ""
+        self.gpu1_primary_workload_chars = 0
+        self.gpu1_primary_workload_tokens = 0
+        self.leader_source = "none"
+        self.sidecars_start_policy = ""
+        self.parallel_provider_overlap_seconds = 0.0
         self.provider_native_tool_call_ids: set[str] = set()
         self.errors: list[str] = []
         self.warnings: list[str] = []

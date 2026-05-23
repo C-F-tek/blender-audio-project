@@ -7,6 +7,7 @@ from ia_carmine.runtime.heap_gate.provider_lane_policy import (
     NPU_LANE,
     PRIMARY_LANE,
 )
+from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import preferred_gpu1_model
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     Path,
@@ -192,12 +193,21 @@ def _gpu1_model(gate: Any) -> str:
                     report.get("provider_model"),
                 ]
             )
-    candidates.append(getattr(gate.args, "provider_model", ""))
+    if bool(getattr(gate.args, "strict_provider_model", False)):
+        candidates.append(getattr(gate.args, "provider_model", ""))
+    candidates.append(
+        preferred_gpu1_model(
+            getattr(gate.args, "provider_model", ""),
+            strict=bool(getattr(gate.args, "strict_provider_model", False)),
+        )
+    )
+    if not bool(getattr(gate.args, "strict_provider_model", False)):
+        candidates.append(getattr(gate.args, "provider_model", ""))
     for value in candidates:
         model = str(value or "").strip()
         if model and model.lower() != "auto":
             return model
-    return "qwen2.5-coder:14b"
+    return preferred_gpu1_model("", strict=False)
 
 
 def _gpu1_base_url(gate: Any) -> str:

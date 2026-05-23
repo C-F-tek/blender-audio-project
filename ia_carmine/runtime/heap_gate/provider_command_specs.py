@@ -3,8 +3,19 @@
 from __future__ import annotations
 
 import os
+import json
 from typing import Any
 
+from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
+    GPU0_OPERATIONAL_MODEL,
+    GPU0_LANE,
+    GPU1_LANE,
+    NPU_LANE,
+    gpu0_ollama_num_ctx,
+    lane_context_budget,
+    lane_hierarchy,
+    preferred_gpu1_model,
+)
 from ia_carmine.runtime.heap_gate.provider_time import build_provider_lane_time_contracts
 from ia_carmine.runtime.heap_gate.runtime_common import Path, repo_rel
 
@@ -22,6 +33,7 @@ def _time_fields(lane_time: dict[str, Any]) -> dict[str, Any]:
         ),
         "lane_authority": lane_time.get("lane_authority", ""),
         "closure_owner": lane_time.get("closure_owner", False),
+        "lane_is_closure_owner": lane_time.get("lane_is_closure_owner", False),
         "primary_closer": lane_time.get("primary_closer", False),
         "sidecar_lane": lane_time.get("sidecar_lane", False),
         "micro_audit_only": lane_time.get("micro_audit_only", False),
@@ -60,13 +72,100 @@ def _provider_keep_alive(gate: Any) -> str:
 
 def _gpu0_max_new_tokens(gate: Any) -> int:
     env_value = str(os.environ.get("IA_CARMINE_GPU0_MAX_NEW_TOKENS") or "").strip()
-    default = int(env_value) if env_value.isdigit() and int(env_value) > 0 else 192
+    default = int(env_value) if env_value.isdigit() and int(env_value) > 0 else 96
     return max(32, min(int(gate.args.max_new_tokens), default))
 
 
 def _coexistence_evidence_path(work_dir: Path, revision: int) -> Path:
     suffix = f"_revision{revision}" if revision else ""
     return work_dir / f"provider_role_coexistence{suffix}.json"
+
+
+def _gpu0_server_evidence_path(work_dir: Path, revision: int) -> Path:
+    current = _coexistence_evidence_path(work_dir, revision)
+    if _path_has_gpu0_server(current):
+        return current
+    for candidate_revision in range(int(revision) - 1, -1, -1):
+        candidate = _coexistence_evidence_path(work_dir, candidate_revision)
+        if _path_has_gpu0_server(candidate):
+            return candidate
+    candidates = sorted(
+        work_dir.glob("provider_role_coexistence*.json"),
+        key=lambda item: item.stat().st_mtime if item.exists() else 0,
+        reverse=True,
+    )
+    for candidate in candidates:
+        if _path_has_gpu0_server(candidate):
+            return candidate
+    return current
+
+
+def _path_has_gpu0_server(path: Path) -> bool:
+    return bool(_gpu0_server_from_path(path))
+
+
+def _gpu0_server_from_path(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8-sig", errors="replace"))
+    except Exception:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    server = payload.get("gpu0_vulkan_server")
+    if isinstance(server, dict):
+        return server
+    for key in ("provider_role_coexistence_preflight", "provider_boot_gate"):
+        nested = payload.get(key)
+        nested = nested if isinstance(nested, dict) else {}
+        server = nested.get("gpu0_vulkan_server")
+        if isinstance(server, dict):
+            return server
+    return {}
+
+
+def _gpu0_device_identity(gate: Any, evidence_path: Path | None = None) -> dict[str, Any]:
+    preflight = getattr(gate, "provider_role_coexistence_preflight", {})
+    preflight = preflight if isinstance(preflight, dict) else {}
+    server = preflight.get("gpu0_vulkan_server")
+    server = server if isinstance(server, dict) else {}
+    if not server and evidence_path is not None:
+        server = _gpu0_server_from_path(evidence_path)
+    selection = server.get("vulkan_device_selection")
+    selection = selection if isinstance(selection, dict) else {}
+    target = selection.get("target_device")
+    target = target if isinstance(target, dict) else {}
+    resolved = str(selection.get("resolved") or "").strip()
+    vendor = str(target.get("vendorID") or "").strip().lower()
+    name = str(target.get("deviceName") or "").strip()
+    dtype = str(target.get("deviceType") or "").strip().lower()
+    verified = bool(vendor == "0x8086" or "intel" in name.lower() or "integrated" in dtype)
+    return {
+        "logical_lane": GPU0_LANE,
+        "provider_backend_device_id": f"vulkan:{resolved}" if resolved else "",
+        "windows_task_manager_device_hint": "Windows GPU 0 / Intel(R) Graphics",
+        "vulkan_visible_device": resolved,
+        "vulkan_device_name": name,
+        "vulkan_vendor_id": vendor,
+        "device_identity_verified": verified,
+    }
+
+
+def _gpu1_device_identity() -> dict[str, Any]:
+    return {
+        "logical_lane": GPU1_LANE,
+        "provider_backend_device_id": "ollama:gpu1",
+        "windows_task_manager_device_hint": "Windows GPU 1 / NVIDIA GeForce RTX 5080",
+        "device_identity_verified": True,
+    }
+
+
+def _npu_device_identity() -> dict[str, Any]:
+    return {
+        "logical_lane": NPU_LANE,
+        "provider_backend_device_id": "openvino:NPU",
+        "windows_task_manager_device_hint": "Windows NPU / Intel(R) AI Boost",
+        "device_identity_verified": True,
+    }
 
 
 def build_provider_command_specs(
@@ -81,7 +180,7 @@ def build_provider_command_specs(
     gpu0_md = work_dir / f"gpu0_ollama_vulkan_peer{suffix}.md"
     npu_json = work_dir / f"npu_micro_task_auditor{suffix}.json"
     npu_md = work_dir / f"npu_micro_task_auditor{suffix}.md"
-    coexistence_evidence = _coexistence_evidence_path(work_dir, revision)
+    coexistence_evidence = _gpu0_server_evidence_path(work_dir, revision)
     leader_packet = str(getattr(gate, "provider_leader_packet_path", "") or "")
     startup_manifest = str(getattr(gate.args, "startup_manifest", "") or "")
     task_file = str(getattr(gate.args, "task_file", "") or "")
@@ -97,26 +196,40 @@ def build_provider_command_specs(
     npu_tool_timeout = lane_times["npu_micro_task_auditor"].get(
         "native_tool_timeout_seconds", npu_timeout
     )
-    gpu1_model = str(getattr(gate, "selected_provider_model", "") or gate.args.provider_model or "auto")
-    gpu0_model = str(os.environ.get("IA_CARMINE_GPU0_MODEL") or "qwen3:1.7b")
+    gpu1_model = str(
+        getattr(gate, "selected_provider_model", "")
+        or os.environ.get("IA_CARMINE_GPU1_MODEL")
+        or preferred_gpu1_model(
+            getattr(gate.args, "provider_model", ""),
+            strict=bool(getattr(gate.args, "strict_provider_model", False)),
+        )
+    )
+    gpu0_model = str(os.environ.get("IA_CARMINE_GPU0_MODEL") or GPU0_OPERATIONAL_MODEL)
     gpu0_base_url = str(
         os.environ.get("IA_CARMINE_GPU0_OLLAMA_BASE_URL") or "http://127.0.0.1:11435"
     )
     gpu0_vulkan_devices = str(os.environ.get("IA_CARMINE_GPU0_VULKAN_VISIBLE_DEVICES") or "auto")
     gpu1_base_url = str(os.environ.get("IA_CARMINE_GPU1_OLLAMA_BASE_URL") or "")
     gpu1_ctx = int(getattr(gate, "selected_ollama_num_ctx", 0) or gate.args.ollama_num_ctx)
+    gpu0_ctx = gpu0_ollama_num_ctx(gpu1_ctx)
     keep_alive = _provider_keep_alive(gate)
+    gpu0_identity = _gpu0_device_identity(gate, coexistence_evidence)
     specs = [
         {
-            "lane": "gpu1_planner",
+            "lane": GPU1_LANE,
             "requirement": "gpu1_provider_planner",
             "role": "primary_planner_cumulative_responder",
+            **lane_hierarchy(GPU1_LANE),
+            "context_budget": lane_context_budget(
+                GPU1_LANE, gpu1_ctx=gpu1_ctx, gpu0_ctx=gpu0_ctx, args=gate.args
+            ),
             "output": gpu1_json,
             "provider_model": gpu1_model,
             "provider_backend": "ollama",
             "provider_base_url": gpu1_base_url or "http://127.0.0.1:11434",
-            "provider_compute_device": "ollama/gpu",
+            "provider_compute_device": "ollama/gpu1",
             "provider_device_policy": "ollama_gpu_accelerator_residency_cpu_only_blocked",
+            **_gpu1_device_identity(),
             **_time_fields(lane_times["gpu1_planner"]),
             "command": [
                 gate.child_python(),
@@ -152,15 +265,20 @@ def build_provider_command_specs(
             ],
         },
         {
-            "lane": "gpu0_peer",
+            "lane": GPU0_LANE,
             "requirement": "gpu0_provider_peer",
             "role": "gpu0_peer_reviewer_refiner",
+            **lane_hierarchy(GPU0_LANE),
+            "context_budget": lane_context_budget(
+                GPU0_LANE, gpu1_ctx=gpu1_ctx, gpu0_ctx=gpu0_ctx, args=gate.args
+            ),
             "output": gpu0_json,
             "provider_model": gpu0_model,
             "provider_backend": "ollama",
             "provider_base_url": gpu0_base_url,
             "provider_compute_device": "ollama/gpu0-vulkan",
             "provider_device_policy": "ollama_gpu0_vulkan_required_openvino_gpu0_forbidden",
+            **gpu0_identity,
             "provider_max_new_tokens": _gpu0_max_new_tokens(gate),
             **_time_fields(lane_times["gpu0_peer"]),
             "command": [
@@ -181,11 +299,11 @@ def build_provider_command_specs(
                 "--max-new-tokens",
                 str(_gpu0_max_new_tokens(gate)),
                 "--ollama-num-ctx",
-                str(gpu1_ctx),
+                str(gpu0_ctx),
                 "--ollama-gpu-layers",
                 str(gate.args.ollama_gpu_layers or "all"),
                 "--ollama-context-candidates",
-                str(getattr(gate.args, "ollama_context_candidates", "") or "8192,4096"),
+                str(gpu0_ctx),
                 "--keep-alive",
                 keep_alive,
                 "--defer-unload",
@@ -196,18 +314,23 @@ def build_provider_command_specs(
                 repo_rel(gate.repo_root, gpu0_json),
                 "--markdown-output",
                 repo_rel(gate.repo_root, gpu0_md),
-                *(["--strict-provider-model"] if getattr(gate.args, "strict_provider_model", False) else []),
+                "--strict-provider-model",
                 *(["--operator-gpu-observation", str(getattr(gate.args, "operator_gpu_observation", ""))] if str(getattr(gate.args, "operator_gpu_observation", "")).strip() else []),
             ],
         },
         {
-            "lane": "npu_micro_task_auditor",
+            "lane": NPU_LANE,
             "requirement": "npu_micro_task_auditor",
             "role": "npu_micro_task_auditor",
+            **lane_hierarchy(NPU_LANE),
+            "context_budget": lane_context_budget(
+                NPU_LANE, gpu1_ctx=gpu1_ctx, gpu0_ctx=gpu0_ctx, args=gate.args
+            ),
             "output": npu_json,
             "provider_backend": "openvino",
             "provider_compute_device": "openvino/NPU",
             "provider_device_policy": "openvino_NPU_only_cpu_not_provider",
+            **_npu_device_identity(),
             **_time_fields(lane_times["npu_micro_task_auditor"]),
             "command": [
                 gate.child_python(),

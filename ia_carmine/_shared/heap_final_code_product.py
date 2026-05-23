@@ -83,6 +83,14 @@ def first_json_report(run_dir: Path, values: list[Any]) -> tuple[str, dict[str, 
 def item_has_code_product(item: dict[str, Any]) -> bool:
     status = str(item.get("implementation_status") or "")
     source = str(item.get("source") or "")
+    diff_source = str(item.get("diff_source") or "").strip()
+    if diff_source == "current_worktree_diagnostic":
+        return False
+    if source == "patch_candidate_synthesis" and diff_source not in {
+        "provider_owned",
+        "evidence_owned",
+    }:
+        return False
     if status != "validated_patch_candidate" and source != "patch_candidate_synthesis":
         return False
     if status == "verified_target_no_worktree_diff":
@@ -218,6 +226,7 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
                 "",
                 f"- Git status: `{data.get('git_status')}`.",
                 f"- Implementation status: `{data.get('implementation_status')}`.",
+                f"- Diff source: `{data.get('diff_source') or 'unknown'}`.",
                 "",
                 "```diff",
                 sketch,
@@ -264,7 +273,9 @@ def render_full_code_product_markdown(
         f"- Gate product status: `{gate_product_status or 'unknown'}`",
         f"- Patch candidate synthesis requested: `{matrix.get('patch_candidate_synthesis_requested')}`",
         f"- Patch candidate synthesis passed count: `{matrix.get('patch_candidate_synthesis_passed_count')}`",
-        "- Worktree diff fallback: `disabled`",
+        "- Final assembler worktree fallback: `disabled`",
+        f"- Upstream worktree diagnostic candidate count: `{matrix.get('upstream_worktree_candidate_count', 0)}`",
+        f"- Current worktree diff candidates allowed: `{matrix.get('allow_current_worktree_diff_candidates', False)}`",
         f"- Verified target count: `{matrix.get('verified_target_count', matrix.get('target_count'))}`",
         "",
         "## Guardrail",
@@ -290,6 +301,7 @@ def render_full_code_product_markdown(
                 "",
                 f"- Git status: `{data.get('git_status')}`",
                 f"- Implementation status: `{data.get('implementation_status')}`",
+                f"- Diff source: `{data.get('diff_source') or 'unknown'}`",
                 f"- Diff hunks: `{data.get('diff_hunk_count')}`",
                 f"- Validation commands: `{data.get('validation_commands')}`",
                 "",

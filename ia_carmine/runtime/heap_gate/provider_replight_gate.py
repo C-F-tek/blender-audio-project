@@ -198,6 +198,10 @@ def _report_for_completed(
     report.setdefault("lane", spec.get("lane"))
     report.setdefault("provider_id", spec.get("lane"))
     report.setdefault("provider_role", spec.get("role"))
+    report.setdefault("lane_tier", spec.get("lane_tier"))
+    report.setdefault("authority", spec.get("authority"))
+    report.setdefault("closure_owner", spec.get("closure_owner"))
+    report.setdefault("context_budget", spec.get("context_budget"))
     report.setdefault("provider_backend", spec.get("provider_backend"))
     report.setdefault("provider_compute_device", spec.get("provider_compute_device"))
     report.setdefault("provider_replight_required", True)
@@ -265,6 +269,10 @@ def _write_failure_report(
         "lane": spec.get("lane"),
         "provider_id": spec.get("lane"),
         "provider_role": spec.get("role"),
+        "lane_tier": spec.get("lane_tier"),
+        "authority": spec.get("authority"),
+        "closure_owner": spec.get("closure_owner"),
+        "context_budget": spec.get("context_budget"),
         "provider_backend": spec.get("provider_backend"),
         "provider_compute_device": spec.get("provider_compute_device"),
         "provider_replight_required": True,

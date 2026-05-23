@@ -175,6 +175,7 @@ def build_evidence_candidates(
                     "target_files": targets,
                     "reason": "validated unified diff extracted from provider/proposal evidence",
                     "pattern_id": "evidence_unified_diff",
+                    "diff_source": "evidence_owned",
                     "evidence": [
                         f"evidence_report={source_ref}",
                         "all diff targets are verified repo-relative source paths",

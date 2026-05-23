@@ -120,7 +120,7 @@ def build_args(context: dict[str, Any]) -> dict[str, Any]:
 
     argv = [
         "-m",
-        "ia_carmine",
+        "ia_carmine.cli",
         "agent_review_prepare_pr",
         "--repo-root",
         ".",

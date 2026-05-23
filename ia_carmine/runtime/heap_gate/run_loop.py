@@ -10,7 +10,7 @@ from ia_carmine.runtime.heap_gate.generic_write_followup import (
     npu_peer_followup_pending_count,
 )
 from ia_carmine.runtime.heap_gate.run_loop_metrics import build_provider_lane_metrics
-from ia_carmine.runtime.heap_gate.runtime_common import Any, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
+from ia_carmine.runtime.heap_gate.runtime_common import Any, PROVIDER_START_REQUIREMENTS, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
 class RuntimeGateRunLoopMixin:
     def run(self) -> dict[str, Any]:
         self.bootstrap()
@@ -107,6 +107,25 @@ class RuntimeGateRunLoopMixin:
             requirement for requirement in completed_all if requirement not in required_set
         ]
         missing = self.missing_requirements(final_events)
+        provider_launch_started = self.provider_launch_started(final_events)
+        pre_provider_phase = bool(
+            self.args.allow_provider_generation
+            and not self.provider_reports
+            and not provider_launch_started
+        )
+        provider_start_missing = [
+            requirement
+            for requirement in PROVIDER_START_REQUIREMENTS
+            if requirement not in completed_set
+        ]
+        provider_start_unattempted = self.next_unattempted_plan_item(final_events)
+        provider_start_unattempted_requirement = (
+            str(provider_start_unattempted.get("requirement") or "")
+            if provider_start_unattempted
+            and str(provider_start_unattempted.get("requirement") or "")
+            in PROVIDER_START_REQUIREMENTS
+            else ""
+        )
         final_bridge_reports = self.bridge_report_refs(final_events)
         final_tool_request_count = self.effective_tool_request_count(final_events)
         final_tool_execution_count = self.effective_tool_execution_count(final_events)
@@ -173,6 +192,9 @@ class RuntimeGateRunLoopMixin:
             "generic_write_refinement_count": generic_write_refinement_count(
                 final_events, self
             ),
+            "generic_write_consumed_round_count": generic_write_product.get(
+                "generic_write_consumed_round_count", 0
+            ),
             "generic_write_followup_pending_count": generic_write_followup_pending_count(
                 self, final_events
             ),
@@ -184,6 +206,9 @@ class RuntimeGateRunLoopMixin:
             ),
             "generic_write_no_tool_capture_count": generic_write_product.get(
                 "generic_write_no_tool_capture_count", 0
+            ),
+            "generic_write_capture_failed_count": generic_write_product.get(
+                "generic_write_capture_failed_count", 0
             ),
             "generic_write_lanes": generic_write_product.get("generic_write_lanes", []),
             "generic_write_document_product": generic_write_product,
@@ -220,6 +245,11 @@ class RuntimeGateRunLoopMixin:
             "gpu0_provider_evidence_count": (1 if "gpu0_provider_peer" in completed else 0),
             "npu_micro_task_evidence_count": (1 if "npu_micro_task_auditor" in completed else 0),
             "provider_result_count": len(self.provider_reports),
+            "provider_launch_started": provider_launch_started,
+            "pre_provider_phase": pre_provider_phase,
+            "provider_start_requirements": list(PROVIDER_START_REQUIREMENTS),
+            "provider_start_missing_requirements": provider_start_missing,
+            "provider_start_unattempted_requirement": provider_start_unattempted_requirement,
             "provider_revision_count": self.provider_revision_count,
             "provider_revision_counter_semantics": (
                 "positive_evidence_counter_not_loop_cutoff"

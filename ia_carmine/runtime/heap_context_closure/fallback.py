@@ -26,6 +26,7 @@ def write_fallback_heap_report(
     blocking = [reason]
     if startup_payload.get("startup_reload_degraded"):
         blocking.append("startup_reload_degraded=True")
+    blocking.extend(_startup_rag_blockers(startup_payload))
     for item in (
         startup_payload.get("blocking_requirements", [])
         if isinstance(startup_payload.get("blocking_requirements"), list)
@@ -107,3 +108,20 @@ def _write_fallback_markdown(
     lines.extend(f"- {item}" for item in blocking)
     markdown_file.parent.mkdir(parents=True, exist_ok=True)
     markdown_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _startup_rag_blockers(startup_payload: dict[str, Any]) -> list[str]:
+    blockers: list[str] = []
+    if startup_payload.get("rag_index_ready") is not False:
+        return blockers
+    missing = startup_payload.get("rag_missing_embedding_count_after")
+    action = startup_payload.get("rag_index_action") or ""
+    ingest_failed = startup_payload.get("rag_repo_ingest_passed") is False
+    if ingest_failed:
+        detail = f"rag_repo_ingest failed: missing embeddings after ingest: {missing}"
+        if action:
+            detail += f" (action={action})"
+        blockers.append(detail)
+    else:
+        blockers.append("rag index not ready before provider runtime")
+    return blockers

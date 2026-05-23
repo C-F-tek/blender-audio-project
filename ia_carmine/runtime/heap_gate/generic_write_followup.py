@@ -40,12 +40,46 @@ def passed_generic_write_results(
         summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
         if summary.get("passed") is False:
             continue
+        if owner is not None and not _generic_write_source_verified(owner, payload):
+            continue
         passed.append(payload)
     return passed
 
 
 def generic_write_refinement_count(events: list[dict[str, Any]], owner: Any | None = None) -> int:
-    return len(passed_generic_write_results(events, owner=owner))
+    if owner is None:
+        return len(passed_generic_write_results(events, owner=owner))
+    return generic_write_consumed_round_count(owner, events)
+
+
+def generic_write_consumed_round_count(owner: Any, events: list[dict[str, Any]]) -> int:
+    del events
+    refs = getattr(owner, "gpu1_consumed_generic_write_block_ids", []) or []
+    return len({str(item) for item in refs if str(item).strip()})
+
+
+def failed_generic_write_results(
+    events: list[dict[str, Any]], owner: Any | None = None
+) -> list[dict[str, Any]]:
+    failed: list[dict[str, Any]] = []
+    for payload in generic_write_results(events, owner=owner):
+        errors = payload.get("errors") if isinstance(payload.get("errors"), list) else []
+        summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+        returncode = payload.get("returncode")
+        if (
+            payload.get("blocked")
+            or errors
+            or (returncode is not None and safe_int(returncode, default=1) != 0)
+            or summary.get("passed") is False
+        ):
+            failed.append(payload)
+    return failed
+
+
+def generic_write_capture_failed_count(
+    events: list[dict[str, Any]], owner: Any | None = None
+) -> int:
+    return len(failed_generic_write_results(events, owner=owner))
 
 
 def _latest_gpu1_revision(owner: Any) -> int:
@@ -61,6 +95,10 @@ def generic_write_followup_pending(owner: Any, events: list[dict[str, Any]]) -> 
     latest_gpu1 = _latest_gpu1_revision(owner)
     pending: list[dict[str, Any]] = []
     for payload in passed_generic_write_results(events, owner=owner):
+        if not payload.get("gpu1_followup_required"):
+            continue
+        if _generic_write_ref_id(owner, payload) in _consumed_generic_write_refs(owner):
+            continue
         source_revision = safe_int(payload.get("revision"), default=0)
         if latest_gpu1 <= source_revision:
             pending.append(payload)
@@ -101,6 +139,8 @@ def _peer_followup_pending(
         if str(payload.get("lane") or "") != lane:
             continue
         if not payload.get("gpu1_followup_required"):
+            continue
+        if _generic_write_ref_id(owner, payload) in _consumed_generic_write_refs(owner):
             continue
         source_revision = safe_int(payload.get("revision"), default=0)
         if latest_gpu1 <= source_revision:
@@ -147,12 +187,39 @@ def _hydrate_generic_write_payload(owner: Any | None, payload: dict[str, Any]) -
         followup = report.get("gpu1_followup_required")
     if followup is None:
         followup = lane in PEER_GENERIC_WRITE_LANES
+    source_provider_passed = report.get("source_provider_passed")
+    source_provider_execution = report.get("source_provider_execution_performed")
+    source_provider_work = report.get("source_provider_work_verified")
+    provider_summary = (
+        report.get("provider_summary")
+        if isinstance(report.get("provider_summary"), dict)
+        else {}
+    )
     hydrated = dict(payload)
     hydrated.update(
         {
             "lane": lane,
             "revision": revision,
             "provider_report": payload.get("provider_report") or report.get("provider_report"),
+            "source_provider_passed": source_provider_passed
+            if source_provider_passed is not None
+            else provider_summary.get("passed"),
+            "source_provider_execution_performed": source_provider_execution
+            if source_provider_execution is not None
+            else bool(
+                provider_summary.get("provider_execution_performed")
+                or provider_summary.get("operational_provider_activity")
+            ),
+            "source_provider_work_verified": source_provider_work
+            if source_provider_work is not None
+            else bool(
+                provider_summary.get("provider_work_verified")
+                or provider_summary.get("gpu1_primary_workload_valid")
+            ),
+            "source_provider_block_id": report.get("source_provider_block_id")
+            or provider_summary.get("provider_block_id"),
+            "source_proposal_block_id": report.get("source_proposal_block_id")
+            or provider_summary.get("proposal_block_id"),
             "gpu1_followup_required": bool(followup),
             "peer_followup_required": bool(
                 report.get("peer_followup_required") or lane in PEER_GENERIC_WRITE_LANES
@@ -163,8 +230,37 @@ def _hydrate_generic_write_payload(owner: Any | None, payload: dict[str, Any]) -
     return hydrated
 
 
+def _generic_write_source_verified(owner: Any, payload: dict[str, Any]) -> bool:
+    hydrated = _hydrate_generic_write_payload(owner, payload)
+    return bool(
+        hydrated.get("source_provider_passed") is True
+        and hydrated.get("source_provider_execution_performed") is True
+        and hydrated.get("source_provider_work_verified") is True
+    )
+
+
+def _generic_write_ref_id(owner: Any, payload: dict[str, Any]) -> str:
+    hydrated = _hydrate_generic_write_payload(owner, payload)
+    for key in ("source_provider_block_id", "provider_block_id", "source_proposal_block_id"):
+        value = str(hydrated.get(key) or "").strip()
+        if value:
+            return value
+    outputs = _tool_outputs(hydrated)
+    if outputs.get("json_report"):
+        return str(outputs.get("json_report"))
+    return owner.broker_result_digest(hydrated)
+
+
+def _consumed_generic_write_refs(owner: Any) -> set[str]:
+    return {
+        str(item)
+        for item in (getattr(owner, "gpu1_consumed_generic_write_block_ids", []) or [])
+        if str(item).strip()
+    }
+
+
 def generic_write_document_product_eligible(owner: Any, events: list[dict[str, Any]]) -> bool:
-    if generic_write_refinement_count(events, owner) < GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS:
+    if generic_write_consumed_round_count(owner, events) < GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS:
         return False
     if generic_write_followup_pending_count(owner, events) > 0:
         return False
@@ -177,18 +273,27 @@ def generic_write_document_product_eligible(owner: Any, events: list[dict[str, A
 
 def generic_write_document_product(owner: Any, events: list[dict[str, Any]]) -> dict[str, Any]:
     results = passed_generic_write_results(events, owner=owner)
-    latest = results[-1] if results else {}
+    failed_results = failed_generic_write_results(events, owner=owner)
+    latest = _latest_verified_gpu1_result(results)
     report = _generic_write_report(owner, latest) if latest else {}
     latest_gpu1 = _latest_gpu1_revision(owner)
     latest_source_revision = safe_int(latest.get("revision"), default=-1) if latest else -1
     lanes = [str(payload.get("lane") or "") for payload in results]
     captures = [_capture_summary(owner, payload) for payload in results]
+    consumed_count = generic_write_consumed_round_count(owner, events)
     return {
         "eligible": generic_write_document_product_eligible(owner, events),
         "kind": "generic_write_refined_product",
         "minimum_refinements": GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS,
-        "refinement_count": len(results),
+        "refinement_count": consumed_count,
+        "generic_write_consumed_round_count": consumed_count,
         "capture_count": len(results),
+        "generic_write_source_unverified_count": len(generic_write_results(events, owner=owner))
+        - len(results),
+        "generic_write_capture_failed_count": len(failed_results),
+        "generic_write_capture_failures": [
+            _failed_capture_summary(payload) for payload in failed_results[:8]
+        ],
         "generic_write_no_tool_capture_count": sum(
             1
             for payload in results
@@ -208,6 +313,12 @@ def generic_write_document_product(owner: Any, events: list[dict[str, Any]]) -> 
         "latest_outputs": _tool_outputs(latest) if latest else {},
         "latest_refined_request": str(report.get("refined_request") or "")[:6000],
         "captures": captures,
+        "peer_review_refs": [
+            item for item in captures if item.get("lane") in PEER_GENERIC_WRITE_LANES
+        ],
+        "gpu1_consumed_generic_write_block_ids": list(
+            getattr(owner, "gpu1_consumed_generic_write_block_ids", []) or []
+        ),
         "code_product_allowed_after_three_refinements": True,
         "product_includes_provider_communication": True,
         "readable_code_content_allowed": True,
@@ -216,21 +327,50 @@ def generic_write_document_product(owner: Any, events: list[dict[str, Any]]) -> 
     }
 
 
+def _latest_verified_gpu1_result(results: list[dict[str, Any]]) -> dict[str, Any]:
+    for payload in reversed(results):
+        if str(payload.get("lane") or "") == "gpu1_planner":
+            return payload
+    return {}
+
+
 def _capture_summary(owner: Any, payload: dict[str, Any]) -> dict[str, Any]:
     report = _generic_write_report(owner, payload)
+    hydrated = _hydrate_generic_write_payload(owner, payload)
     return {
-        "lane": str(payload.get("lane") or report.get("source_lane") or ""),
-        "revision": payload.get("revision") if payload.get("revision") is not None else report.get("source_revision"),
+        "lane": str(hydrated.get("lane") or report.get("source_lane") or ""),
+        "revision": hydrated.get("revision")
+        if hydrated.get("revision") is not None
+        else report.get("source_revision"),
         "capture_mode": str(report.get("capture_mode") or payload.get("capture_mode") or ""),
         "gpu1_followup_required": bool(
-            payload.get("gpu1_followup_required") or report.get("gpu1_followup_required")
+            hydrated.get("gpu1_followup_required") or report.get("gpu1_followup_required")
         ),
         "peer_followup_required": bool(
-            payload.get("peer_followup_required") or report.get("peer_followup_required")
+            hydrated.get("peer_followup_required") or report.get("peer_followup_required")
         ),
+        "source_provider_passed": hydrated.get("source_provider_passed"),
+        "source_provider_execution_performed": hydrated.get(
+            "source_provider_execution_performed"
+        ),
+        "source_provider_work_verified": hydrated.get("source_provider_work_verified"),
+        "source_provider_block_id": hydrated.get("source_provider_block_id"),
         "outputs": _tool_outputs(payload),
         "provider_report": str(report.get("provider_report") or payload.get("provider_report") or ""),
         "provider_response_excerpt": str(report.get("provider_response_excerpt") or "")[:1200],
+    }
+
+
+def _failed_capture_summary(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "lane": str(payload.get("lane") or ""),
+        "revision": payload.get("revision"),
+        "capture_mode": str(payload.get("capture_mode") or ""),
+        "request_id": str(payload.get("request_id") or payload.get("id") or ""),
+        "errors": payload.get("errors") if isinstance(payload.get("errors"), list) else [],
+        "returncode": payload.get("returncode"),
+        "blocked": bool(payload.get("blocked")),
+        "outputs": _tool_outputs(payload),
     }
 
 
@@ -299,6 +439,7 @@ def maybe_run_generic_write_followup(
         }
     )
     owner.run_provider_teamwork(round_id, revision=next_revision)
+    _mark_generic_write_consumed_by_gpu1(owner, payload, next_revision)
     updated = owner.read_events()
     if owner.publish_provider_native_tool_calls(round_id, updated):
         if owner.heap.pending_broker_requests():
@@ -314,3 +455,27 @@ def maybe_run_generic_write_followup(
     if getattr(owner, "provider_universe_blocked_reason", ""):
         return owner.read_events()
     return updated
+
+
+def _mark_generic_write_consumed_by_gpu1(
+    owner: Any, payload: dict[str, Any], next_revision: int
+) -> None:
+    gpu1_report = next(
+        (
+            report
+            for report in reversed(getattr(owner, "provider_reports", []) or [])
+            if str(report.get("lane") or "") == "gpu1_planner"
+            and safe_int(report.get("revision"), default=-1) >= next_revision
+            and report.get("passed") is True
+            and bool(report.get("provider_work_verified") or report.get("gpu1_primary_workload_valid"))
+        ),
+        {},
+    )
+    if not gpu1_report:
+        return
+    refs = list(getattr(owner, "gpu1_consumed_generic_write_block_ids", []) or [])
+    ref_id = _generic_write_ref_id(owner, payload)
+    if ref_id and ref_id not in refs:
+        refs.append(ref_id)
+    owner.gpu1_consumed_generic_write_block_ids = refs
+    gpu1_report["consumed_generic_write_refs"] = refs

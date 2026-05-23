@@ -135,6 +135,7 @@ REQUIREMENT_ORDER = (
     "shared_context_chunks",
     "semantic_code_chunks",
     "ai_context_pack",
+    "rag_context_pack",
     "semantic_evidence_chunks",
     "runtime_file_refs",
     "gpu0_provider_peer",
@@ -152,6 +153,7 @@ BASE_REQUIREMENTS = (
     "shared_context_chunks",
     "semantic_code_chunks",
     "ai_context_pack",
+    "rag_context_pack",
     "semantic_evidence_chunks",
     "runtime_file_refs",
 )
@@ -215,6 +217,7 @@ MEMORY_CONTEXT_RELOAD_REQUIREMENTS = {
     "shared_context_chunks": "shared_context_reload",
     "semantic_code_chunks": "semantic_code_reload",
     "ai_context_pack": "context_pack_reload",
+    "rag_context_pack": "rag_context_pack_reload",
     "semantic_evidence_chunks": "semantic_evidence_reload",
     "runtime_file_refs": "runtime_file_refs_reload",
     "virtual_dev_environment": "virtual_dev_environment_reload",

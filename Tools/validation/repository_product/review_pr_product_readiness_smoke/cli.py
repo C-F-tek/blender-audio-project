@@ -76,7 +76,7 @@ def args_payload(
     if argv is None:
         argv = [
             "-m",
-            "ia_carmine",
+            "ia_carmine.cli",
             "agent_review_prepare_pr",
             "--repo-root",
             ".",
@@ -157,10 +157,10 @@ def main() -> int:
                     apply_product=False,
                     argv=[
                         "-m",
-                        "ia_carmine",
+                        "ia_carmine.cli",
                         "agent_review_prepare_pr",
                         "-m",
-                        "ia_carmine",
+                        "ia_carmine.cli",
                         "agent_review_prepare_pr",
                         "--repo-root",
                         ".",
@@ -181,7 +181,7 @@ def main() -> int:
                     apply_product=False,
                     argv=[
                         "-m",
-                        "ia_carmine",
+                        "ia_carmine.cli",
                         "agent_review_prepare_pr",
                         "--repo-root",
                         ".",

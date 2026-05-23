@@ -11,6 +11,12 @@ NPU_LANE = "npu_micro_task_auditor"
 LANE_POLICY_KEYS = (
     "sidecar_join_after_primary_seconds",
     "closure_owner",
+    "lane_is_closure_owner",
+    "lane_tier",
+    "authority",
+    "provider_role",
+    "peer_only",
+    "context_budget",
     "primary_closer",
     "sidecar_lane",
     "micro_audit_only",
@@ -49,18 +55,17 @@ def provider_lanes_for_revision(owner: Any, revision: int) -> set[str]:
     elif bool(getattr(owner, "skip_npu_on_soft_lock_targeted_refine", False)):
         selected = {PRIMARY_LANE, GPU0_LANE}
         reason = "soft_lock_targeted_refine_gpu1_gpu0_only_npu_advisory_inherited"
-    elif not valid_npu_micro_audit_available(owner.provider_reports):
-        selected = {PRIMARY_LANE, GPU0_LANE, NPU_LANE}
-        reason = "revision_needs_missing_npu_micro_audit"
     else:
-        selected = {PRIMARY_LANE, GPU0_LANE}
-        reason = "revision_uses_inherited_npu_micro_audit"
+        selected = {PRIMARY_LANE, GPU0_LANE, NPU_LANE}
+        reason = "revision_reruns_all_lanes_with_fresh_npu_micro_fast_audit"
     owner.provider_revision_lane_policy = {
         "revision": revision,
         "reason": reason,
         "selected_lanes": sorted(selected),
         "closure_owner": PRIMARY_LANE,
+        "gpu1_role": "primary_leader_max_context_closure_owner",
         "gpu0_role": "reviewer_refiner_not_primary_closer",
         "npu_role": "micro_audit_only_not_primary_closer",
+        "npu_rerun_each_revision": NPU_LANE in selected,
     }
     return selected

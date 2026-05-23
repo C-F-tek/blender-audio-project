@@ -162,8 +162,10 @@ def validate_complete(report: dict[str, Any]) -> list[str]:
         errors.append(
             "complete smoke must fail when latest provider proposal iteration is rejected"
         )
-    if metrics.get("latest_gpu0_review_decision", "").startswith("reject"):
-        errors.append("complete smoke must fail when GPU0 rejects the GPU1 delta")
+    if metrics.get("gpu0_secondary_schema_valid") is not True:
+        errors.append("complete smoke must fail when GPU0 lacks structured secondary schema")
+    if metrics.get("latest_gpu0_review_decision", "") in {"veto", "refine_required", "incongruent"}:
+        errors.append("complete smoke must fail when GPU0 blocks the GPU1 delta")
     if metrics.get("missing_requirements"):
         errors.append("complete run must have no missing requirements")
     if int(metrics.get("completed_requirement_count") or 0) != int(

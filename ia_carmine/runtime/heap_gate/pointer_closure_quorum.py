@@ -2,18 +2,35 @@
 
 from __future__ import annotations
 
-import re
-
+from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import (
+    gpu0_secondary_reason,
+    normalize_gpu0_decision,
+)
+from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
+    GPU1_DECISION_MISSING,
+    derive_gpu1_decision,
+    extract_gpu1_closure_decision_packet,
+    gpu1_decision_packet_valid,
+    gpu1_packets_equivalent,
+    normalize_gpu1_decision,
+)
 from ia_carmine.runtime.heap_gate.runtime_common import Any
 
 GPU1_CLOSURE_DECISIONS = {
     "finalize_product",
+    "needs_refine",
     "blocked_continuation",
-    "no_more_action",
-    "needs_gpu0_refine",
+    "no_patchable_target",
+    GPU1_DECISION_MISSING,
 }
-GPU0_CLOSURE_AGREEMENTS = {"agree_close", "veto_with_reason", "refine_once"}
+GPU0_CLOSURE_AGREEMENTS = {
+    "agree_close",
+    "veto_with_reason",
+    "refine_once",
+    "not_evaluated_waiting_for_gpu1_decision",
+}
 QUORUM_STATUSES = {
+    "waiting_for_provider_start",
     "ready_to_close",
     "targeted_refine_allowed",
     "blocked_continuation_ready",
@@ -32,42 +49,80 @@ def closure_quorum_state(
     NPU is deliberately advisory here: it can strengthen evidence, but it must
     not be a closer or keep the soft-lock loop alive.
     """
-    del events
+    events = events or []
     raw_summary = raw_summary or {"open_pointer_count_final": 0}
     latest = getattr(owner, "latest_proposal_iteration_report", lambda: {})() or {}
     response_text = getattr(owner, "response_text", lambda: "")() or ""
-    owner_decision = str(getattr(owner, "soft_lock_closure_owner_decision", "") or "")
-    if owner_decision not in GPU1_CLOSURE_DECISIONS:
-        owner_decision = gpu1_closure_decision_from_text(response_text, latest)
-    if owner_decision in GPU1_CLOSURE_DECISIONS:
-        owner.soft_lock_closure_owner_decision = owner_decision
-
     targeted_used = bool(getattr(owner, "soft_lock_targeted_refine_used", False))
-    gpu0_agreement, gpu0_reason = gpu0_closure_agreement(
-        getattr(owner, "provider_reports", []) or [],
-        latest,
-        targeted_used=targeted_used,
-    )
-    if gpu0_agreement in GPU0_CLOSURE_AGREEMENTS:
-        owner.gpu0_closure_agreement = gpu0_agreement
-    npu_advisory = npu_closure_advisory(getattr(owner, "provider_reports", []) or [])
+    provider_reports = getattr(owner, "provider_reports", []) or []
+    npu_advisory = npu_closure_advisory(provider_reports)
     owner.npu_closure_advisory = npu_advisory
 
     resume_from = _resume_from_latest(latest)
     evidence_block = str(latest.get("block_id") or latest.get("proposal_block_id") or "")
     open_count = int(raw_summary.get("open_pointer_count_final") or 0)
+    if _pre_provider_waiting(owner, events, provider_reports):
+        return {
+            "soft_lock_closure_owner_decision": "",
+            "gpu1_closure_decision_packet": {},
+            "gpu1_closure_decision_packet_valid": False,
+            "gpu0_closure_agreement": "",
+            "gpu0_closure_reason": "",
+            "npu_closure_advisory": npu_advisory,
+            "cpu_closure_validation": "waiting_for_provider_start",
+            "closure_quorum_status": "waiting_for_provider_start",
+            "closure_quorum_reason": "",
+            "soft_lock_targeted_refine_used": targeted_used,
+            "resume_from_block_id": "",
+            "closure_evidence_block_id": "",
+        }
+
+    packet = extract_gpu1_closure_decision_packet(latest)
+    owner_decision = normalize_gpu1_decision(
+        packet.get("gpu1_decision") if packet else getattr(owner, "soft_lock_closure_owner_decision", "")
+    )
+    if not packet and owner_decision not in GPU1_CLOSURE_DECISIONS:
+        owner_decision = gpu1_closure_decision_from_text(response_text, latest)
+    if not packet or not gpu1_decision_packet_valid(packet) or owner_decision not in GPU1_CLOSURE_DECISIONS or owner_decision == GPU1_DECISION_MISSING:
+        owner_decision = GPU1_DECISION_MISSING
+        owner.soft_lock_closure_owner_decision = owner_decision
+        owner.gpu0_closure_agreement = "not_evaluated_waiting_for_gpu1_decision"
+        return {
+            "soft_lock_closure_owner_decision": owner_decision,
+            "gpu1_closure_decision_packet": packet,
+            "gpu1_closure_decision_packet_valid": False,
+            "gpu0_closure_agreement": "not_evaluated_waiting_for_gpu1_decision",
+            "gpu0_closure_reason": "gpu0_veto_not_allowed_without_gpu1_decision",
+            "npu_closure_advisory": npu_advisory,
+            "cpu_closure_validation": "blocked_provider_or_pointer",
+            "closure_quorum_status": "blocked_with_reason",
+            "closure_quorum_reason": "gpu0_veto_not_allowed_without_gpu1_decision",
+            "soft_lock_targeted_refine_used": targeted_used,
+            "resume_from_block_id": resume_from,
+            "closure_evidence_block_id": evidence_block or resume_from,
+        }
+
+    owner.soft_lock_closure_owner_decision = owner_decision
+    gpu0_agreement, gpu0_reason = gpu0_closure_agreement(
+        provider_reports,
+        latest,
+        targeted_used=targeted_used,
+        gpu1_packet=packet,
+    )
+    if gpu0_agreement in GPU0_CLOSURE_AGREEMENTS:
+        owner.gpu0_closure_agreement = gpu0_agreement
     status = ""
     reason = ""
     cpu_validation = "waiting_for_gpu1_gpu0_quorum"
-    if owner_decision == "needs_gpu0_refine":
+    if owner_decision == "needs_refine":
         status = "targeted_refine_allowed" if not targeted_used else "blocked_continuation_ready"
-        reason = "GPU1 requested GPU0-targeted refinement before closure"
-    elif gpu0_agreement in {"veto_with_reason", "refine_once"} and not targeted_used:
+        reason = "GPU1 decision packet requires refinement before closure"
+    elif gpu0_agreement == "refine_once" and not targeted_used:
         status = "targeted_refine_allowed"
         reason = gpu0_reason or "GPU0 requested one targeted refinement"
-    elif not owner_decision:
-        status = ""
-        reason = "GPU1 closure decision not available yet"
+    elif gpu0_agreement == "veto_with_reason":
+        status = "blocked_with_reason"
+        reason = gpu0_reason or "GPU0 vetoed the GPU1 delta"
     elif gpu0_agreement != "agree_close":
         status = "blocked_with_reason"
         reason = gpu0_reason or "GPU0 closure agreement missing"
@@ -75,7 +130,7 @@ def closure_quorum_state(
         status = "ready_to_close"
         reason = "GPU1 finalized product and GPU0 agreed with no open pointers"
         cpu_validation = "product_closure_validated"
-    elif owner_decision in {"blocked_continuation", "no_more_action"}:
+    elif owner_decision in {"blocked_continuation", "no_patchable_target"}:
         status = "blocked_continuation_ready"
         reason = "GPU1 declared no further useful action in this run and GPU0 agreed"
         cpu_validation = "continuation_closure_validated"
@@ -94,6 +149,8 @@ def closure_quorum_state(
 
     return {
         "soft_lock_closure_owner_decision": owner_decision,
+        "gpu1_closure_decision_packet": packet,
+        "gpu1_closure_decision_packet_valid": True,
         "gpu0_closure_agreement": gpu0_agreement,
         "gpu0_closure_reason": gpu0_reason,
         "npu_closure_advisory": npu_advisory,
@@ -119,20 +176,13 @@ def gpu1_closure_decision_from_text(
             str(latest_report.get("reject_reason") or ""),
         ]
     ).upper()
-    if latest_report.get("quality_passed") is True:
-        return "finalize_product"
-    if _has_any(haystack, ("NEEDS_GPU0_REFINE", "GPU0_REFINE_REQUIRED")):
-        return "needs_gpu0_refine"
-    if _has_any(
-        haystack,
-        ("BLOCKED_CONTINUATION", "DEFERRED_TO_RESUME", "CONTINUATION_REQUIRED"),
-    ):
-        return "blocked_continuation"
-    if _has_any(haystack, ("FINALIZE_RUN", "FINAL_PRODUCT_APPROVED", "FINALIZE_PRODUCT")):
-        return "finalize_product"
-    if _has_any(haystack, ("NO_MORE_ACTION", "NO PATCHABLE TARGET", "NO_PATCHABLE_TARGET")):
-        return "no_more_action"
-    return ""
+    return derive_gpu1_decision(
+        quality_passed=latest_report.get("quality_passed") is True,
+        exit_decision=str(latest_report.get("exit_decision") or ""),
+        pointer_action=str(latest_report.get("pointer_action") or ""),
+        reject_reasons=[str(latest_report.get("reject_reason") or "")],
+        response_text=haystack,
+    )
 
 
 def gpu0_closure_agreement(
@@ -140,8 +190,15 @@ def gpu0_closure_agreement(
     latest_report: dict[str, Any] | None = None,
     *,
     targeted_used: bool = False,
+    gpu1_packet: dict[str, Any] | None = None,
 ) -> tuple[str, str]:
     latest_report = latest_report or {}
+    packet = extract_gpu1_closure_decision_packet(gpu1_packet or latest_report)
+    if not packet or not gpu1_decision_packet_valid(packet):
+        return (
+            "not_evaluated_waiting_for_gpu1_decision",
+            "gpu0_veto_not_allowed_without_gpu1_decision",
+        )
     gpu0 = _latest_lane_report(provider_reports, "gpu0_peer")
     if not gpu0:
         return "", "GPU0 closure report missing"
@@ -154,10 +211,8 @@ def gpu0_closure_agreement(
     ):
         return "veto_with_reason", "GPU0 report is not operational evidence"
 
-    role_decision = str(gpu0.get("role_decision") or "")
-    response = str(gpu0.get("response_text") or "")
     review = gpu0.get("gpu0_operational_review")
-    review_text = str(review if not isinstance(review, dict) else review.get("decision") or review)
+    review = review if isinstance(review, dict) else {}
     veto = latest_report.get("cross_lane_veto")
     veto = veto if isinstance(veto, dict) else {}
     veto_reasons = [
@@ -167,12 +222,51 @@ def gpu0_closure_agreement(
     ]
     if veto_reasons and not targeted_used:
         return "refine_once", "; ".join(veto_reasons[:4])
-    combined = "\n".join([role_decision, response, review_text]).lower()
-    if re.search(r"\b(veto|reject|rifiut|non accett|non soddisfacente)\b", combined):
+    if gpu0.get("gpu0_secondary_schema_valid") is not True:
+        if "gpu0_checked_wrong_gpu1_packet" in (gpu0.get("veto_reasons") or []):
+            return "refine_once", "gpu0_checked_wrong_gpu1_packet"
         if not targeted_used:
-            return "refine_once", "GPU0 reported a concrete veto/refine signal"
-        return "agree_close", "GPU0 veto already consumed by one targeted refinement"
-    return "agree_close", "GPU0 has valid evidence and no active concrete veto"
+            return "refine_once", "GPU0 secondary decision schema is invalid or missing"
+        return "veto_with_reason", "GPU0 secondary decision schema stayed invalid after refinement"
+    if str(gpu0.get("checked_block_id") or "") != str(packet.get("gpu1_block_id") or ""):
+        return "refine_once", "gpu0_checked_wrong_gpu1_packet"
+    if str(gpu0.get("checked_gpu1_revision") or "") != str(packet.get("gpu1_revision") or ""):
+        return "refine_once", "gpu0_checked_wrong_gpu1_packet"
+    reviewed_packet = extract_gpu1_closure_decision_packet(gpu0)
+    if not reviewed_packet:
+        return (
+            "not_evaluated_waiting_for_gpu1_decision",
+            "gpu0_review_missing_gpu1_packet",
+        )
+    if not gpu1_packets_equivalent(reviewed_packet, packet):
+        return (
+            "not_evaluated_waiting_for_gpu1_decision",
+            "gpu0_review_stale_after_gpu1_packet_rewrite",
+        )
+    if gpu0.get("gpu0_unanchored_reasons") and normalize_gpu0_decision(gpu0.get("gpu0_model_decision")) in {
+        "veto",
+        "refine_required",
+        "incongruent",
+    }:
+        decision = normalize_gpu0_decision(gpu0.get("gpu0_effective_decision") or gpu0.get("gpu0_decision"))
+        if decision == "congruent":
+            return "agree_close", "gpu0_unanchored_reason_ignored"
+    decision = normalize_gpu0_decision(
+        gpu0.get("gpu0_effective_decision")
+        or gpu0.get("gpu0_decision")
+        or review.get("gpu0_decision")
+        or review.get("decision")
+    )
+    reason = gpu0_secondary_reason({**gpu0, **review})
+    if decision == "congruent":
+        return "agree_close", reason or "GPU0 structured congruence check passed"
+    if decision == "veto":
+        return "veto_with_reason", reason or "GPU0 structured veto"
+    if decision in {"refine_required", "incongruent"}:
+        if not targeted_used:
+            return "refine_once", reason or f"GPU0 requested {decision}"
+        return "veto_with_reason", reason or f"GPU0 still reports {decision} after refinement"
+    return "veto_with_reason", "GPU0 structured decision is invalid"
 
 
 def npu_closure_advisory(provider_reports: list[dict[str, Any]]) -> str:
@@ -209,6 +303,28 @@ def _resume_from_latest(latest_report: dict[str, Any]) -> str:
         or latest_report.get("proposal_block_id")
         or ""
     )
+
+
+def _pre_provider_waiting(
+    owner: Any,
+    events: list[dict[str, Any]],
+    provider_reports: list[dict[str, Any]],
+) -> bool:
+    args = getattr(owner, "args", None)
+    if not bool(getattr(args, "allow_provider_generation", False)):
+        return False
+    if provider_reports:
+        return False
+    launch_started = getattr(owner, "provider_launch_started", None)
+    if callable(launch_started):
+        return not bool(launch_started(events))
+    for event in events:
+        if event.get("event_type") != "provider_state":
+            continue
+        payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+        if payload.get("lane") in {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}:
+            return False
+    return True
 
 
 def _has_any(text: str, markers: tuple[str, ...]) -> bool:

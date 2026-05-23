@@ -28,8 +28,10 @@ def wait_for_gpu1_residency_preflight(
     process = item.get("process")
     started_perf = float(item.get("started_perf") or time.perf_counter())
     output_path = Path(item.get("spec", {}).get("output") or "")
+    spec = item.get("spec") if isinstance(item.get("spec"), dict) else {}
     model = str(
-        getattr(gate, "selected_provider_model", "")
+        spec.get("provider_model")
+        or getattr(gate, "selected_provider_model", "")
         or getattr(gate.args, "provider_model", "")
         or ""
     ).strip()

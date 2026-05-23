@@ -30,6 +30,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-context-files", type=int, default=80)
     parser.add_argument("--startup-scan-context-files", type=int, default=10000)
     parser.add_argument("--max-chars-per-file", type=int, default=12000)
+    parser.add_argument("--rag-db", default="output/ai_runtime_memory/rag/rag.sqlite")
+    parser.add_argument("--rag-index-policy", choices=("auto", "always", "never"), default="auto")
+    parser.add_argument("--rag-top-k", type=int, default=20)
+    parser.add_argument("--rag-char-budget", type=int, default=32000)
+    parser.add_argument("--rag-embedding-endpoint", default="http://127.0.0.1:11434")
+    parser.add_argument("--rag-embedding-model", default="bge-m3")
+    parser.add_argument("--rag-ingest-batch-size", type=int, default=8)
+    parser.add_argument("--rag-embed-smoke-batch-size", type=int, default=8)
+    parser.add_argument("--rag-chunk-min-chars", type=int, default=1500)
+    parser.add_argument("--rag-chunk-max-chars", type=int, default=4000)
+    parser.add_argument("--rag-chunk-overlap-chars", type=int, default=300)
+    parser.add_argument("--rag-max-file-size", type=int, default=250000)
+    parser.add_argument("--rag-allow-missing-embeddings", action="store_true")
+    parser.add_argument("--rag-skip-query-embedding", action="store_true")
     parser.add_argument(
         "--strict-ai-context-pack",
         action="store_true",

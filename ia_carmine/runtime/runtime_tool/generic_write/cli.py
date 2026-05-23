@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
@@ -61,13 +62,33 @@ def _provider_summary(report: dict[str, Any]) -> dict[str, Any]:
     keys = (
         "lane",
         "revision",
+        "provider_cycle_id",
         "role",
         "provider_role",
+        "passed",
+        "provider_execution_performed",
+        "provider_work_verified",
+        "operational_provider_activity",
+        "useful_output_produced",
+        "gpu1_primary_workload_valid",
+        "lane_is_closure_owner",
+        "closure_owner",
+        "review_for_gpu1_cycle",
+        "audit_for_gpu1_cycle",
+        "cannot_open_revision",
         "provider_block_id",
         "proposal_block_id",
+        "refines_block_id",
         "response_text",
         "target_files",
         "validation_commands",
+        "provider_compute_device",
+        "windows_task_manager_device_hint",
+        "elapsed_seconds",
+        "prompt_eval_count",
+        "eval_count",
+        "prompt_token_count",
+        "completion_token_count",
         "provider_rejection_reason",
         "native_tool_call_count",
         "errors",
@@ -231,7 +252,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         provider_summary["response_text"] = proposal_text
     capture_mode = str(args.capture_mode or "native_call")
     source_lane = str(args.source_lane or provider_summary.get("lane") or "")
-    source_revision = str(getattr(args, "source_revision", "") or provider_summary.get("revision") or "")
+    raw_source_revision = getattr(args, "source_revision", "")
+    if raw_source_revision in ("", None):
+        raw_source_revision = provider_summary.get("revision")
+    source_revision = "" if raw_source_revision is None else str(raw_source_revision)
     peer_followup_required = _truthy(getattr(args, "peer_followup_required", "")) or source_lane in {
         "gpu0_peer",
         "npu_micro_task_auditor",
@@ -256,6 +280,16 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         native_tool_count = int(provider_summary.get("native_tool_call_count") or 0)
     except (TypeError, ValueError):
         native_tool_count = 0
+    provider_response = str(provider_summary.get("response_text") or "")
+    source_provider_passed = provider_summary.get("passed") is True
+    source_provider_execution_performed = bool(
+        provider_summary.get("provider_execution_performed")
+        or provider_summary.get("operational_provider_activity")
+    )
+    source_provider_work_verified = bool(
+        provider_summary.get("provider_work_verified")
+        or provider_summary.get("gpu1_primary_workload_valid")
+    )
     return {
         "schema_version": 1,
         "kind": "generic_write_md",
@@ -264,6 +298,14 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "passed": True,
         "source_lane": source_lane,
         "source_revision": source_revision,
+        "source_provider_passed": source_provider_passed,
+        "source_provider_execution_performed": source_provider_execution_performed,
+        "source_provider_work_verified": source_provider_work_verified,
+        "source_provider_block_id": str(provider_summary.get("provider_block_id") or ""),
+        "source_proposal_block_id": str(provider_summary.get("proposal_block_id") or ""),
+        "source_provider_cycle_id": provider_summary.get("provider_cycle_id")
+        if provider_summary.get("provider_cycle_id") is not None
+        else source_revision,
         "gpu1_followup_required": gpu1_followup_required,
         "peer_followup_required": peer_followup_required,
         "provider_role": provider_role,
@@ -275,7 +317,10 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "evidence_report": evidence_reports,
         "tool_evidence_summary": evidence_summaries,
         "provider_summary": provider_summary,
-        "provider_response_excerpt": _compact(provider_summary.get("response_text") or ""),
+        "provider_response_excerpt": _compact(provider_response),
+        "provider_response_sha256": hashlib.sha256(
+            provider_response.encode("utf-8", errors="replace")
+        ).hexdigest(),
         "refined_request": refined_request,
         "action_plan": [
             "resolve verified targets",

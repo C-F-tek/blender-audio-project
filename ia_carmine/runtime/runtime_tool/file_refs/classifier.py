@@ -6,7 +6,7 @@ import re
 from collections.abc import Iterable
 
 FILE_REF_RE = re.compile(
-    r"(?P<path>(?:\.\/)?(?:Tools|tools|docs|CHATGPT|Scripting|scripts|patch_specs|config|examples|assets|\.github|output|indexAI|renders)/[A-Za-z0-9_./() -]+\.(?:py|ps1|md|json|txt|yml|yaml|toml|diff|patch|csv|tsv|svg|png|jpg|jpeg|webp|wav|mp3|mp4))"
+    r"(?P<path>(?:\.\/)?(?:ia_carmine|Tools|tools|docs|CHATGPT|Scripting|scripts|patch_specs|config|examples|assets|\.github|output|indexAI|renders)/[A-Za-z0-9_./() -]+\.(?:py|ps1|md|json|txt|yml|yaml|toml|diff|patch|csv|tsv|svg|png|jpg|jpeg|webp|wav|mp3|mp4))"
 )
 SECTION_RE = re.compile(r"(?im)^\s*(?P<name>[A-Z_ ]{3,}):\s*(?P<body>.*)$")
 HEADING_RE = re.compile(r"(?im)^\s*#{1,6}\s*(?P<name>[A-Z_ ]{3,})(?:\s*$|[:=])")
@@ -66,7 +66,7 @@ def extract_section_refs(text: str, section_name: str) -> list[str]:
         for line in block.splitlines():
             cleaned = line.strip().lstrip("-*0123456789. ").strip("`'\"")
             if ("/" in cleaned or "\\" in cleaned) and re.match(
-                r"^(?:\.\/)?(?:Tools|tools|docs|CHATGPT|Scripting|scripts|patch_specs|config|examples|assets|\.github|output|indexAI|renders)/",
+                r"^(?:\.\/)?(?:ia_carmine|Tools|tools|docs|CHATGPT|Scripting|scripts|patch_specs|config|examples|assets|\.github|output|indexAI|renders)/",
                 cleaned,
             ):
                 refs.append(cleaned.split()[0].strip(",;"))

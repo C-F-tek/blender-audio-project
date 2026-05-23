@@ -9,6 +9,10 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig", errors="replace") if path.exists() else ""
 
 
+def has_lane_spec(text: str, lane: str, constant: str) -> bool:
+    return f'"lane": "{lane}"' in text or f'"lane": {constant}' in text
+
+
 def validate_contract_only(repo_root: Path) -> list[str]:
     files = {
         "gate": read_text(repo_root / "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py"),
@@ -31,11 +35,17 @@ def validate_contract_only(repo_root: Path) -> list[str]:
         "startup_manifest_primary": "compact_manifest_context" in files["startup_context"],
         "startup_md_reference_only": "artifact_reference_only_not_ingested"
         in files["startup_manifest"],
-        "gpu1_lane": '"lane": "gpu1_planner"' in files["provider_commands"],
-        "gpu0_lane": '"lane": "gpu0_peer"' in files["provider_commands"],
-        "npu_lane": '"lane": "npu_micro_task_auditor"' in files["provider_commands"],
-        "concurrent_provider_teamwork": "concurrent_provider_teamwork"
-        in files["provider_execution"],
+        "gpu1_lane": has_lane_spec(files["provider_commands"], "gpu1_planner", "GPU1_LANE"),
+        "gpu0_lane": has_lane_spec(files["provider_commands"], "gpu0_peer", "GPU0_LANE"),
+        "npu_lane": has_lane_spec(
+            files["provider_commands"], "npu_micro_task_auditor", "NPU_LANE"
+        ),
+        "concurrent_provider_teamwork": (
+            "concurrent_provider_teamwork" in files["provider_execution"]
+            or "production_provider_window_all_lanes_started_before_residency_result"
+            in files["provider_execution"]
+            or "provider_teamwork_unified_parallel" in files["provider_execution"]
+        ),
         "provider_launch_manifest": "provider_launch_manifest" in files["provider_execution"],
         "provider_process_evidence": "provider_process_id" in files["provider_absorption"]
         and "started_at" in files["provider_absorption"],

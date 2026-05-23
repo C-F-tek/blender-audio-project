@@ -8,6 +8,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from ia_carmine.runtime.heap_context_closure.product_state import build_product_state
+
 TRUNCATED_DIFF_MARKER = "[diff " + "truncated]"
 def now_stamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -104,7 +107,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     "ollama_compute_verified": True,
                     "done": True,
                     "eval_count": 96,
-                    "provider_model": "qwen3-coder:latest",
+                    "provider_model": "qwen2.5-coder:14b",
                 }
             )
         elif lane == "gpu0_peer":
@@ -158,7 +161,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "semantic_provider_execution_performed": True,
                 "native_tool_loop_performed": True,
                 "native_tool_call_count": 1,
-                "selected_model": "qwen3-coder:latest" if lane == "gpu1_planner" else "",
+                "selected_model": "qwen2.5-coder:14b" if lane == "gpu1_planner" else "",
                 "workload": {"performed": True},
                 "response_text": f"{role} performed=true reviewed {proposal_2}",
                 **provider_fields,
@@ -216,6 +219,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     "target_file": "ia_carmine/product/code_product/final_readable_product/cli.py",
                     "implementation_status": "validated_patch_candidate",
                     "source": "patch_candidate_synthesis",
+                    "diff_source": "evidence_owned",
                     "git_status": "artifact patch candidate",
                     "code_or_patch_sketch": "diff --git a/ia_carmine/product/code_product/final_readable_product/cli.py b/ia_carmine/product/code_product/final_readable_product/cli.py\n@@\n+def build_report(...):\n+    pass\n..." + TRUNCATED_DIFF_MARKER,
                     "diff_path": str(diff_artifact),
@@ -304,12 +308,74 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "virtual_dev_environment_reports": [repo_rel(repo_root, virtual_dev_path)],
                 "generic_write_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
                 "generic_write_no_tool_capture_count": 3,
+                "generic_write_capture_failed_count": 1,
+                "lane_tiers": {
+                    "gpu1_planner": "primary",
+                    "gpu0_peer": "coworker_medium",
+                    "npu_micro_task_auditor": "micro_fast",
+                },
+                "lane_authority": {
+                    "gpu1_planner": "leader",
+                    "gpu0_peer": "coworker",
+                    "npu_micro_task_auditor": "micro_tool",
+                },
+                "lane_context_budgets": {
+                    "gpu1_planner": {"ollama_num_ctx": 8192, "max_new_tokens": 900},
+                    "gpu0_peer": {"ollama_num_ctx": 4096, "max_new_tokens": 512},
+                    "npu_micro_task_auditor": {
+                        "max_prompt_chars": 1200,
+                        "max_context_chars": 8000,
+                        "max_new_tokens": 384,
+                    },
+                },
+                "gpu1_context_budget": {"ollama_num_ctx": 8192, "max_new_tokens": 900},
+                "gpu0_context_budget": {"ollama_num_ctx": 4096, "max_new_tokens": 512},
+                "npu_context_budget": {
+                    "max_prompt_chars": 1200,
+                    "max_context_chars": 8000,
+                    "max_new_tokens": 384,
+                },
+                "context_hierarchy_valid": True,
+                "gpu1_replight_valid": True,
+                "gpu1_boot_leader_ready": True,
+                "gpu1_primary_workload_valid": True,
+                "gpu1_primary_evidence_valid": True,
+                "gpu1_primary_evidence_source": "generic_write",
+                "leader_source": "generic_write",
+                "sidecars_start_policy": "after_gpu1_residency_handshake",
+                "parallel_provider_overlap_seconds": 12.5,
+                "device_identity_map": [
+                    {
+                        "logical_lane": "gpu0_peer",
+                        "provider_backend_device_id": "vulkan:1",
+                        "windows_task_manager_device_hint": "Windows GPU 0 / Intel(R) Graphics",
+                        "vulkan_visible_device": "1",
+                        "vulkan_device_name": "Intel(R) Graphics",
+                        "vulkan_vendor_id": "0x8086",
+                        "device_identity_verified": True,
+                    }
+                ],
+                "gpu1_primary_workload_chars": 1400,
+                "gpu1_primary_workload_tokens": 180,
+                "gpu1_leader_valid": True,
+                "gpu1_leader_block_id": "smoke:gpu1:002",
+                "consumed_peer_block_ids": ["smoke:gpu0:002", "smoke:npu:002"],
+                "gpu1_consumed_gpu0_peer": True,
+                "gpu1_consumed_npu_peer": True,
                 "gpu0_peer_followup_pending_count": 1,
                 "npu_peer_followup_pending_count": 1,
                 "generic_write_refined_product": {
                     "eligible": False,
                     "capture_count": 3,
                     "generic_write_no_tool_capture_count": 3,
+                    "generic_write_capture_failed_count": 1,
+                    "generic_write_capture_failures": [
+                        {
+                            "lane": "npu_micro_task_auditor",
+                            "revision": 1,
+                            "errors": ["generic_write: unsupported args smoke fixture"],
+                        }
+                    ],
                     "generic_write_lanes": ["gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"],
                     "gpu0_peer_followup_pending_count": 1,
                     "npu_peer_followup_pending_count": 1,
@@ -380,7 +446,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     zip_path = Path(str(documents_dir) + ".zip")
     body = final_md.read_text(encoding="utf-8-sig") if final_md.exists() else ""
     code_product_body = full_code_product.read_text(encoding="utf-8-sig") if full_code_product.exists() else ""
-    required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Modifiche concrete", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore", "Peer follow-up pending", "MICRO_TASK=target_reference_audit"]
+    required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore", "Peer follow-up pending", "MICRO_TASK=target_reference_audit", "Capture failed", "Gerarchia GPU1/GPU0/NPU", "GPU1 primary workload", "GPU1 primary evidence", "Generic write", "GPU1/NVIDIA", "GPU0/Vulkan", "coworker_medium", "NPU/OpenVINO", "micro_fast", "context_budget", "Parallel provider overlap", "Device identity map"]
     missing = [phrase for phrase in required_phrases if phrase not in body]
     pointer_reconstruction = (
         product.get("pointer_reconstruction")
@@ -391,6 +457,28 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         pointer_reconstruction.get("contract")
         if isinstance(pointer_reconstruction.get("contract"), dict)
         else {}
+    )
+    launcher_product_state = build_product_state(
+        code_product_contract={"path": str(full_code_product), "real_code_product_ready": False},
+        external_contract={
+            "provider_execution_performed": True,
+            "resume_from_block_id": "smoke:proposal:000",
+            "latest_block_id": "smoke:gpu0_peer:000",
+            "provider_rejection_reasons": [],
+            "missing_roles": [],
+            "pointer_block_count": 3,
+        },
+        final_result={"passed": False},
+        final_payload={
+            "product_kind": "blocked_continuation_product",
+            "product_blocked_reason": "gpu0_peer_followup_pending",
+            "soft_close_reason": "gpu0_peer_followup_pending",
+        },
+        launcher_contract_errors=["final readable product did not pass"],
+    )
+    launcher_reason_preserved = (
+        launcher_product_state.get("product_blocked_reason") == "gpu0_peer_followup_pending"
+        and launcher_product_state.get("soft_close_reason") == "gpu0_peer_followup_pending"
     )
     passed = (
         completed.returncode == 0
@@ -408,11 +496,12 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and "ia_carmine/runtime/heap_context_closure/cli.py" not in code_product_body
         and "ia_carmine/_shared/heap_final_code_product.py" not in code_product_body
         and "ia_carmine/worktree_extra.py" not in code_product_body
-        and "Worktree diff fallback: `disabled`" in code_product_body
+        and "Final assembler worktree fallback: `disabled`" in code_product_body
         and "Code product status: `BLOCKED_WITH_CODE_PRODUCT_REVIEW`" in code_product_body
         and "[no worktree diff captured]" not in code_product_body
         and zip_path.exists()
         and not missing
+        and launcher_reason_preserved
     )
     report = {
         "schema_version": 1,
@@ -428,6 +517,8 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         "missing_required_phrases": missing,
         "pointer_reconstruction_passed": product.get("pointer_reconstruction_passed"),
         "pointer_reconstruction": pointer_reconstruction,
+        "launcher_reason_preserved": launcher_reason_preserved,
+        "launcher_product_state": launcher_product_state,
         "returncode": completed.returncode,
         "stdout_tail": (completed.stdout or "")[-4000:],
         "stderr_tail": (completed.stderr or "")[-4000:],

@@ -5,6 +5,7 @@ from __future__ import annotations
 from .common import ToolSpec
 from .context_builders import (
     build_ai_context_pack_tool,
+    build_rag_context_pack_tool,
     build_semantic_evidence_chunk_manifest,
     run_agent_runtime_debug_lab,
     runtime_sqlite_memory,
@@ -132,6 +133,23 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         ),
         builder=build_semantic_evidence_chunk_manifest,
     ),
+    "rag_context_pack": ToolSpec(
+        name="rag_context_pack",
+        description="Build a heap-consumable internal RAG context pack from SQLite/FTS5/vector retrieval.",
+        allowed_args=(
+            "query",
+            "task_file",
+            "db",
+            "top_k",
+            "char_budget",
+            "embedding_endpoint",
+            "embedding_model",
+            "skip_query_embedding",
+            "allow_missing_query_embedding",
+            "allow_empty_results",
+        ),
+        builder=build_rag_context_pack_tool,
+    ),
     "agent_runtime_debug_lab": ToolSpec(
         name="agent_runtime_debug_lab",
         description="Run the controlled report-only Python debug lab with an in-memory or allowlisted request.",
@@ -209,6 +227,10 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "capture_mode",
             "evidence_report",
             "source_lane",
+            "source_revision",
+            "gpu1_followup_required",
+            "peer_followup_required",
+            "provider_role",
             "reason",
         ),
         builder=generic_write,

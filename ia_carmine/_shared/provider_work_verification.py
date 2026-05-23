@@ -102,13 +102,19 @@ def _gpu1_status(report: dict[str, Any]) -> dict[str, Any]:
         report.get("ollama_residency_verified")
         or report.get("provider_device_verified")
         or report.get("ollama_full_gpu_verified")
+        or report.get("device_identity_verified")
+        or report.get("gpu0_vulkan_policy_verified")
     )
     model_loaded = normalize_bool(report.get("provider_loaded")) or bool(
         str(report.get("selected_model") or report.get("provider_model") or "").strip()
         and token_count > 0
         and normalize_bool(report.get("done"))
     )
-    compute_verified = normalize_bool(report.get("ollama_compute_verified"))
+    compute_verified = normalize_bool(
+        report.get("ollama_compute_verified")
+        or report.get("gpu0_vulkan_workload_verified")
+        or report.get("gpu0_vulkan_sdk_workload_verified")
+    )
     workload = bool(
         compute_verified
         or (

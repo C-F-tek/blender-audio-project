@@ -176,8 +176,27 @@ def generic_write_summary(run_dir: Path, gate: dict[str, Any]) -> list[str]:
         metrics.get("generic_write_refined_product")
         or metrics.get("generic_write_document_product")
     )
+    failed_count = int(
+        product.get("generic_write_capture_failed_count")
+        or metrics.get("generic_write_capture_failed_count")
+        or 0
+    )
     if not product:
         return ["Nessuna cattura `generic_write` disponibile."]
+    if failed_count and not as_list(product.get("captures")):
+        failures = as_list(product.get("generic_write_capture_failures"))
+        failure_lines = []
+        for failure in failures[:6]:
+            data = as_dict(failure)
+            errors = ", ".join(str(item) for item in as_list(data.get("errors")))
+            failure_lines.append(
+                f"{data.get('lane') or 'unknown'}@{data.get('revision')}: {errors or 'errore non dettagliato'}"
+            )
+        return [
+            f"Generic write capture failed: `{failed_count}`.",
+            "Il canale MD/prosa e' evidenza primaria quando non esistono native tool calls; questo errore blocca il prodotto.",
+            "Failure details: " + (" | ".join(failure_lines) if failure_lines else "non disponibili"),
+        ]
     latest_outputs = as_dict(product.get("latest_outputs"))
     latest_report = _read_generic_write_report(run_dir, gate, latest_outputs)
     tool_evidence = as_list(latest_report.get("tool_evidence_summary"))
@@ -203,6 +222,7 @@ def generic_write_summary(run_dir: Path, gate: dict[str, Any]) -> list[str]:
         )
     return [
         f"Capture count: `{product.get('capture_count')}`; no-tool capture: `{product.get('generic_write_no_tool_capture_count')}`.",
+        f"Capture failed: `{failed_count}`.",
         f"Lane catturate: `{product.get('generic_write_lanes') or metrics.get('generic_write_lanes') or []}`.",
         f"Eligible refined product: `{product.get('eligible')}`; ultimo consumato da GPU1: `{product.get('latest_consumed_by_gpu1')}`.",
         f"Ultima source lane: `{product.get('latest_source_lane')}`; capture mode: `{latest_report.get('capture_mode') or ''}`.",
@@ -235,6 +255,40 @@ def _read_generic_write_report(
     return {}
 
 
+def gpu1_raw_evidence_summary(run_dir: Path) -> list[str]:
+    proposal_dir = run_dir / "proposal_iterations"
+    reports = sorted(proposal_dir.glob("heap_proposal_revision_*.json")) if proposal_dir.is_dir() else []
+    lines: list[str] = []
+    for path in reports[-6:]:
+        data = read_json(path)
+        if not data:
+            continue
+        packet = as_dict(data.get("gpu1_closure_decision_packet"))
+        raw = str(data.get("gpu1_free_text_evidence") or data.get("response_text") or "")
+        raw_excerpt = raw.replace("\r\n", "\n").replace("\n", " ")[:1200]
+        reject_reason = str(data.get("reject_reason") or "")
+        lines.extend(
+            [
+                (
+                    f"GPU1 rev `{data.get('revision')}` raw `{path}`: decision "
+                    f"`{packet.get('gpu1_decision') or data.get('gpu1_decision')}`, "
+                    f"quality `{data.get('quality_passed')}`, chars "
+                    f"`{data.get('gpu1_free_text_evidence_chars') or len(raw)}`, "
+                    f"sha `{data.get('gpu1_free_text_evidence_sha256') or packet.get('response_text_sha256') or ''}`."
+                ),
+                f"GPU1 rev `{data.get('revision')}` reject: `{reject_reason or 'none'}`.",
+                f"GPU1 rev `{data.get('revision')}` raw excerpt: {raw_excerpt or 'non disponibile'}.",
+            ]
+        )
+    provider_dir = run_dir / "provider_teamwork"
+    provider_raw = sorted(provider_dir.glob("gpu1_ollama_provider_probe*.md")) if provider_dir.is_dir() else []
+    for path in provider_raw[-4:]:
+        lines.append(f"GPU1 provider raw markdown: `{path}`.")
+    if not lines:
+        return ["Nessun testo raw GPU1 trovato nei report della run."]
+    return lines
+
+
 def peer_followup_summary(metrics: dict[str, Any], pointer: dict[str, Any]) -> list[str]:
     product = as_dict(
         metrics.get("generic_write_refined_product")
@@ -265,6 +319,88 @@ def peer_followup_summary(metrics: dict[str, Any], pointer: dict[str, Any]) -> l
         "Azione richiesta: `next GPU1 revision must consume this peer evidence`.",
         "Regola: GPU0/NPU possono produrre peer/refinement/veto/evidence, ma non chiudono mai il prodotto senza un blocco GPU1 successivo collegato.",
     ]
+
+
+def provider_hierarchy_summary(metrics: dict[str, Any]) -> list[str]:
+    lane_tiers = as_dict(metrics.get("lane_tiers"))
+    authority = as_dict(metrics.get("lane_authority"))
+    lane_budgets = as_dict(metrics.get("lane_context_budgets"))
+    consumed = as_list(metrics.get("consumed_peer_block_ids"))
+    device_map = as_list(metrics.get("device_identity_map"))
+    def budget(lane: str) -> str:
+        data = as_dict(lane_budgets.get(lane))
+        if data.get("ollama_num_ctx"):
+            return f"ctx={data.get('ollama_num_ctx')}, max_new_tokens={data.get('max_new_tokens')}"
+        if data.get("max_prompt_chars"):
+            return (
+                f"prompt_chars={data.get('max_prompt_chars')}, "
+                f"context_chars={data.get('max_context_chars')}, "
+                f"max_new_tokens={data.get('max_new_tokens')}"
+            )
+        return "not_available"
+    return [
+        f"Context hierarchy valid: `{metrics.get('context_hierarchy_valid')}`.",
+        f"GPU1 replight valid: `{metrics.get('gpu1_replight_valid')}`; solo health/residency, mai leadership.",
+        f"GPU1 boot leader ready: `{metrics.get('gpu1_boot_leader_ready')}`; autorizza solo avvio sidecar.",
+        f"GPU1 primary workload: `{metrics.get('gpu1_primary_workload_valid')}`; chars=`{metrics.get('gpu1_primary_workload_chars')}`, tokens=`{metrics.get('gpu1_primary_workload_tokens')}`.",
+        f"GPU1 primary evidence: `{metrics.get('gpu1_primary_evidence_valid')}`; source=`{metrics.get('gpu1_primary_evidence_source') or 'not_available'}`; leader_source=`{metrics.get('leader_source') or 'none'}`; gpu1_native_tool_call_count=`{metrics.get('gpu1_native_tool_call_count')}`.",
+        f"Sidecar start policy: `{metrics.get('sidecars_start_policy') or 'not_available'}`; Parallel provider overlap seconds=`{metrics.get('parallel_provider_overlap_seconds')}`.",
+        f"GPU1 leader valid: `{metrics.get('gpu1_leader_valid')}`; leader block id: `{metrics.get('gpu1_leader_block_id') or 'not_available'}`.",
+        f"GPU1/NVIDIA: lane_tier=`{lane_tiers.get('gpu1_planner') or 'primary'}`, authority=`{authority.get('gpu1_planner') or 'leader'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('gpu1_planner')}`.",
+        f"GPU0/Vulkan: lane_tier=`{lane_tiers.get('gpu0_peer') or 'coworker_medium'}`, authority=`{authority.get('gpu0_peer') or 'coworker'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('gpu0_peer')}`.",
+        f"NPU/OpenVINO: lane_tier=`{lane_tiers.get('npu_micro_task_auditor') or 'micro_fast'}`, authority=`{authority.get('npu_micro_task_auditor') or 'micro_tool'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('npu_micro_task_auditor')}`.",
+        f"Consumed peer block ids: `{consumed}`.",
+        f"GPU1 consumed GPU0 peer: `{metrics.get('gpu1_consumed_gpu0_peer')}`; GPU1 consumed NPU peer: `{metrics.get('gpu1_consumed_npu_peer')}`.",
+        f"GPU1 consumed generic_write block ids: `{metrics.get('gpu1_consumed_generic_write_block_ids') or []}`.",
+        "Device identity map: `" + _device_identity_map_text(device_map) + "`.",
+        "Regola: GPU0 puo' produrre testo migliore o piu lungo, ma resta coworker_medium; non diventa primary e non chiude senza consumo GPU1.",
+    ]
+
+
+def closure_display_values(
+    soft_lock_state: dict[str, Any],
+    metrics: dict[str, Any],
+    revision: dict[str, Any],
+) -> tuple[str, str]:
+    closure_status = str(soft_lock_state.get("closure_quorum_status") or "").strip()
+    if closure_status == "waiting_for_provider_start":
+        return "waiting_for_provider_start", "not_evaluated_waiting_for_provider_start"
+    gpu1_decision = str(soft_lock_state.get("soft_lock_closure_owner_decision") or "").strip()
+    gpu0_agreement = str(soft_lock_state.get("gpu0_closure_agreement") or "").strip()
+    gpu1_work_present = bool(
+        metrics.get("gpu1_primary_workload_valid")
+        or metrics.get("gpu1_leader_block_id")
+        or metrics.get("latest_gpu1_block_id")
+        or int(revision.get("gpu1_block_count") or 0) > 0
+        or int(revision.get("proposal_block_count") or 0) > 0
+    )
+    if gpu1_work_present and gpu1_decision in {"", "not_available"}:
+        gpu1_decision = "gpu1_decision_missing"
+    if gpu1_decision == "gpu1_decision_missing":
+        gpu0_agreement = "not_evaluated_waiting_for_gpu1_decision"
+    return gpu1_decision or "not_available", gpu0_agreement or "not_available"
+
+
+def _device_identity_map_text(items: list[Any]) -> str:
+    parts: list[str] = []
+    for raw in items:
+        item = as_dict(raw)
+        lane = str(item.get("logical_lane") or "")
+        if not lane:
+            continue
+        backend = str(item.get("provider_backend_device_id") or item.get("provider_compute_device") or "")
+        windows = str(item.get("windows_task_manager_device_hint") or "")
+        vulkan = str(item.get("vulkan_visible_device") or "")
+        name = str(item.get("vulkan_device_name") or "")
+        verified = item.get("device_identity_verified")
+        detail = f"{lane}->{backend}"
+        if vulkan or name:
+            detail += f"->Vulkan {vulkan} {name}".rstrip()
+        if windows:
+            detail += f"->{windows}"
+        detail += f" verified={verified}"
+        parts.append(detail)
+    return "; ".join(parts) if parts else "not_available"
 
 
 def validation_summary(
@@ -330,6 +466,18 @@ def render_markdown(
     open_pointer_count_final = int(soft_lock_state.get("open_pointer_count_final") or 0)
     closure_quorum_status = str(soft_lock_state.get("closure_quorum_status") or "")
     closure_quorum_reason = str(soft_lock_state.get("closure_quorum_reason") or "")
+    gpu1_closure_display, gpu0_closure_display = closure_display_values(
+        soft_lock_state,
+        metrics,
+        revision,
+    )
+    cpu_closure_display = str(soft_lock_state.get("cpu_closure_validation") or "").strip()
+    if gpu1_closure_display == "gpu1_decision_missing":
+        closure_quorum_status = closure_quorum_status or "blocked_with_reason"
+        closure_quorum_reason = (
+            closure_quorum_reason or "gpu0_veto_not_allowed_without_gpu1_decision"
+        )
+        cpu_closure_display = cpu_closure_display or "blocked_provider_or_pointer"
     gpu1_reason = gpu1_blocked_reason_from_gate(gate)
     pointer_closure_blocked = open_pointer_count_final > 0
     blocked_continuation = bool(
@@ -416,18 +564,22 @@ def render_markdown(
         f"- Continuation required: `{blocked_continuation}`.",
         f"- Soft lock state: `{soft_lock_state.get('soft_lock_state')}`.",
         f"- Closure quorum status: `{closure_quorum_status or 'not_available'}`.",
-        f"- GPU1 closure decision: `{soft_lock_state.get('soft_lock_closure_owner_decision') or 'not_available'}`.",
-        f"- GPU0 closure agreement: `{soft_lock_state.get('gpu0_closure_agreement') or 'not_available'}`.",
+        f"- GPU1 closure decision: `{gpu1_closure_display}`.",
+        f"- GPU0 closure agreement: `{gpu0_closure_display}`.",
         f"- NPU advisory: `{soft_lock_state.get('npu_closure_advisory') or npu_sidecar_status or 'not_available'}`.",
-        f"- CPU closure validation: `{soft_lock_state.get('cpu_closure_validation') or 'not_available'}`.",
+        f"- CPU closure validation: `{cpu_closure_display or 'not_available'}`.",
         f"- Soft lock extensions: `{soft_lock_state.get('soft_lock_extension_count')}`.",
         f"- Open pointer count final: `{open_pointer_count_final}`.",
-        f"- Soft close reason: `{provider_runtime_reason or closure_quorum_reason or gpu1_reason or gate_product_status or provider_decision or soft_lock_state.get('soft_lock_state')}`.",
-        f"- NPU sidecar status: `{npu_sidecar_status or 'not_available'}`.",
+            f"- Soft close reason: `{provider_runtime_reason or closure_quorum_reason or gpu1_reason or gate_product_status or provider_decision or soft_lock_state.get('soft_lock_state')}`.",
+            f"- NPU sidecar status: `{npu_sidecar_status or 'not_available'}`.",
             f"- Decisione pratica: {practical_decision}",
             "",
+            "## Gerarchia GPU1/GPU0/NPU",
+            "",
+            *[f"- {line}" for line in provider_hierarchy_summary(metrics)],
+            "",
             *provider_replight_table(gate),
-            "## Generic write",
+            "## Generic write evidence",
             "",
             *[f"- {line}" for line in generic_write_summary(run_dir, gate)],
             "",
@@ -495,12 +647,16 @@ def render_markdown(
             "",
             "## Quorum di chiusura",
             "",
-            f"- Decisione GPU1: `{soft_lock_state.get('soft_lock_closure_owner_decision') or 'not_available'}`.",
-            f"- Accordo/veto GPU0: `{soft_lock_state.get('gpu0_closure_agreement') or 'not_available'}`.",
+            f"- Decisione GPU1: `{gpu1_closure_display}`.",
+            f"- Accordo/veto GPU0: `{gpu0_closure_display}`.",
             f"- Advisory NPU: `{soft_lock_state.get('npu_closure_advisory') or npu_sidecar_status or 'not_available'}`.",
-            f"- Validazione CPU: `{soft_lock_state.get('cpu_closure_validation') or 'not_available'}`.",
+            f"- Validazione CPU: `{cpu_closure_display or 'not_available'}`.",
             f"- Stato quorum: `{closure_quorum_status or 'not_available'}`.",
             f"- Motivo quorum: `{closure_quorum_reason or 'not_available'}`.",
+            "",
+            "## Catena raw GPU1 -> packet CPU -> GPU0 -> quorum",
+            "",
+            *[f"- {line}" for line in gpu1_raw_evidence_summary(run_dir)],
             "",
             "## Perche il provider non si applica",
             "",

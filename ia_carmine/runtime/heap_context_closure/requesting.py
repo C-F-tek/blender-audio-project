@@ -9,6 +9,13 @@ from ia_carmine._shared.revision_context_prompt import render_revision_context_p
 
 from .common import DEFAULT_REQUEST, REVISION_CONTEXT_MARKER
 
+HARD_STARTUP_REQUIREMENTS = {
+    "rag_ollama_embed_preflight",
+    "rag_repo_ingest",
+    "rag_context_pack",
+    "startup_unified_context_pack",
+}
+
 
 def revision_context_prompt(payload: dict[str, Any], path: Path | None, max_tasks: int) -> str:
     return render_revision_context_prompt(
@@ -87,6 +94,12 @@ def startup_can_continue(
 ) -> bool:
     if skipped or startup_result.get("passed") is True:
         return True
+    blocking = startup_payload.get("blocking_requirements")
+    blocking_requirements = {
+        str(item) for item in blocking if isinstance(item, str)
+    } if isinstance(blocking, list) else set()
+    if blocking_requirements & HARD_STARTUP_REQUIREMENTS:
+        return False
     artifact_ready = bool(startup_artifact_refs(startup_payload))
     if strict_startup_reload:
         return False

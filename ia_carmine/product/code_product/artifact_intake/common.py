@@ -9,7 +9,7 @@ DEFAULT_OUTPUT = "output/validation/code_product_artifact_intake.json"
 DEFAULT_MARKDOWN = "output/validation/code_product_artifact_intake.md"
 DENY_PREFIXES = ("output/", "renders/", "indexAI/code_chunks/", "indexAI/project_code_chunks/")
 DENY_SUFFIXES = (".db", ".sqlite", ".sqlite3", ".sqlite-wal", ".sqlite-shm")
-SAFE_PREFIXES = ("Tools/", "docs/", "config/")
+SAFE_PREFIXES = ("Tools/", "docs/", "config/", "ia_carmine/")
 INTEGRATED_STATUSES = (
     "already_integrated",
     "already_integrated_with_context_drift",

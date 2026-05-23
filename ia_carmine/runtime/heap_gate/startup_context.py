@@ -170,6 +170,10 @@ class RuntimeGateStartupContextMixin:
         contract = manifest.get("contract") if isinstance(manifest.get("contract"), dict) else {}
 
         artifact_requirements = {
+            "rag_context_pack": (
+                "rag_context_pack_loaded",
+                ("rag_context_pack_json", "rag_context_pack_markdown"),
+            ),
             "semantic_code_chunks": (
                 "semantic_code_chunks_loaded",
                 ("semantic_code_chunks_json", "semantic_code_chunks_markdown"),
@@ -298,6 +302,7 @@ class RuntimeGateStartupContextMixin:
             "shared_context_chunks",
             "semantic_code_chunks",
             "ai_context_pack",
+            "rag_context_pack",
             "semantic_evidence_chunks",
         )
         for requirement in startup_requirements:

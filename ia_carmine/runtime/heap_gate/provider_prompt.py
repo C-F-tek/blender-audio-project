@@ -8,6 +8,16 @@ from ia_carmine.runtime.heap_gate.provider_prompt_text import (
     provider_invocation_wrapper_text,
 )
 from ia_carmine.runtime.heap_gate.provider_time import provider_time_counter_prompt_text
+from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import (
+    GPU0_ROLE,
+    bind_gpu0_secondary_to_gpu1_packet,
+    gpu0_role_decision,
+    gpu0_secondary_decision_text,
+    parse_gpu0_secondary_response,
+)
+from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
+    extract_gpu1_closure_decision_packet,
+)
 
 
 class RuntimeGateProviderPromptMixin:
@@ -24,16 +34,28 @@ class RuntimeGateProviderPromptMixin:
             return ""
 
         artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
-        preferred_keys = (
+        if artifacts.get("startup_context_pack_markdown"):
+            preferred_keys = (
+                "startup_context_pack_markdown",
+                "shared_memory_markdown",
+                "operational_memory_search_markdown",
+                "tool_catalog_markdown",
+                "semantic_code_chunks_markdown",
+                "semantic_evidence_chunks_markdown",
+                "repo_docs_map_markdown",
+            )
+        else:
+            preferred_keys = (
             "shared_memory_markdown",
             "operational_memory_search_markdown",
             "tool_catalog_markdown",
             "semantic_code_chunks_markdown",
             "semantic_evidence_chunks_markdown",
             "ai_context_pack_markdown",
+            "rag_context_pack_markdown",
             "ai_context_pack_evidence_markdown",
             "repo_docs_map_markdown",
-        )
+            )
 
         manifest_summary = {
             "startup_manifest": repo_rel(self.repo_root, manifest_path) if manifest_path else "",
@@ -330,37 +352,96 @@ class RuntimeGateProviderPromptMixin:
         pointer_action = pointer_action_match.group(1).strip() if pointer_action_match else ""
 
         if lane == "gpu0_peer":
+            gpu1_packet = extract_gpu1_closure_decision_packet(provider_report)
+            raw_free_text = str(
+                provider_report.get("free_text_evidence")
+                or provider_report.get("gpu0_raw_response_text")
+                or provider_report.get("response_text")
+                or ""
+            )
+            secondary = parse_gpu0_secondary_response(
+                raw_free_text,
+                fallback_block_id=str(provider_report.get("review_for_gpu1_cycle") or ""),
+                fallback_revision=str(revision),
+            )
+            if provider_report.get("gpu0_secondary_schema_valid") is True:
+                secondary.update(
+                    {
+                        key: provider_report.get(key)
+                        for key in (
+                            "gpu0_secondary_schema_valid",
+                            "gpu0_role",
+                            "gpu0_decision",
+                            "role_decision",
+                            "checked_block_id",
+                            "checked_gpu1_revision",
+                            "missing_required_sections",
+                            "incongruence_reasons",
+                            "veto_reasons",
+                            "required_gpu1_next_action",
+                            "free_text_evidence",
+                            "free_text_used_as_product",
+                            "free_text_used_as_decision",
+                            "gpu0_model_decision",
+                            "gpu0_effective_decision",
+                            "expected_gpu1_block_id",
+                            "expected_gpu1_revision",
+                            "gpu0_checked_current_packet",
+                            "gpu0_unanchored_reasons",
+                            "gpu0_decision_override_reason",
+                            "gpu1_closure_decision_packet_present",
+                            "gpu1_closure_decision_packet_valid",
+                        )
+                        if key in provider_report
+                    }
+                )
+            secondary = bind_gpu0_secondary_to_gpu1_packet(
+                secondary,
+                {"gpu1_closure_decision_packet": gpu1_packet},
+            )
+            final_decision = str(
+                secondary.get("gpu0_effective_decision")
+                or secondary.get("gpu0_decision")
+                or "refine_required"
+            )
+            secondary["gpu0_decision"] = final_decision
+            secondary["role_decision"] = gpu0_role_decision(final_decision)
+            provider_report.update(secondary)
             review_lines = [
-                "GPU0 operational peer review:",
+                "GPU0 structured secondary review:",
                 f"- revision={revision}",
                 f"- pointer_action={pointer_action or 'missing'}",
                 f"- target_files_verified={bool(file_quality.get('existing_source_file_refs'))}",
                 f"- file_quality_passed={file_quality.get('passed')}",
                 f"- implementation_quality_passed={implementation_quality.get('passed')}",
                 f"- missing_delta_sections={missing}",
-                "- decision="
-                + (
-                    "accept_delta_shape_for_next_audit"
-                    if not missing
-                    and file_quality.get("passed")
-                    and implementation_quality.get("passed")
-                    else "reject_until_concrete_repo_relative_delta"
-                ),
+                f"- gpu0_secondary_schema_valid={secondary.get('gpu0_secondary_schema_valid')}",
+                f"- gpu0_checked_current_packet={secondary.get('gpu0_checked_current_packet')}",
+                f"- gpu0_decision={final_decision}",
+                f"- role_decision={secondary.get('role_decision')}",
             ]
             provider_report["gpu0_operational_review"] = {
                 "performed": True,
                 "revision": revision,
+                "gpu0_role": GPU0_ROLE,
+                "gpu0_secondary_schema_valid": secondary.get("gpu0_secondary_schema_valid") is True,
+                "gpu0_decision": final_decision,
+                "gpu0_model_decision": secondary.get("gpu0_model_decision") or "",
+                "gpu0_effective_decision": secondary.get("gpu0_effective_decision") or final_decision,
+                "role_decision": secondary.get("role_decision"),
+                "gpu0_checked_current_packet": secondary.get("gpu0_checked_current_packet") is True,
+                "gpu0_unanchored_reasons": secondary.get("gpu0_unanchored_reasons") or [],
                 "pointer_action": pointer_action,
                 "missing_delta_sections": missing,
+                "missing_required_sections": secondary.get("missing_required_sections") or missing,
+                "incongruence_reasons": secondary.get("incongruence_reasons") or [],
+                "veto_reasons": secondary.get("veto_reasons") or [],
+                "required_gpu1_next_action": secondary.get("required_gpu1_next_action") or "",
+                "free_text_used_as_product": False,
+                "free_text_used_as_decision": False,
                 "file_quality": file_quality,
                 "implementation_quality": implementation_quality,
-                "decision": (
-                    "accept_delta_shape_for_next_audit"
-                    if not missing
-                    and file_quality.get("passed")
-                    and implementation_quality.get("passed")
-                    else "reject_until_concrete_repo_relative_delta"
-                ),
+                "decision": final_decision,
             }
         else:
             placeholder_hits = implementation_quality.get("placeholder_hits") or []
@@ -420,9 +501,12 @@ class RuntimeGateProviderPromptMixin:
             }
 
         previous_text = str(provider_report.get("response_text") or "").strip()
-        provider_report["response_text"] = "\\n".join(
-            part for part in (previous_text, "\\n".join(review_lines)) if part
-        )
+        if lane == "gpu0_peer":
+            provider_report["response_text"] = gpu0_secondary_decision_text(provider_report)
+        else:
+            provider_report["response_text"] = "\\n".join(
+                part for part in (previous_text, "\\n".join(review_lines)) if part
+            )
         provider_report["operational_peer_review_performed"] = True
         provider_report["operational_peer_review_source"] = repo_rel(
             self.repo_root, self.gpu1_delta_report_path(work_dir, revision)

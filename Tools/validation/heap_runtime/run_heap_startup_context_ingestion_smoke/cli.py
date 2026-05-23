@@ -38,12 +38,18 @@ except ImportError:  # pragma: no cover
 
 SOURCE_FILES = {
     "launcher": "ia_carmine/runtime/heap_context_closure/launcher.py",
+    "launcher_requesting": "ia_carmine/runtime/heap_context_closure/requesting.py",
     "gate": "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py",
+    "runtime_common": "ia_carmine/runtime/heap_gate/runtime_common.py",
     "gate_startup": "ia_carmine/runtime/heap_gate/startup_context.py",
     "gate_startup_manifest": "ia_carmine/runtime/heap_gate/startup_manifest_context.py",
+    "tool_plan_builder": "ia_carmine/runtime/heap_gate/tool_plan_builder.py",
     "gate_loop": "ia_carmine/runtime/heap_gate/loop_steps.py",
+    "provider_prompt": "ia_carmine/runtime/heap_gate/provider_prompt.py",
+    "provider_teamwork_packet": "ia_carmine/runtime/heap_gate/provider_teamwork_packet.py",
     "preload": "ia_carmine/context/heap_context_memory_reload/cli.py",
     "preload_runner": "ia_carmine/context/heap_context_memory_reload/runner.py",
+    "preload_rag_startup": "ia_carmine/context/heap_context_memory_reload/rag_startup.py",
     "preload_delta": "ia_carmine/context/heap_context_memory_reload/delta.py",
     "preload_builders": "ia_carmine/context/heap_context_memory_reload/builders.py",
     "preload_manifest": "ia_carmine/context/heap_context_memory_reload/manifest.py",
@@ -152,12 +158,19 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         errors.append(f"required source unreadable: {rel_path}")
 
     launcher = sources.get("launcher", "")
+    launcher_requesting = sources.get("launcher_requesting", "")
     gate = sources.get("gate", "")
+    runtime_common = sources.get("runtime_common", "")
     gate_startup = sources.get("gate_startup", "")
     gate_startup_manifest = sources.get("gate_startup_manifest", "")
+    tool_plan_builder = sources.get("tool_plan_builder", "")
     gate_loop = sources.get("gate_loop", "")
+    provider_prompt = sources.get("provider_prompt", "")
+    provider_teamwork_packet = sources.get("provider_teamwork_packet", "")
     preload = sources.get("preload", "")
     preload_runner = sources.get("preload_runner", "")
+    preload_rag_startup = sources.get("preload_rag_startup", "")
+    preload_rag_surface = preload_runner + "\n" + preload_rag_startup
     preload_delta = sources.get("preload_delta", "")
     preload_builders = sources.get("preload_builders", "")
     preload_manifest = sources.get("preload_manifest", "")
@@ -297,6 +310,121 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         severity="critical",
         evidence="BASE_REQUIREMENTS contains operational_memory_write; startup must execute the dispatcher SQLite remember path before provider loop",
         recommendation="Run python -m ia_carmine.cli agent_runtime_sqlite_memory --action remember --scope operational with a content-file and make failure blocking, not degraded.",
+    )
+
+    rag_base_requirement_signal = bool(
+        "BASE_REQUIREMENTS" in runtime_common
+        and '"rag_context_pack"' in runtime_common
+        and "MEMORY_CONTEXT_RELOAD_REQUIREMENTS" in runtime_common
+        and '"rag_context_pack"' in tool_plan_builder
+        and '"rag_context_pack_json"' in tool_plan_builder
+    )
+    bool_check(
+        checks,
+        check_id="rag_context_pack_is_base_requirement",
+        passed=rag_base_requirement_signal,
+        severity="critical",
+        evidence="RAG file-context pack must be a base requirement and broker-plan item before provider decisions",
+        recommendation="Keep rag_context_pack in runtime_common.BASE_REQUIREMENTS and tool_plan_builder so heap jumps have repo-file context available.",
+    )
+
+    rag_startup_signal = bool(
+        "rag_startup.ensure_rag_index_current" in preload_runner
+        and "rag_startup.run_rag_context_pack" in preload_runner
+        and preload_runner.find("rag_startup.ensure_rag_index_current")
+        < preload_runner.find("rag_startup.run_rag_context_pack")
+        and "rag_ollama_embed_preflight" in preload_rag_surface
+        and "rag_repo_ingest" in preload_rag_surface
+        and "startup_unified_context_pack" in preload_rag_surface
+        and "required=True" in preload_rag_surface
+        and "rag_context_pack_required" in preload_manifest
+        and "startup_unified_context_pack_required" in preload_manifest
+        and "rag_context_pack_loaded" in preload_manifest
+    )
+    bool_check(
+        checks,
+        check_id="rag_context_pack_startup_required_and_unified",
+        passed=rag_startup_signal,
+        severity="critical",
+        evidence="startup reload should build required RAG context and then write one active unified context pack",
+        recommendation="Run RAG pack during heap startup, fail invalid RAG packs, and publish startup_context_pack_* as the single active context surface.",
+    )
+    common_import_match = re.search(
+        r"from ia_carmine\.context\.heap_context_memory_reload\.common import\s*(?:\((?P<block>.*?)\)|(?P<line>[^\n]+))",
+        preload_rag_surface,
+        re.S,
+    )
+    common_import_text = (
+        (common_import_match.group("block") or common_import_match.group("line") or "")
+        if common_import_match
+        else ""
+    )
+    rag_runner_import_signal = bool(
+        "read_json(" not in preload_rag_surface or "read_json" in common_import_text
+    )
+    bool_check(
+        checks,
+        check_id="rag_startup_runner_imports_read_json",
+        passed=rag_runner_import_signal,
+        severity="critical",
+        evidence="startup runner uses read_json while reading AI/RAG packs; the helper must be imported so startup cannot crash before providers",
+        recommendation="Import read_json from heap_context_memory_reload.common in the startup runner.",
+    )
+
+    rag_hard_block_signal = bool(
+        "HARD_STARTUP_REQUIREMENTS" in launcher_requesting
+        and "rag_ollama_embed_preflight" in launcher_requesting
+        and "rag_repo_ingest" in launcher_requesting
+        and "rag_context_pack" in launcher_requesting
+        and "startup_unified_context_pack" in launcher_requesting
+        and "blocking_requirements & HARD_STARTUP_REQUIREMENTS" in launcher_requesting
+        and "rag_pack.get(\"passed\") is True" in preload_manifest
+        and "retrieved_count" in preload_manifest
+    )
+    bool_check(
+        checks,
+        check_id="rag_startup_failures_hard_block_provider_run",
+        passed=rag_hard_block_signal,
+        severity="critical",
+        evidence="RAG embed/ingest/context-pack failures must prevent provider startup even without strict-startup-reload",
+        recommendation="Keep RAG requirements in HARD_STARTUP_REQUIREMENTS and require rag_context_pack passed=true with retrieved_count>0.",
+    )
+
+    unified_surface_signal = bool(
+        "startup_context_pack_json" in preload_task_docs
+        and "startup_context_pack_markdown" in preload_task_docs
+        and "startup_context_pack_json" in gate_startup_manifest
+        and "startup_context_pack_markdown" in provider_prompt
+        and "startup_context_pack_json" in provider_teamwork_packet
+        and "startup_context_pack_markdown" in provider_teamwork_packet
+    )
+    bool_check(
+        checks,
+        check_id="unified_context_pack_visible_to_provider_lanes",
+        passed=unified_surface_signal,
+        severity="critical",
+        evidence="GPU1/GPU0/NPU prompts and packets need the active unified context pack, not colliding layered context packs",
+        recommendation="Prefer startup_context_pack_* in startup manifest, task docs, provider prompt and teamwork packet surfaces.",
+    )
+
+    unified_preferred_position = provider_prompt.find(
+        'if artifacts.get("startup_context_pack_markdown")'
+    )
+    static_fallback_position = provider_prompt.find('"ai_context_pack_markdown"', unified_preferred_position)
+    unified_branch_position = provider_prompt.find(
+        '"startup_context_pack_markdown"', unified_preferred_position
+    )
+    bool_check(
+        checks,
+        check_id="provider_prompt_prefers_unified_context_pack",
+        passed=(
+            unified_preferred_position >= 0
+            and unified_branch_position > unified_preferred_position
+            and static_fallback_position > unified_branch_position
+        ),
+        severity="critical",
+        evidence="provider prompt should use startup_context_pack_markdown first and only fall back to separate AI/RAG packs when the unified pack is absent",
+        recommendation="Keep unified pack as the primary provider digest surface to avoid stratified context collisions.",
     )
 
     delta_reload_signal = bool(

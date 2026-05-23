@@ -147,6 +147,7 @@ def build_worktree_candidate(
         "target_file": rel_path,
         "reason": "validate current worktree diff captured by code execution matrix",
         "pattern_id": "validated_current_worktree_diff",
+        "diff_source": "current_worktree_diagnostic",
         "evidence": [
             "target resolved against local filesystem",
             "candidate copied from current git diff for the verified target",
@@ -213,26 +214,30 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         )
         candidates.extend(evidence_candidates)
         warnings.extend(evidence_warnings)
-    for ref in refs:
-        if len(candidates) >= max(1, int(args.max_candidates)):
-            break
-        if not ref.patchable:
-            continue
-        path = repo_root / ref.repo_relative
-        before = path.read_text(encoding="utf-8-sig", errors="replace")
-        worktree_candidate = build_worktree_candidate(
-            repo_root,
-            candidate_dir,
-            ref.repo_relative,
-            before,
-            len(candidates) + 1,
-            max(30, int(args.timeout_seconds)),
-        )
-        if worktree_candidate:
-            candidates.append(worktree_candidate)
+    allow_worktree = bool(getattr(args, "allow_current_worktree_diff_candidates", False))
+    if allow_worktree:
+        for ref in refs:
+            if len(candidates) >= max(1, int(args.max_candidates)):
+                break
+            if not ref.patchable:
+                continue
+            path = repo_root / ref.repo_relative
+            before = path.read_text(encoding="utf-8-sig", errors="replace")
+            worktree_candidate = build_worktree_candidate(
+                repo_root,
+                candidate_dir,
+                ref.repo_relative,
+                before,
+                len(candidates) + 1,
+                max(30, int(args.timeout_seconds)),
+            )
+            if worktree_candidate:
+                candidates.append(worktree_candidate)
     if not candidates:
         warnings.append(
-            "no validated evidence/worktree unified diff matched verified targets"
+            "no validated evidence-owned unified diff matched verified targets"
+            if not allow_worktree
+            else "no validated evidence/worktree unified diff matched verified targets"
         )
     warnings.extend(report_level_warnings(candidates))
     return {
@@ -246,6 +251,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "target_ref_count": len(refs),
         "candidate_count": len(candidates),
         "patch_candidate_synthesis_passed_count": sum(1 for item in candidates if item.get("passed") is True),
+        "allow_current_worktree_diff_candidates": allow_worktree,
+        "current_worktree_diagnostic_candidate_count": sum(
+            1 for item in candidates if item.get("diff_source") == "current_worktree_diagnostic"
+        ),
+        "evidence_owned_candidate_count": sum(
+            1 for item in candidates if item.get("diff_source") == "evidence_owned"
+        ),
         "resolved_file_refs": [item.as_dict() for item in refs],
         "candidates": candidates,
         "source_writes_performed": False,
@@ -305,6 +317,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--markdown-output", default="output/validation/patch_candidate_synthesis.md")
     parser.add_argument("--max-candidates", type=int, default=3)
     parser.add_argument("--timeout-seconds", type=int, default=120)
+    parser.add_argument("--allow-current-worktree-diff-candidates", action="store_true")
     return parser.parse_args()
 
 

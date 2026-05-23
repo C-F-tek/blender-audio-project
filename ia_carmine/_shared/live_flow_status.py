@@ -26,9 +26,12 @@ def collect_flow_status(run_dir: Path | None) -> dict[str, Any]:
     proposal_dir = root / "team_context" / "proposal_iterations"
     proposal_count = len(list(proposal_dir.glob("*.json"))) if proposal_dir.exists() else 0
     preflight = _preflight_status(root)
+    startup = _startup_status(root)
     return {
         "run_dir": str(root),
-        "phase_hint": _phase_hint(root, event_counts, providers, proposal_count, preflight),
+        "phase_hint": _phase_hint(root, event_counts, providers, proposal_count, preflight, startup),
+        "startup": startup,
+        "providers_not_started_reason": startup.get("providers_not_started_reason", ""),
         "events_count": sum(event_counts.values()),
         "event_type_counts": event_counts,
         "last_event_type": last_event.get("event_type", ""),
@@ -72,7 +75,7 @@ def render_console_line(payload: dict[str, Any]) -> str:
     run_status = payload.get("run_status") if isinstance(payload.get("run_status"), dict) else {}
     return (
         "[flow] phase={phase} status={status} elapsed={elapsed}s "
-        "child={child} step={step} hint={hint} last={last} "
+        "child={child} step={step} hint={hint} startup={startup} last={last} "
         "events={events} event_mix={event_mix} broker=req:{broker_req}/res:{broker_res} "
         "provider_blocks={blocks} proposals={proposals} lanes={lanes} crlf_warnings={crlf}"
     ).format(
@@ -82,6 +85,7 @@ def render_console_line(payload: dict[str, Any]) -> str:
         child=_child_label(run_status),
         step=_human_step(run_status),
         hint=run_status.get("phase_hint", ""),
+        startup=_startup_label(run_status),
         last=_last_event_label(run_status),
         events=run_status.get("events_count", 0),
         event_mix=_event_mix_label(run_status),
@@ -156,9 +160,29 @@ def _read_event_line(
                     or current.get("provider_backend"),
                     "provider_compute_device": item.get("provider_compute_device")
                     or current.get("provider_compute_device"),
+                    "logical_lane": item.get("logical_lane") or current.get("logical_lane"),
+                    "provider_backend_device_id": item.get("provider_backend_device_id")
+                    or current.get("provider_backend_device_id"),
+                    "windows_task_manager_device_hint": item.get(
+                        "windows_task_manager_device_hint"
+                    )
+                    or current.get("windows_task_manager_device_hint"),
+                    "vulkan_visible_device": item.get("vulkan_visible_device")
+                    or current.get("vulkan_visible_device"),
+                    "vulkan_device_name": item.get("vulkan_device_name")
+                    or current.get("vulkan_device_name"),
+                    "vulkan_vendor_id": item.get("vulkan_vendor_id")
+                    or current.get("vulkan_vendor_id"),
+                    "lane_tier": item.get("lane_tier") or current.get("lane_tier"),
+                    "authority": item.get("authority") or current.get("authority"),
+                    "closure_owner": item.get("closure_owner") or current.get("closure_owner"),
+                    "context_budget": item.get("context_budget") or current.get("context_budget"),
                     "provider_device_verified": item.get("provider_device_verified")
                     if item.get("provider_device_verified") is not None
                     else current.get("provider_device_verified"),
+                    "device_identity_verified": item.get("device_identity_verified")
+                    if item.get("device_identity_verified") is not None
+                    else current.get("device_identity_verified"),
                     "cpu_provider_fallback_performed": item.get(
                         "cpu_provider_fallback_performed"
                     )
@@ -192,9 +216,29 @@ def _read_event_line(
             or current.get("provider_backend"),
             "provider_compute_device": payload.get("provider_compute_device")
             or current.get("provider_compute_device"),
+            "logical_lane": payload.get("logical_lane") or current.get("logical_lane"),
+            "provider_backend_device_id": payload.get("provider_backend_device_id")
+            or current.get("provider_backend_device_id"),
+            "windows_task_manager_device_hint": payload.get(
+                "windows_task_manager_device_hint"
+            )
+            or current.get("windows_task_manager_device_hint"),
+            "vulkan_visible_device": payload.get("vulkan_visible_device")
+            or current.get("vulkan_visible_device"),
+            "vulkan_device_name": payload.get("vulkan_device_name")
+            or current.get("vulkan_device_name"),
+            "vulkan_vendor_id": payload.get("vulkan_vendor_id")
+            or current.get("vulkan_vendor_id"),
+            "lane_tier": payload.get("lane_tier") or current.get("lane_tier"),
+            "authority": payload.get("authority") or current.get("authority"),
+            "closure_owner": payload.get("closure_owner") or current.get("closure_owner"),
+            "context_budget": payload.get("context_budget") or current.get("context_budget"),
             "provider_device_verified": payload.get("provider_device_verified")
             if payload.get("provider_device_verified") is not None
             else current.get("provider_device_verified"),
+            "device_identity_verified": payload.get("device_identity_verified")
+            if payload.get("device_identity_verified") is not None
+            else current.get("device_identity_verified"),
             "cpu_provider_fallback_performed": payload.get("cpu_provider_fallback_performed")
             if payload.get("cpu_provider_fallback_performed") is not None
             else current.get("cpu_provider_fallback_performed"),
@@ -230,6 +274,12 @@ def _human_step(run_status: dict[str, Any]) -> str:
     hint = str(run_status.get("phase_hint") or "")
     preflight = run_status.get("preflight") if isinstance(run_status.get("preflight"), dict) else {}
     providers = run_status.get("provider_lane_statuses") or []
+    startup = run_status.get("startup") if isinstance(run_status.get("startup"), dict) else {}
+    child_phase = str(run_status.get("child_phase") or "")
+    if startup.get("step") and (
+        hint == "startup_context_running" or child_phase == "startup_context_memory_reload"
+    ):
+        return str(startup.get("step"))
     if hint == "starting":
         return "boot"
     if hint == "preflight_running":
@@ -312,12 +362,60 @@ def _preflight_status(root: Path) -> dict[str, Any]:
     )
 
 
+def _startup_status(root: Path) -> dict[str, Any]:
+    progress_path = root / "startup_context_memory_reload" / "startup_rag_progress.json"
+    manifest_path = root / "startup_context_memory_reload" / "heap_context_memory_reload_manifest.json"
+    data: dict[str, Any] = {}
+    if progress_path.exists():
+        try:
+            loaded = json.loads(progress_path.read_text(encoding="utf-8-sig", errors="replace"))
+            data = loaded if isinstance(loaded, dict) else {}
+        except Exception:
+            data = {}
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig", errors="replace"))
+        except Exception:
+            manifest = {}
+        if isinstance(manifest, dict):
+            data.setdefault("rag_index_ready", manifest.get("rag_index_ready"))
+            data.setdefault("missing_embedding_count_after", manifest.get("rag_missing_embedding_count_after"))
+            data.setdefault("rag_index_action", manifest.get("rag_index_action"))
+            if manifest.get("rag_index_ready") is False:
+                data.setdefault("providers_not_started_reason", "startup_rag_index_not_ready")
+    return data
+
+
+def _startup_label(run_status: dict[str, Any]) -> str:
+    startup = run_status.get("startup") if isinstance(run_status.get("startup"), dict) else {}
+    if not startup:
+        return "-"
+    parts = []
+    resource = startup.get("resource_lane")
+    model = startup.get("embedding_model")
+    missing = startup.get("missing_embedding_count_after")
+    written = startup.get("embedding_written_count")
+    if resource:
+        parts.append(str(resource))
+    if model:
+        parts.append(str(model))
+    if written not in ("", None):
+        parts.append(f"emb={written}")
+    if missing not in ("", None):
+        parts.append(f"missing={missing}")
+    reason = startup.get("providers_not_started_reason")
+    if reason:
+        parts.append(f"block={reason}")
+    return ",".join(parts[:5]) or "-"
+
+
 def _phase_hint(
     root: Path,
     event_counts: dict[str, int],
     providers: list[dict[str, Any]],
     proposal_count: int,
     preflight: dict[str, Any],
+    startup: dict[str, Any],
 ) -> str:
     if (root / "heap_runtime_context_closure_launcher.json").exists():
         return "launcher_summary_written"
@@ -329,6 +427,8 @@ def _phase_hint(
         return "provider_lanes_running_or_written"
     if event_counts:
         return "heap_event_loop_active"
+    if startup and startup.get("step"):
+        return "startup_context_running"
     if (root / "startup_context_memory_reload" / "heap_context_memory_reload_manifest.json").exists():
         return "startup_reload_done"
     if preflight:

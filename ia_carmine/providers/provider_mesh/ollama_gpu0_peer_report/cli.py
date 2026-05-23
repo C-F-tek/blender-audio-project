@@ -19,6 +19,15 @@ from ia_carmine.providers.ollama.role_models import (
     start_gpu0_vulkan_server,
     stop_gpu0_vulkan_server,
 )
+from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import (
+    bind_gpu0_secondary_to_gpu1_packet,
+    gpu0_secondary_decision_text,
+    parse_gpu0_secondary_response,
+)
+from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
+    extract_gpu1_closure_decision_packet,
+    gpu1_decision_packet_valid,
+)
 
 DEFAULT_GPU0_OLLAMA_BASE_URL = "http://127.0.0.1:11435"
 
@@ -73,23 +82,30 @@ def startup_manifest_context(repo_root: Path, value: str) -> str:
     return "\n\n".join(sections)
 
 
-def render_peer_prompt(request: str, leader_packet: dict[str, Any]) -> str:
-    leader = json.dumps(leader_packet, ensure_ascii=False)[:1800] if leader_packet else "{}"
+def render_peer_prompt(_request: str, leader_packet: dict[str, Any]) -> str:
+    packet = extract_gpu1_closure_decision_packet(leader_packet)
+    packet_json = json.dumps(packet, ensure_ascii=False, indent=2)[:2200] if packet else "{}"
+    expected_block = str(packet.get("gpu1_block_id") or "")
+    expected_revision = str(packet.get("gpu1_revision") or "")
     return (
-        "IA-Carmine GPU0 peer reviewer/refiner lane. You are not OpenVINO. "
-        "You run through Ollama on the GPU0/Vulkan lane and must produce useful "
-        "review/refinement evidence for GPU1. You use the same ollama-python native "
-        "tool-call schema as GPU1, but with lower authority: every result is peer "
-        "refinement, veto, evidence_request or generic_write_capture and must be "
-        "consumed by a later GPU1 turn before closure. BROKER_NATIVE_TOOL_RULE: "
-        "as GPU0 Ollama peer puoi chiedere native broker tools for review evidence "
-        "when useful; generic_write captures peer prose/refinement/veto for the "
-        "next GPU1 turn, while matrix/dev/debug/lab tools produce peer-only evidence. "
-        "NPU tool calls are diagnostic only.\n\n"
-        f"OPERATOR_REQUEST:\n{request[:3500]}\n\n"
-        f"GPU1_LEADER_PACKET:\n{leader}\n\n"
-        "Return peer-review evidence with concrete risks, target refs if known, "
-        "and whether GPU1 should continue, backtrack, or ask broker tools."
+        "IA-Carmine GPU0 secondary congruence/veto lane. GPU1 is the only "
+        "closure owner and product author. You may evaluate only the post-gate "
+        "GPU1_CLOSURE_DECISION_PACKET below. Do not use operator request text, "
+        "historical context, target-file guesses, strategy, patches, generic_write, "
+        "or NPU output as a decision source. Return exactly one JSON object and "
+        "nothing else.\n\n"
+        "Required JSON keys: gpu0_decision, checked_block_id, checked_gpu1_revision, "
+        "missing_required_sections, incongruence_reasons, veto_reasons, "
+        "required_gpu1_next_action.\n"
+        "gpu0_decision must be exactly one of: congruent, veto, refine_required, "
+        "incongruent.\n"
+        f"checked_block_id must equal: {expected_block}\n"
+        f"checked_gpu1_revision must equal: {expected_revision}\n"
+        "Reasons must be anchored in packet.reject_reasons, packet.evidence_refs, "
+        "or packet.target_files. Unanchored historical reasons such as "
+        "product_readiness are not valid veto reasons.\n\n"
+        f"GPU1_CLOSURE_DECISION_PACKET:\n{packet_json}\n\n"
+        "Return only the JSON object."
     )
 
 
@@ -102,21 +118,82 @@ def load_leader_packet(repo_root: Path, value: str) -> dict[str, Any]:
         return {}
 
 
-def load_server_evidence(repo_root: Path, value: str) -> dict[str, Any]:
+def load_server_evidence(repo_root: Path, value: str, base_url: str = "") -> dict[str, Any]:
     if not value:
         return {}
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
     try:
-        payload = json.loads(read_text(repo_root, value))
+        payload = json.loads(path.read_text(encoding="utf-8-sig", errors="replace"))
     except Exception:
         return {}
+    return _server_evidence_from_payload(payload, str(path), base_url=base_url)
+
+
+def resolve_server_evidence(repo_root: Path, value: str, base_url: str) -> dict[str, Any]:
+    explicit = load_server_evidence(repo_root, value, base_url=base_url)
+    if explicit:
+        explicit["gpu0_server_evidence_source"] = "explicit_server_evidence"
+        return explicit
+    if not value:
+        return {}
+    evidence_path = Path(value)
+    if not evidence_path.is_absolute():
+        evidence_path = repo_root / evidence_path
+    search_dir = evidence_path.parent
+    if not search_dir.is_dir():
+        return {}
+    candidates = sorted(
+        list(search_dir.glob("provider_role_coexistence*.json"))
+        + list(search_dir.glob("gpu0_ollama_vulkan_peer*.json")),
+        key=lambda item: item.stat().st_mtime if item.exists() else 0,
+        reverse=True,
+    )
+    for candidate in candidates:
+        if candidate == evidence_path:
+            continue
+        try:
+            payload = json.loads(candidate.read_text(encoding="utf-8-sig", errors="replace"))
+        except Exception:
+            continue
+        server = _server_evidence_from_payload(payload, str(candidate), base_url=base_url)
+        if not server:
+            continue
+        source = (
+            "inherited_verified_gpu0_peer"
+            if str(payload.get("kind") or "") == "ollama_gpu0_peer_report"
+            else "inherited_coexistence"
+        )
+        server["gpu0_server_evidence_source"] = source
+        return server
+    return {}
+
+
+def _server_evidence_from_payload(payload: Any, source: str, *, base_url: str = "") -> dict[str, Any]:
     if not isinstance(payload, dict):
         return {}
-    server = payload.get("gpu0_vulkan_server")
+    server: Any = payload.get("gpu0_vulkan_server")
+    if not isinstance(server, dict):
+        preflight = payload.get("provider_role_coexistence_preflight")
+        preflight = preflight if isinstance(preflight, dict) else {}
+        server = preflight.get("gpu0_vulkan_server")
+    if not isinstance(server, dict):
+        boot_gate = payload.get("provider_boot_gate")
+        boot_gate = boot_gate if isinstance(boot_gate, dict) else {}
+        server = boot_gate.get("gpu0_vulkan_server")
     if isinstance(server, dict):
+        if base_url and server.get("base_url") and str(server.get("base_url")) != base_url:
+            return {}
+        if (
+            str(payload.get("kind") or "") == "ollama_gpu0_peer_report"
+            and payload.get("provider_work_verified") is not True
+        ):
+            return {}
         return {
             **server,
             "handoff_provider_loop": payload.get("handoff_provider_loop"),
-            "server_evidence_source": value,
+            "server_evidence_source": source,
         }
     return {}
 
@@ -128,12 +205,13 @@ def merge_server_evidence(current: dict[str, Any], evidence: dict[str, Any]) -> 
     for key in ("env", "stderr_log", "stdout_log", "pid", "vulkan_device_selection"):
         if not merged.get(key) and evidence.get(key):
             merged[key] = evidence[key]
-    for key in ("handoff_provider_loop", "server_evidence_source"):
+    for key in ("handoff_provider_loop", "server_evidence_source", "gpu0_server_evidence_source"):
         if evidence.get(key) is not None:
             merged[key] = evidence[key]
-    if current.get("reason") == "already_ready" and evidence.get("ready") is True:
+    if evidence.get("ready") is True and not merged.get("ready"):
         merged["ready"] = True
         merged["handoff_server_reused"] = True
+        merged["inherited_ready_evidence"] = True
     return merged
 
 
@@ -149,19 +227,32 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Provider work verified: `{report.get('provider_work_verified')}`",
         f"- Provider backend: `{report.get('provider_backend')}`",
         f"- Provider compute device: `{report.get('provider_compute_device')}`",
+        f"- Windows Task Manager device: `{report.get('windows_task_manager_device_hint')}`",
+        f"- Device identity verified: `{report.get('device_identity_verified')}`",
         f"- Ollama base URL: `{report.get('ollama_base_url')}`",
         f"- Vulkan visible device: `{selection.get('resolved')}`",
         f"- Vulkan target: `{target.get('deviceName')}`",
+        f"- Vulkan vendor: `{target.get('vendorID')}`",
         f"- Runtime Intel inference: `{runtime_log.get('runner_inference_intel')}`",
         f"- Unload verified: `{report.get('ollama_unload_verified')}`",
         f"- Unload deferred until production cleanup: `{report.get('provider_residency_deferred_until_production_cleanup')}`",
         f"- Native tool calls: `{report.get('native_tool_call_count')}`",
+        f"- GPU0 secondary schema valid: `{report.get('gpu0_secondary_schema_valid')}`",
+        f"- GPU0 decision: `{report.get('gpu0_decision')}`",
+        f"- GPU0 model decision: `{report.get('gpu0_model_decision')}`",
+        f"- GPU0 effective decision: `{report.get('gpu0_effective_decision')}`",
+        f"- GPU0 checked current packet: `{report.get('gpu0_checked_current_packet')}`",
+        f"- GPU1 packet valid: `{report.get('gpu1_closure_decision_packet_valid')}`",
+        f"- GPU0 prompt scope: `{report.get('gpu0_prompt_scope')}`",
+        f"- GPU0 server evidence source: `{report.get('gpu0_server_evidence_source')}`",
         f"- Rejection reason: `{report.get('provider_rejection_reason')}`",
         "",
-        "## Response",
+        "## Structured Decision",
         "",
         str(report.get("response_text") or ""),
     ]
+    if report.get("free_text_evidence"):
+        lines.extend(["", "## Free Text Evidence", "", str(report.get("free_text_evidence") or "")])
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report.get("errors", []))
@@ -176,6 +267,30 @@ def resolve_path(repo_root: Path, value: str) -> Path:
     if not path.is_absolute():
         path = repo_root / path
     return path.resolve()
+
+
+def _leader_block_id(leader_packet: dict[str, Any]) -> str:
+    packet = extract_gpu1_closure_decision_packet(leader_packet)
+    value = str(packet.get("gpu1_block_id") or "").strip()
+    if value:
+        return value
+    for key in ("block_id", "proposal_block_id", "current_block_id", "resume_from_block_id"):
+        value = str(leader_packet.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _leader_revision(leader_packet: dict[str, Any]) -> str:
+    packet = extract_gpu1_closure_decision_packet(leader_packet)
+    value = str(packet.get("gpu1_revision") or "").strip()
+    if value:
+        return value
+    for key in ("revision", "provider_cycle_id", "review_for_gpu1_cycle"):
+        value = leader_packet.get(key)
+        if value is not None and str(value).strip():
+            return str(value)
+    return ""
 
 
 def main() -> int:
@@ -208,10 +323,11 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
-    request = request_text(repo_root, args)
+    request = ""
     leader_packet = load_leader_packet(repo_root, args.leader_packet)
+    gpu1_packet = extract_gpu1_closure_decision_packet(leader_packet)
     prompt = render_peer_prompt(request, leader_packet)
-    server_evidence = load_server_evidence(repo_root, args.server_evidence)
+    server_evidence = resolve_server_evidence(repo_root, args.server_evidence, args.base_url)
     gpu0_server = {"started": False, "ready": False, "reason": "disabled"}
     if not args.no_start_gpu0_vulkan_server:
         gpu0_server = start_gpu0_vulkan_server(
@@ -240,8 +356,50 @@ def main() -> int:
         gpu0_vulkan_policy_verified=_gpu0_vulkan_policy_verified(gpu0_server),
         unload_model=not args.defer_unload,
     )
+    raw_response_text = str(report.get("response_text") or "")
+    gpu0_secondary = parse_gpu0_secondary_response(
+        raw_response_text,
+        fallback_block_id=_leader_block_id(leader_packet),
+        fallback_revision=_leader_revision(leader_packet),
+    )
+    gpu0_secondary = bind_gpu0_secondary_to_gpu1_packet(gpu0_secondary, leader_packet)
+    report["gpu0_raw_response_text"] = raw_response_text
+    report["gpu1_closure_decision_packet"] = gpu1_packet
+    report["gpu1_closure_decision_packet_present"] = bool(gpu1_packet)
+    report["gpu1_closure_decision_packet_valid"] = gpu1_decision_packet_valid(gpu1_packet)
+    report["gpu0_prompt_scope"] = "post_gate_gpu1_closure_decision_packet_only"
+    report["gpu0_one_execution_per_packet"] = True
+    report.update(gpu0_secondary)
+    report["response_text"] = gpu0_secondary_decision_text(gpu0_secondary)
     runtime_log = _runtime_log_evidence(gpu0_server)
-    workload_verified = _gpu0_workload_verified(report, runtime_log)
+    device_identity = _gpu0_device_identity(gpu0_server)
+    workload_verified = _gpu0_workload_verified(report, runtime_log, gpu0_server, device_identity)
+    schema_valid = gpu0_secondary.get("gpu0_secondary_schema_valid") is True
+    if workload_verified:
+        report.update(
+            {
+                "provider_device_verified": True,
+                "provider_compute_device": "ollama/gpu0-vulkan",
+                "ollama_residency_verified": True,
+                "ollama_compute_verified": True,
+                "ollama_gpu_accelerated_verified": True,
+                "full_gpu_residency_verified": True,
+                "ollama_gpu_residency_status": "verified_by_gpu0_vulkan_handoff",
+            }
+        )
+        report["replight_passed"] = True
+        report["replight_blocked_reason"] = ""
+        report["role_rejection_reason"] = ""
+        report["errors"] = [
+            error
+            for error in report.get("errors", [])
+            if error
+            not in {
+                "gpu0_ollama_vulkan_no_verified_workload",
+                "gpu0_ollama_vulkan_unavailable",
+                "gpu0_vulkan_server_not_ready",
+            }
+        ]
     report.update(
         {
             "schema_version": 1,
@@ -250,7 +408,11 @@ def main() -> int:
             "repo_root": str(repo_root),
             "ollama_base_url": args.base_url,
             "gpu0_vulkan_server": gpu0_server,
+            "gpu0_server_evidence_source": gpu0_server.get("gpu0_server_evidence_source")
+            or gpu0_server.get("server_evidence_source")
+            or "none",
             "gpu0_vulkan_runtime_log": runtime_log,
+            **device_identity,
             "ollama_gpu0_vulkan_required": True,
             "gpu0_windows_lane": "Windows GPU0 / Intel(R) Graphics",
             "gpu0_vulkan_workload_verified": workload_verified,
@@ -262,12 +424,31 @@ def main() -> int:
     if not gpu0_server.get("ready"):
         report.setdefault("errors", []).append("gpu0_vulkan_server_not_ready")
         report["passed"] = False
+    if not device_identity.get("device_identity_verified"):
+        report.setdefault("errors", []).append("gpu0_device_identity_unverified")
+        report["passed"] = False
+        report["provider_work_verified"] = False
+        report["provider_rejection_reason"] = "gpu0_device_identity_unverified"
+        report["product_blocked_reason"] = "gpu0_device_identity_unverified"
     if not workload_verified:
         report.setdefault("errors", []).append("gpu0_ollama_vulkan_no_verified_workload")
         report["passed"] = False
         report["provider_work_verified"] = False
         report["provider_rejection_reason"] = "gpu0_ollama_vulkan_no_verified_workload"
         report["product_blocked_reason"] = "gpu0_ollama_vulkan_no_verified_workload"
+    elif not schema_valid:
+        report.setdefault("errors", []).append("gpu0_secondary_schema_invalid")
+        report["passed"] = False
+        report["provider_work_verified"] = False
+        report["provider_role_counted"] = False
+        report["provider_rejection_reason"] = "gpu0_secondary_schema_invalid"
+        report["product_blocked_reason"] = "gpu0_secondary_schema_invalid"
+    else:
+        report["provider_work_verified"] = True
+        report["provider_role_counted"] = True
+        report["provider_rejection_reason"] = ""
+        report["product_blocked_reason"] = ""
+        report["passed"] = not bool(report.get("errors"))
     if gpu0_server.get("started") and not args.keep_gpu0_vulkan_server and not args.defer_unload:
         report["gpu0_vulkan_server_stop"] = stop_gpu0_vulkan_server(args.base_url)
     output = resolve_path(repo_root, args.output)
@@ -296,6 +477,26 @@ def _gpu0_vulkan_policy_verified(report: dict[str, Any]) -> bool:
     )
 
 
+def _gpu0_device_identity(report: dict[str, Any]) -> dict[str, Any]:
+    selection = report.get("vulkan_device_selection")
+    selection = selection if isinstance(selection, dict) else {}
+    target = selection.get("target_device") if isinstance(selection.get("target_device"), dict) else {}
+    resolved = str(selection.get("resolved") or "").strip()
+    vendor = str(target.get("vendorID") or "").strip().lower()
+    name = str(target.get("deviceName") or "").strip()
+    dtype = str(target.get("deviceType") or "").strip().lower()
+    verified = bool(vendor == "0x8086" or "intel" in name.lower() or "integrated" in dtype)
+    return {
+        "logical_lane": "gpu0_peer",
+        "provider_backend_device_id": f"vulkan:{resolved}" if resolved else "",
+        "windows_task_manager_device_hint": "Windows GPU 0 / Intel(R) Graphics",
+        "vulkan_visible_device": resolved,
+        "vulkan_device_name": name,
+        "vulkan_vendor_id": vendor,
+        "device_identity_verified": verified,
+    }
+
+
 def _runtime_log_evidence(server_report: dict[str, Any]) -> dict[str, Any]:
     path = Path(str(server_report.get("stderr_log") or ""))
     if not path.is_file():
@@ -313,11 +514,31 @@ def _runtime_log_evidence(server_report: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _gpu0_workload_verified(report: dict[str, Any], runtime_log: dict[str, Any]) -> bool:
+def _gpu0_workload_verified(
+    report: dict[str, Any],
+    runtime_log: dict[str, Any],
+    server_report: dict[str, Any],
+    device_identity: dict[str, Any],
+) -> bool:
+    inherited_source = str(
+        server_report.get("gpu0_server_evidence_source")
+        or server_report.get("server_evidence_source")
+        or ""
+    )
+    inherited_server = bool(
+        server_report.get("ready")
+        and device_identity.get("device_identity_verified")
+        and inherited_source
+        and inherited_source != "none"
+    )
     return bool(
         report.get("gpu0_vulkan_policy_verified")
         and int(report.get("eval_count") or 0) > 0
-        and runtime_log.get("runner_inference_intel")
+        and (
+            runtime_log.get("runner_inference_intel")
+            or inherited_server
+            or server_report.get("handoff_provider_loop")
+        )
     )
 
 

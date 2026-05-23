@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 from ia_carmine._shared.provider_work_verification import provider_work_status
+from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import normalize_gpu0_decision
 
 
 def proposal_block_id_for_revision(stamp: str, revision: int) -> str:
@@ -45,6 +46,8 @@ def provider_block_contract(
         resume = proposal_block_id
     target_files = provider_report.get("target_files")
     if not isinstance(target_files, list):
+        target_files = []
+    if lane_key in {"gpu0_peer", "npu_micro_task_auditor"}:
         target_files = []
     operational, classification = operational_provider_activity(lane_key, provider_report)
     return {
@@ -140,8 +143,19 @@ def operational_provider_activity(
                 or provider_report.get("provider_rejection_reason")
                 or "gpu0_ollama_vulkan_unavailable"
             )
+        if provider_report.get("device_identity_verified") is not True:
+            return False, "gpu0_device_identity_unverified"
         if "gpu0-vulkan" not in str(provider_report.get("provider_compute_device") or ""):
             return False, "gpu0_ollama_vulkan_unavailable"
+        if provider_report.get("gpu0_secondary_schema_valid") is not True:
+            return False, "gpu0_secondary_schema_invalid"
+        if normalize_gpu0_decision(provider_report.get("gpu0_decision")) not in {
+            "congruent",
+            "veto",
+            "refine_required",
+            "incongruent",
+        }:
+            return False, "gpu0_secondary_decision_invalid"
         if _has_peer_lane_evidence(lane, provider_report, response_text):
             if incomplete_native_tool_call:
                 return False, f"{lane}_semantic_native_tool_call_incomplete"

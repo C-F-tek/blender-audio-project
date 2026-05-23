@@ -68,6 +68,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "semantic_code_chunks_json",
             "semantic_evidence_chunks_json",
             "ai_context_pack_json",
+            "rag_context_pack_json",
             "shared_context_json",
             "repo_docs_map_json",
         ):
@@ -204,6 +205,22 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
                 "max_file_chars": context_preview,
             },
             "reason": "assemble bounded final context pack from stable historical context builder",
+        },
+        {
+            "stage": 2,
+            "requirement": "rag_context_pack",
+            "id": "rag-context-pack",
+            "tool": "rag_context_pack",
+            "args": {
+                "query": query,
+                "task_file": operator_request_file,
+                "db": "output/ai_runtime_memory/rag/rag.sqlite",
+                "top_k": code_chunk_limit,
+                "char_budget": context_count * context_preview,
+                "embedding_endpoint": "http://127.0.0.1:11434",
+                "embedding_model": "bge-m3",
+            },
+            "reason": "retrieve SQLite/FTS5/vector RAG context as a heap-visible context_pack artifact",
         },
         {
             "stage": 2,

@@ -13,7 +13,12 @@ from ia_carmine.runtime.heap_gate.generic_write_followup import (
     npu_peer_followup_pending_count,
 )
 from ia_carmine.runtime.heap_gate.pointer_soft_lock import runtime_soft_lock_state
-from ia_carmine.runtime.heap_gate.runtime_common import Any, append_unique, safe_dict
+from ia_carmine.runtime.heap_gate.runtime_common import (
+    Any,
+    PROVIDER_START_REQUIREMENTS,
+    append_unique,
+    safe_dict,
+)
 
 
 def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) -> None:
@@ -48,6 +53,20 @@ def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) ->
         "blocked_continuation_ready",
         "blocked_with_reason",
     }
+    provider_reports = getattr(owner, "provider_reports", []) or []
+    provider_started = bool(provider_reports) or bool(
+        getattr(owner, "provider_launch_started", lambda _events: False)(events)
+    )
+    pre_provider = bool(
+        getattr(getattr(owner, "args", None), "allow_provider_generation", False)
+        and not provider_started
+    )
+    completed_requirements = owner.completed_requirements(events)
+    provider_start_missing = [
+        requirement
+        for requirement in PROVIDER_START_REQUIREMENTS
+        if requirement not in completed_requirements
+    ]
     if (
         ready
         and owner.detailed_output_expected()
@@ -75,6 +94,18 @@ def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) ->
         and owner.provider_reports
         and owner.proposal_cycle_requires_refinement(owner.response_text(), events)
     )
+    if pre_provider:
+        if unattempted is not None and not budget_exhausted:
+            return
+        if provider_start_missing and not budget_exhausted and not no_more_progress:
+            return
+        pre_provider_reasons = [
+            f"{requirement}_missing_before_provider_start"
+            for requirement in provider_start_missing
+        ]
+        if pre_provider_reasons:
+            missing = list(dict.fromkeys([*missing, *pre_provider_reasons]))
+        closure_can_exit = False
     if not ready and refinement_possible and not closure_can_exit:
         return
     if not ready and not budget_exhausted and not no_more_progress and not closure_can_exit:

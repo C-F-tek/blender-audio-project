@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse
+import hashlib
 import json
 import sys
 from datetime import datetime
@@ -246,6 +247,12 @@ def _report(
         npu_tool_loop.get("native_tool_loop_supported")
         and npu_tool_loop.get("native_tool_loop_performed")
     )
+    request_input_preview = str(request_input or "")[:1200]
+    request_input_sha256 = (
+        hashlib.sha256(str(request_input or "").encode("utf-8", errors="replace")).hexdigest()
+        if request_input
+        else ""
+    )
     errors = [] if npu_device_verified else ["npu_openvino_provider_unavailable"]
     return {
         "kind": "npu_micro_task_companion_report",
@@ -254,6 +261,8 @@ def _report(
         "passed": npu_real_provider_performed,
         "provider_execution_performed": npu_real_provider_performed,
         "mode": "peer_micro_audit",
+        "npu_lane_contract": "microtask_tool_calling_openvino",
+        "npu_decision_authority": "non_closer",
         "diagnostic_only": not npu_real_provider_performed,
         "provider_backend": "openvino",
         "provider_compute_device": "openvino/NPU" if npu_device_available else "openvino/NPU_unavailable",
@@ -270,7 +279,11 @@ def _report(
         "task_file": args.task_file,
         "startup_manifest": str(args.startup_manifest or ""),
         "task_preview_chars": len(task_preview),
-        "request_input": request_input,
+        "request_input": request_input_preview,
+        "request_input_preview": request_input_preview,
+        "request_input_chars": len(str(request_input or "")),
+        "request_input_sha256": request_input_sha256,
+        "request_input_omitted": len(str(request_input or "")) > len(request_input_preview),
         "request_file": str(args.request_file or ""),
         "request_transport": "operator_request_file" if args.request_file else "inline_cli",
         "leader_packet": str(args.leader_packet or ""),
@@ -283,6 +296,13 @@ def _report(
         "leader_packet_startup_artifacts_count": len(leader_packet.get("startup_artifacts") or {}),
         "leader_packet_broker_tool_evidence_count": len(
             leader_packet.get("broker_tool_evidence") or []
+        ),
+        "source_allowlist_contract": "SOURCE_PATH_ALLOWLIST_CONTRACT",
+        "leader_packet_source_allowlist_contract": bool(
+            leader_packet.get("source_allowlist_contract")
+        ),
+        "source_allowlist_contract_present": bool(
+            leader_packet.get("source_allowlist_contract")
         ),
         "leader_packet_error": str(leader_packet.get("_read_error") or ""),
         "leader_packet_consumed": bool(

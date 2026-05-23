@@ -69,7 +69,9 @@ def runtime_soft_lock_state(owner: Any, events: list[dict[str, Any]] | None = No
     blocks = _runtime_pointer_blocks(owner)
     raw_summary = pointer_closure_summary(blocks)
     quorum = closure_quorum_state(owner, events, raw_summary=raw_summary)
-    semantic_defer_open = quorum.get("closure_quorum_status") == "blocked_continuation_ready"
+    quorum_status = str(quorum.get("closure_quorum_status") or "")
+    quorum_enters_soft_lock = bool(quorum_status and quorum_status != "waiting_for_provider_start")
+    semantic_defer_open = quorum_status == "blocked_continuation_ready"
     summary = pointer_closure_summary(
         blocks,
         semantic_defer_open=semantic_defer_open,
@@ -86,13 +88,13 @@ def runtime_soft_lock_state(owner: Any, events: list[dict[str, Any]] | None = No
             "closing_open_pointers"
             if extension_count
             or raw_summary["open_pointer_count_final"]
-            or quorum.get("closure_quorum_status")
+            or quorum_enters_soft_lock
             else "not_entered"
         ),
         "soft_lock_issued": bool(
             extension_count
             or raw_summary["open_pointer_count_final"]
-            or quorum.get("closure_quorum_status")
+            or quorum_enters_soft_lock
         ),
         "soft_lock_extension_count": extension_count,
         "open_pointer_count_before_soft_lock": before,

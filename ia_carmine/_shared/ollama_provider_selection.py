@@ -9,8 +9,8 @@ from ia_carmine.providers.ollama.sdk_client import OllamaSdkClient
 
 
 FALLBACK_ORDER = (
-    "qwen3-coder:latest",
     "qwen2.5-coder:14b",
+    "qwen3-coder:latest",
     "autumnzsd/qwen2.5-coder-tools:latest",
     "qwen3:1.7b",
 )
@@ -179,7 +179,13 @@ def _candidate_models(requested: str, auto_mode: bool, strict: bool, available: 
     ordered = list(FALLBACK_ORDER)
     if auto_mode:
         return [item for item in ordered if item in available] + [item for item in available if item not in ordered]
-    return [requested] + [item for item in ordered if item != requested]
+    if requested == "qwen2.5-coder:14b":
+        return [requested] + [item for item in ordered if item != requested]
+    return [
+        "qwen2.5-coder:14b",
+        requested,
+        *[item for item in ordered if item not in {"qwen2.5-coder:14b", requested}],
+    ]
 
 
 def _fits_vram(size_bytes: int | None, ctx: int, total_mib: int | None) -> tuple[bool | None, str, int | None]:

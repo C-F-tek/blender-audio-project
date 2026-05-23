@@ -4,7 +4,7 @@ Use this index to find the nearest validation context before adding or changing 
 
 | Family | Context file |
 | --- | --- |
-| Agent context | `Tools/validation/agent_context/TOOL_CONTEXT.md` |
+| Agent context and RAG context packs | `Tools/validation/agent_context/TOOL_CONTEXT.md` |
 | Agent memory | `Tools/validation/agent_memory/TOOL_CONTEXT.md` |
 | Agent review | `Tools/validation/agent_review/TOOL_CONTEXT.md` |
 | AI workload | `Tools/validation/ai_workload/TOOL_CONTEXT.md` |

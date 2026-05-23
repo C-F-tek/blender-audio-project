@@ -8,6 +8,7 @@ from ia_carmine._shared.ollama_provider_selection import (
     ollama_model_inventory,
     parse_context_candidates,
 )
+from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import context_hierarchy_payload
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, repo_rel, write_json_report
 
 
@@ -26,6 +27,9 @@ def write_provider_runtime_plan(
         "requested_provider_model": str(getattr(gate.args, "provider_model", "") or "auto"),
         "selected_provider_model": str(getattr(gate, "selected_provider_model", "") or ""),
         "selected_ollama_num_ctx": getattr(gate, "selected_ollama_num_ctx", None),
+        "provider_lane_hierarchy": context_hierarchy_payload(
+            gate.args, gpu1_ctx=getattr(gate, "selected_ollama_num_ctx", None)
+        ),
         "strict_provider_model": bool(getattr(gate.args, "strict_provider_model", False)),
         "ollama_context_candidates": parse_context_candidates(
             str(getattr(gate.args, "ollama_context_candidates", "") or "8192,4096"),
@@ -57,6 +61,10 @@ def _compact_reports(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "requested_provider_model",
         "selected_provider_model",
         "model_switch_reason",
+        "lane_tier",
+        "authority",
+        "closure_owner",
+        "context_budget",
         "provider_backend",
         "provider_compute_device",
         "provider_device_verified",

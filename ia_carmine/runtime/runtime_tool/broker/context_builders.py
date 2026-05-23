@@ -107,6 +107,48 @@ def build_semantic_evidence_chunk_manifest(
     }
 
 
+def build_rag_context_pack_tool(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, str]]:
+    report, markdown = base_outputs(out_dir, request_id, "rag_context_pack")
+    command = [
+        resolve_child_python(repo_root),
+        "-m",
+        "ia_carmine",
+        "rag_build_context_pack",
+        "--repo-root",
+        ".",
+        "--db",
+        str(args.get("db") or "output/ai_runtime_memory/rag/rag.sqlite"),
+        "--top-k",
+        str(args.get("top_k") or 20),
+        "--char-budget",
+        str(args.get("char_budget") or 32000),
+        "--embedding-endpoint",
+        str(args.get("embedding_endpoint") or "http://127.0.0.1:11434"),
+        "--embedding-model",
+        str(args.get("embedding_model") or "bge-m3"),
+        "--output",
+        repo_rel(report, repo_root),
+        "--markdown-output",
+        repo_rel(markdown, repo_root),
+    ]
+    if args.get("query"):
+        command.extend(["--query", str(args["query"])])
+    if args.get("task_file"):
+        command.extend(["--task-file", str(args["task_file"])])
+    if truthy(args.get("skip_query_embedding")):
+        command.append("--skip-query-embedding")
+    if truthy(args.get("allow_missing_query_embedding")):
+        command.append("--allow-missing-query-embedding")
+    if truthy(args.get("allow_empty_results")):
+        command.append("--allow-empty-results")
+    return command, {
+        "json_report": repo_rel(report, repo_root),
+        "markdown_report": repo_rel(markdown, repo_root),
+    }
+
+
 def run_agent_runtime_debug_lab(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, str]]:

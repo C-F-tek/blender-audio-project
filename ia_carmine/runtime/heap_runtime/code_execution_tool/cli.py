@@ -107,6 +107,7 @@ def candidate_proposal_items(report: dict[str, Any]) -> list[dict[str, Any]]:
                 "target_file": candidate.get("target_file"),
                 "implementation_status": "validated_patch_candidate",
                 "source": "patch_candidate_synthesis",
+                "diff_source": candidate.get("diff_source") or "evidence_owned",
                 "git_status": "artifact patch candidate",
                 "diff_hunk_count": diff_text.count("\n@@"),
                 "validation_commands": candidate.get("validation_commands") or [],
@@ -207,6 +208,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     patch_report: dict[str, Any] = {}
     patch_report_path, patch_markdown_path, patch_dir = patch_candidate_outputs(repo_root, output)
     synthesis_requested = bool(args.synthesize_patch_candidates or args.force_patch_candidate_synthesis)
+    allow_worktree_candidates = bool(
+        getattr(args, "allow_current_worktree_diff_candidates", False)
+    )
     if synthesis_requested and not errors:
         patch_args = argparse.Namespace(
             repo_root=str(repo_root),
@@ -220,6 +224,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             markdown_output=str(patch_markdown_path),
             max_candidates=max(1, int(args.max_patch_candidates)),
             timeout_seconds=max(30, int(args.timeout_seconds)),
+            allow_current_worktree_diff_candidates=allow_worktree_candidates,
         )
         patch_report = build_patch_candidate_report(patch_args)
         write_json_report(patch_report, patch_report_path)
@@ -276,6 +281,12 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "patch_candidate_synthesis_candidate_count": patch_report.get("candidate_count", 0)
         if patch_report
         else 0,
+        "upstream_worktree_candidate_count": patch_report.get(
+            "current_worktree_diagnostic_candidate_count", 0
+        )
+        if patch_report
+        else 0,
+        "allow_current_worktree_diff_candidates": allow_worktree_candidates,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -312,6 +323,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--synthesize-patch-candidates", action="store_true")
     parser.add_argument("--force-patch-candidate-synthesis", action="store_true")
     parser.add_argument("--max-patch-candidates", type=int, default=3)
+    parser.add_argument("--allow-current-worktree-diff-candidates", action="store_true")
     parser.add_argument("--no-execute", action="store_true")
     return parser.parse_args()
 

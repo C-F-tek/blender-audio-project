@@ -173,6 +173,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--startup-max-context-files", type=int, default=48)
     parser.add_argument("--startup-scan-context-files", type=int, default=48)
     parser.add_argument("--startup-max-chars-per-file", type=int, default=8000)
+    parser.add_argument("--rag-db", default="output/ai_runtime_memory/rag/rag.sqlite")
+    parser.add_argument("--rag-index-policy", choices=("auto", "always", "never"), default="auto")
+    parser.add_argument("--rag-embedding-endpoint", default="http://127.0.0.1:11434")
+    parser.add_argument("--rag-embedding-model", default="bge-m3")
+    parser.add_argument("--rag-ingest-batch-size", type=int, default=8)
+    parser.add_argument("--rag-embed-smoke-batch-size", type=int, default=8)
+    parser.add_argument("--rag-chunk-min-chars", type=int, default=1500)
+    parser.add_argument("--rag-chunk-max-chars", type=int, default=4000)
+    parser.add_argument("--rag-chunk-overlap-chars", type=int, default=300)
+    parser.add_argument("--rag-max-file-size", type=int, default=250000)
+    parser.add_argument("--rag-top-k", type=int, default=20)
+    parser.add_argument("--rag-char-budget", type=int, default=32000)
     parser.add_argument("--context-document-count", dest="context_document_count", type=int, default=24)
     parser.add_argument(
         "--context-document-preview-chars",
@@ -294,6 +306,19 @@ def build_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> Launc
         startup_max_context_files=args.startup_max_context_files,
         startup_scan_context_files=args.startup_scan_context_files,
         startup_max_chars_per_file=args.startup_max_chars_per_file,
+        rag_db=args.rag_db,
+        rag_index_policy=args.rag_index_policy,
+        rag_embedding_endpoint=args.rag_embedding_endpoint,
+        rag_embedding_model=args.rag_embedding_model,
+        rag_ingest_batch_size=args.rag_ingest_batch_size,
+        rag_embed_smoke_batch_size=args.rag_embed_smoke_batch_size,
+        rag_chunk_min_chars=args.rag_chunk_min_chars,
+        rag_chunk_max_chars=args.rag_chunk_max_chars,
+        rag_chunk_overlap_chars=args.rag_chunk_overlap_chars,
+        rag_max_file_size=args.rag_max_file_size,
+        rag_top_k=args.rag_top_k,
+        rag_char_budget=args.rag_char_budget,
+        rag_allow_missing_embeddings=False,
         context_document_count=args.context_document_count,
         context_document_preview_chars=args.context_document_preview_chars,
         semantic_code_chunk_limit=args.semantic_code_chunk_limit,

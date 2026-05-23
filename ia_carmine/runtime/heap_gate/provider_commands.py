@@ -121,11 +121,22 @@ class RuntimeGateProviderCommandsMixin:
                         "provider_backend",
                         "provider_compute_device",
                         "provider_device_verified",
+                        "logical_lane",
+                        "provider_backend_device_id",
+                        "windows_task_manager_device_hint",
+                        "vulkan_visible_device",
+                        "vulkan_device_name",
+                        "vulkan_vendor_id",
+                        "device_identity_verified",
                         "provider_execution_performed",
                         "cpu_provider_fallback_performed",
                         "provider_replight_required",
                         "provider_id",
                         "provider_role",
+                        "lane_tier",
+                        "authority",
+                        "closure_owner",
+                        "context_budget",
                         "provider_model",
                         "provider_loaded",
                         "generated_phrase",
@@ -175,12 +186,32 @@ class RuntimeGateProviderCommandsMixin:
             "provider_backend": report_data.get("provider_backend"),
             "provider_compute_device": report_data.get("provider_compute_device"),
             "provider_device_verified": report_data.get("provider_device_verified"),
+            "logical_lane": report_data.get("logical_lane") or lane,
+            "provider_backend_device_id": report_data.get("provider_backend_device_id")
+            or spec.get("provider_backend_device_id"),
+            "windows_task_manager_device_hint": report_data.get(
+                "windows_task_manager_device_hint"
+            )
+            or spec.get("windows_task_manager_device_hint"),
+            "vulkan_visible_device": report_data.get("vulkan_visible_device")
+            or spec.get("vulkan_visible_device"),
+            "vulkan_device_name": report_data.get("vulkan_device_name")
+            or spec.get("vulkan_device_name"),
+            "vulkan_vendor_id": report_data.get("vulkan_vendor_id")
+            or spec.get("vulkan_vendor_id"),
+            "device_identity_verified": report_data.get("device_identity_verified")
+            if report_data.get("device_identity_verified") is not None
+            else spec.get("device_identity_verified"),
             "cpu_provider_fallback_performed": report_data.get(
                 "cpu_provider_fallback_performed"
             ),
             "provider_replight_required": report_data.get("provider_replight_required"),
             "provider_id": report_data.get("provider_id"),
-            "provider_role": report_data.get("provider_role"),
+            "provider_role": report_data.get("provider_role") or spec.get("provider_role"),
+            "lane_tier": report_data.get("lane_tier") or spec.get("lane_tier"),
+            "authority": report_data.get("authority") or spec.get("authority"),
+            "closure_owner": report_data.get("closure_owner") or spec.get("closure_owner"),
+            "context_budget": report_data.get("context_budget") or spec.get("context_budget"),
             "provider_model": report_data.get("provider_model"),
             "provider_loaded": report_data.get("provider_loaded"),
             "generated_phrase": report_data.get("generated_phrase"),

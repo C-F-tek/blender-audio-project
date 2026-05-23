@@ -242,6 +242,14 @@ def _publish_lane_state(
             "role": item["spec"].get("role"),
             "requirement": item["requirement"],
             "revision": revision,
+            "provider_cycle_id": revision,
+            "revision_owner_lane": "gpu1_planner",
+            "gpu1_revision_owner": item.get("lane") == "gpu1_planner",
+            "review_for_gpu1_cycle": revision if item.get("lane") == "gpu0_peer" else None,
+            "audit_for_gpu1_cycle": revision
+            if item.get("lane") == "npu_micro_task_auditor"
+            else None,
+            "cannot_open_revision": item.get("lane") != "gpu1_planner",
             "status": status,
             "pid": item.get("pid"),
             "elapsed_seconds": item.get("elapsed_seconds"),
@@ -257,6 +265,18 @@ def _publish_lane_state(
             "failure_kind": item.get("failure_kind") or "",
             "output": repo_rel(gate.repo_root, Path(item["spec"]["output"])),
             "execution_mode": "provider_teamwork_unified_parallel",
+            "provider_backend": item["spec"].get("provider_backend"),
+            "provider_compute_device": item["spec"].get("provider_compute_device"),
+            "provider_device_policy": item["spec"].get("provider_device_policy"),
+            "logical_lane": item["spec"].get("logical_lane") or item.get("lane"),
+            "provider_backend_device_id": item["spec"].get("provider_backend_device_id"),
+            "windows_task_manager_device_hint": item["spec"].get(
+                "windows_task_manager_device_hint"
+            ),
+            "vulkan_visible_device": item["spec"].get("vulkan_visible_device"),
+            "vulkan_device_name": item["spec"].get("vulkan_device_name"),
+            "vulkan_vendor_id": item["spec"].get("vulkan_vendor_id"),
+            "device_identity_verified": item["spec"].get("device_identity_verified"),
         },
         target="orchestrator",
         correlation_id=str(item["correlation"]),

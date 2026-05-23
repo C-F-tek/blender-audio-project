@@ -23,6 +23,11 @@ from ia_carmine.runtime.heap_gate.pointer_soft_lock import (
     gpu1_closure_decision_from_text,
     runtime_soft_lock_state,
 )
+from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
+    build_gpu1_closure_decision_packet,
+    derive_gpu1_decision,
+)
+from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import normalize_gpu0_decision
 
 
 class RuntimeGateProposalCycleAMixin:
@@ -98,6 +103,54 @@ class RuntimeGateProposalCycleAMixin:
         if target_files:
             return "PATCHABLE_TARGET"
         return "NO_PATCHABLE_TARGET"
+
+    def proposal_pointer_field(self, response_text: str, field_name: str) -> str:
+        pattern = rf"(?im)^\s*-?\s*{re.escape(field_name)}\s*=\s*([^\n\r]+)"
+        match = re.search(pattern, response_text or "")
+        if match:
+            return match.group(1).strip()
+        pattern = rf"(?im)^\s*{re.escape(field_name)}\s*:\s*([^\n\r]+)"
+        match = re.search(pattern, response_text or "")
+        return match.group(1).strip() if match else ""
+
+    def latest_peer_decision_for_revision(self, lane: str, revision: int) -> dict[str, Any]:
+        for report in reversed(self.provider_reports):
+            if str(report.get("lane") or "") != lane:
+                continue
+            try:
+                report_revision = int(report.get("revision") or 0)
+            except (TypeError, ValueError):
+                report_revision = 0
+            if report_revision != int(revision):
+                continue
+            return report
+        return {}
+
+    def generic_write_refs_for_revision(self, events: list[dict[str, Any]], revision: int) -> list[str]:
+        refs: list[str] = []
+        for event in events:
+            payload = event.get("payload") if isinstance(event.get("payload"), dict) else event
+            text = " ".join(
+                str(payload.get(key) or "")
+                for key in ("kind", "tool", "tool_name", "output", "path", "source_file")
+            )
+            if "generic_write" not in text:
+                continue
+            ref = str(payload.get("output") or payload.get("path") or payload.get("source_file") or "")
+            if ref and ref not in refs:
+                refs.append(ref)
+        for report in self.provider_reports:
+            try:
+                report_revision = int(report.get("revision") or 0)
+            except (TypeError, ValueError):
+                report_revision = 0
+            if report_revision != int(revision):
+                continue
+            if str(report.get("leader_source") or "") == "generic_write":
+                ref = str(report.get("output") or "")
+                if ref and ref not in refs:
+                    refs.append(ref)
+        return refs
 
     def proposal_target_files(
         self,
@@ -217,6 +270,33 @@ class RuntimeGateProposalCycleAMixin:
         target_files = self.proposal_target_files(
             response_text, quality, anchored_sources, revision
         )
+        previous_gpu0_report = (
+            self.latest_peer_decision_for_revision("gpu0_peer", int(revision) - 1)
+            if int(revision) > 0
+            else {}
+        )
+        previous_gpu0_decision = normalize_gpu0_decision(
+            previous_gpu0_report.get("gpu0_effective_decision")
+            or previous_gpu0_report.get("gpu0_decision")
+            or previous_gpu0_report.get("role_decision")
+            or ""
+        )
+        previous_gpu0_block_id = str(
+            previous_gpu0_report.get("provider_block_id")
+            or previous_gpu0_report.get("block_id")
+            or ""
+        )
+        previous_gpu0_requires_refine = previous_gpu0_decision in {
+            "veto",
+            "refine_required",
+            "incongruent",
+        }
+        declared_refines_block_id = self.proposal_pointer_field(
+            response_text, "refines_block_id"
+        )
+        declared_consumed_gpu0_block_id = self.proposal_pointer_field(
+            response_text, "consumed_gpu0_block_id"
+        )
         missing_link_reasons: list[str] = []
         if not provider_block_refs["gpu1"]:
             missing_link_reasons.append("missing linked GPU1 provider block")
@@ -240,12 +320,28 @@ class RuntimeGateProposalCycleAMixin:
             *missing_link_reasons,
             *[str(item) for item in gpu1_output_gate.get("issues", [])],
         ]
+        continuity_errors: list[str] = []
+        if previous_gpu0_requires_refine:
+            if not declared_refines_block_id or declared_refines_block_id != previous_block_id:
+                continuity_errors.append("gpu1_refine_not_linked_to_gpu0_veto")
+            if not declared_consumed_gpu0_block_id or declared_consumed_gpu0_block_id != previous_gpu0_block_id:
+                continuity_errors.append("gpu1_refine_missing_consumed_gpu0_block_id")
+        if continuity_errors:
+            reject_reasons.extend(continuity_errors)
+            quality_passed = False
+            pointer_action = self.proposal_pointer_action(response_text, quality_passed)
+            exit_decision = self.proposal_exit_decision(response_text, target_files)
         soft_lock_state = getattr(self, "_last_soft_lock_state", {}) or {}
         if getattr(self, "runtime_soft_close_reached", lambda: False)():
             soft_lock_state = runtime_soft_lock_state(self, events)
-        closure_owner_decision = str(
-            soft_lock_state.get("soft_lock_closure_owner_decision") or ""
-        ) or gpu1_closure_decision_from_text(
+        closure_owner_decision = derive_gpu1_decision(
+            quality_passed=quality_passed,
+            exit_decision=exit_decision,
+            pointer_action=pointer_action,
+            reject_reasons=[str(item) for item in reject_reasons if str(item).strip()],
+            response_text=response_text,
+        )
+        closure_owner_decision = closure_owner_decision or gpu1_closure_decision_from_text(
             response_text,
             {
                 "quality_passed": quality_passed,
@@ -253,6 +349,33 @@ class RuntimeGateProposalCycleAMixin:
                 "reject_reason": "; ".join(dict.fromkeys(item for item in reject_reasons if item)),
             },
         )
+        evidence_refs = [
+            *provider_block_refs["gpu1"],
+            *self.broker_output_refs(events),
+            *self.code_execution_matrix_reports(events),
+        ]
+        generic_write_refs = self.generic_write_refs_for_revision(events, revision)
+        gpu1_packet = build_gpu1_closure_decision_packet(
+            gpu1_block_id=block_id,
+            gpu1_revision=revision,
+            gpu1_decision=closure_owner_decision,
+            target_files=target_files,
+            quality_passed=quality_passed,
+            reject_reasons=[str(item) for item in reject_reasons if str(item).strip()],
+            evidence_refs=evidence_refs,
+            generic_write_refs=generic_write_refs,
+            exit_decision=exit_decision,
+            pointer_action=pointer_action,
+            refines_block_id=declared_refines_block_id,
+            consumed_gpu0_block_id=declared_consumed_gpu0_block_id,
+            consumed_gpu0_block_ids=(
+                [declared_consumed_gpu0_block_id] if declared_consumed_gpu0_block_id else []
+            ),
+            consumed_npu_block_ids=[],
+            response_text=response_text,
+            source="proposal_cycle_a",
+        )
+        self.current_gpu1_closure_decision_packet = gpu1_packet
         clipped = (response_text or "")[:PROPOSAL_ITERATION_MAX_CHARS]
         data = {
             "schema_version": 1,
@@ -264,16 +387,35 @@ class RuntimeGateProposalCycleAMixin:
             "source": source,
             "previous_block_id": previous_block_id,
             "next_block_id": "",
-            "refines_block_id": previous_block_id if not quality_passed and previous_block_id else "",
+            "refines_block_id": declared_refines_block_id,
             "resume_from_block_id": previous_block_id or block_id,
             "pointer_action": pointer_action,
             "target_files": target_files,
             "exit_decision": exit_decision,
+            "gpu1_closure_decision_packet": gpu1_packet,
+            "gpu1_decision": gpu1_packet.get("gpu1_decision"),
+            "required_refines_block_id": previous_block_id if previous_gpu0_requires_refine else "",
+            "required_consumed_gpu0_block_id": previous_gpu0_block_id if previous_gpu0_requires_refine else "",
+            "consumed_gpu0_block_id": declared_consumed_gpu0_block_id,
+            "consumed_gpu0_block_ids": (
+                [declared_consumed_gpu0_block_id] if declared_consumed_gpu0_block_id else []
+            ),
+            "gpu1_refine_continuity": {
+                "required": previous_gpu0_requires_refine,
+                "passed": not continuity_errors,
+                "errors": continuity_errors,
+                "previous_gpu1_block_id": previous_block_id,
+                "previous_gpu0_block_id": previous_gpu0_block_id,
+                "previous_gpu0_decision": previous_gpu0_decision,
+                "declared_refines_block_id": declared_refines_block_id,
+                "declared_consumed_gpu0_block_id": declared_consumed_gpu0_block_id,
+            },
             "gpu1_block_ref": provider_block_refs["gpu1"][0] if provider_block_refs["gpu1"] else "",
             "gpu0_review_block_refs": provider_block_refs["gpu0"],
             "npu_audit_block_refs": provider_block_refs["npu"],
             "broker_result_refs": self.broker_output_refs(events),
             "matrix_report_refs": self.code_execution_matrix_reports(events),
+            "generic_write_refs": generic_write_refs,
             "linked_provider_block_gate": linked_provider_block_gate,
             "gpu1_output_gate": gpu1_output_gate,
             "quality_passed": quality_passed,
@@ -299,6 +441,10 @@ class RuntimeGateProposalCycleAMixin:
             ),
             "anchored_source_candidates": anchored_sources,
             "previous_iteration_available": bool(previous),
+            "gpu1_free_text_evidence": response_text or "",
+            "gpu1_free_text_evidence_chars": len(response_text or ""),
+            "gpu1_free_text_evidence_sha256": gpu1_packet.get("response_text_sha256") or "",
+            "gpu1_free_text_evidence_visible_even_when_invalid": True,
             "response_text": clipped,
         }
         write_json_report(data, json_path)

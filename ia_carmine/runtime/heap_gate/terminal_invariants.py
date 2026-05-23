@@ -12,6 +12,13 @@ def safe_int(value: Any) -> int:
         return 0
 
 
+def safe_float(value: Any) -> float:
+    try:
+        return float(value or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def prefixed_errors(errors: list[str]) -> list[str]:
     return [
         error if str(error).startswith("AI STAI GIOCANDO:") else f"AI STAI GIOCANDO: {error}"
@@ -48,7 +55,81 @@ def evaluate_terminal_invariants(
     )
     generic_product = generic_product if isinstance(generic_product, dict) else {}
     generic_product_ready = bool(generic_product.get("eligible"))
-    if allow_provider_generation and detailed_output_expected:
+    generic_write_capture_failed_count = safe_int(
+        metrics.get("generic_write_capture_failed_count")
+        or generic_product.get("generic_write_capture_failed_count")
+    )
+    provider_start_missing = [
+        str(item)
+        for item in (metrics.get("provider_start_missing_requirements") or [])
+        if str(item).strip()
+    ]
+    provider_start_unattempted = str(
+        metrics.get("provider_start_unattempted_requirement") or ""
+    ).strip()
+    provider_launch_started = bool(metrics.get("provider_launch_started"))
+    pre_provider = bool(
+        allow_provider_generation
+        and not provider_execution_performed
+        and not provider_launch_started
+        and safe_int(metrics.get("provider_lane_count")) <= 0
+    )
+    budget_exhausted = bool(metrics.get("budget_exhausted"))
+    if pre_provider:
+        if metrics.get("product_status") == "ready":
+            errors.append("ready product_status is forbidden before provider start")
+        if provider_start_unattempted and not budget_exhausted:
+            errors.append(
+                "pre_provider_closed_with_tentable_requirement:"
+                + provider_start_unattempted
+            )
+        elif "runtime_file_refs" in provider_start_missing:
+            errors.append("runtime_file_refs_missing_before_provider_start")
+        elif provider_start_missing:
+            errors.append(
+                "provider_start_requirements_missing_before_provider_start:"
+                + ",".join(provider_start_missing)
+            )
+    if allow_provider_generation and not pre_provider and generic_write_capture_failed_count > 0:
+        errors.append(
+            "generic_write_capture_failed: provider prose/MD evidence channel failed before producing valid JSON/Markdown capture"
+        )
+    if allow_provider_generation and not pre_provider and metrics.get("context_hierarchy_valid") is not True:
+        errors.append(
+            "context_hierarchy_invalid: GPU1 must have the largest context, GPU0 a smaller coworker context, and NPU a short micro-task context"
+        )
+    if allow_provider_generation and not pre_provider and metrics.get("gpu1_primary_workload_valid") is not True:
+        errors.append(
+            "gpu1_primary_workload_missing: GPU1 primary cannot be proven by replight, handshake, or report existence"
+        )
+    if allow_provider_generation and not pre_provider and metrics.get("gpu1_primary_evidence_valid") is not True:
+        errors.append(
+            "gpu1_primary_evidence_missing: GPU1 leader requires native tool evidence or valid generic_write capture"
+        )
+    if (
+        allow_provider_generation
+        and not pre_provider
+        and metrics.get("leader_source") == "native_tool_result"
+        and safe_int(metrics.get("gpu1_native_tool_call_count")) <= 0
+    ):
+        errors.append(
+            "gpu1_native_tool_result_invalid: leader_source cannot be native_tool_result when GPU1 native_tool_call_count is 0"
+        )
+    if (
+        allow_provider_generation
+        and not pre_provider
+        and metrics.get("sidecars_start_policy") == "after_gpu1_residency_handshake"
+        and safe_float(metrics.get("parallel_provider_overlap_seconds")) <= 0
+        and metrics.get("gpu1_boot_leader_ready") is True
+    ):
+        errors.append(
+            "parallelism_lost_by_serial_leader_gate: GPU0/NPU did not overlap with the GPU1 primary lane"
+        )
+    if allow_provider_generation and not pre_provider and metrics.get("gpu1_leader_valid") is not True:
+        errors.append(
+            "gpu1_leader_missing: GPU0/NPU sidecar evidence requires a prior valid GPU1 leader packet/proposal"
+        )
+    if allow_provider_generation and not pre_provider and detailed_output_expected:
         if metrics.get("product_status") != "ready":
             errors.append(
                 "complete provider product run cannot pass without ready product; "
@@ -58,6 +139,19 @@ def evaluate_terminal_invariants(
             errors.append("GPU1 primary center produced no provider response text")
         if not metrics.get("proposal_iteration_artifacts"):
             errors.append("provider product run requires GPU1 proposal/pointer iteration artifacts")
+        if (
+            metrics.get("gpu1_closure_decision_packet_valid") is not True
+            and not generic_product_ready
+        ):
+            errors.append(
+                "gpu1_decision_missing: GPU1 provider work requires a valid gpu1_closure_decision_packet before GPU0 quorum"
+            )
+        if (
+            metrics.get("gpu0_closure_agreement") == "veto_with_reason"
+            and metrics.get("gpu1_closure_decision_packet_valid") is not True
+            and not generic_product_ready
+        ):
+            errors.append("gpu0_veto_not_allowed_without_gpu1_decision")
         if metrics.get("quality_output_passed") is not True and not generic_product_ready:
             errors.append(
                 "GPU1/pointer proposal quality failed; provider prose cannot pass as product"
@@ -75,14 +169,47 @@ def evaluate_terminal_invariants(
                 errors.append(
                     "rejected GPU1 proposal did not trigger mandatory provider revision retry"
                 )
+        if metrics.get("gpu0_secondary_schema_valid") is not True and not generic_product_ready:
+            errors.append(
+                "GPU0 secondary decision schema is invalid or missing; free text cannot drive veto/congruence"
+            )
+        if (
+            metrics.get("gpu0_secondary_schema_valid") is True
+            and metrics.get("latest_gpu0_checked_current_packet") is not True
+            and not generic_product_ready
+        ):
+            errors.append("gpu0_checked_wrong_gpu1_packet")
+        if (
+            metrics.get("latest_gpu0_packet_stale_after_gpu1_packet_rewrite") is True
+            and not generic_product_ready
+        ):
+            errors.append("gpu0_review_stale_after_gpu1_packet_rewrite")
+        if (
+            metrics.get("latest_gpu0_free_text_used_as_product")
+            or metrics.get("latest_gpu0_free_text_used_as_decision")
+        ) and not generic_product_ready:
+            errors.append("GPU0 free text was used as product or decision")
         gpu0_decision = str(metrics.get("latest_gpu0_review_decision") or "")
-        if gpu0_decision.startswith("reject") and not generic_product_ready:
-            errors.append(f"GPU0 peer rejected current GPU1 delta: {gpu0_decision}")
+        if gpu0_decision in {"veto", "refine_required", "incongruent"} and not generic_product_ready:
+            errors.append(f"GPU0 structured secondary decision blocks current GPU1 delta: {gpu0_decision}")
+        if (
+            metrics.get("product_status") == "ready"
+            and gpu0_decision != "congruent"
+            and not generic_product_ready
+        ):
+            errors.append("ready product_status requires GPU0 structured decision congruent")
         missing_sections = metrics.get("latest_gpu0_missing_delta_sections") or []
         if missing_sections and not generic_product_ready:
             errors.append(
                 "GPU1 delta is missing required pointer/product sections: "
                 + ",".join(str(item) for item in missing_sections)
+            )
+        continuity = metrics.get("latest_gpu1_refine_continuity")
+        continuity = continuity if isinstance(continuity, dict) else {}
+        if continuity.get("required") and not continuity.get("passed") and not generic_product_ready:
+            errors.append(
+                "gpu1_refine_not_linked_to_gpu0_veto: "
+                + ",".join(str(item) for item in continuity.get("errors") or [])
             )
         if not metrics.get("npu_micro_activity_ok"):
             errors.append("NPU micro-lane did not produce valid micro/audit evidence")
@@ -108,6 +235,16 @@ def evaluate_terminal_invariants(
         and safe_int(metrics.get("npu_peer_followup_pending_count")) > 0
     ):
         errors.append("ready product_status is forbidden while NPU peer follow-up is pending")
+    if (
+        metrics.get("product_status") == "ready"
+        and (
+            safe_int(metrics.get("gpu0_peer_followup_pending_count")) > 0
+            or safe_int(metrics.get("npu_peer_followup_pending_count")) > 0
+        )
+    ):
+        errors.append(
+            "gpu1_leader_not_consuming_peer_evidence: ready product requires a later GPU1 block that consumes GPU0/NPU peer evidence"
+        )
     if metrics.get("product_status") == "ready" and generic_product.get("eligible"):
         if safe_int(generic_product.get("refinement_count")) < safe_int(
             generic_product.get("minimum_refinements")
@@ -117,17 +254,17 @@ def evaluate_terminal_invariants(
             errors.append("generic_write refined product cannot claim patch application")
         if generic_product.get("source_writes_performed"):
             errors.append("generic_write refined product cannot claim source writes")
-    if allow_provider_generation and metrics.get("missing_provider_lanes"):
+    if allow_provider_generation and not pre_provider and metrics.get("missing_provider_lanes"):
         errors.append(
             "provider generation requires all three provider lanes; missing: "
             + ",".join(metrics.get("missing_provider_lanes") or [])
         )
-    if allow_provider_generation and metrics.get("provider_native_tool_unavailable_required_lanes"):
+    if allow_provider_generation and not pre_provider and metrics.get("provider_native_tool_unavailable_required_lanes"):
         errors.append(
             "provider generation requested a native tool call on unavailable provider lanes: "
             + ",".join(metrics.get("provider_native_tool_unavailable_required_lanes") or [])
         )
-    if allow_provider_generation and metrics.get("provider_semantic_missing_required_lanes"):
+    if allow_provider_generation and not pre_provider and metrics.get("provider_semantic_missing_required_lanes"):
         errors.append(
             "provider generation requires semantic GPU0/NPU model execution; missing: "
             + ",".join(metrics.get("provider_semantic_missing_required_lanes") or [])

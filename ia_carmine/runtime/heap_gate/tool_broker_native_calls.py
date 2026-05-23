@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ia_carmine._shared.provider_work_rejections import role_for
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     append_unique,
@@ -68,6 +69,12 @@ def publish_provider_native_tool_calls(
     for report in owner.provider_reports:
         published += _publish_report_native_tool_calls(owner, report, round_id, events)
     return published
+
+
+def publish_provider_report_native_tool_calls(
+    owner: Any, report: dict[str, Any], round_id: int, events: list[dict[str, Any]]
+) -> int:
+    return _publish_report_native_tool_calls(owner, report, round_id, events)
 
 
 def _publish_report_native_tool_calls(
@@ -287,13 +294,18 @@ def _enrich_provider_native_tool_args(
         args.setdefault("provider_report", output)
         lane = str(report.get("lane") or "")
         peer_followup_required = lane in {"gpu0_peer", "npu_micro_task_auditor"}
+        revision = report.get("revision")
         args.setdefault("source_lane", lane)
-        args.setdefault("source_revision", str(report.get("revision") or ""))
+        args.setdefault("source_revision", "" if revision is None else str(revision))
         args.setdefault("gpu1_followup_required", str(peer_followup_required).lower())
         args.setdefault("peer_followup_required", str(peer_followup_required).lower())
         args.setdefault(
             "provider_role",
-            str(report.get("provider_role") or report.get("role") or ""),
+            role_for(
+                lane,
+                report,
+                str(report.get("provider_role") or report.get("role") or ""),
+            ),
         )
         args.setdefault("proposal_text", str(report.get("response_text") or ""))
         args.setdefault("request_file", str(getattr(owner.args, "request_file", "") or ""))

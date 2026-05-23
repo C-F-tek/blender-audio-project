@@ -39,6 +39,18 @@ CLI_VALUE_KEYS = {
     "startup_max_context_files": "--startup-max-context-files",
     "startup_scan_context_files": "--startup-scan-context-files",
     "startup_max_chars_per_file": "--startup-max-chars-per-file",
+    "rag_db": "--rag-db",
+    "rag_index_policy": "--rag-index-policy",
+    "rag_embedding_endpoint": "--rag-embedding-endpoint",
+    "rag_embedding_model": "--rag-embedding-model",
+    "rag_ingest_batch_size": "--rag-ingest-batch-size",
+    "rag_embed_smoke_batch_size": "--rag-embed-smoke-batch-size",
+    "rag_chunk_min_chars": "--rag-chunk-min-chars",
+    "rag_chunk_max_chars": "--rag-chunk-max-chars",
+    "rag_chunk_overlap_chars": "--rag-chunk-overlap-chars",
+    "rag_max_file_size": "--rag-max-file-size",
+    "rag_top_k": "--rag-top-k",
+    "rag_char_budget": "--rag-char-budget",
     "context_document_count": "--context-document-count",
     "context_document_preview_chars": "--context-document-preview-chars",
     "semantic_code_chunk_limit": "--semantic-code-chunk-limit",
@@ -56,6 +68,7 @@ CLI_FLAG_KEYS = {
     "allow_npu_device_workload": "--allow-npu-device-workload",
     "skip_startup_reload": "--skip-startup-reload",
     "strict_startup_reload": "--strict-startup-reload",
+    "rag_allow_missing_embeddings": "--rag-allow-missing-embeddings",
     "no_documents": "--no-documents",
 }
 
@@ -101,6 +114,19 @@ class LauncherConfig:
     startup_max_context_files: int = 48
     startup_scan_context_files: int = 48
     startup_max_chars_per_file: int = 8000
+    rag_db: str = "output/ai_runtime_memory/rag/rag.sqlite"
+    rag_index_policy: str = "auto"
+    rag_embedding_endpoint: str = "http://127.0.0.1:11434"
+    rag_embedding_model: str = "bge-m3"
+    rag_ingest_batch_size: int = 8
+    rag_embed_smoke_batch_size: int = 8
+    rag_chunk_min_chars: int = 1500
+    rag_chunk_max_chars: int = 4000
+    rag_chunk_overlap_chars: int = 300
+    rag_max_file_size: int = 250000
+    rag_top_k: int = 20
+    rag_char_budget: int = 32000
+    rag_allow_missing_embeddings: bool = False
     context_document_count: int = 24
     context_document_preview_chars: int = 1200
     semantic_code_chunk_limit: int = 32

@@ -35,6 +35,20 @@ def ordered_tokens(text: str, *tokens: str) -> bool:
     return all(position >= 0 for position in positions) and positions == sorted(positions)
 
 
+def ordered_lane_specs(text: str) -> bool:
+    return ordered_tokens(
+        text,
+        '"lane": "gpu1_planner"',
+        '"lane": "gpu0_peer"',
+        '"lane": "npu_micro_task_auditor"',
+    ) or ordered_tokens(
+        text,
+        '"lane": GPU1_LANE',
+        '"lane": GPU0_LANE',
+        '"lane": NPU_LANE',
+    )
+
+
 def write_markdown(report: dict[str, Any], output: Path) -> str:
     lines = ["# Ollama GPU0 / OpenVINO NPU Topology Contract", "", f"- Passed: `{report.get('passed')}`", ""]
     for key in report.get("check_order") or []:
@@ -160,8 +174,11 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             provider_commands, "build_ollama_gpu0_peer_report"
         )
         and has(provider_commands, "build_npu_micro_task_companion_report")
-        and has(provider_commands, '"lane": "gpu0_peer"')
-        and has(provider_commands, '"lane": "npu_micro_task_auditor"')
+        and (has(provider_commands, '"lane": "gpu0_peer"') or has(provider_commands, '"lane": GPU0_LANE'))
+        and (
+            has(provider_commands, '"lane": "npu_micro_task_auditor"')
+            or has(provider_commands, '"lane": NPU_LANE')
+        )
         and has(provider_commands, "provider_execution_performed")
         and has(provider_commands, "npu_micro_provider_execution_performed")
         and has(provider_absorption, "provider_work_verified")
@@ -200,12 +217,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_teamwork_packet, "source_allowlist_contract")
         and has(provider_runtime, "started_at")
         and has(provider_absorption, "provider_process_id")
-        and ordered_tokens(
-            provider_commands,
-            '"lane": "gpu1_planner"',
-            '"lane": "gpu0_peer"',
-            '"lane": "npu_micro_task_auditor"',
-        ),
+        and ordered_lane_specs(provider_commands),
         "heap_metrics_require_gpu0_npu_provider_evidence": has(
             heap_run_loop, "gpu0_provider_evidence_count"
         )

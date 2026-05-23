@@ -59,6 +59,7 @@ CONTEXT_INDEX.md
 | ia_carmine family index | `ia_carmine/CONTEXT_INDEX.md` | complete-enough |
 | ia_carmine shared helpers | `ia_carmine/_shared/TOOL_CONTEXT.md` | complete-enough |
 | ia_carmine agent context | `ia_carmine/context/agent_context/TOOL_CONTEXT.md` | complete-enough |
+| ia_carmine internal RAG context | `ia_carmine/context/agent_context/TOOL_CONTEXT.md` | complete-enough |
 | ia_carmine agent memory | `ia_carmine/memory/agent_memory/TOOL_CONTEXT.md` | complete-enough |
 | ia_carmine agent review | `ia_carmine/product/agent_review/TOOL_CONTEXT.md` | complete-enough |
 | ia_carmine AI workload | `ia_carmine/product/ai_workload/TOOL_CONTEXT.md` | complete-enough |
@@ -87,6 +88,7 @@ CONTEXT_INDEX.md
 | Tools/validation overview | `Tools/validation/TOOL_CONTEXT.md` | partial |
 | Tools/validation family index | `Tools/validation/CONTEXT_INDEX.md` | complete-enough |
 | Tools/validation agent context | `Tools/validation/agent_context/TOOL_CONTEXT.md` | complete-enough |
+| Tools/validation RAG context checks | `Tools/validation/agent_context/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation agent memory | `Tools/validation/agent_memory/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation agent review | `Tools/validation/agent_review/TOOL_CONTEXT.md` | complete-enough |
 | Tools/validation AI workload | `Tools/validation/ai_workload/TOOL_CONTEXT.md` | complete-enough |

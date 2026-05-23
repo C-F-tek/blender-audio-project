@@ -5,7 +5,24 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ia_carmine.context.heap_context_memory_reload.common import repo_rel, sha256_text
+from ia_carmine.context.heap_context_memory_reload.common import read_json, repo_rel, sha256_text
+
+
+def artifact_json(repo_root: Path, artifacts: dict[str, str], key: str) -> dict[str, Any]:
+    value = str(artifacts.get(key) or "").strip()
+    if not value:
+        return {}
+    path = Path(value)
+    if not path.is_absolute():
+        path = repo_root / path
+    return read_json(path)
+
+
+def as_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
 
 
 def requirement_status(
@@ -44,6 +61,20 @@ def build_manifest(
     input_ready_before_heap = required_passed and bool(context_files)
     strict_startup = bool(strict_startup_reload or strict_ai_context_pack)
     passed = bool(input_ready_before_heap and (not strict_startup or not startup_reload_degraded))
+    rag_pack = artifact_json(repo_root, artifacts, "rag_context_pack_json")
+    rag_ingest = artifact_json(repo_root, artifacts, "rag_repo_ingest_json")
+    unified_pack = artifact_json(repo_root, artifacts, "startup_context_pack_json")
+    rag_index_ready = rag_ingest.get("rag_index_ready") is True
+    rag_repo_ingest_passed = rag_ingest.get("passed") is True
+    missing_embedding_count_after = as_int(rag_ingest.get("missing_embedding_count_after"))
+    rag_index_action = str(rag_ingest.get("action") or "")
+    ollama_embedding_performed = rag_ingest.get("ollama_embedding_performed") is True
+    rag_resource_lane = str(rag_ingest.get("resource_lane") or "")
+    providers_not_started_reason = str(rag_ingest.get("providers_not_started_reason") or "")
+    rag_pack_loaded = bool(
+        rag_pack.get("passed") is True and as_int(rag_pack.get("retrieved_count")) > 0
+    )
+    unified_pack_loaded = bool(unified_pack.get("passed") is True)
     return {
         "schema_version": 1,
         "kind": "heap_context_memory_reload_manifest",
@@ -62,6 +93,13 @@ def build_manifest(
         "input_ready_before_heap": input_ready_before_heap,
         "load_context_into_heap": True,
         "startup_reload_degraded": startup_reload_degraded,
+        "rag_index_ready": rag_index_ready,
+        "rag_repo_ingest_passed": rag_repo_ingest_passed,
+        "rag_index_action": rag_index_action,
+        "rag_missing_embedding_count_after": missing_embedding_count_after,
+        "rag_resource_lane": rag_resource_lane,
+        "ollama_embedding_performed": ollama_embedding_performed,
+        "providers_not_started_reason": providers_not_started_reason,
         "strict_startup_reload": strict_startup,
         "required_reload_passed": required_passed,
         "optional_reload_passed": optional_passed,
@@ -92,6 +130,17 @@ def build_manifest(
             "semantic_code_chunks_loaded": bool(artifacts.get("semantic_code_chunks_json")),
             "ai_context_pack_loaded": bool(artifacts.get("ai_context_pack_json"))
             and context_pack_result.get("artifact_useful"),
+            "rag_index_ready": rag_index_ready,
+            "rag_repo_ingest_passed": rag_repo_ingest_passed,
+            "rag_missing_embedding_count_after": missing_embedding_count_after,
+            "rag_index_action": rag_index_action,
+            "rag_resource_lane": rag_resource_lane,
+            "ollama_embedding_performed": ollama_embedding_performed,
+            "providers_not_started_reason": providers_not_started_reason,
+            "rag_context_pack_loaded": bool(rag_pack_loaded and rag_index_ready),
+            "startup_unified_context_pack_loaded": unified_pack_loaded,
+            "rag_context_pack_required": True,
+            "startup_unified_context_pack_required": True,
             "semantic_evidence_chunks_loaded": bool(artifacts.get("semantic_evidence_chunks_json")),
             "heap_task_file_written": task_file.exists(),
             "advisory_context_pack_non_blocking": not bool(strict_ai_context_pack),
@@ -113,6 +162,13 @@ def build_print_payload(manifest: dict[str, Any], repo_root: Path, manifest_path
         "passed": manifest["passed"],
         "input_ready_before_heap": manifest["input_ready_before_heap"],
         "startup_reload_degraded": manifest["startup_reload_degraded"],
+        "rag_index_ready": manifest.get("rag_index_ready", False),
+        "rag_repo_ingest_passed": manifest.get("rag_repo_ingest_passed", False),
+        "rag_missing_embedding_count_after": manifest.get("rag_missing_embedding_count_after", 0),
+        "rag_index_action": manifest.get("rag_index_action", ""),
+        "rag_resource_lane": manifest.get("rag_resource_lane", ""),
+        "ollama_embedding_performed": manifest.get("ollama_embedding_performed", False),
+        "providers_not_started_reason": manifest.get("providers_not_started_reason", ""),
         "required_reload_passed": manifest["required_reload_passed"],
         "optional_reload_passed": manifest["optional_reload_passed"],
         "request_file": manifest.get("request_file", ""),

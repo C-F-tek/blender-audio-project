@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 try:
     from ia_carmine._shared.heap_final_code_product import code_product_items, code_product_status, render_full_code_product_markdown
-    from ia_carmine._shared.heap_final_readable_synthesis import render_markdown
+    from ia_carmine._shared.heap_final_readable_synthesis import closure_display_values, render_markdown
     from ia_carmine.product.code_product.final_readable_product.code_matrix_discovery import load_code_matrix
     from ia_carmine.product.code_product.final_readable_product.operator_decision import write_operator_decision
     from ia_carmine.product.code_product.final_readable_product.product_contract import code_product_markdown_metrics, final_product_blockers, real_code_product_ready
@@ -22,7 +22,7 @@ except ImportError:  # pragma: no cover
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from ia_carmine._shared.heap_final_code_product import code_product_items, code_product_status, render_full_code_product_markdown  # type: ignore
-    from ia_carmine._shared.heap_final_readable_synthesis import render_markdown  # type: ignore
+    from ia_carmine._shared.heap_final_readable_synthesis import closure_display_values, render_markdown  # type: ignore
     from ia_carmine.product.code_product.final_readable_product.code_matrix_discovery import load_code_matrix  # type: ignore
     from ia_carmine.product.code_product.final_readable_product.operator_decision import write_operator_decision  # type: ignore
     from ia_carmine.product.code_product.final_readable_product.product_contract import code_product_markdown_metrics, final_product_blockers, real_code_product_ready  # type: ignore
@@ -196,6 +196,23 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     soft_lock_state = str(soft_lock.get("soft_lock_state") or "")
     closure_quorum_status = str(soft_lock.get("closure_quorum_status") or "")
     closure_quorum_reason = str(soft_lock.get("closure_quorum_reason") or "")
+    gpu1_closure_display, gpu0_closure_display = closure_display_values(
+        soft_lock,
+        metrics,
+        revision,
+    )
+    if gpu1_closure_display == "gpu1_decision_missing":
+        closure_quorum_status = closure_quorum_status or "blocked_with_reason"
+        closure_quorum_reason = (
+            closure_quorum_reason or "gpu0_veto_not_allowed_without_gpu1_decision"
+        )
+        soft_lock["closure_quorum_status"] = closure_quorum_status
+        soft_lock["closure_quorum_reason"] = closure_quorum_reason
+        soft_lock["cpu_closure_validation"] = (
+            soft_lock.get("cpu_closure_validation") or "blocked_provider_or_pointer"
+        )
+    soft_lock["soft_lock_closure_owner_decision"] = gpu1_closure_display
+    soft_lock["gpu0_closure_agreement"] = gpu0_closure_display
     pointer_closure_blocked = open_pointer_count_final > 0
     blocked_continuation = bool(
         not provider_runtime_blocked
@@ -266,6 +283,27 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         peer_pending_reasons.append("gpu0_peer_followup_pending")
     if int(generic_product.get("npu_peer_followup_pending_count") or metrics.get("npu_peer_followup_pending_count") or 0) > 0:
         peer_pending_reasons.append("npu_peer_followup_pending")
+    if int(generic_product.get("generic_write_capture_failed_count") or metrics.get("generic_write_capture_failed_count") or 0) > 0:
+        peer_pending_reasons.append("generic_write_capture_failed")
+    if metrics.get("context_hierarchy_valid") is False:
+        peer_pending_reasons.append("context_hierarchy_invalid")
+    if metrics.get("gpu1_primary_workload_valid") is False:
+        peer_pending_reasons.append("gpu1_primary_workload_missing")
+    if metrics.get("gpu1_primary_evidence_valid") is False:
+        peer_pending_reasons.append("gpu1_primary_evidence_missing")
+    if metrics.get("gpu1_leader_valid") is False:
+        peer_pending_reasons.append("gpu1_leader_missing")
+    if (
+        metrics.get("leader_source") == "native_tool_result"
+        and int(metrics.get("gpu1_native_tool_call_count") or 0) <= 0
+    ):
+        peer_pending_reasons.append("gpu1_native_tool_result_invalid")
+    if (
+        metrics.get("gpu1_boot_leader_ready") is True
+        and metrics.get("sidecars_start_policy") == "after_gpu1_residency_handshake"
+        and float(metrics.get("parallel_provider_overlap_seconds") or 0.0) <= 0.0
+    ):
+        peer_pending_reasons.append("parallelism_lost_by_serial_leader_gate")
     peer_pending_reason = ",".join(peer_pending_reasons)
     final_soft_close_reason = (
         peer_pending_reason
@@ -316,8 +354,8 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "soft_close_reason": final_soft_close_reason,
         "product_blocked_reason": "" if code_product_ready else final_soft_close_reason,
         "soft_lock_state": soft_lock_state,
-        "soft_lock_closure_owner_decision": soft_lock.get("soft_lock_closure_owner_decision", ""),
-        "gpu0_closure_agreement": soft_lock.get("gpu0_closure_agreement", ""),
+        "soft_lock_closure_owner_decision": gpu1_closure_display,
+        "gpu0_closure_agreement": gpu0_closure_display,
         "npu_closure_advisory": soft_lock.get("npu_closure_advisory", ""),
         "cpu_closure_validation": soft_lock.get("cpu_closure_validation", ""),
         "closure_quorum_status": closure_quorum_status,
@@ -337,6 +375,35 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "npu_sidecar_status": revision.get("npu_sidecar_status") or (
             "evidence_ready_non_closer" if revision.get("npu_block_count") else ""
         ),
+        "lane_tiers": metrics.get("lane_tiers", {}),
+        "lane_authority": metrics.get("lane_authority", {}),
+        "lane_context_budgets": metrics.get("lane_context_budgets", {}),
+        "gpu1_context_budget": metrics.get("gpu1_context_budget", {}),
+        "gpu0_context_budget": metrics.get("gpu0_context_budget", {}),
+        "npu_context_budget": metrics.get("npu_context_budget", {}),
+        "context_hierarchy_valid": metrics.get("context_hierarchy_valid"),
+        "gpu1_replight_valid": metrics.get("gpu1_replight_valid"),
+        "gpu1_boot_leader_ready": metrics.get("gpu1_boot_leader_ready"),
+        "gpu1_primary_workload_valid": metrics.get("gpu1_primary_workload_valid"),
+        "gpu1_primary_evidence_valid": metrics.get("gpu1_primary_evidence_valid"),
+        "gpu1_primary_evidence_source": metrics.get("gpu1_primary_evidence_source", ""),
+        "gpu1_primary_workload_chars": metrics.get("gpu1_primary_workload_chars"),
+        "gpu1_primary_workload_tokens": metrics.get("gpu1_primary_workload_tokens"),
+        "leader_source": metrics.get("leader_source", ""),
+        "gpu1_native_tool_call_count": metrics.get("gpu1_native_tool_call_count"),
+        "sidecars_start_policy": metrics.get("sidecars_start_policy", ""),
+        "parallel_provider_overlap_seconds": metrics.get(
+            "parallel_provider_overlap_seconds"
+        ),
+        "device_identity_map": metrics.get("device_identity_map", []),
+        "gpu1_leader_valid": metrics.get("gpu1_leader_valid"),
+        "gpu1_leader_block_id": metrics.get("gpu1_leader_block_id", ""),
+        "gpu1_consumed_generic_write_block_ids": metrics.get(
+            "gpu1_consumed_generic_write_block_ids", []
+        ),
+        "consumed_peer_block_ids": metrics.get("consumed_peer_block_ids", []),
+        "gpu1_consumed_gpu0_peer": metrics.get("gpu1_consumed_gpu0_peer"),
+        "gpu1_consumed_npu_peer": metrics.get("gpu1_consumed_npu_peer"),
         "code_product_status": code_product_state,
         "real_code_product_ready": code_product_ready,
         "code_product_metrics": code_product_report,

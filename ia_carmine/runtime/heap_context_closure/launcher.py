@@ -1,8 +1,12 @@
 """Orchestrate heap runtime context closure phases."""
+
 from __future__ import annotations
-import json
+
 from pathlib import Path
 from typing import Any
+
+from ia_carmine._shared.report_io import print_json_report
+
 from .commands import heap_command, startup_command
 from .common import (
     load_json,
@@ -35,7 +39,7 @@ def run_launcher(args: Any) -> int:
     _write_completed_manifest(args, state)
     summary = build_launcher_summary(args, state)
     write_json(state["run_dir"] / "heap_runtime_context_closure_launcher.json", summary)
-    print(json.dumps(summary, indent=2, ensure_ascii=False))
+    print_json_report(summary)
     return 0 if summary["launcher_passed"] else 2
 def _prepare_state(args: Any) -> dict[str, Any]:
     repo_root = resolve_repo_root(args.repo_root)

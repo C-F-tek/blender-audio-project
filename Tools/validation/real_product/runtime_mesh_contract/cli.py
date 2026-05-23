@@ -35,6 +35,20 @@ def ordered_tokens(text: str, *tokens: str) -> bool:
     return all(position >= 0 for position in positions) and positions == sorted(positions)
 
 
+def ordered_lane_specs(text: str) -> bool:
+    return ordered_tokens(
+        text,
+        '"lane": "gpu1_planner"',
+        '"lane": "gpu0_peer"',
+        '"lane": "npu_micro_task_auditor"',
+    ) or ordered_tokens(
+        text,
+        '"lane": GPU1_LANE',
+        '"lane": GPU0_LANE',
+        '"lane": NPU_LANE',
+    )
+
+
 def write_markdown(report: dict[str, Any], output: Path) -> str:
     lines = ["# Real Product Runtime Mesh Contract", "", f"- Passed: `{report.get('passed')}`", ""]
     for key in report.get("capability_order") or []:
@@ -163,12 +177,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         )
         and has(provider_commands, "build_ollama_gpu0_peer_report")
         and has(provider_commands, "build_npu_micro_task_companion_report")
-        and ordered_tokens(
-            provider_commands,
-            '"lane": "gpu1_planner"',
-            '"lane": "gpu0_peer"',
-            '"lane": "npu_micro_task_auditor"',
-        )
+        and ordered_lane_specs(provider_commands)
         and has(provider_commands, "--require-ollama-gpu-residency")
         and has(provider_commands, "--leader-packet")
         and has(provider_absorption, "provider_work_verified")
@@ -185,7 +194,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_teamwork_packet, "gpu0_peer_authority")
         and has(provider_teamwork_packet, "npu_peer_authority")
         and has(provider_teamwork_packet, "GPU1 commands final synthesis")
-        and has(provider_teamwork_packet, "parallel peer")
+        and (
+            has(provider_teamwork_packet, "parallel peer")
+            or has(provider_teamwork_packet, "unified_parallel_execution")
+        )
         and has(provider_teamwork_packet, "requires_concrete_rewrite")
         and has(provider_teamwork_packet, "NO_PATCHABLE_TARGET")
         and has(provider_teamwork_packet, "startup_artifacts")

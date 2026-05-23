@@ -16,7 +16,7 @@ the nearest package family before editing runtime code.
 | Runtime provider blackboard | `ia_carmine/runtime/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md` |
 | Runtime contractor universe | `ia_carmine/runtime/runtime/contractor_universe/TOOL_CONTEXT.md` |
 | Memory | `ia_carmine/memory/agent_memory/` |
-| Context reload and packs | `ia_carmine/context/` |
+| Context reload, packs and internal RAG | `ia_carmine/context/` |
 | Provider mesh | `ia_carmine/providers/provider_mesh/TOOL_CONTEXT.md` |
 | OpenVINO NPU provider core | `ia_carmine/providers/npu/` |
 | Product code/final artifacts | `ia_carmine/product/code_product/TOOL_CONTEXT.md` |

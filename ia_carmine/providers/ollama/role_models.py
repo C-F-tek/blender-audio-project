@@ -224,14 +224,21 @@ def start_gpu0_vulkan_server(
 ) -> dict[str, Any]:
     selection = resolve_vulkan_visible_devices(visible_devices)
     client = OllamaSdkClient(base_url)
+    log_dir = repo_root / "output" / "validation" / "ollama_gpu0_vulkan_server"
     if client.is_ready():
         if not restart_if_ready:
+            stdout_log = log_dir / "stdout.log"
+            stderr_log = log_dir / "stderr.log"
             return {
                 "started": False,
                 "ready": True,
                 "base_url": base_url,
+                "pid": ollama_listen_pid(base_url),
                 "reason": "already_ready",
                 "vulkan_device_selection": selection,
+                "stdout_log": str(stdout_log) if stdout_log.is_file() else "",
+                "stderr_log": str(stderr_log) if stderr_log.is_file() else "",
+                "existing_server_requires_handoff_evidence": True,
             }
         stop_gpu0_vulkan_server(base_url)
     exe = find_ollama_exe()
@@ -243,7 +250,6 @@ def start_gpu0_vulkan_server(
             "error": "ollama executable not found",
             "vulkan_device_selection": selection,
         }
-    log_dir = repo_root / "output" / "validation" / "ollama_gpu0_vulkan_server"
     log_dir.mkdir(parents=True, exist_ok=True)
     stdout = (log_dir / "stdout.log").open("wb")
     stderr = (log_dir / "stderr.log").open("wb")

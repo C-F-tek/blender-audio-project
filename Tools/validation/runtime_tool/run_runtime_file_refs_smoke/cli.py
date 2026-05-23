@@ -37,7 +37,11 @@ except ImportError:
 
 
 def build_report(repo_root: Path) -> dict[str, object]:
-    source_target = first_git_file(repo_root, ("*.py", "*.ps1", "*.json", "*.md"), exclude_prefix="Tools/validation/")
+    source_target = first_git_file(
+        repo_root,
+        ("ia_carmine/*.py", "ia_carmine/**/*.py", "*.py", "*.ps1", "*.json", "*.md"),
+        exclude_prefix="Tools/validation/",
+    )
     validation_target = first_git_file(repo_root, ("Tools/validation/*.py",), exclude_prefix="")
     text = """
 TARGET_FILES:

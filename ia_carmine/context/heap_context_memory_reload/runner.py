@@ -5,14 +5,16 @@ from __future__ import annotations
 from argparse import Namespace
 import json
 from pathlib import Path
+from typing import Any
 
 from ia_carmine.context.agent_context.transient_request_context.cli import build_context as build_transient_context, render_markdown as render_transient_markdown
 from ia_carmine._shared.agent_memory_inventory_cli import DEFAULT_MEMORY_DB, build_inventory as build_memory_inventory, render_markdown as render_memory_inventory_markdown
 from ia_carmine.context.heap_context_memory_reload.builders import build_repo_docs_map, collect_semantic_code_chunks, write_semantic_evidence
-from ia_carmine.context.heap_context_memory_reload.common import repo_rel, run_tool, summarize_artifact, write_json
+from ia_carmine.context.heap_context_memory_reload.common import read_json, repo_rel, run_tool, summarize_artifact, write_json
 from ia_carmine.context.heap_context_memory_reload.delta import build_context_delta
 from ia_carmine.context.heap_context_memory_reload.manifest import build_manifest, build_print_payload
 from ia_carmine.context.heap_context_memory_reload.memory_write import build_final_task_markdown, run_operational_memory_write
+from ia_carmine.context.heap_context_memory_reload import rag_startup
 from ia_carmine.context.heap_context_memory_reload.runner_state import ReloadRun
 from ia_carmine.context.heap_context_memory_reload.scanner import existing_context_files
 
@@ -63,6 +65,9 @@ def run_reload(state: ReloadRun) -> int:
     _run_operational_memory_reads(state)
     _run_transient_context(state)
     _run_ai_context_pack(state)
+    rag_startup.ensure_rag_index_current(state, record_tool=record_inprocess_tool)
+    rag_startup.run_rag_context_pack(state)
+    rag_startup.write_unified_context_pack(state, record_tool=record_inprocess_tool)
     state.artifacts.update(write_semantic_evidence(state.commands, state.repo_root, state.output_dir))
     task_file = state.output_dir / "heap_startup_input_ready_context.md"
     state.artifacts["heap_task_file"] = repo_rel(state.repo_root, task_file)

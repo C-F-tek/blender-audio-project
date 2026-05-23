@@ -15,7 +15,7 @@ def request_args(state: dict[str, Any]) -> list[str]:
 
 
 def startup_command(args: Any, state: dict[str, Any]) -> list[str]:
-    return [
+    command = [
         state["project_python"],
         "-m",
         "ia_carmine",
@@ -37,7 +37,34 @@ def startup_command(args: Any, state: dict[str, Any]) -> list[str]:
         str(args.startup_scan_context_files),
         "--max-chars-per-file",
         str(args.startup_max_chars_per_file),
+        "--rag-db",
+        str(args.rag_db),
+        "--rag-index-policy",
+        str(args.rag_index_policy),
+        "--rag-embedding-endpoint",
+        str(args.rag_embedding_endpoint),
+        "--rag-embedding-model",
+        str(args.rag_embedding_model),
+        "--rag-ingest-batch-size",
+        str(args.rag_ingest_batch_size),
+        "--rag-embed-smoke-batch-size",
+        str(args.rag_embed_smoke_batch_size),
+        "--rag-chunk-min-chars",
+        str(args.rag_chunk_min_chars),
+        "--rag-chunk-max-chars",
+        str(args.rag_chunk_max_chars),
+        "--rag-chunk-overlap-chars",
+        str(args.rag_chunk_overlap_chars),
+        "--rag-max-file-size",
+        str(args.rag_max_file_size),
+        "--rag-top-k",
+        str(args.rag_top_k),
+        "--rag-char-budget",
+        str(args.rag_char_budget),
     ]
+    if getattr(args, "rag_allow_missing_embeddings", False):
+        command.append("--rag-allow-missing-embeddings")
+    return command
 
 
 def heap_command(args: Any, state: dict[str, Any]) -> list[str]:

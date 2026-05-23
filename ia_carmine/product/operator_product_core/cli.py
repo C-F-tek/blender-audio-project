@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
+
+from ia_carmine._shared.report_io import print_json_report
 
 from .io_utils import now_stamp
 from .models import DEFAULT_RUN_LABEL, LauncherConfig
@@ -114,11 +115,11 @@ def main() -> int:
         raise SystemExit("--apply-safe is a separate code-product action, not part of run-and-review")
     if args.run_and_review:
         report = run_operator_lab(config, timeout=None)
-        print(json.dumps(report, indent=2, ensure_ascii=False))
+        print_json_report(report)
         return 0 if report.get("passed") else 2
     if args.run:
         report = run_heap(config, timeout=None)
-        print(json.dumps(report, indent=2, ensure_ascii=False))
+        print_json_report(report)
         return 0 if report.get("passed") else 2
     code_product = Path(args.code_product)
     if not args.code_product and args.request_file:
@@ -132,8 +133,8 @@ def main() -> int:
             apply_safe=args.apply_safe,
             require_all_integrated=args.require_all_integrated,
         )
-        print(json.dumps(report, indent=2, ensure_ascii=False))
+        print_json_report(report)
         return 0 if report.get("passed") else 2
     command = build_heap_command(config)
-    print(json.dumps({"command": command, "parameters_source": "direct_cli"}, indent=2, ensure_ascii=False))
+    print_json_report({"command": command, "parameters_source": "direct_cli"})
     return 0

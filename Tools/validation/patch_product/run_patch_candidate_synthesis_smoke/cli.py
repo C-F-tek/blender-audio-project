@@ -29,7 +29,7 @@ def write_text(path: Path, text: str) -> None:
 
 def build_fixture(work_dir: Path) -> Path:
     repo = work_dir / "fixture_repo"
-    target = repo / "Tools" / "ai" / "fixture_tool.py"
+    target = repo / "ia_carmine" / "fixture_tool.py"
     write_text(
         target,
         """from __future__ import annotations
@@ -105,7 +105,7 @@ def main() -> int:
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     work_dir = repo_root / "output" / "validation" / f"patch_candidate_synthesis_smoke_{stamp}"
     fixture_repo = build_fixture(work_dir)
-    target = fixture_repo / "Tools" / "ai" / "fixture_tool.py"
+    target = fixture_repo / "ia_carmine" / "fixture_tool.py"
     before = target.read_text(encoding="utf-8")
     candidate_json = fixture_repo / "output" / "validation" / "patch_candidate_synthesis.json"
     candidate_md = candidate_json.with_suffix(".md")
@@ -149,6 +149,11 @@ def main() -> int:
         errors.append("no validated candidate produced")
     if int(data.get("candidate_count") or 0) != 1:
         errors.append("provider evidence diff should produce exactly one candidate")
+    candidates = data.get("candidates") if isinstance(data.get("candidates"), list) else []
+    if not candidates or candidates[0].get("diff_source") != "evidence_owned":
+        errors.append("candidate must be evidence_owned, not current worktree diagnostic")
+    if data.get("current_worktree_diagnostic_candidate_count") != 0:
+        errors.append("default synthesis must not copy current worktree diffs")
     if before != after:
         errors.append("source file was modified by synthesis")
     if "```diff" not in md_body:

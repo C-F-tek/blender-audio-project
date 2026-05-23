@@ -12,6 +12,7 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
     write_json_report,
 )
 from ia_carmine.runtime.heap_gate.provider_lane_policy import PRIMARY_LANE, lane_policy_payload
+from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import context_hierarchy_payload
 
 
 def write_provider_launch_manifest(
@@ -23,11 +24,14 @@ def write_provider_launch_manifest(
     time_contract: dict[str, Any],
     stage: str,
 ) -> None:
+    metrics = _parallel_window_metrics(prepared)
     write_json_report(
         {
             "kind": "provider_launch_manifest",
             "execution_mode": "provider_teamwork_unified_parallel",
             "revision": revision,
+            "provider_cycle_id": revision,
+            "revision_owner_lane": PRIMARY_LANE,
             "round": round_id,
             "stage": stage,
             "created_at": now_iso(),
@@ -45,6 +49,9 @@ def write_provider_launch_manifest(
             "selected_ollama_num_ctx": getattr(gate, "selected_ollama_num_ctx", None),
             "strict_provider_model": bool(getattr(gate.args, "strict_provider_model", False)),
             "provider_runtime_plan": getattr(gate, "provider_runtime_plan", ""),
+            "provider_lane_hierarchy": context_hierarchy_payload(
+                gate.args, gpu1_ctx=getattr(gate, "selected_ollama_num_ctx", None)
+            ),
             "provider_role_coexistence_preflight": getattr(
                 gate, "provider_role_coexistence_preflight", {}
             ),
@@ -52,8 +59,12 @@ def write_provider_launch_manifest(
             "ollama_gpu_layers_requested": str(
                 getattr(gate.args, "ollama_gpu_layers", "") or "all"
             ),
-            "sidecar_start_policy": (
-                "start_gpu0_npu_after_brief_gpu1_residency_preflight_not_after_gpu1_completion"
+            "sidecar_start_policy": str(
+                getattr(gate, "sidecars_start_policy", "")
+                or "after_gpu1_residency_handshake"
+            ),
+            "gpu1_boot_leader_ready": bool(
+                getattr(gate, "gpu1_boot_leader_ready", False)
             ),
             "gpu1_residency_preflight": getattr(gate, "gpu1_residency_preflight", {}),
             "provider_replight_required": True,
@@ -65,6 +76,14 @@ def write_provider_launch_manifest(
             ],
             "sidecars_start_after_gpu1_seconds": getattr(
                 gate, "provider_sidecars_start_after_gpu1_seconds", None
+            ),
+            "parallel_provider_overlap_seconds": getattr(
+                gate, "parallel_provider_overlap_seconds", None
+            ),
+            "production_provider_window": metrics,
+            "all_selected_lanes_joined": metrics.get("all_selected_lanes_joined"),
+            "sidecar_alone_after_gpu1_seconds": metrics.get(
+                "sidecar_alone_after_gpu1_seconds"
             ),
             "soft_lock_policy": {
                 "state": "closing_open_pointers",
@@ -81,15 +100,18 @@ def write_provider_launch_manifest(
 
 def _lane_manifest_item(gate: Any, item: dict[str, Any]) -> dict[str, Any]:
     spec = item.get("spec", {})
+    lane = str(item.get("lane") or "")
     return {
         "lane": item.get("lane"),
+        "provider_cycle_id": spec.get("revision") or item.get("revision"),
+        "revision_owner_lane": PRIMARY_LANE,
+        "gpu1_revision_owner": lane == PRIMARY_LANE,
+        "review_for_gpu1_cycle": item.get("review_for_gpu1_cycle"),
+        "audit_for_gpu1_cycle": item.get("audit_for_gpu1_cycle"),
+        "cannot_open_revision": lane != PRIMARY_LANE,
         "requirement": item.get("requirement"),
         "role": spec.get("role"),
-        "provider_model": (
-            getattr(gate, "selected_provider_model", "") or gate.args.provider_model
-            if item.get("lane") == PRIMARY_LANE
-            else spec.get("provider_model", "")
-        ),
+        "provider_model": spec.get("provider_model", ""),
         "pid": item.get("pid"),
         "started_at": item.get("started_at"),
         "completed_at": item.get("completed_at"),
@@ -102,11 +124,52 @@ def _lane_manifest_item(gate: Any, item: dict[str, Any]) -> dict[str, Any]:
         "provider_base_url": spec.get("provider_base_url"),
         "provider_compute_device": spec.get("provider_compute_device"),
         "provider_device_policy": spec.get("provider_device_policy"),
+        "logical_lane": spec.get("logical_lane") or item.get("lane"),
+        "provider_backend_device_id": spec.get("provider_backend_device_id"),
+        "windows_task_manager_device_hint": spec.get("windows_task_manager_device_hint"),
+        "vulkan_visible_device": spec.get("vulkan_visible_device"),
+        "vulkan_device_name": spec.get("vulkan_device_name"),
+        "vulkan_vendor_id": spec.get("vulkan_vendor_id"),
+        "device_identity_verified": spec.get("device_identity_verified"),
+        "lane_tier": spec.get("lane_tier"),
+        "authority": spec.get("authority"),
+        "context_budget": spec.get("context_budget"),
         **lane_policy_payload(item),
         "prepare_error": item.get("prepare_error"),
         "blocked_reason": item.get("blocked_reason", ""),
         "output": repo_rel(gate.repo_root, Path(spec["output"])),
         "leader_packet": gate.provider_leader_packet_path,
+    }
+
+
+def _parallel_window_metrics(prepared: list[dict[str, Any]]) -> dict[str, Any]:
+    primary = next((item for item in prepared if item.get("lane") == PRIMARY_LANE), {})
+    primary_start = primary.get("started_perf")
+    primary_end = primary.get("completed_perf")
+    sidecars = [item for item in prepared if item.get("lane") != PRIMARY_LANE]
+    start_skews: dict[str, float] = {}
+    sidecar_alone = 0.0
+    for item in sidecars:
+        lane = str(item.get("lane") or "")
+        side_start = item.get("started_perf")
+        side_end = item.get("completed_perf")
+        if primary_start is not None and side_start is not None:
+            start_skews[lane] = round(float(side_start) - float(primary_start), 6)
+        if primary_end is not None and side_end is not None:
+            sidecar_alone = max(
+                sidecar_alone,
+                max(0.0, float(side_end) - float(primary_end)),
+            )
+    return {
+        "primary_lane": PRIMARY_LANE,
+        "selected_lane_count": len(prepared),
+        "started_lane_count": sum(1 for item in prepared if item.get("started_at")),
+        "completed_lane_count": sum(1 for item in prepared if item.get("completed_at")),
+        "all_selected_lanes_joined": bool(
+            prepared and all(item.get("completed") is not None for item in prepared)
+        ),
+        "start_skew_seconds": start_skews,
+        "sidecar_alone_after_gpu1_seconds": round(sidecar_alone, 6),
     }
 
 
@@ -159,6 +222,14 @@ def _publish_running_state(
             "role": spec.get("role"),
             "requirement": item["requirement"],
             "revision": revision,
+            "provider_cycle_id": revision,
+            "revision_owner_lane": PRIMARY_LANE,
+            "gpu1_revision_owner": item.get("lane") == PRIMARY_LANE,
+            "review_for_gpu1_cycle": revision if item.get("lane") == "gpu0_peer" else None,
+            "audit_for_gpu1_cycle": revision
+            if item.get("lane") == "npu_micro_task_auditor"
+            else None,
+            "cannot_open_revision": item.get("lane") != PRIMARY_LANE,
             "status": "running",
             "pid": pid,
             "started_at": started_at,
@@ -170,6 +241,13 @@ def _publish_running_state(
             "provider_backend": spec.get("provider_backend"),
             "provider_compute_device": spec.get("provider_compute_device"),
             "provider_device_policy": spec.get("provider_device_policy"),
+            "logical_lane": spec.get("logical_lane") or item.get("lane"),
+            "provider_backend_device_id": spec.get("provider_backend_device_id"),
+            "windows_task_manager_device_hint": spec.get("windows_task_manager_device_hint"),
+            "vulkan_visible_device": spec.get("vulkan_visible_device"),
+            "vulkan_device_name": spec.get("vulkan_device_name"),
+            "vulkan_vendor_id": spec.get("vulkan_vendor_id"),
+            "device_identity_verified": spec.get("device_identity_verified"),
             **lane_policy_payload(item),
         },
         target="orchestrator",
