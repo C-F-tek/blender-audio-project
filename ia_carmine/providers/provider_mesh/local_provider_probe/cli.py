@@ -20,6 +20,35 @@ from ia_carmine._shared.provider_probe_paths import ensure_repo_imports
 from ia_carmine._shared.provider_work_verification import provider_work_status
 
 
+def _option_supplied(argv: list[str], option: str) -> bool:
+    return any(item == option or item.startswith(f"{option}=") for item in argv)
+
+
+def _config_sources(args: argparse.Namespace, argv: list[str]) -> dict[str, str]:
+    option_map = {
+        "model": "--model",
+        "timeout": "--timeout",
+        "max_new_tokens": "--max-new-tokens",
+        "ollama_num_ctx": "--ollama-num-ctx",
+        "ollama_gpu_layers": "--ollama-gpu-layers",
+        "ollama_num_thread": "--ollama-num-thread",
+        "ollama_context_candidates": "--ollama-context-candidates",
+        "ollama_base_url": "--ollama-base-url",
+        "strict_provider_model": "--strict-provider-model",
+        "operator_gpu_observation": "--operator-gpu-observation",
+        "ollama_lane": "--ollama-lane",
+        "ollama_role": "--ollama-role",
+        "keep_alive": "--keep-alive",
+        "require_ollama_gpu_residency": "--require-ollama-gpu-residency",
+        "npu_python_exe": "--npu-python-exe",
+    }
+    return {
+        key: "cli_arg" if _option_supplied(argv, option) else "standalone_default"
+        for key, option in option_map.items()
+        if getattr(args, key, None) not in (None, "")
+    }
+
+
 def propagated_positive_int(name: str, value: int) -> int:
     parsed = int(value)
     if parsed <= 0:
@@ -311,6 +340,12 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "passed": not errors,
         "errors": errors,
         "warnings": [],
+        "config_sources": getattr(args, "config_sources", {}),
+        "standalone_default_fields": [
+            key
+            for key, source in getattr(args, "config_sources", {}).items()
+            if source == "standalone_default"
+        ],
         "provider_execution_performed": any(
             item.get("provider_work_verified") for item in lane_reports
         ),
@@ -354,7 +389,9 @@ def main() -> int:
     parser.add_argument("--npu-python-exe", default="")
     parser.add_argument("--run-ollama", action="store_true")
     parser.add_argument("--run-npu", action="store_true")
-    args = parser.parse_args()
+    raw_argv = sys.argv[1:]
+    args = parser.parse_args(raw_argv)
+    args.config_sources = _config_sources(args, raw_argv)
     if not args.run_ollama and not args.run_npu:
         parser.error("At least one explicit probe flag is required: --run-ollama or --run-npu")
     repo_root = Path(args.repo_root).resolve()

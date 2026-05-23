@@ -104,6 +104,14 @@ def write_provider_launch_manifest(
 def _lane_manifest_item(gate: Any, item: dict[str, Any]) -> dict[str, Any]:
     spec = item.get("spec", {})
     lane = str(item.get("lane") or "")
+    derived_config = []
+    if isinstance(spec.get("derived_config"), list):
+        derived_config.extend(spec.get("derived_config") or [])
+    time_contract = item.get("time_counter_contract")
+    if isinstance(time_contract, dict):
+        lane_time = time_contract.get("lanes", {}).get(lane)
+        if isinstance(lane_time, dict) and isinstance(lane_time.get("derived_config"), list):
+            derived_config.extend(lane_time.get("derived_config") or [])
     return {
         "lane": item.get("lane"),
         "provider_cycle_id": spec.get("revision") or item.get("revision"),
@@ -137,6 +145,7 @@ def _lane_manifest_item(gate: Any, item: dict[str, Any]) -> dict[str, Any]:
         "lane_tier": spec.get("lane_tier"),
         "authority": spec.get("authority"),
         "context_budget": spec.get("context_budget"),
+        "derived_config": derived_config,
         **lane_policy_payload(item),
         "prepare_error": item.get("prepare_error"),
         "blocked_reason": item.get("blocked_reason", ""),

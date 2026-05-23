@@ -71,6 +71,33 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
     gpu0_budget = _bounded_seconds(budget // 4, 20, max(20, min(90, budget)))
     gpu0_tool_timeout = _bounded_seconds(gpu0_budget // 2, 8, gpu0_budget)
     npu_tool_timeout = _bounded_seconds(npu_budget // 2, 5, npu_budget)
+    gpu0_derived_config = [
+        {
+            "field": "gpu0.sidecar_budget_seconds",
+            "effective_value": gpu0_budget,
+            "source": "derived_from_budget_counter_seconds",
+            "reason": "GPU0 sidecar watchdog is a bounded review budget, not an operator truncation knob.",
+        },
+        {
+            "field": "gpu0.native_tool_timeout_seconds",
+            "effective_value": gpu0_tool_timeout,
+            "source": "derived_from_gpu0_sidecar_budget_seconds",
+            "reason": "Native tool timeout follows the sidecar packet-review budget.",
+        },
+    ]
+    npu_derived_config = [
+        {
+            "field": "npu.sidecar_budget_seconds",
+            "effective_value": npu_budget,
+            "source": "npu_micro_timeout_seconds_bounded_by_run_budget",
+            "requested_value": npu_requested,
+        },
+        {
+            "field": "npu.native_tool_timeout_seconds",
+            "effective_value": npu_tool_timeout,
+            "source": "derived_from_npu_sidecar_budget_seconds",
+        },
+    ]
     return {
         GPU1_LANE: {
             **contract,
@@ -107,6 +134,7 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
             "native_tool_calling_policy": "gpu0_same_schema_peer_only_requires_later_gpu1_consumption",
             "delta_context_mode": "pointer_delta_review",
             "started_lane_hard_kill_allowed": True,
+            "derived_config": gpu0_derived_config,
         },
         NPU_LANE: {
             **contract,
@@ -132,6 +160,7 @@ def build_provider_lane_time_contracts(args: Any) -> dict[str, dict[str, Any]]:
             "native_tool_calling_policy": "npu_may_call_native_tools_only_for_diagnostic_micro_audit",
             "delta_context_mode": "pointer_delta_micro_audit",
             "started_lane_hard_kill_allowed": True,
+            "derived_config": npu_derived_config,
         },
     }
 

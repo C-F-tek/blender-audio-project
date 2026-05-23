@@ -157,21 +157,27 @@ def main() -> int:
     command = [
         sys.executable,
         "-m",
-        "ia_carmine",
-        "heap_runtime_launcher_command",
+        "ia_carmine.cli",
+        "run",
         "--repo-root",
         ".",
         "--profile",
         "balanced_external_heap",
         "--revision-context",
         str(fixture_path),
-        "--include-postrun-package-command",
-        "--output",
+        "--dry-run",
+        "--effective-config-output",
         str(output_json),
     ]
     result = run(command, repo_root)
     payload = read_json(output_json)
-    generated_command = str(payload.get("command") or "")
+    generated_command = " ".join(str(item) for item in (payload.get("expanded_heap_command") or []))
+    field_sources = payload.get("field_sources") if isinstance(payload.get("field_sources"), dict) else {}
+    effective = (
+        payload.get("effective_universe_config")
+        if isinstance(payload.get("effective_universe_config"), dict)
+        else {}
+    )
     revision_fixture_payload = read_json(fixture_path)
     closure_module = load_heap_closure_module(repo_root)
     native_revision_prompt = closure_module.revision_context_prompt(
@@ -179,43 +185,39 @@ def main() -> int:
     )
     checks = [
         {"name": "command_builder_returncode_zero", "passed": result.get("passed") is True},
-        {"name": "schema_version_6", "passed": payload.get("schema_version") == 6},
+        {"name": "canonical_run_plan_schema", "passed": payload.get("kind") == "operator_universe_run_plan"},
         {
             "name": "profile_balanced",
-            "passed": payload.get("profile_name") == "balanced_external_heap",
+            "passed": field_sources.get("provider_model") == "profile:balanced_external_heap"
+            and effective.get("max_rounds") == 12,
         },
         {
-            "name": "postrun_package_command_present",
-            "passed": bool(payload.get("postrun_package_command")),
-        },
-        {
-            "name": "revision_context_loaded",
-            "passed": payload.get("revision_context_loaded") is True,
+            "name": "retired_launcher_command_not_used",
+            "passed": "heap_runtime_launcher_command" not in " ".join(command),
         },
         {
             "name": "revision_context_selection_explicit",
-            "passed": payload.get("revision_context_selection_policy")
-            == "explicit_revision_context",
+            "passed": field_sources.get("revision_context") == "cli_arg"
+            and effective.get("revision_context") == str(fixture_path),
         },
         {
-            "name": "revision_context_injected_into_request",
-            "passed": "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN" in generated_command,
+            "name": "revision_context_forwarded_to_heap_closure",
+            "passed": "--revision-context" in generated_command and str(fixture_path) in generated_command,
         },
         {
             "name": "rewrite_priority_exposed_in_report",
-            "passed": payload.get("revision_context_requires_concrete_rewrite") is True
-            and payload.get("revision_context_priority_next_action")
-            == "rewrite_non_concrete_candidates",
+            "passed": revision_fixture_payload.get("requires_concrete_rewrite") is True
+            and revision_fixture_payload.get("priority_next_action") == "rewrite_non_concrete_candidates",
         },
         {
-            "name": "rewrite_priority_injected_into_request",
-            "passed": "requires_concrete_rewrite: True" in generated_command
-            and "rewrite_non_concrete_candidates" in generated_command,
+            "name": "rewrite_priority_injected_by_closure_runtime",
+            "passed": "requires_concrete_rewrite: True" in native_revision_prompt
+            and "rewrite_non_concrete_candidates" in native_revision_prompt,
         },
         {
-            "name": "symbol_propagation_skip_injected_into_request",
-            "passed": "symbol_propagation_skipped=True" in generated_command
-            and "candidate_not_concrete_enough" in generated_command,
+            "name": "symbol_propagation_skip_injected_by_closure_runtime",
+            "passed": "symbol_propagation_skipped=True" in native_revision_prompt
+            and "candidate_not_concrete_enough" in native_revision_prompt,
         },
         {
             "name": "native_closure_revision_prompt_exposes_rewrite_priority",
@@ -229,17 +231,12 @@ def main() -> int:
         },
         {
             "name": "main_command_targets_heap_closure",
-            "passed": "-m ia_carmine heap_context_closure" in generated_command,
+            "passed": "-m ia_carmine.cli heap_context_closure" in generated_command,
         },
         {
             "name": "provider_flags_are_unified",
             "passed": "--allow-provider-generation" in generated_command
             and "--operator-intent" in generated_command,
-        },
-        {
-            "name": "postrun_command_targets_orchestrator",
-            "passed": "-m ia_carmine external_heap_postrun_package"
-            in str(payload.get("postrun_package_command") or ""),
         },
     ]
     errors = [check["name"] for check in checks if not check.get("passed")]

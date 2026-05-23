@@ -24,6 +24,14 @@ class RuntimeFileRefResolver:
         validation_ref: bool = False,
     ) -> RuntimeFileRef:
         normalized = normalize_ref_text(raw)
+        if validation_ref:
+            validation_refs = [
+                item
+                for item in extract_file_refs(raw)
+                if normalize_ref_text(item).lower().startswith("tools/validation/")
+            ]
+            if validation_refs:
+                normalized = normalize_ref_text(validation_refs[0])
         rel, rel_error = repo_relative(self.repo_root, normalized)
         kind = classify_kind(rel)
         if rel_error:

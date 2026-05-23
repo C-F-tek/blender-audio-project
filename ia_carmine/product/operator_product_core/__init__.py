@@ -1,6 +1,4 @@
 """Reusable operator product launcher core."""
-
-from .cli import main
 from .models import (
     CLI_FLAG_KEYS,
     CLI_VALUE_KEYS,
@@ -22,6 +20,12 @@ from .runner import (
     run_operator_lab,
 )
 from .controller import OperatorProductController
+
+
+def main(*args, **kwargs):
+    from .cli import main as _main
+
+    return _main(*args, **kwargs)
 
 __all__ = [
     "CLI_FLAG_KEYS",

@@ -10,7 +10,24 @@ def dry_run_contract_policy(
     gpu1_base_url: str | None,
     gpu0_base_url: str | None,
     keep_alive: str | None,
+    field_sources: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    sources = field_sources or {}
+
+    def source_for(*fields: str) -> str:
+        values = [
+            str(sources.get(field) or "").strip()
+            for field in fields
+            if str(sources.get(field) or "").strip()
+            and str(sources.get(field) or "").strip() != "optional_unset"
+        ]
+        unique = sorted(set(values))
+        if not unique:
+            return "unknown"
+        if len(unique) == 1:
+            return unique[0]
+        return "mixed:" + ",".join(unique)
+
     return {
         "provider_role_policy": {
             "closure_owner": "gpu1_planner",
@@ -46,17 +63,35 @@ def dry_run_contract_policy(
                 "backend": "ollama",
                 "base_url": gpu1_base_url,
                 "keep_alive": keep_alive,
-                "source": "cli_arg",
+                "source": source_for("gpu1_base_url", "keep_alive"),
+                "config_sources": {
+                    "base_url": source_for("gpu1_base_url"),
+                    "keep_alive": source_for("keep_alive"),
+                },
             },
             "gpu0": {
                 "backend": "ollama_vulkan",
                 "base_url": gpu0_base_url,
                 "keep_alive": keep_alive,
-                "source": "cli_arg",
+                "source": source_for("gpu0_base_url", "gpu0_model", "keep_alive"),
+                "config_sources": {
+                    "base_url": source_for("gpu0_base_url"),
+                    "model": source_for("gpu0_model"),
+                    "keep_alive": source_for("keep_alive"),
+                },
             },
             "npu": {
                 "backend": "openvino_NPU",
-                "source": "cli_arg",
+                "source": source_for(
+                    "npu_model_dir",
+                    "npu_micro_start_mode",
+                    "allow_npu_device_workload",
+                ),
+                "config_sources": {
+                    "model_dir": source_for("npu_model_dir"),
+                    "start_mode": source_for("npu_micro_start_mode"),
+                    "device_workload": source_for("allow_npu_device_workload"),
+                },
             },
             "workload_verified_at_boot": False,
             "failure_exit": "provider_boot_gate_failed",

@@ -7,6 +7,7 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import (
@@ -33,6 +34,8 @@ from Tools.validation._shared.report_utils import write_json_report, write_text_
 
 
 class _Heap:
+    paths = SimpleNamespace(events=Path("events.jsonl"))
+
     def pending_broker_requests(self) -> bool:
         return False
 
@@ -81,11 +84,15 @@ class _Owner:
         )
         self.args = _Args()
         self.stamp = "smoke"
+        self.repo_root = Path(".").resolve()
         self.heap = _Heap()
         self.provider_revision_count = 0
         self.provider_recovery_attempt_count = 0
         self.provider_revision_feedback = ""
         self.provider_universe_blocked_reason = ""
+        self.provider_universe_deferred_block_reason = ""
+        self.state: dict[str, Any] = {"decisions": [], "product": {}}
+        self.decision_count = 0
         self.errors: list[str] = []
         self.provider_reports: list[dict[str, Any]] = [
             {
@@ -120,6 +127,7 @@ class _Owner:
         self.published: list[dict[str, Any]] = []
         self.heap_events: list[dict[str, Any]] = []
         self.persisted: list[dict[str, Any]] = []
+        self.warnings: list[str] = []
         self._response = "GPU1 recovery raw evidence with consumed_gpu0_block_id=smoke:gpu0:000"
 
     def latest_proposal_iteration_report(self) -> dict[str, Any]:
@@ -137,6 +145,24 @@ class _Owner:
         return "REJECTED_GPU1_BLOCK_RETRY_REQUIRED"
 
     def read_events(self) -> list[dict[str, Any]]:
+        return []
+
+    def request_text(self) -> str:
+        return "smoke request"
+
+    def build_final_response_text(self, _events: list[dict[str, Any]]) -> str:
+        return "blocked primary failure"
+
+    def response_source(self) -> str:
+        return "smoke"
+
+    def provider_refs(self) -> list[str]:
+        return []
+
+    def provider_response_texts(self) -> list[str]:
+        return []
+
+    def provider_role_decisions(self) -> list[dict[str, Any]]:
         return []
 
     def publish_provider_native_tool_calls(self, _round_id: int, _events: list[dict[str, Any]]) -> bool:
@@ -205,6 +231,8 @@ def run_smoke() -> dict[str, Any]:
     maybe_run_provider_recovery(blocked_owner, 1, [])
     deferred_block_owner = _Owner()
     block_provider_universe_run(deferred_block_owner, "gpu0_peer_followup_pending", 1, 0)
+    primary_block_owner = _Owner()
+    block_provider_universe_run(primary_block_owner, "gpu1_primary_workload_invalid", 1, 0)
     events_after = maybe_run_provider_recovery(owner, 1, [])
     status_after = provider_recovery_status(owner, events_after)
     config = context_hierarchy_payload(owner.args, gpu1_ctx=owner.args.ollama_num_ctx)
@@ -231,11 +259,19 @@ def run_smoke() -> dict[str, Any]:
         "terminal_product_deferred_until_gpu1_recovery": not any(
             item.get("kind") == "product_signal" for item in deferred_block_owner.published
         )
+        and deferred_block_owner.provider_universe_blocked_reason == ""
+        and deferred_block_owner.provider_universe_deferred_block_reason == "gpu0_peer_followup_pending"
         and any(
             item.get("kind") == "validation_signal"
             and item.get("payload", {}).get("decision")
             == "defer_terminal_block_until_gpu1_recovery"
             for item in deferred_block_owner.published
+        ),
+        "primary_gpu1_failure_not_deferred_by_sidecar_state": (
+            primary_block_owner.provider_universe_blocked_reason
+            == "gpu1_primary_workload_invalid"
+            and primary_block_owner.provider_universe_deferred_block_reason == ""
+            and any(item.get("kind") == "product_signal" for item in primary_block_owner.published)
         ),
         "gpu1_recovery_attempted": owner.provider_recovery_attempt_count == 1,
         "gpu1_recovery_attempted_metric": status_after.get("gpu1_recovery_attempted") is True,

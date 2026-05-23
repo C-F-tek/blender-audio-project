@@ -178,7 +178,10 @@ def build_report(
             else "recover_missing_proposal_chunk"
         )
     terminal_no_patchable = terminal_no_patchable_target_summary(proposals)
-    if terminal_no_patchable.get("all_proposals_terminal_no_patchable_target"):
+    if (
+        terminal_no_patchable.get("all_proposals_terminal_no_patchable_target")
+        and not provider_recovery_tasks
+    ):
         candidate_summary = dict(candidate_summary)
         candidate_summary["requires_concrete_rewrite"] = False
         candidate_summary["priority_next_action"] = "blocked_no_verified_target"

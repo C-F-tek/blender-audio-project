@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from ia_carmine.runtime.run.universe_config import OPTIONAL_FIELDS, config_field_names
+
 
 def run(repo_root: Path, command: list[str]) -> dict[str, Any]:
     env = os.environ.copy()
@@ -49,6 +51,15 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {error}" for error in report.get("errors") or [])
     return "\n".join(lines) + "\n"
+
+
+def safe_get(data: dict[str, Any], *keys: str) -> Any:
+    current: Any = data
+    for key in keys:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+    return current
 
 
 def main() -> int:
@@ -117,7 +128,11 @@ def main() -> int:
         "16",
         "--gpu0-min-seconds",
         "0.1",
+        "--npu-micro-start-mode",
+        "deferred",
         "--npu-micro-timeout-seconds",
+        "60",
+        "--npu-final-wait-seconds",
         "60",
         "--npu-max-context-chars",
         "8000",
@@ -195,6 +210,8 @@ def main() -> int:
         "ia_carmine,Tools",
         "--provider-prompt-tool-catalog-cap",
         "80",
+        "--max-degraded-lanes",
+        "0",
         "--allow-provider-generation",
         "--require-ollama-gpu-residency",
         "--allow-npu-device-workload",
@@ -204,11 +221,61 @@ def main() -> int:
         [*base, *explicit_args],
     )
     rejected_config_result = run(repo_root, [*base, "--dry-run", "--operator-config", "x.json"])
+    operator_mixed_local_result = run(
+        repo_root,
+        [
+            sys.executable,
+            "-m",
+            "ia_carmine.product.operator_product_core.cli",
+            "--run",
+            "--review-code-product",
+            "--code-product",
+            "CODE_PRODUCT_FULL_PATCH.md",
+        ],
+    )
+    profile_result = run(
+        repo_root,
+        [
+            *base,
+            "--profile",
+            "balanced_external_heap",
+            "--dry-run",
+        ],
+    )
     payload = resolved.get("payload") if isinstance(resolved.get("payload"), dict) else {}
+    profile_payload = (
+        profile_result.get("payload") if isinstance(profile_result.get("payload"), dict) else {}
+    )
     sources = payload.get("field_sources") if isinstance(payload.get("field_sources"), dict) else {}
+    profile_sources = (
+        profile_payload.get("field_sources")
+        if isinstance(profile_payload.get("field_sources"), dict)
+        else {}
+    )
     effective = (
         payload.get("effective_universe_config")
         if isinstance(payload.get("effective_universe_config"), dict)
+        else {}
+    )
+    profile_effective = (
+        profile_payload.get("effective_universe_config")
+        if isinstance(profile_payload.get("effective_universe_config"), dict)
+        else {}
+    )
+    required_fields = sorted(config_field_names() - OPTIONAL_FIELDS)
+    profile_missing_required = [
+        field
+        for field in required_fields
+        if profile_sources.get(field) in {None, "", "unresolved_missing", "optional_unset"}
+    ]
+    boot_policy = (
+        profile_payload.get("provider_boot_gate_policy")
+        if isinstance(profile_payload.get("provider_boot_gate_policy"), dict)
+        else {}
+    )
+    direct_parameters = (
+        profile_payload.get("direct_parameters")
+        if isinstance(profile_payload.get("direct_parameters"), dict)
         else {}
     )
     checks = [
@@ -231,9 +298,44 @@ def main() -> int:
             "passed": sources.get("provider_model") == "cli_arg"
             and sources.get("files_per_round") == "cli_arg"
             and sources.get("gpu0_ollama_num_ctx") == "cli_arg"
+            and sources.get("npu_micro_start_mode") == "cli_arg"
+            and sources.get("npu_final_wait_seconds") == "cli_arg"
+            and sources.get("max_degraded_lanes") == "cli_arg"
             and effective.get("provider_model") == "qwen2.5-coder:14b"
             and effective.get("files_per_round") == 4
-            and effective.get("gpu0_ollama_num_ctx") == 2048,
+            and effective.get("gpu0_ollama_num_ctx") == 2048
+            and effective.get("npu_micro_start_mode") == "deferred"
+            and effective.get("npu_final_wait_seconds") == 60
+            and effective.get("max_degraded_lanes") == 0,
+        },
+        {
+            "name": "profile_surface_resolves_without_hidden_defaults",
+            "passed": profile_result["returncode"] == 0
+            and profile_sources.get("provider_model") == "profile:balanced_external_heap"
+            and profile_sources.get("files_per_round") == "profile:balanced_external_heap"
+            and profile_sources.get("gpu0_ollama_num_ctx") == "profile:balanced_external_heap"
+            and profile_sources.get("npu_micro_start_mode") == "profile:balanced_external_heap"
+            and profile_sources.get("npu_final_wait_seconds") == "profile:balanced_external_heap"
+            and profile_sources.get("max_degraded_lanes") == "profile:balanced_external_heap"
+            and profile_effective.get("provider_model") == "qwen3-coder:latest"
+            and profile_effective.get("files_per_round") == 4
+            and profile_effective.get("npu_micro_start_mode") == "deferred",
+        },
+        {
+            "name": "all_profiles_cover_required_universe_fields",
+            "passed": profile_result["returncode"] == 0 and not profile_missing_required,
+        },
+        {
+            "name": "profile_provenance_reported_consistently",
+            "passed": profile_payload.get("parameters_source")
+            == "profile_surface_with_visible_effective_config"
+            and safe_get(boot_policy, "gpu1", "source") == "profile:balanced_external_heap"
+            and safe_get(boot_policy, "gpu0", "source") == "profile:balanced_external_heap"
+            and safe_get(boot_policy, "npu", "source") == "profile:balanced_external_heap"
+            and direct_parameters == profile_effective
+            and "provider_model" in direct_parameters
+            and "npu_max_new_tokens" in direct_parameters
+            and "allow_provider_generation" in direct_parameters,
         },
         {
             "name": "files_per_round_propagated_to_expanded_command",
@@ -244,6 +346,14 @@ def main() -> int:
             "name": "operator_config_flag_rejected",
             "passed": rejected_config_result["returncode"] != 0
             and "operator-config" in rejected_config_result["stderr_tail"] + rejected_config_result["stdout_tail"],
+        },
+        {
+            "name": "operator_product_core_mixed_provider_local_action_rejected",
+            "passed": operator_mixed_local_result["returncode"] != 0
+            and "provider actions" in (
+                operator_mixed_local_result["stderr_tail"]
+                + operator_mixed_local_result["stdout_tail"]
+            ),
         },
     ]
     errors = [check["name"] for check in checks if not check.get("passed")]
@@ -259,7 +369,10 @@ def main() -> int:
         "errors": errors,
         "missing_result": missing,
         "resolved_result": resolved,
+        "profile_result": profile_result,
+        "profile_missing_required": profile_missing_required,
         "rejected_config_result": rejected_config_result,
+        "operator_mixed_local_result": operator_mixed_local_result,
     }
     output = Path(args.output)
     if not output.is_absolute():

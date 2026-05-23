@@ -151,6 +151,7 @@ class RuntimeGateProviderExecutionMixin:
                         "provider_backend": spec.get("provider_backend"),
                         "provider_compute_device": spec.get("provider_compute_device"),
                         "provider_device_policy": spec.get("provider_device_policy"),
+                        "derived_config": spec.get("derived_config") or [],
                         "logical_lane": spec.get("logical_lane") or lane,
                         "provider_backend_device_id": spec.get("provider_backend_device_id"),
                         "windows_task_manager_device_hint": spec.get(
@@ -210,6 +211,7 @@ class RuntimeGateProviderExecutionMixin:
                             "budget_counter_seconds": spec.get("budget_counter_seconds"),
                             "soft_close_after_seconds": spec.get("soft_close_after_seconds"),
                             "watchdog_timeout_seconds": spec.get("watchdog_timeout_seconds"),
+                            "derived_config": spec.get("derived_config") or [],
                             **lane_policy_payload(spec),
                             "time_counter_contract": spec.get("time_counter_contract"),
                             "pid": None,
@@ -243,6 +245,7 @@ class RuntimeGateProviderExecutionMixin:
                             "budget_counter_seconds": spec.get("budget_counter_seconds"),
                             "soft_close_after_seconds": spec.get("soft_close_after_seconds"),
                             "watchdog_timeout_seconds": spec.get("watchdog_timeout_seconds"),
+                            "derived_config": spec.get("derived_config") or [],
                             **lane_policy_payload(spec),
                             "time_counter_contract": spec.get("time_counter_contract"),
                             "pid": None,

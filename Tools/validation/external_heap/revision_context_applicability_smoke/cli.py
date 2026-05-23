@@ -256,6 +256,63 @@ runtime_universe_contract = RuntimeUniverseContract()
     return pointer, composer, causality
 
 
+def build_recovery_priority_fixture() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    terminal_preview = """# HEAP_DELTA_PROPOSAL
+EXIT_DECISION=NO_PATCHABLE_TARGET
+POINTER_ACTION=STAY_FORWARD
+CURRENT_POINTER:
+- previous_block_id=proposal_previous
+- refines_block_id=proposal_previous
+- resume_from_block_id=proposal_terminal
+
+TARGET_FILES:
+- none_verified
+
+BLOCKED_NO_VERIFIED_TARGET_REASON:
+- no verified/allowlisted repo-relative patch target
+
+PATCH_SKETCH:
+- omitted because emitting a diff without a verified target would create a fake patch.
+"""
+    pointer = {
+        "protocol": "external_heap_block_pointer_v1",
+        "provider_execution_performed": True,
+        "provider_recovery_required": True,
+        "open_pointer_count": 1,
+        "blocks": [
+            {
+                "block_type": "proposal_chunk",
+                "block_id": "proposal_terminal",
+                "role": "gpu1_planner",
+                "preview": terminal_preview,
+                "candidate_response_preview": terminal_preview,
+                "quality_passed": False,
+                "accepted": False,
+                "previous_block_id": "proposal_previous",
+                "refines_block_id": "proposal_previous",
+                "resume_from_block_id": "proposal_terminal",
+            },
+            {
+                "block_type": "provider_evidence",
+                "block_id": "gpu1_provider_terminal",
+                "role": "gpu1_planner",
+                "refines_block_id": "proposal_terminal",
+                "resume_from_block_id": "proposal_terminal",
+            },
+            {
+                "block_type": "peer_review",
+                "block_id": "gpu0_sidecar_terminal",
+                "role": "gpu0_reviewer_refiner",
+                "refines_block_id": "proposal_terminal",
+                "resume_from_block_id": "proposal_terminal",
+            },
+        ],
+    }
+    composer = {"product_status": "blocked_with_reason"}
+    causality = {"causal_chain_passed": True}
+    return pointer, composer, causality
+
+
 def run_smoke() -> dict[str, Any]:
     pointer, composer, causality = build_fixture()
     report = build_report(pointer, composer, causality)
@@ -284,6 +341,8 @@ def run_smoke() -> dict[str, Any]:
     ]
     symbols = propagation.get("discovered_symbols") if isinstance(propagation, dict) else {}
     symbols = symbols if isinstance(symbols, dict) else {}
+    recovery_pointer, recovery_composer, recovery_causality = build_recovery_priority_fixture()
+    recovery_report = build_report(recovery_pointer, recovery_composer, recovery_causality)
 
     required_flags = {
         "bare_pass",
@@ -351,6 +410,12 @@ def run_smoke() -> dict[str, Any]:
             "passed": concrete_report.get("can_resume_universe") is True
             and concrete_report.get("resume_from_block_id") == "proposal_current",
         },
+        {
+            "name": "provider_recovery_priority_not_overwritten_by_no_patchable_target",
+            "passed": recovery_report.get("provider_recovery_task_count", 0) > 0
+            and recovery_report.get("priority_next_action")
+            == "gpu1_congruence_check_after_sidecar_join",
+        },
     ]
     passed = all(item["passed"] for item in checks)
     return {
@@ -365,6 +430,7 @@ def run_smoke() -> dict[str, Any]:
         "rewrite_task": first_task,
         "concrete_propagation_task": propagation,
         "concrete_revision_task_count": concrete_report.get("parallel_task_count"),
+        "recovery_priority_next_action": recovery_report.get("priority_next_action"),
         "errors": [] if passed else [item["name"] for item in checks if not item["passed"]],
         "warnings": [],
     }

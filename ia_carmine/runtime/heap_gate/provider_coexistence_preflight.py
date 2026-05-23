@@ -94,6 +94,8 @@ def run_provider_role_coexistence_preflight(
     keep_alive = str(getattr(gate.args, "keep_alive", "") or "").strip()
     if not gpu0_model or not gpu0_base_url or not gpu0_vulkan_devices or not keep_alive:
         raise RuntimeError("provider coexistence preflight requires explicit GPU0/base URL/device/keep_alive config")
+    preflight_max_new_tokens = 4
+    npu_hold_seconds = 6
     command = [
         gate.child_python(),
         "-m",
@@ -116,10 +118,10 @@ def run_provider_role_coexistence_preflight(
         "--num-ctx",
         str(gpu1_ctx),
         "--max-new-tokens",
-        "4",
+        str(preflight_max_new_tokens),
         "--handoff-provider-loop",
         "--npu-hold-seconds",
-        "6",
+        str(npu_hold_seconds),
         "--npu-timeout-seconds",
         str(max(60, int(getattr(gate.args, "npu_micro_timeout_seconds", 60)) + 30)),
         "--output",
@@ -153,6 +155,20 @@ def run_provider_role_coexistence_preflight(
     report["stderr_tail"] = (completed.stderr or "")[-1200:]
     report["output"] = repo_rel(gate.repo_root, output)
     report["markdown_output"] = repo_rel(gate.repo_root, markdown)
+    report["derived_config"] = [
+        {
+            "field": "provider_coexistence_preflight.max_new_tokens",
+            "effective_value": preflight_max_new_tokens,
+            "source": "fixed_health_probe_budget",
+            "reason": "coexistence preflight is health/residency only, not provider product work",
+        },
+        {
+            "field": "provider_coexistence_preflight.npu_hold_seconds",
+            "effective_value": npu_hold_seconds,
+            "source": "fixed_health_probe_hold",
+            "reason": "short NPU hold keeps the three-role boot window observable",
+        },
+    ]
     return report
 
 

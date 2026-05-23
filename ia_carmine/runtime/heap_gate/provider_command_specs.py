@@ -213,6 +213,18 @@ def build_provider_command_specs(
     gpu1_ctx = int(getattr(gate, "selected_ollama_num_ctx", 0) or gate.args.ollama_num_ctx)
     gpu0_ctx = gpu0_ollama_num_ctx(gate.args)
     keep_alive = _provider_keep_alive(gate)
+    gpu1_context_candidates = str(getattr(gate.args, "ollama_context_candidates", "") or "").strip()
+    gpu1_derived_config: list[dict[str, Any]] = []
+    if not gpu1_context_candidates:
+        gpu1_context_candidates = "8192,4096"
+        gpu1_derived_config.append(
+            {
+                "field": "ollama_context_candidates",
+                "effective_value": gpu1_context_candidates,
+                "source": "derived_runtime_default",
+                "reason": "inner gate fallback retained for compatibility and reported explicitly",
+            }
+        )
     gpu0_identity = _gpu0_device_identity(gate, coexistence_evidence)
     specs = [
         {
@@ -231,6 +243,7 @@ def build_provider_command_specs(
             "provider_device_policy": "ollama_gpu_accelerator_residency_cpu_only_blocked",
             **_gpu1_device_identity(),
             **_time_fields(lane_times["gpu1_planner"]),
+            "derived_config": gpu1_derived_config,
             "command": [
                 gate.child_python(),
                 "-m",
@@ -254,7 +267,7 @@ def build_provider_command_specs(
                 "--ollama-gpu-layers",
                 str(gate.args.ollama_gpu_layers or "all"),
                 "--ollama-context-candidates",
-                str(getattr(gate.args, "ollama_context_candidates", "") or "8192,4096"),
+                gpu1_context_candidates,
                 "--keep-alive",
                 keep_alive,
                 "--defer-unload",

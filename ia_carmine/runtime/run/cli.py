@@ -19,6 +19,7 @@ from ia_carmine._shared.live_flow_monitor import CRLF_WARNING_RE
 from ia_carmine.product.operator_product_core import LauncherConfig, OperatorProductController
 from ia_carmine.product.operator_product_core.io_utils import now_stamp
 from ia_carmine.product.operator_product_core.direct_command import resolve_config, resolve_project_python
+from ia_carmine.product.operator_product_core.profiles import apply_profile_to_args
 from ia_carmine.runtime.run.dry_run_report import dry_run_report
 from ia_carmine.runtime.run.preflight_files import PRODUCT_PREFLIGHT_FILES
 from ia_carmine.runtime.run.universe_config import (
@@ -126,6 +127,8 @@ def preflight(repo_root: Path, python_exe: str) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-RepoRoot", "--repo-root", dest="repo_root", default=".")
+    parser.add_argument("--profile", default="")
+    parser.add_argument("--profiles-file", default="")
     parser.add_argument("--print-effective-config", action="store_true")
     parser.add_argument("--emit-expanded-command", action="store_true")
     parser.add_argument("--effective-config-output", default="")
@@ -176,7 +179,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-KeepAlive", "--keep-alive", dest="keep_alive", default=None)
     parser.add_argument("--gpu0-iterations", dest="gpu0_iterations", type=int, default=None)
     parser.add_argument("--gpu0-min-seconds", dest="gpu0_min_seconds", type=float, default=None)
+    parser.add_argument("--npu-micro-start-mode", dest="npu_micro_start_mode", default=None)
     parser.add_argument("--npu-micro-timeout-seconds", dest="npu_micro_timeout_seconds", type=int, default=None)
+    parser.add_argument("--npu-final-wait-seconds", dest="npu_final_wait_seconds", type=int, default=None)
     parser.add_argument("--npu-max-context-chars", dest="npu_max_context_chars", type=int, default=None)
     parser.add_argument("--npu-max-prompt-chars", dest="npu_max_prompt_chars", type=int, default=None)
     parser.add_argument("--npu-max-new-tokens", dest="npu_max_new_tokens", type=int, default=None)
@@ -234,6 +239,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--code-interpreter-inputs", default=None)
     parser.add_argument("--duplication-audit-roots", default=None)
     parser.add_argument("--provider-prompt-tool-catalog-cap", type=int, default=None)
+    parser.add_argument("--max-degraded-lanes", type=int, default=None)
     parser.add_argument(
         "--allow-provider-generation",
         action="store_true",
@@ -335,10 +341,13 @@ def build_config(
         keep_alive=args.keep_alive,
         gpu0_iterations=args.gpu0_iterations,
         gpu0_min_seconds=args.gpu0_min_seconds,
+        npu_micro_start_mode=args.npu_micro_start_mode,
         npu_micro_timeout_seconds=args.npu_micro_timeout_seconds,
+        npu_final_wait_seconds=args.npu_final_wait_seconds,
         npu_max_context_chars=args.npu_max_context_chars,
         npu_max_prompt_chars=args.npu_max_prompt_chars,
         npu_max_new_tokens=args.npu_max_new_tokens,
+        max_degraded_lanes=args.max_degraded_lanes,
         npu_device_workload_seconds=args.npu_device_workload_seconds,
         npu_device_workload_iterations=args.npu_device_workload_iterations,
         startup_max_memory_chars=args.startup_max_memory_chars,
@@ -393,6 +402,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(raw_argv)
     repo_root = Path(args.repo_root).resolve()
     supplied_dests = provided_dests(parser, raw_argv)
+    apply_profile_to_args(args, repo_root, supplied_dests)
     resolved_universe = resolve_universe_config(
         repo_root=repo_root,
         args=args,

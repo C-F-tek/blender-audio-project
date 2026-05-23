@@ -328,7 +328,6 @@ def _report_verified(report: dict[str, Any]) -> bool:
     return bool(
         report.get("provider_work_verified")
         or report.get("gpu1_primary_workload_valid")
-        or report.get("npu_peer_evidence_verified")
     )
 
 

@@ -53,7 +53,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gpu0-ollama-num-ctx", type=int, default=None)
     parser.add_argument("--gpu0-iterations", type=int, default=None)
     parser.add_argument("--gpu0-min-seconds", type=float, default=None)
+    parser.add_argument("--npu-micro-start-mode", default="")
     parser.add_argument("--npu-micro-timeout-seconds", type=int, default=None)
+    parser.add_argument("--npu-final-wait-seconds", type=int, default=None)
     parser.add_argument("--npu-max-context-chars", type=int, default=None)
     parser.add_argument("--npu-max-prompt-chars", type=int, default=None)
     parser.add_argument("--npu-max-new-tokens", type=int, default=None)
@@ -110,6 +112,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--code-interpreter-inputs", default="")
     parser.add_argument("--duplication-audit-roots", default="")
     parser.add_argument("--provider-prompt-tool-catalog-cap", type=int, default=None)
+    parser.add_argument("--max-degraded-lanes", type=int, default=None)
     parser.add_argument(
         "--revision-context",
         default="",

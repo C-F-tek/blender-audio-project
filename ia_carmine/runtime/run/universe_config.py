@@ -50,10 +50,13 @@ class UniverseRunConfig:
     keep_alive: str | None = None
     gpu0_iterations: int | None = None
     gpu0_min_seconds: float | None = None
+    npu_micro_start_mode: str | None = None
     npu_micro_timeout_seconds: int | None = None
+    npu_final_wait_seconds: int | None = None
     npu_max_context_chars: int | None = None
     npu_max_prompt_chars: int | None = None
     npu_max_new_tokens: int | None = None
+    max_degraded_lanes: int | None = None
     npu_device_workload_seconds: float | None = None
     npu_device_workload_iterations: int | None = None
     startup_max_memory_chars: int | None = None
@@ -115,10 +118,12 @@ INT_FIELDS = {
     "max_new_tokens",
     "gpu0_max_new_tokens",
     "gpu0_iterations",
+    "npu_final_wait_seconds",
     "npu_micro_timeout_seconds",
     "npu_max_context_chars",
     "npu_max_prompt_chars",
     "npu_max_new_tokens",
+    "max_degraded_lanes",
     "npu_device_workload_iterations",
     "startup_max_memory_chars",
     "startup_max_context_files",
@@ -211,12 +216,16 @@ def resolve_universe_config(
     _ = repo_root
     config = UniverseRunConfig()
     sources = {field: "unresolved_missing" for field in config_field_names()}
+    profile_sources = getattr(args, "_profile_applied_fields", {}) or {}
+    if not isinstance(profile_sources, dict):
+        profile_sources = {}
 
-    for dest in sorted(provided_dests & config_field_names()):
+    configured_dests = (provided_dests | set(str(key) for key in profile_sources)) & config_field_names()
+    for dest in sorted(configured_dests):
         value = getattr(args, dest)
         current = getattr(config, dest)
         setattr(config, dest, _coerce_value(dest, current, value))
-        sources[dest] = "cli_arg"
+        sources[dest] = "cli_arg" if dest in provided_dests else str(profile_sources.get(dest) or "profile")
 
     missing = sorted(
         field

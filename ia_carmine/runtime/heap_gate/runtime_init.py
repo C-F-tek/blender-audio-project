@@ -40,10 +40,20 @@ class RuntimeGateInitMixin:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
         self.repo_root = Path(args.repo_root).resolve()
+        derived_runtime_config: list[dict[str, Any]] = []
         if bool(getattr(args, "allow_provider_generation", False)):
             keep_alive = str(getattr(args, "keep_alive", "") or "").strip().lower()
             if keep_alive in {"", "0", "0s", "0m", "0h"}:
                 args.keep_alive = "120s"
+                derived_runtime_config.append(
+                    {
+                        "field": "keep_alive",
+                        "effective_value": "120s",
+                        "source": "derived_runtime_default",
+                        "reason": "provider_generation_requires_nonzero_keep_alive",
+                    }
+                )
+        setattr(args, "_derived_runtime_config", derived_runtime_config)
         if getattr(args, "request_file", ""):
             args.request = read_request_file(self.repo_root, args.request_file)
         self.stamp = args.stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -85,6 +95,8 @@ class RuntimeGateInitMixin:
         )
         self.max_iterations = clamp_loop_iterations(self.budget_config, args.max_iterations)
         self.state = make_state(args.objective, getattr(args, "request", ""))
+        self.derived_runtime_config = list(getattr(args, "_derived_runtime_config", []) or [])
+        self.state["derived_runtime_config"] = self.derived_runtime_config
         self.state["budget_governor"] = self.budget_governor
         self.state["invocation_contract"] = self.invocation_contract
         self.state["time_counter_contract"] = self.time_counter_contract
@@ -102,6 +114,7 @@ class RuntimeGateInitMixin:
         self.provider_recovery_attempt_count = 0
         self.provider_recovery_last_status: dict[str, Any] = {}
         self.provider_universe_blocked_reason = ""
+        self.provider_universe_deferred_block_reason = ""
         self.gpu1_replight_valid = False
         self.gpu1_boot_leader_ready = False
         self.gpu1_primary_workload_valid = False

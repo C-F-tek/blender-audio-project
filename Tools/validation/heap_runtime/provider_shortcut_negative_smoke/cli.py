@@ -33,6 +33,7 @@ from ia_carmine.runtime.heap_gate.proposal_cycle_a import RuntimeGateProposalCyc
 from ia_carmine.runtime.heap_gate.generic_write_followup import (
     generic_write_document_product_eligible,
 )
+from ia_carmine.runtime.heap_gate.provider_recovery import provider_recovery_status
 from ia_carmine.runtime.heap_gate.provider_teamwork_packet import (
     _provider_packet_tool_catalog_limit,
 )
@@ -67,6 +68,8 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     }
     if _lane_has_model_execution([attempted_not_verified], "gpu1_planner"):
         errors.append("lane metrics accepted attempted/raw response as verified model execution")
+    if not _npu_peer_evidence_not_verified_role():
+        errors.append("NPU peer evidence availability was counted as verified provider role")
     blockers = _weak_gate_final_product_blockers()
     if not any("verified pointer evidence" in item for item in blockers):
         errors.append("final product accepted weak gate provider_execution_performed fallback")
@@ -103,6 +106,14 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         errors.append("heap runtime launcher profiles still default provider_prompt_tool_catalog_cap to 0")
     if not _startup_manifest_carries_effective_config(repo_root):
         errors.append("startup manifest does not expose startup_effective_config")
+    if not _inner_runtime_fallbacks_report_derived_config(repo_root):
+        errors.append("inner runtime fallbacks are not exposed as derived_config")
+    if not _standalone_provider_tools_report_default_sources(repo_root):
+        errors.append("standalone provider tools do not expose standalone_default config sources")
+    if not _full_run_rejects_standalone_default_provider_evidence(repo_root):
+        errors.append("full-run provider absorption does not reject standalone_default evidence")
+    if not _lane_manifest_preserves_derived_config(repo_root):
+        errors.append("provider launch manifest does not preserve lane derived_config")
     requirement_report = _requirement_semantics_report()
     if requirement_report.get("missing_requirements"):
         errors.append("attempted sidecar requirements were reported as missing")
@@ -116,6 +127,34 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "errors": errors,
         "requirement_semantics": requirement_report,
     }
+
+
+def _npu_peer_evidence_not_verified_role() -> bool:
+    owner = SimpleNamespace(
+        args=SimpleNamespace(max_provider_revisions=2),
+        provider_revision_count=0,
+        provider_recovery_attempt_count=0,
+        provider_reports=[
+            {
+                "lane": "npu_micro_task_auditor",
+                "provider_role": "npu_auditor",
+                "revision": 0,
+                "provider_block_id": "npu:semantic-reject",
+                "npu_peer_evidence_verified": True,
+                "semantic_contract_passed": False,
+                "provider_work_verified": False,
+                "provider_rejection_reason": "provider_semantic_contract_failed",
+                "response_text": "NPU evidence exists but semantic contract rejected it.",
+            }
+        ],
+        latest_proposal_iteration_report=lambda: {},
+        latest_rejected_proposal_requires_retry=lambda: False,
+    )
+    status = provider_recovery_status(owner, [])
+    return (
+        "npu_auditor" not in set(status.get("roles_verified") or [])
+        and "npu_auditor" in set(status.get("roles_observed_invalid") or [])
+    )
 
 
 def _weak_gate_final_product_blockers() -> list[str]:
@@ -288,6 +327,70 @@ def _startup_manifest_carries_effective_config(repo_root: Path) -> bool:
     return (
         manifest.get("startup_effective_config") == effective
         and manifest.get("contract", {}).get("startup_effective_config") == effective
+    )
+
+
+def _inner_runtime_fallbacks_report_derived_config(repo_root: Path) -> bool:
+    runtime_init = (repo_root / "ia_carmine/runtime/heap_gate/runtime_init.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    command_specs = (repo_root / "ia_carmine/runtime/heap_gate/provider_command_specs.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    coexistence = (
+        repo_root / "ia_carmine/runtime/heap_gate/provider_coexistence_preflight.py"
+    ).read_text(encoding="utf-8", errors="replace")
+    provider_time = (repo_root / "ia_carmine/runtime/heap_gate/provider_time.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    return bool(
+        "derived_runtime_config" in runtime_init
+        and "derived_config" in command_specs
+        and "ollama_context_candidates" in command_specs
+        and "fixed_health_probe_budget" in coexistence
+        and "gpu0.sidecar_budget_seconds" in provider_time
+    )
+
+
+def _standalone_provider_tools_report_default_sources(repo_root: Path) -> bool:
+    files = [
+        repo_root / "ia_carmine/providers/provider_mesh/provider_role_coexistence/cli.py",
+        repo_root / "ia_carmine/providers/provider_mesh/ollama_gpu0_peer_report/cli.py",
+        repo_root / "ia_carmine/providers/provider_mesh/local_provider_probe/cli.py",
+        repo_root / "ia_carmine/providers/ollama/role_models.py",
+    ]
+    texts = [path.read_text(encoding="utf-8", errors="replace") for path in files]
+    return all(
+        "config_sources" in text
+        and "standalone_default_fields" in text
+        and "standalone_default" in text
+        for text in texts
+    )
+
+
+def _full_run_rejects_standalone_default_provider_evidence(repo_root: Path) -> bool:
+    source = (repo_root / "ia_carmine/runtime/heap_gate/provider_commands.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    return bool(
+        "standalone_default_fields" in source
+        and "standalone_default_config_not_accepted_as_full_run_provider_evidence" in source
+        and 'report_data["provider_work_verified"] = False' in source
+        and 'report_data["provider_role_counted"] = False' in source
+    )
+
+
+def _lane_manifest_preserves_derived_config(repo_root: Path) -> bool:
+    source = (repo_root / "ia_carmine/runtime/heap_gate/provider_lane_launch.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    execution = (repo_root / "ia_carmine/runtime/heap_gate/provider_execution.py").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    return bool(
+        '"derived_config": derived_config' in source
+        and 'spec.get("derived_config") or []' in execution
+        and "time_counter_contract" in source
     )
 
 

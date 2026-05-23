@@ -112,6 +112,11 @@ def provider_work_status(
 
 def _semantic_contract_passed(provider_id: str, report: dict[str, Any]) -> bool:
     if provider_id == "npu_micro_task_auditor":
+        for key in ("semantic_contract_passed", "provider_requirement_complete", "provider_work_verified"):
+            if key in report and normalize_bool(report.get(key)) is False:
+                return False
+        if str(report.get("provider_rejection_reason") or "").strip():
+            return False
         if normalize_bool(report.get("npu_peer_followup_required")):
             return False
         if str(report.get("npu_native_tool_loop_error") or "").strip():

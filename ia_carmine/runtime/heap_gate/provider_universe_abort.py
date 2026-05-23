@@ -6,6 +6,25 @@ from ia_carmine.runtime.heap_gate.runtime_common import Any, now_iso, repo_rel, 
 
 PRIMARY_LANE = "gpu1_planner"
 RECOVERABLE_SIDECAR_LANES = {"gpu0_peer", "npu_micro_task_auditor"}
+HARD_PRIMARY_REASON_MARKERS = (
+    "gpu1_primary",
+    "gpu1_planner",
+    "primary_lane",
+    "provider_universe_primary",
+    "provider_boot_gate_failed",
+    "provider_replight_failed",
+)
+RECOVERABLE_SIDECAR_REASON_MARKERS = (
+    "sidecar_invalid",
+    "sidecar_incongruent",
+    "gpu0_peer_followup_pending",
+    "npu_peer_followup_pending",
+    "gpu0_review_invalid_requires_gpu1_retry",
+    "gpu0_checked_wrong_gpu1_packet",
+    "gpu0_secondary_decision_incongruent",
+    "gpu0_secondary_schema_invalid",
+    "npu_followup_pending",
+)
 
 
 def provider_universe_abort_reason(prepared: list[dict[str, Any]]) -> str:
@@ -163,10 +182,19 @@ def block_unstarted_provider_items(items: list[dict[str, Any]], reason: str) -> 
 def block_provider_universe_run(gate: Any, reason: str, round_id: int, revision: int) -> None:
     if not reason:
         return
-    gate.provider_universe_blocked_reason = reason
-    if reason not in gate.errors:
-        gate.errors.append(reason)
-    if _provider_recovery_should_run_before_terminal_product(gate):
+    if _provider_recovery_should_run_before_terminal_product(gate, reason):
+        gate.provider_universe_deferred_block_reason = reason
+        deferred = {
+            "reason": reason,
+            "revision": revision,
+            "round": round_id,
+            "deferred_for": "gpu1_recovery_revision",
+        }
+        state = getattr(gate, "state", None)
+        if isinstance(state, dict):
+            state.setdefault("provider_universe_deferred_blocks", []).append(deferred)
+        if reason not in getattr(gate, "warnings", []):
+            gate.warnings.append(reason)
         signal = {
             "id": "provider_universe_block_deferred_for_gpu1_recovery",
             "from": "provider_universe",
@@ -184,6 +212,9 @@ def block_provider_universe_run(gate: Any, reason: str, round_id: int, revision:
             round_id=round_id,
         )
         return
+    gate.provider_universe_blocked_reason = reason
+    if reason not in gate.errors:
+        gate.errors.append(reason)
     decision = {
         "id": "provider_universe_blocked",
         "from": "provider_universe",
@@ -239,7 +270,9 @@ def block_provider_universe_run(gate: Any, reason: str, round_id: int, revision:
     publish_candidate_operation(gate, ready=False, missing=[reason], round_id=round_id)
 
 
-def _provider_recovery_should_run_before_terminal_product(gate: Any) -> bool:
+def _provider_recovery_should_run_before_terminal_product(gate: Any, reason: str) -> bool:
+    if not _recoverable_sidecar_terminal_reason(reason):
+        return False
     try:
         from ia_carmine.runtime.heap_gate.provider_recovery import provider_recovery_status
 
@@ -251,6 +284,20 @@ def _provider_recovery_should_run_before_terminal_product(gate: Any) -> bool:
         and status.get("sidecar_recoverable_failure")
         and not status.get("provider_recovery_attempted")
         and not status.get("provider_revision_budget_exhausted")
+    )
+
+
+def _recoverable_sidecar_terminal_reason(reason: str) -> bool:
+    lowered = str(reason or "").strip().lower()
+    if not lowered:
+        return False
+    if any(marker in lowered for marker in HARD_PRIMARY_REASON_MARKERS):
+        return False
+    if any(marker in lowered for marker in RECOVERABLE_SIDECAR_REASON_MARKERS):
+        return True
+    return bool(
+        ("gpu0" in lowered or "npu" in lowered or "sidecar" in lowered)
+        and any(token in lowered for token in ("followup", "retry", "refine", "veto", "incongruent", "invalid"))
     )
 
 

@@ -20,6 +20,37 @@ ROLE_DEFAULTS = {
 }
 
 
+def _option_source(argv: list[str], *options: str) -> str:
+    for token in argv:
+        for option in options:
+            if token == option or token.startswith(f"{option}="):
+                return "cli_arg"
+    return "standalone_default"
+
+
+def cli_config_sources(argv: list[str]) -> dict[str, str]:
+    gpu1_env, _ = ROLE_DEFAULTS["gpu1_planner"]
+    gpu0_env, _ = ROLE_DEFAULTS["gpu0_peer"]
+    return {
+        "gpu1_base_url": _option_source(argv, "--gpu1-base-url"),
+        "gpu0_base_url": _option_source(argv, "--gpu0-base-url"),
+        "gpu1_model": (
+            _option_source(argv, "--gpu1-model")
+            if _option_source(argv, "--gpu1-model") == "cli_arg"
+            else (f"env:{gpu1_env}" if os.environ.get(gpu1_env, "").strip() else "standalone_default")
+        ),
+        "gpu0_model": (
+            _option_source(argv, "--gpu0-model")
+            if _option_source(argv, "--gpu0-model") == "cli_arg"
+            else (f"env:{gpu0_env}" if os.environ.get(gpu0_env, "").strip() else "standalone_default")
+        ),
+        "gpu0_vulkan_visible_devices": _option_source(argv, "--gpu0-vulkan-visible-devices"),
+        "keep_alive": _option_source(argv, "--keep-alive"),
+        "num_ctx": _option_source(argv, "--num-ctx"),
+        "max_new_tokens": _option_source(argv, "--max-new-tokens"),
+    }
+
+
 def role_model(role: str, explicit: str = "") -> str:
     env_name, default = ROLE_DEFAULTS[role]
     return explicit or os.environ.get(env_name, "").strip() or default
@@ -357,7 +388,8 @@ def main() -> int:
     parser.add_argument("--max-new-tokens", type=int, default=16)
     parser.add_argument("--output", default="output/validation/ollama_role_models.json")
     parser.add_argument("--markdown-output", default="output/validation/ollama_role_models.md")
-    args = parser.parse_args()
+    raw_argv = sys.argv[1:]
+    args = parser.parse_args(raw_argv)
     repo_root = Path(args.repo_root).resolve()
     gpu0_server = {"started": False, "ready": False, "reason": "not_requested"}
     if args.start_gpu0_vulkan_server:
@@ -381,6 +413,10 @@ def main() -> int:
     )
     report["gpu1_base_url"] = args.gpu1_base_url
     report["gpu0_base_url"] = args.gpu0_base_url
+    report["config_sources"] = cli_config_sources(raw_argv)
+    report["standalone_default_fields"] = [
+        key for key, source in report["config_sources"].items() if source == "standalone_default"
+    ]
     report["gpu0_vulkan_server"] = gpu0_server
     if args.start_gpu0_vulkan_server and not args.keep_gpu0_vulkan_server and gpu0_server.get("started"):
         report["gpu0_vulkan_server_stop"] = stop_gpu0_vulkan_server(args.gpu0_base_url)

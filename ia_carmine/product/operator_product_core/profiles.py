@@ -12,6 +12,12 @@ PROFILE_REQUEST_FLAG = "--request-file"
 PROFILE_DEST_OVERRIDES = {
     "revision_context_mode": "revision_context",
 }
+PROFILE_METADATA_KEYS = {
+    "description",
+    "profile_name",
+    "universe_roles",
+    "block_pointer_protocol",
+}
 
 
 def load_profiles(repo_root: Path, profiles_file: Path | None = None) -> dict[str, Any]:
@@ -62,8 +68,14 @@ def apply_profile_to_args(
     raw_profiles_file = str(getattr(args, "profiles_file", "") or "")
     profiles_file = Path(raw_profiles_file) if raw_profiles_file else None
     profile = select_profile(repo_root, profile_name, profiles_file)
+    applied: dict[str, str] = {}
     for key, value in profile.items():
+        if key in PROFILE_METADATA_KEYS:
+            continue
         dest = PROFILE_DEST_OVERRIDES.get(key, key)
         if dest in provided_dests or not hasattr(args, dest) or value is None:
             continue
         setattr(args, dest, value)
+        applied[dest] = f"profile:{profile_name}"
+    setattr(args, "_profile_name", profile_name)
+    setattr(args, "_profile_applied_fields", applied)

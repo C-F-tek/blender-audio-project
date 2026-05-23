@@ -32,6 +32,27 @@ from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
 DEFAULT_GPU0_OLLAMA_BASE_URL = "http://127.0.0.1:11435"
 
 
+def config_sources_from_argv(argv: list[str]) -> dict[str, str]:
+    def source(*options: str) -> str:
+        for token in argv:
+            for option in options:
+                if token == option or token.startswith(f"{option}="):
+                    return "cli_arg"
+        return "standalone_default"
+
+    return {
+        "base_url": source("--base-url"),
+        "gpu0_vulkan_visible_devices": source("--gpu0-vulkan-visible-devices"),
+        "model": source("--model"),
+        "max_new_tokens": source("--max-new-tokens"),
+        "ollama_num_ctx": source("--ollama-num-ctx"),
+        "ollama_gpu_layers": source("--ollama-gpu-layers", "--ollama-num-gpu"),
+        "ollama_context_candidates": source("--ollama-context-candidates"),
+        "keep_alive": source("--keep-alive"),
+        "require_ollama_gpu_residency": source("--require-ollama-gpu-residency"),
+    }
+
+
 def read_text(repo_root: Path, value: str) -> str:
     if not value:
         return ""
@@ -327,7 +348,9 @@ def main() -> int:
     parser.add_argument("--strict-provider-model", action="store_true")
     parser.add_argument("--operator-gpu-observation", default="")
     parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=True)
-    args = parser.parse_args()
+    raw_argv = sys.argv[1:]
+    args = parser.parse_args(raw_argv)
+    config_sources = config_sources_from_argv(raw_argv)
 
     repo_root = Path(args.repo_root).resolve()
     request = ""
@@ -419,6 +442,10 @@ def main() -> int:
             "kind": "ollama_gpu0_peer_report",
             "generated_at": datetime.now().isoformat(timespec="seconds"),
             "repo_root": str(repo_root),
+            "config_sources": config_sources,
+            "standalone_default_fields": [
+                key for key, source in config_sources.items() if source == "standalone_default"
+            ],
             "ollama_base_url": args.base_url,
             "gpu0_vulkan_server": gpu0_server,
             "gpu0_server_evidence_source": gpu0_server.get("gpu0_server_evidence_source")

@@ -311,7 +311,7 @@ def build_provider_lane_metrics(
                 "npu_micro_timeout_enforced"
             )
         ),
-        "npu_peer_evidence_verified": bool(npu_report.get("npu_peer_evidence_verified")),
+        "npu_peer_evidence_available": bool(npu_report.get("npu_peer_evidence_verified")),
         "npu_native_tool_loop_error": str(npu_report.get("npu_native_tool_loop_error") or ""),
         "npu_native_tool_loop_required": bool(npu_report.get("npu_native_tool_loop_required")),
         "delta_context_mode": "startup_full_once_then_pointer_delta_revisions",
@@ -522,7 +522,6 @@ def _lane_workload_metrics(reports: list[dict[str, Any]]) -> list[dict[str, Any]
                 "work_verified": bool(
                     report.get("provider_work_verified")
                     or report.get("gpu1_primary_workload_valid")
-                    or report.get("npu_peer_evidence_verified")
                 ),
                 "accepted_by_gpu1": bool(
                     lane == GPU1_LANE

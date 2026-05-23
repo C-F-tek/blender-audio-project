@@ -9,6 +9,23 @@ from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import context_hierarc
 from ia_carmine.runtime.run.dry_run_policy import dry_run_contract_policy
 
 
+def _parameters_source(field_sources: dict[str, Any]) -> str:
+    values = {
+        str(value)
+        for value in field_sources.values()
+        if str(value or "").strip() and str(value or "").strip() != "optional_unset"
+    }
+    has_cli = "cli_arg" in values
+    has_profile = any(value.startswith("profile:") for value in values)
+    if has_cli and has_profile:
+        return "profile_plus_explicit_cli_surface_with_visible_effective_config"
+    if has_profile:
+        return "profile_surface_with_visible_effective_config"
+    if has_cli:
+        return "explicit_cli_surface_with_visible_effective_config"
+    return "unresolved_config_surface"
+
+
 def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
     cfg = resolve_config(config)
     command = OperatorProductController(config).build_command()
@@ -52,7 +69,7 @@ def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
         "full_gpu_residency_required": True,
         "provider_keep_alive": cfg.keep_alive,
         "run_label": cfg.run_label,
-        "parameters_source": "explicit_cli_surface_with_visible_effective_config",
+        "parameters_source": _parameters_source(field_sources),
         "request_file": str(cfg.request_file),
         "intermediate_run_dir": str(run_dir_for(cfg)),
         "final_root": str(cfg.final_root),
@@ -78,69 +95,11 @@ def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
             "cpu": "runtime_only_not_provider",
         },
         "codex_failure_counter_markdown_updates": {"performed": False, "reason": "dry_run"},
-        "direct_parameters": {
-            key: getattr(cfg, key)
-            for key in [
-                "budget_minutes",
-                "max_iterations",
-                "min_runtime_rounds",
-                "min_proposal_iterations",
-                "max_rounds",
-                "files_per_round",
-                "max_provider_revisions",
-                "timeout_seconds",
-                "preflight_timeout_seconds",
-                "ollama_gpu_layers",
-                "gpu1_base_url",
-                "gpu0_model",
-                "gpu0_base_url",
-                "gpu0_vulkan_visible_devices",
-                "ollama_num_ctx",
-                "gpu0_ollama_num_ctx",
-                "ollama_num_thread",
-                "ollama_context_candidates",
-                "max_new_tokens",
-                "gpu0_max_new_tokens",
-                "keep_alive",
-                "startup_max_memory_chars",
-                "startup_max_context_files",
-                "startup_scan_context_files",
-                "startup_max_chars_per_file",
-                "rag_db",
-                "rag_index_policy",
-                "rag_embedding_endpoint",
-                "rag_embedding_model",
-                "rag_ingest_batch_size",
-                "rag_embed_smoke_batch_size",
-                "rag_chunk_min_chars",
-                "rag_chunk_max_chars",
-                "rag_chunk_overlap_chars",
-                "rag_max_file_size",
-                "rag_top_k",
-                "rag_char_budget",
-                "rag_allow_missing_embeddings",
-                "context_document_count",
-                "context_document_preview_chars",
-                "semantic_code_chunk_limit",
-                "semantic_code_chunk_preview_chars",
-                "semantic_evidence_chunk_limit",
-                "memory_search_limit",
-                "tool_catalog_limit",
-                "startup_provider_input_workers",
-                "startup_required_context_profile",
-                "startup_operational_memory_query",
-                "startup_operational_memory_limit",
-                "tool_inventory_roots",
-                "semantic_path_boosts",
-                "ai_context_pack_profile",
-                "code_interpreter_inputs",
-                "duplication_audit_roots",
-                "provider_prompt_tool_catalog_cap",
-            ]
-        },
+        "direct_parameters": dict(effective_universe_config),
         **dry_run_contract_policy(
             gpu1_base_url=cfg.gpu1_base_url,
             gpu0_base_url=cfg.gpu0_base_url,
             keep_alive=cfg.keep_alive,
+            field_sources=field_sources,
         ),
     }

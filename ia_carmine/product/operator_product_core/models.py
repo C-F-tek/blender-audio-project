@@ -36,10 +36,13 @@ CLI_VALUE_KEYS = {
     "keep_alive": "--keep-alive",
     "gpu0_iterations": "--gpu0-iterations",
     "gpu0_min_seconds": "--gpu0-min-seconds",
+    "npu_micro_start_mode": "--npu-micro-start-mode",
     "npu_micro_timeout_seconds": "--npu-micro-timeout-seconds",
+    "npu_final_wait_seconds": "--npu-final-wait-seconds",
     "npu_max_context_chars": "--npu-max-context-chars",
     "npu_max_prompt_chars": "--npu-max-prompt-chars",
     "npu_max_new_tokens": "--npu-max-new-tokens",
+    "max_degraded_lanes": "--max-degraded-lanes",
     "npu_device_workload_seconds": "--npu-device-workload-seconds",
     "npu_device_workload_iterations": "--npu-device-workload-iterations",
     "startup_max_memory_chars": "--startup-max-memory-chars",
@@ -128,10 +131,13 @@ class LauncherConfig:
     keep_alive: str | None = None
     gpu0_iterations: int | None = None
     gpu0_min_seconds: float | None = None
+    npu_micro_start_mode: str | None = None
     npu_micro_timeout_seconds: int | None = None
+    npu_final_wait_seconds: int | None = None
     npu_max_context_chars: int | None = None
     npu_max_prompt_chars: int | None = None
     npu_max_new_tokens: int | None = None
+    max_degraded_lanes: int | None = None
     npu_device_workload_seconds: float | None = None
     npu_device_workload_iterations: int | None = None
     startup_max_memory_chars: int | None = None

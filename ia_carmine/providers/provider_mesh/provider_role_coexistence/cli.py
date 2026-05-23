@@ -18,6 +18,28 @@ from ia_carmine.providers.ollama.role_models import (
 from ia_carmine.providers.provider_mesh.runtime.python_runtime import command_env
 
 
+def _config_sources(argv: list[str]) -> dict[str, str]:
+    def source(*options: str) -> str:
+        for token in argv:
+            for option in options:
+                if token == option or token.startswith(f"{option}="):
+                    return "cli_arg"
+        return "standalone_default"
+
+    return {
+        "gpu1_base_url": source("--gpu1-base-url"),
+        "gpu0_base_url": source("--gpu0-base-url"),
+        "gpu1_model": source("--gpu1-model"),
+        "gpu0_model": source("--gpu0-model"),
+        "gpu0_vulkan_visible_devices": source("--gpu0-vulkan-visible-devices"),
+        "keep_alive": source("--keep-alive"),
+        "num_ctx": source("--num-ctx"),
+        "max_new_tokens": source("--max-new-tokens"),
+        "npu_hold_seconds": source("--npu-hold-seconds"),
+        "npu_timeout_seconds": source("--npu-timeout-seconds"),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--child-npu", action="store_true")
@@ -37,9 +59,11 @@ def main() -> int:
     parser.add_argument("--handoff-provider-loop", action="store_true")
     parser.add_argument("--output", default="output/validation/provider_role_coexistence.json")
     parser.add_argument("--markdown-output", default="output/validation/provider_role_coexistence.md")
-    args = parser.parse_args()
+    raw_argv = sys.argv[1:]
+    args = parser.parse_args(raw_argv)
     if args.child_npu:
         return _child_npu()
+    args._config_sources = _config_sources(raw_argv)
     repo_root = Path(args.repo_root).resolve()
     report = build_report(repo_root, args)
     output = _resolve(repo_root, args.output)
@@ -122,6 +146,12 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "errors": errors,
         "handoff_provider_loop": bool(args.handoff_provider_loop),
         "provider_inactivity_unload_seconds": 120,
+        "config_sources": getattr(args, "_config_sources", {}),
+        "standalone_default_fields": [
+            key
+            for key, source in getattr(args, "_config_sources", {}).items()
+            if source == "standalone_default"
+        ],
         "coexistence_verified": bool(gpu1["alive_during_coexistence"] and gpu0["alive_during_coexistence"] and npu_alive),
         "roles": {"gpu1_planner": gpu1, "gpu0_peer": gpu0, "npu_micro_task_auditor": npu.get("ready_payload", {})},
         "coexistence_snapshot": coexistence,
