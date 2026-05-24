@@ -139,18 +139,19 @@ class OllamaSdkClient:
         tools: list[dict[str, Any]] | None = None,
         partial_callback: Callable[[str, dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
+        stream = bool(partial_callback) and not bool(tools)
         kwargs: dict[str, Any] = {
             "model": model,
             "messages": messages,
             "keep_alive": keep_alive,
             "options": _options(temperature, num_predict, num_thread, num_ctx, num_gpu),
-            "stream": bool(partial_callback),
+            "stream": stream,
             "think": think,
         }
         if tools:
             kwargs["tools"] = tools
         try:
-            if partial_callback:
+            if partial_callback and stream:
                 return self._chat_stream(kwargs, partial_callback)
             data = _to_plain_dict(self.client.chat(**kwargs))
             self.last_chat_response = data
@@ -165,14 +166,26 @@ class OllamaSdkClient:
     ) -> dict[str, Any]:
         parts: list[str] = []
         last: dict[str, Any] = {}
+        stream_tool_calls: list[Any] = []
         for chunk in self.client.chat(**kwargs):
             last = _to_plain_dict(chunk)
             message = last.get("message") if isinstance(last.get("message"), dict) else {}
+            tool_calls = message.get("tool_calls")
+            if isinstance(tool_calls, list):
+                stream_tool_calls.extend(tool_calls)
             piece = str(message.get("content") or "")
             if piece:
                 parts.append(piece)
             if piece or last.get("done"):
                 partial_callback("".join(parts), last)
+        if stream_tool_calls:
+            message = last.get("message") if isinstance(last.get("message"), dict) else {}
+            existing_tool_calls = message.get("tool_calls")
+            if not isinstance(existing_tool_calls, list) or not existing_tool_calls:
+                message["tool_calls"] = stream_tool_calls
+            if parts and not message.get("content"):
+                message["content"] = "".join(parts)
+            last["message"] = message
         self.last_chat_response = last
         return last
 

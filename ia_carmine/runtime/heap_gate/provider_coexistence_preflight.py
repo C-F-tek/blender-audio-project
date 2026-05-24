@@ -91,6 +91,7 @@ def run_provider_role_coexistence_preflight(
     gpu0_model = str(getattr(gate.args, "gpu0_model", "") or "").strip()
     gpu0_base_url = str(getattr(gate.args, "gpu0_base_url", "") or "").strip()
     gpu0_vulkan_devices = str(getattr(gate.args, "gpu0_vulkan_visible_devices", "") or "").strip()
+    gpu_layers = str(getattr(gate.args, "ollama_gpu_layers", "") or "all").strip()
     keep_alive = str(getattr(gate.args, "keep_alive", "") or "").strip()
     if not gpu0_model or not gpu0_base_url or not gpu0_vulkan_devices or not keep_alive:
         raise RuntimeError("provider coexistence preflight requires explicit GPU0/base URL/device/keep_alive config")
@@ -117,6 +118,8 @@ def run_provider_role_coexistence_preflight(
         keep_alive,
         "--num-ctx",
         str(gpu1_ctx),
+        "--ollama-gpu-layers",
+        gpu_layers,
         "--max-new-tokens",
         str(preflight_max_new_tokens),
         "--handoff-provider-loop",

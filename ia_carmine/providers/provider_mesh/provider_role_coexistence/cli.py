@@ -11,6 +11,8 @@ from typing import Any
 
 from ia_carmine.providers.ollama.sdk_client import OllamaSdkClient
 from ia_carmine.providers.ollama.role_models import (
+    gpu_layers_label,
+    gpu_layers_option,
     model_alive,
     start_gpu0_vulkan_server,
     stop_gpu0_vulkan_server,
@@ -34,6 +36,7 @@ def _config_sources(argv: list[str]) -> dict[str, str]:
         "gpu0_vulkan_visible_devices": source("--gpu0-vulkan-visible-devices"),
         "keep_alive": source("--keep-alive"),
         "num_ctx": source("--num-ctx"),
+        "ollama_gpu_layers": source("--ollama-gpu-layers", "--ollama-num-gpu"),
         "max_new_tokens": source("--max-new-tokens"),
         "npu_hold_seconds": source("--npu-hold-seconds"),
         "npu_timeout_seconds": source("--npu-timeout-seconds"),
@@ -52,6 +55,7 @@ def main() -> int:
     parser.add_argument("--gpu0-vulkan-visible-devices", default="auto")
     parser.add_argument("--keep-alive", default="120s")
     parser.add_argument("--num-ctx", type=int, default=2048)
+    parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default="all")
     parser.add_argument("--max-new-tokens", type=int, default=8)
     parser.add_argument("--npu-model-dir", default="")
     parser.add_argument("--npu-hold-seconds", type=float, default=8.0)
@@ -90,6 +94,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         args.gpu1_model,
         args.keep_alive,
         args.num_ctx,
+        args.ollama_gpu_layers,
         args.max_new_tokens,
     )
     gpu0 = _load_ollama_role(
@@ -98,6 +103,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         args.gpu0_model,
         args.keep_alive,
         args.num_ctx,
+        args.ollama_gpu_layers,
         args.max_new_tokens,
     )
     npu = _start_npu_child(repo_root, args)
@@ -164,7 +170,17 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
-def _load_ollama_role(client: OllamaSdkClient, role: str, model: str, keep_alive: str, num_ctx: int, tokens: int) -> dict[str, Any]:
+def _load_ollama_role(
+    client: OllamaSdkClient,
+    role: str,
+    model: str,
+    keep_alive: str,
+    num_ctx: int,
+    gpu_layers: str | int | None,
+    tokens: int,
+) -> dict[str, Any]:
+    gpu_layers_requested = gpu_layers_label(gpu_layers)
+    num_gpu = gpu_layers_option(gpu_layers)
     text = client.generate(
         model=model,
         prompt=f"IA-Carmine {role} coexistence probe: reply READY.",
@@ -173,7 +189,7 @@ def _load_ollama_role(client: OllamaSdkClient, role: str, model: str, keep_alive
         num_predict=max(4, int(tokens)),
         num_thread=None,
         num_ctx=num_ctx,
-        num_gpu=-1,
+        num_gpu=num_gpu,
         think=False,
     )
     return {
@@ -181,6 +197,10 @@ def _load_ollama_role(client: OllamaSdkClient, role: str, model: str, keep_alive
         "model": model,
         "provider_backend": "ollama",
         "provider_compute_device": "ollama/gpu1" if role == "gpu1_planner" else "ollama/gpu0-vulkan",
+        "num_ctx": num_ctx,
+        "effective_num_ctx": num_ctx,
+        "ollama_gpu_layers_requested": gpu_layers_requested,
+        "ollama_options_num_gpu": num_gpu,
         "load_performed": True,
         "boot_probe_performed": True,
         "boot_loaded": True,

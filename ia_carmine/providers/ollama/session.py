@@ -44,7 +44,10 @@ class OllamaSession:
         self.num_thread = num_thread if num_thread and num_thread > 0 else None
         self.ollama_gpu_layers_requested = _gpu_layers_label(gpu_layers)
         self.ollama_options_num_gpu = _gpu_layers_option(gpu_layers)
-        self.num_ctx = num_ctx if num_ctx and num_ctx >= 4096 else default_ollama_num_ctx()
+        self.requested_num_ctx = num_ctx if num_ctx and num_ctx > 0 else None
+        self.num_ctx = self.requested_num_ctx or default_ollama_num_ctx()
+        self.effective_num_ctx = self.num_ctx
+        self.effective_num_ctx_source = "explicit" if self.requested_num_ctx else "default"
         self.ollama_exe = find_ollama_exe()
         self.process: subprocess.Popen | None = None
         self.started_server = False
@@ -81,6 +84,9 @@ class OllamaSession:
                 "ollama_options_num_gpu": self.ollama_options_num_gpu,
                 "num_thread": self.num_thread,
                 "num_ctx": self.num_ctx,
+                "requested_num_ctx": self.requested_num_ctx,
+                "effective_num_ctx": self.effective_num_ctx,
+                "effective_num_ctx_source": self.effective_num_ctx_source,
                 "inactivity_unload_seconds": 120,
                 "elapsed_sec": round(time.perf_counter() - start, 4),
             },
@@ -207,6 +213,10 @@ class OllamaSession:
                 "ollama_gpu_layers_requested": self.ollama_gpu_layers_requested,
                 "ollama_options_num_gpu": self.ollama_options_num_gpu,
                 "num_thread": self.num_thread,
+                "num_ctx": self.num_ctx,
+                "requested_num_ctx": self.requested_num_ctx,
+                "effective_num_ctx": self.effective_num_ctx,
+                "effective_num_ctx_source": self.effective_num_ctx_source,
             },
         )
 
@@ -235,6 +245,10 @@ def _runtime_event_payload(
         "ollama_gpu_layers_requested": session.ollama_gpu_layers_requested,
         "ollama_options_num_gpu": session.ollama_options_num_gpu,
         "num_thread": num_thread,
+        "num_ctx": session.num_ctx,
+        "requested_num_ctx": session.requested_num_ctx,
+        "effective_num_ctx": session.effective_num_ctx,
+        "effective_num_ctx_source": session.effective_num_ctx_source,
         "elapsed_sec": round(time.perf_counter() - start, 4),
     }
     if exc:
@@ -258,6 +272,10 @@ def _chat_event_payload(
         "ollama_gpu_layers_requested": session.ollama_gpu_layers_requested,
         "ollama_options_num_gpu": session.ollama_options_num_gpu,
         "num_thread": num_thread,
+        "num_ctx": session.num_ctx,
+        "requested_num_ctx": session.requested_num_ctx,
+        "effective_num_ctx": session.effective_num_ctx,
+        "effective_num_ctx_source": session.effective_num_ctx_source,
         "elapsed_sec": round(time.perf_counter() - start, 4),
     }
     if exc:

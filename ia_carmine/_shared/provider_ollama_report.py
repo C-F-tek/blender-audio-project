@@ -42,9 +42,12 @@ _REPORT_KEYS = (
     "native_tool_api_attempted",
     "native_tool_api_completed",
     "provider_native_tool_call_required",
+    "provider_native_tool_api_adapter_available",
     "provider_native_tool_api_supported",
     "provider_native_tool_api_error",
+    "provider_native_tool_api_attempt_error",
     "provider_native_tool_api_unavailable",
+    "provider_native_tool_api_attempt_failed",
     "provider_native_tool_call_required_unmet",
     "native_tool_decision_prompted",
     "native_classification",
@@ -136,9 +139,18 @@ def build_ollama_probe_report(ctx: dict[str, Any]) -> dict[str, Any]:
         "provider_native_tool_api_attempted": ctx["native_tool_api_attempted"],
         "provider_native_tool_api_completed": ctx["native_tool_api_completed"],
         "provider_native_tool_call_required": ctx["provider_native_tool_call_required"],
+        "provider_native_tool_api_adapter_available": ctx[
+            "provider_native_tool_api_adapter_available"
+        ],
         "provider_native_tool_api_supported": ctx["provider_native_tool_api_supported"],
         "provider_native_tool_api_error": ctx["provider_native_tool_api_error"],
+        "provider_native_tool_api_attempt_error": ctx[
+            "provider_native_tool_api_attempt_error"
+        ],
         "provider_native_tool_api_unavailable": ctx["provider_native_tool_api_unavailable"],
+        "provider_native_tool_api_attempt_failed": ctx[
+            "provider_native_tool_api_attempt_failed"
+        ],
         "provider_native_tool_call_required_unmet": ctx["provider_native_tool_call_required_unmet"],
         "native_tool_loop_supported": bool(ctx["provider_native_tool_api_supported"]),
         "native_tool_loop_performed": bool(ctx["native_tool_api_completed"]),

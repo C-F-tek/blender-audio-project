@@ -43,6 +43,8 @@ def main() -> int:
     from ia_carmine.providers.ollama.session import OllamaSession
     from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
     from ia_carmine.runtime.heap_gate.run_loop_metrics import build_provider_lane_metrics
+    from ia_carmine.runtime.runtime_tool.broker.common import validate_request_args
+    from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
 
     schemas = broker_tool_schemas()
     errors: list[str] = []
@@ -63,6 +65,23 @@ def main() -> int:
     ):
         if required not in tool_names:
             errors.append(f"Ollama native tool list missing {required}")
+    refs_spec = TOOL_SPECS["runtime_file_refs"]
+    unknown_arg_errors = validate_request_args(
+        refs_spec.name,
+        {"not_allowed": True},
+        refs_spec.allowed_args,
+        refs_spec.input_schema,
+    )
+    invalid_type_errors = validate_request_args(
+        refs_spec.name,
+        {"strict_patchable_targets": {"bad": "type"}},
+        refs_spec.allowed_args,
+        refs_spec.input_schema,
+    )
+    if not unknown_arg_errors:
+        errors.append("broker schema validation accepted unknown runtime_file_refs arg")
+    if not invalid_type_errors:
+        errors.append("broker schema validation accepted invalid runtime_file_refs arg type")
 
     fake_chat = {
         "message": {
@@ -179,6 +198,19 @@ def main() -> int:
         "provider_native_tool_call_required_unmet": True,
         "native_tool_call_count": 0,
     }
+    attempt_failed_fixture = {
+        "lane": "gpu1_planner",
+        "native_tool_loop_requested": True,
+        "native_tool_loop_supported": True,
+        "native_tool_loop_performed": False,
+        "provider_native_tool_call_required": True,
+        "provider_native_tool_api_adapter_available": True,
+        "provider_native_tool_api_supported": True,
+        "provider_native_tool_api_unavailable": False,
+        "provider_native_tool_api_attempt_failed": True,
+        "provider_native_tool_call_required_unmet": False,
+        "native_tool_call_count": 0,
+    }
     npu_fixture = {
         "lane": "npu_micro_task_auditor",
         "native_tool_loop_requested": False,
@@ -229,6 +261,23 @@ def main() -> int:
         errors.append("native tool API unavailable lane was not classified separately")
     if fixture_metrics.get("provider_native_tool_missing_required_lanes") != ["gpu0_peer"]:
         errors.append("required native tool miss must exclude API-unavailable lanes")
+    attempt_failed_metrics = build_provider_lane_metrics(
+        FixtureOwner(),
+        {
+            "gpu1_planner": attempt_failed_fixture,
+            "gpu0_peer": required_unmet_fixture,
+            "npu_micro_task_auditor": npu_fixture,
+        },
+        [attempt_failed_fixture, required_unmet_fixture, npu_fixture],
+    )
+    if attempt_failed_metrics.get("provider_native_tool_attempt_failed_required_lanes") != [
+        "gpu1_planner"
+    ]:
+        errors.append("native tool API attempt failure was not classified separately")
+    if "gpu1_planner" in attempt_failed_metrics.get(
+        "provider_native_tool_missing_required_lanes", []
+    ):
+        errors.append("native tool API attempt failure must not be collapsed into missing tool call")
 
     live_ollama: dict[str, object] = {"requested": bool(args.run_live_ollama)}
     if args.run_live_ollama:
@@ -293,7 +342,26 @@ def main() -> int:
                 "provider_native_tool_call_required_unmet"
             ],
         },
+        "native_tool_attempt_failed_fixture": {
+            "provider_native_tool_api_supported": attempt_failed_fixture[
+                "provider_native_tool_api_supported"
+            ],
+            "provider_native_tool_api_unavailable": attempt_failed_fixture[
+                "provider_native_tool_api_unavailable"
+            ],
+            "provider_native_tool_api_attempt_failed": attempt_failed_fixture[
+                "provider_native_tool_api_attempt_failed"
+            ],
+            "provider_native_tool_call_required_unmet": attempt_failed_fixture[
+                "provider_native_tool_call_required_unmet"
+            ],
+        },
+        "schema_validation_error_counts": {
+            "unknown_arg": len(unknown_arg_errors),
+            "invalid_type": len(invalid_type_errors),
+        },
         "fixture_metrics": fixture_metrics,
+        "attempt_failed_metrics": attempt_failed_metrics,
         "live_ollama": {
             "requested": args.run_live_ollama,
             "native_tool_call_count": live_ollama.get("native_tool_call_count"),

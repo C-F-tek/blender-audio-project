@@ -186,9 +186,12 @@ class RuntimeGateProviderCommandsMixin:
                         "provider_native_tool_call_required",
                         "provider_native_tool_api_attempted",
                         "provider_native_tool_api_completed",
+                        "provider_native_tool_api_adapter_available",
                         "provider_native_tool_api_supported",
                         "provider_native_tool_api_error",
+                        "provider_native_tool_api_attempt_error",
                         "provider_native_tool_api_unavailable",
+                        "provider_native_tool_api_attempt_failed",
                         "provider_native_tool_call_required_unmet",
                         "broker_tools_available_count",
                         "available_tool_names",
@@ -238,6 +241,16 @@ class RuntimeGateProviderCommandsMixin:
             reason = (
                 str(report_data.get("provider_rejection_reason") or "").strip()
                 or "provider_native_tool_api_unavailable"
+            )
+            errors.append(reason)
+            report_data["errors"] = errors
+            report_data["provider_rejection_reason"] = reason
+            report_data["provider_work_verified"] = False
+            report_data["provider_role_counted"] = False
+        elif report_data.get("provider_native_tool_api_attempt_failed"):
+            reason = (
+                str(report_data.get("provider_rejection_reason") or "").strip()
+                or "provider_native_tool_api_attempt_failed"
             )
             errors.append(reason)
             report_data["errors"] = errors
@@ -344,6 +357,9 @@ class RuntimeGateProviderCommandsMixin:
             "provider_native_tool_api_supported": report_data.get(
                 "provider_native_tool_api_supported"
             ),
+            "provider_native_tool_api_adapter_available": report_data.get(
+                "provider_native_tool_api_adapter_available"
+            ),
             "provider_native_tool_call_required": report_data.get(
                 "provider_native_tool_call_required"
             ),
@@ -356,8 +372,14 @@ class RuntimeGateProviderCommandsMixin:
             "provider_native_tool_api_error": report_data.get(
                 "provider_native_tool_api_error"
             ),
+            "provider_native_tool_api_attempt_error": report_data.get(
+                "provider_native_tool_api_attempt_error"
+            ),
             "provider_native_tool_api_unavailable": report_data.get(
                 "provider_native_tool_api_unavailable"
+            ),
+            "provider_native_tool_api_attempt_failed": report_data.get(
+                "provider_native_tool_api_attempt_failed"
             ),
             "provider_native_tool_call_required_unmet": report_data.get(
                 "provider_native_tool_call_required_unmet"

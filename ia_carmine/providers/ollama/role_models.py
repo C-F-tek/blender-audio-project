@@ -47,6 +47,7 @@ def cli_config_sources(argv: list[str]) -> dict[str, str]:
         "gpu0_vulkan_visible_devices": _option_source(argv, "--gpu0-vulkan-visible-devices"),
         "keep_alive": _option_source(argv, "--keep-alive"),
         "num_ctx": _option_source(argv, "--num-ctx"),
+        "ollama_gpu_layers": _option_source(argv, "--ollama-gpu-layers", "--ollama-num-gpu"),
         "max_new_tokens": _option_source(argv, "--max-new-tokens"),
     }
 
@@ -76,10 +77,13 @@ def ensure_role_models(
     load: bool = True,
     keep_alive: str = "120s",
     num_ctx: int = 2048,
+    gpu_layers: str | int | None = "all",
     max_new_tokens: int = 16,
     unload_after_check: bool = True,
 ) -> dict[str, Any]:
     keep_alive = bounded_keep_alive(keep_alive)
+    gpu_layers_requested = gpu_layers_label(gpu_layers)
+    num_gpu = gpu_layers_option(gpu_layers)
     models_before = {
         "gpu1_planner": sorted(set(gpu1_client.list_models())),
         "gpu0_peer": sorted(set(gpu0_client.list_models())),
@@ -101,6 +105,8 @@ def ensure_role_models(
             load=load,
             keep_alive=keep_alive,
             num_ctx=num_ctx,
+            gpu_layers_requested=gpu_layers_requested,
+            num_gpu=num_gpu,
             max_new_tokens=max_new_tokens,
         )
         role_reports[role] = report
@@ -131,6 +137,10 @@ def ensure_role_models(
         "coexistence_verified": all(bool(r.get("alive_during_coexistence")) for r in role_reports.values()),
         "provider_execution_performed": bool(load),
         "ollama_inactivity_unload_seconds": 120,
+        "num_ctx": num_ctx,
+        "effective_num_ctx": num_ctx,
+        "ollama_gpu_layers_requested": gpu_layers_requested,
+        "ollama_options_num_gpu": num_gpu,
         "unload_after_check": bool(unload_after_check),
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -147,11 +157,17 @@ def _ensure_one_role(
     load: bool,
     keep_alive: str,
     num_ctx: int,
+    gpu_layers_requested: str,
+    num_gpu: int | None,
     max_new_tokens: int,
 ) -> dict[str, Any]:
     report: dict[str, Any] = {
         "role": role,
         "model": model,
+        "num_ctx": num_ctx,
+        "effective_num_ctx": num_ctx,
+        "ollama_gpu_layers_requested": gpu_layers_requested,
+        "ollama_options_num_gpu": num_gpu,
         "present_before": model in models_before,
         "pull_performed": False,
         "load_performed": False,
@@ -177,7 +193,7 @@ def _ensure_one_role(
                 num_predict=max_new_tokens,
                 num_thread=None,
                 num_ctx=num_ctx,
-                num_gpu=-1,
+                num_gpu=num_gpu,
                 think=False,
             )
             report["load_performed"] = True
@@ -222,6 +238,29 @@ def _wait_unloaded(client: OllamaSdkClient, model: str) -> dict[str, Any]:
         if not model_alive(payload, model):
             return payload
     return payload
+
+
+def gpu_layers_label(value: str | int | None) -> str:
+    if value is None:
+        return "default"
+    text = str(value).strip().lower()
+    if text in {"", "default", "auto"}:
+        return "default"
+    if text in {"all", "-1"}:
+        return "all"
+    return text
+
+
+def gpu_layers_option(value: str | int | None) -> int | None:
+    label = gpu_layers_label(value)
+    if label == "default":
+        return None
+    if label == "all":
+        return -1
+    try:
+        return int(label)
+    except ValueError as exc:
+        raise ValueError("--ollama-gpu-layers must be 'all', 'default', or an integer") from exc
 
 
 def _write(path: Path, report: dict[str, Any]) -> None:
@@ -385,6 +424,7 @@ def main() -> int:
     parser.add_argument("--keep-alive", default="120s")
     parser.add_argument("--keep-loaded-after-check", action="store_true")
     parser.add_argument("--num-ctx", type=int, default=2048)
+    parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default="all")
     parser.add_argument("--max-new-tokens", type=int, default=16)
     parser.add_argument("--output", default="output/validation/ollama_role_models.json")
     parser.add_argument("--markdown-output", default="output/validation/ollama_role_models.md")
@@ -408,6 +448,7 @@ def main() -> int:
         load=not args.no_load,
         keep_alive=args.keep_alive,
         num_ctx=args.num_ctx,
+        gpu_layers=args.ollama_gpu_layers,
         max_new_tokens=args.max_new_tokens,
         unload_after_check=not args.keep_loaded_after_check,
     )

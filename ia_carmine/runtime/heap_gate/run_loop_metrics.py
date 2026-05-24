@@ -188,6 +188,9 @@ def build_provider_lane_metrics(
             if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
             and _native_tool_loop_required(lane, provider_reports_by_lane.get(lane, {}))
             and provider_reports_by_lane.get(lane, {}).get("native_tool_loop_supported")
+            and not provider_reports_by_lane.get(lane, {}).get(
+                "provider_native_tool_api_attempt_failed"
+            )
             and safe_int(provider_reports_by_lane.get(lane, {}).get("native_tool_call_count"))
             <= 0
         ),
@@ -197,6 +200,15 @@ def build_provider_lane_metrics(
             if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
             and _native_tool_loop_required(lane, provider_reports_by_lane.get(lane, {}))
             and not provider_reports_by_lane.get(lane, {}).get("native_tool_loop_supported")
+        ),
+        "provider_native_tool_attempt_failed_required_lanes": sorted(
+            lane
+            for lane in required_lanes
+            if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
+            and _native_tool_loop_required(lane, provider_reports_by_lane.get(lane, {}))
+            and provider_reports_by_lane.get(lane, {}).get(
+                "provider_native_tool_api_attempt_failed"
+            )
         ),
         "semantic_required_provider_lanes": sorted(semantic_required),
         "provider_semantic_execution_count": sum(

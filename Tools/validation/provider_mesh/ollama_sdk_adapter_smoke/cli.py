@@ -97,9 +97,63 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     calls = normalize_ollama_tool_calls(chat)
     client = OllamaSdkClient(client_factory=fake_factory)
     ps = client.ps()
+    streamed_chunks: list[dict[str, Any]] = []
+    streamed_chat = client.chat(
+        model="fake-ollama:latest",
+        messages=[{"role": "user", "content": "stream a tool"}],
+        keep_alive="0s",
+        temperature=0.0,
+        num_predict=16,
+        num_thread=None,
+        num_ctx=2048,
+        tools=None,
+        partial_callback=lambda text, chunk: streamed_chunks.append(
+            {"text": text, "chunk": chunk}
+        ),
+    )
+    streamed_calls = normalize_ollama_tool_calls(streamed_chat)
+    non_stream_tool_callbacks: list[dict[str, Any]] = []
+    tool_chat_with_callback = client.chat(
+        model="fake-ollama:latest",
+        messages=[{"role": "user", "content": "tool callback must not stream"}],
+        keep_alive="0s",
+        temperature=0.0,
+        num_predict=16,
+        num_thread=None,
+        num_ctx=2048,
+        tools=[{"type": "function", "function": {"name": "run_heap_code_execution_matrix"}}],
+        partial_callback=lambda text, chunk: non_stream_tool_callbacks.append(
+            {"text": text, "chunk": chunk}
+        ),
+    )
+    tool_chat_calls = normalize_ollama_tool_calls(tool_chat_with_callback)
+    gpu0_ctx_session = OllamaSession(
+        model="fake-ollama:latest",
+        shutdown_server=False,
+        unload_model=True,
+        num_ctx=2048,
+        client_factory=fake_factory,
+    )
+    gpu1_ctx_session = OllamaSession(
+        model="fake-ollama:latest",
+        shutdown_server=False,
+        unload_model=True,
+        num_ctx=16384,
+        client_factory=fake_factory,
+    )
 
     generate_call = next(item for item in FakeClient.calls if item["method"] == "generate")
     chat_call = next(item for item in FakeClient.calls if item["method"] == "chat")
+    streamed_chat_call = next(
+        item
+        for item in FakeClient.calls
+        if item["method"] == "chat" and item["kwargs"].get("stream")
+    )
+    tool_callback_chat_call = next(
+        item
+        for item in reversed(FakeClient.calls)
+        if item["method"] == "chat" and item["kwargs"].get("tools")
+    )
     options = generate_call["kwargs"].get("options", {})
     if generated != "hello world from sdk":
         errors.append("OllamaSession.generate did not return SDK text")
@@ -108,11 +162,27 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     if options.get("temperature") != 0.25 or options.get("num_predict") != 123:
         errors.append("generate options did not propagate temperature/num_predict")
     if options.get("num_gpu") != -1:
-        errors.append("generate options did not propagate gpu_layers=all as num_gpu=-1")
+        errors.append("generate options did not propagate gpu_layers=all sentinel")
     if not chat_call["kwargs"].get("tools"):
         errors.append("chat tools were not propagated to ollama-python")
     if not calls or calls[0].get("tool") != "run_heap_code_execution_matrix":
         errors.append("ollama-python tool_calls were not normalized")
+    if streamed_chat_call["kwargs"].get("stream") is not True:
+        errors.append("streaming chat did not request stream mode")
+    if not streamed_calls or streamed_calls[0].get("tool") != "run_heap_code_execution_matrix":
+        errors.append("streaming ollama tool_calls were not accumulated")
+    if not streamed_chunks:
+        errors.append("streaming chat did not invoke partial callback")
+    if tool_callback_chat_call["kwargs"].get("stream") is not False:
+        errors.append("chat with native tools must disable streaming to preserve tool_calls")
+    if non_stream_tool_callbacks:
+        errors.append("chat with native tools unexpectedly invoked streaming callback")
+    if not tool_chat_calls or tool_chat_calls[0].get("tool") != "run_heap_code_execution_matrix":
+        errors.append("non-stream tool chat did not preserve tool_calls")
+    if gpu0_ctx_session.effective_num_ctx != 2048 or gpu0_ctx_session.num_ctx != 2048:
+        errors.append("GPU0 explicit short num_ctx 2048 was not preserved")
+    if gpu1_ctx_session.effective_num_ctx != 16384 or gpu1_ctx_session.num_ctx != 16384:
+        errors.append("GPU1 explicit num_ctx 16384 was not preserved")
     if not ps.get("models"):
         errors.append("OllamaSdkClient.ps did not return process data")
     if OllamaSession.__module__ != "ia_carmine.providers.ollama.session":
@@ -126,6 +196,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             "provider_device_verified": True,
             "ollama_residency_verified": True,
             "ollama_compute_verified": True,
+            "gpu0_secondary_schema_valid": True,
             "selected_model": "fake-ollama:latest",
             "eval_count": 80,
             "done": True,
@@ -134,6 +205,26 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     )
     if not gpu0_status.get("provider_work_verified"):
         errors.append(f"GPU0 Ollama status rejected: {gpu0_status}")
+    gpu0_missing_schema_status = provider_work_status(
+        lane="gpu0_peer",
+        report={
+            "provider_backend": "ollama",
+            "provider_compute_device": "ollama/gpu0-vulkan",
+            "provider_device_verified": True,
+            "ollama_residency_verified": True,
+            "ollama_compute_verified": True,
+            "selected_model": "fake-ollama:latest",
+            "eval_count": 80,
+            "done": True,
+            "response_text": "GPU0 reviewed concrete target refs and requested broker evidence.",
+        },
+    )
+    if gpu0_missing_schema_status.get("provider_work_verified"):
+        errors.append("GPU0 Ollama status without secondary schema must be rejected")
+    if gpu0_missing_schema_status.get("provider_rejection_reason") != "gpu0_secondary_schema_invalid":
+        errors.append(
+            "GPU0 Ollama missing secondary schema rejection is not gpu0_secondary_schema_invalid"
+        )
 
     canonical_sources = [
         repo_root / "ia_carmine" / "providers" / "ollama" / "sdk_client.py",
@@ -155,7 +246,12 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "provider_execution_performed": False,
         "ollama_request_performed": False,
         "gpu0_ollama_contract": gpu0_status,
+        "gpu0_missing_schema_contract": gpu0_missing_schema_status,
         "tool_call_count": len(calls),
+        "stream_tool_call_count": len(streamed_calls),
+        "streaming_tool_callback_disabled": not bool(non_stream_tool_callbacks),
+        "gpu0_effective_num_ctx": gpu0_ctx_session.effective_num_ctx,
+        "gpu1_effective_num_ctx": gpu1_ctx_session.effective_num_ctx,
         "session_signature": str(inspect.signature(OllamaSession.generate)),
     }
 
