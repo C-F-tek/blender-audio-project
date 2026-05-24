@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from ia_carmine._shared.heap_final_readable_synthesis import render_markdown
+from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
 from ia_carmine.runtime.heap_context_closure.product_state import build_product_state
 from ia_carmine.runtime.heap_gate.gpu1_closure_packet import build_gpu1_closure_decision_packet
 
@@ -48,6 +49,12 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     target = "ia_carmine/product/code_product/final_readable_product/cli.py"
     proposal_1 = "smoke:proposal:001"
     proposal_2 = "smoke:proposal:002"
+    proposal_1_response = (
+        "TARGET_FILES:\n- "
+        + target
+        + "\nPROBLEM:\n- smoke rejected first revision\nPATCH_SKETCH_UNIFIED_DIFF:\n"
+        + full_diff
+    )
     proposal_2_response = "TARGET_FILES:\n- " + target + "\nPATCH_SKETCH_UNIFIED_DIFF:\n" + full_diff
     gpu1_packet = build_gpu1_closure_decision_packet(
         gpu1_block_id=proposal_2,
@@ -80,10 +87,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "exit_decision": "PATCHABLE_TARGET",
             "quality_passed": False,
             "accepted": False,
-            "response_text": "TARGET_FILES:\n- "
-            + target
-            + "\nPROBLEM:\n- smoke rejected first revision\nPATCH_SKETCH_UNIFIED_DIFF:\n"
-            + full_diff,
+            **write_text_evidence_fields(
+                repo_root,
+                run_dir / "text_artifacts",
+                prefix="response_text",
+                name="proposal_001_response_text",
+                text=proposal_1_response,
+                kind="smoke_proposal_response_text",
+                producer="heap_final_readable_product_smoke",
+                suffix=".md",
+            ),
         },
     )
     write_json(
@@ -108,7 +121,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "gpu1_closure_decision_packet": gpu1_packet,
             "quality_passed": True,
             "accepted": True,
-            "response_text": proposal_2_response,
+            **write_text_evidence_fields(
+                repo_root,
+                run_dir / "text_artifacts",
+                prefix="response_text",
+                name="proposal_002_response_text",
+                text=proposal_2_response,
+                kind="smoke_proposal_response_text",
+                producer="heap_final_readable_product_smoke",
+                suffix=".md",
+            ),
         },
     )
     for lane, role, block_type, block_id, action in (
@@ -180,6 +202,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                     "npu_peer_followup_required": False,
                 }
             )
+        provider_response_text = f"{role} performed=true reviewed {proposal_2}"
         write_json(
             provider_dir / f"{lane}.json",
             {
@@ -200,7 +223,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "native_tool_call_count": 1,
                 "selected_model": "qwen2.5-coder:14b" if lane == "gpu1_planner" else "",
                 "workload": {"performed": True},
-                "response_text": f"{role} performed=true reviewed {proposal_2}",
+                **write_text_evidence_fields(
+                    repo_root,
+                    run_dir / "text_artifacts",
+                    prefix="response_text",
+                    name=f"{lane}_response_text",
+                    text=provider_response_text,
+                    kind="smoke_provider_response_text",
+                    producer="heap_final_readable_product_smoke",
+                    suffix=".md",
+                ),
                 **provider_fields,
             },
         )

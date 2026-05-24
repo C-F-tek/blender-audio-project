@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ia_carmine._shared.file_backed_transport import report_text
+from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine._shared.provider_work_rejections import looks_like_handshake, normalize_bool
 from ia_carmine.runtime.heap_gate.generic_write_followup import failed_generic_write_results
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, safe_int
@@ -13,9 +13,7 @@ def gpu1_primary_workload_status(
     *,
     repo_root: Path | str | None = None,
 ) -> dict[str, Any]:
-    response_text = str(
-        report_text(repo_root, report, require_full=True).get("text") or ""
-    ).strip()
+    response_text = str(report_text_required_full(repo_root, report).get("text") or "").strip()
     token_count = safe_int(
         report.get("eval_count") or report.get("completion_token_count"),
         default=0,

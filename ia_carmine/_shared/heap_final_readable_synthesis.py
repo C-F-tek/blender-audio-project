@@ -281,8 +281,6 @@ def gpu1_raw_evidence_summary(run_dir: Path) -> list[str]:
         raw = str(
             _text_from_ref({"repo_root": str(_repo_root_from_run_dir(run_dir))}, data, "gpu1_free_text_evidence")
             or _text_from_ref({"repo_root": str(_repo_root_from_run_dir(run_dir))}, data, "response_text")
-            or data.get("response_text")
-            or data.get("response_text_tail")
             or ""
         )
         raw_excerpt = raw.replace("\r\n", "\n").replace("\n", " ")[:1200]

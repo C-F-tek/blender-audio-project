@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from ia_carmine._shared.file_backed_transport import read_text_evidence
+from ia_carmine._shared.file_backed_transport import report_text_preview
 from ia_carmine._shared.provider_work_verification import (
     provider_rejection_record,
     provider_work_status,
@@ -191,7 +191,7 @@ def _skip_provider_item(path: Path, data: dict[str, Any]) -> bool:
 
 
 def _preview_text(repo_root: Path, data: dict[str, Any], max_block_chars: int) -> str:
-    text = str(read_text_evidence(repo_root, data, "response_text").get("text") or "")
+    text = str(report_text_preview(repo_root, data).get("text") or "")
     if not text:
         text = json.dumps(data, indent=2, ensure_ascii=False)
     if max_block_chars > 0 and len(text) > max_block_chars:

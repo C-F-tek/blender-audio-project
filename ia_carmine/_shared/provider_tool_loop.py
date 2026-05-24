@@ -8,7 +8,10 @@ import sys
 import time
 from pathlib import Path
 from typing import Any
-from ia_carmine._shared.file_backed_transport import report_text, write_text_evidence_fields
+from ia_carmine._shared.file_backed_transport import (
+    report_text_required_full,
+    write_text_evidence_fields,
+)
 from ia_carmine.providers.ollama.tool_calls import (
     normalize_ollama_tool_calls as normalize_ollama_sdk_tool_calls,
 )
@@ -123,9 +126,13 @@ def _openvino_tool_loop_child_main() -> int:
         )
         if not child_artifacts_dir.is_absolute():
             child_artifacts_dir = repo_root / child_artifacts_dir
-        provider_delta = str(result.get("provider_heap_delta_text") or "")
-        response_text = str(result.get("provider_heap_delta_text") or result.get("response_text") or "")
-        structured_text = str(result.get("structured_text") or "")
+        provider_delta = str(
+            report_text_required_full(repo_root, result, ("provider_heap_delta_text",)).get("text") or ""
+        )
+        response_text = provider_delta or str(report_text_required_full(repo_root, result).get("text") or "")
+        structured_text = str(
+            report_text_required_full(repo_root, result, ("structured_text",)).get("text") or ""
+        )
         result.update(write_text_evidence_fields(
             repo_root,
             child_artifacts_dir,
@@ -352,9 +359,9 @@ def openvino_tool_loop_report(
     if payload.get("errors"):
         report["errors"].extend(str(item) for item in payload.get("errors") or [])
     provider_delta = str(
-        report_text(repo_root, payload, ("provider_heap_delta_text",)).get("text") or ""
+        report_text_required_full(repo_root, payload, ("provider_heap_delta_text",)).get("text") or ""
     )
-    response_text = str(report_text(repo_root, payload).get("text") or "")
+    response_text = str(report_text_required_full(repo_root, payload).get("text") or "")
     evidence_dir = repo_root / "output" / "validation" / "provider_tool_loop_artifacts"
     report.update(write_text_evidence_fields(
         repo_root,
@@ -379,7 +386,9 @@ def openvino_tool_loop_report(
     parsed = payload.get("parsed") if isinstance(payload.get("parsed"), dict) else {}
     tool_calls = parsed.get("tool_calls") if isinstance(parsed.get("tool_calls"), list) else []
     structured_call = payload.get("structured_call") if isinstance(payload.get("structured_call"), dict) else {}
-    structured_text = str(read_text_evidence(repo_root, payload, "structured_text").get("text") or "")
+    structured_text = str(
+        report_text_required_full(repo_root, payload, ("structured_text",)).get("text") or ""
+    )
     report.update(write_text_evidence_fields(
         repo_root,
         evidence_dir,

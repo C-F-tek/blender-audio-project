@@ -25,6 +25,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine.runtime.heap_gate.pointer_soft_lock import pointer_closure_summary
 
 from .provider_graph import provider_blocks, provider_rejections
@@ -170,10 +171,13 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
         data = read_json(path)
         md_path = path.with_suffix(".md")
         diagnostic_preview = read_text(md_path if md_path.exists() else path, max_block_chars)
-        candidate_preview = compact_text(
-            data.get("response_text") or data.get("proposal_text") or "",
-            max_block_chars,
+        candidate_evidence = report_text_required_full(
+            repo_root,
+            data,
+            ("gpu1_free_text_evidence", "response_text", "proposal_text"),
         )
+        candidate_text = str(candidate_evidence.get("text") or "")
+        candidate_preview = compact_text(candidate_text, max_block_chars)
         preview = candidate_preview or diagnostic_preview
         block_id = str(data.get("block_id") or "").strip() or stable_id(
             "proposal", f"{repo_rel(repo_root, path)}:{data.get('revision')}:{index}"
@@ -229,6 +233,9 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             ),
             "preview": preview,
             "candidate_response_preview": candidate_preview,
+            "candidate_response_full_verified": bool(candidate_evidence.get("full_verified")),
+            "candidate_response_source": str(candidate_evidence.get("source") or ""),
+            "candidate_response_blocked_reason": str(candidate_evidence.get("reason") or ""),
             "diagnostic_preview": diagnostic_preview,
             "preview_source": (
                 "candidate_response" if candidate_preview else "diagnostic_markdown"

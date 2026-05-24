@@ -250,7 +250,7 @@ def build_npu_role_response(request_input: str, micro: dict[str, Any]) -> dict[s
         "role_decision": decision,
         "micro_task_used": "ia_carmine.providers.npu.provider_mesh._shared.npu_runtime.npu_preflight",
         "micro_task_result_summary": text,
-        "response_text": text,
+        "response_text_full_text_in_json": False,
     }
 
 

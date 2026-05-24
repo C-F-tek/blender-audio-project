@@ -110,7 +110,7 @@ def write_text_artifact(
 ) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{safe_name(name)}{suffix}"
-    path.write_text(text, encoding="utf-8")
+    path.write_bytes(str(text or "").encode("utf-8"))
     return artifact_ref(path, repo_root, kind=kind, producer=producer, ref_id=safe_name(name))
 
 
@@ -315,6 +315,22 @@ def read_text_evidence(
     inline = payload.get(prefix)
     if isinstance(inline, str) and inline:
         warnings.append(f"{prefix}_legacy_inline_fallback")
+        if require_full:
+            errors.append(f"{prefix}_legacy_inline_not_full_evidence")
+            return {
+                "text": "",
+                "source": "legacy_inline",
+                "ref_path": "",
+                "used_ref": False,
+                "used_legacy_inline": True,
+                "used_tail_fallback": False,
+                "sha256_valid": text_sha256(inline) == str(payload.get(f"{prefix}_sha256") or ""),
+                "full_verified": False,
+                "required_full": True,
+                "reason": f"{prefix}_legacy_inline_not_full_evidence",
+                "errors": errors,
+                "warnings": warnings,
+            }
         return {
             "text": inline,
             "source": "legacy_inline",
@@ -330,6 +346,22 @@ def read_text_evidence(
     tail = str(payload.get(f"{prefix}_tail") or "")
     if tail:
         warnings.append(f"{prefix}_tail_fallback")
+        if require_full:
+            errors.append(f"{prefix}_tail_not_full_evidence")
+            return {
+                "text": "",
+                "source": "tail",
+                "ref_path": "",
+                "used_ref": False,
+                "used_legacy_inline": False,
+                "used_tail_fallback": True,
+                "sha256_valid": False,
+                "full_verified": False,
+                "required_full": True,
+                "reason": f"{prefix}_tail_not_full_evidence",
+                "errors": errors,
+                "warnings": warnings,
+            }
     elif require_full:
         errors.append(f"{prefix}_full_text_unavailable")
     return {
@@ -388,6 +420,35 @@ def report_text(
         "errors": collected_errors,
         "warnings": collected_warnings,
     }
+
+
+def report_text_preview(
+    repo_root: Path | str | None,
+    report: dict[str, Any],
+    prefixes: list[str] | tuple[str, ...] = ("response_text",),
+) -> dict[str, Any]:
+    """Permissive text accessor for rendering, summaries and diagnostics."""
+    return report_text(repo_root, report, prefixes, require_full=False)
+
+
+def report_text_required_full(
+    repo_root: Path | str | None,
+    report: dict[str, Any],
+    prefixes: list[str] | tuple[str, ...] = ("response_text",),
+) -> dict[str, Any]:
+    """Strict text accessor for semantic gates and provider decisions."""
+    result = report_text(repo_root, report, prefixes, require_full=True)
+    if result.get("used_ref") and result.get("full_verified") and result.get("text"):
+        result["required_full"] = True
+        result["reason"] = ""
+        return result
+    errors = [str(item) for item in result.get("errors") or [] if str(item)]
+    reason = errors[0] if errors else f"{result.get('prefix') or prefixes[0]}_full_text_not_verified"
+    strict = dict(result)
+    strict["text"] = ""
+    strict["required_full"] = True
+    strict["reason"] = reason
+    return strict
 
 
 def write_json_artifact(

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
+
+from ia_carmine._shared.file_backed_transport import report_text_preview
 
 NPU_MICRO_TASK_KINDS = (
     "section_presence_audit",
@@ -103,7 +106,7 @@ def render_npu_micro_prompt(
 
 
 def infer_npu_decision(npu_tool_loop: dict, role_response: dict) -> str:
-    response = str(npu_tool_loop.get("response_text") or role_response.get("response_text") or "")
+    response = _npu_findings_text(npu_tool_loop, role_response)
     parsed = _extract_npu_decision(response)
     if parsed:
         return parsed
@@ -126,7 +129,7 @@ def schema_response_text(
     device_workload: dict,
     npu_tool_loop: dict,
 ) -> str:
-    findings = str(npu_tool_loop.get("response_text") or role_response.get("response_text") or "").strip()
+    findings = _npu_findings_text(npu_tool_loop, role_response).strip()
     if not findings:
         findings = "no actionable context available"
     reason = str(npu_tool_loop.get("classification") or role_response.get("role_decision") or "bounded_micro_audit")
@@ -144,6 +147,31 @@ def schema_response_text(
             f"iterations={device_workload.get('iterations')};seconds={device_workload.get('seconds')}"
         )
     return "\n".join(lines)
+
+
+def _npu_findings_text(npu_tool_loop: dict, role_response: dict) -> str:
+    repo_root = Path(
+        str(
+            npu_tool_loop.get("repo_root")
+            or role_response.get("repo_root")
+            or "."
+        )
+    ).resolve(strict=False)
+    text = str(
+        report_text_preview(
+            repo_root,
+            npu_tool_loop,
+            ("response_text", "provider_heap_delta_text"),
+        ).get("text")
+        or ""
+    ).strip()
+    if text:
+        return text
+    return str(
+        role_response.get("micro_task_result_summary")
+        or role_response.get("response_text")
+        or ""
+    )
 
 
 def _extract_npu_decision(text: str) -> str:

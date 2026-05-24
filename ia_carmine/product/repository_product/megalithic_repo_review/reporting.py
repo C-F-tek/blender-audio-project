@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .common import *  # noqa: F403
+from ia_carmine._shared.file_backed_transport import report_text_preview
 
 def build_proposals(review: dict[str, Any]) -> dict[str, Any]:
     proposals: list[dict[str, Any]] = []
@@ -63,11 +64,18 @@ def render_markdown(review: dict[str, Any], proposals: dict[str, Any]) -> str:
         for detail in finding.get("details", [])[:30]:
             lines.append(f"- {detail}")
         lines.append("")
-    if review["ollama_review"].get("response_text"):
+    ollama_text = str(
+        report_text_preview(
+            Path(review["repo_root"]),
+            review["ollama_review"],
+        ).get("text")
+        or ""
+    )
+    if ollama_text:
         lines.append("## Ollama semantic review")
         lines.append("")
         lines.append("```text")
-        lines.append(review["ollama_review"]["response_text"][:16000])
+        lines.append(ollama_text[:16000])
         lines.append("```")
         lines.append("")
     lines.append("## Proposals")

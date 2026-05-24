@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
+
 
 MODEL_ENV_VARS = (
     "IA_CARMINE_OPENVINO_TOOL_MODEL_DIR",
@@ -132,14 +134,63 @@ def run_openvino_tool_loop_child_payload(payload: dict[str, Any]) -> dict[str, A
         except Exception as exc:  # noqa: BLE001 - reported to parent as provider evidence.
             structured_call = {"_structured_error": f"{type(exc).__name__}: {exc}"}
 
-    return {
+    result = {
         "performed": True,
         "supported": True,
         "classification": "openvino_genai_tool_loop_executed",
         "devices": devices,
-        "provider_heap_delta_text": reflection_text,
-        "response_text": text,
         "parsed": parsed,
-        "structured_text": structured_text,
         "structured_call": structured_call,
     }
+    repo_value = str(payload.get("repo_root") or "").strip()
+    artifacts_value = str(payload.get("child_artifacts_dir") or "").strip()
+    if repo_value:
+        repo_root = Path(repo_value).resolve(strict=False)
+        output_dir = Path(artifacts_value or "output/validation/openvino_tool_loop_child_artifacts")
+        if not output_dir.is_absolute():
+            output_dir = repo_root / output_dir
+        result.update(
+            write_text_evidence_fields(
+                repo_root,
+                output_dir,
+                prefix="provider_heap_delta_text",
+                name="openvino_child_provider_heap_delta_text",
+                text=reflection_text,
+                kind="provider_heap_delta_text",
+                producer="openvino_model_discovery",
+                suffix=".md",
+            )
+        )
+        result.update(
+            write_text_evidence_fields(
+                repo_root,
+                output_dir,
+                prefix="response_text",
+                name="openvino_child_response_text",
+                text=text,
+                kind="provider_response_text",
+                producer="openvino_model_discovery",
+                suffix=".md",
+            )
+        )
+        result.update(
+            write_text_evidence_fields(
+                repo_root,
+                output_dir,
+                prefix="structured_text",
+                name="openvino_child_structured_text",
+                text=structured_text,
+                kind="provider_structured_tool_call_text",
+                producer="openvino_model_discovery",
+                suffix=".txt",
+            )
+        )
+    else:
+        result.update(
+            {
+                "provider_heap_delta_text": reflection_text,
+                "response_text": text,
+                "structured_text": structured_text,
+            }
+        )
+    return result

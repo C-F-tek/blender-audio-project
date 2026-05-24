@@ -17,6 +17,11 @@ from ia_carmine.product.heap_final_proposals.common import (
 from ia_carmine.product.heap_final_proposals.normalize_final_causality.cli import (
     provider_execution_performed as causality_provider_execution_performed,
 )
+from Tools.validation.heap_runtime.provider_shortcut_helpers import (
+    response_fields,
+    tool_report,
+    write_json_file,
+)
 from ia_carmine.product.code_product.final_readable_product.product_contract import (
     final_product_blockers,
 )
@@ -40,9 +45,7 @@ from ia_carmine.runtime.heap_gate.provider_teamwork_packet import (
     _provider_packet_tool_catalog_limit,
 )
 from ia_carmine.runtime.heap_gate.tool_broker import RuntimeGateToolBrokerMixin
-from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
-    publish_provider_native_tool_calls,
-)
+from ia_carmine.runtime.heap_gate.tool_broker_native_calls import publish_provider_native_tool_calls
 
 
 def run_smoke(repo_root: Path) -> dict[str, Any]:
@@ -139,31 +142,33 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
 
 
 def _npu_peer_evidence_not_verified_role() -> bool:
-    owner = SimpleNamespace(
-        args=SimpleNamespace(max_provider_revisions=2),
-        provider_revision_count=0,
-        provider_recovery_attempt_count=0,
-        provider_reports=[
-            {
-                "lane": "npu_micro_task_auditor",
-                "provider_role": "npu_auditor",
-                "revision": 0,
-                "provider_block_id": "npu:semantic-reject",
-                "npu_peer_evidence_verified": True,
-                "semantic_contract_passed": False,
-                "provider_work_verified": False,
-                "provider_rejection_reason": "provider_semantic_contract_failed",
-                "response_text": "NPU evidence exists but semantic contract rejected it.",
-            }
-        ],
-        latest_proposal_iteration_report=lambda: {},
-        latest_rejected_proposal_requires_retry=lambda: False,
-    )
-    status = provider_recovery_status(owner, [])
-    return (
-        "npu_auditor" not in set(status.get("roles_verified") or [])
-        and "npu_auditor" in set(status.get("roles_observed_invalid") or [])
-    )
+    with TemporaryDirectory(prefix="provider-shortcut-npu-peer-") as tmp:
+        repo = Path(tmp)
+        report = {
+            "repo_root": str(repo),
+            "lane": "npu_micro_task_auditor",
+            "provider_role": "npu_auditor",
+            "revision": 0,
+            "provider_block_id": "npu:semantic-reject",
+            "npu_peer_evidence_verified": True,
+            "semantic_contract_passed": False,
+            "provider_work_verified": False,
+            "provider_rejection_reason": "provider_semantic_contract_failed",
+            **response_fields(repo, "npu_semantic_reject", "NPU evidence exists but semantic contract rejected it."),
+        }
+        owner = SimpleNamespace(
+            args=SimpleNamespace(max_provider_revisions=2),
+            provider_revision_count=0,
+            provider_recovery_attempt_count=0,
+            provider_reports=[report],
+            latest_proposal_iteration_report=lambda: {},
+            latest_rejected_proposal_requires_retry=lambda: False,
+        )
+        status = provider_recovery_status(owner, [])
+        return (
+            "npu_auditor" not in set(status.get("roles_verified") or [])
+            and "npu_auditor" in set(status.get("roles_observed_invalid") or [])
+        )
 
 
 def _weak_gate_final_product_blockers() -> list[str]:
@@ -407,7 +412,12 @@ def _full_run_accepts_fingerprinted_canonical_provider_evidence(repo_root: Path)
         "completion_token_count": 1024,
         "eval_count": 1024,
         "done": True,
-        "response_text": "HEAP_DELTA_PROPOSAL\nTARGET_FILES:\n- ia_carmine/runtime/heap_gate/provider_commands.py\nPATCH_SKETCH:\n```diff\n@@\n+ok\n```",
+        "repo_root": str(repo_root),
+        **response_fields(
+            repo_root,
+            "canonical_provider_evidence",
+            "HEAP_DELTA_PROPOSAL\nTARGET_FILES:\n- ia_carmine/runtime/heap_gate/provider_commands.py\nPATCH_SKETCH:\n```diff\n@@\n+ok\n```",
+        ),
         "passed": True,
         "standalone_default_fields": ["strict_provider_model"],
         "canonical_run_provider_evidence": True,
@@ -447,17 +457,17 @@ def _build_pointer_graph() -> list[dict[str, Any]]:
         root = Path(tmp)
         provider_dir = root / "provider_teamwork"
         provider_dir.mkdir()
-        _write(provider_dir / "gpu1.json", _gpu1_report())
-        _write(provider_dir / "gpu0.json", _gpu0_incongruent_report())
-        _write(provider_dir / "npu.json", _npu_invalid_report())
+        write_json_file(provider_dir / "gpu1.json", _gpu1_report())
+        write_json_file(provider_dir / "gpu0.json", _gpu0_incongruent_report())
+        write_json_file(provider_dir / "npu.json", _npu_invalid_report())
         return provider_blocks(root, root, 4000)
 
 
 def _sidecar_generic_write_published() -> bool:
     owner = _FakeNativeOwner(
         [
-            _tool_report("gpu0_peer", "gpu0.json"),
-            _tool_report("npu_micro_task_auditor", "npu.json"),
+            tool_report("gpu0_peer", "gpu0.json"),
+            tool_report("npu_micro_task_auditor", "npu.json"),
         ]
     )
     publish_provider_native_tool_calls(owner, 1, [])
@@ -467,8 +477,12 @@ def _sidecar_generic_write_published() -> bool:
 def _npu_revision_refs_are_current_only() -> bool:
     class _ProposalOwner(RuntimeGateProposalCycleAMixin):
         def __init__(self) -> None:
+            self._temp_dir = TemporaryDirectory(prefix="provider-shortcut-revision-")
+            self.repo_root = Path(self._temp_dir.name)
+            self.repo_root.mkdir(parents=True, exist_ok=True)
             self.provider_reports = [
             {
+                "repo_root": str(self.repo_root),
                 "lane": "gpu1_planner",
                 "revision": 1,
                 "provider_block_id": "gpu1:001",
@@ -477,9 +491,10 @@ def _npu_revision_refs_are_current_only() -> bool:
                 "done": True,
                 "completion_token_count": 260,
                 "ollama_compute_verified": True,
-                "response_text": "GPU1 verified current packet with enough concrete content for execution.",
+                **response_fields(self.repo_root, "gpu1_revision_current", "GPU1 verified current packet with enough concrete content for execution."),
             },
             {
+                "repo_root": str(self.repo_root),
                 "lane": "gpu0_peer",
                 "revision": 1,
                 "provider_block_id": "gpu0:001",
@@ -491,7 +506,7 @@ def _npu_revision_refs_are_current_only() -> bool:
                 "completion_token_count": 260,
                 "ollama_compute_verified": True,
                 "gpu0_secondary_schema_valid": True,
-                "response_text": "GPU0 verified packet review with structured current packet evidence.",
+                **response_fields(self.repo_root, "gpu0_revision_current", "GPU0 verified packet review with structured current packet evidence."),
             },
             {
                 "lane": "npu_micro_task_auditor",
@@ -617,20 +632,6 @@ def _npu_invalid_report() -> dict[str, Any]:
         "npu_peer_followup_required": True,
         "response_text": "NPU sidecar reject until guardrails and validation are concrete.",
     }
-
-
-def _tool_report(lane: str, output: str) -> dict[str, Any]:
-    return {
-        "lane": lane,
-        "output": output,
-        "revision": 0,
-        "response_text": f"{lane} sidecar text",
-        "tool_calls": [{"id": f"{lane}_generic", "tool": "generic_write", "args": {}}],
-    }
-
-
-def _write(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 class _FakeNativeOwner:

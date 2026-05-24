@@ -2,10 +2,17 @@ from __future__ import annotations
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, repo_rel, subprocess
 from ia_carmine.runtime.heap_gate.provider_command_specs import build_provider_command_specs
 from ia_carmine.runtime.heap_gate.provider_time import build_provider_time_counter_contract
+from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine._shared.provider_tool_schemas import is_api_native_tool_call
 from ia_carmine._shared.provider_work_verification import provider_work_status
 def _empty_report_value(value: Any) -> bool:
     return value is None or value == "" or value == [] or value == {}
+def _provider_report_response_text(owner: Any, report: dict[str, Any]) -> str:
+    reader = getattr(owner, "provider_report_response_text", None)
+    if callable(reader):
+        return str(reader(report) or "").strip()
+    repo_root = getattr(owner, "repo_root", report.get("repo_root", "."))
+    return str(report_text_required_full(repo_root, report).get("text") or "").strip()
 class RuntimeGateProviderCommandsMixin:
     def provider_time_counter_contract(self) -> dict[str, Any]:
         return build_provider_time_counter_contract(self.args)
@@ -123,7 +130,7 @@ class RuntimeGateProviderCommandsMixin:
             report_data["standalone_default_fields_ignored_reason"] = (
                 "canonical_run_provider_evidence_fingerprint_verified"
             )
-        response_text = self.provider_report_response_text(report_data).strip()
+        response_text = _provider_report_response_text(self, report_data)
         selected_model = str(report_data.get("selected_model") or "").strip()
         lane_reports = report_data.get("lane_reports")
         if isinstance(lane_reports, list):
@@ -140,7 +147,7 @@ class RuntimeGateProviderCommandsMixin:
                         or selected_model
                     ).strip()
                     response_text = (
-                        self.provider_report_response_text(lane_report).strip()
+                        _provider_report_response_text(self, lane_report)
                         or str(lane_report.get("text_preview") or response_text).strip()
                     )
                     if not report_data.get("target_files") and lane_report.get("target_files"):

@@ -81,7 +81,7 @@ For heap heartbeat/team runtime validation, ready requires at least:
 - shared context evidence exists
 - semantic chunk/context evidence exists
 - AI context pack evidence exists when the profile requires it
-- response_text is non-empty and complete
+- response_text_ref or long-response artifact is present, readable, checksum verified and `full_verified=true`; response tails are preview/fallback only
 - errors is empty
 
 If any required surface is missing, the product must be blocked_with_reason.

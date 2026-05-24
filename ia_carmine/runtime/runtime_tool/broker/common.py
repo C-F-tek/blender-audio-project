@@ -11,6 +11,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import write_text_artifact
 from ia_carmine._shared.agent_runtime_tool_broker_execution import TimedCommandResult
 
 DEFAULT_OUTPUT = "output/validation/agent_runtime_tool_broker.json"
@@ -76,9 +77,27 @@ def execute_debug_lab_in_process(
                 "passed": report.get("passed"),
                 "operation_count": report.get("operation_count"),
                 "failed_count": report.get("failed_count"),
-                "request_transport": "in_memory",
+                "request_transport": "in_process_internal",
+                "full_io_refs": True,
             },
             ensure_ascii=False,
+        )
+        io_dir = Path(outputs["json_report"]).resolve(strict=False).parent / "broker_io_artifacts"
+        stdout_ref = write_text_artifact(
+            repo_root,
+            io_dir,
+            name="agent_runtime_debug_lab_in_process_stdout",
+            text=stdout_tail,
+            kind="tool_stdout",
+            producer="agent_runtime_tool_broker",
+        )
+        stderr_ref = write_text_artifact(
+            repo_root,
+            io_dir,
+            name="agent_runtime_debug_lab_in_process_stderr",
+            text="",
+            kind="tool_stderr",
+            producer="agent_runtime_tool_broker",
         )
         return TimedCommandResult(
             returncode=0 if report.get("passed") is True else 2,
@@ -88,6 +107,10 @@ def execute_debug_lab_in_process(
             started_at=started_at,
             finished_at=now_iso(),
             elapsed_seconds=round(max(0.0, perf_counter() - started), 3),
+            stdout_ref=stdout_ref,
+            stderr_ref=stderr_ref,
+            stdout_chars=len(stdout_tail),
+            stderr_chars=0,
         )
     except Exception as exc:  # noqa: BLE001
         return TimedCommandResult(

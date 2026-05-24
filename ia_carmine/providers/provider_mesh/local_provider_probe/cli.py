@@ -19,8 +19,8 @@ from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
 from ia_carmine._shared.provider_probe_paths import ensure_repo_imports
 from ia_carmine._shared.provider_work_verification import provider_work_status
 from ia_carmine._shared.file_backed_transport import (
+    compact_text_fields as shared_compact_text_fields,
     write_text_artifact,
-    write_text_evidence_fields,
 )
 
 
@@ -265,38 +265,41 @@ def mirror_single_provider_lane(report: dict[str, Any], lane_report: dict[str, A
     return report
 
 
-def _compact_text_fields(
+def _compact_provider_payload(
     repo_root: Path,
     output_dir: Path,
     payload: dict[str, Any],
     *,
     name: str,
 ) -> dict[str, Any]:
-    compact = dict(payload)
-    text_keys = (
+    compact = shared_compact_text_fields(
+        repo_root,
+        output_dir / "provider_report_artifacts",
+        payload,
+        (
+            "response_text",
+            "provider_heap_delta_text",
+            "gpu0_raw_response_text",
+            "request_prompt",
+            "raw_preview",
+        ),
+        name=name,
+        producer="local_provider_probe",
+        kind_prefix="local_provider_probe",
+        suffix=".md",
+    )
+    text_keys = {
         "response_text",
         "provider_heap_delta_text",
         "gpu0_raw_response_text",
         "request_prompt",
         "raw_preview",
-    )
+    }
     for key in text_keys:
-        if key not in compact:
-            continue
-        text = str(compact.pop(key) or "")
-        compact.update(write_text_evidence_fields(
-            repo_root,
-            output_dir / "provider_report_artifacts",
-            prefix=key,
-            name=f"{name}_{key}",
-            text=text,
-            kind=f"local_provider_probe_{key}",
-            producer="local_provider_probe",
-            suffix=".md",
-        ))
+        compact.pop(key, None)
     nested = compact.get("openvino_native_tool_loop")
     if isinstance(nested, dict):
-        compact["openvino_native_tool_loop"] = _compact_text_fields(
+        compact["openvino_native_tool_loop"] = _compact_provider_payload(
             repo_root,
             output_dir,
             nested,
@@ -304,7 +307,7 @@ def _compact_text_fields(
         )
     child = compact.get("child")
     if isinstance(child, dict):
-        compact["child"] = _compact_text_fields(
+        compact["child"] = _compact_provider_payload(
             repo_root,
             output_dir,
             child,
@@ -429,7 +432,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     if not partial_output.is_absolute():
         partial_output = repo_root / partial_output
     safe_lane_reports = [
-        _compact_text_fields(
+        _compact_provider_payload(
             repo_root,
             partial_output.parent,
             item,

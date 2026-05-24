@@ -8,7 +8,7 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
     safe_int,
 )
 from ia_carmine._shared.file_backed_transport import (
-    report_text,
+    report_text_required_full,
     text_sha256,
     write_large_text_evidence,
 )
@@ -70,7 +70,7 @@ class RuntimeGateProviderContextMixin:
         return ""
 
     def provider_report_response_text(self, report: dict[str, Any]) -> str:
-        evidence = report_text(self.repo_root, report)
+        evidence = report_text_required_full(self.repo_root, report)
         for warning in evidence.get("warnings") or []:
             self.warnings.append(f"provider_response_text_fallback:{warning}")
         for error in evidence.get("errors") or []:

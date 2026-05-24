@@ -70,6 +70,7 @@ def fake_factory(host: str) -> FakeClient:
 
 
 def build_report(repo_root: Path) -> dict[str, Any]:
+    from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
     from ia_carmine._shared.provider_work_verification import provider_work_status
     from ia_carmine.providers.ollama.sdk_client import OllamaSdkClient
     from ia_carmine.providers.ollama.session import OllamaSession
@@ -188,36 +189,53 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     if OllamaSession.__module__ != "ia_carmine.providers.ollama.session":
         errors.append("OllamaSession is not exported from canonical ia_carmine.providers.ollama")
 
+    gpu0_report = {
+        "repo_root": str(repo_root),
+        "provider_backend": "ollama",
+        "provider_compute_device": "ollama/gpu0-vulkan",
+        "provider_device_verified": True,
+        "ollama_residency_verified": True,
+        "ollama_compute_verified": True,
+        "gpu0_secondary_schema_valid": True,
+        "selected_model": "fake-ollama:latest",
+        "eval_count": 80,
+        "done": True,
+    }
+    gpu0_report.update(
+        write_text_evidence_fields(
+            repo_root,
+            repo_root / "output" / "validation" / "ollama_sdk_adapter_smoke_artifacts",
+            prefix="response_text",
+            name="gpu0_valid_response_text",
+            text="GPU0 reviewed concrete target refs and requested broker evidence.",
+            kind="ollama_sdk_adapter_smoke_gpu0_response_text",
+            producer="ollama_sdk_adapter_smoke",
+            suffix=".md",
+        )
+    )
     gpu0_status = provider_work_status(
         lane="gpu0_peer",
-        report={
-            "provider_backend": "ollama",
-            "provider_compute_device": "ollama/gpu0-vulkan",
-            "provider_device_verified": True,
-            "ollama_residency_verified": True,
-            "ollama_compute_verified": True,
-            "gpu0_secondary_schema_valid": True,
-            "selected_model": "fake-ollama:latest",
-            "eval_count": 80,
-            "done": True,
-            "response_text": "GPU0 reviewed concrete target refs and requested broker evidence.",
-        },
+        report=gpu0_report,
     )
     if not gpu0_status.get("provider_work_verified"):
         errors.append(f"GPU0 Ollama status rejected: {gpu0_status}")
+    gpu0_missing_schema_report = dict(gpu0_report)
+    gpu0_missing_schema_report.pop("gpu0_secondary_schema_valid", None)
+    gpu0_missing_schema_report.update(
+        write_text_evidence_fields(
+            repo_root,
+            repo_root / "output" / "validation" / "ollama_sdk_adapter_smoke_artifacts",
+            prefix="response_text",
+            name="gpu0_missing_schema_response_text",
+            text="GPU0 reviewed concrete target refs and requested broker evidence.",
+            kind="ollama_sdk_adapter_smoke_gpu0_response_text",
+            producer="ollama_sdk_adapter_smoke",
+            suffix=".md",
+        )
+    )
     gpu0_missing_schema_status = provider_work_status(
         lane="gpu0_peer",
-        report={
-            "provider_backend": "ollama",
-            "provider_compute_device": "ollama/gpu0-vulkan",
-            "provider_device_verified": True,
-            "ollama_residency_verified": True,
-            "ollama_compute_verified": True,
-            "selected_model": "fake-ollama:latest",
-            "eval_count": 80,
-            "done": True,
-            "response_text": "GPU0 reviewed concrete target refs and requested broker evidence.",
-        },
+        report=gpu0_missing_schema_report,
     )
     if gpu0_missing_schema_status.get("provider_work_verified"):
         errors.append("GPU0 Ollama status without secondary schema must be rejected")

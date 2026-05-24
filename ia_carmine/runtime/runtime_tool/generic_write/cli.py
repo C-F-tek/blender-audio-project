@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from ia_carmine._shared.file_backed_transport import (
-    read_text_evidence,
     read_text_windows_safe,
+    report_text_required_full,
     resolve_path,
     write_large_text_evidence,
 )
@@ -108,7 +108,7 @@ def _provider_summary(report: dict[str, Any]) -> dict[str, Any]:
 
 
 def _provider_response_text(repo_root: Path, report: dict[str, Any]) -> str:
-    return str(read_text_evidence(repo_root, report, "response_text").get("text") or "").strip()
+    return str(report_text_required_full(repo_root, report).get("text") or "").strip()
 
 
 def _tool_result_summary(result: dict[str, Any]) -> dict[str, Any]:

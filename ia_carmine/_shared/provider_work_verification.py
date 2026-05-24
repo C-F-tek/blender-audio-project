@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ia_carmine._shared.file_backed_transport import report_text
+from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine._shared.provider_work_rejections import (
     MIN_GPU1_WORK_TOKENS,
     gpu0_ollama_rejection_reason,
@@ -367,15 +367,13 @@ def _generic_status(report: dict[str, Any]) -> dict[str, Any]:
 
 def _response_text(report: dict[str, Any]) -> str:
     repo_root = Path(str(report.get("repo_root") or ".")).resolve()
-    text = str(report_text(repo_root, report).get("text") or "").strip()
+    text = str(report_text_required_full(repo_root, report).get("text") or "").strip()
     if text:
         return text
     text = str(
-        report_text(repo_root, report, ("provider_heap_delta_text",)).get("text") or ""
+        report_text_required_full(repo_root, report, ("provider_heap_delta_text",)).get("text") or ""
     ).strip()
-    if text:
-        return text
-    return str(report.get("tool_result_summary") or report.get("micro_task_result_summary") or "").strip()
+    return text
 
 
 def _useful_output(report: dict[str, Any]) -> bool:

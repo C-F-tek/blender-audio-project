@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ia_carmine._shared.file_backed_transport import report_text
+from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine._shared.provider_work_verification import provider_work_status
 from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import normalize_gpu0_decision
 
@@ -88,9 +88,7 @@ def operational_provider_activity(
     *,
     repo_root: Path | str | None = None,
 ) -> tuple[bool, str]:
-    response_text = str(
-        report_text(repo_root, provider_report, require_full=True).get("text") or ""
-    ).strip()
+    response_text = str(report_text_required_full(repo_root, provider_report).get("text") or "").strip()
     selected_model = str(provider_report.get("selected_model") or "").strip()
     tool_call_count = _safe_int(provider_report.get("native_tool_call_count"))
     tool_calls = provider_report.get("tool_calls") if isinstance(provider_report.get("tool_calls"), list) else []

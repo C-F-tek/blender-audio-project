@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from ia_carmine._shared.file_backed_transport import report_text, write_json_artifact
+from ia_carmine._shared.file_backed_transport import (
+    report_text,
+    report_text_required_full,
+    write_json_artifact,
+)
 from ia_carmine._shared.provider_work_rejections import role_for
 from ia_carmine._shared.provider_tool_schemas import is_api_native_tool_call
 from ia_carmine.runtime.heap_gate.runtime_common import (
@@ -446,7 +450,7 @@ def _enrich_provider_native_tool_args(
         )
         args.setdefault(
             "proposal_text",
-            str(report_text(getattr(owner, "repo_root", None), report).get("text") or ""),
+            str(report_text_required_full(getattr(owner, "repo_root", None), report).get("text") or ""),
         )
         args.setdefault("request_file", str(getattr(owner.args, "request_file", "") or ""))
         if not args.get("request_file"):

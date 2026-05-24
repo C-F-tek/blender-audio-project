@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 from typing import Any
+from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
 from ia_carmine._shared.provider_replight import provider_replight_fields
 from ia_carmine._shared.provider_work_verification import provider_work_status
 from ia_carmine._shared.provider_tool_loop import openvino_tool_loop_report
@@ -178,6 +179,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
+    output = resolve_path(repo_root, args.output)
     report = run_openvino_gpu0_tensor_test(
         iterations=args.iterations,
         min_seconds=args.min_seconds,
@@ -321,7 +323,22 @@ def main() -> int:
             "GPU.0 peer did not consume a valid GPU1 primary advisor leader packet."
         )
         report["passed"] = False
-    report.update(build_gpu0_peer_response(report))
+    report["repo_root"] = str(repo_root)
+    peer_response = build_gpu0_peer_response(report)
+    peer_response_text = str(peer_response.pop("response_text", "") or "")
+    peer_response.update(
+        write_text_evidence_fields(
+            repo_root,
+            output.parent / "provider_response_artifacts",
+            prefix="response_text",
+            name="openvino_gpu0_peer_response_text",
+            text=peer_response_text,
+            kind="openvino_gpu0_peer_response_text",
+            producer="openvino_gpu0_workload_report",
+            suffix=".md",
+        )
+    )
+    report.update(peer_response)
     report.update(
         provider_work_status(
             lane="gpu0_peer",
@@ -343,8 +360,6 @@ def main() -> int:
     if not report["replight_passed"]:
         report.setdefault("errors", []).append(str(report["replight_blocked_reason"]))
         report["passed"] = False
-    report["repo_root"] = str(repo_root)
-    output = resolve_path(repo_root, args.output)
     markdown = resolve_path(repo_root, args.markdown_output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown.parent.mkdir(parents=True, exist_ok=True)

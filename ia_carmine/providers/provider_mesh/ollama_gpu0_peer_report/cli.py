@@ -15,7 +15,7 @@ if str(REPO_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORT))
 
 from ia_carmine._shared.file_backed_transport import (
-    report_text,
+    report_text_required_full,
     write_large_text_evidence,
     write_text_evidence_fields,
 )
@@ -404,7 +404,7 @@ def main() -> int:
         unload_model=not args.defer_unload,
     )
     output_parent = resolve_path(repo_root, args.output).parent
-    raw_response_text = str(report_text(repo_root, report).get("text") or "")
+    raw_response_text = str(report_text_required_full(repo_root, report).get("text") or "")
     gpu0_secondary = parse_gpu0_secondary_response(
         raw_response_text,
         fallback_block_id=_leader_block_id(leader_packet),

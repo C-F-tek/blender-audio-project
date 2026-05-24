@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ia_carmine._shared.file_backed_transport import report_text
+from ia_carmine._shared.file_backed_transport import report_text_preview, report_text_required_full
 from ia_carmine.runtime.heap_gate.provider_lane_policy import (
     GPU0_LANE,
     NPU_LANE,
@@ -74,7 +74,7 @@ def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[s
         else ""
     ).strip().lower()
     npu_text = str(
-        report_text(
+        report_text_required_full(
             Path(str((latest_npu or {}).get("repo_root") or ".")).resolve(strict=False),
             latest_npu or {},
             REPORT_TEXT_PREFIXES,
@@ -301,7 +301,7 @@ def _roles_observed_invalid(reports: list[dict[str, Any]]) -> list[str]:
             or report.get("operational_provider_activity")
             or report.get("provider_loaded")
             or str(
-                report_text(
+                report_text_required_full(
                     Path(str(report.get("repo_root") or ".")).resolve(strict=False),
                     report,
                     REPORT_TEXT_PREFIXES,
@@ -336,7 +336,7 @@ def _sidecar_invalid(report: dict[str, Any]) -> bool:
             or report.get("semantic_contract_passed") is False
             or decision.startswith("reject")
             or "reject_until" in str(
-                report_text(
+                report_text_required_full(
                     Path(str(report.get("repo_root") or ".")).resolve(strict=False),
                     report,
                     REPORT_TEXT_PREFIXES,
@@ -409,7 +409,7 @@ def _unconsumed_peer_block_ids(owner: Any, reports: list[dict[str, Any]]) -> lis
 
 def _excerpt(report: dict[str, Any], limit: int = 800) -> str:
     text = str(
-        report_text(
+        report_text_preview(
             Path(str(report.get("repo_root") or ".")).resolve(strict=False),
             report,
             REPORT_TEXT_PREFIXES,

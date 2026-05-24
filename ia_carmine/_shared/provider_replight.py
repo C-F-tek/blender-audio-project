@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ia_carmine._shared.file_backed_transport import report_text
+from ia_carmine._shared.file_backed_transport import report_text_preview
 from ia_carmine._shared.provider_tool_loop import ollama_tool_call_tool_names
 from ia_carmine._shared.provider_work_verification import provider_work_status
 
@@ -45,11 +45,11 @@ def provider_replight_fields(
     ).strip()
     repo_root = Path(str(report.get("repo_root") or ".")).resolve()
     response_text = str(
-        report_text(repo_root, report).get("text") or ""
+        report_text_preview(repo_root, report).get("text") or ""
     ).strip()
     if not response_text:
         response_text = str(
-            report_text(repo_root, report, ("provider_heap_delta_text",)).get("text") or ""
+            report_text_preview(repo_root, report, ("provider_heap_delta_text",)).get("text") or ""
         ).strip()
     if not response_text:
         response_text = str(

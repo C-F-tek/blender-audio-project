@@ -12,6 +12,11 @@ from pathlib import Path
 from typing import Any
 
 from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
+from ia_carmine._shared.file_backed_transport import (
+    prefixed_text_evidence_fields,
+    write_large_text_evidence,
+    write_text_evidence_fields,
+)
 from ia_carmine._shared.live_flow_lanes import merge_provider_statuses, provider_status
 from ia_carmine._shared.provider_work_verification import provider_work_status
 from ia_carmine.product.heap_final_proposals.artifacts import (
@@ -93,10 +98,24 @@ def _validation_command_check() -> tuple[bool, dict[str, Any]]:
     )
 
 
-def _provider_workload_split_check() -> tuple[bool, dict[str, Any]]:
+def _response_fields(repo: Path, name: str, text: str) -> dict[str, Any]:
+    return write_text_evidence_fields(
+        repo,
+        repo / "provider_text_artifacts",
+        prefix="response_text",
+        name=name,
+        text=text,
+        kind="post_provider_contract_response_text",
+        producer="post_provider_contract_consistency_smoke",
+        suffix=".md",
+    )
+
+
+def _provider_workload_split_check(repo: Path) -> tuple[bool, dict[str, Any]]:
     gpu1_status = provider_work_status(
         lane="gpu1_planner",
         report={
+            "repo_root": str(repo),
             "provider_device_verified": True,
             "ollama_residency_verified": True,
             "ollama_compute_verified": True,
@@ -104,20 +123,21 @@ def _provider_workload_split_check() -> tuple[bool, dict[str, Any]]:
             "selected_model": "qwen2.5-coder:14b",
             "eval_count": 128,
             "done": True,
-            "response_text": "HEAP_DELTA_PROPOSAL with enough useful provider text for a concrete review.",
+            **_response_fields(repo, "gpu1_workload_split_response", "HEAP_DELTA_PROPOSAL with enough useful provider text for a concrete review."),
             "quality_passed": False,
         },
     )
     npu_status = provider_work_status(
         lane="npu_micro_task_auditor",
         report={
+            "repo_root": str(repo),
             "provider_device_verified": True,
             "provider_compute_device": "openvino/NPU",
             "npu_peer_evidence_verified": True,
             "npu_micro_provider_model_loaded": True,
             "npu_micro_provider_execution_performed": True,
             "npu_device_workload_performed": True,
-            "response_text": "NPU audit evidence is available and useful for GPU1 follow-up.",
+            **_response_fields(repo, "npu_workload_split_response", "NPU audit evidence is available and useful for GPU1 follow-up."),
             "npu_native_tool_loop_error": "openvino_native_tool_loop_timeout",
             "npu_peer_followup_required": True,
         },
@@ -372,6 +392,39 @@ class _AbortGate:
     def provider_role_decisions(self) -> list[str]:
         return []
 
+    def request_input_ref_or_tail(self) -> dict[str, Any]:
+        return write_large_text_evidence(
+            self.repo_root,
+            self.repo_root / "abort_smoke_artifacts",
+            name="request_input",
+            text=self.request_text(),
+            kind="request_input",
+            producer="post_provider_contract_consistency_smoke",
+        )
+
+    def response_text_ref_or_tail(
+        self,
+        text: str,
+        *,
+        name: str,
+        kind: str,
+        producer: str,
+    ) -> dict[str, Any]:
+        return write_large_text_evidence(
+            self.repo_root,
+            self.repo_root / "abort_smoke_artifacts",
+            name=name,
+            text=text,
+            kind=kind,
+            producer=producer,
+        )
+
+    def provider_response_refs_or_tails(self) -> dict[str, Any]:
+        return {}
+
+    def prefixed_text_evidence_fields(self, prefix: str, evidence: dict[str, Any]) -> dict[str, Any]:
+        return prefixed_text_evidence_fields(prefix, evidence)
+
 
 def _provider_abort_candidate_check(repo: Path) -> tuple[bool, dict[str, Any]]:
     gate = _AbortGate(repo)
@@ -414,9 +467,10 @@ def _live_flow_replight_precedence_check(repo: Path) -> tuple[bool, dict[str, An
     production.write_text(
         json.dumps(
             {
+                "repo_root": str(repo),
                 "lane": "gpu1_planner",
                 "provider_model": "qwen2.5-coder:14b",
-                "response_text": "production response with real proposal text",
+                **_response_fields(repo, "live_flow_production_response", "production response with real proposal text"),
                 "provider_compute_device": "ollama/gpu1",
             },
             indent=2,
@@ -427,11 +481,12 @@ def _live_flow_replight_precedence_check(repo: Path) -> tuple[bool, dict[str, An
     replight.write_text(
         json.dumps(
             {
+                "repo_root": str(repo),
                 "lane": "gpu1_planner",
                 "replight_mode": True,
                 "replight_passed": True,
                 "provider_loaded": True,
-                "response_text": "ok",
+                **_response_fields(repo, "live_flow_replight_response", "ok"),
             },
             indent=2,
         )
@@ -458,7 +513,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
             _make_repo(repo)
             checks["target_contract_no_anchor_contamination"], details["target_contract"] = _target_contract_check(repo)
             checks["validation_commands_are_commands"], details["validation_commands"] = _validation_command_check()
-            checks["provider_workload_semantic_split"], details["provider_workload"] = _provider_workload_split_check()
+            checks["provider_workload_semantic_split"], details["provider_workload"] = _provider_workload_split_check(repo)
             checks["external_revision_context_not_passed_when_non_operational"], details["revision_context"] = _revision_context_check()
             checks["composer_preserves_proposal_identity"], details["composer"] = _composer_identity_check(repo)
             checks["causality_requires_pointer_validity"], details["causality"] = _causality_pointer_check(repo)

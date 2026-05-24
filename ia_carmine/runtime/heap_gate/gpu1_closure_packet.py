@@ -11,7 +11,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from ia_carmine._shared.file_backed_transport import report_text
+from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine.runtime.heap_gate.runtime_common import Any
 
 GPU1_PACKET_KIND = "gpu1_closure_decision_packet"
@@ -125,7 +125,7 @@ def packet_from_report(
     source: str = "",
     repo_root: Path | str | None = None,
 ) -> dict[str, Any]:
-    text = str(report_text(repo_root, report).get("text") or "")
+    text = str(report_text_required_full(repo_root, report).get("text") or "")
     target_files = report.get("target_files") if isinstance(report.get("target_files"), list) else []
     reject_reasons = [
         report.get("gpu1_primary_block_reason"),

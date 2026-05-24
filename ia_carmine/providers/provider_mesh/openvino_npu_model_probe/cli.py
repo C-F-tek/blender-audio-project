@@ -11,8 +11,7 @@ from typing import Any
 
 from ia_carmine._shared.file_backed_transport import (
     compact_text_fields,
-    read_text_evidence,
-    report_text,
+    report_text_required_full,
     write_large_text_evidence,
     write_text_evidence_fields,
 )
@@ -68,12 +67,14 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     child = _run_child(repo_root, python_exe, args, model_dir) if not errors else {}
     child_errors = child.get("errors") if isinstance(child.get("errors"), list) else []
     errors.extend(str(item) for item in child_errors)
-    output_text = str(report_text(repo_root, child).get("text") or "")
+    output_text = str(report_text_required_full(repo_root, child).get("text") or "")
     if not output_text:
         output_text = str(
-            report_text(repo_root, child, ("provider_heap_delta_text",)).get("text") or ""
+            report_text_required_full(repo_root, child, ("provider_heap_delta_text",)).get("text") or ""
         )
-    structured_text = str(read_text_evidence(repo_root, child, "structured_text").get("text") or "")
+    structured_text = str(
+        report_text_required_full(repo_root, child, ("structured_text",)).get("text") or ""
+    )
     tool_calls = child.get("tool_calls") if isinstance(child.get("tool_calls"), list) else []
     if not tool_calls and "semantic_evidence_chunks" in structured_text:
         tool_calls = [{
@@ -269,9 +270,13 @@ def _child_main() -> int:
         child_artifacts_dir = Path(str(payload.get("child_artifacts_dir") or "output/validation/openvino_npu_child_artifacts"))
         if not child_artifacts_dir.is_absolute():
             child_artifacts_dir = repo_root / child_artifacts_dir
-        provider_delta_text = str(child.get("provider_heap_delta_text") or "")
-        response_text = str(child.get("provider_heap_delta_text") or child.get("response_text") or "")
-        structured_text = str(child.get("structured_text") or "")
+        provider_delta_text = str(
+            report_text_required_full(repo_root, child, ("provider_heap_delta_text",)).get("text") or ""
+        )
+        response_text = provider_delta_text or str(report_text_required_full(repo_root, child).get("text") or "")
+        structured_text = str(
+            report_text_required_full(repo_root, child, ("structured_text",)).get("text") or ""
+        )
         text_fields: dict[str, Any] = {}
         text_fields.update(write_text_evidence_fields(
             repo_root,

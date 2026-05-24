@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .common import *  # noqa: F403
+from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
 
 def build_ollama_prompt(review: dict[str, Any], *, objective: str) -> str:
     compact = {
@@ -40,12 +41,22 @@ def maybe_run_ollama(
             parsed = parse_model_json_object(text)
         except Exception:
             parsed = None
+        response_fields = write_text_evidence_fields(
+            repo_root,
+            repo_root / "output" / "ai_pipeline" / "megalithic_repo_review_artifacts",
+            prefix="response_text",
+            name="ollama_semantic_review",
+            text=text,
+            kind="megalithic_repo_review_provider_response",
+            producer="megalithic_repo_review",
+            suffix=".md",
+        )
         return {
             "used": True,
             "provider": "ollama",
             "compute_lane": "gpu_cuda",
             "model": model,
-            "response_text": text,
+            **response_fields,
             "response_json": parsed,
             "error": "",
         }
@@ -55,7 +66,7 @@ def maybe_run_ollama(
             "provider": "ollama",
             "compute_lane": "gpu_cuda",
             "model": model,
-            "response_text": "",
+            "response_text_transport": "empty",
             "response_json": None,
             "error": f"{type(exc).__name__}: {exc}",
         }

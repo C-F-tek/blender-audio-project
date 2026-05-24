@@ -13,6 +13,8 @@ from types import SimpleNamespace
 
 from Tools.validation.runtime_tool.run_file_backed_transport_contract_smoke.helpers import (
     fake_ollama_report_context,
+    legacy_dispatch_absent_errors,
+    strict_text_accessor_errors,
 )
 
 
@@ -52,11 +54,6 @@ def build_report(repo_root: Path) -> dict[str, object]:
     )
     from ia_carmine.runtime.runtime_tool.generic_write.cli import (
         build_report as build_generic_write_report,
-    )
-    from ia_carmine.dispatch import LEGACY_NON_RUN_UNICA_COMMANDS, TOOL_MAIN_TARGETS
-    from Tools.validation.dispatch import (
-        LEGACY_NON_RUN_UNICA_VALIDATION_COMMANDS,
-        TOOL_MAIN_TARGETS as VALIDATION_TOOL_MAIN_TARGETS,
     )
 
     files = {
@@ -651,31 +648,8 @@ def build_report(repo_root: Path) -> dict[str, object]:
         errors,
     )
 
-    old_legacy = {
-        "ollama_tool_gateway",
-        "gpu_deep_planning_review",
-        "gpu_deep_planning_supervised",
-        "gpu_npu_parallel_orchestrator",
-        "npu_gpu_deep_review_auditor",
-        "build_openvino_gpu0_workload_report",
-    }
-    legacy_names = old_legacy | {
-        "legacy_ollama_tool_gateway",
-        "legacy_gpu_deep_planning_review",
-        "legacy_gpu_deep_planning_supervised",
-        "legacy_gpu_npu_parallel_orchestrator",
-        "legacy_npu_gpu_deep_review_auditor",
-        "legacy_build_openvino_gpu0_workload_report",
-    }
-    require(
-        legacy_names.isdisjoint(set(TOOL_MAIN_TARGETS))
-        and not set(LEGACY_NON_RUN_UNICA_COMMANDS)
-        and not set(LEGACY_NON_RUN_UNICA_VALIDATION_COMMANDS)
-        and "legacy_run_ollama_tool_gateway_smoke" not in set(VALIDATION_TOOL_MAIN_TARGETS)
-        and "run_ollama_tool_gateway_smoke" not in set(VALIDATION_TOOL_MAIN_TARGETS),
-        "legacy gateway/deep-planning commands must be absent from live dispatchers",
-        errors,
-    )
+    errors.extend(legacy_dispatch_absent_errors())
+    errors.extend(strict_text_accessor_errors(repo_root, smoke_dir))
     docs_phrase = "HTTP/API coordinates"
     for key in ("current_contract", "agents", "chatgpt", "runtime_tool_context", "heap_gate_context"):
         require(
