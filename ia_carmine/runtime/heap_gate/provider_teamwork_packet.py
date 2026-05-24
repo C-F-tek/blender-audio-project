@@ -252,6 +252,14 @@ def build_provider_teamwork_leader_packet(
             "gpu1_allowed_kinds": ["text", "code", "text_and_code"],
             "gpu1_allowed_actions": ["append", "replace", "supersede", "refine"],
             "gpu1_blocked_output_allowed": False,
+            "code_delta_file_read_required": True,
+            "path_refs_are_not_file_content": True,
+            "required_code_read_tool": "runtime_file_window",
+            "code_delta_evidence_rule": (
+                "FINAL_PRODUCT_KIND=code/text_and_code or any PATCH_SKETCH_UNIFIED_DIFF "
+                "requires a successful GPU1 API-native broker runtime_file_window result "
+                "consumed in CONSUMED_EVIDENCE; otherwise the turn remains raw evidence."
+            ),
             "composer_mode": "deterministic_apply_delta_protocol_no_final_gpu_synthesis",
         },
         "startup_context_plane": {

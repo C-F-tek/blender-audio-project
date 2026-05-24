@@ -210,6 +210,15 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             "final_product_delta_chars": data.get("final_product_delta_chars"),
             "final_product_delta_sha256": data.get("final_product_delta_sha256", ""),
             "delta_applied": bool(data.get("quality_passed") is True and data.get("final_product_delta_valid") is True),
+            "final_product_requires_file_read": bool(data.get("final_product_requires_file_read")),
+            "final_product_file_read_verified": bool(data.get("final_product_file_read_verified")),
+            "final_product_file_read_refs": data.get("final_product_file_read_refs")
+            if isinstance(data.get("final_product_file_read_refs"), list)
+            else [],
+            "final_product_code_file_read_contract": data.get("final_product_code_file_read_contract")
+            if isinstance(data.get("final_product_code_file_read_contract"), dict)
+            else {},
+            "gpu1_code_delta_without_file_read": bool(data.get("gpu1_code_delta_without_file_read")),
             "target_files": data.get("target_files") if isinstance(data.get("target_files"), list) else [],
             "exit_decision": data.get("exit_decision"),
             "reject_reason": data.get("reject_reason", ""),

@@ -38,7 +38,8 @@ HTTP/API coordinates work at boundaries; it is not the container for the runtime
 - `gpu1_dynamic_context_pack` is the active provider context surface; legacy `startup_unified_context_pack` can remain attached evidence but is not the terminal hard blocker.
 - GPU1 keeps its full prompt/chat/product role; the mass is materialized on disk and referenced, not sliced into body excerpts. Ollama/provider reports store prompt refs, bytes, chars and sha256, not the request prompt body.
 - Tool/lab/matrix/debug payloads and results count only through native broker request/result artifacts. Textual tool calls in prose remain non-executable evidence.
-- `runtime_file_window` is a bounded repo-owned artifact reader, not a generic absolute-path reader; oversize limits and paths outside the checkout block with typed errors.
+- `runtime_file_refs` proves target/path resolution only. It does not prove that GPU1 has read source content.
+- `runtime_file_window` is the brokered file-content read surface. It is a bounded repo-owned artifact reader, not a generic absolute-path reader; oversize limits and paths outside the checkout block with typed errors.
 - Long responses, logs and reports return paths plus short diagnostic tails. Full content stays file-backed.
 - Legacy gateway/deep-planning dispatch surfaces are historical/non-run-unica unless explicitly promoted into the current dynamic-pack/native-broker contract.
 
@@ -49,6 +50,8 @@ HTTP/API coordinates work at boundaries; it is not the container for the runtime
 - `CODE_PRODUCT_FULL_PATCH.md` is the code/diff surface of that same product only when verified code exists.
 - When the product is text-only, `CODE_PRODUCT_FULL_PATCH.md` may report `NO_APPLICABLE_CODE_PRODUCT` while the run still has a valid text product surface.
 - GPU1 contributes `FINAL_PRODUCT_DELTA` records during each heap turn. GPU1 must declare `FINAL_PRODUCT_KIND`, `FINAL_PRODUCT_ACTION`, `CURRENT_POINTER`, `CONSUMED_EVIDENCE`, `NEXT_RUNTIME_INTENT` and `FINAL_PRODUCT_DELTA`.
+- GPU1 cannot emit a grounded code diff for `FINAL_PRODUCT_KIND=code` or `FINAL_PRODUCT_KIND=text_and_code` until it has consumed a successful API-native broker `runtime_file_window` result for the target source content and cites that result in `CONSUMED_EVIDENCE`. Path allowlists, prompt context, `runtime_file_refs` and raw prose are not file-content evidence.
+- If GPU1 has not read the target source content, it may emit a text-only delta or `gpu1_decision=needs_refine` with `NEXT_RUNTIME_INTENT` requesting `runtime_file_window`; any diff-like code delta is classified as `gpu1_code_delta_without_file_read`.
 - GPU1 does not emit `blocked` as a final-product value. `blocked_with_reason` is a runtime/gate classification.
 - The final composer must apply ordered GPU1 deltas through `append`, `replace`, `supersede` and `refine`; it must not create a new final GPU synthesis and must not present raw proposal-body collage as the product.
 - Pointer graph, recovery/congruence and heap/pointer files remain technical attachments proving how the product surface was composed.

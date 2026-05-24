@@ -13,6 +13,9 @@ from Tools.validation.heap_runtime.provider_loop_hierarchy_checks import (
     run_provider_loop_hierarchy_checks,
 )
 from Tools.validation.heap_runtime.provider_loop_primary_evidence_checks import run_provider_loop_primary_evidence_checks
+from Tools.validation.heap_runtime.provider_loop_code_delta_checks import (
+    probe_code_delta_file_read_contract,
+)
 from Tools.validation.heap_runtime.provider_loop_tail_checks import (
     check_bounded_npu_micro_tasks,
     check_external_heap_health_report_filter,
@@ -183,6 +186,8 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
         "CURRENT_POINTER",
         "CONSUMED_EVIDENCE",
         "NEXT_RUNTIME_INTENT",
+        "FILE_READ_GROUNDING_RULE",
+        "runtime_file_window",
     ):
         if marker not in provider_context:
             errors.append(f"GPU1 prompt lacks {marker} final-product delta contract")
@@ -194,6 +199,10 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
             errors.append(f"GPU1 prompt still allows blocked in final-product protocol: {forbidden}")
     if "gpu1_blocked_not_allowed_as_final_product_delta" not in terminal:
         errors.append("terminal invariants do not expose GPU1 blocked-output final-product blocker")
+    if "gpu1_code_delta_without_file_read" not in terminal:
+        errors.append("terminal invariants do not block code deltas without brokered file-read evidence")
+    if "code_delta_file_read_required" not in team_packet:
+        errors.append("provider teamwork packet does not advertise code-delta file-read grounding")
     if "GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS = 3" not in followup:
         errors.append("generic_write follow-up does not require three refinements")
     if "generic_write_next_turn_required" not in followup:
@@ -221,9 +230,12 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
     errors.extend(_probe_npu_generic_write_result_hydration())
     errors.extend(_probe_generic_write_no_tool_product())
     errors.extend(_probe_peer_pointer_requires_later_gpu1())
+    errors.extend(probe_code_delta_file_read_contract(repo_root))
     errors.extend(_probe_final_readable_generic_write_section(repo_root))
     errors.extend(_probe_unicode_json_print())
     return {"name": "ollama_native_tool_lane_contract", "errors": errors}
+
+
 
 
 def _probe_native_tool_routing() -> list[str]:

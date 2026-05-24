@@ -71,6 +71,8 @@ def _classify_message(message: str, metrics: dict[str, Any]) -> dict[str, Any]:
         "provider generation requires all three provider lanes"
     ) or text.startswith("runtime state contains unviable lanes") or text.startswith("NPU micro-lane"):
         category = LANE_VIABILITY_BLOCKER
+    elif "provider_native_tool_api_unavailable_for_code_delta" in text:
+        category = PROVIDER_START_BLOCKER
     elif any(
         fragment in text
         for fragment in (
@@ -116,6 +118,8 @@ def _classify_message(message: str, metrics: dict[str, Any]) -> dict[str, Any]:
             "gpu0_veto_not_allowed_without_gpu1_decision",
             "free text cannot drive veto/congruence",
             "provider prose cannot pass as product",
+            "tool_declared_operational_without_broker_evidence",
+            "textual_tool_call_counted_as_execution",
             "generic_write_capture_failed",
             "cannot claim patch application",
             "cannot claim source writes",
@@ -297,6 +301,40 @@ def _evaluate_terminal_invariant_messages(
             errors.append("gpu1_final_product_delta_missing" + (f": {detail}" if detail else ""))
             if "gpu1_blocked_not_allowed_as_final_product_delta" in final_product_protocol_errors:
                 errors.append("gpu1_blocked_not_allowed_as_final_product_delta")
+        if (
+            metrics.get("latest_final_product_requires_file_read")
+            and metrics.get("latest_final_product_file_read_verified") is not True
+            and not generic_product_ready
+        ):
+            file_read_errors = [
+                str(item)
+                for item in (metrics.get("latest_final_product_file_read_errors") or [])
+                if str(item).strip()
+            ]
+            detail = ",".join(file_read_errors) or "runtime_file_window_result_missing_or_not_consumed"
+            errors.append(f"gpu1_code_delta_without_file_read: {detail}")
+            if (
+                safe_int(metrics.get("provider_native_tool_loop_requested_count")) > 0
+                and safe_int(metrics.get("provider_native_tool_loop_supported_count")) <= 0
+            ):
+                errors.append("provider_native_tool_api_unavailable_for_code_delta")
+            if (
+                safe_int(metrics.get("provider_native_tool_call_count")) <= 0
+                and safe_int(metrics.get("tool_execution_count")) > 0
+            ):
+                errors.append(
+                    "tool_declared_operational_without_broker_evidence: code delta requires brokered native runtime_file_window result"
+                )
+            if metrics.get("latest_final_product_file_read_tool_api_ready") is not True:
+                tool_api_errors = [
+                    str(item)
+                    for item in (metrics.get("latest_final_product_file_read_tool_api_errors") or [])
+                    if str(item).strip()
+                ]
+                errors.append(
+                    "tool_declared_operational_without_broker_evidence: runtime_file_window API definition is not broker-ready"
+                    + (": " + ",".join(tool_api_errors) if tool_api_errors else "")
+                )
         if (
             metrics.get("latest_final_product_pointer_protocol_operational") is not True
             and not generic_product_ready

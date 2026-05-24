@@ -37,3 +37,12 @@ python -m Tools.validation <tool> [args...]
 Public validation tool names are registered in `Tools/validation/dispatch.py`.
 
 A validation report proves only the checked contract. It does not replace current source inspection.
+
+## AI workload report quality gate
+
+- Validator: `Tools/validation/ai_workload/check_ai_workload_report_quality.py`.
+- Dispatch/tool surface: `ai_workload_report_quality`.
+- Contract doc: `docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md`.
+- Purpose: keep metadata-only or empty provider reports from being promoted as useful workload evidence.
+- Required classifier examples include `usable_text_lanes_only_for_advisory_context` and `npu_review_metadata`.
+- Provider-quality reports stay report-only evidence with `provider_execution_performed=false` unless a broker/provider workload contract proves execution.

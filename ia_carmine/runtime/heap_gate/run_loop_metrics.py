@@ -41,6 +41,11 @@ def build_provider_lane_metrics(
     latest_final_product_protocol = safe_dict(
         latest_proposal.get("final_product_protocol") if latest_proposal else {}
     )
+    latest_code_file_read_contract = safe_dict(
+        latest_proposal.get("final_product_code_file_read_contract")
+        if latest_proposal
+        else {}
+    )
     latest_gpu1_packet = extract_gpu1_closure_decision_packet(latest_proposal)
     gpu0_review = safe_dict(
         provider_reports_by_lane.get("gpu0_peer", {}).get("gpu0_operational_review")
@@ -378,6 +383,47 @@ def build_provider_lane_metrics(
             latest_final_product_protocol.get("errors")
             if isinstance(latest_final_product_protocol.get("errors"), list)
             else []
+        ),
+        "latest_final_product_requires_file_read": bool(
+            latest_code_file_read_contract.get("required")
+        ),
+        "latest_final_product_file_read_verified": bool(
+            latest_code_file_read_contract.get("verified")
+        ),
+        "latest_final_product_file_read_refs": (
+            latest_code_file_read_contract.get("consumed_file_read_refs")
+            if isinstance(latest_code_file_read_contract.get("consumed_file_read_refs"), list)
+            else []
+        ),
+        "latest_final_product_file_read_errors": (
+            latest_code_file_read_contract.get("errors")
+            if isinstance(latest_code_file_read_contract.get("errors"), list)
+            else []
+        ),
+        "latest_final_product_file_read_result_count": safe_int(
+            latest_code_file_read_contract.get("available_file_read_result_count")
+        ),
+        "latest_final_product_consumed_file_read_result_count": safe_int(
+            latest_code_file_read_contract.get("consumed_file_read_result_count")
+        ),
+        "latest_final_product_file_read_tool_api_ready": bool(
+            latest_code_file_read_contract.get("tool_api_ready")
+        ),
+        "latest_final_product_file_read_tool_api_errors": (
+            latest_code_file_read_contract.get("tool_api_errors")
+            if isinstance(latest_code_file_read_contract.get("tool_api_errors"), list)
+            else []
+        ),
+        "latest_final_product_diff_present": bool(
+            latest_code_file_read_contract.get("diff_present")
+        ),
+        "latest_gpu1_code_delta_without_file_read": (
+            "gpu1_code_delta_without_file_read"
+            in (
+                latest_code_file_read_contract.get("errors")
+                if isinstance(latest_code_file_read_contract.get("errors"), list)
+                else []
+            )
         ),
         "latest_proposal_target_files": (
             latest_proposal.get("target_files")

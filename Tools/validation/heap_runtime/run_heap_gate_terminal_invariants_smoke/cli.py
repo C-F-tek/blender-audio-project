@@ -16,6 +16,8 @@ try:
     from ia_carmine.runtime.heap_gate.terminal_invariants import evaluate_terminal_invariants
     from ia_carmine.runtime.heap_gate.pointer_soft_lock import pointer_closure_summary
     from Tools.validation._shared.report_utils import write_json_report
+    from Tools.validation.heap_runtime.terminal_file_read_checks import run_file_read_terminal_fixtures
+    from Tools.validation.heap_runtime.terminal_ready_metrics import ready_metrics
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
@@ -23,97 +25,8 @@ except ImportError:
     from ia_carmine.runtime.heap_gate.terminal_invariants import evaluate_terminal_invariants  # type: ignore
     from ia_carmine.runtime.heap_gate.pointer_soft_lock import pointer_closure_summary  # type: ignore
     from Tools.validation._shared.report_utils import write_json_report  # type: ignore
-
-
-def ready_metrics() -> dict[str, Any]:
-    return {
-        "heap_read_count": 1,
-        "heap_write_count": 1,
-        "tool_request_count": 1,
-        "tool_execution_count": 1,
-        "decision_count": 1,
-        "candidate_operation_count": 1,
-        "product_status": "ready",
-        "budget_exhausted": False,
-        "provider_lane_count": 3,
-        "provider_launch_started": True,
-        "pre_provider_phase": False,
-        "provider_start_missing_requirements": [],
-        "provider_start_unattempted_requirement": "",
-        "provider_textual_tool_call_count": 0,
-        "provider_native_tool_loop_requested_count": 3,
-        "provider_native_tool_loop_supported_count": 3,
-        "provider_native_tool_missing_lanes": [],
-        "missing_provider_lanes": [],
-        "provider_native_tool_unavailable_required_lanes": [],
-        "provider_native_tool_missing_required_lanes": [],
-        "provider_semantic_missing_required_lanes": [],
-        "provider_raw_response_text_chars": len(
-            "GPU1 response with source-backed product evidence."
-        ),
-        "proposal_iteration_artifacts": ["output/validation/proposal_iteration_000.json"],
-        "gpu1_closure_decision_packet_valid": True,
-        "latest_gpu1_decision": "finalize_product",
-        "latest_gpu1_block_id": "smoke:proposal:000",
-        "latest_gpu1_revision": "0",
-        "latest_gpu1_refine_continuity": {"required": False, "passed": True, "errors": []},
-        "latest_proposal_quality_passed": True,
-        "latest_proposal_exit_decision": "PATCHABLE_TARGET",
-        "gpu0_secondary_schema_valid": True,
-        "latest_gpu0_review_decision": "congruent",
-        "latest_gpu0_model_decision": "congruent",
-        "latest_gpu0_effective_decision": "congruent",
-        "latest_gpu0_checked_current_packet": True,
-        "latest_gpu0_packet_stale_after_gpu1_packet_rewrite": False,
-        "latest_gpu1_block_requires_gpu0_review": True,
-        "latest_gpu1_block_reviewed_by_gpu0": True,
-        "gpu0_review_invalid_requires_gpu1_retry": False,
-        "latest_gpu0_role_decision": "agree_close",
-        "latest_gpu0_veto_reasons": [],
-        "latest_gpu0_incongruence_reasons": [],
-        "latest_gpu0_free_text_used_as_product": False,
-        "latest_gpu0_free_text_used_as_decision": False,
-        "latest_gpu0_missing_delta_sections": [],
-        "latest_final_product_kind": "text_and_code",
-        "latest_final_product_action": "append",
-        "latest_final_product_delta_valid": True,
-        "latest_final_product_pointer_protocol_operational": True,
-        "latest_final_product_protocol_errors": [],
-        "npu_micro_activity_ok": True,
-        "generic_write_followup_pending_count": 0,
-        "gpu0_peer_followup_pending_count": 0,
-        "npu_peer_followup_pending_count": 0,
-        "generic_write_capture_failed_count": 0,
-        "generic_write_document_product": {"eligible": False},
-        "generic_write_refined_product": {"eligible": False},
-        "context_hierarchy_valid": True,
-        "gpu1_replight_valid": True,
-        "gpu1_primary_workload_valid": True,
-        "gpu1_primary_evidence_valid": True,
-        "gpu1_primary_evidence_source": "native_tool_result",
-        "leader_source": "native_tool_result",
-        "gpu1_native_tool_call_count": 1,
-        "gpu1_boot_leader_ready": True,
-        "sidecars_start_policy": "after_gpu1_residency_handshake",
-        "parallel_provider_overlap_seconds": 3.5,
-        "gpu1_primary_workload_chars": 1200,
-        "gpu1_primary_workload_tokens": 128,
-        "gpu1_leader_valid": True,
-        "gpu1_consumed_gpu0_peer": True,
-        "gpu1_consumed_npu_peer": True,
-        "context_artifact_refs": ["output/validation/context.json"],
-        "response_text_complete": True,
-        "quality_output_passed": True,
-        "virtual_dev_environment_required": True,
-        "virtual_dev_environment_passed": True,
-        "code_execution_matrix_required": True,
-        "code_execution_matrix_passed": True,
-        "patch_candidate_synthesis_required": True,
-        "matrix_verified_target_count": 1,
-        "concrete_code_proposal_count": 1,
-        "runtime_debug_lab_required": True,
-        "runtime_debug_lab_passed": True,
-    }
+    from Tools.validation.heap_runtime.terminal_file_read_checks import run_file_read_terminal_fixtures  # type: ignore
+    from Tools.validation.heap_runtime.terminal_ready_metrics import ready_metrics  # type: ignore
 
 
 def run_smoke(repo_root: Path) -> dict[str, Any]:
@@ -474,6 +387,9 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         provider_execution_performed=True,
         detailed_output_expected=True,
     )
+    file_read_fixtures = run_file_read_terminal_fixtures(ready_metrics, evaluate_terminal_invariants)
+    code_delta_without_file_read_errors = file_read_fixtures["code_delta_without_file_read_errors"]
+    text_only_without_file_read_errors = file_read_fixtures["text_only_without_file_read_errors"]
     errors: list[str] = []
     if ok_errors:
         errors.append("ready metric set produced terminal errors")
@@ -564,6 +480,10 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
             errors.append(f"missing expected terminal invariant: {fragment}")
     if not any("semantic GPU0/NPU model execution" in error for error in peer_degraded_errors):
         errors.append("ready metric set must reject missing GPU0/NPU semantic execution")
+    if not any("gpu1_code_delta_without_file_read" in error for error in code_delta_without_file_read_errors):
+        errors.append("code/text_and_code final-product delta must reject diff without brokered file-read evidence")
+    if text_only_without_file_read_errors:
+        errors.append("text-only final-product delta must not require runtime_file_window evidence")
     gpu0_refine_pointer = pointer_closure_summary(
         [
             {
@@ -622,6 +542,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         soft_lock_closed_refine_errors, deferred_zero_open_errors, gpu1_unlinked_refine_errors,
         leader_missing_errors, primary_workload_missing_errors, primary_evidence_missing_errors,
         pre_provider_tentable_errors, pre_provider_exhausted_errors, bad_errors, peer_degraded_errors,
+        code_delta_without_file_read_errors,
     )
     return {
         "schema_version": 1,
@@ -678,6 +599,10 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "broken_errors": bad_errors,
         "peer_degraded_error_count": len(peer_degraded_errors),
         "peer_degraded_errors": peer_degraded_errors,
+        "code_delta_without_file_read_error_count": len(code_delta_without_file_read_errors),
+        "code_delta_without_file_read_errors": code_delta_without_file_read_errors,
+        "text_only_without_file_read_error_count": len(text_only_without_file_read_errors),
+        "text_only_without_file_read_errors": text_only_without_file_read_errors,
         "expected_negative_fixture_error_count": sum(len(items) for items in expected_negative_groups),
         "errors": errors,
         "source_writes_performed": False,
