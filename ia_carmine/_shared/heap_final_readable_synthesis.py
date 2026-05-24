@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ia_carmine._shared.file_backed_transport import read_text_windows_safe, resolve_path
+from ia_carmine._shared.file_backed_transport import read_text_evidence
 
 from ia_carmine._shared.heap_final_code_product import (
     code_product_items,
@@ -280,6 +280,7 @@ def gpu1_raw_evidence_summary(run_dir: Path) -> list[str]:
         packet = as_dict(data.get("gpu1_closure_decision_packet"))
         raw = str(
             _text_from_ref({"repo_root": str(_repo_root_from_run_dir(run_dir))}, data, "gpu1_free_text_evidence")
+            or _text_from_ref({"repo_root": str(_repo_root_from_run_dir(run_dir))}, data, "response_text")
             or data.get("response_text")
             or data.get("response_text_tail")
             or ""
@@ -309,18 +310,8 @@ def gpu1_raw_evidence_summary(run_dir: Path) -> list[str]:
 
 
 def _text_from_ref(gate: dict[str, Any], data: dict[str, Any], prefix: str) -> str:
-    text = str(data.get(prefix) or "").strip()
-    if text:
-        return text
-    ref = data.get(f"{prefix}_ref") if isinstance(data.get(f"{prefix}_ref"), dict) else {}
-    ref_path = str(ref.get("path") or "").strip()
-    if ref_path:
-        repo_root = Path(str(gate.get("repo_root") or ".")).resolve()
-        try:
-            return read_text_windows_safe(resolve_path(repo_root, ref_path)).strip()
-        except Exception:
-            pass
-    return str(data.get(f"{prefix}_tail") or "").strip()
+    repo_root = Path(str(gate.get("repo_root") or ".")).resolve()
+    return str(read_text_evidence(repo_root, data, prefix).get("text") or "").strip()
 
 
 def _repo_root_from_run_dir(run_dir: Path) -> Path:

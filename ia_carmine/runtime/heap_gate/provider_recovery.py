@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+from ia_carmine._shared.file_backed_transport import report_text
 from ia_carmine.runtime.heap_gate.provider_lane_policy import (
     GPU0_LANE,
     NPU_LANE,
@@ -27,6 +30,7 @@ RECOVERABLE_PROVIDER_RECOVERY_REASONS = {
     RECOVERY_REASON_SIDECAR_INVALID,
     RECOVERY_REASON_SIDECAR_INCONGRUENT,
 }
+REPORT_TEXT_PREFIXES = ("gpu0_raw_response_text", "free_text_evidence", "response_text")
 
 
 def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -69,7 +73,14 @@ def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[s
         if isinstance((latest_npu or {}).get("npu_operational_audit"), dict)
         else ""
     ).strip().lower()
-    npu_text = str((latest_npu or {}).get("response_text") or "").lower()
+    npu_text = str(
+        report_text(
+            Path(str((latest_npu or {}).get("repo_root") or ".")).resolve(strict=False),
+            latest_npu or {},
+            REPORT_TEXT_PREFIXES,
+        ).get("text")
+        or ""
+    ).lower()
     if latest_npu and (
         npu_decision.startswith("reject")
         or "reject_until" in npu_text
@@ -289,7 +300,14 @@ def _roles_observed_invalid(reports: list[dict[str, Any]]) -> list[str]:
             report.get("provider_execution_performed")
             or report.get("operational_provider_activity")
             or report.get("provider_loaded")
-            or str(report.get("response_text") or "").strip()
+            or str(
+                report_text(
+                    Path(str(report.get("repo_root") or ".")).resolve(strict=False),
+                    report,
+                    REPORT_TEXT_PREFIXES,
+                ).get("text")
+                or ""
+            ).strip()
         ):
             continue
         role = str(report.get("provider_role") or report.get("role") or report.get("lane") or "")
@@ -317,7 +335,14 @@ def _sidecar_invalid(report: dict[str, Any]) -> bool:
             or report.get("provider_work_verified") is False
             or report.get("semantic_contract_passed") is False
             or decision.startswith("reject")
-            or "reject_until" in str(report.get("response_text") or "").lower()
+            or "reject_until" in str(
+                report_text(
+                    Path(str(report.get("repo_root") or ".")).resolve(strict=False),
+                    report,
+                    REPORT_TEXT_PREFIXES,
+                ).get("text")
+                or ""
+            ).lower()
         )
     return False
 
@@ -384,9 +409,11 @@ def _unconsumed_peer_block_ids(owner: Any, reports: list[dict[str, Any]]) -> lis
 
 def _excerpt(report: dict[str, Any], limit: int = 800) -> str:
     text = str(
-        report.get("gpu0_raw_response_text")
-        or report.get("free_text_evidence")
-        or report.get("response_text")
+        report_text(
+            Path(str(report.get("repo_root") or ".")).resolve(strict=False),
+            report,
+            REPORT_TEXT_PREFIXES,
+        ).get("text")
         or ""
     )
     return text.replace("\n", " | ")[:limit]

@@ -46,6 +46,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request-file", default="")
     parser.add_argument("--request-json", default="")
+    parser.add_argument("--payload-file", default="")
+    parser.add_argument("--job-id", default="")
     parser.add_argument("--output", default="output/validation/agent_runtime_debug_lab.json")
     parser.add_argument("--markdown-output", default="output/validation/agent_runtime_debug_lab.md")
     parser.add_argument("--timeout-seconds", type=int, default=300)
@@ -56,7 +58,16 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
-    if args.request_json:
+    request_transport = "in_memory"
+    payload_file = ""
+    if args.payload_file:
+        request_path = Path(args.payload_file)
+        if not request_path.is_absolute():
+            request_path = repo_root / request_path
+        request, load_error = load_request(request_path)
+        request_transport = "payload_file"
+        payload_file = str(request_path)
+    elif args.request_json:
         request, load_error = load_request_json(args.request_json)
     elif args.request_file:
         request_path = Path(args.request_file)
@@ -95,6 +106,9 @@ def main() -> int:
             timeout_seconds=max(1, int(args.timeout_seconds)),
             tail_chars=max(256, int(args.tail_chars)),
         )
+    report["job_id"] = str(args.job_id or "")
+    report["payload_file"] = payload_file
+    report["request_transport"] = request_transport
 
     write_reports(
         repo_root=repo_root,

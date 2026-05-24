@@ -193,20 +193,201 @@ def write_text_evidence_fields(
     return fields
 
 
+def compact_text_fields(
+    repo_root: Path,
+    output_dir: Path,
+    payload: dict[str, Any],
+    prefixes: list[str] | tuple[str, ...],
+    *,
+    name: str,
+    producer: str,
+    kind_prefix: str = "",
+    suffix: str = ".txt",
+) -> dict[str, Any]:
+    """Replace full text fields with stable ref/hash/tail transport fields.
+
+    This helper is deliberately materialize-first: if a prefix has inline full
+    text, the full value is written to disk before the inline field is removed.
+    Existing refs are preserved and verified enough to fill stable metadata.
+    Tails are kept only as bounded previews/fallbacks.
+    """
+    compact = dict(payload)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for prefix in prefixes:
+        inline = compact.pop(prefix, None)
+        if isinstance(inline, str) and inline:
+            compact.update(
+                write_text_evidence_fields(
+                    repo_root,
+                    output_dir,
+                    prefix=prefix,
+                    name=f"{name}_{prefix}",
+                    text=inline,
+                    kind=f"{kind_prefix or name}_{prefix}",
+                    producer=producer,
+                    suffix=suffix,
+                )
+            )
+            continue
+
+        ref = compact.get(f"{prefix}_ref")
+        if isinstance(ref, dict) and str(ref.get("path") or "").strip():
+            evidence = read_text_evidence(repo_root, compact, prefix, require_full=True)
+            text = str(evidence.get("text") or "")
+            if evidence.get("used_ref") and text:
+                compact[f"{prefix}_chars"] = len(text)
+                compact[f"{prefix}_sha256"] = text_sha256(text)
+                tail = text[-TEXT_EVIDENCE_TAIL_CHARS:]
+                compact[f"{prefix}_tail"] = tail
+                compact[f"{prefix}_tail_chars"] = len(tail)
+                compact[f"{prefix}_full_text_in_json"] = False
+                compact[f"{prefix}_transport"] = "artifact_ref"
+            else:
+                compact[f"{prefix}_full_text_in_json"] = False
+                compact[f"{prefix}_transport"] = "artifact_ref_unreadable"
+                if evidence.get("errors"):
+                    compact[f"{prefix}_transport_errors"] = evidence.get("errors")
+            continue
+
+        tail = str(compact.get(f"{prefix}_tail") or "")
+        compact[f"{prefix}_chars"] = int(compact.get(f"{prefix}_chars") or len(tail))
+        compact[f"{prefix}_sha256"] = str(compact.get(f"{prefix}_sha256") or "")
+        compact[f"{prefix}_tail"] = tail[-TEXT_EVIDENCE_TAIL_CHARS:] if tail else ""
+        compact[f"{prefix}_tail_chars"] = min(len(tail), TEXT_EVIDENCE_TAIL_CHARS)
+        compact[f"{prefix}_full_text_in_json"] = False
+        compact[f"{prefix}_transport"] = "tail_fallback" if tail else "empty"
+    return compact
+
+
 def text_from_ref_or_tail(repo_root: Path, payload: dict[str, Any], prefix: str) -> str:
     """Load full text from ref, falling back to legacy inline text then tail."""
+    return str(read_text_evidence(repo_root, payload, prefix).get("text") or "")
+
+
+def read_text_evidence(
+    repo_root: Path | str | None,
+    payload: dict[str, Any],
+    prefix: str,
+    *,
+    require_full: bool = False,
+) -> dict[str, Any]:
+    """Read ref-backed text evidence with typed fallback metadata.
+
+    Full runtime decisions should use the ref path when present. Tail text is a
+    diagnostic fallback only and is flagged so gates can avoid treating it as
+    verified full evidence.
+    """
+    errors: list[str] = []
+    warnings: list[str] = []
+    root = Path(repo_root or payload.get("repo_root") or ".").resolve(strict=False)
     ref = payload.get(f"{prefix}_ref")
     if isinstance(ref, dict):
         ref_path = str(ref.get("path") or "").strip()
         if ref_path:
             try:
-                return read_text_windows_safe(resolve_path(repo_root, ref_path))
-            except Exception:
-                pass
+                target = resolve_path(root, ref_path)
+                text = read_text_windows_safe(target)
+                expected_sha = str(
+                    payload.get(f"{prefix}_sha256") or ref.get("sha256") or ""
+                ).strip()
+                actual_sha = text_sha256(text)
+                if expected_sha and actual_sha != expected_sha:
+                    errors.append(f"{prefix}_ref_sha256_mismatch:{ref_path}")
+                else:
+                    return {
+                        "text": text,
+                        "source": "ref",
+                        "ref_path": ref_path,
+                        "used_ref": True,
+                        "used_legacy_inline": False,
+                        "used_tail_fallback": False,
+                        "sha256_valid": bool(expected_sha),
+                        "full_verified": bool(expected_sha),
+                        "errors": errors,
+                        "warnings": warnings,
+                    }
+            except Exception as exc:  # noqa: BLE001 - diagnostic helper.
+                errors.append(f"{prefix}_ref_read_failed:{ref_path}:{type(exc).__name__}: {exc}")
+        elif require_full:
+            errors.append(f"{prefix}_ref_path_missing")
+    elif require_full:
+        errors.append(f"{prefix}_ref_missing")
     inline = payload.get(prefix)
     if isinstance(inline, str) and inline:
-        return inline
-    return str(payload.get(f"{prefix}_tail") or "")
+        warnings.append(f"{prefix}_legacy_inline_fallback")
+        return {
+            "text": inline,
+            "source": "legacy_inline",
+            "ref_path": "",
+            "used_ref": False,
+            "used_legacy_inline": True,
+            "used_tail_fallback": False,
+            "sha256_valid": text_sha256(inline) == str(payload.get(f"{prefix}_sha256") or ""),
+            "full_verified": False,
+            "errors": errors,
+            "warnings": warnings,
+        }
+    tail = str(payload.get(f"{prefix}_tail") or "")
+    if tail:
+        warnings.append(f"{prefix}_tail_fallback")
+    elif require_full:
+        errors.append(f"{prefix}_full_text_unavailable")
+    return {
+        "text": tail,
+        "source": "tail" if tail else "",
+        "ref_path": "",
+        "used_ref": False,
+        "used_legacy_inline": False,
+        "used_tail_fallback": bool(tail),
+        "sha256_valid": False,
+        "full_verified": False,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def report_text(
+    repo_root: Path | str | None,
+    report: dict[str, Any],
+    prefixes: list[str] | tuple[str, ...] = ("response_text",),
+    *,
+    require_full: bool = False,
+) -> dict[str, Any]:
+    """Read text from a provider/report payload using the canonical order.
+
+    For every prefix the order is ref, legacy inline, then tail. The first
+    prefix producing text wins, with fallback metadata preserved for gates.
+    """
+    collected_errors: list[str] = []
+    collected_warnings: list[str] = []
+    for prefix in prefixes:
+        evidence = read_text_evidence(
+            repo_root,
+            report,
+            prefix,
+            require_full=require_full,
+        )
+        collected_errors.extend(str(item) for item in evidence.get("errors") or [])
+        collected_warnings.extend(str(item) for item in evidence.get("warnings") or [])
+        if str(evidence.get("text") or ""):
+            result = dict(evidence)
+            result["prefix"] = prefix
+            result["errors"] = collected_errors
+            result["warnings"] = collected_warnings
+            return result
+    return {
+        "text": "",
+        "prefix": "",
+        "source": "",
+        "ref_path": "",
+        "used_ref": False,
+        "used_legacy_inline": False,
+        "used_tail_fallback": False,
+        "sha256_valid": False,
+        "full_verified": False,
+        "errors": collected_errors,
+        "warnings": collected_warnings,
+    }
 
 
 def write_json_artifact(

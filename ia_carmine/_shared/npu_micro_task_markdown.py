@@ -55,13 +55,16 @@ def render_markdown(report: dict) -> str:
         f"- Request input sha256: `{report.get('request_input_sha256')}`",
         f"- Request input omitted: `{report.get('request_input_omitted')}`",
         f"- Request input preview: `{report.get('request_input_preview') or report.get('request_input')}`",
-        f"- Response text: {report['response_text']}",
+        f"- Response text ref: `{(report.get('response_text_ref') or {}).get('path') or ''}`",
+        f"- Response text chars: `{report.get('response_text_chars')}`",
+        f"- Response text sha256: `{report.get('response_text_sha256')}`",
+        f"- Response text tail: {report.get('response_text_tail') or ''}",
         f"- NPU activity limit: {report['npu_activity_limit']}",
         f"- Legacy NPU auditor used: `{report['guardrails']['legacy_npu_auditor_used']}`",
         f"- Provider execution performed: `{report['guardrails']['provider_execution_performed']}`",
         "",
         "## Recommendation",
         "",
-        report["recommendations"][0]["summary"],
+        report["recommendations"][0].get("summary_tail") or "",
     ]
     return "\n".join(lines) + "\n"

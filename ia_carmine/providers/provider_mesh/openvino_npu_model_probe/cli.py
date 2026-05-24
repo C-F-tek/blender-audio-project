@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Any
 
 from ia_carmine._shared.file_backed_transport import (
-    text_sha256,
+    compact_text_fields,
+    read_text_evidence,
+    report_text,
     write_large_text_evidence,
     write_text_evidence_fields,
 )
@@ -66,15 +68,14 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     child = _run_child(repo_root, python_exe, args, model_dir) if not errors else {}
     child_errors = child.get("errors") if isinstance(child.get("errors"), list) else []
     errors.extend(str(item) for item in child_errors)
-    output_text = str(
-        child.get("response_text_tail")
-        or child.get("provider_heap_delta_text_tail")
-        or child.get("response_text")
-        or child.get("provider_heap_delta_text")
-        or ""
-    )
+    output_text = str(report_text(repo_root, child).get("text") or "")
+    if not output_text:
+        output_text = str(
+            report_text(repo_root, child, ("provider_heap_delta_text",)).get("text") or ""
+        )
+    structured_text = str(read_text_evidence(repo_root, child, "structured_text").get("text") or "")
     tool_calls = child.get("tool_calls") if isinstance(child.get("tool_calls"), list) else []
-    if not tool_calls and "semantic_evidence_chunks" in str(child.get("structured_text") or ""):
+    if not tool_calls and "semantic_evidence_chunks" in structured_text:
         tool_calls = [{
             "id": "openvino_npu_structured_tool_call_001",
             "tool": "semantic_evidence_chunks",
@@ -149,7 +150,11 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "native_tool_loop_performed": performed,
         "native_tool_call_count": len(tool_calls),
         "tool_calls": tool_calls,
-        "child": _compact_child_payload(child),
+        "child": _compact_child_payload(
+            child,
+            repo_root,
+            _resolve(repo_root, args.output).parent / "openvino_npu_child_compacted_artifacts",
+        ),
     }
     report.update(provider_work_status(lane="npu_micro_task_auditor", report=report, default_role="npu_auditor"))
     report.update(provider_replight_fields(
@@ -204,6 +209,10 @@ def _run_child(repo_root: Path, python_exe: Path, args: argparse.Namespace, mode
         ),
         "force_tool_call": prompt_explicitly_requires_tool_call(args.prompt),
         "max_new_tokens": max(8, int(args.max_new_tokens)),
+        "repo_root": str(repo_root),
+        "child_artifacts_dir": str(
+            _resolve(repo_root, args.output).parent / "openvino_npu_child_artifacts"
+        ),
     }
     try:
         completed = subprocess.run(
@@ -256,18 +265,57 @@ def _child_main() -> int:
                 "reason": str(structured_call.get("reason") or "openvino_npu_structured_tool_call"),
                 "native_provider": "openvino_genai_npu",
             }]
+        repo_root = Path(str(payload.get("repo_root") or ".")).resolve(strict=False)
+        child_artifacts_dir = Path(str(payload.get("child_artifacts_dir") or "output/validation/openvino_npu_child_artifacts"))
+        if not child_artifacts_dir.is_absolute():
+            child_artifacts_dir = repo_root / child_artifacts_dir
+        provider_delta_text = str(child.get("provider_heap_delta_text") or "")
+        response_text = str(child.get("provider_heap_delta_text") or child.get("response_text") or "")
+        structured_text = str(child.get("structured_text") or "")
+        text_fields: dict[str, Any] = {}
+        text_fields.update(write_text_evidence_fields(
+            repo_root,
+            child_artifacts_dir,
+            prefix="provider_heap_delta_text",
+            name="openvino_npu_child_provider_heap_delta_text",
+            text=provider_delta_text,
+            kind="openvino_npu_child_provider_heap_delta_text",
+            producer="openvino_npu_model_probe_child",
+            suffix=".md",
+        ))
+        text_fields.update(write_text_evidence_fields(
+            repo_root,
+            child_artifacts_dir,
+            prefix="response_text",
+            name="openvino_npu_child_response_text",
+            text=response_text,
+            kind="openvino_npu_child_response_text",
+            producer="openvino_npu_model_probe_child",
+            suffix=".md",
+        ))
+        text_fields.update(write_text_evidence_fields(
+            repo_root,
+            child_artifacts_dir,
+            prefix="structured_text",
+            name="openvino_npu_child_structured_text",
+            text=structured_text,
+            kind="openvino_npu_child_structured_text",
+            producer="openvino_npu_model_probe_child",
+            suffix=".txt",
+        ))
         result = {
             **child,
             "performed": bool(child.get("performed")),
             "supported": bool(child.get("supported")),
             "model_loaded": bool(child.get("performed")),
             "device_verified": "NPU" in [str(item) for item in child.get("devices", [])],
-            "provider_heap_delta_text": str(child.get("provider_heap_delta_text") or ""),
-            "response_text": str(child.get("provider_heap_delta_text") or child.get("response_text") or ""),
+            **text_fields,
             "native_tool_call_count": len(tool_calls),
             "tool_calls": tool_calls,
             "elapsed_sec": round(time.perf_counter() - started, 4),
         }
+        for key in ("provider_heap_delta_text", "response_text", "structured_text"):
+            result.pop(key, None)
     except Exception as exc:  # noqa: BLE001
         result = {
             "performed": False,
@@ -281,18 +329,16 @@ def _child_main() -> int:
     return 0 if result.get("performed") else 2
 
 
-def _compact_child_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    compact = dict(payload)
-    for key in ("provider_heap_delta_text", "response_text", "structured_text"):
-        text = str(compact.pop(key, "") or "")
-        if not text:
-            continue
-        compact[f"{key}_chars"] = len(text)
-        compact[f"{key}_sha256"] = text_sha256(text)
-        compact[f"{key}_tail"] = text[-4000:]
-        compact[f"{key}_tail_chars"] = min(len(text), 4000)
-        compact[f"{key}_full_text_in_json"] = False
-    return compact
+def _compact_child_payload(payload: dict[str, Any], repo_root: Path, output_dir: Path) -> dict[str, Any]:
+    return compact_text_fields(
+        repo_root,
+        output_dir,
+        payload,
+        ("provider_heap_delta_text", "response_text", "structured_text"),
+        name="openvino_npu_child_payload",
+        producer="openvino_npu_model_probe",
+        kind_prefix="openvino_npu_child_payload",
+    )
 
 
 def _resolve(repo_root: Path, value: str) -> Path:

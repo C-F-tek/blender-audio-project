@@ -7,6 +7,8 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+
+from ia_carmine._shared.file_backed_transport import read_text_evidence
 from ia_carmine._shared.provider_work_verification import (
     provider_rejection_record,
     provider_work_status,
@@ -188,8 +190,8 @@ def _skip_provider_item(path: Path, data: dict[str, Any]) -> bool:
     return False
 
 
-def _preview_text(data: dict[str, Any], max_block_chars: int) -> str:
-    text = str(data.get("response_text") or "")
+def _preview_text(repo_root: Path, data: dict[str, Any], max_block_chars: int) -> str:
+    text = str(read_text_evidence(repo_root, data, "response_text").get("text") or "")
     if not text:
         text = json.dumps(data, indent=2, ensure_ascii=False)
     if max_block_chars > 0 and len(text) > max_block_chars:
@@ -229,7 +231,7 @@ def provider_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             continue
         if not verified and sidecar_role:
             block_type = "observed_invalid_provider_evidence"
-        text = _preview_text(data, max_block_chars)
+        text = _preview_text(repo_root, data, max_block_chars)
         block_id = str(data.get("provider_block_id") or data.get("block_id") or "").strip()
         if not block_id:
             block_id = _stable_id("provider", f"{_repo_rel(repo_root, path)}:{role}:{index}")

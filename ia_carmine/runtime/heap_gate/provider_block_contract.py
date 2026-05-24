@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
+
+from ia_carmine._shared.file_backed_transport import report_text
 from ia_carmine._shared.provider_work_verification import provider_work_status
 from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import normalize_gpu0_decision
 
@@ -16,6 +19,8 @@ def provider_block_contract(
     lane: str,
     revision: int,
     provider_report: dict[str, Any],
+    *,
+    repo_root: Path | str | None = None,
 ) -> dict[str, Any]:
     proposal_block_id = proposal_block_id_for_revision(stamp, revision)
     lane_key = str(lane or "provider").strip() or "provider"
@@ -49,7 +54,9 @@ def provider_block_contract(
         target_files = []
     if lane_key in {"gpu0_peer", "npu_micro_task_auditor"}:
         target_files = []
-    operational, classification = operational_provider_activity(lane_key, provider_report)
+    operational, classification = operational_provider_activity(
+        lane_key, provider_report, repo_root=repo_root
+    )
     return {
         "heap_block": operational,
         "operational_provider_activity": operational,
@@ -78,11 +85,11 @@ def provider_block_contract(
 def operational_provider_activity(
     lane: str,
     provider_report: dict[str, Any],
+    *,
+    repo_root: Path | str | None = None,
 ) -> tuple[bool, str]:
     response_text = str(
-        provider_report.get("response_text")
-        or provider_report.get("response_text_tail")
-        or ""
+        report_text(repo_root, provider_report, require_full=True).get("text") or ""
     ).strip()
     selected_model = str(provider_report.get("selected_model") or "").strip()
     tool_call_count = _safe_int(provider_report.get("native_tool_call_count"))

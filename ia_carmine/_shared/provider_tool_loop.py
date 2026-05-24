@@ -8,7 +8,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any
-from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
+from ia_carmine._shared.file_backed_transport import report_text, write_text_evidence_fields
 from ia_carmine.providers.ollama.tool_calls import (
     normalize_ollama_tool_calls as normalize_ollama_sdk_tool_calls,
 )
@@ -117,6 +117,47 @@ def _openvino_tool_loop_child_main() -> int:
         if not isinstance(payload, dict):
             payload = {}
         result = run_openvino_tool_loop_child_payload(payload)
+        repo_root = Path(str(payload.get("repo_root") or ".")).resolve(strict=False)
+        child_artifacts_dir = Path(
+            str(payload.get("child_artifacts_dir") or "output/validation/provider_tool_loop_child_artifacts")
+        )
+        if not child_artifacts_dir.is_absolute():
+            child_artifacts_dir = repo_root / child_artifacts_dir
+        provider_delta = str(result.get("provider_heap_delta_text") or "")
+        response_text = str(result.get("provider_heap_delta_text") or result.get("response_text") or "")
+        structured_text = str(result.get("structured_text") or "")
+        result.update(write_text_evidence_fields(
+            repo_root,
+            child_artifacts_dir,
+            prefix="provider_heap_delta_text",
+            name="openvino_tool_loop_child_provider_heap_delta_text",
+            text=provider_delta,
+            kind="provider_heap_delta_text",
+            producer="provider_tool_loop_child",
+            suffix=".md",
+        ))
+        result.update(write_text_evidence_fields(
+            repo_root,
+            child_artifacts_dir,
+            prefix="response_text",
+            name="openvino_tool_loop_child_response_text",
+            text=response_text,
+            kind="provider_response_text",
+            producer="provider_tool_loop_child",
+            suffix=".md",
+        ))
+        result.update(write_text_evidence_fields(
+            repo_root,
+            child_artifacts_dir,
+            prefix="structured_text",
+            name="openvino_tool_loop_child_structured_text",
+            text=structured_text,
+            kind="provider_structured_tool_call_text",
+            producer="provider_tool_loop_child",
+            suffix=".txt",
+        ))
+        for key in ("provider_heap_delta_text", "response_text", "structured_text"):
+            result.pop(key, None)
     except Exception as exc:  # noqa: BLE001 - child errors are normalized JSON evidence.
         result = {
             "performed": False,
@@ -249,6 +290,10 @@ def openvino_tool_loop_report(
         "structured_schema": structured_schema_json,
         "force_tool_call": force_tool_call,
         "max_new_tokens": token_limit,
+        "repo_root": str(repo_root),
+        "child_artifacts_dir": str(
+            repo_root / "output" / "validation" / "provider_tool_loop_child_artifacts"
+        ),
     }
     child_env = command_env(repo_root)
     child_env["PYTHONIOENCODING"] = "utf-8"
@@ -306,8 +351,10 @@ def openvino_tool_loop_report(
     report["available_devices"] = payload.get("devices") or []
     if payload.get("errors"):
         report["errors"].extend(str(item) for item in payload.get("errors") or [])
-    provider_delta = str(payload.get("provider_heap_delta_text") or "")
-    response_text = str(payload.get("provider_heap_delta_text") or payload.get("response_text") or "")
+    provider_delta = str(
+        report_text(repo_root, payload, ("provider_heap_delta_text",)).get("text") or ""
+    )
+    response_text = str(report_text(repo_root, payload).get("text") or "")
     evidence_dir = repo_root / "output" / "validation" / "provider_tool_loop_artifacts"
     report.update(write_text_evidence_fields(
         repo_root,
@@ -332,7 +379,7 @@ def openvino_tool_loop_report(
     parsed = payload.get("parsed") if isinstance(payload.get("parsed"), dict) else {}
     tool_calls = parsed.get("tool_calls") if isinstance(parsed.get("tool_calls"), list) else []
     structured_call = payload.get("structured_call") if isinstance(payload.get("structured_call"), dict) else {}
-    structured_text = str(payload.get("structured_text") or "")
+    structured_text = str(read_text_evidence(repo_root, payload, "structured_text").get("text") or "")
     report.update(write_text_evidence_fields(
         repo_root,
         evidence_dir,

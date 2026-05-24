@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import time
@@ -130,6 +131,7 @@ class PartialWriter:
         }
 
     def _markdown(self, text: str, chunk: dict[str, Any]) -> str:
+        tail = str(text or "")[-4000:]
         return "\n".join(
             [
                 "# Ollama Provider Partial",
@@ -138,10 +140,12 @@ class PartialWriter:
                 f"- Model: `{self.selected_model}`",
                 f"- Done: `{bool(chunk.get('done'))}`",
                 f"- Partial chars: `{len(text)}`",
+                f"- Partial sha256: `{hashlib.sha256(str(text or '').encode('utf-8')).hexdigest()}`",
+                "- Partial response policy: `tail_only_diagnostic_not_full_evidence`",
                 "",
-                "## Partial Response",
+                "## Partial Response Tail",
                 "",
-                text,
+                tail,
                 "",
             ]
         )

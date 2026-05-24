@@ -15,7 +15,7 @@ if str(REPO_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORT))
 
 from ia_carmine._shared.file_backed_transport import (
-    read_text_windows_safe,
+    report_text,
     write_large_text_evidence,
     write_text_evidence_fields,
 )
@@ -284,8 +284,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         str(report.get("response_text_tail") or ""),
     ]
-    if report.get("free_text_evidence"):
-        lines.extend(["", "## Free Text Evidence", "", str(report.get("free_text_evidence") or "")])
+    if report.get("free_text_evidence_tail"):
+        lines.extend(["", "## Free Text Evidence", "", str(report.get("free_text_evidence_tail") or "")])
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
         lines.extend(f"- {item}" for item in report.get("errors", []))
@@ -300,20 +300,6 @@ def resolve_path(repo_root: Path, value: str) -> Path:
     if not path.is_absolute():
         path = repo_root / path
     return path.resolve()
-
-
-def _report_response_text(repo_root: Path, report: dict[str, Any]) -> str:
-    text = str(report.get("response_text") or "").strip()
-    if text:
-        return text
-    ref = report.get("response_text_ref") if isinstance(report.get("response_text_ref"), dict) else {}
-    ref_path = str(ref.get("path") or "").strip()
-    if ref_path:
-        try:
-            return read_text_windows_safe(resolve_path(repo_root, ref_path))
-        except Exception:
-            pass
-    return str(report.get("response_text_tail") or "")
 
 
 def _leader_block_id(leader_packet: dict[str, Any]) -> str:
@@ -418,7 +404,7 @@ def main() -> int:
         unload_model=not args.defer_unload,
     )
     output_parent = resolve_path(repo_root, args.output).parent
-    raw_response_text = _report_response_text(repo_root, report)
+    raw_response_text = str(report_text(repo_root, report).get("text") or "")
     gpu0_secondary = parse_gpu0_secondary_response(
         raw_response_text,
         fallback_block_id=_leader_block_id(leader_packet),
@@ -446,6 +432,17 @@ def main() -> int:
     )
     report["gpu0_one_execution_per_packet"] = True
     report.update(gpu0_secondary)
+    free_text_evidence = str(report.pop("free_text_evidence", "") or "")
+    report.update(write_text_evidence_fields(
+        repo_root,
+        output_parent / "provider_response_artifacts",
+        prefix="free_text_evidence",
+        name="gpu0_free_text_evidence",
+        text=free_text_evidence,
+        kind="gpu0_free_text_evidence",
+        producer="ollama_gpu0_peer_report",
+        suffix=".md",
+    ))
     report.update(write_text_evidence_fields(
         repo_root,
         output_parent / "provider_response_artifacts",

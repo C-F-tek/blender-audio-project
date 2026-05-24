@@ -50,7 +50,9 @@ class RuntimeGateProviderExecutionMixin:
         revision: int,
         provider_report: dict[str, Any],
     ) -> dict[str, Any]:
-        return build_provider_block_contract(self.stamp, lane, revision, provider_report)
+        return build_provider_block_contract(
+            self.stamp, lane, revision, provider_report, repo_root=self.repo_root
+        )
 
     def poll_pending_provider_sidecars(self, round_id: int) -> None:
         poll_pending_provider_sidecars(self, round_id)
@@ -318,6 +320,7 @@ class RuntimeGateProviderExecutionMixin:
             self.current_gpu1_closure_decision_packet = packet_from_report(
                 leader_report_for_packet,
                 source="gpu1_provider_report_before_gpu0",
+                repo_root=self.repo_root,
             )
             write_json_report(
                 build_provider_teamwork_leader_packet(self, round_id, revision, leader_prompt),
@@ -548,7 +551,7 @@ class RuntimeGateProviderExecutionMixin:
     def capture_gpu1_primary_evidence_after_provider_join(
         self, leader_report: dict[str, Any], round_id: int
     ) -> dict[str, Any]:
-        workload = gpu1_primary_workload_status(leader_report)
+        workload = gpu1_primary_workload_status(leader_report, repo_root=self.repo_root)
         self.gpu1_primary_workload_valid = bool(
             workload.get("gpu1_primary_workload_valid")
         )

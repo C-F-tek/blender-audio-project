@@ -79,7 +79,11 @@ class RuntimeGateProviderRefinementMixin:
             if isinstance(report.get("implementation_quality"), dict)
             else {}
         )
-        response_text = str(report.get("response_text") or "")
+        response_text = (
+            self.provider_report_response_text(report)
+            if hasattr(self, "provider_report_response_text")
+            else str(report.get("response_text") or "")
+        )
         unverified = [
             str(item)
             for item in (
@@ -196,7 +200,11 @@ class RuntimeGateProviderRefinementMixin:
         if not report:
             return False
         exit_decision = str(report.get("exit_decision") or "").strip().upper()
-        response_text = str(report.get("response_text") or "")
+        response_text = (
+            self.provider_report_response_text(report)
+            if hasattr(self, "provider_report_response_text")
+            else str(report.get("response_text") or "")
+        )
         quality = (
             report.get("response_file_reference_quality")
             if isinstance(report.get("response_file_reference_quality"), dict)

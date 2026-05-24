@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
 from ia_carmine.providers.ollama.sdk_client import OllamaSdkClient
 from ia_carmine.providers.ollama.role_models import (
     gpu_layers_label,
@@ -96,6 +97,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         args.num_ctx,
         args.ollama_gpu_layers,
         args.max_new_tokens,
+        repo_root,
     )
     gpu0 = _load_ollama_role(
         OllamaSdkClient(args.gpu0_base_url),
@@ -105,6 +107,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         args.num_ctx,
         args.ollama_gpu_layers,
         args.max_new_tokens,
+        repo_root,
     )
     npu = _start_npu_child(repo_root, args)
     coexistence = {
@@ -178,6 +181,7 @@ def _load_ollama_role(
     num_ctx: int,
     gpu_layers: str | int | None,
     tokens: int,
+    repo_root: Path,
 ) -> dict[str, Any]:
     gpu_layers_requested = gpu_layers_label(gpu_layers)
     num_gpu = gpu_layers_option(gpu_layers)
@@ -191,6 +195,29 @@ def _load_ollama_role(
         num_ctx=num_ctx,
         num_gpu=num_gpu,
         think=False,
+    )
+    artifacts_dir = repo_root / "output" / "validation" / "provider_role_coexistence_artifacts"
+    response_fields = write_text_evidence_fields(
+        repo_root,
+        artifacts_dir,
+        prefix="response_text",
+        name=f"{role}_boot_probe_response",
+        text=text,
+        kind="provider_role_boot_probe_response",
+        producer="provider_role_coexistence",
+        suffix=".txt",
+    )
+    last_response = client.last_generate_response if isinstance(client.last_generate_response, dict) else {}
+    last_response_text = str(last_response.get("response") or "")
+    last_response_fields = write_text_evidence_fields(
+        repo_root,
+        artifacts_dir,
+        prefix="last_generate_response_text",
+        name=f"{role}_last_generate_response_text",
+        text=last_response_text,
+        kind="provider_role_last_generate_response_text",
+        producer="provider_role_coexistence",
+        suffix=".txt",
     )
     return {
         "role": role,
@@ -207,8 +234,11 @@ def _load_ollama_role(
         "workload_verified_at_boot": False,
         "provider_work_verified": False,
         "provider_stage": "boot_probe",
-        "response_text": text,
-        "last_generate_response": client.last_generate_response,
+        **response_fields,
+        **last_response_fields,
+        "last_generate_response_metadata": {
+            key: value for key, value in last_response.items() if key not in {"response", "context"}
+        },
     }
 
 
@@ -218,14 +248,15 @@ def _start_npu_child(repo_root: Path, args: argparse.Namespace) -> dict[str, Any
     ready_path.parent.mkdir(parents=True, exist_ok=True)
     if ready_path.exists():
         ready_path.unlink()
-    payload = {
-        "repo_root": str(repo_root),
-        "model_dir": args.npu_model_dir,
-        "device": "NPU",
-        "ready_path": str(ready_path),
-        "hold_seconds": max(1.0, float(args.npu_hold_seconds)),
-        "max_new_tokens": max(2, int(args.max_new_tokens)),
-    }
+        payload = {
+            "repo_root": str(repo_root),
+            "model_dir": args.npu_model_dir,
+            "device": "NPU",
+            "ready_path": str(ready_path),
+            "artifacts_dir": str(ready_path.parent / "provider_role_coexistence_artifacts"),
+            "hold_seconds": max(1.0, float(args.npu_hold_seconds)),
+            "max_new_tokens": max(2, int(args.max_new_tokens)),
+        }
     process = subprocess.Popen(
         [str(python_exe), "-m", "ia_carmine.providers.provider_mesh.provider_role_coexistence.cli", "--child-npu"],
         cwd=str(repo_root),
@@ -267,6 +298,20 @@ def _child_npu() -> int:
             raise RuntimeError(f"{device} not in available devices: {devices}")
         pipe = genai.LLMPipeline(str(payload["model_dir"]), device, MAX_PROMPT_LEN=512, MIN_RESPONSE_LEN=1)
         text = str(pipe.generate("IA-Carmine NPU coexistence probe: READY.", max_new_tokens=int(payload["max_new_tokens"]))).strip()
+        repo_root = Path(str(payload.get("repo_root") or ".")).resolve(strict=False)
+        artifacts_dir = Path(str(payload.get("artifacts_dir") or "output/validation/provider_role_coexistence_artifacts"))
+        if not artifacts_dir.is_absolute():
+            artifacts_dir = repo_root / artifacts_dir
+        response_fields = write_text_evidence_fields(
+            repo_root,
+            artifacts_dir,
+            prefix="response_text",
+            name="npu_micro_task_auditor_boot_probe_response",
+            text=text,
+            kind="provider_role_boot_probe_response",
+            producer="provider_role_coexistence_npu_child",
+            suffix=".txt",
+        )
         result = {
             "schema_version": 1,
             "kind": "provider_role_coexistence_npu_ready",
@@ -289,7 +334,7 @@ def _child_npu() -> int:
             "provider_stage": "boot_probe",
             "device_verified": True,
             "devices": devices,
-            "response_text": text,
+            **response_fields,
             "elapsed_sec_to_ready": round(time.perf_counter() - started, 4),
         }
         Path(str(payload["ready_path"])).write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

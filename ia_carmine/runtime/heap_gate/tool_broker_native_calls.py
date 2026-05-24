@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ia_carmine._shared.file_backed_transport import report_text, write_json_artifact
 from ia_carmine._shared.provider_work_rejections import role_for
 from ia_carmine._shared.provider_tool_schemas import is_api_native_tool_call
 from ia_carmine.runtime.heap_gate.runtime_common import (
@@ -116,10 +117,14 @@ def _publish_report_native_tool_calls(
     if (
         not calls
         and lane in PRIMARY_NATIVE_TOOL_CALL_LANES
-        and str(report.get("response_text") or "").strip()
+        and str(report_text(getattr(owner, "repo_root", None), report).get("text") or "").strip()
     ):
         _publish_primary_free_text_raw_evidence(owner, report, output, round_id)
-    elif not calls and lane in SIDECAR_NATIVE_TOOL_CALL_LANES and str(report.get("response_text") or "").strip():
+    elif (
+        not calls
+        and lane in SIDECAR_NATIVE_TOOL_CALL_LANES
+        and str(report_text(getattr(owner, "repo_root", None), report).get("text") or "").strip()
+    ):
         _publish_sidecar_free_text_raw_evidence(owner, report, output, round_id)
     return published
 
@@ -154,7 +159,7 @@ def _report_has_useful_no_tool_text(report: dict[str, Any]) -> bool:
     lane = str(report.get("lane") or "")
     if lane not in NO_TOOL_GENERIC_WRITE_CAPTURE_LANES:
         return False
-    if str(report.get("response_text") or "").strip() == "":
+    if str(report_text(report.get("repo_root"), report).get("text") or "").strip() == "":
         return False
     if isinstance(report.get("tool_calls"), list) and report.get("tool_calls"):
         return False
@@ -439,7 +444,10 @@ def _enrich_provider_native_tool_args(
                 str(report.get("provider_role") or report.get("role") or ""),
             ),
         )
-        args.setdefault("proposal_text", str(report.get("response_text") or ""))
+        args.setdefault(
+            "proposal_text",
+            str(report_text(getattr(owner, "repo_root", None), report).get("text") or ""),
+        )
         args.setdefault("request_file", str(getattr(owner.args, "request_file", "") or ""))
         if not args.get("request_file"):
             args.setdefault("operator_request", owner.request_text()[:5000])
@@ -449,7 +457,6 @@ def _enrich_provider_native_tool_args(
             or "Provider lane requested generic_write to refine the next GPU1 turn.",
         )
     plan_item["args"] = args
-
 
 def _publish_need_and_request(
     owner: Any,
@@ -506,10 +513,29 @@ def _publish_need_and_request(
     if plan_item.get("nonblocking"):
         tool_request["nonblocking"] = True
     append_unique(owner.state["tool_requests"], tool_request)
+    request_ref = write_json_artifact(
+        owner.repo_root,
+        owner.provider_work_dir() / "broker_request_payloads",
+        name=request_id.replace(":", "_"),
+        payload=tool_request,
+        kind="provider_native_broker_request",
+        producer="tool_broker_native_calls",
+    )
+    event_payload = {
+        "id": request_id,
+        "request_id": request_id,
+        "tool": tool_request["tool"],
+        "args_keys": sorted(str(key) for key in (tool_request.get("args") or {}))[:32],
+        "lane": lane,
+        "provider_native_tool_call": True,
+        "payload_file_backed": True,
+        "payload_ref": request_ref,
+        "payload_kind": "provider_native_broker_request",
+    }
     owner.publish(
         source,
         "broker_request",
-        tool_request,
+        event_payload,
         target="broker",
         correlation_id=request_id,
         round_id=round_id,

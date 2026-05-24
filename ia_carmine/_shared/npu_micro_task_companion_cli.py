@@ -19,6 +19,7 @@ from ia_carmine._shared.npu_micro_task_contract import (
 from ia_carmine._shared.provider_replight import provider_replight_fields
 from ia_carmine._shared.provider_tool_loop import openvino_tool_loop_report
 from ia_carmine._shared.provider_work_verification import provider_work_status
+from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
 try:
     from build_npu_micro_task_companion_report import (
         build_npu_role_response,
@@ -233,6 +234,17 @@ def _report(
     response_schema_valid = _npu_response_schema_valid(
         response_text, micro_task_kind, micro_decision
     )
+    repo_root = Path(args.repo_root).resolve(strict=False)
+    response_fields = write_text_evidence_fields(
+        repo_root,
+        Path(args.output).resolve(strict=False).parent / "provider_response_artifacts",
+        prefix="response_text",
+        name="npu_micro_task_companion_response_text",
+        text=response_text,
+        kind="npu_micro_task_companion_response_text",
+        producer="npu_micro_task_companion",
+        suffix=".md",
+    )
     npu_peer_evidence_verified = bool(
         npu_device_verified
         and device_workload.get("requested")
@@ -321,7 +333,7 @@ def _report(
             and leader_packet.get("pointer_contract")
         ),
         "project_python_exe": str(project_python),
-        "response_text": response_text,
+        **response_fields,
         "request_classification": role_response["request_classification"],
         "role_decision": role_response["role_decision"],
         "npu_micro_task_kind": micro_task_kind,
@@ -371,7 +383,15 @@ def _report(
         "npu_provider_execution_performed": npu_real_provider_performed,
         "npu_activity_classification": role_response["role_decision"],
         "npu_activity_limit": "NPU lane is a real bounded micro-task provider: it audits the current GPU1 packet only, runs device workload/tool-loop evidence when selected, and never owns final synthesis or product closure.",
-        "recommendations": [{"id": "npu_companion_policy", "summary": response_text, "classification": "SAFE_MECHANICAL"}],
+        "recommendations": [{
+            "id": "npu_companion_policy",
+            "summary_ref": response_fields.get("response_text_ref") or {},
+            "summary_tail": response_fields.get("response_text_tail") or "",
+            "summary_chars": response_fields.get("response_text_chars") or 0,
+            "summary_sha256": response_fields.get("response_text_sha256") or "",
+            "summary_full_text_in_json": False,
+            "classification": "SAFE_MECHANICAL",
+        }],
         "guardrails": {
             "legacy_npu_auditor_used": False,
             "provider_execution_performed": npu_real_provider_performed,

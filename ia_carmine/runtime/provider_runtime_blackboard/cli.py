@@ -13,6 +13,7 @@ from ia_carmine._shared.file_backed_transport import (
     read_json_windows_safe,
     read_text_windows_safe,
     validate_runtime_payload_manifest,
+    write_json_artifact,
 )
 from .common import EVENT_TYPES, LANES, tool_catalog_snapshot
 from .heap import ProviderRuntimeHeap
@@ -132,6 +133,15 @@ def main() -> int:
             }
             print(json.dumps(result, indent=2, ensure_ascii=False))
             return 2
+        if args.event_type == "broker_request" and not payload_ref and payload:
+            payload_ref = write_json_artifact(
+                repo_root,
+                repo_root / "output" / "validation" / "provider_runtime_blackboard_payloads",
+                name=args.correlation_id or payload.get("id") or "broker_request",
+                payload=payload,
+                kind="provider_runtime_blackboard_payload",
+                producer="provider_runtime_blackboard",
+            )
         event = heap.append_event(
             source=args.source,
             target=args.target or None,

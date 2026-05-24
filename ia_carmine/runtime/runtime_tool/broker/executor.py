@@ -110,7 +110,11 @@ def load_requests_data(
             if not request_path:
                 return {}, payload_path, "payload_file", ["payload_manifest_missing_request_packet"]
             request_packet_path = resolve_path(repo_root, request_path)
-            return read_json_report(request_packet_path), request_packet_path, "payload_file", []
+            packet = read_json_report(request_packet_path)
+            packet["_payload_file"] = repo_rel(payload_path, repo_root)
+            packet["_payload_manifest_job_id"] = payload_data.get("job_id")
+            packet["_request_packet_ref"] = request_ref
+            return packet, request_packet_path, "payload_file", []
         return payload_data, payload_path, "payload_file", []
     request_data = getattr(args, "request_data", None)
     if isinstance(request_data, dict):
@@ -492,8 +496,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "kind": "agent_runtime_tool_broker",
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
-        "job_id": str(getattr(args, "job_id", "") or stamp),
-        "payload_file": str(getattr(args, "payload_file", "") or ""),
+        "job_id": str(
+            getattr(args, "job_id", "")
+            or requests_data.get("_payload_manifest_job_id")
+            or stamp
+        ),
+        "payload_file": str(getattr(args, "payload_file", "") or requests_data.get("_payload_file") or ""),
+        "request_packet_ref": requests_data.get("_request_packet_ref") or {},
         "request_file": repo_rel(request_path, repo_root) if request_path else "",
         "request_transport": request_transport,
         "request_kind": requests_data.get("kind"),

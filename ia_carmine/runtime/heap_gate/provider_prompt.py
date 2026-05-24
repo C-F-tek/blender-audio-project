@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, json, os, re, read_json, repo_rel
-from ia_carmine._shared.file_backed_transport import artifact_ref
+from ia_carmine._shared.file_backed_transport import (
+    artifact_ref,
+    report_text,
+    write_text_evidence_fields,
+)
 from ia_carmine.runtime.heap_gate.provider_prompt_text import (
     POINTER_DELTA_PROTOCOL,
     provider_invocation_wrapper_text,
@@ -181,13 +185,21 @@ class RuntimeGateProviderPromptMixin:
         """Extract provider response text from heterogeneous provider reports."""
         if not isinstance(payload, dict):
             return ""
-        direct = payload.get("response_text") or payload.get("text") or payload.get("stdout_tail")
+        direct = report_text(
+            self.repo_root,
+            payload,
+            ("response_text", "text", "stdout"),
+        ).get("text")
         if isinstance(direct, str) and direct.strip():
             return direct.strip()
         for item in payload.get("lane_reports") or []:
             if not isinstance(item, dict):
                 continue
-            value = item.get("response_text") or item.get("text_preview") or item.get("raw_preview")
+            value = report_text(
+                self.repo_root,
+                item,
+                ("response_text", "text_preview", "raw_preview"),
+            ).get("text")
             if isinstance(value, str) and value.strip():
                 return value.strip()
         return ""
@@ -205,7 +217,9 @@ class RuntimeGateProviderPromptMixin:
             return text
         for report in reversed(self.provider_reports):
             if str(report.get("lane") or "") == "gpu1_planner":
-                text = str(report.get("response_text") or "").strip()
+                text = str(
+                    report_text(self.repo_root, report).get("text") or ""
+                ).strip()
                 if text:
                     return text
         return self.response_text()
@@ -336,11 +350,13 @@ class RuntimeGateProviderPromptMixin:
         if lane == "gpu0_peer":
             gpu1_packet = extract_gpu1_closure_decision_packet(provider_report)
             raw_free_text = str(
-                provider_report.get("free_text_evidence")
-                or provider_report.get("gpu0_raw_response_text")
-                or provider_report.get("response_text")
+                report_text(
+                    self.repo_root,
+                    provider_report,
+                    ("free_text_evidence", "gpu0_raw_response_text", "response_text"),
+                ).get("text")
                 or ""
-            )
+            ).strip()
             secondary = parse_gpu0_secondary_response(
                 raw_free_text,
                 fallback_block_id=str(
@@ -374,7 +390,6 @@ class RuntimeGateProviderPromptMixin:
                             "incongruence_reasons",
                             "veto_reasons",
                             "required_gpu1_next_action",
-                            "free_text_evidence",
                             "free_text_used_as_product",
                             "free_text_used_as_decision",
                             "gpu0_model_decision",
@@ -495,13 +510,28 @@ class RuntimeGateProviderPromptMixin:
                 ),
             }
 
-        previous_text = str(provider_report.get("response_text") or "").strip()
+        previous_text = str(
+            report_text(self.repo_root, provider_report).get("text") or ""
+        ).strip()
         if lane == "gpu0_peer":
-            provider_report["response_text"] = gpu0_secondary_decision_text(provider_report)
+            next_response_text = gpu0_secondary_decision_text(provider_report)
         else:
-            provider_report["response_text"] = "\\n".join(
+            next_response_text = "\\n".join(
                 part for part in (previous_text, "\\n".join(review_lines)) if part
             )
+        provider_report.pop("response_text", None)
+        provider_report.update(
+            write_text_evidence_fields(
+                self.repo_root,
+                work_dir / "provider_response_artifacts",
+                prefix="response_text",
+                name=f"{lane}_operational_peer_review_revision_{revision}",
+                text=next_response_text,
+                kind=f"{lane}_operational_peer_review",
+                producer="heap_gate_provider_prompt",
+                suffix=".md",
+            )
+        )
         provider_report["operational_peer_review_performed"] = True
         provider_report["operational_peer_review_source"] = repo_rel(
             self.repo_root, self.gpu1_delta_report_path(work_dir, revision)
