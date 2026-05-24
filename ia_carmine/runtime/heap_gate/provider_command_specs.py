@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import write_text_artifact
 from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
     GPU0_LANE,
     GPU1_LANE,
@@ -181,6 +182,22 @@ def _npu_device_identity() -> dict[str, Any]:
     }
 
 
+def _provider_request_args(gate: Any, work_dir: Path, revision: int) -> list[str]:
+    request_file = str(getattr(gate.args, "request_file", "") or "").strip()
+    if request_file:
+        return ["--request-file", request_file]
+    ref = write_text_artifact(
+        gate.repo_root,
+        work_dir / "provider_input_artifacts",
+        name=f"provider_request_revision_{revision}",
+        text=gate.request_text(),
+        kind="provider_request",
+        producer="provider_command_specs",
+        suffix=".md",
+    )
+    return ["--request-file", str(ref.get("path") or "")]
+
+
 def build_provider_command_specs(
     gate: Any,
     work_dir: Path,
@@ -197,8 +214,7 @@ def build_provider_command_specs(
     leader_packet = str(getattr(gate, "provider_leader_packet_path", "") or "")
     startup_manifest = str(getattr(gate.args, "startup_manifest", "") or "")
     task_file = str(getattr(gate.args, "task_file", "") or "")
-    request_file = str(getattr(gate.args, "request_file", "") or "")
-    request_args = ["--request-file", request_file] if request_file else ["--request", gate.request_text()]
+    request_args = _provider_request_args(gate, work_dir, revision)
     startup_args = (
         ["--startup-manifest", startup_manifest]
         if startup_manifest

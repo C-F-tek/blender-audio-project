@@ -188,9 +188,10 @@ def run_openvino_tool_loop_child_payload(payload: dict[str, Any]) -> dict[str, A
     else:
         result.update(
             {
-                "provider_heap_delta_text": reflection_text,
-                "response_text": text,
-                "structured_text": structured_text,
+                "provider_heap_delta_text_transport": "missing_repo_root_no_inline_fallback",
+                "response_text_transport": "missing_repo_root_no_inline_fallback",
+                "structured_text_transport": "missing_repo_root_no_inline_fallback",
+                "errors": ["repo_root_required_for_file_backed_provider_text"],
             }
         )
     return result

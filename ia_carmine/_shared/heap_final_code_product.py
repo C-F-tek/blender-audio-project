@@ -189,7 +189,7 @@ def item_has_code_product(item: dict[str, Any]) -> bool:
         return False
     if status == "verified_target_no_worktree_diff":
         return False
-    diff_ref = str(item.get("diff_path") or "").strip()
+    diff_ref = str(item.get("diff_path") or item.get("diff_ref") or "").strip()
     sketch = str(item.get("code_or_patch_sketch") or "").strip()
     if diff_ref:
         return True
@@ -225,7 +225,7 @@ def diff_hunk_count(payload: str) -> int:
 
 
 def full_code_or_patch(matrix: dict[str, Any], item: dict[str, Any]) -> str:
-    diff_ref = str(item.get("diff_path") or "").strip()
+    diff_ref = str(item.get("diff_path") or item.get("diff_ref") or "").strip()
     if diff_ref:
         diff_path = Path(diff_ref)
         if not diff_path.is_absolute():

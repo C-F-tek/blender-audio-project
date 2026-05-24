@@ -12,6 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from Tools.validation.runtime_tool.run_file_backed_transport_contract_smoke.helpers import (
+    blackboard_broker_transport_errors,
     fake_ollama_report_context,
     legacy_dispatch_absent_errors,
     strict_text_accessor_errors,
@@ -27,25 +28,14 @@ def require(condition: bool, message: str, errors: list[str]) -> None:
         errors.append(message)
 
 
-def extract_first_tool(data: dict[str, object]) -> str:
-    requests = data.get("tool_requests")
-    if not isinstance(requests, list) or not requests:
-        return ""
-    first = requests[0]
-    return str(first.get("tool") or "") if isinstance(first, dict) else ""
-
-
 def build_report(repo_root: Path) -> dict[str, object]:
     from ia_carmine._shared.file_backed_transport import (
         INLINE_TEXT_MAX_CHARS,
         MAX_FILE_WINDOW_CHARS,
         artifact_ref,
         validate_runtime_payload_manifest,
-        write_json_artifact,
-        write_transport_manifest,
     )
     from ia_carmine._shared.provider_ollama_report import build_ollama_probe_report
-    from ia_carmine.runtime.provider_runtime_blackboard.cli import parse_payload
     from ia_carmine.runtime.runtime_tool.agent_runtime_debug_lab.cli import load_request_json
     from ia_carmine.runtime.runtime_tool.broker.context_builders import runtime_sqlite_memory
     from ia_carmine.runtime.runtime_tool.broker.executor import (
@@ -94,6 +84,8 @@ def build_report(repo_root: Path) -> dict[str, object]:
         "chatgpt": "CHATGPT.md",
         "runtime_tool_context": "ia_carmine/runtime/runtime_tool/TOOL_CONTEXT.md",
         "heap_gate_context": "ia_carmine/runtime/heap_gate/TOOL_CONTEXT.md",
+        "provider_teamwork_packet": "ia_carmine/runtime/heap_gate/provider_teamwork_packet.py",
+        "provider_command_specs": "ia_carmine/runtime/heap_gate/provider_command_specs.py",
     }
     source = {key: read(repo_root, path) for key, path in files.items()}
     errors: list[str] = []
@@ -271,6 +263,15 @@ def build_report(repo_root: Path) -> dict[str, object]:
         "validate_runtime_payload_manifest" in source["blackboard"]
         and "payload_manifest_invalid" in source["blackboard"],
         "provider runtime blackboard must validate runtime payload manifests on --payload-file ingress",
+        errors,
+    )
+    require(
+        '"request": gate.request_text()' not in source["provider_teamwork_packet"]
+        and "leader_prompt_excerpt" not in source["provider_teamwork_packet"]
+        and 'gate, "request"' in source["provider_teamwork_packet"]
+        and 'gate, "leader_prompt"' in source["provider_teamwork_packet"]
+        and '["--request", gate.request_text()]' not in source["provider_command_specs"],
+        "provider packet/commands must use request and leader prompt artifact refs, not inline payloads",
         errors,
     )
     require(
@@ -472,105 +473,7 @@ def build_report(repo_root: Path) -> dict[str, object]:
         errors,
     )
 
-    payload_file = smoke_dir / "blackboard_payload.json"
-    payload_file.write_text('{"ok": true}\n', encoding="utf-8")
-    payload, payload_ref = parse_payload(payload_file=str(payload_file), repo_root=repo_root)
-    manifest_payload, manifest_payload_ref = parse_payload(
-        payload_file=str(good_manifest), repo_root=repo_root
-    )
-    array_failed = False
-    inline_large_failed = False
-    bad_manifest_failed = False
-    try:
-        array_file = smoke_dir / "blackboard_array.json"
-        array_file.write_text("[1, 2, 3]\n", encoding="utf-8")
-        parse_payload(payload_file=str(array_file), repo_root=repo_root)
-    except ValueError:
-        array_failed = True
-    try:
-        parse_payload(payload_file=str(bad_manifest), repo_root=repo_root)
-    except ValueError as exc:
-        bad_manifest_failed = "payload_manifest_invalid" in str(exc)
-    try:
-        parse_payload(raw='{"body":"' + ("x" * (INLINE_TEXT_MAX_CHARS + 1)) + '"}', repo_root=repo_root)
-    except ValueError as exc:
-        inline_large_failed = "payload_json_large_requires_payload_file" in str(exc)
-    require(
-        payload.get("ok") is True
-        and bool(payload_ref.get("sha256"))
-        and manifest_payload.get("kind") == "ia_carmine_runtime_payload_manifest"
-        and bool(manifest_payload_ref.get("sha256"))
-        and array_failed
-        and bad_manifest_failed
-        and inline_large_failed,
-        "blackboard payload loading must preserve payload_ref and reject arrays/corrupt manifests/large inline JSON",
-        errors,
-    )
-
-    from ia_carmine.runtime.provider_runtime_blackboard.broker_bridge.cli import event_to_tool_request
-
-    broker_payload_file = smoke_dir / "broker_request_payload.json"
-    broker_payload = {
-        "request_id": "broker_req_file_backed",
-        "tool": "runtime_file_refs",
-        "args": {"text_file": str(payload_file.relative_to(repo_root))},
-        "lane": "gpu1_planner",
-        "provider_native_tool_call": True,
-    }
-    broker_payload_file.write_text(
-        json.dumps(broker_payload, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
-    broker_ref = artifact_ref(
-        broker_payload_file,
-        repo_root,
-        kind="provider_runtime_blackboard_payload",
-        producer="file_backed_transport_contract_smoke",
-    )
-    hydrated_request = event_to_tool_request(
-        repo_root,
-        {
-            "source": "gpu1_planner",
-            "event_type": "broker_request",
-            "correlation_id": "broker_req_file_backed",
-            "payload_ref": broker_ref,
-            "payload": {
-                "payload_file_backed": True,
-                "payload_ref": broker_ref,
-                "payload_kind": "provider_runtime_blackboard_payload",
-            },
-        },
-        1,
-    )
-    require(
-        hydrated_request.get("tool") == "runtime_file_refs"
-        and hydrated_request.get("args", {}).get("text_file")
-        and hydrated_request.get("provider_native_tool_call") is True
-        and not hydrated_request.get("payload_ref_error"),
-        "broker bridge must hydrate file-backed broker_request payloads and preserve tool/args/native flag",
-        errors,
-    )
-    request_packet_ref = write_json_artifact(
-        repo_root, smoke_dir, name="broker_request_packet",
-        payload={"schema_version": 1, "kind": "agent_runtime_tool_requests", "tool_requests": [hydrated_request]},
-        kind="provider_runtime_broker_request_packet", producer="file_backed_transport_contract_smoke",
-    )
-    broker_manifest = smoke_dir / "broker_payload_manifest.json"
-    write_transport_manifest(
-        repo_root, broker_manifest, job_id="broker-retry-smoke", run_dir=smoke_dir,
-        refs=[request_packet_ref], extra={"broker": {"request_packet_ref": request_packet_ref}},
-    )
-    broker_manifest_data, _, broker_manifest_transport, broker_manifest_errors = load_requests_data(
-        repo_root,
-        SimpleNamespace(request_data=None, request_packet=None, request_json="", request_file="", payload_file=str(broker_manifest)),
-    )
-    require(
-        broker_manifest_transport == "payload_file"
-        and not broker_manifest_errors
-        and extract_first_tool(broker_manifest_data) == "runtime_file_refs",
-        "broker payload_file manifest must hydrate retryable request packet with tool/args",
-        errors,
-    )
+    errors.extend(blackboard_broker_transport_errors(repo_root, smoke_dir))
 
     large_request_data, _, _, large_request_errors = load_requests_data(
         repo_root,

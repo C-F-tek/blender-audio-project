@@ -245,6 +245,16 @@ def _report(
         producer="npu_micro_task_companion",
         suffix=".md",
     )
+    request_fields = write_text_evidence_fields(
+        repo_root,
+        Path(args.output).resolve(strict=False).parent / "provider_input_artifacts",
+        prefix="request_input",
+        name="npu_micro_task_companion_request_input",
+        text=request_input,
+        kind="provider_request_input",
+        producer="npu_micro_task_companion",
+        suffix=".md",
+    )
     npu_peer_evidence_verified = bool(
         npu_device_verified
         and device_workload.get("requested")
@@ -299,7 +309,7 @@ def _report(
         "task_file": args.task_file,
         "startup_manifest": str(args.startup_manifest or ""),
         "task_preview_chars": len(task_preview),
-        "request_input": request_input_preview,
+        **request_fields,
         "request_input_preview": request_input_preview,
         "request_input_chars": len(str(request_input or "")),
         "request_input_sha256": request_input_sha256,

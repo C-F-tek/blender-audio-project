@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import subprocess
 import sys
@@ -153,7 +154,10 @@ def build_worktree_candidate(
             "candidate copied from current git diff for the verified target",
             "applicability checked against git index with git apply --check --cached",
         ],
-        "unified_diff": diff_text,
+        "diff_ref": str(diff_path),
+        "diff_sha256": hashlib.sha256(diff_text.encode("utf-8")).hexdigest(),
+        "diff_chars": len(diff_text),
+        "diff_tail": diff_text[-4000:],
         "diff_path": str(diff_path),
         "validation_commands": validation_commands_for_diff(rel_path, diff_path, cached=True),
         "applicability_check": check,
@@ -288,10 +292,8 @@ def render_markdown(report: dict[str, Any]) -> str:
                 f"- Passed: `{item.get('passed')}`",
                 f"- Reason: {item.get('reason')}",
                 f"- Diff path: `{item.get('diff_path')}`",
-                "",
-                "```diff",
-                str(item.get("unified_diff") or "").rstrip(),
-                "```",
+                f"- Diff chars: `{item.get('diff_chars')}`",
+                f"- Diff sha256: `{item.get('diff_sha256')}`",
                 "",
             ]
         )

@@ -105,6 +105,23 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     postrun = read_json(run_dir / "external_heap_postrun_package.json")
     revision = read_json(run_dir / "external_heap_revision_context.json")
     pointer = read_json(run_dir / "external_heap_block_pointer_manifest.json")
+    causality_path_value = str(postrun.get("causality_json") or "")
+    causality_path = (
+        resolve_path(repo_root, causality_path_value)
+        if causality_path_value
+        else run_dir / "heap_final_causality_normalized.json"
+    )
+    causality = read_json(causality_path)
+    causal_chain_passed = (
+        postrun.get("causality_passed")
+        if "causality_passed" in postrun
+        else causality.get("causal_chain_passed")
+    )
+    product_acceptance_passed = (
+        postrun.get("product_acceptance_passed")
+        if "product_acceptance_passed" in postrun
+        else causality.get("product_acceptance_passed")
+    )
     matrix, matrix_path = load_code_matrix(repo_root, run_dir, gate)
     pointer_reconstruction = build_pointer_reconstruction(pointer, revision)
     decision = as_dict(composer.get("operator_decision"))
@@ -310,6 +327,9 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         revision=revision,
         matrix=matrix,
         gate=gate,
+        product_acceptance_passed=(
+            product_acceptance_passed if isinstance(product_acceptance_passed, bool) else None
+        ),
     )
     blockers.extend(str(item) for item in pointer_reconstruction.get("errors", []))
     if open_pointer_count_final > 0:
@@ -393,6 +413,9 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "continuation_required": blocked_continuation,
         "soft_close_reason": final_soft_close_reason,
         "product_blocked_reason": "" if code_product_ready else final_soft_close_reason,
+        "causal_chain_passed": causal_chain_passed,
+        "product_acceptance_passed": product_acceptance_passed,
+        "causality_json": str(causality_path) if causality_path.exists() else "",
         "soft_lock_state": soft_lock_state,
         "soft_lock_closure_owner_decision": gpu1_closure_display,
         "gpu0_closure_agreement": gpu0_closure_display,

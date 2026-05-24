@@ -14,7 +14,7 @@ from ia_carmine.runtime.heap_gate.provider_recovery import (
     maybe_run_provider_recovery,
     provider_recovery_status,
 )
-from ia_carmine.runtime.heap_gate.runtime_common import Any, PROVIDER_REQUIREMENTS, PROVIDER_START_REQUIREMENTS, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
+from ia_carmine.runtime.heap_gate.runtime_common import Any, PROVIDER_REQUIREMENTS, PROVIDER_START_REQUIREMENTS, evaluate_terminal_invariant_records, now_iso, record_lane_diagnostic, render_invariant, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
 LAB_BROKER_TOOLS = {
     "agent_runtime_debug_lab",
     "run_heap_code_execution_matrix",
@@ -406,18 +406,17 @@ class RuntimeGateRunLoopMixin:
             self.repo_root, self.heap_exchange_paths()["exit_product"]
         )
         metrics["heap_exchange_exit_passed"] = heap_exchange_exit_product.get("passed")
-        self.errors.extend(
-            evaluate_terminal_invariants(
-                metrics=metrics,
-                missing_requirements=unsatisfied_requirements,
-                lane_gate_passed=bool(lane_gate["passed"]),
-                degraded_lanes=list(lane_gate["unviable_lanes"]),
-                final_bridge_reports=final_bridge_reports,
-                allow_provider_generation=bool(self.args.allow_provider_generation),
-                provider_execution_performed=bool(self.provider_execution_performed),
-                detailed_output_expected=bool(self.detailed_output_expected()),
-            )
+        terminal_invariant_records = evaluate_terminal_invariant_records(
+            metrics=metrics,
+            missing_requirements=unsatisfied_requirements,
+            lane_gate_passed=bool(lane_gate["passed"]),
+            degraded_lanes=list(lane_gate["unviable_lanes"]),
+            final_bridge_reports=final_bridge_reports,
+            allow_provider_generation=bool(self.args.allow_provider_generation),
+            provider_execution_performed=bool(self.provider_execution_performed),
+            detailed_output_expected=bool(self.detailed_output_expected()),
         )
+        self.errors.extend(render_invariant(record) for record in terminal_invariant_records)
         return {
             "schema_version": 1,
             "kind": "heap_runtime_completeness_gate",
@@ -426,6 +425,7 @@ class RuntimeGateRunLoopMixin:
             "stamp": self.stamp,
             "passed": not self.errors,
             "metrics": metrics,
+            "terminal_invariant_records": terminal_invariant_records,
             "state": self.json_safe_coordination_payload(self.state, name="state"),
             "budget_governor": self.budget_governor,
             "heap_snapshot": {

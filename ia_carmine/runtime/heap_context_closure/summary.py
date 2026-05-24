@@ -226,6 +226,13 @@ def _read_json_object(path_value: Any) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def _first_bool(*values: Any) -> bool:
+    for value in values:
+        if isinstance(value, bool):
+            return value
+    return False
+
+
 def _read_text(path_value: Any) -> str:
     if not path_value:
         return ""
@@ -278,6 +285,7 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
     long_md = str(external_payload.get("long_response_markdown") or "")
     long_json = Path(long_md).with_suffix(".json") if long_md else None
     long_response = _read_json_object(long_json)
+    causality = _read_json_object(external_payload.get("causality_json"))
     revision = _read_json_object(external_payload.get("revision_context_json"))
     pointer = _read_json_object(external_payload.get("pointer_manifest_json"))
     stats = _dict_or_empty(long_response.get("stats"))
@@ -302,6 +310,28 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
         or _list_or_empty(revision.get("provider_rejection_reasons"))
         or _list_or_empty(stats.get("provider_rejection_reasons"))
     )
+    long_response_artifact_written = bool(
+        long_response.get("long_response_artifact_written")
+        or (long_md and Path(long_md).is_file())
+    )
+    causal_chain_passed = _first_bool(
+        external_payload.get("causality_passed"),
+        causality.get("causal_chain_passed"),
+        long_response.get("causal_chain_passed"),
+    )
+    product_acceptance_passed = _first_bool(
+        external_payload.get("product_acceptance_passed"),
+        causality.get("product_acceptance_passed"),
+        long_response.get("product_acceptance_passed"),
+    )
+    long_response_product_ready = bool(
+        long_response.get("long_response_product_ready")
+        or (
+            long_response_artifact_written
+            and causal_chain_passed
+            and product_acceptance_passed
+        )
+    )
     return {
         "postrun_passed": bool(external_payload.get("passed")),
         "provider_execution_performed": bool(
@@ -311,6 +341,11 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
         ),
         "long_response_path": str(long_json) if long_json else "",
         "long_response_passed": bool(long_response.get("passed")),
+        "long_response_artifact_written": long_response_artifact_written,
+        "long_response_product_ready": long_response_product_ready,
+        "causality_path": str(external_payload.get("causality_json") or ""),
+        "causal_chain_passed": causal_chain_passed,
+        "product_acceptance_passed": product_acceptance_passed,
         "revision_context_path": str(external_payload.get("revision_context_json") or ""),
         "revision_context_operational": bool(revision.get("operational_revision_context")),
         "revision_context_passed": bool(revision.get("passed")),
@@ -373,6 +408,12 @@ def _launcher_contract_errors(
     if getattr(args, "allow_provider_generation", False):
         if not external_contract.get("provider_execution_performed"):
             errors.append("provider execution evidence is missing")
+        if not external_contract.get("long_response_artifact_written"):
+            errors.append("external heap long response artifact is missing")
+        if not external_contract.get("causal_chain_passed"):
+            errors.append("external heap causal chain did not pass")
+        if not external_contract.get("product_acceptance_passed"):
+            errors.append("external heap product acceptance did not pass")
         if external_contract.get("provider_rejection_reasons"):
             errors.append(
                 "provider work rejected: "

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -99,9 +100,17 @@ def candidate_proposal_items(report: dict[str, Any]) -> list[dict[str, Any]]:
     for candidate in report.get("candidates") or []:
         if not isinstance(candidate, dict) or candidate.get("passed") is not True:
             continue
-        diff_text = str(candidate.get("unified_diff") or "").strip()
+        diff_path_value = str(candidate.get("diff_path") or candidate.get("diff_ref") or "")
+        diff_path = Path(diff_path_value)
+        if diff_path_value and not diff_path.is_absolute():
+            diff_path = repo_root_from_candidate_report(report) / diff_path
+        try:
+            diff_text = diff_path.read_text(encoding="utf-8-sig", errors="replace").strip()
+        except Exception:
+            diff_text = str(candidate.get("unified_diff") or "").strip()
         if not diff_text:
             continue
+        diff_sha = hashlib.sha256(diff_text.encode("utf-8")).hexdigest()
         items.append(
             {
                 "target_file": candidate.get("target_file"),
@@ -117,13 +126,21 @@ def candidate_proposal_items(report: dict[str, Any]) -> list[dict[str, Any]]:
                     "git apply --check passed without modifying sources",
                     "source_writes_performed remains false",
                 ],
-                "code_or_patch_sketch": diff_text,
+                "code_or_patch_sketch": "",
+                "diff_ref": diff_path_value,
+                "diff_sha256": diff_sha,
+                "diff_chars": len(diff_text),
+                "diff_tail": diff_text[-4000:],
                 "diff_path": candidate.get("diff_path"),
                 "reason": candidate.get("reason"),
                 "evidence": candidate.get("evidence") or [],
             }
         )
     return items
+
+
+def repo_root_from_candidate_report(report: dict[str, Any]) -> Path:
+    return Path(str(report.get("repo_root") or ".")).resolve(strict=False)
 
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:

@@ -45,6 +45,14 @@ def _messages(items: Iterable[Any]) -> list[str]:
     return [str(item) for item in items if str(item).strip()]
 
 
+def _invariant_records(items: Iterable[Any]) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for item in items:
+        if isinstance(item, dict):
+            records.append(item)
+    return records
+
+
 def _returncode_increment(returncodes: Iterable[Any]) -> int:
     total = 0
     for item in returncodes:
@@ -78,6 +86,35 @@ def _systemic_product_lie(messages: Iterable[str]) -> bool:
     return any(term in joined for term in SYSTEMIC_PRODUCT_LIE_TERMS)
 
 
+def _message_counter_buckets(messages: Iterable[str]) -> dict[str, int]:
+    buckets = {
+        "script_gaming": 0,
+        "provider_start": 0,
+        "product_acceptance": 0,
+        "runtime_blocker": 0,
+    }
+    for message in messages:
+        text = str(message)
+        if text.startswith("AI STAI GIOCANDO:"):
+            buckets["script_gaming"] += 1
+        elif text.startswith("PROVIDER_START_BLOCKED:"):
+            buckets["provider_start"] += 1
+        elif text.startswith("PRODUCT_ACCEPTANCE_BLOCKED:"):
+            buckets["product_acceptance"] += 1
+        elif text.startswith(
+            (
+                "LANE_UNVIABLE:",
+                "CAUSALITY_BLOCKED:",
+                "RECOVERY_REQUIRED:",
+                "METRIC_CONSISTENCY_BLOCKED:",
+                "PROVIDER_OUTPUT_CONTRACT_VIOLATION:",
+                "TERMINAL_BLOCKED:",
+            )
+        ):
+            buckets["runtime_blocker"] += 1
+    return buckets
+
+
 def _interrupted(value: Any) -> bool:
     if isinstance(value, str):
         return value.strip().lower() in {"1", "true", "yes", "operator", "user"}
@@ -93,10 +130,12 @@ def classify_codex_failure_counters(
 ) -> dict[str, Any]:
     """Classify counter increments from smoke/run errors and warnings.
 
-    Positive return codes increment the script-gaming regression counter by the
-    exact numeric value. If the operator/user closes the run, non-lie operational
-    counters increment by 1 while the lie counter remains text-driven. Error or
-    warning categories/messages containing terms such as "complete",
+    Positive return codes are reported as failed_run_returncode, not as
+    script-gaming regressions. Script-gaming increments only from structured
+    invariants with counts_as_script_gaming=true or from the explicit
+    AI STAI GIOCANDO prefix. If the operator/user closes the run, non-lie
+    operational counters increment by 1 while the lie counter remains
+    text-driven. Error or warning categories/messages containing terms such as "complete",
     "fuorviante/fuorvianti", "misleading", or attempts to hide/silence warnings
     and errors, increment the separate misleading/Codex lie counter once per
     matched category.
@@ -104,14 +143,43 @@ def classify_codex_failure_counters(
 
     error_messages = _messages(errors)
     warning_messages = _messages(warnings)
+    records = [*_invariant_records(errors), *_invariant_records(warnings)]
     hits = _misleading_hits([*error_messages, *warning_messages])
-    systemic_product_lie = _systemic_product_lie([*error_messages, *warning_messages])
+    systemic_product_lie = _systemic_product_lie([*error_messages, *warning_messages]) or any(
+        bool(record.get("counts_as_product_lie")) for record in records
+    )
     interrupted = _interrupted(user_interrupted)
     operator_increment = 1 if interrupted else 0
-    returncode_increment = 0 if interrupted else _returncode_increment(returncodes)
+    failed_returncode = 0 if interrupted else _returncode_increment(returncodes)
+    buckets = _message_counter_buckets([*error_messages, *warning_messages])
+    record_script_gaming = sum(1 for record in records if record.get("counts_as_script_gaming"))
+    record_provider_start = sum(
+        1 for record in records if record.get("category") == "provider_start_blocker"
+    )
+    record_product_acceptance = sum(
+        1 for record in records if record.get("category") == "product_acceptance_blocker"
+    )
+    record_runtime_blocker = sum(
+        1
+        for record in records
+        if str(record.get("category") or "")
+        in {
+            "lane_viability_blocker",
+            "causality_blocker",
+            "recovery_blocker",
+            "metric_consistency_blocker",
+            "provider_output_contract_violation",
+        }
+    )
     return {
         "kind": "codex_failure_counter_increments",
-        "script_gaming_regression_increment": returncode_increment + operator_increment,
+        "script_gaming_regression_increment": buckets["script_gaming"] + record_script_gaming,
+        "runtime_blocker_increment": buckets["runtime_blocker"] + record_runtime_blocker,
+        "product_acceptance_blocker_increment": (
+            buckets["product_acceptance"] + record_product_acceptance
+        ),
+        "provider_start_blocker_increment": buckets["provider_start"] + record_provider_start,
+        "failed_run_returncode": failed_returncode,
         "operator_block_increment": operator_increment,
         "user_interrupted": interrupted,
         "misleading_codex_lie_increment": len(hits),
@@ -135,6 +203,9 @@ COUNTER_LABELS = {
     "misleading_codex_lie_increment": ("Misleading/Codex lie evidence count",),
     "systemic_product_lie_increment": ("Systemic product-lie evidence count",),
     "systemic_product_lie_severity": ("Systemic product-lie severity score",),
+    "runtime_blocker_increment": ("Runtime blocker count",),
+    "product_acceptance_blocker_increment": ("Product acceptance blocker count",),
+    "provider_start_blocker_increment": ("Provider start blocker count",),
 }
 
 CANONICAL_COUNTER_MARKDOWN = (
@@ -173,6 +244,9 @@ def apply_codex_failure_counter_updates(
         for key in (
             "operator_block_increment",
             "script_gaming_regression_increment",
+            "runtime_blocker_increment",
+            "product_acceptance_blocker_increment",
+            "provider_start_blocker_increment",
             "misleading_codex_lie_increment",
             "systemic_product_lie_increment",
             "systemic_product_lie_severity",

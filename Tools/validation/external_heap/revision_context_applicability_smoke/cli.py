@@ -224,6 +224,7 @@ runtime_universe_contract = RuntimeUniverseContract()
                 "accepted": False,
                 "preview": current_preview,
                 "candidate_response_preview": current_preview,
+                "candidate_response_full_verified": True,
             },
             {
                 "block_type": "peer_review",

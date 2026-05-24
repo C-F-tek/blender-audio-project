@@ -22,7 +22,11 @@ if str(repo_root) not in sys.path:
 from ia_carmine._shared import heap_source_anchors as source_anchors
 from ia_carmine.runtime.heap_gate.provider_tool_scheduler import provider_patch_synthesis_plan
 from ia_carmine.runtime.heap_gate.target_planner import RuntimeTargetPlanner, request_focus_text, tokenize
-from ia_carmine.runtime.heap_gate.terminal_invariants import evaluate_terminal_invariants
+from ia_carmine.runtime.heap_gate.terminal_invariants import (
+    evaluate_terminal_invariant_records,
+    evaluate_terminal_invariants,
+    render_invariant,
+)
 from ia_carmine.runtime.heap_provider.budget_governor import (
     ProviderBudgetConfig,
     build_heap_provider_budget_governor,
@@ -88,6 +92,7 @@ __all__ = [
     "command_env",
     "datetime",
     "evaluate_terminal_invariants",
+    "evaluate_terminal_invariant_records",
     "event_payloads_by_type",
     "hashlib",
     "json",
@@ -101,6 +106,7 @@ __all__ = [
     "read_request_file",
     "record_lane_diagnostic",
     "render_universe_markdown",
+    "render_invariant",
     "repo_rel",
     "request_focus_text",
     "resolve_child_python",

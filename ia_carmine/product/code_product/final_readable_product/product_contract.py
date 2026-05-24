@@ -55,6 +55,7 @@ def final_product_blockers(
     revision: dict[str, Any],
     matrix: dict[str, Any],
     gate: dict[str, Any],
+    product_acceptance_passed: bool | None = None,
 ) -> list[str]:
     blockers: list[str] = []
     if gate and gate.get("passed") is False:
@@ -62,6 +63,8 @@ def final_product_blockers(
     gate_errors = gate.get("errors") if isinstance(gate.get("errors"), list) else []
     if gate_errors:
         blockers.append("heap runtime completeness gate reported errors")
+    if product_acceptance_passed is not True:
+        blockers.append("external heap product acceptance did not pass")
     if not pointer:
         blockers.append("external heap pointer manifest is missing")
     elif not truthy(pointer.get("passed")):

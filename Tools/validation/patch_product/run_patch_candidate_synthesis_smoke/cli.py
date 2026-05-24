@@ -154,10 +154,14 @@ def main() -> int:
         errors.append("candidate must be evidence_owned, not current worktree diagnostic")
     if data.get("current_worktree_diagnostic_candidate_count") != 0:
         errors.append("default synthesis must not copy current worktree diffs")
+    if candidates and candidates[0].get("unified_diff"):
+        errors.append("candidate report must not inline full unified_diff")
+    if candidates and not candidates[0].get("diff_ref"):
+        errors.append("candidate report must publish diff_ref")
     if before != after:
         errors.append("source file was modified by synthesis")
-    if "```diff" not in md_body:
-        errors.append("markdown report does not contain diff block")
+    if "```diff" in md_body:
+        errors.append("markdown report must not inline full diff block")
     report = {
         "schema_version": 1,
         "kind": "patch_candidate_synthesis_smoke",

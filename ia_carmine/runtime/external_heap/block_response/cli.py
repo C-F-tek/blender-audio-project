@@ -327,11 +327,23 @@ def main() -> int:
     )
     write_text(output, markdown)
     contract = pointer_product_contract(pointer)
+    long_response_artifact_written = bool(output.is_file() and output.stat().st_size > 0)
+    causal_chain_passed = causality.get("causal_chain_passed") is True
+    product_acceptance_passed = causality.get("product_acceptance_passed") is True
+    long_response_product_ready = bool(
+        long_response_artifact_written
+        and causal_chain_passed
+        and product_acceptance_passed
+    )
     report = {
         "schema_version": 1,
         "kind": "external_heap_primary_long_response_composer",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "passed": True,
+        "passed": long_response_artifact_written,
+        "long_response_artifact_written": long_response_artifact_written,
+        "long_response_product_ready": long_response_product_ready,
+        "causal_chain_passed": causal_chain_passed,
+        "product_acceptance_passed": product_acceptance_passed,
         "pointer_manifest": str(pointer_path),
         "composer_json": (str(Path(args.composer_json).resolve()) if args.composer_json else ""),
         "causality_json": (str(Path(args.causality_json).resolve()) if args.causality_json else ""),

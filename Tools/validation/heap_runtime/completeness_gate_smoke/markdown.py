@@ -33,6 +33,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(["", "## Codex Failure Counter Increments", ""])
         for key in (
             "script_gaming_regression_increment",
+            "runtime_blocker_increment",
+            "product_acceptance_blocker_increment",
+            "provider_start_blocker_increment",
+            "failed_run_returncode",
             "operator_block_increment",
             "misleading_codex_lie_increment",
             "systemic_product_lie_increment",

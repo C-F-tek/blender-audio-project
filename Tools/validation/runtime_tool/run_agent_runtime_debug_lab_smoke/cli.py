@@ -172,6 +172,15 @@ def main() -> int:
             errors.append(f"guardrail {key} must be false")
     if guardrails.get("allowlist_enforced") is not True:
         errors.append("allowlist_enforced must be true")
+    for operation in valid_data.get("operations") or []:
+        if not isinstance(operation, dict) or operation.get("executed") is not True:
+            continue
+        if operation.get("type") == "powershell_parse":
+            for parse_result in operation.get("parse_results") or []:
+                if not parse_result.get("stdout_ref") or not parse_result.get("stderr_ref"):
+                    errors.append("powershell_parse result missing stdout_ref/stderr_ref")
+        elif not operation.get("stdout_ref") or not operation.get("stderr_ref"):
+            errors.append(f"{operation.get('id') or operation.get('type')} missing stdout_ref/stderr_ref")
     if invalid_returncode == 0 or invalid_data.get("passed") is not False:
         errors.append("invalid debug lab request was not rejected")
     if invalid_data.get("failed_count", 0) < 1:

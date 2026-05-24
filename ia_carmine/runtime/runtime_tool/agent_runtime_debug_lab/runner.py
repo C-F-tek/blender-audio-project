@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
 from typing import Any
+
+from ia_carmine._shared.file_backed_transport import write_text_artifact
 
 from .policy import (
     ALLOWED_OPERATION_TYPES,
@@ -27,6 +30,33 @@ def tail(text: str, limit: int) -> str:
     return text[-limit:] if len(text) > limit else text
 
 
+def command_io_refs(cwd: Path, command: list[str], stdout: str, stderr: str) -> dict[str, Any]:
+    digest = hashlib.sha256(json.dumps(command, ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
+    io_dir = cwd / "output" / "validation" / "agent_runtime_debug_lab_io"
+    stdout_ref = write_text_artifact(
+        cwd,
+        io_dir,
+        name=f"{digest}_stdout",
+        text=stdout,
+        kind="debug_lab_stdout",
+        producer="agent_runtime_debug_lab",
+    )
+    stderr_ref = write_text_artifact(
+        cwd,
+        io_dir,
+        name=f"{digest}_stderr",
+        text=stderr,
+        kind="debug_lab_stderr",
+        producer="agent_runtime_debug_lab",
+    )
+    return {
+        "stdout_ref": stdout_ref,
+        "stderr_ref": stderr_ref,
+        "stdout_chars": len(stdout),
+        "stderr_chars": len(stderr),
+    }
+
+
 def run_command(command: list[str], cwd: Path, timeout: int, tail_chars: int) -> dict[str, Any]:
     started = time.monotonic()
     try:
@@ -38,6 +68,8 @@ def run_command(command: list[str], cwd: Path, timeout: int, tail_chars: int) ->
             check=False,
             timeout=timeout,
         )
+        stdout = result.stdout or ""
+        stderr = result.stderr or ""
         elapsed = round(time.monotonic() - started, 3)
         return {
             "executed": True,
@@ -45,11 +77,14 @@ def run_command(command: list[str], cwd: Path, timeout: int, tail_chars: int) ->
             "returncode": result.returncode,
             "elapsed_seconds": elapsed,
             "timeout": False,
-            "stdout_tail": tail(result.stdout or "", tail_chars),
-            "stderr_tail": tail(result.stderr or "", tail_chars),
+            "stdout_tail": tail(stdout, tail_chars),
+            "stderr_tail": tail(stderr, tail_chars),
+            **command_io_refs(cwd, command, stdout, stderr),
             "ok": result.returncode == 0,
         }
     except subprocess.TimeoutExpired as exc:
+        stdout = str(exc.stdout or "")
+        stderr = str(exc.stderr or "")
         elapsed = round(time.monotonic() - started, 3)
         return {
             "executed": True,
@@ -57,8 +92,9 @@ def run_command(command: list[str], cwd: Path, timeout: int, tail_chars: int) ->
             "returncode": 124,
             "elapsed_seconds": elapsed,
             "timeout": True,
-            "stdout_tail": tail(str(exc.stdout or ""), tail_chars),
-            "stderr_tail": tail(str(exc.stderr or ""), tail_chars),
+            "stdout_tail": tail(stdout, tail_chars),
+            "stderr_tail": tail(stderr, tail_chars),
+            **command_io_refs(cwd, command, stdout, stderr),
             "ok": False,
             "error": f"timeout after {timeout}s",
         }
@@ -175,6 +211,10 @@ def run_powershell_parse(repo_root: Path, operation: dict[str, Any]) -> dict[str
                 "returncode": result.get("returncode"),
                 "stdout_tail": result.get("stdout_tail", ""),
                 "stderr_tail": result.get("stderr_tail", ""),
+                "stdout_ref": result.get("stdout_ref") or {},
+                "stderr_ref": result.get("stderr_ref") or {},
+                "stdout_chars": result.get("stdout_chars", 0),
+                "stderr_chars": result.get("stderr_chars", 0),
                 "errors": (
                     []
                     if result.get("ok") is True

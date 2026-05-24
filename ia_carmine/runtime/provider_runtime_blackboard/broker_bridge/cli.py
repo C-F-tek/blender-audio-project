@@ -212,9 +212,26 @@ def broker_result_target_from_source(value: object) -> str:
     return "orchestrator"
 
 
-def request_sources_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
+def broker_report_tool_requests(repo_root: Path, broker_report: dict[str, Any]) -> list[dict[str, Any]]:
+    requests = broker_report.get("tool_requests")
+    if isinstance(requests, list):
+        return [item for item in requests if isinstance(item, dict)]
+    ref = safe_dict(broker_report.get("tool_requests_ref"))
+    ref_path = str(ref.get("path") or "").strip()
+    if ref_path:
+        try:
+            payload = read_json_windows_safe(resolve_transport_path(repo_root, ref_path))
+            requests = payload.get("tool_requests")
+            if isinstance(requests, list):
+                return [item for item in requests if isinstance(item, dict)]
+        except Exception:
+            return []
+    return []
+
+
+def request_sources_by_id(repo_root: Path, broker_report: dict[str, Any]) -> dict[str, str]:
     mapping: dict[str, str] = {}
-    for request in broker_report.get("tool_requests", []):
+    for request in broker_report_tool_requests(repo_root, broker_report):
         if not isinstance(request, dict):
             continue
         request_id = str(request.get("id") or request.get("request_id") or "")
@@ -226,9 +243,9 @@ def request_sources_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     return mapping
 
 
-def request_requirements_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
+def request_requirements_by_id(repo_root: Path, broker_report: dict[str, Any]) -> dict[str, str]:
     mapping: dict[str, str] = {}
-    for request in broker_report.get("tool_requests", []):
+    for request in broker_report_tool_requests(repo_root, broker_report):
         if not isinstance(request, dict):
             continue
         request_id = str(request.get("id") or request.get("request_id") or "")
@@ -238,9 +255,9 @@ def request_requirements_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     return mapping
 
 
-def request_correlations_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
+def request_correlations_by_id(repo_root: Path, broker_report: dict[str, Any]) -> dict[str, str]:
     mapping: dict[str, str] = {}
-    for request in broker_report.get("tool_requests", []):
+    for request in broker_report_tool_requests(repo_root, broker_report):
         if not isinstance(request, dict):
             continue
         request_id = str(request.get("id") or request.get("request_id") or "")
@@ -251,9 +268,9 @@ def request_correlations_by_id(broker_report: dict[str, Any]) -> dict[str, str]:
     return mapping
 
 
-def request_payloads_by_id(broker_report: dict[str, Any]) -> dict[str, dict[str, Any]]:
+def request_payloads_by_id(repo_root: Path, broker_report: dict[str, Any]) -> dict[str, dict[str, Any]]:
     mapping: dict[str, dict[str, Any]] = {}
-    for request in broker_report.get("tool_requests", []):
+    for request in broker_report_tool_requests(repo_root, broker_report):
         if not isinstance(request, dict):
             continue
         request_id = str(request.get("id") or request.get("request_id") or "")
@@ -350,10 +367,10 @@ def append_broker_results(
     heap: ProviderRuntimeHeap, broker_report: dict[str, Any], repo_root: Path
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
-    source_by_request_id = request_sources_by_id(broker_report)
-    correlation_by_request_id = request_correlations_by_id(broker_report)
-    requirement_by_request_id = request_requirements_by_id(broker_report)
-    payload_by_request_id = request_payloads_by_id(broker_report)
+    source_by_request_id = request_sources_by_id(repo_root, broker_report)
+    correlation_by_request_id = request_correlations_by_id(repo_root, broker_report)
+    requirement_by_request_id = request_requirements_by_id(repo_root, broker_report)
+    payload_by_request_id = request_payloads_by_id(repo_root, broker_report)
     for result in broker_report.get("tool_results", []):
         if not isinstance(result, dict):
             continue
@@ -472,10 +489,6 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         )
         if broker_report:
             broker_report["output"] = repo_rel(repo_root, broker_output)
-            # The broker output may not echo the original request packet. Keep
-            # the generated tool_requests attached here so broker_result events
-            # can be routed back to the provider lane that created the request.
-            broker_report.setdefault("tool_requests", packet.get("tool_requests", []))
             broker_result_events = append_broker_results(heap, broker_report, repo_root)
 
     snapshot = heap.write_snapshot()

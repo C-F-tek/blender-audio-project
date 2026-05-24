@@ -349,6 +349,7 @@ class _FakeNativeOwner:
     def __init__(self, provider_reports: list[dict[str, Any]]) -> None:
         self.stamp = "smoke"
         self.args = SimpleNamespace(request_file="")
+        self.repo_root = Path.cwd().resolve()
         self.provider_native_tool_call_ids: set[str] = set()
         self.state = {"needs": [], "tool_requests": []}
         self.tool_request_count = 0
@@ -372,6 +373,8 @@ class _FakeNativeOwner:
 
     def request_text(self) -> str:
         return "smoke request"
+    def provider_work_dir(self) -> Path:
+        return self.repo_root / "output" / "validation" / "provider_loop_activation_smoke"
 
     def publish(self, source: str, event_type: str, payload: dict[str, Any], **kwargs: Any) -> None:
         self.published.append({"source": source, "event_type": event_type, "payload": payload, **kwargs})

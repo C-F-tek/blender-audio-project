@@ -100,7 +100,7 @@ def render_markdown(
     _append_json_blocks(lines, "GPU0 companion review/refine", gpu0_reviews, "Nessuna review GPU0 trovata nei proposal/provider report.")
     _append_json_blocks(lines, "NPU workload/audit pieces", npu_audits, "Nessun audit/workload NPU trovato nei proposal/provider report.")
     _append_provider_reports(lines, repo_root, provider_reports)
-    _append_full_proposals(lines, proposals, max_proposal_chars)
+    _append_full_proposals(lines, proposals, max_proposal_chars, repo_root)
     _append_context_refs(lines, context_refs, startup_manifest)
     lines.extend(["## Concrete action list", ""])
     lines.extend(f"- {action}" for action in action_list)
@@ -212,7 +212,7 @@ def _append_provider_reports(
 
 
 def _append_full_proposals(
-    lines: list[str], proposals: list[dict[str, Any]], max_proposal_chars: int
+    lines: list[str], proposals: list[dict[str, Any]], max_proposal_chars: int, repo_root: Path
 ) -> None:
     lines.extend(["## Proposal chunks", ""])
     if not proposals:

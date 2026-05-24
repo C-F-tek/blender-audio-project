@@ -486,7 +486,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         errors.append("ready metric set must reject failed generic_write capture")
     if not any("context_hierarchy_invalid" in error for error in context_invalid_errors):
         errors.append("ready metric set must reject invalid GPU1/GPU0/NPU context hierarchy")
-    if not any("GPU0 secondary decision schema" in error for error in gpu0_schema_invalid_errors):
+    if not any("gpu0_secondary_decision_schema_invalid" in error for error in gpu0_schema_invalid_errors):
         errors.append("ready metric set must reject invalid GPU0 secondary schema")
     if not any("GPU0 free text" in error for error in gpu0_free_text_decision_errors):
         errors.append("ready metric set must reject GPU0 free text as decision/product")
@@ -516,7 +516,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         errors.append("ready metric set must reject missing GPU1 leader")
     if not any("gpu1_primary_workload_missing" in error for error in primary_workload_missing_errors):
         errors.append("ready metric set must reject missing GPU1 primary workload")
-    if not any("gpu1_primary_evidence_missing" in error for error in primary_evidence_missing_errors):
+    if not any("gpu1_native_tool_evidence_missing_when_required" in error for error in primary_evidence_missing_errors):
         errors.append("ready metric set must reject missing GPU1 primary evidence")
     if not any(
         "pre_provider_closed_with_tentable_requirement:runtime_file_refs" in error
@@ -599,8 +599,16 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     )
     if "product_blocked_reason" not in arbiter_product or "npu_peer_followup_pending" not in arbiter_product:
         errors.append("arbiter product must expose peer follow-up as product blocked reason")
-    if not all(error.startswith("AI STAI GIOCANDO:") for error in bad_errors):
-        errors.append("terminal errors must use AI STAI GIOCANDO prefix")
+    from Tools.validation._shared.codex_failure_counters import classify_codex_failure_counters
+    pre_counters = classify_codex_failure_counters(returncodes=[2], errors=pre_provider_exhausted_errors)
+    gpu0_text_counters = classify_codex_failure_counters(errors=gpu0_free_text_decision_errors)
+    broken_counters = classify_codex_failure_counters(errors=bad_errors)
+    if pre_counters.get("script_gaming_regression_increment") or pre_counters.get("provider_start_blocker_increment") != 1:
+        errors.append("runtime_file_refs provider-start blocker must not increment script-gaming")
+    if gpu0_text_counters.get("script_gaming_regression_increment") != 1:
+        errors.append("GPU0 free text decision must increment script-gaming")
+    if broken_counters.get("product_acceptance_blocker_increment") < 1:
+        errors.append("ready matrix failure must increment product acceptance blocker")
     expected_negative_groups = (
         generic_claims_patch_errors, generic_claims_source_errors, gpu0_followup_errors,
         npu_followup_errors, generic_capture_failed_errors, context_invalid_errors,

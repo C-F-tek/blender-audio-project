@@ -107,8 +107,8 @@ def classify_request(text: str) -> str:
     if any(token in normalized for token in ("patch", "modifica", "codice", "script", "repo")):
         return "repo_work_request"
     return "general_request"
-def build_gpu0_peer_response(report: dict[str, Any]) -> dict[str, Any]:
-    request = str(report.get("request_input") or "").strip()
+def build_gpu0_peer_response(report: dict[str, Any], request_input: str) -> dict[str, Any]:
+    request = str(request_input or "").strip()
     classification = classify_request(request)
     workload_ok = bool(
         report.get("openvino_gpu0_observable_workload_passed")
@@ -191,7 +191,19 @@ def main() -> int:
     report["min_seconds"] = float(args.min_seconds)
     report["requested_role"] = str(args.role)
     request_input = read_text_file(repo_root, args.request_file) if args.request_file else str(args.request or "").strip()
-    report["request_input"] = request_input
+    report.update(
+        write_text_evidence_fields(
+            repo_root,
+            output.parent / "provider_input_artifacts",
+            prefix="request_input",
+            name="openvino_gpu0_request_input",
+            text=request_input,
+            kind="provider_request_input",
+            producer="openvino_gpu0_workload_report",
+            suffix=".md",
+        )
+    )
+    report["request_input_preview"] = request_input[:1200]
     report["request_file"] = str(args.request_file or "")
     report["request_transport"] = "operator_request_file" if args.request_file else "inline_cli"
     startup_context, startup_context_source = startup_context_preview(
@@ -248,7 +260,7 @@ def main() -> int:
     tool_loop = openvino_tool_loop_report(
         repo_root=repo_root,
         prompt=render_leader_peer_prompt(
-            report["request_input"] or "Call the broker tool needed to validate a heap code product.",
+            request_input or "Call the broker tool needed to validate a heap code product.",
             leader_packet,
             startup_context,
         ),
@@ -324,7 +336,7 @@ def main() -> int:
         )
         report["passed"] = False
     report["repo_root"] = str(repo_root)
-    peer_response = build_gpu0_peer_response(report)
+    peer_response = build_gpu0_peer_response(report, request_input)
     peer_response_text = str(peer_response.pop("response_text", "") or "")
     peer_response.update(
         write_text_evidence_fields(

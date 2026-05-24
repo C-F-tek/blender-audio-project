@@ -88,7 +88,7 @@ def candidate_text_from_block(block: dict[str, Any]) -> str:
     rejection snippets and existing block quality metadata.
     """
     parts: list[str] = []
-    if block.get("candidate_response_full_verified") is not False:
+    if block.get("candidate_response_full_verified") is True:
         value = block.get("candidate_response_preview")
         if value:
             parts.append(str(value))
@@ -119,11 +119,12 @@ def candidate_symbol_text_from_block(block: dict[str, Any]) -> str:
     back-propagation lane.
     """
     parts: list[str] = []
-    if block.get("candidate_response_full_verified") is not False:
-        value = block.get("candidate_response_preview")
-        if value:
-            parts.append(str(value))
-    for key in ("source_preview", "preview", "response_text"):
+    if block.get("candidate_response_full_verified") is not True:
+        return ""
+    value = block.get("candidate_response_preview")
+    if value:
+        parts.append(str(value))
+    for key in ("source_preview", "response_text"):
         value = block.get(key)
         if value:
             parts.append(str(value))

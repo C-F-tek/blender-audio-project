@@ -11,6 +11,7 @@ from typing import Any
 from ia_carmine._shared.file_backed_transport import (
     INLINE_TEXT_MAX_CHARS,
     should_materialize_inline,
+    text_sha256,
     validate_runtime_payload_manifest,
     write_json_artifact,
     write_text_artifact,
@@ -33,6 +34,7 @@ TEXT_ARG_FILE_TARGETS = {
 JSON_ARG_FILE_TARGETS = {
     "agent_runtime_debug_lab": {"request_json": "request_file"},
 }
+REPORT_INLINE_VALUE_MAX_CHARS = 512
 
 def extract_tool_requests(data: dict[str, Any]) -> list[dict[str, Any]]:
     requests = data.get("tool_requests", [])
@@ -47,6 +49,96 @@ def first_tool_request_source(tool_requests: list[dict[str, Any]]) -> str:
         if source:
             return source
     return ""
+
+
+def _sanitize_report_value(
+    repo_root: Path,
+    output_dir: Path,
+    value: Any,
+    name: str,
+) -> Any:
+    if isinstance(value, str):
+        if len(value) <= REPORT_INLINE_VALUE_MAX_CHARS:
+            return value
+        ref = write_text_artifact(
+            repo_root,
+            output_dir,
+            name=name,
+            text=value,
+            kind="broker_request_inline_text",
+            producer="agent_runtime_tool_broker",
+            suffix=".txt",
+        )
+        return {
+            "ref": ref,
+            "chars": len(value),
+            "sha256": text_sha256(value),
+            "tail": value[-REPORT_INLINE_VALUE_MAX_CHARS:],
+            "tail_chars": min(len(value), REPORT_INLINE_VALUE_MAX_CHARS),
+            "full_text_in_json": False,
+        }
+    if isinstance(value, list):
+        return [
+            _sanitize_report_value(repo_root, output_dir, item, f"{name}_{index:03d}")
+            for index, item in enumerate(value, start=1)
+        ]
+    if isinstance(value, dict):
+        return {
+            str(key): _sanitize_report_value(repo_root, output_dir, item, f"{name}_{key}")
+            for key, item in value.items()
+        }
+    return value
+
+
+def _sanitized_tool_request_packet_ref(
+    repo_root: Path,
+    out_dir: Path,
+    requests_data: dict[str, Any],
+    tool_requests: list[dict[str, Any]],
+    request_source: str,
+) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]:
+    packet_dir = out_dir / "request_packet_sanitized"
+    sanitized_requests = [
+        _sanitize_report_value(repo_root, packet_dir / "inline_text", request, f"tool_request_{index:03d}")
+        for index, request in enumerate(tool_requests, start=1)
+    ]
+    packet = {
+        "schema_version": 1,
+        "kind": "agent_runtime_tool_requests_sanitized",
+        "generated_at": now_iso(),
+        "request_kind": requests_data.get("kind"),
+        "source": request_source,
+        "tool_request_count": len(sanitized_requests),
+        "tool_requests": sanitized_requests,
+    }
+    packet_ref = write_json_artifact(
+        repo_root,
+        packet_dir,
+        name="request_packet",
+        payload=packet,
+        kind="agent_runtime_tool_request_packet_sanitized",
+        producer="agent_runtime_tool_broker",
+    )
+    tool_requests_ref = write_json_artifact(
+        repo_root,
+        packet_dir,
+        name="tool_requests",
+        payload={"schema_version": 1, "kind": "tool_requests_sanitized", "tool_requests": sanitized_requests},
+        kind="agent_runtime_tool_requests_sanitized",
+        producer="agent_runtime_tool_broker",
+    )
+    summary = [
+        {
+            "id": str(request.get("id") or request.get("request_id") or ""),
+            "tool": str(request.get("tool") or ""),
+            "source": str(request.get("source") or ""),
+            "lane": str(request.get("lane") or request.get("owner") or ""),
+            "arg_keys": sorted((request.get("args") if isinstance(request.get("args"), dict) else {}).keys()),
+        }
+        for request in sanitized_requests
+        if isinstance(request, dict)
+    ]
+    return packet_ref, tool_requests_ref, summary
 
 
 def infer_request_source(requests_data: dict[str, Any], request_path: Path | None) -> str:
@@ -490,6 +582,13 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     source_write_count = sum(1 for item in results if guardrails_for(item).get("source_writes_performed"))
     patch_application_count = sum(1 for item in results if guardrails_for(item).get("patch_application_performed"))
     operational_memory_clear_count = sum(1 for item in results if guardrails_for(item).get("operational_memory_clear_performed"))
+    request_packet_ref, tool_requests_ref, tool_requests_summary = _sanitized_tool_request_packet_ref(
+        repo_root,
+        out_dir,
+        requests_data,
+        tool_requests,
+        request_source,
+    )
 
     return {
         "schema_version": 1,
@@ -502,7 +601,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
             or stamp
         ),
         "payload_file": str(getattr(args, "payload_file", "") or requests_data.get("_payload_file") or ""),
-        "request_packet_ref": requests_data.get("_request_packet_ref") or {},
+        "request_packet_ref": request_packet_ref,
+        "input_request_packet_ref": requests_data.get("_request_packet_ref") or {},
+        "tool_requests_ref": tool_requests_ref,
         "request_file": repo_rel(request_path, repo_root) if request_path else "",
         "request_transport": request_transport,
         "request_kind": requests_data.get("kind"),
@@ -529,7 +630,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "dry_run": bool(args.dry_run),
         "tool_request_count": len(tool_requests),
         "tool_execution_count": len(executed),
-        "tool_requests": tool_requests,
+        "tool_requests_summary": tool_requests_summary,
         "blocked_tool_count": len(blocked),
         "failed_tool_count": len(failed),
         "nonblocking_failed_tool_count": len(nonblocking_failed),

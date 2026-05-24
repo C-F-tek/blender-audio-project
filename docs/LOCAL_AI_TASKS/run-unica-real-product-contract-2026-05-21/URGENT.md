@@ -5,21 +5,28 @@
 `run unica` must be one integrated recursive flow:
 
 ```text
-single input
--> universe creation
--> startup/memory/tool/chunk preload
--> heap blackboard and pointer graph
--> GPU1 primary planner
--> GPU0 coworker reviewer/refiner
--> NPU controlled microtask auditor
--> broker/tool evidence
--> matrix/lab and patch candidate synthesis
--> product bundle / CODE_PRODUCT_FULL_PATCH.md
+single input / task file
+-> file-backed runtime payload and dynamic context universe
+-> startup/memory/RAG/tool/chunk preload
+-> heap blackboard, pointer graph and revision context
+-> GPU1 primary planner/proposal packet
+-> async GPU0 packet_review_only coworker review/refine
+-> async NPU packet_review_only controlled microtask audit
+-> broker/native tool request-result evidence
+-> GPU1 recovery/congruence turn consumes GPU0/NPU pointer ids
+-> matrix/lab/debug/virtual-dev validation and patch candidate synthesis
+-> PLAN_PRODUCT_FULL_PATCH.md technical prompt/chat/proposal product
+-> CODE_PRODUCT_FULL_PATCH.md patch/code product when verified diff/code exists
+-> final readable Documents package or typed blocked continuation
 ```
 
-The product bundle must be reconstructed from heap memory, provider blocks and
-pointer links produced at each round. It must not depend on chat context, token
-window continuity, copied provider prose or a second out-of-band flow.
+The final package must be reconstructed from heap memory, provider blocks,
+pointer links and file-backed artifact refs produced at each round. It publishes
+two sibling product surfaces: `PLAN_PRODUCT_FULL_PATCH.md` for the recomposed
+GPU1 prompt/chat/proposal product, and `CODE_PRODUCT_FULL_PATCH.md` for the
+verified patch/code product when an applicable diff/code product exists. It must
+not depend on chat context, token window continuity, copied provider prose,
+inline HTTP/report blobs or a second out-of-band flow.
 
 `contractor_universe` is not excluded. Its `UniverseHeap`, `LogicalClock` and
 contractor-role model describe the dynamic heap scheduler and soft-time closure
@@ -31,15 +38,19 @@ mutually exclusive paths:
 
 ```text
 runtime universe / file-tool index
-startup manifest and memory reload
-tool catalog and broker bridge
+startup manifest, RAG hard surface and dynamic GPU1 context pack
+tool catalog, native schemas and broker bridge
 semantic code/evidence chunks
 contractor_universe scheduler surface
-GPU1/GPU0/NPU provider teamwork packet
-runtime debug lab and virtual dev environment
-code execution matrix and patch candidate synthesis
+GPU1 leader/proposal packet and closure decision
+async GPU0/NPU packet_review_only sidecar collections
+sidecar polling, recovery/congruence and consumed peer refs
+runtime debug lab, virtual dev environment and code execution matrix
+patch candidate synthesis and code-product intake boundary
 external pointer manifest and revision context
-final readable product / CODE_PRODUCT_FULL_PATCH.md
+final readable Documents package
+PLAN_PRODUCT_FULL_PATCH.md technical product
+CODE_PRODUCT_FULL_PATCH.md patch/code product
 ```
 
 The operator-provided `deep-research-report (1).md` is useful research input.
@@ -47,9 +58,11 @@ Adopt its heap/clock/contractor and report-I/O ideas only when they reinforce
 the single run-unica flow. Do not adopt its optional standalone dispatcher or
 runtime selector as a second product entry.
 
-The provider leader packet must expose this as `integrated_surface_map` and
-`contractor_universe_surface_contract` so GPU1, GPU0 and NPU operate inside the
-same heap/pointer universe.
+The provider leader packet and dynamic GPU1 context pack must expose this as
+`integrated_surface_map`, `contractor_universe_surface_contract`,
+`sidecar_scope_mode=packet_review_only` and artifact refs so GPU1, GPU0 and NPU
+operate inside the same heap/pointer universe without forcing GPU1 to wait for
+sidecar completion before its next pointer/recovery step.
 
 Resource/provider preflight is not static inspection. A report can correctly
 say `provider_execution_performed=false` and still have performed resource
@@ -186,6 +199,72 @@ governors, the correct exit is `blocked_continuation_product` with
 Preflight static failures from stale contract surfaces must be counted and
 reported, but they must not skip startup/provider when
 `product_entry_allowed=true`. Only real runtime blockers may stop startup.
+
+## Operator Update 2026-05-24
+
+The current direct command surface is valid when the dry run reports
+`canonical_entrypoint=python -m ia_carmine.cli run`, all fields come from direct
+CLI/profile-derived sources, and `--dry-run` performs no provider execution.
+For this workstation the active command must keep:
+
+```text
+repo_root = C:\Users\carmi\ProjectsDir\blender-audio-project
+python_exe = C:\Users\carmi\blender\blender-audio-project\.venv\Scripts\python.exe
+request_file = docs\LOCAL_AI_TASKS\run-unica-real-product-contract-2026-05-21\URGENT.md
+npu_model_dir = C:\Users\carmi\blender\npu-models\Phi-3.5-mini-instruct-int4-cw-ov
+```
+
+Current run-unica priority is not to make a stale static context file pass. The
+startup/provider boundary must use the current dynamic surfaces:
+
+```text
+gpu1_dynamic_context_pack
+rag_context_pack / hard RAG surface
+runtime_file_refs
+native broker tool schemas and tool request/result artifacts
+file-backed provider prompts, responses, stdout/stderr and patches
+```
+
+HTTP/API boundaries coordinate `job_id`, `payload_file` and metadata only. Large
+operator request text, GPU1 prompt/chat material, heap chunks, provider output,
+patch candidates, stdout/stderr and debug logs must live on filesystem artifacts
+with refs, bytes and sha256. Tail/excerpt fields are preview only. If a gate
+needs semantic evidence and a full ref is missing or corrupt, the run must block
+with a typed reason instead of accepting the tail.
+
+GPU1 remains the primary reasoning and closure lane. This does not reduce GPU1
+to a tool runner: GPU1 may produce prompt/chat/proposal/plan evidence, but
+tool, lab, matrix, debug and patch validation count only through native broker
+tool calls and deterministic artifacts. JSON/Markdown/prose that describes a
+tool call is not executable evidence.
+
+Terminal blockers must now be classified by cause:
+
+```text
+AI STAI GIOCANDO: fake tool/product/decision evidence was promoted
+PROVIDER_START_BLOCKED: provider prereq missing, for example runtime_file_refs
+LANE_UNVIABLE: required provider lane evidence missing or degraded
+PRODUCT_ACCEPTANCE_BLOCKED: ready/product acceptance is not proven
+CAUSALITY_BLOCKED: pointer/quorum/review chain is inconsistent
+RECOVERY_REQUIRED: a valid recovery/refinement turn is required
+METRIC_CONSISTENCY_BLOCKED: state counters contradict closure
+PROVIDER_OUTPUT_CONTRACT_VIOLATION: provider emitted non-executable tool text
+```
+
+`AI STAI GIOCANDO` must not be attached to every failed run. A blocked run with
+`runtime_file_refs_missing_before_provider_start` is a provider-start blocker,
+not script-gaming. GPU0 free text used as product/decision is script-gaming.
+Ready status with a missing matrix/lab/product acceptance blocker is product
+acceptance failure. The Codex failure counters must follow those categories and
+must not increment script-gaming only because a process returned nonzero.
+
+For the run produced by the current command, the final decision must be read
+from its own `intermediate_run_dir`, `final_root`, launcher summary and final
+readable product package. Do not verify this run by sorting old output folders
+or scraping the newest `operator_product_lab_summary.json` from an unrelated
+run. If the product cannot close, the correct result is
+`blocked_continuation_product` with typed blockers and resume/pointer evidence,
+not an empty code product or a post-hoc success claim.
 
 ## Provider Viability
 

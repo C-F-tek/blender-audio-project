@@ -18,6 +18,31 @@ from ia_carmine._shared.file_backed_transport import (
 from .common import EVENT_TYPES, LANES, tool_catalog_snapshot
 from .heap import ProviderRuntimeHeap
 
+SEMANTIC_FILE_BACKED_KEYS = {
+    "context_pack",
+    "heap_events",
+    "provider_output",
+    "response_text",
+    "patch_candidate",
+    "chunks",
+    "tool_results",
+}
+
+
+def inline_semantic_payload_keys(data: Any) -> list[str]:
+    found: set[str] = set()
+    if isinstance(data, dict):
+        for key, value in data.items():
+            text = str(key)
+            if text in SEMANTIC_FILE_BACKED_KEYS:
+                found.add(text)
+            found.update(inline_semantic_payload_keys(value))
+    elif isinstance(data, list):
+        for item in data:
+            found.update(inline_semantic_payload_keys(item))
+    return sorted(found)
+
+
 def parse_payload(
     raw: str = "",
     payload_file: str = "",
@@ -69,6 +94,12 @@ def parse_payload(
 
     if not isinstance(data, dict):
         raise ValueError("payload JSON must be an object")
+    semantic_keys = inline_semantic_payload_keys(data)
+    if semantic_keys:
+        raise ValueError(
+            "payload_file_required_for_semantic_payload_keys:"
+            + ",".join(semantic_keys)
+        )
     return data, {}
 
 def build_parser() -> argparse.ArgumentParser:

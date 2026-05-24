@@ -19,14 +19,132 @@ def safe_float(value: Any) -> float:
         return 0.0
 
 
-def prefixed_errors(errors: list[str]) -> list[str]:
-    return [
-        error if str(error).startswith("AI STAI GIOCANDO:") else f"AI STAI GIOCANDO: {error}"
-        for error in errors
-    ]
+ANTI_GAMING = "anti_gaming"
+PROVIDER_START_BLOCKER = "provider_start_blocker"
+LANE_VIABILITY_BLOCKER = "lane_viability_blocker"
+PRODUCT_ACCEPTANCE_BLOCKER = "product_acceptance_blocker"
+CAUSALITY_BLOCKER = "causality_blocker"
+RECOVERY_BLOCKER = "recovery_blocker"
+METRIC_CONSISTENCY_BLOCKER = "metric_consistency_blocker"
+PROVIDER_OUTPUT_CONTRACT_VIOLATION = "provider_output_contract_violation"
+
+PREFIX_BY_CATEGORY = {
+    ANTI_GAMING: "AI STAI GIOCANDO",
+    PROVIDER_START_BLOCKER: "PROVIDER_START_BLOCKED",
+    LANE_VIABILITY_BLOCKER: "LANE_UNVIABLE",
+    PRODUCT_ACCEPTANCE_BLOCKER: "PRODUCT_ACCEPTANCE_BLOCKED",
+    CAUSALITY_BLOCKER: "CAUSALITY_BLOCKED",
+    RECOVERY_BLOCKER: "RECOVERY_REQUIRED",
+    METRIC_CONSISTENCY_BLOCKER: "METRIC_CONSISTENCY_BLOCKED",
+    PROVIDER_OUTPUT_CONTRACT_VIOLATION: "PROVIDER_OUTPUT_CONTRACT_VIOLATION",
+}
 
 
-def evaluate_terminal_invariants(
+def _code_from_message(message: str) -> str:
+    head = str(message).split(":", 1)[0].strip()
+    cleaned = "".join(ch if ch.isalnum() else "_" for ch in head.lower()).strip("_")
+    return cleaned or "terminal_invariant_failed"
+
+
+def _native_tool_evidence_required(metrics: dict[str, Any]) -> bool:
+    return bool(
+        metrics.get("gpu1_native_tool_evidence_required")
+        or metrics.get("lab_called")
+        or metrics.get("code_execution_matrix_required")
+        or metrics.get("runtime_debug_lab_required")
+        or metrics.get("virtual_dev_environment_required")
+        or metrics.get("leader_source") == "native_tool_result"
+    )
+
+
+def _classify_message(message: str, metrics: dict[str, Any]) -> dict[str, Any]:
+    text = str(message)
+    category = PRODUCT_ACCEPTANCE_BLOCKER
+    recovery_allowed = False
+    counts_as_script_gaming = False
+    counts_as_product_lie = False
+    if "runtime_file_refs_missing_before_provider_start" in text or text.startswith(
+        "provider_start_requirements_missing_before_provider_start"
+    ) or text.startswith("pre_provider_closed_with_tentable_requirement"):
+        category = PROVIDER_START_BLOCKER
+    elif text.startswith("provider generation requires semantic GPU0/NPU model execution") or text.startswith(
+        "provider generation requires all three provider lanes"
+    ) or text.startswith("runtime state contains unviable lanes") or text.startswith("NPU micro-lane"):
+        category = LANE_VIABILITY_BLOCKER
+    elif any(
+        fragment in text
+        for fragment in (
+            "gpu0_checked_wrong_gpu1_packet",
+            "gpu0_review_stale_after_gpu1_packet_rewrite",
+            "gpu1_refine_not_linked_to_gpu0_veto",
+            "gpu1_leader_not_consuming_peer_evidence",
+        )
+    ):
+        category = CAUSALITY_BLOCKER
+        recovery_allowed = True
+    elif any(
+        fragment in text
+        for fragment in (
+            "gpu0_review_invalid_requires_gpu1_retry",
+            "gpu1_recovery_revision_missing_after_sidecar_join",
+            "rejected GPU1 proposal did not trigger mandatory provider revision retry",
+        )
+    ):
+        category = RECOVERY_BLOCKER
+        recovery_allowed = True
+    elif any(
+        fragment in text
+        for fragment in (
+            "open_pointer_count_zero_with_deferred_pointer_edges",
+            "soft_lock_closed_with_targeted_refine_allowed",
+            "context_hierarchy_invalid",
+            "parallelism_lost_by_serial_leader_gate",
+        )
+    ):
+        category = METRIC_CONSISTENCY_BLOCKER
+    elif "PROVIDER_TOOL_CALLS_REMAIN_TEXT" in text:
+        promoted = bool(
+            metrics.get("provider_textual_tool_calls_counted_as_execution")
+            or metrics.get("provider_textual_tool_call_promoted")
+        )
+        category = ANTI_GAMING if promoted else PROVIDER_OUTPUT_CONTRACT_VIOLATION
+        counts_as_script_gaming = promoted
+    elif any(
+        fragment in text
+        for fragment in (
+            "GPU0 free text was used as product or decision",
+            "gpu0_veto_not_allowed_without_gpu1_decision",
+            "free text cannot drive veto/congruence",
+            "provider prose cannot pass as product",
+            "generic_write_capture_failed",
+            "cannot claim patch application",
+            "cannot claim source writes",
+        )
+    ):
+        category = ANTI_GAMING
+        counts_as_script_gaming = True
+    elif "ready product_status" in text or "cannot pass without ready product" in text:
+        category = PRODUCT_ACCEPTANCE_BLOCKER
+        counts_as_product_lie = bool(metrics.get("product_status") == "ready")
+    return {
+        "code": _code_from_message(text),
+        "message": text,
+        "category": category,
+        "severity": "error",
+        "phase": "terminal",
+        "counts_as_script_gaming": counts_as_script_gaming,
+        "counts_as_product_lie": counts_as_product_lie,
+        "recovery_allowed": recovery_allowed,
+    }
+
+
+def render_invariant(record: dict[str, Any]) -> str:
+    prefix = PREFIX_BY_CATEGORY.get(str(record.get("category") or ""), "TERMINAL_BLOCKED")
+    message = str(record.get("message") or "")
+    return message if message.startswith(f"{prefix}:") else f"{prefix}: {message}"
+
+
+def _evaluate_terminal_invariant_messages(
     *,
     metrics: dict[str, Any],
     missing_requirements: list[str],
@@ -107,9 +225,14 @@ def evaluate_terminal_invariants(
             "gpu1_primary_workload_missing: GPU1 primary cannot be proven by replight, handshake, or report existence"
         )
     if allow_provider_generation and not pre_provider and metrics.get("gpu1_primary_evidence_valid") is not True:
-        errors.append(
-            "gpu1_primary_evidence_missing: GPU1 leader requires brokered API-native tool evidence; generic_write prose is raw text evidence only"
-        )
+        if _native_tool_evidence_required(metrics):
+            errors.append(
+                "gpu1_native_tool_evidence_missing_when_required: GPU1 tool/lab/matrix/debug evidence requires brokered API-native tool evidence"
+            )
+        else:
+            errors.append(
+                "gpu1_generation_evidence_missing: GPU1 prompt/chat/proposal evidence is missing or unverified"
+            )
     if (
         allow_provider_generation
         and not pre_provider
@@ -158,7 +281,7 @@ def evaluate_terminal_invariants(
         if not metrics.get("proposal_iteration_artifacts"):
             errors.append("provider product run requires GPU1 proposal/pointer iteration artifacts")
         if soft_close_sampled_exit:
-            return prefixed_errors(errors)
+            return errors
         if (
             metrics.get("gpu1_closure_decision_packet_valid") is not True
             and not generic_product_ready
@@ -197,9 +320,22 @@ def evaluate_terminal_invariants(
                     "rejected GPU1 proposal did not trigger mandatory provider revision retry"
                 )
         if metrics.get("gpu0_secondary_schema_valid") is not True and not generic_product_ready:
-            errors.append(
-                "GPU0 secondary decision schema is invalid or missing; free text cannot drive veto/congruence"
-            )
+            if any(
+                str(metrics.get(key) or "").strip()
+                for key in (
+                    "latest_gpu0_review_decision",
+                    "latest_gpu0_model_decision",
+                    "latest_gpu0_effective_decision",
+                    "latest_gpu0_role_decision",
+                )
+            ):
+                errors.append(
+                    "gpu0_secondary_decision_schema_invalid: GPU0 structured/free-text decision exists but schema is invalid; free text cannot drive veto/congruence"
+                )
+            else:
+                errors.append(
+                    "gpu0_secondary_decision_schema_missing: GPU0 review is missing or pending"
+                )
         if (
             metrics.get("gpu0_secondary_schema_valid") is True
             and metrics.get("latest_gpu0_checked_current_packet") is not True
@@ -375,4 +511,52 @@ def evaluate_terminal_invariants(
         errors.append(
             "ready product_status requires runtime debug lab execution passed for MVP/lab requests"
         )
-    return prefixed_errors(errors)
+    return errors
+
+
+def evaluate_terminal_invariant_records(
+    *,
+    metrics: dict[str, Any],
+    missing_requirements: list[str],
+    lane_gate_passed: bool,
+    degraded_lanes: list[str],
+    final_bridge_reports: list[str],
+    allow_provider_generation: bool,
+    provider_execution_performed: bool,
+    detailed_output_expected: bool,
+) -> list[dict[str, Any]]:
+    messages = _evaluate_terminal_invariant_messages(
+        metrics=metrics,
+        missing_requirements=missing_requirements,
+        lane_gate_passed=lane_gate_passed,
+        degraded_lanes=degraded_lanes,
+        final_bridge_reports=final_bridge_reports,
+        allow_provider_generation=allow_provider_generation,
+        provider_execution_performed=provider_execution_performed,
+        detailed_output_expected=detailed_output_expected,
+    )
+    return [_classify_message(message, metrics) for message in messages]
+
+
+def evaluate_terminal_invariants(
+    *,
+    metrics: dict[str, Any],
+    missing_requirements: list[str],
+    lane_gate_passed: bool,
+    degraded_lanes: list[str],
+    final_bridge_reports: list[str],
+    allow_provider_generation: bool,
+    provider_execution_performed: bool,
+    detailed_output_expected: bool,
+) -> list[str]:
+    records = evaluate_terminal_invariant_records(
+        metrics=metrics,
+        missing_requirements=missing_requirements,
+        lane_gate_passed=lane_gate_passed,
+        degraded_lanes=degraded_lanes,
+        final_bridge_reports=final_bridge_reports,
+        allow_provider_generation=allow_provider_generation,
+        provider_execution_performed=provider_execution_performed,
+        detailed_output_expected=detailed_output_expected,
+    )
+    return [render_invariant(record) for record in records]

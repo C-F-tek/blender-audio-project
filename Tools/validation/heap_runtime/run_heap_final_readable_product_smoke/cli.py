@@ -483,7 +483,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
         },
     )
     write_json(run_dir / "heap_context_preflight_gate.json", {"passed": True})
-    write_json(run_dir / "external_heap_postrun_package.json", {"passed": True, "product_acceptance_passed": False})
+    write_json(run_dir / "external_heap_postrun_package.json", {"passed": True, "product_acceptance_passed": True})
     write_json(run_dir / "external_heap_revision_context.json", {"terminal_no_patchable_target": True})
     composer_json = run_dir / "heap_final_proposal_composer.json"
     causality_json = run_dir / "heap_final_causality_normalized.json"

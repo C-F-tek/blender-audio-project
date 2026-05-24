@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ia_carmine._shared.file_backed_transport import (
+    report_text_preview,
+    write_text_evidence_fields,
+)
 from ia_carmine.runtime.contractor_universe.surface import build_contractor_universe_surface_contract
 from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
     extract_gpu1_closure_decision_packet,
@@ -9,6 +13,20 @@ from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
 from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import context_hierarchy_payload, lane_hierarchy
 from ia_carmine.runtime.heap_gate.provider_time import build_provider_lane_time_contracts
 from ia_carmine.runtime.heap_gate.runtime_common import Any, now_iso, repo_rel, safe_dict, safe_int
+
+
+def _packet_text_fields(gate: Any, prefix: str, name: str, text: str) -> dict[str, Any]:
+    output_dir = gate.provider_work_dir() / "provider_input_artifacts"
+    return write_text_evidence_fields(
+        gate.repo_root,
+        output_dir,
+        prefix=prefix,
+        name=name,
+        text=text,
+        kind=f"provider_teamwork_{prefix}",
+        producer="provider_teamwork_packet",
+        suffix=".md",
+    )
 
 
 def _compact_artifacts(artifacts: dict[str, Any], limit: int = 24) -> dict[str, str]:
@@ -48,6 +66,7 @@ def _compact_provider_reports(gate: Any, limit: int = 6) -> list[dict[str, Any]]
     for report in reversed(getattr(gate, "provider_reports", []) or []):
         if not isinstance(report, dict):
             continue
+        preview = report_text_preview(getattr(gate, "repo_root", None), report)
         reports.append(
             {
                 "lane": report.get("lane"),
@@ -61,7 +80,10 @@ def _compact_provider_reports(gate: Any, limit: int = 6) -> list[dict[str, Any]]
                 "provider_activity_classification": report.get(
                     "provider_activity_classification"
                 ),
-                "response_text_excerpt": str(report.get("response_text") or "")[:2400],
+                "response_text_ref": report.get("response_text_ref") or {},
+                "response_text_chars": report.get("response_text_chars"),
+                "response_text_sha256": report.get("response_text_sha256"),
+                "diagnostic_preview": str(preview.get("text") or "")[:2400],
             }
         )
         if len(reports) >= limit:
@@ -106,14 +128,20 @@ def build_provider_teamwork_leader_packet(
     context_hierarchy = context_hierarchy_payload(
         gate.args, gpu1_ctx=getattr(gate, "selected_ollama_num_ctx", None)
     )
-    return {
+    request_text = gate.request_text()
+    request_fields = _packet_text_fields(
+        gate, "request", f"provider_request_revision_{revision}", request_text
+    )
+    prompt_fields = _packet_text_fields(
+        gate, "leader_prompt", f"gpu1_leader_prompt_revision_{revision}", leader_prompt
+    )
+    packet = {
         "kind": "provider_teamwork_leader_packet",
         "role": "gpu1_primary_advisory_leader",
         "lane": "gpu1_planner",
         "revision": revision,
         "round": round_id,
         "created_at": now_iso(),
-        "request": gate.request_text(),
         "closure_owner": "gpu1_planner",
         "revision_opened_by_gpu1": True,
         "revision_lane_policy": getattr(gate, "provider_revision_lane_policy", {}),
@@ -239,8 +267,14 @@ def build_provider_teamwork_leader_packet(
         "verified_source_candidates": gate.real_source_file_candidates(events, limit=32),
         "primary_provider_evidence": _compact_provider_reports(gate, limit=6),
         "revision_feedback": str(gate.provider_revision_feedback or ""),
-        "leader_prompt_excerpt": leader_prompt[:6000],
+        "diagnostic_preview": {
+            "request_tail": request_fields.get("request_tail", ""),
+            "leader_prompt_tail": prompt_fields.get("leader_prompt_tail", ""),
+        },
     }
+    packet.update(request_fields)
+    packet.update(prompt_fields)
+    return packet
 
 
 def _provider_packet_tool_catalog_limit(gate: Any) -> int:
