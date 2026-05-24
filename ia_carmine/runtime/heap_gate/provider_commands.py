@@ -183,6 +183,13 @@ class RuntimeGateProviderCommandsMixin:
                         "token_metric_source",
                         "tokens_per_second",
                         "native_tool_calling_supported",
+                        "provider_native_tool_call_required",
+                        "provider_native_tool_api_attempted",
+                        "provider_native_tool_api_completed",
+                        "provider_native_tool_api_supported",
+                        "provider_native_tool_api_error",
+                        "provider_native_tool_api_unavailable",
+                        "provider_native_tool_call_required_unmet",
                         "broker_tools_available_count",
                         "available_tool_names",
                         "functionalities",
@@ -336,6 +343,18 @@ class RuntimeGateProviderCommandsMixin:
             "native_tool_loop_performed": native_tool_loop_performed,
             "provider_native_tool_api_supported": report_data.get(
                 "provider_native_tool_api_supported"
+            ),
+            "provider_native_tool_call_required": report_data.get(
+                "provider_native_tool_call_required"
+            ),
+            "provider_native_tool_api_attempted": report_data.get(
+                "provider_native_tool_api_attempted"
+            ),
+            "provider_native_tool_api_completed": report_data.get(
+                "provider_native_tool_api_completed"
+            ),
+            "provider_native_tool_api_error": report_data.get(
+                "provider_native_tool_api_error"
             ),
             "provider_native_tool_api_unavailable": report_data.get(
                 "provider_native_tool_api_unavailable"

@@ -179,6 +179,7 @@ def build_provider_lane_metrics(
             str(item.get("lane") or "unknown")
             for item in latest_provider_reports
             if item.get("native_tool_loop_requested")
+            and item.get("native_tool_loop_supported")
             and safe_int(item.get("native_tool_call_count")) <= 0
         ],
         "provider_native_tool_missing_required_lanes": sorted(
@@ -186,6 +187,7 @@ def build_provider_lane_metrics(
             for lane in required_lanes
             if provider_reports_by_lane.get(lane, {}).get("native_tool_loop_requested")
             and _native_tool_loop_required(lane, provider_reports_by_lane.get(lane, {}))
+            and provider_reports_by_lane.get(lane, {}).get("native_tool_loop_supported")
             and safe_int(provider_reports_by_lane.get(lane, {}).get("native_tool_call_count"))
             <= 0
         ),

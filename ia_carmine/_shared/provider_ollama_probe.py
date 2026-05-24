@@ -96,6 +96,10 @@ def run_ollama_probe(
     partial_markdown_output = partial_json.with_suffix(".md") if partial_json else None
     generation_stats: dict[str, Any] = {}
     gpu_runtime_summary: dict[str, Any] = {}
+    provider_native_tool_api_supported = callable(getattr(OllamaSession, "chat", None))
+    provider_native_tool_api_error = ""
+    native_tool_api_attempted = False
+    native_tool_api_completed = False
     write_partial = PartialWriter(
         path=partial_json,
         markdown_path=partial_markdown_output,
@@ -161,12 +165,75 @@ def run_ollama_probe(
                     if not text:
                         tool_prompts.append(ollama_tool_call_fallback_prompt())
                     for index, tool_prompt in enumerate(tool_prompts, start=2):
-                        raw_chat_response = session.chat(
-                            [{"role": "user", "content": tool_prompt}],
-                            tools=broker_tool_schemas(ollama_tool_call_tool_names()),
-                            max_new_tokens=propagated_max_new_tokens,
-                            temperature=0.0,
-                        )
+                        if not provider_native_tool_api_supported:
+                            provider_native_tool_api_error = "provider_adapter_missing_chat_method"
+                            prompt_attempts.append(
+                                {
+                                    "attempt": index,
+                                    "phase": "native_tool_call_api_error",
+                                    "prompt_chars": len(tool_prompt),
+                                    "text_chars": 0,
+                                    "text_present": False,
+                                    "max_new_tokens": propagated_max_new_tokens,
+                                    "max_new_tokens_source": "operator_heap_propagated",
+                                    "native_tool_loop_requested": True,
+                                    "native_tool_api_supported": False,
+                                    "native_tool_api_error": provider_native_tool_api_error,
+                                    "native_tool_call_count": 0,
+                                }
+                            )
+                            break
+                        try:
+                            native_tool_api_attempted = True
+                            raw_chat_response = session.chat(
+                                [{"role": "user", "content": tool_prompt}],
+                                tools=broker_tool_schemas(ollama_tool_call_tool_names()),
+                                max_new_tokens=propagated_max_new_tokens,
+                                temperature=0.0,
+                            )
+                        except Exception as exc:  # noqa: BLE001
+                            provider_native_tool_api_supported = False
+                            provider_native_tool_api_error = f"{type(exc).__name__}: {exc}"
+                            raw_chat_response = {}
+                            prompt_attempts.append(
+                                {
+                                    "attempt": index,
+                                    "phase": "native_tool_call_api_error",
+                                    "prompt_chars": len(tool_prompt),
+                                    "text_chars": 0,
+                                    "text_present": False,
+                                    "max_new_tokens": propagated_max_new_tokens,
+                                    "max_new_tokens_source": "operator_heap_propagated",
+                                    "native_tool_loop_requested": True,
+                                    "native_tool_api_supported": False,
+                                    "native_tool_api_error": provider_native_tool_api_error,
+                                    "native_tool_call_count": 0,
+                                }
+                            )
+                            break
+                        if not isinstance(raw_chat_response, dict):
+                            provider_native_tool_api_supported = False
+                            provider_native_tool_api_error = (
+                                f"invalid_chat_response_type:{type(raw_chat_response).__name__}"
+                            )
+                            raw_chat_response = {}
+                            prompt_attempts.append(
+                                {
+                                    "attempt": index,
+                                    "phase": "native_tool_call_api_error",
+                                    "prompt_chars": len(tool_prompt),
+                                    "text_chars": 0,
+                                    "text_present": False,
+                                    "max_new_tokens": propagated_max_new_tokens,
+                                    "max_new_tokens_source": "operator_heap_propagated",
+                                    "native_tool_loop_requested": True,
+                                    "native_tool_api_supported": False,
+                                    "native_tool_api_error": provider_native_tool_api_error,
+                                    "native_tool_call_count": 0,
+                                }
+                            )
+                            break
+                        native_tool_api_completed = True
                         message = raw_chat_response.get("message")
                         message = message if isinstance(message, dict) else {}
                         candidate = str(message.get("content") or "")
@@ -184,6 +251,8 @@ def run_ollama_probe(
                                 "max_new_tokens": propagated_max_new_tokens,
                                 "max_new_tokens_source": "operator_heap_propagated",
                                 "native_tool_loop_requested": True,
+                                "native_tool_api_supported": True,
+                                "native_tool_api_completed": True,
                                 "native_tool_call_count": len(native_tool_calls),
                             }
                         )
@@ -274,7 +343,6 @@ def run_ollama_probe(
     warnings: list[str] = []
     errors: list[str] = []
     provider_native_tool_call_required = bool(explicit_tool_call_required)
-    provider_native_tool_api_supported = True
     native_tool_loop_requested = bool(native_tool_calls or provider_native_tool_call_required)
     provider_native_tool_api_unavailable = bool(
         provider_native_tool_call_required and not provider_native_tool_api_supported
@@ -293,6 +361,7 @@ def run_ollama_probe(
             "Heap/code-product provider task did not emit a native broker tool_call; text heap delta is raw evidence only."
         )
     if provider_native_tool_api_unavailable:
+        native_classification = "ollama_native_tool_api_unavailable"
         errors.append("provider_native_tool_api_unavailable")
     elif provider_native_tool_call_required_unmet:
         errors.append("provider_native_tool_call_required_unmet")

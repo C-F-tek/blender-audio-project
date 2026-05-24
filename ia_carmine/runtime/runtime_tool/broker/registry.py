@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from .common import ToolSpec
 from .context_builders import (
     build_ai_context_pack_tool,
@@ -28,6 +30,108 @@ from .runtime_builders import (
     runtime_file_refs,
     synthesize_patch_candidates,
 )
+
+
+STRING = {"type": "string"}
+OBJECT = {"type": "object"}
+STRING_OR_ARRAY = {"type": ["string", "array"]}
+BOOL_OR_STRING = {"type": ["boolean", "string"]}
+NUMBER_OR_STRING = {"type": ["integer", "number", "string"]}
+
+
+def tool_input_schema(
+    properties: dict[str, dict[str, Any]],
+    *,
+    required: tuple[str, ...] = (),
+) -> dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": list(required),
+        "additionalProperties": False,
+    }
+
+
+DEBUG_LAB_SCHEMA = tool_input_schema(
+    {
+        "request_file": STRING,
+        "request_json": OBJECT,
+        "output": STRING,
+        "markdown_output": STRING,
+        "timeout_seconds": NUMBER_OR_STRING,
+        "tail_chars": NUMBER_OR_STRING,
+    }
+)
+
+CODE_EXECUTION_MATRIX_SCHEMA = tool_input_schema(
+    {
+        "target_file": STRING_OR_ARRAY,
+        "validation_script": STRING_OR_ARRAY,
+        "validation_arg": STRING_OR_ARRAY,
+        "timeout_seconds": NUMBER_OR_STRING,
+        "tail_chars": NUMBER_OR_STRING,
+        "max_diff_chars": NUMBER_OR_STRING,
+        "operator_request": STRING,
+        "operator_request_file": STRING,
+        "evidence_report": STRING_OR_ARRAY,
+        "synthesize_patch_candidates": BOOL_OR_STRING,
+        "force_patch_candidate_synthesis": BOOL_OR_STRING,
+        "max_patch_candidates": NUMBER_OR_STRING,
+        "no_execute": BOOL_OR_STRING,
+    }
+)
+
+PATCH_SYNTHESIS_SCHEMA = tool_input_schema(
+    {
+        "target_file": STRING_OR_ARRAY,
+        "operator_request": STRING,
+        "operator_request_file": STRING,
+        "evidence_report": STRING_OR_ARRAY,
+        "matrix_report": STRING,
+        "max_candidates": NUMBER_OR_STRING,
+        "timeout_seconds": NUMBER_OR_STRING,
+    }
+)
+
+GENERIC_WRITE_SCHEMA = tool_input_schema(
+    {
+        "request_file": STRING,
+        "operator_request": STRING,
+        "provider_report": STRING,
+        "proposal_text": STRING,
+        "capture_mode": STRING,
+        "evidence_report": STRING_OR_ARRAY,
+        "source_lane": STRING,
+        "source_revision": STRING,
+        "gpu1_followup_required": BOOL_OR_STRING,
+        "peer_followup_required": BOOL_OR_STRING,
+        "provider_role": STRING,
+        "reason": STRING,
+    }
+)
+
+VIRTUAL_DEV_ENVIRONMENT_SCHEMA = tool_input_schema(
+    {
+        "target_file": STRING_OR_ARRAY,
+        "validation_script": STRING_OR_ARRAY,
+        "timeout_seconds": NUMBER_OR_STRING,
+        "tail_chars": NUMBER_OR_STRING,
+        "dynamic_import": BOOL_OR_STRING,
+        "help_probe": BOOL_OR_STRING,
+    }
+)
+
+RUNTIME_FILE_REFS_SCHEMA = tool_input_schema(
+    {
+        "text": STRING_OR_ARRAY,
+        "text_file": STRING_OR_ARRAY,
+        "target_file": STRING_OR_ARRAY,
+        "validation_script": STRING_OR_ARRAY,
+        "provenance": STRING,
+        "strict_patchable_targets": BOOL_OR_STRING,
+    }
+)
+
 
 TOOL_SPECS: dict[str, ToolSpec] = {
     "build_python_line_count_csv": ToolSpec(
@@ -162,6 +266,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "tail_chars",
         ),
         builder=run_agent_runtime_debug_lab,
+        input_schema=DEBUG_LAB_SCHEMA,
     ),
     "runtime_sqlite_memory": ToolSpec(
         name="runtime_sqlite_memory",
@@ -201,6 +306,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "no_execute",
         ),
         builder=run_heap_code_execution_matrix,
+        input_schema=CODE_EXECUTION_MATRIX_SCHEMA,
     ),
     "synthesize_patch_candidates": ToolSpec(
         name="synthesize_patch_candidates",
@@ -215,6 +321,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "timeout_seconds",
         ),
         builder=synthesize_patch_candidates,
+        input_schema=PATCH_SYNTHESIS_SCHEMA,
     ),
     "generic_write": ToolSpec(
         name="generic_write",
@@ -234,6 +341,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "reason",
         ),
         builder=generic_write,
+        input_schema=GENERIC_WRITE_SCHEMA,
     ),
     "run_heap_virtual_dev_environment": ToolSpec(
         name="run_heap_virtual_dev_environment",
@@ -247,6 +355,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "help_probe",
         ),
         builder=run_heap_virtual_dev_environment,
+        input_schema=VIRTUAL_DEV_ENVIRONMENT_SCHEMA,
     ),
     "runtime_file_refs": ToolSpec(
         name="runtime_file_refs",
@@ -260,6 +369,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "strict_patchable_targets",
         ),
         builder=runtime_file_refs,
+        input_schema=RUNTIME_FILE_REFS_SCHEMA,
     ),
     "analyze_code_product_artifact": ToolSpec(
         name="analyze_code_product_artifact",

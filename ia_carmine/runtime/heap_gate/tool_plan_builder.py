@@ -85,6 +85,8 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "semantic_evidence_chunks_json",
             "ai_context_pack_json",
             "rag_context_pack_json",
+            "gpu1_dynamic_context_pack_json",
+            "startup_context_pack_json",
             "shared_context_json",
             "repo_docs_map_json",
         ):

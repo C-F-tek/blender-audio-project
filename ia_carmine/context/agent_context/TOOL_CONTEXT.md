@@ -56,7 +56,7 @@ python -m ia_carmine.cli shared_toolbox_bundle ...
 - Context is not a patch target list.
 - Semantic chunks are retrieval/evidence inputs, not proof of applicability.
 - The RAG SQLite DB is an ignored runtime artifact; commit the code/contracts, not `*.sqlite` outputs.
-- `startup_unified_context_pack` is the active provider surface when static context and RAG retrieval both exist.
+- `gpu1_dynamic_context_pack` is the active provider surface for GPU1; `startup_unified_context_pack` is a legacy technical attachment and is not a terminal startup blocker.
 - The final target shortlist must be verified later by lab/matrix/validation.
 - Do not add source-write behavior in context builders.
 

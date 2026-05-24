@@ -335,19 +335,36 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         < preload_runner.find("rag_startup.run_rag_context_pack")
         and "rag_ollama_embed_preflight" in preload_rag_surface
         and "rag_repo_ingest" in preload_rag_surface
-        and "startup_unified_context_pack" in preload_rag_surface
         and "required=True" in preload_rag_surface
         and "rag_context_pack_required" in preload_manifest
-        and "startup_unified_context_pack_required" in preload_manifest
         and "rag_context_pack_loaded" in preload_manifest
     )
     bool_check(
         checks,
-        check_id="rag_context_pack_startup_required_and_unified",
+        check_id="rag_context_pack_startup_required",
         passed=rag_startup_signal,
         severity="critical",
-        evidence="startup reload should build required RAG context and then write one active unified context pack",
-        recommendation="Run RAG pack during heap startup, fail invalid RAG packs, and publish startup_context_pack_* as the single active context surface.",
+        evidence="startup reload should build required RAG context before provider decisions",
+        recommendation="Run RAG pack during heap startup and fail invalid RAG packs as typed RAG blockers.",
+    )
+
+    dynamic_context_signal = bool(
+        "_run_gpu1_dynamic_context_pack(state)" in preload_runner
+        and "gpu1_dynamic_context_pack" in preload_runner
+        and "gpu1_dynamic_context_pack_loaded" in preload_manifest
+        and "gpu1_dynamic_context_pack_api_ready" in preload_manifest
+        and "gpu1_dynamic_context_pack_api_ready" in launcher_requesting
+        and "gpu1_dynamic_context_pack" in launcher_requesting
+        and "startup_unified_context_pack_blocking" in preload_manifest
+        and '"startup_unified_context_pack_blocking": False' in preload_manifest
+    )
+    bool_check(
+        checks,
+        check_id="gpu1_dynamic_context_pack_is_active_provider_surface",
+        passed=dynamic_context_signal,
+        severity="critical",
+        evidence="GPU1 dynamic context pack must replace static/unified pack as the hard active provider surface",
+        recommendation="Require gpu1_dynamic_context_pack and api-ready schema in startup continuation; keep startup_unified_context_pack_blocking=false.",
     )
     common_import_match = re.search(
         r"from ia_carmine\.context\.heap_context_memory_reload\.common import\s*(?:\((?P<block>.*?)\)|(?P<line>[^\n]+))",
@@ -376,7 +393,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and "rag_ollama_embed_preflight" in launcher_requesting
         and "rag_repo_ingest" in launcher_requesting
         and "rag_context_pack" in launcher_requesting
-        and "startup_unified_context_pack" in launcher_requesting
+        and "gpu1_dynamic_context_pack" in launcher_requesting
+        and "gpu1_dynamic_context_pack_api_ready" in launcher_requesting
+        and "startup_unified_context_pack" not in launcher_requesting
         and "blocking_requirements & HARD_STARTUP_REQUIREMENTS" in launcher_requesting
         and "rag_pack.get(\"passed\") is True" in preload_manifest
         and "retrieved_count" in preload_manifest
@@ -387,12 +406,12 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         passed=rag_hard_block_signal,
         severity="critical",
         evidence="RAG embed/ingest/context-pack failures must prevent provider startup even without strict-startup-reload",
-        recommendation="Keep RAG requirements in HARD_STARTUP_REQUIREMENTS and require rag_context_pack passed=true with retrieved_count>0.",
+        recommendation="Keep only RAG and GPU1 dynamic-pack requirements in HARD_STARTUP_REQUIREMENTS; startup_unified_context_pack must stay non-terminal.",
     )
 
     unified_surface_signal = bool(
-        "startup_context_pack_json" in preload_task_docs
-        and "startup_context_pack_markdown" in preload_task_docs
+        "gpu1_dynamic_context_pack_json" in preload_task_docs
+        and "gpu1_dynamic_context_pack_markdown" in provider_prompt
         and "startup_context_pack_json" in gate_startup_manifest
         and "startup_context_pack_markdown" in provider_prompt
         and "startup_context_pack_json" in provider_teamwork_packet
@@ -400,31 +419,31 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     )
     bool_check(
         checks,
-        check_id="unified_context_pack_visible_to_provider_lanes",
+        check_id="dynamic_context_pack_visible_to_provider_lanes",
         passed=unified_surface_signal,
         severity="critical",
-        evidence="GPU1/GPU0/NPU prompts and packets need the active unified context pack, not colliding layered context packs",
-        recommendation="Prefer startup_context_pack_* in startup manifest, task docs, provider prompt and teamwork packet surfaces.",
+        evidence="GPU1 prompt needs gpu1_dynamic_context_pack; legacy startup_context_pack remains a non-terminal attachment",
+        recommendation="Prefer gpu1_dynamic_context_pack_* in provider prompt and keep startup_context_pack_* only as technical attachment/fallback.",
     )
 
     unified_preferred_position = provider_prompt.find(
-        'if artifacts.get("startup_context_pack_markdown")'
+        'if artifacts.get("gpu1_dynamic_context_pack_markdown")'
     )
     static_fallback_position = provider_prompt.find('"ai_context_pack_markdown"', unified_preferred_position)
     unified_branch_position = provider_prompt.find(
-        '"startup_context_pack_markdown"', unified_preferred_position
+        '"gpu1_dynamic_context_pack_markdown"', unified_preferred_position
     )
     bool_check(
         checks,
-        check_id="provider_prompt_prefers_unified_context_pack",
+        check_id="provider_prompt_prefers_gpu1_dynamic_context_pack",
         passed=(
             unified_preferred_position >= 0
             and unified_branch_position > unified_preferred_position
             and static_fallback_position > unified_branch_position
         ),
         severity="critical",
-        evidence="provider prompt should use startup_context_pack_markdown first and only fall back to separate AI/RAG packs when the unified pack is absent",
-        recommendation="Keep unified pack as the primary provider digest surface to avoid stratified context collisions.",
+        evidence="provider prompt should use gpu1_dynamic_context_pack_markdown first and only fall back to older packs when absent",
+        recommendation="Keep the per-run GPU1 dynamic pack as the primary provider digest surface.",
     )
 
     delta_reload_signal = bool(

@@ -7,6 +7,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 
 def ensure_repo(repo_root: Path) -> None:
@@ -41,6 +42,7 @@ def main() -> int:
     from ia_carmine._shared.provider_tool_loop import ollama_tool_call_tool_names
     from ia_carmine.providers.ollama.session import OllamaSession
     from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
+    from ia_carmine.runtime.heap_gate.run_loop_metrics import build_provider_lane_metrics
 
     schemas = broker_tool_schemas()
     errors: list[str] = []
@@ -155,6 +157,79 @@ def main() -> int:
     if ov_report.get("classification") != "openvino_tool_loop_model_dir_unconfigured":
         errors.append("OpenVINO unconfigured tool loop classification not explicit")
 
+    api_unavailable_fixture = {
+        "lane": "gpu1_planner",
+        "native_tool_loop_requested": True,
+        "native_tool_loop_supported": False,
+        "native_tool_loop_performed": False,
+        "provider_native_tool_call_required": True,
+        "provider_native_tool_api_supported": False,
+        "provider_native_tool_api_unavailable": True,
+        "provider_native_tool_call_required_unmet": False,
+        "native_tool_call_count": 0,
+    }
+    required_unmet_fixture = {
+        "lane": "gpu0_peer",
+        "native_tool_loop_requested": True,
+        "native_tool_loop_supported": True,
+        "native_tool_loop_performed": True,
+        "provider_native_tool_call_required": True,
+        "provider_native_tool_api_supported": True,
+        "provider_native_tool_api_unavailable": False,
+        "provider_native_tool_call_required_unmet": True,
+        "native_tool_call_count": 0,
+    }
+    npu_fixture = {
+        "lane": "npu_micro_task_auditor",
+        "native_tool_loop_requested": False,
+        "native_tool_loop_supported": True,
+        "npu_native_tool_loop_required": False,
+    }
+
+    class FixtureOwner:
+        args = SimpleNamespace(
+            allow_provider_generation=True,
+            ollama_num_ctx=16384,
+            gpu0_ollama_num_ctx=2048,
+            max_new_tokens=3400,
+            gpu0_max_new_tokens=1296,
+            npu_max_context_chars=2000,
+            npu_max_prompt_chars=900,
+            npu_max_new_tokens=384,
+            max_provider_revisions=5,
+            keep_alive="120s",
+        )
+        provider_reports = [api_unavailable_fixture, required_unmet_fixture, npu_fixture]
+        provider_replight_reports: list[dict[str, object]] = []
+        provider_execution_performed = False
+        selected_ollama_num_ctx = 16384
+        provider_revision_lane_policy: dict[str, object] = {}
+        pending_provider_sidecar_collections: list[dict[str, object]] = []
+        provider_recovery_attempt_count = 0
+        time_counter_contract: dict[str, object] = {}
+
+        def latest_proposal_iteration_report(self) -> dict[str, object]:
+            return {}
+
+        def runtime_soft_close_reached(self) -> bool:
+            return False
+
+    fixture_metrics = build_provider_lane_metrics(
+        FixtureOwner(),
+        {
+            "gpu1_planner": api_unavailable_fixture,
+            "gpu0_peer": required_unmet_fixture,
+            "npu_micro_task_auditor": npu_fixture,
+        },
+        [api_unavailable_fixture, required_unmet_fixture, npu_fixture],
+    )
+    if fixture_metrics.get("provider_native_tool_unavailable_required_lanes") != [
+        "gpu1_planner"
+    ]:
+        errors.append("native tool API unavailable lane was not classified separately")
+    if fixture_metrics.get("provider_native_tool_missing_required_lanes") != ["gpu0_peer"]:
+        errors.append("required native tool miss must exclude API-unavailable lanes")
+
     live_ollama: dict[str, object] = {"requested": bool(args.run_live_ollama)}
     if args.run_live_ollama:
         from ia_carmine.providers.provider_mesh.local_provider_probe import run_ollama_probe
@@ -196,6 +271,29 @@ def main() -> int:
         "broker_tool_schema_count": len(schemas),
         "ollama_native_tool_call_count": len(calls),
         "openvino_classification": ov_report.get("classification"),
+        "native_tool_api_unavailable_fixture": {
+            "provider_native_tool_api_supported": api_unavailable_fixture[
+                "provider_native_tool_api_supported"
+            ],
+            "provider_native_tool_api_unavailable": api_unavailable_fixture[
+                "provider_native_tool_api_unavailable"
+            ],
+            "provider_native_tool_call_required_unmet": api_unavailable_fixture[
+                "provider_native_tool_call_required_unmet"
+            ],
+        },
+        "native_tool_required_unmet_fixture": {
+            "provider_native_tool_api_supported": required_unmet_fixture[
+                "provider_native_tool_api_supported"
+            ],
+            "provider_native_tool_api_unavailable": required_unmet_fixture[
+                "provider_native_tool_api_unavailable"
+            ],
+            "provider_native_tool_call_required_unmet": required_unmet_fixture[
+                "provider_native_tool_call_required_unmet"
+            ],
+        },
+        "fixture_metrics": fixture_metrics,
         "live_ollama": {
             "requested": args.run_live_ollama,
             "native_tool_call_count": live_ollama.get("native_tool_call_count"),
