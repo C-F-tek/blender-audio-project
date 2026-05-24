@@ -611,7 +611,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     report = {
         "schema_version": 1,
         "kind": "heap_final_readable_product_smoke",
+        "repo_root": repo_root.as_posix(),
         "passed": passed,
+        "errors": [] if passed else ["heap final readable product smoke failed"],
+        "warnings": [],
         "work_dir": str(work_dir),
         "run_dir": str(run_dir),
         "documents_dir": str(documents_dir),

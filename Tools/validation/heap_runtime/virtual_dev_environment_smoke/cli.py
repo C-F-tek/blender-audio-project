@@ -197,6 +197,7 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     report = {
         "schema_version": 1,
         "kind": "heap_virtual_dev_environment_smoke",
+        "repo_root": repo_root.as_posix(),
         "passed": bool(passed),
         "direct_output": str(direct_output),
         "broker_output": str(broker_output),

@@ -131,12 +131,13 @@ def main() -> int:
     report = {
         "schema_version": 1,
         "kind": "heap_provider_budget_governor_smoke",
+        "repo_root": repo_root.as_posix(),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": not errors,
         "inner_report": inner,
+        "errors": errors,
+        "warnings": [],
     }
-    if errors:
-        report["errors"] = errors
     output = resolve_output_path(repo_root, args.output)
     markdown = resolve_output_path(repo_root, args.markdown_output)
     print(write_json_report(report, output), end="")
