@@ -24,9 +24,10 @@ REPORT_KIND = "full_context_golden_docs_contract_validation"
 
 REQUIRED_DOCS = (
     "AGENTS.md",
+    "docs/README.md",
+    "docs/AI_DOCS_ENTRYPOINT.md",
     "docs/LOCAL_AI_RUN_BOOTSTRAP.md",
     "docs/LOCAL_AI_WORKFLOW.md",
-    "docs/LOCAL_AI_TASKS/README.md",
     "docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md",
     "docs/LOCAL_AI_TASKS/full-context-golden-docs-contract.md",
     "docs/JSON_SCHEMAS.md",

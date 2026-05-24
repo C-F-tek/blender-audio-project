@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ia_carmine._shared.provider_work_rejections import role_for
+from ia_carmine._shared.provider_tool_schemas import is_api_native_tool_call
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     append_unique,
@@ -16,7 +17,7 @@ PEER_NATIVE_TOOL_CALL_LANES = {"gpu0_peer"}
 OPERATIVE_NATIVE_TOOL_CALL_LANES = PRIMARY_NATIVE_TOOL_CALL_LANES | PEER_NATIVE_TOOL_CALL_LANES
 DIAGNOSTIC_NATIVE_TOOL_CALL_LANES = {"npu_micro_task_auditor"}
 SIDECAR_NATIVE_TOOL_CALL_LANES = PEER_NATIVE_TOOL_CALL_LANES | DIAGNOSTIC_NATIVE_TOOL_CALL_LANES
-NO_TOOL_GENERIC_WRITE_CAPTURE_LANES = PRIMARY_NATIVE_TOOL_CALL_LANES
+NO_TOOL_GENERIC_WRITE_CAPTURE_LANES: set[str] = set()
 EVIDENCE_ENRICHED_TOOLS = {
     "generic_write",
     "run_heap_code_execution_matrix",
@@ -91,6 +92,9 @@ def _publish_report_native_tool_calls(
         if unique_id in owner.provider_native_tool_call_ids:
             continue
         owner.provider_native_tool_call_ids.add(unique_id)
+        if not is_api_native_tool_call(call, lane=lane):
+            _publish_non_native_tool_call_diagnostic(owner, source, lane, output, call, unique_id, round_id)
+            continue
         if tool_name == "generic_write" and lane in SIDECAR_NATIVE_TOOL_CALL_LANES:
             _publish_sidecar_generic_write_non_decision(
                 owner, source, lane, output, call, unique_id, round_id
@@ -109,8 +113,12 @@ def _publish_report_native_tool_calls(
         request_id = f"{owner.stamp}:provider-native:{call_id}:{plan_item['tool']}"
         _publish_need_and_request(owner, report, call, plan_item, request_id, round_id)
         published += 1
-    if not calls and _report_has_useful_no_tool_text(report):
-        published += _publish_no_tool_generic_write_capture(owner, report, output, round_id, events)
+    if (
+        not calls
+        and lane in PRIMARY_NATIVE_TOOL_CALL_LANES
+        and str(report.get("response_text") or "").strip()
+    ):
+        _publish_primary_free_text_raw_evidence(owner, report, output, round_id)
     elif not calls and lane in SIDECAR_NATIVE_TOOL_CALL_LANES and str(report.get("response_text") or "").strip():
         _publish_sidecar_free_text_raw_evidence(owner, report, output, round_id)
     return published
@@ -303,6 +311,67 @@ def _publish_sidecar_free_text_raw_evidence(
         },
         target="deterministic",
         correlation_id=f"{output}:{lane}:free-text-non-decision",
+        round_id=round_id,
+    )
+
+
+def _publish_non_native_tool_call_diagnostic(
+    owner: Any,
+    source: str,
+    lane: str,
+    output: str,
+    call: dict[str, Any],
+    unique_id: str,
+    round_id: int,
+) -> None:
+    owner.publish(
+        source,
+        "validation_signal",
+        {
+            "kind": "provider_textual_tool_call_not_executable",
+            "lane": lane,
+            "tool_call": call,
+            "provider_report": output,
+            "raw_evidence_non_decision": True,
+            "policy": (
+                "Only provider API-native tool_calls are broker executable. "
+                "Markdown, JSON-in-text and structured prose tool requests remain diagnostic."
+            ),
+        },
+        target="deterministic",
+        correlation_id=unique_id,
+        round_id=round_id,
+    )
+
+
+def _publish_primary_free_text_raw_evidence(
+    owner: Any,
+    report: dict[str, Any],
+    output: str,
+    round_id: int,
+) -> None:
+    lane = str(report.get("lane") or "provider")
+    owner.publish(
+        provider_heap_lane(lane),
+        "validation_signal",
+        {
+            "kind": "primary_free_text_without_native_tool_call",
+            "lane": lane,
+            "provider_report": output,
+            "provider_block_id": report.get("provider_block_id"),
+            "proposal_block_id": report.get("proposal_block_id"),
+            "revision": report.get("revision"),
+            "raw_evidence_non_decision": True,
+            "provider_textual_tool_call_not_executable": bool(report.get("textual_tool_calls")),
+            "native_tool_call_required": bool(report.get("provider_native_tool_call_required")),
+            "policy": (
+                "GPU1 prose without a native provider tool_call is retained as raw "
+                "text evidence only. It does not create broker requests and cannot "
+                "verify lab, matrix, patch, workload or product status."
+            ),
+        },
+        target="deterministic",
+        correlation_id=f"{output}:{lane}:free-text-no-native-tool",
         round_id=round_id,
     )
 

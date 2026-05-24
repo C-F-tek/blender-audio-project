@@ -112,6 +112,7 @@ def execute_tool_request(
         "warnings": [],
         "outputs": {},
         "summary": {},
+        "input_schema_validated": False,
         "guardrails": {
             "provider_execution_performed": False,
             "patch_application_performed": False,
@@ -148,12 +149,18 @@ def execute_tool_request(
         base_result["errors"] = [f"tool not allowlisted: {tool_name}"]
         return base_result
 
-    arg_errors = validate_request_args(tool_name, request_args, spec.allowed_args)
+    arg_errors = validate_request_args(
+        tool_name,
+        request_args,
+        spec.allowed_args,
+        input_schema=spec.input_schema,
+    )
     if arg_errors:
         base_result["blocked"] = True
         base_result["status"] = "blocked_invalid_args"
         base_result["errors"] = arg_errors
         return base_result
+    base_result["input_schema_validated"] = True
 
     command, outputs = spec.builder(repo_root, out_dir, request_id, request_args)
     base_result["command"] = command

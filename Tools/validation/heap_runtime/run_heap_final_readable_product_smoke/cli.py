@@ -377,8 +377,9 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 "gpu1_boot_leader_ready": True,
                 "gpu1_primary_workload_valid": True,
                 "gpu1_primary_evidence_valid": True,
-                "gpu1_primary_evidence_source": "generic_write",
-                "leader_source": "generic_write",
+                "gpu1_primary_evidence_source": "native_tool_result",
+                "leader_source": "native_tool_result",
+                "gpu1_native_tool_call_count": 1,
                 "sidecars_start_policy": "after_gpu1_residency_handshake",
                 "parallel_provider_overlap_seconds": 12.5,
                 "device_identity_map": [

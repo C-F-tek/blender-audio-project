@@ -242,7 +242,7 @@ This separates provider proposal, patch plan, patch candidate, code product, Pat
 | JSON/report schemas | `JSON_SCHEMAS.md` |
 | Patch-spec workflow | `PATCH_SPEC_WORKFLOW.md` |
 | Project status | `PROJECT_STATUS_POINT.md` |
-| AI task map | `LOCAL_AI_TASKS/README.md` |
+| AI task map | `AI_DOCS_ENTRYPOINT.md` and current files under `LOCAL_AI_TASKS/` |
 | Tool package family map | `LOCAL_AI_TASKS/tool-package-family-map-2026-05-18.md` |
 
 ## Policy

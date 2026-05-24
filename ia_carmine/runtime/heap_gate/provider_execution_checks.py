@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 from ia_carmine._shared.provider_work_rejections import looks_like_handshake, normalize_bool
-from ia_carmine.runtime.heap_gate.generic_write_followup import (
-    failed_generic_write_results,
-    passed_generic_write_results,
-)
+from ia_carmine.runtime.heap_gate.generic_write_followup import failed_generic_write_results
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, safe_int
 
 
@@ -44,12 +41,6 @@ def gpu1_primary_workload_status(report: dict[str, Any]) -> dict[str, Any]:
 def gpu1_primary_evidence_status(
     owner: Any | None, report: dict[str, Any], events: list[dict[str, Any]]
 ) -> dict[str, Any]:
-    generic_passed = [
-        payload
-        for payload in passed_generic_write_results(events, owner=owner)
-        if _same_gpu1_revision(payload, report)
-        and _generic_write_capture_artifact_valid(owner, payload)
-    ]
     generic_failed = [
         payload
         for payload in failed_generic_write_results(events, owner=owner)
@@ -62,12 +53,12 @@ def gpu1_primary_evidence_status(
         for payload in [event.get("payload") if isinstance(event.get("payload"), dict) else {}]
         if _provider_native_tool_result_valid(payload, report)
     ]
-    source = "native_tool_result" if native_passed else "generic_write" if generic_passed else ""
+    source = "native_tool_result" if native_passed else ""
     return {
         "gpu1_primary_evidence_valid": bool(source),
         "gpu1_primary_evidence_source": source,
         "leader_source": source or "none",
-        "gpu1_generic_write_capture_valid": bool(generic_passed),
+        "gpu1_generic_write_capture_valid": False,
         "gpu1_generic_write_capture_failed": bool(generic_failed),
     }
 
@@ -124,21 +115,6 @@ def _same_gpu1_revision(payload: dict[str, Any], report: dict[str, Any]) -> bool
         if payload_id and report_id:
             return payload_id == report_id
     return False
-
-
-def _generic_write_capture_artifact_valid(
-    owner: Any | None, payload: dict[str, Any]
-) -> bool:
-    outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
-    json_report = str(outputs.get("json_report") or "").strip()
-    if not json_report:
-        return False
-    if owner is None:
-        return True
-    report_path = Path(json_report)
-    if not report_path.is_absolute():
-        report_path = owner.repo_root / report_path
-    return report_path.is_file()
 
 
 def _provider_native_tool_result_valid(payload: dict[str, Any], report: dict[str, Any]) -> bool:

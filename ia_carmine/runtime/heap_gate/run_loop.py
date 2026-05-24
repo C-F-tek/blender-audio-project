@@ -15,6 +15,11 @@ from ia_carmine.runtime.heap_gate.provider_recovery import (
     provider_recovery_status,
 )
 from ia_carmine.runtime.heap_gate.runtime_common import Any, PROVIDER_REQUIREMENTS, PROVIDER_START_REQUIREMENTS, evaluate_terminal_invariants, now_iso, record_lane_diagnostic, repo_rel, runtime_state_lane_gate, safe_dict, safe_int
+LAB_BROKER_TOOLS = {
+    "agent_runtime_debug_lab",
+    "run_heap_code_execution_matrix",
+    "run_heap_virtual_dev_environment",
+}
 class RuntimeGateRunLoopMixin:
     def run(self) -> dict[str, Any]:
         self.bootstrap()
@@ -163,6 +168,21 @@ class RuntimeGateRunLoopMixin:
         final_bridge_reports = self.bridge_report_refs(final_events)
         final_tool_request_count = self.effective_tool_request_count(final_events)
         final_tool_execution_count = self.effective_tool_execution_count(final_events)
+        final_lab_tool_request_count = sum(
+            1
+            for event in final_events
+            if event.get("event_type") == "broker_request"
+            and safe_dict(event.get("payload")).get("provider_native_tool_call") is True
+            and str(safe_dict(event.get("payload")).get("tool") or "") in LAB_BROKER_TOOLS
+        )
+        final_lab_tool_execution_count = sum(
+            1
+            for payload in self.broker_results(final_events)
+            if payload.get("provider_native_tool_call") is True
+            and str(payload.get("tool") or "") in LAB_BROKER_TOOLS
+            and not payload.get("blocked")
+            and (safe_int(payload.get("returncode"), default=1) == 0 or payload.get("executed") is True)
+        )
         final_response_text = self.build_final_response_text(final_events)
         final_quality_signals = self.quality_output_signals(final_response_text, final_events)
         provider_reports_by_lane = {
@@ -197,6 +217,8 @@ class RuntimeGateRunLoopMixin:
             "heap_write_count": self.heap_write_count,
             "tool_request_count": final_tool_request_count,
             "tool_execution_count": final_tool_execution_count,
+            "lab_tool_request_count": final_lab_tool_request_count,
+            "lab_tool_execution_count": final_lab_tool_execution_count,
             "decision_count": self.decision_count,
             "candidate_operation_count": self.candidate_operation_count,
             "product_status": self.state["product"].get("status"),

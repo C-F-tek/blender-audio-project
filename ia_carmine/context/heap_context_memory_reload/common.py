@@ -21,7 +21,8 @@ CANONICAL_CONTEXT_FILES = (
     "docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md",
     "docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md",
     "ia_carmine/README.md",
-    "Tools/workflow/README.md",
+    "Tools/workflow/CONTEXT_INDEX.md",
+    "Tools/workflow/TOOL_CONTEXT.md",
 )
 SEMANTIC_CHUNK_ROOTS = (
     "ia_carmine",
@@ -57,6 +58,13 @@ REPO_SCAN_TEXT_SUFFIXES = {
     ".csv",
     ".bat",
     ".sh",
+}
+STRICT_EFFECTIVE_REQUIREMENTS = {
+    "rag_ollama_embed_preflight",
+    "rag_repo_ingest",
+    "rag_context_pack",
+    "gpu1_dynamic_context_pack",
+    "runtime_file_refs",
 }
 
 
@@ -160,6 +168,43 @@ def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:
     return item
 
 
+def _strict_artifact_contract_passed(artifacts: list[dict[str, Any]]) -> bool:
+    json_artifacts = [
+        item for item in artifacts if str(item.get("suffix") or "").lower() == ".json"
+    ]
+    return bool(json_artifacts) and any(item.get("json_passed") is True for item in json_artifacts)
+
+
+def effective_tool_status(
+    *,
+    requirement: str,
+    returncode: int,
+    artifacts: list[dict[str, Any]],
+) -> dict[str, Any]:
+    useful_artifacts = [item["path"] for item in artifacts if item.get("useful")]
+    passed = returncode == 0
+    strict_requirement = requirement in STRICT_EFFECTIVE_REQUIREMENTS
+    artifact_contract_passed = _strict_artifact_contract_passed(artifacts)
+    effective_passed = (
+        passed and artifact_contract_passed
+        if strict_requirement
+        else passed or bool(useful_artifacts)
+    )
+    degraded = (
+        (not passed) and bool(useful_artifacts) and not strict_requirement
+    )
+    return {
+        "passed": passed,
+        "effective_passed": effective_passed,
+        "degraded": degraded,
+        "hard_failed": not effective_passed and not degraded,
+        "artifact_useful": bool(useful_artifacts),
+        "strict_artifact_contract": strict_requirement,
+        "artifact_contract_passed": artifact_contract_passed,
+        "useful_artifact_paths": useful_artifacts,
+    }
+
+
 def run_tool(
     command: list[str],
     repo_root: Path,
@@ -178,23 +223,27 @@ def run_tool(
     )
     artifacts = [summarize_artifact(path, repo_root) for path in (artifact_paths or [])]
     existing_artifacts = [item["path"] for item in artifacts if item.get("exists")]
-    useful_artifacts = [item["path"] for item in artifacts if item.get("useful")]
-    passed = completed.returncode == 0
-    artifact_useful = bool(useful_artifacts)
+    status = effective_tool_status(
+        requirement=requirement,
+        returncode=completed.returncode,
+        artifacts=artifacts,
+    )
     return {
         "name": name,
         "requirement": requirement,
         "required": required,
         "command": command,
         "returncode": completed.returncode,
-        "passed": passed,
-        "effective_passed": passed or artifact_useful,
-        "degraded": (not passed) and artifact_useful,
-        "hard_failed": (not passed) and (not artifact_useful),
-        "artifact_useful": artifact_useful,
+        "passed": status["passed"],
+        "effective_passed": status["effective_passed"],
+        "degraded": status["degraded"],
+        "hard_failed": status["hard_failed"],
+        "artifact_useful": status["artifact_useful"],
+        "strict_artifact_contract": status["strict_artifact_contract"],
+        "artifact_contract_passed": status["artifact_contract_passed"],
         "artifact_paths": [item["path"] for item in artifacts],
         "existing_artifact_paths": existing_artifacts,
-        "useful_artifact_paths": useful_artifacts,
+        "useful_artifact_paths": status["useful_artifact_paths"],
         "artifact_summaries": artifacts,
         "stdout_tail": (completed.stdout or "")[-3000:],
         "stderr_tail": (completed.stderr or "")[-3000:],

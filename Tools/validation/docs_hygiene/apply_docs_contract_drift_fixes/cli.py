@@ -166,7 +166,7 @@ class PatchSpec:
 def specs() -> tuple[PatchSpec, ...]:
     return (
         PatchSpec(
-            path="Tools/validation/README.md",
+            path="Tools/validation/CONTEXT_INDEX.md",
             marker="## AI workload report quality gate",
             block=README_BLOCK,
             anchor="## Tool map",

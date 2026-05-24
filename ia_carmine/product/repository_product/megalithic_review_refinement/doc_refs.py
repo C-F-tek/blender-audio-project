@@ -111,7 +111,7 @@ def refine_doc_doc(
         path = str(item.get("path"))
         if path in {
             "docs/JSON_SCHEMAS.md",
-            "Tools/validation/README.md",
+            "Tools/validation/CONTEXT_INDEX.md",
             "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
         }:
             actionable.append({"path": path, "missing_terms": missing})

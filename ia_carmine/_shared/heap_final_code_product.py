@@ -122,15 +122,12 @@ def lab_status_summary(
     )
     lab_failed = required_missing or any(value is False for value in pass_values.values())
     lab_evidence_written = bool(report_refs)
-    lab_called = bool(
-        lab_evidence_written
-        or int(metrics.get("tool_request_count") or 0) > 0
-        or int(metrics.get("tool_execution_count") or 0) > 0
-        or int(metrics.get("provider_native_tool_call_count") or 0) > 0
-        or int(metrics.get("provider_native_tool_loop_requested_count") or 0) > 0
-    )
+    lab_tool_request_count = int(metrics.get("lab_tool_request_count") or 0)
+    lab_tool_execution_count = int(metrics.get("lab_tool_execution_count") or 0)
+    lab_called = bool(lab_tool_request_count > 0)
     lab_usable = bool(
-        not lab_failed
+        lab_called
+        and not lab_failed
         and lab_evidence_written
         and (
             verified_target_count > 0
@@ -139,16 +136,20 @@ def lab_status_summary(
             or int(debug.get("operation_count") or debug.get("target_count") or 0) > 0
         )
     )
-    if lab_failed:
-        lab_status = "ran_failed"
+    if lab_failed and lab_called:
+        lab_status = "requested_failed"
+    elif lab_failed:
+        lab_status = "not_requested"
     elif not lab_called:
-        lab_status = "not_run"
+        lab_status = "not_requested"
     elif not lab_usable:
-        lab_status = "ran_no_targets"
+        lab_status = "report_written_unusable" if lab_evidence_written else "requested_failed"
     elif target_count <= 0 and verified_target_count <= 0:
-        lab_status = "ran_no_targets"
+        lab_status = "requested_no_targets"
+    elif all(value is True for value in pass_values.values() if value is not None):
+        lab_status = "passed"
     else:
-        lab_status = "evidence_available"
+        lab_status = "usable"
     return {
         "lab_status": lab_status,
         "lab_called": lab_called,
@@ -160,6 +161,8 @@ def lab_status_summary(
         "lab_required_missing": required_missing,
         "tool_request_count": int(metrics.get("tool_request_count") or 0),
         "tool_execution_count": int(metrics.get("tool_execution_count") or 0),
+        "lab_tool_request_count": lab_tool_request_count,
+        "lab_tool_execution_count": lab_tool_execution_count,
         "provider_native_tool_call_count": int(metrics.get("provider_native_tool_call_count") or 0),
         "provider_textual_tool_call_count": int(metrics.get("provider_textual_tool_call_count") or 0),
         "provider_native_tool_loop_requested_count": int(metrics.get("provider_native_tool_loop_requested_count") or 0),
@@ -282,13 +285,13 @@ def render_lab_section(
     guardrails = as_dict(matrix.get("guardrails"))
     virtual_guardrails = as_dict(virtual.get("guardrails"))
     lab_status = str(lab.get("lab_status") or "not_run")
-    if lab_status == "evidence_available":
+    if lab_status in {"usable", "passed"}:
         intro = "- Il lab non e' una promessa testuale: evidenza operativa disponibile."
         capability_line = "- Sa usarlo: `True`; lab/matrix/debug hanno evidenza verificabile per target."
-    elif lab_status == "ran_failed":
+    elif lab_status == "requested_failed":
         intro = "- Il lab/tooling operativo e' stato tentato, ma almeno una evidenza richiesta e' fallita o manca."
         capability_line = "- Sa usarlo: `False`; tool/lab tentati ma non validi per chiudere il prodotto."
-    elif lab_status == "ran_no_targets":
+    elif lab_status in {"requested_no_targets", "report_written_unusable"}:
         intro = "- Il lab e' stato tentato, ma non ha prodotto target verificabili."
         capability_line = "- Sa usarlo: `False`; nessun target verificato da lab/matrix/debug."
     else:
@@ -303,7 +306,7 @@ def render_lab_section(
         f"- Lab report written: `{lab.get('lab_report_written')}`.",
         f"- Lab usable: `{lab.get('lab_usable')}`.",
         f"- Lab evidence written: `{lab.get('lab_evidence_written')}`.",
-        f"- Tool calling attempts: requests=`{lab.get('tool_request_count')}` executions=`{lab.get('tool_execution_count')}` native_provider_calls=`{lab.get('provider_native_tool_call_count')}` textual_tool_calls=`{lab.get('provider_textual_tool_call_count')}`.",
+        f"- Tool calling attempts: lab_requests=`{lab.get('lab_tool_request_count')}` lab_executions=`{lab.get('lab_tool_execution_count')}` total_requests=`{lab.get('tool_request_count')}` total_executions=`{lab.get('tool_execution_count')}` native_provider_calls=`{lab.get('provider_native_tool_call_count')}` textual_tool_calls=`{lab.get('provider_textual_tool_call_count')}`.",
         f"- Native tool loop requested: `{lab.get('provider_native_tool_loop_requested_count')}`; missing lanes: `{lab.get('provider_native_tool_missing_lanes')}`.",
         f"- Lab pass values: `{lab.get('lab_pass_values')}`; required_missing=`{lab.get('lab_required_missing')}`.",
         f"- Virtual dev report: `{virtual_report_path}`.",

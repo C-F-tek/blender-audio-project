@@ -69,7 +69,7 @@ CANONICAL_DOCS = (
     "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
     "docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md",
     "docs/JSON_SCHEMAS.md",
-    "tools/validation/README.md",
+    "Tools/validation/CONTEXT_INDEX.md",
 )
 CONTRACT_TERMS = (
     "provider_execution_performed",

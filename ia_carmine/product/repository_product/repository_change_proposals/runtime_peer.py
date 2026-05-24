@@ -122,7 +122,7 @@ def runtime_peer_evidence_proposal(summary: dict[str, Any]) -> dict[str, Any]:
         target_files=[
             "ia_carmine/product/repository_product/repository_change_proposals/cli.py",
             "ia_carmine/product/generated_patch_specs/proposal_cli.py",
-            "Tools/validation/README.md",
+            "Tools/validation/CONTEXT_INDEX.md",
         ],
         change_type="runtime_evidence_proposal_feed",
         evidence_summary={"runtime_peer_evidence": summary},
@@ -135,7 +135,7 @@ def runtime_peer_evidence_proposal(summary: dict[str, Any]) -> dict[str, Any]:
         concrete_operations=[
             {
                 "operation": "append_once",
-                "path": "Tools/validation/README.md",
+                "path": "Tools/validation/CONTEXT_INDEX.md",
                 "content": content,
                 "source_id": "P-RUNTIME-PEER-EVIDENCE-FEED",
                 "family": "runtime_peer_evidence",

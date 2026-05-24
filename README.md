@@ -125,7 +125,7 @@ automated transcript parser.
 |---|---:|---|
 | Operator-aligned fixes kept in source/docs | 16 | Cases where Codex accepted an operator correction and changed code/docs toward the requested contract. |
 | Operator blocks required | 34 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
-| Script-gaming total regression count | 569 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
+| Script-gaming total regression count | 571 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
 | Misleading/Codex lie evidence count | 115 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
 | Systemic product-lie evidence count | 16 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
 | Systemic product-lie severity score | 175 | Sum of severity weights for structural product lies; operator override may exceed the normal `5` severity. |
@@ -416,7 +416,7 @@ Metadata-only patch drafts are not enough for a successful review-PR product. `o
 | Main runtime architecture | `docs/MAIN_RUNTIME_ARCHITECTURE.md` |
 | Unified launcher manifest contract | `docs/UNIFIED_LOCAL_AI_LAUNCHER_CONTRACT.md` |
 | Unified launcher internal workflow | `docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md` |
-| Validators and inventories | `Tools/validation/README.md` and validator-smoke map |
+| Validators and inventories | `Tools/validation/CONTEXT_INDEX.md`, `Tools/validation/TOOL_CONTEXT.md` and validator-smoke map |
 | NPU/helper package | `Tools/npu/pipeline/README.md` |
 | Repository area map | `docs/MODULE_MAP.md` |
 | Documentation map and pruning | `docs/DOCUMENTATION_MAP_AND_PRUNING_PLAN.md` |

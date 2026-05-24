@@ -88,7 +88,8 @@ def run_ollama_probe(
     heap_delta_text_required = bool(heap_patch_prompt_required(prompt or ""))
     explicit_tool_call_required = prompt_explicitly_requires_tool_call(prompt or "")
     native_tool_loop_relevant = bool(
-        native_tool_decision_prompted and explicit_tool_call_required
+        native_tool_decision_prompted
+        and (explicit_tool_call_required or heap_delta_text_required)
     )
     prompt_attempts: list[dict[str, Any]] = []
     partial_json = Path(partial_output).expanduser() if partial_output else None
@@ -272,14 +273,29 @@ def run_ollama_probe(
     native_classification = "ollama_native_tool_decision_not_prompted"
     warnings: list[str] = []
     errors: list[str] = []
-    native_tool_loop_requested = bool(native_tool_calls)
+    provider_native_tool_call_required = bool(explicit_tool_call_required)
+    provider_native_tool_api_supported = True
+    native_tool_loop_requested = bool(native_tool_calls or provider_native_tool_call_required)
+    provider_native_tool_api_unavailable = bool(
+        provider_native_tool_call_required and not provider_native_tool_api_supported
+    )
+    provider_native_tool_call_required_unmet = bool(
+        provider_native_tool_call_required
+        and provider_native_tool_api_supported
+        and native_tool_loop_relevant
+        and not native_tool_calls
+    )
     if native_tool_calls:
         native_classification = "ollama_native_tool_calls_emitted"
     elif native_tool_loop_relevant:
         native_classification = "ollama_native_tool_not_selected_for_heap_delta"
         warnings.append(
-            "Heap/code-product provider task did not emit a native broker tool_call; text heap delta remains authoritative."
+            "Heap/code-product provider task did not emit a native broker tool_call; text heap delta is raw evidence only."
         )
+    if provider_native_tool_api_unavailable:
+        errors.append("provider_native_tool_api_unavailable")
+    elif provider_native_tool_call_required_unmet:
+        errors.append("provider_native_tool_call_required_unmet")
     if rejected_validation_refs:
         warnings.append(
             "Rejected bare file refs in VALIDATION_COMMANDS: "
@@ -362,6 +378,16 @@ def run_ollama_probe(
         default_role=provider_role,
     )
     provider_work_verified = bool(work_status.get("provider_work_verified"))
+    if provider_native_tool_api_unavailable or provider_native_tool_call_required_unmet:
+        provider_work_verified = False
+        work_status["provider_work_verified"] = False
+        work_status["provider_requirement_complete"] = False
+        work_status["semantic_contract_passed"] = False
+        work_status["provider_rejection_reason"] = (
+            "provider_native_tool_api_unavailable"
+            if provider_native_tool_api_unavailable
+            else "provider_native_tool_call_required_unmet"
+        )
     provider_execution_attempted = bool(
         response_text
         or prompt_attempts
@@ -392,7 +418,7 @@ def run_ollama_probe(
             "selected_model": selected_model,
             "response_text": response_text,
             "request_prompt": prompt or "",
-            "native_tool_loop_supported": True,
+            "native_tool_loop_supported": provider_native_tool_api_supported,
             "ollama_base_url": effective_base_url,
             "ollama_unload_performed": unload_performed,
             "ollama_unload_verified": unload_verified,

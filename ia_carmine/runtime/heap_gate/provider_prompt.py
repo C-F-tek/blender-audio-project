@@ -34,7 +34,18 @@ class RuntimeGateProviderPromptMixin:
             return ""
 
         artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
-        if artifacts.get("startup_context_pack_markdown"):
+        if artifacts.get("gpu1_dynamic_context_pack_markdown"):
+            preferred_keys = (
+                "gpu1_dynamic_context_pack_markdown",
+                "startup_context_pack_markdown",
+                "tool_catalog_markdown",
+                "semantic_code_chunks_markdown",
+                "semantic_evidence_chunks_markdown",
+                "shared_memory_markdown",
+                "operational_memory_search_markdown",
+                "repo_docs_map_markdown",
+            )
+        elif artifacts.get("startup_context_pack_markdown"):
             preferred_keys = (
                 "startup_context_pack_markdown",
                 "shared_memory_markdown",
@@ -113,7 +124,7 @@ class RuntimeGateProviderPromptMixin:
 
         return (
             "STARTUP_CONTEXT_DIGEST_FOR_GPU1:\n"
-            "Use this as active heap context. Prefer exact repo-relative paths and concrete validation commands.\n\n"
+            "Use this as compact active heap context. Broker tool execution must use native API tool_calls from the provider adapter; Markdown/JSON/prose tool-call text is not executable evidence. Prefer exact repo-relative paths and broker-validated runtime_file_refs.\n\n"
             + "\n\n".join(sections)
         )
 

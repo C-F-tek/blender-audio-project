@@ -20,8 +20,6 @@ from Tools.validation.heap_runtime.provider_loop_tail_checks import (
     check_gpu1_workload_absorption,
     check_rejected_gpu1_retry_contract,
 )
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
@@ -59,16 +57,12 @@ def main() -> int:
         output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
-
-
 def _check_heap_loop_bootstrap_import_contract(repo_root: Path) -> dict[str, Any]:
     loop_steps = _read(repo_root, "ia_carmine/runtime/heap_gate/loop_steps.py")
     errors: list[str] = []
     if "safe_dict(" in loop_steps and "safe_dict," not in loop_steps:
         errors.append("loop_steps.py uses safe_dict but does not import it from runtime_common")
     return {"name": "heap_loop_bootstrap_import_contract", "errors": errors}
-
-
 def _check_independent_sidecar_watchdogs(repo_root: Path) -> dict[str, Any]:
     from ia_carmine.runtime.heap_gate.provider_time import build_provider_lane_time_contracts
 
@@ -93,8 +87,6 @@ def _check_independent_sidecar_watchdogs(repo_root: Path) -> dict[str, Any]:
     if "pending_provider_sidecar_collections.append" not in provider_execution:
         errors.append("provider loop does not retain async sidecar process handles")
     return {"name": "independent_sidecar_watchdogs", "errors": errors}
-
-
 def _check_boot_handoff(repo_root: Path) -> dict[str, Any]:
     coexistence = _read(repo_root, "ia_carmine/providers/provider_mesh/provider_role_coexistence/cli.py")
     preflight = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_coexistence_preflight.py")
@@ -218,7 +210,6 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
 
 def _probe_native_tool_routing() -> list[str]:
     from ia_carmine.runtime.heap_gate.tool_broker_native_calls import publish_provider_native_tool_calls
-
     owner = _FakeNativeOwner(
         [
             _fake_report("gpu1_planner", "gpu1.json", "generic_write", 0),
@@ -253,7 +244,6 @@ def _probe_native_tool_routing() -> list[str]:
 
 def _probe_no_tool_generic_write_capture() -> list[str]:
     from ia_carmine.runtime.heap_gate.tool_broker_native_calls import publish_provider_native_tool_calls
-
     owner = _FakeNativeOwner(
         [
             _fake_no_tool_report("gpu1_planner", "gpu1-no-tool.json", 0),
@@ -266,12 +256,19 @@ def _probe_no_tool_generic_write_capture() -> list[str]:
     lanes = [item.get("lane") for item in requests]
     capture_modes = [item.get("args", {}).get("capture_mode") for item in requests]
     errors: list[str] = []
-    if published != 1:
-        errors.append(f"expected one GPU1 no-tool generic_write capture, got {published}")
-    if lanes != ["gpu1_planner"]:
-        errors.append(f"expected only GPU1 no-tool capture lane, got {lanes}")
-    if capture_modes != ["no_tool_capture"]:
-        errors.append(f"expected no_tool_capture modes, got {capture_modes}")
+    if published != 0:
+        errors.append(f"expected no broker request for no-tool prose, got {published}")
+    if lanes:
+        errors.append(f"expected no no-tool capture request lanes, got {lanes}")
+    if capture_modes:
+        errors.append(f"expected no no-tool capture modes, got {capture_modes}")
+    primary_raw = [
+        item.get("payload", {}).get("lane")
+        for item in owner.published
+        if item.get("payload", {}).get("kind") == "primary_free_text_without_native_tool_call"
+    ]
+    if primary_raw != ["gpu1_planner"]:
+        errors.append(f"GPU1 no-tool prose did not stay raw evidence: {primary_raw}")
     raw_lanes = [
         item.get("payload", {}).get("lane")
         for item in owner.published
@@ -284,7 +281,6 @@ def _probe_no_tool_generic_write_capture() -> list[str]:
 
 def _probe_generic_write_broker_metadata_args(repo_root: Path) -> list[str]:
     from ia_carmine.runtime.runtime_tool.broker.executor import build_report
-
     errors: list[str] = []
     with TemporaryDirectory(prefix="generic-write-broker-") as tmp:
         root = Path(tmp)
@@ -387,7 +383,16 @@ def _fake_report(lane: str, output: str, tool: str, revision: int) -> dict[str, 
         "output": output,
         "revision": revision,
         "response_text": f"{lane} response",
-        "tool_calls": [{"id": f"{lane}_call", "tool": tool, "args": {}, "reason": "smoke"}],
+        "tool_calls": [
+            {
+                "id": f"{lane}_call",
+                "tool": tool,
+                "args": {},
+                "reason": "smoke",
+                "native_provider": "ollama",
+                "native_shape": "ollama-python.message.tool_calls[].function",
+            }
+        ],
     }
 
 
@@ -419,7 +424,6 @@ def _fake_no_tool_report(lane: str, output: str, revision: int) -> dict[str, Any
 
 def _probe_npu_peer_evidence_timeout() -> list[str]:
     from ia_carmine._shared.provider_work_verification import provider_work_status
-
     report = {
         "lane": "npu_micro_task_auditor",
         "provider_compute_device": "openvino/NPU",
@@ -488,7 +492,6 @@ def _probe_npu_generic_write_result_hydration() -> list[str]:
 def _probe_generic_write_no_tool_product() -> list[str]:
     from ia_carmine.runtime.heap_gate.generic_write_followup import generic_write_document_product
     from ia_carmine.runtime.runtime_tool.generic_write.cli import build_report
-
     errors: list[str] = []
     with TemporaryDirectory(prefix="generic-write-smoke-") as tmp:
         root = Path(tmp)
@@ -563,7 +566,6 @@ def _probe_generic_write_no_tool_product() -> list[str]:
 
         class Owner:
             pass
-
         owner = Owner()
         owner.repo_root = root
         owner.provider_reports = [{"lane": "gpu1_planner", "revision": 3}]
@@ -582,7 +584,6 @@ def _probe_generic_write_no_tool_product() -> list[str]:
 
 def _probe_peer_pointer_requires_later_gpu1() -> list[str]:
     from ia_carmine.runtime.heap_gate.pointer_soft_lock import pointer_closure_summary
-
     peer_final = [
         {"block_id": "p0", "role": "gpu1_planner", "accepted": True},
         {
@@ -625,7 +626,6 @@ def _probe_final_readable_generic_write_section(repo_root: Path) -> list[str]:
 
 def _probe_unicode_json_print() -> list[str]:
     from ia_carmine._shared.report_io import print_json_report
-
     previous_stdout = sys.stdout
     buffer = io.BytesIO()
     sys.stdout = io.TextIOWrapper(buffer, encoding="cp1252", errors="strict")

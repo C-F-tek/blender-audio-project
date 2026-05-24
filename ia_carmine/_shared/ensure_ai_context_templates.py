@@ -48,7 +48,7 @@ LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md
 | Patch-spec workflow | `PATCH_SPEC_WORKFLOW.md` |
 | Project status | `PROJECT_STATUS_POINT.md` |
 | AI docs entrypoint | `AI_DOCS_ENTRYPOINT.md` |
-| Tooling index | `../tools/ai/README.md`, `../tools/workflow/README.md`, `../tools/validation/README.md` |
+| Tooling index | `../Tools/CONTEXT_INDEX.md`, `../Tools/workflow/CONTEXT_INDEX.md`, `../Tools/validation/CONTEXT_INDEX.md` |
 
 ## Policy
 

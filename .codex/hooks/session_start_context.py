@@ -17,7 +17,8 @@ GUIDE_CANDIDATES = [
     "AGENTS.md",
     "README.md",
     "docs/LOCAL_AI_RUN_BOOTSTRAP.md",
-    "docs/LOCAL_AI_TASKS/README.md",
+    "docs/README.md",
+    "docs/AI_DOCS_ENTRYPOINT.md",
     "docs/LOCAL_AI_TASKS/gpu-npu-parallel-evidence-runbook.md",
     "docs/LOCAL_AI_TASKS/heavy-gpu-local-ai-diagnostics-handoff.md",
 ]

@@ -104,14 +104,14 @@ def build_proposals() -> list[dict[str, Any]]:
             ),
             target_files=[
                 "Tools/validation/pipeline/check_local_ai_adapter_manifest/cli.py",
-                "Tools/validation/README.md",
+                "Tools/validation/CONTEXT_INDEX.md",
             ],
             change_type="validator",
             patch_sketch=[
                 "Create a report-only validator for local_ai_task_pipeline_adapter_manifest JSON files.",
                 "Validate enrichment_requested flags, enrichment_outputs paths, context_file_count, provider_execution_requested and patch_application_performed false.",
                 "Reject missing selected-chunks evidence when build_selected_chunks_evidence is true.",
-                "Document usage in Tools/validation/README.md.",
+                "Document usage in Tools/validation/CONTEXT_INDEX.md.",
             ],
             validation_commands=[
                 "python -m Tools.validation check_python_syntax --repo-root . --output output/validation/python_syntax.json",
@@ -125,7 +125,7 @@ def build_proposals() -> list[dict[str, Any]]:
             ],
             suggestion_outputs=[
                 suggestion("Tools/validation/pipeline/check_local_ai_adapter_manifest/cli.py"),
-                suggestion("Tools/validation/README.md", "markdown"),
+                suggestion("Tools/validation/CONTEXT_INDEX.md", "markdown"),
             ],
         ),
         base_proposal(
@@ -175,7 +175,7 @@ def build_proposals() -> list[dict[str, Any]]:
             target_files=[
                 "docs/LOCAL_AI_WORKFLOW.md",
                 "docs/LOCAL_AI_RUN_BOOTSTRAP.md",
-                "docs/LOCAL_AI_TASKS/README.md",
+                "docs/AI_DOCS_ENTRYPOINT.md",
             ],
             change_type="docs_contract",
             patch_sketch=[
@@ -197,7 +197,7 @@ def build_proposals() -> list[dict[str, Any]]:
             suggestion_outputs=[
                 suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
                 suggestion("docs/LOCAL_AI_RUN_BOOTSTRAP.md", "markdown"),
-                suggestion("docs/LOCAL_AI_TASKS/README.md", "markdown"),
+                suggestion("docs/AI_DOCS_ENTRYPOINT.md", "markdown"),
             ],
         ),
         base_proposal(

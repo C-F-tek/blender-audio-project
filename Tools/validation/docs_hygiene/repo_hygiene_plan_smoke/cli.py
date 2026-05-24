@@ -96,7 +96,7 @@ def smoke_delete_marker_guards(source_repo: Path) -> dict[str, Any]:
         repo.mkdir()
         write(repo / ".git/HEAD", "ref: refs/heads/main\n")
         write(
-            repo / "docs/LOCAL_AI_TASKS/README.md/part-001.md",
+            repo / "docs/AI_DOCS_ENTRYPOINT.md/part-001.md",
             "<!-- IA-CARMINE-MD-SPLIT: part -->\n# Current operational README\n\nHistorical wording exists, but this path is protected.\n",
         )
         write(
@@ -107,7 +107,7 @@ def smoke_delete_marker_guards(source_repo: Path) -> dict[str, Any]:
             repo / "docs/DELETE_ME.md/part-001.md",
             "<!-- IA-CARMINE-MD-SPLIT: part -->\n# Delete me\n\nStatus: obsolete\nHistorical obsolete legacy split snapshot.\n",
         )
-        write(repo / "docs/LOCAL_AI_TASKS/README.md/_ia_carmine_md_split_manifest.json", "{}\n")
+        write(repo / "docs/AI_DOCS_ENTRYPOINT.md/_ia_carmine_md_split_manifest.json", "{}\n")
         write(repo / "docs/OLD_SPLIT.md/_ia_carmine_md_split_manifest.json", "{}\n")
         write(repo / "docs/DELETE_ME.md/_ia_carmine_md_split_manifest.json", "{}\n")
 
@@ -121,7 +121,7 @@ def smoke_delete_marker_guards(source_repo: Path) -> dict[str, Any]:
             and "docs/DELETE_ME.md/part-001.md" in targets
             and markers.get("docs/DELETE_ME.md/part-001.md") == "Status: obsolete"
             and "docs/OLD_SPLIT.md/part-001.md" not in targets
-            and "docs/LOCAL_AI_TASKS/README.md/part-001.md" not in targets
+            and "docs/AI_DOCS_ENTRYPOINT.md/part-001.md" not in targets
         )
         return {
             "name": "delete_marker_required_and_current_paths_protected",

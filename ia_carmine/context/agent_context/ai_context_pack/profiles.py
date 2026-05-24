@@ -52,7 +52,8 @@ PROFILES: dict[str, dict[str, Any]] = {
             {"path": "docs/LOCAL_AI_WORKFLOW.md", "role": "ai_workflow"},
             {"path": "docs/PATCH_SPEC_WORKFLOW.md", "role": "patch_spec_workflow"},
             {"path": "docs/JSON_SCHEMAS.md", "role": "schema_notes"},
-            {"path": "tools/validation/README.md", "role": "validation_commands"},
+            {"path": "Tools/validation/CONTEXT_INDEX.md", "role": "validation_commands"},
+            {"path": "Tools/validation/TOOL_CONTEXT.md", "role": "validation_tool_context"},
             {
                 "path": "ia_carmine/product/repository_product/repository_change_proposals/cli.py",
                 "role": "proposal_builder",
@@ -113,7 +114,8 @@ PROFILES: dict[str, dict[str, Any]] = {
                 "path": "ia_carmine/product/repository_product/github_evidence_bundle/cli.py",
                 "role": "evidence_builder",
             },
-            {"path": "tools/validation/README.md", "role": "validation_commands"},
+            {"path": "Tools/validation/CONTEXT_INDEX.md", "role": "validation_commands"},
+            {"path": "Tools/validation/TOOL_CONTEXT.md", "role": "validation_tool_context"},
         ],
         "optional_files": [
             {
@@ -135,27 +137,20 @@ PROFILES: dict[str, dict[str, Any]] = {
         "description": "AI artifact pipeline, dry-run matrix and refactor-status context.",
         "required_files": [
             {
-                "path": "docs/AI_PIPELINE_ARCHITECTURE.md",
+                "path": "docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md",
                 "role": "pipeline_architecture",
             },
             {
-                "path": "docs/AI_PIPELINE_REFACTOR_STATUS.md",
+                "path": "docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md",
                 "role": "pipeline_refactor_status",
             },
-            {"path": "docs/AI_ARTIFACT_SCHEMAS.md", "role": "artifact_schema_notes"},
-            {
-                "path": "tools/ai/pipeline/refactor_status.py",
-                "role": "machine_readable_status",
-            },
+            {"path": "docs/JSON_SCHEMAS.md", "role": "artifact_schema_notes"},
             {
                 "path": "ia_carmine/product/pipeline/dry_run_matrix/cli.py",
                 "role": "dry_run_matrix",
             },
-            {
-                "path": "tools/validation/check_refactor_status_consistency.py",
-                "role": "status_validator",
-            },
-            {"path": "tools/validation/README.md", "role": "validation_commands"},
+            {"path": "Tools/validation/CONTEXT_INDEX.md", "role": "validation_commands"},
+            {"path": "Tools/validation/TOOL_CONTEXT.md", "role": "validation_tool_context"},
         ],
         "optional_files": [
             {"path": "tools/ai/pipeline/markdown_report.py", "role": "markdown_report"},
@@ -178,7 +173,8 @@ PROFILES: dict[str, dict[str, Any]] = {
             {"path": "docs/PROJECT_STATUS_POINT.md", "role": "status_checkpoint"},
             {"path": "docs/DATA_FLOW.md", "role": "data_flow"},
             {"path": "docs/JSON_SCHEMAS.md", "role": "schema_notes"},
-            {"path": "tools/validation/README.md", "role": "validation_commands"},
+            {"path": "Tools/validation/CONTEXT_INDEX.md", "role": "validation_commands"},
+            {"path": "Tools/validation/TOOL_CONTEXT.md", "role": "validation_tool_context"},
         ],
         "optional_files": [
             {"path": "docs/TECH_DEBT_TRACKER.md", "role": "debt_tracker"},

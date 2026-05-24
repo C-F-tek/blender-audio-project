@@ -35,7 +35,8 @@ def run(cmd: list[str], cwd: Path) -> dict[str, Any]:
 def seed_repo(repo: Path) -> None:
     (repo / "Tools/validation").mkdir(parents=True)
     (repo / "ia_carmine").mkdir(parents=True)
-    (repo / "Tools/validation/README.md").write_text("# Validation\n", encoding="utf-8")
+    (repo / "Tools/validation/CONTEXT_INDEX.md").write_text("# Validation\n", encoding="utf-8")
+    (repo / "Tools/validation/TOOL_CONTEXT.md").write_text("# Tool Context\n", encoding="utf-8")
     (repo / "ia_carmine/product/repository_product/repository_change_proposals/cli.py").write_text(
         "# placeholder\n", encoding="utf-8"
     )
@@ -143,7 +144,7 @@ def seed_runtime_reports(repo: Path) -> None:
                 {
                     "id": "P-EMPTY",
                     "reason": "metadata-only draft operation has no concrete replacements",
-                    "target_files": ["Tools/validation/README.md"],
+                    "target_files": ["Tools/validation/CONTEXT_INDEX.md"],
                 }
             ],
         },

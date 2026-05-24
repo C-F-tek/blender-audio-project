@@ -12,8 +12,10 @@ from .common import DEFAULT_REQUEST, REVISION_CONTEXT_MARKER
 HARD_STARTUP_REQUIREMENTS = {
     "rag_ollama_embed_preflight",
     "rag_repo_ingest",
+    "rag_index_ready",
     "rag_context_pack",
-    "startup_unified_context_pack",
+    "gpu1_dynamic_context_pack",
+    "gpu1_dynamic_context_pack_api_ready",
 }
 
 
@@ -84,6 +86,37 @@ def startup_artifact_refs(startup_payload: dict[str, Any]) -> list[str]:
     return refs
 
 
+def _dynamic_gpu1_context_ready(startup_payload: dict[str, Any]) -> bool:
+    contract = (
+        startup_payload.get("contract")
+        if isinstance(startup_payload.get("contract"), dict)
+        else {}
+    )
+    artifacts = (
+        startup_payload.get("artifacts")
+        if isinstance(startup_payload.get("artifacts"), dict)
+        else {}
+    )
+    return bool(
+        contract.get("gpu1_dynamic_context_pack_loaded") is True
+        and contract.get("gpu1_dynamic_context_pack_api_ready") is True
+        and artifacts.get("gpu1_dynamic_context_pack_json")
+    )
+
+
+def _rag_hard_surface_ready(startup_payload: dict[str, Any]) -> bool:
+    contract = (
+        startup_payload.get("contract")
+        if isinstance(startup_payload.get("contract"), dict)
+        else {}
+    )
+    return bool(
+        contract.get("rag_index_ready") is True
+        and contract.get("rag_repo_ingest_passed") is True
+        and contract.get("rag_context_pack_loaded") is True
+    )
+
+
 def startup_can_continue(
     *,
     startup_result: dict[str, Any],
@@ -92,13 +125,20 @@ def startup_can_continue(
     strict_startup_reload: bool,
     skipped: bool,
 ) -> bool:
-    if skipped or startup_result.get("passed") is True:
+    if skipped:
+        return True
+    if not _dynamic_gpu1_context_ready(startup_payload):
+        return False
+    if not _rag_hard_surface_ready(startup_payload):
+        return False
+    if startup_result.get("passed") is True:
         return True
     blocking = startup_payload.get("blocking_requirements")
     blocking_requirements = {
         str(item) for item in blocking if isinstance(item, str)
     } if isinstance(blocking, list) else set()
-    if blocking_requirements & HARD_STARTUP_REQUIREMENTS:
+    hard_blockers = blocking_requirements & HARD_STARTUP_REQUIREMENTS
+    if hard_blockers:
         return False
     artifact_ready = bool(startup_artifact_refs(startup_payload))
     if strict_startup_reload:

@@ -2,7 +2,25 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
+
+from ia_carmine.runtime.runtime_tool.broker.common import default_input_schema
+
+API_NATIVE_TOOL_CALL_SHAPES = {
+    ("ollama", "ollama-python.message.tool_calls[].function"),
+}
+
+
+def is_api_native_tool_call(call: dict[str, Any], *, lane: str = "") -> bool:
+    """Return true only for provider API tool-call objects, not text JSON."""
+    provider = str(call.get("native_provider") or "").strip()
+    shape = str(call.get("native_shape") or "").strip()
+    if (provider, shape) in API_NATIVE_TOOL_CALL_SHAPES:
+        return True
+    if lane == "npu_micro_task_auditor" and provider == "openvino_genai":
+        return False
+    return False
 
 
 def broker_tool_schemas(
@@ -20,27 +38,155 @@ def broker_tool_schemas(
     for name, spec in sorted(TOOL_SPECS.items()):
         if allowed and name not in allowed:
             continue
-        properties: dict[str, Any] = {}
-        if not compact:
-            properties = {
-                arg: {
-                    "type": ["string", "number", "boolean", "array", "object"],
-                    "description": f"Broker-validated argument `{arg}`.",
-                }
-                for arg in spec.allowed_args
-            }
+        input_schema = (
+            spec.input_schema
+            if getattr(spec, "input_schema", None) and not compact
+            else _input_schema(spec.allowed_args, compact=compact)
+        )
         schemas.append(
             {
                 "type": "function",
                 "function": {
                     "name": name,
                     "description": "IA-Carmine broker tool." if compact else spec.description,
-                    "parameters": {
-                        "type": "object",
-                        "properties": properties,
-                        "additionalProperties": False,
-                    },
+                    "parameters": input_schema,
                 },
             }
         )
     return schemas
+
+
+def broker_tool_api_definitions(
+    tool_names: list[str] | tuple[str, ...] | None = None,
+    *,
+    compact: bool = False,
+) -> list[dict[str, Any]]:
+    """Return broker tools in the runtime API contract shape.
+
+    These definitions are separate from the provider SDK `tools=` payload above:
+    startup and packet reports use them to prove that published tools are
+    registry-backed, schema-serializable and lane-scoped before GPU1 sees them.
+    """
+    try:
+        from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
+    except ImportError:  # pragma: no cover
+        from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS  # type: ignore
+
+    allowed = set(tool_names or [])
+    definitions: list[dict[str, Any]] = []
+    for name, spec in sorted(TOOL_SPECS.items()):
+        if allowed and name not in allowed:
+            continue
+        input_schema = (
+            spec.input_schema
+            if getattr(spec, "input_schema", None) and not compact
+            else _input_schema(spec.allowed_args, compact=compact)
+        )
+        definition = {
+            "name": name,
+            "description": spec.description,
+            "input_schema": input_schema,
+            "side_effect_policy": _side_effect_policy(name),
+            "expected_artifacts": _expected_artifacts(name),
+            "timeout_seconds": _timeout_seconds(name),
+            "lane_permissions": _lane_permissions(name),
+            "handler_resolvable": callable(getattr(spec, "builder", None)),
+            "schema_serializable": _json_schema_serializable(input_schema),
+        }
+        definitions.append(definition)
+    return definitions
+
+
+def validate_broker_tool_api_definitions(
+    definitions: list[dict[str, Any]],
+) -> dict[str, Any]:
+    errors: list[str] = []
+    for item in definitions:
+        name = str(item.get("name") or "").strip()
+        if not name:
+            errors.append("tool_definition_missing_name")
+        if not isinstance(item.get("input_schema"), dict):
+            errors.append(f"{name}:input_schema_missing")
+        elif not item.get("schema_serializable"):
+            errors.append(f"{name}:input_schema_not_serializable")
+        if not item.get("handler_resolvable"):
+            errors.append(f"{name}:handler_not_resolvable")
+        if not item.get("expected_artifacts"):
+            errors.append(f"{name}:expected_artifacts_missing")
+        if not item.get("lane_permissions"):
+            errors.append(f"{name}:lane_permissions_missing")
+    return {
+        "passed": not errors,
+        "tool_definition_count": len(definitions),
+        "errors": errors,
+    }
+
+
+def _input_schema(args: tuple[str, ...], *, compact: bool) -> dict[str, Any]:
+    if compact:
+        return {"type": "object", "properties": {}, "additionalProperties": False}
+    schema = default_input_schema(args)
+    for arg, field in schema.get("properties", {}).items():
+        if isinstance(field, dict):
+            field["description"] = f"Broker-validated argument `{arg}`."
+    return schema
+
+
+def _side_effect_policy(name: str) -> str:
+    read_only = {
+        "build_agent_memory_inventory",
+        "build_agent_agnostic_tool_inventory",
+        "build_agent_transient_request_context",
+        "check_python_syntax",
+        "select_semantic_code_chunks",
+        "runtime_file_refs",
+    }
+    source_forbidden = {"analyze_code_product_artifact"}
+    if name in source_forbidden:
+        return "source_write_forbidden"
+    if name in read_only:
+        return "read_only"
+    return "writes_artifact"
+
+
+def _expected_artifacts(name: str) -> list[str]:
+    if name == "runtime_file_refs":
+        return ["runtime_file_refs_json", "runtime_file_refs_markdown"]
+    if name == "run_heap_code_execution_matrix":
+        return ["code_execution_matrix_json", "code_execution_matrix_markdown"]
+    if name == "run_heap_virtual_dev_environment":
+        return ["virtual_dev_environment_json", "virtual_dev_environment_markdown"]
+    if name == "agent_runtime_debug_lab":
+        return ["runtime_debug_lab_json", "runtime_debug_lab_markdown"]
+    if name == "synthesize_patch_candidates":
+        return ["patch_candidate_synthesis_json", "patch_candidate_synthesis_markdown"]
+    if name == "generic_write":
+        return ["generic_write_json", "generic_write_markdown"]
+    return [f"{name}_json", f"{name}_markdown"]
+
+
+def _timeout_seconds(name: str) -> int:
+    if name in {"run_heap_code_execution_matrix", "run_heap_virtual_dev_environment"}:
+        return 120
+    if name in {"agent_runtime_debug_lab", "synthesize_patch_candidates"}:
+        return 90
+    return 60
+
+
+def _lane_permissions(name: str) -> dict[str, str]:
+    permissions = {
+        "gpu1_planner": "operative_broker_request_allowed",
+        "gpu0_peer": "peer_evidence_only_requires_later_gpu1_consumption",
+        "npu_micro_task_auditor": "diagnostic_only_no_product_close",
+    }
+    if name == "analyze_code_product_artifact":
+        permissions["gpu1_planner"] = "report_only_apply_forbidden_without_boundary"
+    return permissions
+
+
+def _json_schema_serializable(schema: dict[str, Any]) -> bool:
+    try:
+        json.dumps(schema, ensure_ascii=False)
+    except TypeError:
+        return False
+    return True

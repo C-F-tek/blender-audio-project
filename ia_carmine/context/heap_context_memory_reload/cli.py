@@ -46,6 +46,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rag-skip-query-embedding", action="store_true")
     parser.add_argument("--startup-provider-input-workers", type=int, default=None)
     parser.add_argument("--startup-required-context-profile", default="")
+    parser.add_argument("--ai-context-pack-profile", default="")
     parser.add_argument(
         "--startup-operational-memory-query",
         default="",

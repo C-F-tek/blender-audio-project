@@ -38,6 +38,11 @@ def requirement_status(
     return required, optional, blocking, degraded, optional_failed
 
 
+def append_unique(values: list[str], value: str) -> None:
+    if value and value not in values:
+        values.append(value)
+
+
 def build_manifest(
     *,
     stamp: str,
@@ -56,15 +61,21 @@ def build_manifest(
     startup_effective_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     required, optional, blocking, degraded, optional_failed = requirement_status(commands)
-    startup_reload_degraded = bool(degraded or optional_failed)
-    required_passed = not blocking
-    optional_passed = all(bool(item.get("effective_passed")) for item in optional)
-    input_ready_before_heap = required_passed and bool(context_files)
-    strict_startup = bool(strict_startup_reload or strict_ai_context_pack)
-    passed = bool(input_ready_before_heap and (not strict_startup or not startup_reload_degraded))
+    stale_static_context_demoted = "startup_unified_context_pack" in blocking
+    if stale_static_context_demoted:
+        blocking = [item for item in blocking if item != "startup_unified_context_pack"]
+        append_unique(degraded, "startup_unified_context_pack")
+        warnings = [
+            *warnings,
+            (
+                "stale_static_context_reference_demoted:startup_unified_context_pack;"
+                " hard blockers must be rag_context_pack or gpu1_dynamic_context_pack"
+            ),
+        ]
     rag_pack = artifact_json(repo_root, artifacts, "rag_context_pack_json")
     rag_ingest = artifact_json(repo_root, artifacts, "rag_repo_ingest_json")
     unified_pack = artifact_json(repo_root, artifacts, "startup_context_pack_json")
+    gpu1_dynamic_context_pack = artifact_json(repo_root, artifacts, "gpu1_dynamic_context_pack_json")
     startup_scan = artifact_json(repo_root, artifacts, "startup_repo_scan_index_json")
     rag_index_ready = rag_ingest.get("rag_index_ready") is True
     rag_repo_ingest_passed = rag_ingest.get("passed") is True
@@ -77,6 +88,40 @@ def build_manifest(
         rag_pack.get("passed") is True and as_int(rag_pack.get("retrieved_count")) > 0
     )
     unified_pack_loaded = bool(unified_pack.get("passed") is True)
+    gpu1_dynamic_context_pack_loaded = bool(
+        gpu1_dynamic_context_pack.get("passed") is True
+        and gpu1_dynamic_context_pack.get("active_context_pack") is True
+    )
+    gpu1_dynamic_context_pack_api_ready = bool(
+        gpu1_dynamic_context_pack.get("api_native_tool_contract_ready") is True
+    )
+    if not rag_repo_ingest_passed:
+        append_unique(blocking, "rag_repo_ingest")
+    if not rag_index_ready:
+        append_unique(blocking, "rag_index_ready")
+    if not rag_pack_loaded or not rag_index_ready:
+        append_unique(blocking, "rag_context_pack")
+    if not gpu1_dynamic_context_pack_loaded:
+        append_unique(blocking, "gpu1_dynamic_context_pack")
+    if not gpu1_dynamic_context_pack_api_ready:
+        append_unique(blocking, "gpu1_dynamic_context_pack_api_ready")
+    hard_context_blockers = [
+        item
+        for item in (
+            "rag_repo_ingest",
+            "rag_index_ready",
+            "rag_context_pack",
+            "gpu1_dynamic_context_pack",
+            "gpu1_dynamic_context_pack_api_ready",
+        )
+        if item in blocking
+    ]
+    startup_reload_degraded = bool(degraded or optional_failed)
+    required_passed = not blocking
+    optional_passed = all(bool(item.get("effective_passed")) for item in optional)
+    input_ready_before_heap = required_passed and bool(context_files)
+    strict_startup = bool(strict_startup_reload or strict_ai_context_pack)
+    passed = bool(input_ready_before_heap and (not strict_startup or not startup_reload_degraded))
     return {
         "schema_version": 1,
         "kind": "heap_context_memory_reload_manifest",
@@ -114,8 +159,10 @@ def build_manifest(
         "required_reload_passed": required_passed,
         "optional_reload_passed": optional_passed,
         "blocking_requirements": blocking,
+        "hard_context_blockers": hard_context_blockers,
         "degraded_requirements": degraded,
         "optional_failed_requirements": optional_failed,
+        "stale_static_context_block_demoted": stale_static_context_demoted,
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -150,7 +197,14 @@ def build_manifest(
             "providers_not_started_reason": providers_not_started_reason,
             "rag_context_pack_loaded": bool(rag_pack_loaded and rag_index_ready),
             "startup_unified_context_pack_loaded": unified_pack_loaded,
+            "startup_unified_context_pack_blocking": False,
+            "stale_static_context_block_demoted": stale_static_context_demoted,
+            "gpu1_dynamic_context_pack_loaded": gpu1_dynamic_context_pack_loaded,
+            "gpu1_dynamic_context_pack_required": True,
+            "gpu1_dynamic_context_pack_api_ready": gpu1_dynamic_context_pack_api_ready,
+            "gpu1_dynamic_context_pack_path": artifacts.get("gpu1_dynamic_context_pack_json", ""),
             "rag_context_pack_required": True,
+            "hard_context_blockers": hard_context_blockers,
             "startup_unified_context_pack_required": True,
             "semantic_evidence_chunks_loaded": bool(artifacts.get("semantic_evidence_chunks_json")),
             "heap_task_file_written": task_file.exists(),
@@ -184,6 +238,12 @@ def build_print_payload(manifest: dict[str, Any], repo_root: Path, manifest_path
         "rag_resource_lane": manifest.get("rag_resource_lane", ""),
         "ollama_embedding_performed": manifest.get("ollama_embedding_performed", False),
         "providers_not_started_reason": manifest.get("providers_not_started_reason", ""),
+        "gpu1_dynamic_context_pack_loaded": manifest.get("contract", {}).get(
+            "gpu1_dynamic_context_pack_loaded", False
+        ),
+        "gpu1_dynamic_context_pack_api_ready": manifest.get("contract", {}).get(
+            "gpu1_dynamic_context_pack_api_ready", False
+        ),
         "required_reload_passed": manifest["required_reload_passed"],
         "optional_reload_passed": manifest["optional_reload_passed"],
         "request_file": manifest.get("request_file", ""),
@@ -198,8 +258,12 @@ def build_print_payload(manifest: dict[str, Any], repo_root: Path, manifest_path
         "artifact_count": len(manifest.get("artifacts", {})),
         "tool_execution_count": len(manifest.get("tool_executions", [])),
         "blocking_requirements": manifest.get("blocking_requirements", []),
+        "hard_context_blockers": manifest.get("hard_context_blockers", []),
         "degraded_requirements": manifest.get("degraded_requirements", []),
         "optional_failed_requirements": manifest.get("optional_failed_requirements", []),
+        "stale_static_context_block_demoted": manifest.get(
+            "stale_static_context_block_demoted", False
+        ),
         "startup_effective_config": manifest.get("startup_effective_config", {}),
         "manifest": repo_rel(repo_root, manifest_path),
         "markdown": repo_rel(repo_root, manifest_md),

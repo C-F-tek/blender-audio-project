@@ -108,7 +108,7 @@ def evaluate_terminal_invariants(
         )
     if allow_provider_generation and not pre_provider and metrics.get("gpu1_primary_evidence_valid") is not True:
         errors.append(
-            "gpu1_primary_evidence_missing: GPU1 leader requires native tool evidence or valid generic_write capture"
+            "gpu1_primary_evidence_missing: GPU1 leader requires brokered API-native tool evidence; generic_write prose is raw text evidence only"
         )
     if (
         allow_provider_generation

@@ -65,6 +65,8 @@ def startup_command(args: Any, state: dict[str, Any]) -> list[str]:
         str(args.startup_provider_input_workers),
         "--startup-required-context-profile",
         str(args.startup_required_context_profile),
+        "--ai-context-pack-profile",
+        str(getattr(args, "ai_context_pack_profile", "") or ""),
         "--startup-operational-memory-query",
         str(args.startup_operational_memory_query),
         "--startup-operational-memory-limit",

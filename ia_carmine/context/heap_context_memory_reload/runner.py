@@ -12,8 +12,18 @@ from typing import Any
 from ia_carmine.context.agent_context.transient_request_context.cli import build_context as build_transient_context, render_markdown as render_transient_markdown
 from ia_carmine._shared.agent_memory_inventory_cli import DEFAULT_MEMORY_DB, build_inventory as build_memory_inventory, render_markdown as render_memory_inventory_markdown
 from ia_carmine.context.heap_context_memory_reload.builders import build_repo_docs_map, collect_semantic_code_chunks, write_semantic_evidence
-from ia_carmine.context.heap_context_memory_reload.common import read_json, repo_rel, run_tool, summarize_artifact, write_json
+from ia_carmine.context.heap_context_memory_reload.common import (
+    effective_tool_status,
+    read_json,
+    repo_rel,
+    run_tool,
+    summarize_artifact,
+    write_json,
+)
 from ia_carmine.context.heap_context_memory_reload.delta import build_context_delta
+from ia_carmine.context.heap_context_memory_reload.dynamic_gpu1_context import (
+    build_gpu1_dynamic_context_pack,
+)
 from ia_carmine.context.heap_context_memory_reload.manifest import build_manifest, build_print_payload
 from ia_carmine.context.heap_context_memory_reload.memory_write import build_final_task_markdown, run_operational_memory_write
 from ia_carmine.context.heap_context_memory_reload import rag_startup
@@ -50,8 +60,12 @@ def record_inprocess_tool(
     artifact_paths: list[Path],
 ) -> None:
     artifacts = [summarize_artifact(path, state.repo_root) for path in artifact_paths]
-    useful_artifacts = [item["path"] for item in artifacts if item.get("useful")]
-    passed = returncode == 0
+    existing_artifacts = [item["path"] for item in artifacts if item.get("exists")]
+    status = effective_tool_status(
+        requirement=requirement,
+        returncode=returncode,
+        artifacts=artifacts,
+    )
     state.commands.append(
         {
             "name": name,
@@ -59,14 +73,16 @@ def record_inprocess_tool(
             "required": required,
             "command": command,
             "returncode": returncode,
-            "passed": passed,
-            "effective_passed": passed or bool(useful_artifacts),
-            "degraded": (not passed) and bool(useful_artifacts),
-            "hard_failed": (not passed) and not bool(useful_artifacts),
-            "artifact_useful": bool(useful_artifacts),
+            "passed": status["passed"],
+            "effective_passed": status["effective_passed"],
+            "degraded": status["degraded"],
+            "hard_failed": status["hard_failed"],
+            "artifact_useful": status["artifact_useful"],
+            "strict_artifact_contract": status["strict_artifact_contract"],
+            "artifact_contract_passed": status["artifact_contract_passed"],
             "artifact_paths": [item["path"] for item in artifacts],
-            "existing_artifact_paths": [item["path"] for item in artifacts if item.get("exists")],
-            "useful_artifact_paths": useful_artifacts,
+            "existing_artifact_paths": existing_artifacts,
+            "useful_artifact_paths": status["useful_artifact_paths"],
             "artifact_summaries": artifacts,
             "stdout_tail": stdout_tail[-3000:],
             "stderr_tail": stderr_tail[-3000:],
@@ -85,6 +101,7 @@ def run_reload(state: ReloadRun) -> int:
     rag_startup.ensure_rag_index_current(state, record_tool=record_inprocess_tool)
     rag_startup.run_rag_context_pack(state)
     rag_startup.write_unified_context_pack(state, record_tool=record_inprocess_tool)
+    _run_gpu1_dynamic_context_pack(state)
     state.artifacts.update(write_semantic_evidence(state.commands, state.repo_root, state.output_dir))
     task_file = state.output_dir / "heap_startup_input_ready_context.md"
     state.artifacts["heap_task_file"] = repo_rel(state.repo_root, task_file)
@@ -111,6 +128,9 @@ def run_reload(state: ReloadRun) -> int:
             ),
             "startup_required_context_profile": str(
                 getattr(state.args, "startup_required_context_profile", "") or ""
+            ),
+            "ai_context_pack_profile": str(
+                getattr(state.args, "ai_context_pack_profile", "") or ""
             ),
             "startup_operational_memory_query": str(
                 getattr(state.args, "startup_operational_memory_query", "") or ""
@@ -560,7 +580,11 @@ def _run_ai_context_pack(state: ReloadRun) -> None:
             "--repo-root",
             ".",
             "--profile",
-            "project_self_improvement",
+            str(
+                getattr(state.args, "ai_context_pack_profile", "")
+                or getattr(state.args, "startup_required_context_profile", "")
+                or "project_self_improvement"
+            ),
             "--output-dir",
             str(pack_dir),
             "--basename",
@@ -593,3 +617,46 @@ def _run_ai_context_pack(state: ReloadRun) -> None:
         state.warnings.append(warning)
         warnings = pack_payload.get("warnings") if isinstance(pack_payload.get("warnings"), list) else []
         state.warnings.extend(f"ai_context_pack warning: {item}" for item in warnings[:5])
+
+
+def _run_gpu1_dynamic_context_pack(state: ReloadRun) -> None:
+    command = ["in_process", "gpu1_dynamic_context_pack"]
+    try:
+        payload, output_json, output_md = build_gpu1_dynamic_context_pack(
+            repo_root=state.repo_root,
+            output_dir=state.output_dir,
+            stamp=state.stamp,
+            artifacts=state.artifacts,
+            commands=state.commands,
+            request_text=state.request_text,
+        )
+        returncode = 0 if payload.get("passed") is True else 2
+        stdout = json.dumps(
+            {
+                "passed": payload.get("passed"),
+                "active_context_pack": payload.get("active_context_pack"),
+                "tool_definition_count": payload.get("broker_tool_schema_count"),
+                "artifact_ref_count": len(payload.get("artifact_refs") or {}),
+            },
+            ensure_ascii=False,
+        )
+        stderr = ""
+    except Exception as exc:  # noqa: BLE001
+        output_json = state.output_dir / "startup_gpu1_dynamic_context_pack.json"
+        output_md = state.output_dir / "startup_gpu1_dynamic_context_pack.md"
+        returncode = 1
+        stdout = ""
+        stderr = f"{type(exc).__name__}: {exc}"
+    record_inprocess_tool(
+        state,
+        name="gpu1_dynamic_context_pack",
+        requirement="gpu1_dynamic_context_pack",
+        required=True,
+        command=command,
+        returncode=returncode,
+        stdout_tail=stdout,
+        stderr_tail=stderr,
+        artifact_paths=[output_json, output_md],
+    )
+    state.artifacts["gpu1_dynamic_context_pack_json"] = repo_rel(state.repo_root, output_json)
+    state.artifacts["gpu1_dynamic_context_pack_markdown"] = repo_rel(state.repo_root, output_md)

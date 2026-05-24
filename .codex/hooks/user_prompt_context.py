@@ -34,7 +34,8 @@ CONTEXT_BY_LABEL = {
         "docs/LOCAL_AI_RUN_BOOTSTRAP.md",
     ],
     "docs_hygiene": [
-        "docs/LOCAL_AI_TASKS/README.md",
+        "docs/README.md",
+        "docs/AI_DOCS_ENTRYPOINT.md",
         "docs/LOCAL_AI_RUN_BOOTSTRAP.md",
     ],
     "git_flow": [

@@ -25,7 +25,7 @@ REPORT_KIND = "docs_contract_drift"
 
 DOC_CHECKS: tuple[dict[str, Any], ...] = (
     {
-        "path": "Tools/validation/README.md",
+        "path": "Tools/validation/CONTEXT_INDEX.md",
         "contract": "ai_workload_report_quality_validator_discoverability",
         "required_terms": (
             "check_ai_workload_report_quality.py",
@@ -38,7 +38,7 @@ DOC_CHECKS: tuple[dict[str, Any], ...] = (
             "metadata-only",
             "provider_execution_performed=false",
         ),
-        "safe_patch_hint": "Add a focused section for the AI workload quality gate and link docs/AI_WORKLOAD_REPORT_QUALITY_GATE.md.",
+        "safe_patch_hint": "Add or link a focused section for the AI workload quality gate from Tools/validation/CONTEXT_INDEX.md.",
     },
     {
         "path": "docs/JSON_SCHEMAS.md",

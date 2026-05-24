@@ -107,7 +107,7 @@ def build_proposals(
                     target_files=[
                         "ia_carmine/providers/provider_mesh/local_resource_lanes_check/cli.py",
                         "Tools/workflow/_powershell/run_post_validation_ai_packet.ps1",
-                        "Tools/validation/README.md",
+                        "Tools/validation/CONTEXT_INDEX.md",
                     ],
                     change_type="preflight_hardening",
                     sketch=[

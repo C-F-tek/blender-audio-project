@@ -37,10 +37,10 @@ def run_provider_loop_primary_evidence_checks(repo_root: Path) -> dict[str, Any]
         )
     ]
     generic = gpu1_primary_evidence_status(None, text_report, generic_events)
-    if not generic["gpu1_primary_evidence_valid"]:
-        errors.append("valid GPU1 generic_write is not counted as primary evidence")
-    if generic["leader_source"] != "generic_write":
-        errors.append("GPU1 generic_write evidence did not set leader_source=generic_write")
+    if generic["gpu1_primary_evidence_valid"]:
+        errors.append("GPU1 generic_write still counts as primary evidence")
+    if generic["leader_source"] == "generic_write":
+        errors.append("GPU1 generic_write still sets leader_source=generic_write")
 
     native_events = [
         _broker_result(

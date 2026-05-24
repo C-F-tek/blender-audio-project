@@ -2,6 +2,7 @@ from __future__ import annotations
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, repo_rel, subprocess
 from ia_carmine.runtime.heap_gate.provider_command_specs import build_provider_command_specs
 from ia_carmine.runtime.heap_gate.provider_time import build_provider_time_counter_contract
+from ia_carmine._shared.provider_tool_schemas import is_api_native_tool_call
 from ia_carmine._shared.provider_work_verification import provider_work_status
 def _empty_report_value(value: Any) -> bool:
     return value is None or value == "" or value == [] or value == {}
@@ -19,6 +20,7 @@ class RuntimeGateProviderCommandsMixin:
         lane = str(spec["lane"])
         tool_calls: list[dict[str, Any]] = []
         textual_tool_calls: list[dict[str, Any]] = []
+        rejected_non_native_tool_calls: list[dict[str, Any]] = []
         native_tool_loop_requested = bool(report_data.get("native_tool_loop_requested"))
         native_tool_loop_supported = bool(report_data.get("native_tool_loop_supported"))
         native_tool_loop_performed = bool(report_data.get("native_tool_loop_performed"))
@@ -38,7 +40,15 @@ class RuntimeGateProviderCommandsMixin:
             calls = payload.get("tool_calls") if isinstance(payload.get("tool_calls"), list) else []
             for call in calls:
                 if isinstance(call, dict):
-                    tool_calls.append(call)
+                    if is_api_native_tool_call(call, lane=lane):
+                        tool_calls.append(call)
+                    else:
+                        rejected_non_native_tool_calls.append(
+                            {
+                                **call,
+                                "rejection_reason": "provider_textual_tool_call_not_executable",
+                            }
+                        )
             text_calls = (
                 payload.get("textual_tool_calls")
                 if isinstance(payload.get("textual_tool_calls"), list)
@@ -210,6 +220,33 @@ class RuntimeGateProviderCommandsMixin:
             or report_data.get("provider_execution_performed")
         )
         provider_execution_claim_seen = provider_execution_attempted
+        if (textual_tool_calls or rejected_non_native_tool_calls) and not tool_calls:
+            reason = "provider_textual_tool_call_not_executable"
+            errors.append(reason)
+            report_data["errors"] = errors
+            report_data["provider_rejection_reason"] = reason
+            report_data["provider_work_verified"] = False
+            report_data["provider_role_counted"] = False
+        elif report_data.get("provider_native_tool_api_unavailable"):
+            reason = (
+                str(report_data.get("provider_rejection_reason") or "").strip()
+                or "provider_native_tool_api_unavailable"
+            )
+            errors.append(reason)
+            report_data["errors"] = errors
+            report_data["provider_rejection_reason"] = reason
+            report_data["provider_work_verified"] = False
+            report_data["provider_role_counted"] = False
+        elif report_data.get("provider_native_tool_call_required_unmet"):
+            reason = (
+                str(report_data.get("provider_rejection_reason") or "").strip()
+                or "provider_native_tool_call_required_unmet"
+            )
+            errors.append(reason)
+            report_data["errors"] = errors
+            report_data["provider_rejection_reason"] = reason
+            report_data["provider_work_verified"] = False
+            report_data["provider_role_counted"] = False
         verified_status = provider_work_status(
             lane=lane,
             report=report_data,
@@ -293,9 +330,19 @@ class RuntimeGateProviderCommandsMixin:
             "response_text": response_text,
             "tool_calls": tool_calls,
             "textual_tool_calls": textual_tool_calls,
+            "rejected_non_native_tool_calls": rejected_non_native_tool_calls,
             "native_tool_loop_requested": native_tool_loop_requested,
             "native_tool_loop_supported": native_tool_loop_supported,
             "native_tool_loop_performed": native_tool_loop_performed,
+            "provider_native_tool_api_supported": report_data.get(
+                "provider_native_tool_api_supported"
+            ),
+            "provider_native_tool_api_unavailable": report_data.get(
+                "provider_native_tool_api_unavailable"
+            ),
+            "provider_native_tool_call_required_unmet": report_data.get(
+                "provider_native_tool_call_required_unmet"
+            ),
             "native_tool_loop_classification": (
                 report_data.get("native_tool_loop_classification")
                 or report_data.get("classification")
@@ -303,7 +350,7 @@ class RuntimeGateProviderCommandsMixin:
                 or report_data.get("semantic_provider_classification")
             ),
             "native_tool_call_count": len(tool_calls),
-            "textual_tool_call_count": len(textual_tool_calls),
+            "textual_tool_call_count": len(textual_tool_calls) + len(rejected_non_native_tool_calls),
             "role_decision": report_data.get("role_decision"),
             "selected_model": selected_model or report_data.get("selected_model"),
             "target_files": report_data.get("target_files") or report_data.get("TARGET_FILES") or [],

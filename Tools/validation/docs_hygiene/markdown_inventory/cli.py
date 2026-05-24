@@ -36,9 +36,10 @@ CANONICAL_INDEX_FILES = [
     "README.md",
     "WORKFLOW.md",
     "docs/README.md",
-    "docs/LOCAL_AI_TASKS/README.md",
+    "docs/AI_DOCS_ENTRYPOINT.md",
     "docs/MODULE_MAP.md",
-    "Tools/validation/README.md",
+    "Tools/validation/CONTEXT_INDEX.md",
+    "Tools/validation/TOOL_CONTEXT.md",
     "Tools/npu/pipeline/README.md",
 ]
 ROOT_COMMUNITY_DOCS = {
@@ -163,7 +164,7 @@ def lifecycle_for(category: str, rel_path: str) -> str:
         "README.md",
         "WORKFLOW.md",
         "docs/README.md",
-        "docs/LOCAL_AI_TASKS/README.md",
+        "docs/AI_DOCS_ENTRYPOINT.md",
     }:
         return "canonical_entrypoint"
     if category.startswith("markdown_split_"):

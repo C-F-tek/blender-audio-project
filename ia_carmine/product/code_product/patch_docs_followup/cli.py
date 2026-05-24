@@ -41,7 +41,7 @@ DOC_TARGETS_BY_AREA: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         "validation",
         (
-            "tools/validation/README.md",
+            "Tools/validation/CONTEXT_INDEX.md",
             "docs/JSON_SCHEMAS.md",
             "docs/CONTRACT_DRIFT_VALIDATION.md",
         ),
@@ -49,7 +49,7 @@ DOC_TARGETS_BY_AREA: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         "cpu_validation",
         (
-            "tools/validation/README.md",
+            "Tools/validation/CONTEXT_INDEX.md",
             "docs/JSON_SCHEMAS.md",
             "docs/CONTRACT_DRIFT_VALIDATION.md",
         ),
@@ -58,7 +58,7 @@ DOC_TARGETS_BY_AREA: tuple[tuple[str, tuple[str, ...]], ...] = (
         "cpu_orchestration",
         (
             "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-            "docs/LOCAL_AI_TASKS/README.md",
+            "docs/AI_DOCS_ENTRYPOINT.md",
             "WORKFLOW.md",
         ),
     ),
@@ -66,7 +66,7 @@ DOC_TARGETS_BY_AREA: tuple[tuple[str, tuple[str, ...]], ...] = (
         "workflow",
         (
             "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-            "docs/LOCAL_AI_TASKS/README.md",
+            "docs/AI_DOCS_ENTRYPOINT.md",
             "WORKFLOW.md",
         ),
     ),
@@ -91,7 +91,7 @@ DOC_TARGETS_BY_PATH_PREFIX: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         "tools/validation/",
         (
-            "tools/validation/README.md",
+            "Tools/validation/CONTEXT_INDEX.md",
             "docs/JSON_SCHEMAS.md",
             "docs/CONTRACT_DRIFT_VALIDATION.md",
         ),
@@ -100,7 +100,7 @@ DOC_TARGETS_BY_PATH_PREFIX: tuple[tuple[str, tuple[str, ...]], ...] = (
         "tools/workflow/",
         (
             "docs/LOCAL_AI_CORE_TOOL_ACTIVATION.md",
-            "docs/LOCAL_AI_TASKS/README.md",
+            "docs/AI_DOCS_ENTRYPOINT.md",
             "WORKFLOW.md",
         ),
     ),

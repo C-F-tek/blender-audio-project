@@ -181,7 +181,8 @@ HISTORICAL_TOOL_CONTEXT_FILES = (
     "docs/LOCAL_AI_TASKS/documentation-panorama-and-staleness-map-2026-05-09.md",
     "docs/LOCAL_AI_TASKS/ai-orientation-map-2026-05-09.md",
     "tools/ai/README.md",
-    "tools/workflow/README.md",
+    "Tools/workflow/CONTEXT_INDEX.md",
+    "Tools/workflow/TOOL_CONTEXT.md",
 )
 
 COMPLEX_REQUEST_HINTS = (

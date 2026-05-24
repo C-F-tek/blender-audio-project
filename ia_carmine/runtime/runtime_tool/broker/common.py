@@ -24,6 +24,7 @@ class ToolSpec:
     description: str
     allowed_args: tuple[str, ...]
     builder: Callable[[Path, Path, str, dict[str, Any]], tuple[list[str], dict[str, str]]]
+    input_schema: dict[str, Any] | None = None
 
 
 def now_iso() -> str:
@@ -262,15 +263,81 @@ def fixture_repo_write(
     return all_fixture_or_generated and any(fixture_repo_path(path) for path in paths)
 
 
+def default_input_schema(allowed_args: tuple[str, ...]) -> dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {
+            key: {
+                "type": ["string", "number", "boolean", "array", "object", "null"],
+            }
+            for key in allowed_args
+        },
+        "additionalProperties": False,
+    }
+
+
+def _json_type_matches(value: Any, expected: str) -> bool:
+    if expected == "null":
+        return value is None
+    if expected == "boolean":
+        return isinstance(value, bool)
+    if expected == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if expected == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "array":
+        return isinstance(value, list)
+    if expected == "object":
+        return isinstance(value, dict)
+    return True
+
+
+def _validate_input_schema(
+    tool_name: str,
+    request_args: dict[str, Any],
+    input_schema: dict[str, Any],
+) -> list[str]:
+    errors: list[str] = []
+    if input_schema.get("type") != "object":
+        return [f"{tool_name}: input_schema root must be object"]
+    properties = (
+        input_schema.get("properties")
+        if isinstance(input_schema.get("properties"), dict)
+        else {}
+    )
+    required = input_schema.get("required") if isinstance(input_schema.get("required"), list) else []
+    missing = sorted(str(item) for item in required if str(item) not in request_args)
+    if missing:
+        errors.append(f"{tool_name}: missing required args: {', '.join(missing)}")
+    if input_schema.get("additionalProperties") is False:
+        unknown = sorted(set(request_args) - set(properties))
+        if unknown:
+            errors.append(f"{tool_name}: unsupported args: {', '.join(unknown)}")
+    for key, value in request_args.items():
+        schema = properties.get(key) if isinstance(properties.get(key), dict) else {}
+        expected = schema.get("type")
+        expected_types = expected if isinstance(expected, list) else [expected]
+        expected_types = [str(item) for item in expected_types if item]
+        if expected_types and not any(_json_type_matches(value, item) for item in expected_types):
+            errors.append(
+                f"{tool_name}: arg {key} expected {'/'.join(expected_types)}, got {type(value).__name__}"
+            )
+    return errors
+
+
 def validate_request_args(
-    tool_name: str, request_args: dict[str, Any], allowed_args: tuple[str, ...]
+    tool_name: str,
+    request_args: dict[str, Any],
+    allowed_args: tuple[str, ...],
+    input_schema: dict[str, Any] | None = None,
 ) -> list[str]:
     errors: list[str] = []
     if not isinstance(request_args, dict):
         return [f"{tool_name}: args must be an object"]
-    unknown = sorted(set(request_args) - set(allowed_args))
-    if unknown:
-        errors.append(f"{tool_name}: unsupported args: {', '.join(unknown)}")
+    schema = input_schema if isinstance(input_schema, dict) else default_input_schema(allowed_args)
+    errors.extend(_validate_input_schema(tool_name, request_args, schema))
     return errors
 
 
