@@ -219,6 +219,7 @@ def _start_npu_child(repo_root: Path, args: argparse.Namespace) -> dict[str, Any
     if ready_path.exists():
         ready_path.unlink()
     payload = {
+        "repo_root": str(repo_root),
         "model_dir": args.npu_model_dir,
         "device": "NPU",
         "ready_path": str(ready_path),
@@ -267,6 +268,15 @@ def _child_npu() -> int:
         pipe = genai.LLMPipeline(str(payload["model_dir"]), device, MAX_PROMPT_LEN=512, MIN_RESPONSE_LEN=1)
         text = str(pipe.generate("IA-Carmine NPU coexistence probe: READY.", max_new_tokens=int(payload["max_new_tokens"]))).strip()
         result = {
+            "schema_version": 1,
+            "kind": "provider_role_coexistence_npu_ready",
+            "repo_root": str(payload.get("repo_root") or ""),
+            "passed": True,
+            "errors": [],
+            "warnings": [],
+            "provider_execution_performed": True,
+            "patch_application_performed": False,
+            "source_writes_performed": False,
             "role": "npu_micro_task_auditor",
             "provider_backend": "openvino",
             "provider_compute_device": "openvino/NPU",
@@ -286,8 +296,23 @@ def _child_npu() -> int:
         time.sleep(float(payload.get("hold_seconds") or 1.0))
         del pipe
     except Exception as exc:  # noqa: BLE001
-        result = {"model_loaded": False, "device_verified": False, "errors": [f"{type(exc).__name__}: {exc}"]}
-        Path(str(payload.get("ready_path") or "npu_ready.json")).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        result = {
+            "schema_version": 1,
+            "kind": "provider_role_coexistence_npu_ready",
+            "repo_root": str(payload.get("repo_root") or ""),
+            "passed": False,
+            "errors": [f"{type(exc).__name__}: {exc}"],
+            "warnings": [],
+            "provider_execution_performed": False,
+            "patch_application_performed": False,
+            "source_writes_performed": False,
+            "model_loaded": False,
+            "device_verified": False,
+        }
+        Path(str(payload.get("ready_path") or "npu_ready.json")).write_text(
+            json.dumps(result, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
         return 2
     return 0
 
