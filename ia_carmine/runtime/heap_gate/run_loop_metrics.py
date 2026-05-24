@@ -38,6 +38,9 @@ def build_provider_lane_metrics(
         and not _lane_has_model_execution(owner.provider_reports, lane)
     )
     latest_proposal = owner.latest_proposal_iteration_report()
+    latest_final_product_protocol = safe_dict(
+        latest_proposal.get("final_product_protocol") if latest_proposal else {}
+    )
     latest_gpu1_packet = extract_gpu1_closure_decision_packet(latest_proposal)
     gpu0_review = safe_dict(
         provider_reports_by_lane.get("gpu0_peer", {}).get("gpu0_operational_review")
@@ -361,6 +364,21 @@ def build_provider_lane_metrics(
         "latest_proposal_reject_reason": str(latest_proposal.get("reject_reason") or ""),
         "latest_proposal_pointer_action": str(latest_proposal.get("pointer_action") or ""),
         "latest_proposal_exit_decision": str(latest_proposal.get("exit_decision") or ""),
+        "latest_final_product_kind": str(latest_proposal.get("final_product_kind") or ""),
+        "latest_final_product_action": str(latest_proposal.get("final_product_action") or ""),
+        "latest_final_product_delta_valid": (
+            latest_proposal.get("final_product_delta_valid") if latest_proposal else None
+        ),
+        "latest_final_product_pointer_protocol_operational": (
+            latest_final_product_protocol.get("pointer_protocol_operational")
+            if latest_final_product_protocol
+            else None
+        ),
+        "latest_final_product_protocol_errors": (
+            latest_final_product_protocol.get("errors")
+            if isinstance(latest_final_product_protocol.get("errors"), list)
+            else []
+        ),
         "latest_proposal_target_files": (
             latest_proposal.get("target_files")
             if isinstance(latest_proposal.get("target_files"), list)

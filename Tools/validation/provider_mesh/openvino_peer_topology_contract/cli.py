@@ -205,7 +205,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_teamwork_packet, "gpu1_authority")
         and has(provider_teamwork_packet, "gpu0_peer_authority")
         and has(provider_teamwork_packet, "npu_peer_authority")
-        and has(provider_teamwork_packet, "GPU1 commands final synthesis")
+        and has(provider_teamwork_packet, "FINAL_PRODUCT_DELTA")
         and has(provider_teamwork_packet, "unified_parallel_execution")
         and has(provider_teamwork_packet, "re-evaluate in parallel")
         and has(provider_teamwork_packet, "requires_concrete_rewrite")

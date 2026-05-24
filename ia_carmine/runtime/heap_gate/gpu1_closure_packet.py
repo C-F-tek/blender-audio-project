@@ -18,8 +18,6 @@ GPU1_PACKET_KIND = "gpu1_closure_decision_packet"
 GPU1_CLOSURE_DECISIONS = {
     "finalize_product",
     "needs_refine",
-    "blocked_continuation",
-    "no_patchable_target",
 }
 GPU1_DECISION_MISSING = "gpu1_decision_missing"
 
@@ -30,10 +28,6 @@ def normalize_gpu1_decision(value: Any) -> str:
         return "finalize_product"
     if raw in {"needs_refine", "needs_gpu0_refine", "gpu0_refine_required", "refine"}:
         return "needs_refine"
-    if raw in {"blocked_continuation", "deferred_to_resume", "continuation_required"}:
-        return "blocked_continuation"
-    if raw in {"no_patchable_target", "no_more_action", "no_patchable"}:
-        return "no_patchable_target"
     if raw == GPU1_DECISION_MISSING:
         return GPU1_DECISION_MISSING
     return ""
@@ -57,13 +51,6 @@ def derive_gpu1_decision(
     ).upper()
     if quality_passed:
         return "finalize_product"
-    if "NO_PATCHABLE_TARGET" in haystack or "NO PATCHABLE TARGET" in haystack:
-        return "no_patchable_target"
-    if any(
-        marker in haystack
-        for marker in ("BLOCKED_CONTINUATION", "DEFERRED_TO_RESUME", "CONTINUATION_REQUIRED")
-    ):
-        return "blocked_continuation"
     return "needs_refine"
 
 
@@ -94,6 +81,8 @@ def build_gpu1_closure_decision_packet(
         "schema_version": 1,
         "kind": GPU1_PACKET_KIND,
         "gpu1_decision": decision,
+        "gpu1_delta_status": "valid" if decision == "finalize_product" else "requires_refine",
+        "runtime_product_status_authority": "runtime_gate_not_gpu1",
         "gpu1_block_id": str(gpu1_block_id or ""),
         "gpu1_revision": str(gpu1_revision if gpu1_revision is not None else ""),
         "target_files": _string_list(target_files),

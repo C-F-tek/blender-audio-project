@@ -19,8 +19,6 @@ from ia_carmine.runtime.heap_gate.runtime_common import Any
 GPU1_CLOSURE_DECISIONS = {
     "finalize_product",
     "needs_refine",
-    "blocked_continuation",
-    "no_patchable_target",
     GPU1_DECISION_MISSING,
 }
 GPU0_CLOSURE_AGREEMENTS = {
@@ -130,10 +128,6 @@ def closure_quorum_state(
         status = "ready_to_close"
         reason = "GPU1 finalized product and GPU0 agreed with no open pointers"
         cpu_validation = "product_closure_validated"
-    elif owner_decision in {"blocked_continuation", "no_patchable_target"}:
-        status = "blocked_continuation_ready"
-        reason = "GPU1 declared no further useful action in this run and GPU0 agreed"
-        cpu_validation = "continuation_closure_validated"
     elif owner_decision == "finalize_product" and open_count > 0:
         status = "blocked_continuation_ready"
         reason = "GPU1 finalized but pointer graph still requires resume/defer closure"

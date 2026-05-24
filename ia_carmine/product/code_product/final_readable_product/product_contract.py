@@ -55,6 +55,7 @@ def final_product_blockers(
     revision: dict[str, Any],
     matrix: dict[str, Any],
     gate: dict[str, Any],
+    text_product_ready: bool = False,
     product_acceptance_passed: bool | None = None,
 ) -> list[str]:
     blockers: list[str] = []
@@ -92,6 +93,8 @@ def final_product_blockers(
         blockers.append("code execution matrix did not pass")
     if not markdown_output.exists():
         blockers.append("final readable markdown was not written")
+    if text_product_ready:
+        return blockers
     if final_document_status in {"DIAGNOSTIC_REVIEW_READY", "NO_APPLICABLE_CODE_PRODUCT"}:
         blockers.append(f"final document status is not a real code product: {final_document_status}")
     if final_document_status == "BLOCKED_PROVIDER_RUNTIME":

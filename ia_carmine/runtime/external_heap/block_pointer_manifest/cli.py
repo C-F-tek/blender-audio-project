@@ -174,7 +174,7 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
         candidate_evidence = report_text_required_full(
             repo_root,
             data,
-            ("gpu1_free_text_evidence", "response_text", "proposal_text"),
+            ("final_product_delta", "gpu1_free_text_evidence", "response_text", "proposal_text"),
         )
         candidate_text = str(candidate_evidence.get("text") or "")
         candidate_preview = compact_text(candidate_text, max_block_chars)
@@ -198,6 +198,18 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             ),
             "resume_from_block_id": str(data.get("resume_from_block_id") or previous_id),
             "pointer_action": data.get("pointer_action"),
+            "final_product_kind": data.get("final_product_kind", ""),
+            "final_product_action": data.get("final_product_action", ""),
+            "final_product_delta_valid": bool(data.get("final_product_delta_valid")),
+            "final_product_protocol": data.get("final_product_protocol")
+            if isinstance(data.get("final_product_protocol"), dict)
+            else {},
+            "final_product_delta_ref": data.get("final_product_delta_ref")
+            if isinstance(data.get("final_product_delta_ref"), dict)
+            else {},
+            "final_product_delta_chars": data.get("final_product_delta_chars"),
+            "final_product_delta_sha256": data.get("final_product_delta_sha256", ""),
+            "delta_applied": bool(data.get("quality_passed") is True and data.get("final_product_delta_valid") is True),
             "target_files": data.get("target_files") if isinstance(data.get("target_files"), list) else [],
             "exit_decision": data.get("exit_decision"),
             "reject_reason": data.get("reject_reason", ""),

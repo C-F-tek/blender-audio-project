@@ -283,6 +283,26 @@ def _evaluate_terminal_invariant_messages(
         if soft_close_sampled_exit:
             return errors
         if (
+            metrics.get("latest_final_product_delta_valid") is not True
+            and not generic_product_ready
+        ):
+            final_product_protocol_errors = [
+                str(item)
+                for item in (metrics.get("latest_final_product_protocol_errors") or [])
+                if str(item).strip()
+            ]
+            detail = ",".join(
+                final_product_protocol_errors
+            )
+            errors.append("gpu1_final_product_delta_missing" + (f": {detail}" if detail else ""))
+            if "gpu1_blocked_not_allowed_as_final_product_delta" in final_product_protocol_errors:
+                errors.append("gpu1_blocked_not_allowed_as_final_product_delta")
+        if (
+            metrics.get("latest_final_product_pointer_protocol_operational") is not True
+            and not generic_product_ready
+        ):
+            errors.append("gpu1_pointer_protocol_not_operational")
+        if (
             metrics.get("gpu1_closure_decision_packet_valid") is not True
             and not generic_product_ready
         ):

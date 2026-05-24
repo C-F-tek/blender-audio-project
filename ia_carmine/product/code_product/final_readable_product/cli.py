@@ -317,12 +317,17 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         concrete_code_proposal_count=concrete_code_proposal_count,
         code_product_metrics=code_product_report,
     )
+    text_product_ready = (
+        "Text surface status: `FINAL_PRODUCT_TEXT_SURFACE_AVAILABLE`" in plan_product_full_patch
+    )
+    final_product_surface_ready = bool(code_product_ready or text_product_ready)
     blockers = final_product_blockers(
         markdown_output=markdown_output,
         final_document_status=final_document_status,
         concrete_code_proposal_count=concrete_code_proposal_count,
         code_product_metrics=code_product_report,
         code_product_ready=code_product_ready,
+        text_product_ready=text_product_ready,
         pointer=pointer,
         revision=revision,
         matrix=matrix,
@@ -401,7 +406,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "passed": bool(
             markdown.strip()
             and markdown_output.exists()
-            and code_product_ready
+            and final_product_surface_ready
             and not blockers
         ),
         "final_document_status": final_document_status,
@@ -412,7 +417,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "resume_from_block_id": resume_from_block_id,
         "continuation_required": blocked_continuation,
         "soft_close_reason": final_soft_close_reason,
-        "product_blocked_reason": "" if code_product_ready else final_soft_close_reason,
+        "product_blocked_reason": "" if final_product_surface_ready else final_soft_close_reason,
         "causal_chain_passed": causal_chain_passed,
         "product_acceptance_passed": product_acceptance_passed,
         "causality_json": str(causality_path) if causality_path.exists() else "",
@@ -471,6 +476,8 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "gpu1_consumed_npu_peer": metrics.get("gpu1_consumed_npu_peer"),
         "code_product_status": code_product_state,
         "real_code_product_ready": code_product_ready,
+        "text_product_ready": text_product_ready,
+        "final_product_surface_ready": final_product_surface_ready,
         "code_product_metrics": code_product_report,
         "truncation_marker": truncation_marker,
         "blocking_reasons": blockers,
@@ -519,7 +526,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "documents_zip": documents_zip,
         "zip_member_count": zip_member_count,
         "plan_product_full_patch_ready": True,
-        "plan_product_kind": "technical_plan_product",
+        "plan_product_kind": "final_product_text_surface",
         "provider_execution_performed": pointer.get("provider_execution_performed"),
         "patch_application_performed": gate.get("patch_application_performed"),
         "source_writes_performed": gate.get("source_writes_performed"),

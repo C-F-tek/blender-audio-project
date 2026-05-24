@@ -8,7 +8,7 @@ Canonical wording: `docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md`.
 - GPU1/NVIDIA primary Ollama lane is the operational center and advances by heap pointer/recovery turns without waiting for GPU0/NPU sidecar completion.
 - GPU0/NPU are `packet_review_only` sidecars: they start only after a reviewable GPU1 packet, do not close product, and remain deferred evidence until a later GPU1 turn consumes their pointer ids.
 - Tool/lab/matrix/debug reporting must distinguish `lab_called`, `lab_report_written`, `lab_usable` and `lab_status`; attempted tool calls are evidence, not automatic usable lab output.
-- `CODE_PRODUCT_FULL_PATCH.md` is the final patch/code product; `PLAN_PRODUCT_FULL_PATCH.md` is the final recomposed GPU1 prompt/chat product, with pointer graph and recovery/congruence as technical attachments.
+- `FINAL_PRODUCT` is single: text, code, or text+code. `PLAN_PRODUCT_FULL_PATCH.md` is its text/prose surface; `CODE_PRODUCT_FULL_PATCH.md` is its code/diff surface only when verified code exists. GPU1 emits causal `FINAL_PRODUCT_DELTA` records; blocked status is runtime/gate classification, not GPU1 output.
 - HTTP/API coordinates only job control and refs; filesystem artifacts carry context mass, heap chunks, provider inputs/outputs, logs and `ia_carmine_runtime_payload_manifest` evidence.
 - Missing optional values stay empty/null; required missing devices or provider prerequisites raise or block with a typed reason rather than emitting placeholder text.
 - Complete runs require explicit config flags, including `--files-per-round`, `--gpu0-ollama-num-ctx`, `--npu-micro-start-mode`, `--npu-final-wait-seconds` and `--max-degraded-lanes`.
@@ -45,7 +45,7 @@ terminal invariants -> final status contract
 ## Provider roles
 
 ```text
-GPU1/Ollama -> planner, review opener, closure owner and final synthesis lane
+GPU1/Ollama -> planner, review opener, closure owner and FINAL_PRODUCT_DELTA lane
 GPU0/Ollama Vulkan -> coworker reviewer/refiner lane, not primary closer
 NPU/OpenVINO -> bounded microtask/tool auditor lane, not primary closer
 CPU/helper -> broker, validator, lab, composer
@@ -57,7 +57,7 @@ CPU/helper -> broker, validator, lab, composer
 - GPU1 startup/provider context is file-backed: `gpu1_dynamic_context_pack` and payload manifests carry large context, while provider prompts carry stable refs, checksums and native broker tool definitions.
 - Pointer/proposal blocks do not prove provider workload by themselves.
 - `provider_execution_performed` must be backed by explicit workload/provider evidence.
-- GPU1 is the primary Ollama broker/native tool-call lane and owns final synthesis. Every GPU1 provider revision must materialize a `gpu1_closure_decision_packet` with `gpu1_decision`, `gpu1_block_id`, `gpu1_revision`, `target_files`, `quality_passed`, `reject_reasons` and `evidence_refs`; `generic_write` refs are evidence only and never a GPU1 decision.
+- GPU1 is the primary Ollama broker/native tool-call lane and owns the FINAL_PRODUCT_DELTA stream. Every GPU1 provider revision must materialize a `gpu1_closure_decision_packet` with `gpu1_decision=finalize_product|needs_refine`, `gpu1_block_id`, `gpu1_revision`, `target_files`, `quality_passed`, `reject_reasons` and `evidence_refs`; `generic_write` refs are evidence only and never a GPU1 decision.
 - GPU0/Ollama Vulkan is a rapid secondary congruence/veto lane. Its prompt input is only the current GPU1 decision packet plus packet evidence refs, never the full operator request or free historical context. Its output must be structured as `congruent`, `veto`, `refine_required` or `incongruent`, checked against the same GPU1 pointer/revision. Free text is preserved only as secondary evidence.
 - GPU0/NPU sidecars run in `sidecar_scope_mode=packet_review_only`: no broad exploration, no final synthesis, no product closure and no complete alternate plan. Scope reduction is semantic/prompt-based, not a GPU0 truncation timeout.
 - GPU0 can veto/refine only an anchored current GPU1 packet. If the GPU1 packet is missing, GPU0 is `not_evaluated_waiting_for_gpu1_decision`; if GPU0 checks the wrong pointer/revision the result is `gpu0_checked_wrong_gpu1_packet`; unanchored historical reasons such as stale `product_readiness` are `gpu0_unanchored_reason` and cannot become final veto.
@@ -70,9 +70,9 @@ CPU/helper -> broker, validator, lab, composer
 - Time input is a shared heap counter for GPU1 cycles and coordinated soft close. GPU0/NPU sidecars use bounded watchdogs/timeouts; a selected lane that fails to start is still a hard universe stop.
 - GPU1 must remain resident for the whole provider production cycle, not only until its current subprocess exits. GPU0 uses the same residency rule when selected so provider lanes can call back into each other across revisions. Ollama unload happens at provider production-cycle cleanup, not as a per-lane success proof.
 - Soft close enters `soft_lock_state=closing_open_pointers`: no broad new exploration, only merge/veto/refine/classify/resume work until every pointer is merged, rejected, superseded, deferred, externally blocked or requires operator input.
-- Soft close exits through closure quorum, not inert repetition. GPU1 emits `soft_lock_closure_owner_decision` from its packet, GPU0 emits `gpu0_closure_agreement` only after a valid packet, CPU validates `closure_quorum_status`, and NPU remains `npu_closure_advisory=evidence_ready_non_closer` when its micro evidence is valid.
+- Soft close exits through closure quorum, not inert repetition. GPU1 emits `soft_lock_closure_owner_decision=finalize_product|needs_refine` from its packet, GPU0 emits `gpu0_closure_agreement` only after a valid packet, CPU validates `closure_quorum_status`, and NPU remains `npu_closure_advisory=evidence_ready_non_closer` when its micro evidence is valid.
 - Before provider launch, closure quorum is non-terminal. When `allow_provider_generation=true`, no GPU1/GPU0/NPU quorum may close the run while `provider_reports` are empty and no provider lane has emitted `provider_state`; missing `runtime_file_refs` remains a hard provider-start requirement that must be brokered or reported only as `runtime_file_refs_missing_before_provider_start` after real budget/no-work exhaustion.
-- If GPU1 says `no_more_action` or `blocked_continuation` and there is no active peer veto, the arbiter closes automatically. If the peer vetoes, only one targeted GPU1 refinement is allowed; NPU is not relaunched unless a new punctual risk is declared.
+- GPU1 does not say `blocked_continuation` or `no_more_action` as a product decision. If GPU1 cannot produce a valid delta, the runtime/gate classifies continuation or blocked status. If the peer vetoes, only one targeted GPU1 refinement is allowed; NPU is not relaunched unless a new punctual risk is declared.
 - `provider_revision_count` is positive evidence only. It must not be compared to an effective max to cut GPU1 recursion.
 - Do not weaken gates to make a run pass.
 - Do not convert all context files into patch targets.

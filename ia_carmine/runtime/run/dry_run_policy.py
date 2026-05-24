@@ -102,8 +102,8 @@ def dry_run_contract_policy(
             "gpu0_required_for_close": True,
             "npu_closure_role": "advisory_only",
             "exit_rule": (
-                "GPU1 no_more_action/blocked_continuation plus GPU0 agree_close "
-                "closes automatically; GPU0 veto allows one targeted GPU1 refine"
+                "GPU1 finalize_product plus GPU0 agree_close can close; "
+                "GPU1 needs_refine or GPU0 veto allows one targeted GPU1 refine"
             ),
         },
         "gpu1_closure_owner": True,
@@ -124,9 +124,7 @@ def dry_run_contract_policy(
                 "npu_closure_role": "advisory_only",
                 "valid_gpu1_decisions": [
                     "finalize_product",
-                    "blocked_continuation",
-                    "no_more_action",
-                    "needs_gpu0_refine",
+                    "needs_refine",
                 ],
                 "valid_gpu0_decisions": [
                     "agree_close",

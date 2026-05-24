@@ -176,6 +176,24 @@ def _check_ollama_native_tool_lane_contract(repo_root: Path) -> dict[str, Any]:
     for source, name in ((provider_context, "GPU1 prompt"), (gpu0, "GPU0 prompt")):
         if "BROKER_NATIVE_TOOL_RULE" not in source or "generic_write" not in source:
             errors.append(f"{name} lacks generic_write native broker instruction")
+    for marker in (
+        "FINAL_PRODUCT_DELTA",
+        "FINAL_PRODUCT_KIND",
+        "FINAL_PRODUCT_ACTION",
+        "CURRENT_POINTER",
+        "CONSUMED_EVIDENCE",
+        "NEXT_RUNTIME_INTENT",
+    ):
+        if marker not in provider_context:
+            errors.append(f"GPU1 prompt lacks {marker} final-product delta contract")
+    for forbidden in (
+        "FINAL_PRODUCT_KIND: text|code|text_and_code|blocked",
+        "FINAL_PRODUCT_ACTION: append|replace|supersede|refine|blocked",
+    ):
+        if forbidden in provider_context:
+            errors.append(f"GPU1 prompt still allows blocked in final-product protocol: {forbidden}")
+    if "gpu1_blocked_not_allowed_as_final_product_delta" not in terminal:
+        errors.append("terminal invariants do not expose GPU1 blocked-output final-product blocker")
     if "GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS = 3" not in followup:
         errors.append("generic_write follow-up does not require three refinements")
     if "generic_write_next_turn_required" not in followup:

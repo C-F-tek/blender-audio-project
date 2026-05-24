@@ -180,15 +180,15 @@ def build_markdown(
     gpu1 = role_blocks(pointer, "gpu1_planner")
 
     lines = [
-        "# External Heap Primary Long Response",
+        "# External Heap Diagnostic Transcript",
         "",
-        "Questo e' l'output principale file-based dell'heap esterno. Ricostruisce una risposta lunga usando blocchi persistenti e puntatori come product contract, non la singola finestra token del provider.",
+        "Questo artifact e' un transcript diagnostico file-based dell'heap esterno. Non e' il FINAL_PRODUCT se non applica il protocollo FINAL_PRODUCT_DELTA con append/replace/supersede/refine.",
         "",
         "## Stato",
         "",
         *status_lines(pointer, causality),
         "",
-        "## Risposta ricostruita dai blocchi",
+        "## Blocchi diagnostici esposti",
         "",
     ]
     if pointer.get("max_blocks_applied"):
@@ -228,6 +228,11 @@ def build_markdown(
         "proposal_block_count": len(proposals),
         "accepted_proposal_block_count": len(accepted),
         "rendered_proposal_block_count": len(rendered),
+        "diagnostic_transcript": True,
+        "final_product_composer_only_collaged_blocks": bool(rendered),
+        "final_product_delta_applied_count": sum(
+            1 for item in proposals if item.get("delta_applied") is True
+        ),
         "gpu1_block_count": len(gpu1),
         "gpu0_block_count": len(gpu0),
         "npu_block_count": len(npu),
@@ -251,7 +256,7 @@ def append_download_manifest(manifest_path: Path, output_paths: list[Path]) -> N
         except Exception:
             lines = []
     existing = set(lines)
-    additions = ["", "External heap primary long response:"]
+    additions = ["", "External heap diagnostic transcript:"]
     for path in output_paths:
         line = f"- {path}"
         if line not in existing:

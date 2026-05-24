@@ -154,6 +154,91 @@ class RuntimeGateProposalCycleAMixin:
         match = re.search(pattern, response_text or "")
         return match.group(1).strip() if match else ""
 
+    def proposal_pointer_field_declared(self, response_text: str, field_name: str) -> bool:
+        patterns = [
+            rf"(?im)^\s*-?\s*{re.escape(field_name)}\s*=\s*[^\n\r]*",
+            rf"(?im)^\s*{re.escape(field_name)}\s*:\s*[^\n\r]*",
+        ]
+        return any(re.search(pattern, response_text or "") for pattern in patterns)
+
+    def final_product_scalar_field(self, response_text: str, field_name: str) -> str:
+        pattern = rf"(?im)^\s*(?:[-*]\s*)?(?:#+\s*)?{re.escape(field_name)}\s*(?:=|:)\s*`?([A-Za-z_]+)`?"
+        match = re.search(pattern, response_text or "")
+        return match.group(1).strip().lower() if match else ""
+
+    def final_product_section_body(self, response_text: str, section_name: str) -> str:
+        section_names = (
+            "FINAL_PRODUCT_KIND",
+            "FINAL_PRODUCT_ACTION",
+            "CURRENT_POINTER",
+            "CONSUMED_EVIDENCE",
+            "NEXT_RUNTIME_INTENT",
+            "FINAL_PRODUCT_DELTA",
+            "TARGET_FILES",
+            "PROBLEM",
+            "IMPLEMENTATION_CHANGES",
+            "PATCH_SKETCH_UNIFIED_DIFF",
+            "VALIDATION_COMMANDS",
+            "RISKS",
+            "EXIT_DECISION",
+        )
+        stop_names = "|".join(re.escape(name) for name in section_names if name != section_name)
+        pattern = (
+            rf"(?ims)^\s*(?:#+\s*)?{re.escape(section_name)}\s*(?:=|:)?\s*"
+            rf"(.*?)(?=^\s*(?:#+\s*)?(?:{stop_names})\b|\Z)"
+        )
+        match = re.search(pattern, response_text or "")
+        return match.group(1).strip() if match else ""
+
+    def final_product_protocol(self, response_text: str) -> dict[str, Any]:
+        allowed_kinds = {"text", "code", "text_and_code"}
+        allowed_actions = {"append", "replace", "supersede", "refine"}
+        kind = self.final_product_scalar_field(response_text, "FINAL_PRODUCT_KIND")
+        action = self.final_product_scalar_field(response_text, "FINAL_PRODUCT_ACTION")
+        delta = self.final_product_section_body(response_text, "FINAL_PRODUCT_DELTA")
+        current_pointer_present = bool(
+            re.search(r"(?im)^\s*(?:#+\s*)?CURRENT_POINTER\b", response_text or "")
+        )
+        pointer_fields_present = {
+            "previous_block_id": self.proposal_pointer_field_declared(response_text, "previous_block_id"),
+            "refines_block_id": self.proposal_pointer_field_declared(response_text, "refines_block_id"),
+            "resume_from_block_id": self.proposal_pointer_field_declared(response_text, "resume_from_block_id"),
+        }
+        consumed_evidence = self.final_product_section_body(response_text, "CONSUMED_EVIDENCE")
+        next_runtime_intent = self.final_product_section_body(response_text, "NEXT_RUNTIME_INTENT")
+        errors: list[str] = []
+        if kind not in allowed_kinds:
+            errors.append("gpu1_final_product_kind_invalid_or_missing")
+        if action not in allowed_actions:
+            errors.append("gpu1_final_product_action_invalid_or_missing")
+        if kind == "blocked" or action in {"blocked", "block"}:
+            errors.append("gpu1_blocked_not_allowed_as_final_product_delta")
+        if not delta:
+            errors.append("gpu1_final_product_delta_missing")
+        missing_pointer_fields = [
+            name for name, present in pointer_fields_present.items() if not present
+        ]
+        pointer_operational = bool(current_pointer_present and not missing_pointer_fields)
+        if not pointer_operational:
+            errors.append("gpu1_pointer_protocol_not_operational")
+        if not consumed_evidence:
+            errors.append("gpu1_consumed_evidence_section_missing")
+        if not next_runtime_intent:
+            errors.append("gpu1_next_runtime_intent_missing")
+        return {
+            "passed": not errors,
+            "kind": kind,
+            "action": action,
+            "delta": delta,
+            "delta_chars": len(delta),
+            "current_pointer_present": current_pointer_present,
+            "pointer_fields_present": pointer_fields_present,
+            "pointer_protocol_operational": pointer_operational,
+            "consumed_evidence_present": bool(consumed_evidence),
+            "next_runtime_intent_present": bool(next_runtime_intent),
+            "errors": errors,
+        }
+
     def latest_peer_decision_for_revision(self, lane: str, revision: int) -> dict[str, Any]:
         for report in reversed(self.provider_reports):
             if str(report.get("lane") or "") != lane:
@@ -436,6 +521,7 @@ class RuntimeGateProposalCycleAMixin:
         )
         target_files = target_contract["verified_declared_target_files"]
         validation_commands = self.proposal_validation_commands(response_text, revision)
+        final_product_protocol = self.final_product_protocol(response_text)
         previous_gpu0_report = (
             self.latest_peer_decision_for_revision("gpu0_peer", int(revision) - 1)
             if int(revision) > 0
@@ -481,6 +567,7 @@ class RuntimeGateProposalCycleAMixin:
             and parallel_cycle.get("passed")
             and linked_provider_block_gate["passed"]
             and gpu1_output_gate["passed"]
+            and final_product_protocol.get("passed")
             and not cross_lane_veto.get("vetoed")
         )
         pointer_action = self.proposal_pointer_action(response_text, quality_passed)
@@ -489,6 +576,7 @@ class RuntimeGateProposalCycleAMixin:
             *[str(item) for item in cross_lane_veto.get("reasons", [])],
             *missing_link_reasons,
             *[str(item) for item in gpu1_output_gate.get("issues", [])],
+            *[str(item) for item in final_product_protocol.get("errors", [])],
         ]
         continuity_errors: list[str] = []
         if previous_gpu0_requires_refine:
@@ -564,6 +652,12 @@ class RuntimeGateProposalCycleAMixin:
             response_text or "", name=f"gpu1_free_text_evidence_revision_{revision:03d}",
             kind="gpu1_free_text_evidence", producer="proposal_cycle_a",
         )
+        final_product_delta_evidence = self.response_text_ref_or_tail(
+            str(final_product_protocol.get("delta") or ""),
+            name=f"final_product_delta_revision_{revision:03d}",
+            kind="final_product_delta",
+            producer="proposal_cycle_a",
+        )
         data = {
             "schema_version": 1,
             "kind": "heap_proposal_iteration",
@@ -589,6 +683,14 @@ class RuntimeGateProposalCycleAMixin:
             "exit_decision": exit_decision,
             "gpu1_closure_decision_packet": gpu1_packet,
             "gpu1_decision": gpu1_packet.get("gpu1_decision"),
+            "final_product_kind": final_product_protocol.get("kind") or "",
+            "final_product_action": final_product_protocol.get("action") or "",
+            "final_product_delta_valid": bool(final_product_protocol.get("passed")),
+            "final_product_protocol": {
+                key: value
+                for key, value in final_product_protocol.items()
+                if key != "delta"
+            },
             "required_refines_block_id": previous_block_id if previous_gpu0_requires_refine else "",
             "required_consumed_gpu0_block_id": previous_gpu0_block_id if previous_gpu0_requires_refine else "",
             "consumed_gpu0_block_id": declared_consumed_gpu0_block_id,
@@ -641,6 +743,7 @@ class RuntimeGateProposalCycleAMixin:
             "anchored_source_candidates": anchored_sources,
             "previous_iteration_available": bool(previous),
             **self.prefixed_text_evidence_fields("gpu1_free_text_evidence", gpu1_free_text_evidence),
+            **self.prefixed_text_evidence_fields("final_product_delta", final_product_delta_evidence),
             "gpu1_free_text_evidence_packet_sha256": gpu1_packet.get("response_text_sha256") or "",
             "gpu1_free_text_evidence_visible_even_when_invalid": True,
             "response_text_preview": clipped,
@@ -683,6 +786,9 @@ class RuntimeGateProposalCycleAMixin:
                 "refines_block_id": data["refines_block_id"],
                 "resume_from_block_id": data["resume_from_block_id"],
                 "pointer_action": pointer_action,
+                "final_product_kind": data["final_product_kind"],
+                "final_product_action": data["final_product_action"],
+                "final_product_delta_valid": data["final_product_delta_valid"],
                 "target_files": target_files,
                 "quality_passed": quality_passed,
                 "proposal_progress_passed": bool(proposal_progress.get("passed")),

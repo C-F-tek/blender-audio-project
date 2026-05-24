@@ -49,13 +49,56 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     target = "ia_carmine/product/code_product/final_readable_product/cli.py"
     proposal_1 = "smoke:proposal:001"
     proposal_2 = "smoke:proposal:002"
+    proposal_1_delta = (
+        "Initial smoke final-product delta. This first revision is intentionally "
+        "rejected by quality gates and must remain raw evidence, not the product.\n\n"
+        + full_diff
+    )
     proposal_1_response = (
-        "TARGET_FILES:\n- "
+        "FINAL_PRODUCT_KIND: text_and_code\n"
+        "FINAL_PRODUCT_ACTION: append\n"
+        "CURRENT_POINTER:\n"
+        "- previous_block_id=\n"
+        "- refines_block_id=\n"
+        "- resume_from_block_id=\n"
+        "CONSUMED_EVIDENCE:\n"
+        "- consumed_gpu0_block_id=\n"
+        "- consumed_npu_block_ids=\n"
+        "- tool_or_matrix_refs=\n"
+        "NEXT_RUNTIME_INTENT:\n"
+        "- wait for sidecar review and refine the final-product delta\n"
+        "FINAL_PRODUCT_DELTA:\n"
+        + proposal_1_delta
+        + "\nTARGET_FILES:\n- "
         + target
         + "\nPROBLEM:\n- smoke rejected first revision\nPATCH_SKETCH_UNIFIED_DIFF:\n"
         + full_diff
     )
-    proposal_2_response = "TARGET_FILES:\n- " + target + "\nPATCH_SKETCH_UNIFIED_DIFF:\n" + full_diff
+    proposal_2_delta = (
+        "Refined smoke final-product delta. The final product is one product with "
+        "this text surface and a verified code surface.\n\n"
+        + full_diff
+    )
+    proposal_2_response = (
+        "FINAL_PRODUCT_KIND: text_and_code\n"
+        "FINAL_PRODUCT_ACTION: refine\n"
+        "CURRENT_POINTER:\n"
+        f"- previous_block_id={proposal_1}\n"
+        f"- refines_block_id={proposal_1}\n"
+        f"- resume_from_block_id={proposal_1}\n"
+        "CONSUMED_EVIDENCE:\n"
+        "- consumed_gpu0_block_id=smoke:gpu0:002\n"
+        "- consumed_npu_block_ids=smoke:npu:002\n"
+        f"- tool_or_matrix_refs={repo_rel(repo_root, matrix_path)}\n"
+        "NEXT_RUNTIME_INTENT:\n"
+        "- compose the final-product text surface deterministically from deltas\n"
+        "FINAL_PRODUCT_DELTA:\n"
+        + proposal_2_delta
+        + "\nTARGET_FILES:\n- "
+        + target
+        + "\nPATCH_SKETCH_UNIFIED_DIFF:\n"
+        + full_diff
+    )
     gpu1_packet = build_gpu1_closure_decision_packet(
         gpu1_block_id=proposal_2,
         gpu1_revision=2,
@@ -87,6 +130,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "exit_decision": "PATCHABLE_TARGET",
             "quality_passed": False,
             "accepted": False,
+            "final_product_kind": "text_and_code",
+            "final_product_action": "append",
+            "final_product_delta_valid": True,
+            "final_product_protocol": {
+                "passed": True,
+                "kind": "text_and_code",
+                "action": "append",
+                "pointer_protocol_operational": True,
+                "errors": [],
+            },
             **write_text_evidence_fields(
                 repo_root,
                 run_dir / "text_artifacts",
@@ -94,6 +147,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 name="proposal_001_response_text",
                 text=proposal_1_response,
                 kind="smoke_proposal_response_text",
+                producer="heap_final_readable_product_smoke",
+                suffix=".md",
+            ),
+            **write_text_evidence_fields(
+                repo_root,
+                run_dir / "text_artifacts",
+                prefix="final_product_delta",
+                name="proposal_001_final_product_delta",
+                text=proposal_1_delta,
+                kind="smoke_final_product_delta",
                 producer="heap_final_readable_product_smoke",
                 suffix=".md",
             ),
@@ -119,6 +182,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "broker_result_refs": [repo_rel(repo_root, matrix_path)],
             "matrix_report_refs": [repo_rel(repo_root, matrix_path)],
             "gpu1_closure_decision_packet": gpu1_packet,
+            "final_product_kind": "text_and_code",
+            "final_product_action": "refine",
+            "final_product_delta_valid": True,
+            "final_product_protocol": {
+                "passed": True,
+                "kind": "text_and_code",
+                "action": "refine",
+                "pointer_protocol_operational": True,
+                "errors": [],
+            },
             "quality_passed": True,
             "accepted": True,
             **write_text_evidence_fields(
@@ -128,6 +201,16 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
                 name="proposal_002_response_text",
                 text=proposal_2_response,
                 kind="smoke_proposal_response_text",
+                producer="heap_final_readable_product_smoke",
+                suffix=".md",
+            ),
+            **write_text_evidence_fields(
+                repo_root,
+                run_dir / "text_artifacts",
+                prefix="final_product_delta",
+                name="proposal_002_final_product_delta",
+                text=proposal_2_delta,
+                kind="smoke_final_product_delta",
                 producer="heap_final_readable_product_smoke",
                 suffix=".md",
             ),
@@ -610,9 +693,16 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and plan_product_full_patch.exists()
         and "CODE_PRODUCT_FULL_PATCH" in code_product_body
         and "PLAN_PRODUCT_FULL_PATCH" in plan_product_body
-        and "technical_plan_product" in product.get("plan_product_kind", "")
+        and "final_product_text_surface" in product.get("plan_product_kind", "")
+        and "## FINAL_PRODUCT Text Surface" in plan_product_body
+        and "FINAL_PRODUCT_DELTA" in plan_product_body
+        and "Refined smoke final-product delta" in plan_product_body
+        and "Initial smoke final-product delta" in plan_product_body
+        and "Text surface status: `FINAL_PRODUCT_TEXT_SURFACE_AVAILABLE`" in plan_product_body
+        and "packaging/evidence surfaces, not competing products" in plan_product_body
         and "ia_carmine/product/code_product/final_readable_product/cli.py" in code_product_body
         and "FULL_DIFF_SENTINEL" in code_product_body
+        and "FULL_DIFF_SENTINEL" in plan_product_body
         and TRUNCATED_DIFF_MARKER not in code_product_body
         and "[code product excerpt truncated" not in body
         and "ia_carmine/runtime/heap_context_closure/cli.py" not in code_product_body

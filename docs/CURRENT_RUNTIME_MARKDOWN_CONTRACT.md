@@ -42,10 +42,16 @@ HTTP/API coordinates work at boundaries; it is not the container for the runtime
 - Long responses, logs and reports return paths plus short diagnostic tails. Full content stays file-backed.
 - Legacy gateway/deep-planning dispatch surfaces are historical/non-run-unica unless explicitly promoted into the current dynamic-pack/native-broker contract.
 
-## Final product files
+## Final product surfaces
 
-- `CODE_PRODUCT_FULL_PATCH.md` is the final patch/code product. It is reviewable only when it contains concrete diff/code, explicit no-op, already-integrated or non-applicable classification backed by matrix/lab/patch evidence.
-- `PLAN_PRODUCT_FULL_PATCH.md` is the final real prompt/chat product from the heap. Its main content is the GPU1-generated content of any nature across heap rounds, recomposed as one readable final product. Pointer graph, recovery/congruence and heap/pointer files are technical attachments, not the main content.
+- `FINAL_PRODUCT` is one product: text, code, or text+code.
+- `PLAN_PRODUCT_FULL_PATCH.md` is the text/prose/decision surface of that single product.
+- `CODE_PRODUCT_FULL_PATCH.md` is the code/diff surface of that same product only when verified code exists.
+- When the product is text-only, `CODE_PRODUCT_FULL_PATCH.md` may report `NO_APPLICABLE_CODE_PRODUCT` while the run still has a valid text product surface.
+- GPU1 contributes `FINAL_PRODUCT_DELTA` records during each heap turn. GPU1 must declare `FINAL_PRODUCT_KIND`, `FINAL_PRODUCT_ACTION`, `CURRENT_POINTER`, `CONSUMED_EVIDENCE`, `NEXT_RUNTIME_INTENT` and `FINAL_PRODUCT_DELTA`.
+- GPU1 does not emit `blocked` as a final-product value. `blocked_with_reason` is a runtime/gate classification.
+- The final composer must apply ordered GPU1 deltas through `append`, `replace`, `supersede` and `refine`; it must not create a new final GPU synthesis and must not present raw proposal-body collage as the product.
+- Pointer graph, recovery/congruence and heap/pointer files remain technical attachments proving how the product surface was composed.
 
 ## Missing value and device policy
 

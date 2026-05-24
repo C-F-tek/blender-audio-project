@@ -241,7 +241,7 @@ def _build_refined_request(
             "2. If code targets are verified, request `run_heap_virtual_dev_environment` and `run_heap_code_execution_matrix` before claiming product readiness.",
             "3. If runtime behavior is unclear, request `agent_runtime_debug_lab` with the smallest concrete diagnostic request.",
             "4. If no verified target exists, return `EXIT_DECISION=NO_PATCHABLE_TARGET` with `BLOCKED_NO_VERIFIED_TARGET_REASON`.",
-            "5. GPU1 must consume GPU0/NPU vetoes and this report in the next revision before final synthesis.",
+            "5. GPU1 must consume GPU0/NPU vetoes and this report in the next revision before emitting the next FINAL_PRODUCT_DELTA.",
             "",
             "## Evidence Reports",
             "",
