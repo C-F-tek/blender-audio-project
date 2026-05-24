@@ -81,7 +81,7 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     )
     proposal_2_response = (
         "FINAL_PRODUCT_KIND: text_and_code\n"
-        "FINAL_PRODUCT_ACTION: refine\n"
+        "FINAL_PRODUCT_ACTION: append\n"
         "CURRENT_POINTER:\n"
         f"- previous_block_id={proposal_1}\n"
         f"- refines_block_id={proposal_1}\n"
@@ -183,12 +183,12 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "matrix_report_refs": [repo_rel(repo_root, matrix_path)],
             "gpu1_closure_decision_packet": gpu1_packet,
             "final_product_kind": "text_and_code",
-            "final_product_action": "refine",
+            "final_product_action": "append",
             "final_product_delta_valid": True,
             "final_product_protocol": {
                 "passed": True,
                 "kind": "text_and_code",
-                "action": "refine",
+                "action": "append",
                 "pointer_protocol_operational": True,
                 "errors": [],
             },
@@ -409,6 +409,8 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
             "product_status": "blocked_with_reason",
             "quality_output_passed": False,
             "accepted_proposal_count": 1,
+            "accepted_final_product_delta_count": 1,
+            "final_product_delta_applied_count": 1,
             "rejected_proposal_count": 1,
             "proposal_count": 2,
             "provider_report_count": 3,
@@ -572,8 +574,8 @@ def build_fixture(repo_root: Path, work_dir: Path) -> tuple[Path, Path]:
     causality_json = run_dir / "heap_final_causality_normalized.json"
     pointer_json = run_dir / "external_heap_block_pointer_manifest.json"
     for command in (
-        [sys.executable, "-m", "ia_carmine.cli", "normalize_heap_final_causality", "--composer-json", str(composer_json), "--output", str(causality_json)],
         [sys.executable, "-m", "ia_carmine.cli", "build_external_heap_block_pointer_manifest", "--repo-root", ".", "--run-dir", str(run_dir)],
+        [sys.executable, "-m", "ia_carmine.cli", "normalize_heap_final_causality", "--composer-json", str(composer_json), "--pointer-manifest", str(pointer_json), "--output", str(causality_json)],
         [sys.executable, "-m", "ia_carmine.cli", "build_external_heap_revision_context", "--pointer-manifest", str(pointer_json), "--composer-json", str(composer_json), "--causality-json", str(causality_json), "--output", str(run_dir / "external_heap_revision_context.json"), "--no-documents-copy"],
     ):
         subprocess.run(command, cwd=repo_root, text=True, capture_output=True, check=False)

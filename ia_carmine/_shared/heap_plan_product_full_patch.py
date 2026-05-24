@@ -111,8 +111,7 @@ def _apply_delta(composed: list[dict[str, Any]], entry: dict[str, Any]) -> str:
             if str(existing.get("block_id") or "") == target:
                 composed[index] = entry
                 return f"{action}_applied_to:{target}"
-    composed.append(entry)
-    return f"{action or 'unknown'}_target_missing_appended"
+    return f"{action or 'unknown'}_target_missing_rejected"
 
 
 def _compose_final_product(
@@ -126,6 +125,20 @@ def _compose_final_product(
         entry = _proposal_entry(repo_root, report)
         if entry["valid"]:
             status = _apply_delta(composed, entry)
+            if status.endswith("_rejected"):
+                rejected.append(
+                    {
+                        **entry,
+                        "raw_text": entry.get("text") or "",
+                        "raw_source": "final_product_delta_ref",
+                        "raw_errors": [
+                            *entry.get("errors", []),
+                            "final_product_delta_target_missing",
+                            status,
+                        ],
+                    }
+                )
+                continue
             ledger.append({**entry, "applied_status": status})
         else:
             raw = _strict_text(repo_root, report, "gpu1_free_text_evidence")

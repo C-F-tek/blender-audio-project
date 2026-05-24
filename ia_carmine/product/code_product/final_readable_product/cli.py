@@ -320,6 +320,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     text_product_ready = (
         "Text surface status: `FINAL_PRODUCT_TEXT_SURFACE_AVAILABLE`" in plan_product_full_patch
     )
+    final_product_delta_applied_count = plan_product_full_patch.count("### Applied Delta ")
     final_product_surface_ready = bool(code_product_ready or text_product_ready)
     blockers = final_product_blockers(
         markdown_output=markdown_output,
@@ -478,6 +479,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "real_code_product_ready": code_product_ready,
         "text_product_ready": text_product_ready,
         "final_product_surface_ready": final_product_surface_ready,
+        "final_product_delta_applied_count": final_product_delta_applied_count,
         "code_product_metrics": code_product_report,
         "truncation_marker": truncation_marker,
         "blocking_reasons": blockers,
@@ -525,7 +527,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "documents_outputs": documents_outputs,
         "documents_zip": documents_zip,
         "zip_member_count": zip_member_count,
-        "plan_product_full_patch_ready": True,
+        "plan_product_full_patch_ready": text_product_ready,
         "plan_product_kind": "final_product_text_surface",
         "provider_execution_performed": pointer.get("provider_execution_performed"),
         "patch_application_performed": gate.get("patch_application_performed"),

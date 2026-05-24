@@ -44,7 +44,7 @@ def build_launcher_summary(args: Any, state: dict[str, Any]) -> dict[str, Any]:
         composer_result["passed"]
         or (
             state["composer_packaging_performed"]
-            and code_product_contract.get("real_code_product_ready")
+            and code_product_contract.get("final_product_surface_ready")
         )
     )
     launcher_passed = bool(
@@ -164,6 +164,11 @@ def build_launcher_summary(args: Any, state: dict[str, Any]) -> dict[str, Any]:
         "plan_product_full_patch": final_payload.get("plan_product_full_patch_output", ""),
         "plan_product_kind": final_payload.get("plan_product_kind", ""),
         "plan_product_full_patch_ready": final_payload.get("plan_product_full_patch_ready", False),
+        "text_product_ready": code_product_contract.get("text_product_ready", False),
+        "final_product_surface_ready": code_product_contract.get("final_product_surface_ready", False),
+        "final_product_delta_applied_count": code_product_contract.get(
+            "final_product_delta_applied_count", 0
+        ),
         "final_readable_product_zip": final_result.get("documents_zip", ""),
         "final_code_product_contract": code_product_contract,
         "external_heap_contract": external_contract,
@@ -253,6 +258,11 @@ def _code_product_contract(state: dict[str, Any], final_payload: dict[str, Any])
         or final_payload.get("full_code_product_output")
         or str(state["run_dir"] / "CODE_PRODUCT_FULL_PATCH.md")
     )
+    plan_product_path = (
+        documents_outputs.get("documents_plan_product_full_patch")
+        or final_payload.get("plan_product_full_patch_output")
+        or str(state["run_dir"] / "PLAN_PRODUCT_FULL_PATCH.md")
+    )
     if not metrics:
         text = _read_text(code_product_path)
         metrics = {
@@ -272,9 +282,22 @@ def _code_product_contract(state: dict[str, Any], final_payload: dict[str, Any])
             and not metrics.get("truncation_marker")
         )
     )
+    text_product_ready = bool(final_payload.get("text_product_ready"))
+    final_product_surface_ready = bool(
+        final_payload.get("final_product_surface_ready")
+        or real_code_product_ready
+        or text_product_ready
+    )
     return {
         "path": str(code_product_path or ""),
+        "plan_product_path": str(plan_product_path or ""),
         "real_code_product_ready": real_code_product_ready,
+        "text_product_ready": text_product_ready,
+        "final_product_surface_ready": final_product_surface_ready,
+        "plan_product_kind": str(final_payload.get("plan_product_kind") or ""),
+        "final_product_delta_applied_count": _safe_int(
+            final_payload.get("final_product_delta_applied_count")
+        ),
         "metrics": metrics,
         "final_document_status": final_payload.get("final_document_status"),
         "blocking_reasons": _list_or_empty(final_payload.get("blocking_reasons")),
@@ -314,6 +337,13 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
         long_response.get("long_response_artifact_written")
         or (long_md and Path(long_md).is_file())
     )
+    final_product_delta_applied_count = _safe_int(
+        long_response.get("final_product_delta_applied_count")
+        or stats.get("final_product_delta_applied_count")
+        or pointer.get("source_accepted_final_product_delta_count")
+        or pointer.get("accepted_final_product_delta_count")
+        or pointer.get("final_product_delta_applied_count")
+    )
     causal_chain_passed = _first_bool(
         external_payload.get("causality_passed"),
         causality.get("causal_chain_passed"),
@@ -324,12 +354,16 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
         causality.get("product_acceptance_passed"),
         long_response.get("product_acceptance_passed"),
     )
+    reported_long_response_ready = long_response.get("long_response_product_ready") is True
     long_response_product_ready = bool(
-        long_response.get("long_response_product_ready")
-        or (
-            long_response_artifact_written
-            and causal_chain_passed
-            and product_acceptance_passed
+        final_product_delta_applied_count > 0
+        and (
+            reported_long_response_ready
+            or (
+                long_response_artifact_written
+                and causal_chain_passed
+                and product_acceptance_passed
+            )
         )
     )
     return {
@@ -343,6 +377,7 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
         "long_response_passed": bool(long_response.get("passed")),
         "long_response_artifact_written": long_response_artifact_written,
         "long_response_product_ready": long_response_product_ready,
+        "final_product_delta_applied_count": final_product_delta_applied_count,
         "causality_path": str(external_payload.get("causality_json") or ""),
         "causal_chain_passed": causal_chain_passed,
         "product_acceptance_passed": product_acceptance_passed,
@@ -392,16 +427,33 @@ def _launcher_contract_errors(
     final_payload: dict[str, Any],
 ) -> list[str]:
     errors: list[str] = []
+    text_product_ready = bool(
+        final_payload.get("text_product_ready")
+        or code_product_contract.get("text_product_ready")
+    )
+    final_product_surface_ready = bool(
+        final_payload.get("final_product_surface_ready")
+        or code_product_contract.get("final_product_surface_ready")
+        or code_product_contract.get("real_code_product_ready")
+        or text_product_ready
+    )
     if not final_result.get("passed"):
-        errors.append("final readable product did not pass the real code product contract")
-    if not code_product_contract.get("real_code_product_ready"):
+        errors.append("final readable product did not pass the final product surface contract")
+    if not final_product_surface_ready:
+        errors.append(
+            "FINAL_PRODUCT has no accepted text or code surface"
+        )
+    if (
+        not code_product_contract.get("real_code_product_ready")
+        and not text_product_ready
+    ):
         errors.append("CODE_PRODUCT_FULL_PATCH.md is missing a real non-truncated diff product")
     if final_payload.get("final_document_status") in {
         "DIAGNOSTIC_REVIEW_READY",
         "NO_APPLICABLE_CODE_PRODUCT",
-    }:
+    } and not text_product_ready:
         errors.append(
-            "final product is diagnostic/no-applicable instead of a concrete code product"
+            "final product is diagnostic/no-applicable without a valid text surface"
         )
     if not external_result.get("passed"):
         errors.append("external heap postrun package did not complete")

@@ -239,11 +239,51 @@ def compute_causal_chain(
     }
 
 
-def compute_product_acceptance(composer: dict[str, Any]) -> dict[str, Any]:
+def final_product_delta_applied_count(
+    composer: dict[str, Any],
+    pointer_manifest: dict[str, Any] | None,
+) -> int:
+    for key in (
+        "accepted_final_product_delta_count",
+        "final_product_delta_applied_count",
+    ):
+        try:
+            value = int(composer.get(key) or 0)
+        except (TypeError, ValueError):
+            value = 0
+        if value > 0:
+            return value
+    if pointer_manifest:
+        for key in (
+            "source_accepted_final_product_delta_count",
+            "accepted_final_product_delta_count",
+            "final_product_delta_applied_count",
+        ):
+            try:
+                value = int(pointer_manifest.get(key) or 0)
+            except (TypeError, ValueError):
+                value = 0
+            if value > 0:
+                return value
+        blocks = pointer_manifest.get("blocks")
+        if isinstance(blocks, list):
+            return sum(
+                1
+                for block in blocks
+                if isinstance(block, dict) and block.get("delta_applied") is True
+            )
+    return 0
+
+
+def compute_product_acceptance(
+    composer: dict[str, Any],
+    pointer_manifest: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     reasons: list[str] = []
     product_status = str(composer.get("product_status") or "")
     quality_output_passed = composer.get("quality_output_passed")
     accepted_count = int(composer.get("accepted_proposal_count") or 0)
+    accepted_delta_count = final_product_delta_applied_count(composer, pointer_manifest)
     rejected_count = int(composer.get("rejected_proposal_count") or 0)
     blockers = (
         composer.get("blocking_issues") if isinstance(composer.get("blocking_issues"), list) else []
@@ -253,8 +293,10 @@ def compute_product_acceptance(composer: dict[str, Any]) -> dict[str, Any]:
         reasons.append(f"product_status={product_status or 'missing'}")
     if quality_output_passed is not True:
         reasons.append(f"quality_output_passed={quality_output_passed}")
-    if accepted_count <= 0:
+    if accepted_count <= 0 and accepted_delta_count <= 0:
         reasons.append("no accepted proposal chunks")
+    if accepted_delta_count <= 0:
+        reasons.append("final_product_composer_only_collaged_blocks")
     if blockers:
         reasons.append(f"blocking_issue_count={len(blockers)}")
     if rejected_count > 0 and accepted_count <= 0:
@@ -275,6 +317,8 @@ def compute_product_acceptance(composer: dict[str, Any]) -> dict[str, Any]:
         "product_status": product_status,
         "quality_output_passed": quality_output_passed,
         "accepted_proposal_count": accepted_count,
+        "accepted_final_product_delta_count": accepted_delta_count,
+        "final_product_delta_applied_count": accepted_delta_count,
         "rejected_proposal_count": rejected_count,
         "blocking_issue_count": len(blockers),
         "reasons": reasons,
@@ -287,7 +331,7 @@ def build_report(
     pointer_manifest: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     causal_chain = compute_causal_chain(composer, pointer_manifest)
-    product_acceptance = compute_product_acceptance(composer)
+    product_acceptance = compute_product_acceptance(composer, pointer_manifest)
     return {
         "schema_version": 1,
         "kind": "external_heap_final_causality_normalization",

@@ -335,10 +335,14 @@ def main() -> int:
     long_response_artifact_written = bool(output.is_file() and output.stat().st_size > 0)
     causal_chain_passed = causality.get("causal_chain_passed") is True
     product_acceptance_passed = causality.get("product_acceptance_passed") is True
+    final_product_delta_applied_count = int(
+        stats.get("final_product_delta_applied_count") or 0
+    )
     long_response_product_ready = bool(
         long_response_artifact_written
         and causal_chain_passed
         and product_acceptance_passed
+        and final_product_delta_applied_count > 0
     )
     report = {
         "schema_version": 1,
@@ -347,6 +351,7 @@ def main() -> int:
         "passed": long_response_artifact_written,
         "long_response_artifact_written": long_response_artifact_written,
         "long_response_product_ready": long_response_product_ready,
+        "final_product_delta_applied_count": final_product_delta_applied_count,
         "causal_chain_passed": causal_chain_passed,
         "product_acceptance_passed": product_acceptance_passed,
         "pointer_manifest": str(pointer_path),
@@ -373,6 +378,8 @@ def main() -> int:
             else []
         ),
     }
+    if long_response_artifact_written and final_product_delta_applied_count <= 0:
+        report["warnings"].append("final_product_composer_only_collaged_blocks")
     write_json(json_output, report)
     if not args.no_documents_copy:
         documents_outputs = attach_to_composer_documents(

@@ -226,7 +226,10 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             "consumed_block_ids": data.get("consumed_block_ids") if isinstance(data.get("consumed_block_ids"), list) else [],
             "gpu1_closure_decision_packet": data.get("gpu1_closure_decision_packet"),
             "quality_passed": data.get("quality_passed"),
-            "accepted": data.get("quality_passed") is True,
+            "accepted": bool(
+                data.get("quality_passed") is True
+                and data.get("final_product_delta_valid") is True
+            ),
             "soft_lock_closure_owner_decision": data.get(
                 "soft_lock_closure_owner_decision", ""
             ),
@@ -258,7 +261,10 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
                 "navigation_role": "proposal_chain",
                 "can_continue_to_next": True,
                 "can_backrefine": bool(previous_id),
-                "requires_review": data.get("quality_passed") is True,
+                "requires_review": bool(
+                    data.get("quality_passed") is True
+                    and data.get("final_product_delta_valid") is True
+                ),
             },
         }
         if not block["consumed_block_ids"]:
@@ -360,6 +366,7 @@ def build_report(
     roles_observed = sorted(set(roles_verified) | set(invalid_roles))
     roles_observed_invalid = invalid_roles
     accepted_blocks = [block for block in blocks if block.get("accepted") is True]
+    delta_applied_blocks = [block for block in blocks if block.get("delta_applied") is True]
     rejected_blocks = [
         block
         for block in blocks
@@ -367,6 +374,9 @@ def build_report(
     ]
     latest_proposal = source_proposals[-1] if source_proposals else {}
     all_accepted_blocks = [block for block in all_blocks if block.get("accepted") is True]
+    all_delta_applied_blocks = [
+        block for block in all_blocks if block.get("delta_applied") is True
+    ]
     all_rejected_blocks = [
         block
         for block in all_blocks
@@ -412,13 +422,15 @@ def build_report(
         and provider_execution_performed
         and not unlinked_peer_blocks
     )
-    proposal_graph_product_passed = bool(source_proposals)
+    proposal_graph_product_passed = bool(source_proposals and all_delta_applied_blocks)
     errors: list[str] = []
     warnings: list[str] = []
     if not source_proposals and provider_graph_recoverable:
         warnings.append("provider graph recoverable but no proposal chunk")
     elif not source_proposals:
         errors.append("proposal_block_count is zero")
+    if source_proposals and not all_delta_applied_blocks:
+        errors.append("final_product_composer_only_collaged_blocks")
     if source_proposals and not edges:
         errors.append("edge_count is zero")
     if provider_mode_observed:
@@ -471,6 +483,9 @@ def build_report(
         "edge_count": len(edges),
         "accepted_block_count": len(accepted_blocks),
         "source_accepted_block_count": len(all_accepted_blocks),
+        "accepted_final_product_delta_count": len(delta_applied_blocks),
+        "source_accepted_final_product_delta_count": len(all_delta_applied_blocks),
+        "final_product_delta_applied_count": len(delta_applied_blocks),
         "rejected_proposal_block_count": len(rejected_blocks),
         "source_rejected_proposal_block_count": len(all_rejected_blocks),
         "has_forward_pointers": any(edge.get("edge_type") == "next" for edge in edges),

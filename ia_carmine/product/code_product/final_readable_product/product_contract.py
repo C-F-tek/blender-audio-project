@@ -89,7 +89,7 @@ def final_product_blockers(
         blockers.append("revision context has no linked NPU audit block")
     if not truthy(pointer.get("provider_execution_performed")):
         blockers.append("provider execution is not proven by verified pointer evidence")
-    if matrix and matrix.get("passed") is not True:
+    if matrix and matrix.get("passed") is not True and not text_product_ready:
         blockers.append("code execution matrix did not pass")
     if not markdown_output.exists():
         blockers.append("final readable markdown was not written")

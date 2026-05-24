@@ -13,10 +13,32 @@ def build_product_state(
     final_payload: dict[str, Any],
     launcher_contract_errors: list[str],
 ) -> dict[str, Any]:
+    real_code_product_ready = bool(code_product_contract.get("real_code_product_ready"))
+    text_product_ready = bool(
+        code_product_contract.get("text_product_ready")
+        or final_payload.get("text_product_ready")
+    )
+    final_product_surface_ready = bool(
+        code_product_contract.get("final_product_surface_ready")
+        or final_payload.get("final_product_surface_ready")
+        or real_code_product_ready
+        or text_product_ready
+    )
+    plan_product_kind = str(
+        final_payload.get("plan_product_kind")
+        or code_product_contract.get("plan_product_kind")
+        or ""
+    ).strip()
     product_kind = str(final_payload.get("product_kind") or "").strip()
+    if product_kind == "code_or_text_product_candidate":
+        product_kind = ""
     if not product_kind:
-        if code_product_contract.get("real_code_product_ready"):
+        if real_code_product_ready and text_product_ready:
+            product_kind = "text_and_code_product"
+        elif real_code_product_ready:
             product_kind = "code_patch_product"
+        elif text_product_ready or plan_product_kind == "final_product_text_surface":
+            product_kind = "text_product"
         elif external_contract.get("resume_from_block_id") and external_contract.get(
             "provider_execution_performed"
         ):
@@ -34,8 +56,10 @@ def build_product_state(
         product_kind = "provider_runtime_blocked_product"
 
     approved = bool(
-        product_kind in {"code_patch_product", "text_product", "technical_plan_product"}
+        product_kind
+        in {"code_patch_product", "text_product", "text_and_code_product", "technical_plan_product"}
         and final_result.get("passed")
+        and final_product_surface_ready
         and not launcher_contract_errors
     )
     continuation_required = bool(
@@ -65,7 +89,11 @@ def build_product_state(
         final_payload=final_payload,
     )
     return {
-        "canonical_product_path": code_product_contract.get("path", ""),
+        "canonical_product_path": (
+            code_product_contract.get("path", "")
+            if real_code_product_ready
+            else code_product_contract.get("plan_product_path", "")
+        ),
         "product_kind": product_kind,
         "product_status": product_status,
         "product_approval_status": (
@@ -73,7 +101,13 @@ def build_product_state(
         ),
         "product_approval_evidence": {
             "final_readable_product_passed": bool(final_result.get("passed")),
-            "real_code_product_ready": bool(code_product_contract.get("real_code_product_ready")),
+            "real_code_product_ready": real_code_product_ready,
+            "text_product_ready": text_product_ready,
+            "final_product_surface_ready": final_product_surface_ready,
+            "plan_product_kind": plan_product_kind,
+            "final_product_delta_applied_count": code_product_contract.get(
+                "final_product_delta_applied_count", 0
+            ),
             "provider_execution_performed": bool(
                 external_contract.get("provider_execution_performed")
             ),
