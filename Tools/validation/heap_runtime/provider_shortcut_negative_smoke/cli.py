@@ -127,9 +127,14 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "kind": "provider_shortcut_negative_smoke",
+        "repo_root": repo_root.as_posix(),
         "passed": not errors,
         "errors": errors,
+        "warnings": [],
         "requirement_semantics": requirement_report,
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
     }
 
 
