@@ -3,16 +3,17 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
 
-def repo_root() -> Path:
+def default_repo_root() -> Path:
     return Path(__file__).resolve().parents[4]
 
 
-def read(rel_path: str) -> str:
-    return (repo_root() / rel_path).read_text(encoding="utf-8")
+def read(repo_root: Path, rel_path: str) -> str:
+    return (repo_root / rel_path).read_text(encoding="utf-8")
 
 
 def require(condition: bool, message: str, errors: list[str]) -> None:
@@ -20,41 +21,41 @@ def require(condition: bool, message: str, errors: list[str]) -> None:
         errors.append(message)
 
 
-def main() -> int:
+def build_report(repo_root: Path) -> dict[str, object]:
     errors: list[str] = []
     launcher = "\n".join(
         [
-            read("ia_carmine/runtime/heap_context_closure/launcher.py"),
-            read("ia_carmine/runtime/heap_context_closure/commands.py"),
+            read(repo_root, "ia_carmine/runtime/heap_context_closure/launcher.py"),
+            read(repo_root, "ia_carmine/runtime/heap_context_closure/commands.py"),
         ]
     )
     prepare = "\n".join(
         [
-            read("ia_carmine/context/heap_context_memory_reload/cli.py"),
-            read("ia_carmine/context/heap_context_memory_reload/runner.py"),
-            read("ia_carmine/context/heap_context_memory_reload/memory_write.py"),
+            read(repo_root, "ia_carmine/context/heap_context_memory_reload/cli.py"),
+            read(repo_root, "ia_carmine/context/heap_context_memory_reload/runner.py"),
+            read(repo_root, "ia_carmine/context/heap_context_memory_reload/memory_write.py"),
         ]
     )
     gate = "\n".join(
         [
-            read("ia_carmine/runtime/heap_runtime/completeness_gate/cli.py"),
-            read("ia_carmine/runtime/heap_gate/runtime_init.py"),
-            read("ia_carmine/runtime/heap_gate/runtime_common.py"),
+            read(repo_root, "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py"),
+            read(repo_root, "ia_carmine/runtime/heap_gate/runtime_init.py"),
+            read(repo_root, "ia_carmine/runtime/heap_gate/runtime_common.py"),
         ]
     )
-    transient = read("ia_carmine/context/agent_context/transient_request_context/cli.py")
+    transient = read(repo_root, "ia_carmine/context/agent_context/transient_request_context/cli.py")
     sqlite_memory = "\n".join(
         [
-            read("ia_carmine/memory/agent_memory/sqlite_cli.py"),
-            read("ia_carmine/memory/agent_memory/sqlite_report.py"),
+            read(repo_root, "ia_carmine/memory/agent_memory/sqlite_cli.py"),
+            read(repo_root, "ia_carmine/memory/agent_memory/sqlite_report.py"),
         ]
     )
-    file_transport = read("ia_carmine/_shared/file_backed_transport.py")
-    startup_runner = read("ia_carmine/context/heap_context_memory_reload/runner.py")
-    startup_manifest = read("ia_carmine/context/heap_context_memory_reload/manifest.py")
-    rag_startup = read("ia_carmine/context/heap_context_memory_reload/rag_startup.py")
-    gpu1_dynamic_pack = read("ia_carmine/context/heap_context_memory_reload/dynamic_gpu1_context.py")
-    provider_prompt = read("ia_carmine/runtime/heap_gate/provider_prompt.py")
+    file_transport = read(repo_root, "ia_carmine/_shared/file_backed_transport.py")
+    startup_runner = read(repo_root, "ia_carmine/context/heap_context_memory_reload/runner.py")
+    startup_manifest = read(repo_root, "ia_carmine/context/heap_context_memory_reload/manifest.py")
+    rag_startup = read(repo_root, "ia_carmine/context/heap_context_memory_reload/rag_startup.py")
+    gpu1_dynamic_pack = read(repo_root, "ia_carmine/context/heap_context_memory_reload/dynamic_gpu1_context.py")
+    provider_prompt = read(repo_root, "ia_carmine/runtime/heap_gate/provider_prompt.py")
 
     require(
         '"request_transport"] = "inline_cli"' in launcher,
@@ -191,15 +192,38 @@ def main() -> int:
         errors,
     )
 
-    report = {
+    return {
         "schema_version": 1,
         "kind": "heap_file_backed_request_startup_smoke",
+        "repo_root": repo_root.as_posix(),
         "passed": not errors,
         "errors": errors,
+        "warnings": [],
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
     }
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", default="")
+    parser.add_argument("--output", default="")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    repo_root = Path(args.repo_root).resolve() if args.repo_root else default_repo_root()
+    report = build_report(repo_root)
+
+    if args.output:
+        output = Path(args.output)
+        if not output.is_absolute():
+            output = repo_root / output
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report["passed"] else 2
 
