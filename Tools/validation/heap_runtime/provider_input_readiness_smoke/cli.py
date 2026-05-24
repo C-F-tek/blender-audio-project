@@ -296,11 +296,16 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "kind": "provider_input_readiness_smoke",
+        "repo_root": repo_root.as_posix(),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": all(checks.values()),
         "checks": checks,
         "batch_payload": batch_payload,
         "errors": [name for name, passed in checks.items() if not passed],
+        "warnings": [],
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
     }
 
 
