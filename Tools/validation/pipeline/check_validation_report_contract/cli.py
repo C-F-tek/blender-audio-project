@@ -18,7 +18,18 @@ except ImportError:  # Allows package-style imports during external checks.
 DEFAULT_REPORT_DIR = "output/validation"
 REQUIRED_COMMON_FIELDS = ("schema_version", "repo_root", "passed")
 RECOMMENDED_COMMON_FIELDS = ("kind", "errors")
-NON_REPORT_FILE_PATTERNS = ("*_stdout.json", "*_request_*.json", "*_tool_requests.json")
+NON_REPORT_FILE_PATTERNS = (
+    "*_stdout.json",
+    "*_request_payload.json",
+    "*_request_input.json",
+    "*_request_data.json",
+    "*_tool_requests.json",
+    "*_smoke_evidence_*.json",
+    "*_smoke_inner_*.json",
+)
+NON_REPORT_KINDS = {
+    "provider_proposal_fixture",
+}
 
 
 EXPECTED_REPORT_KINDS = {
@@ -53,12 +64,31 @@ def is_report_candidate(path: Path) -> bool:
     return not any(fnmatch.fnmatch(path.name, pattern) for pattern in NON_REPORT_FILE_PATTERNS)
 
 
-def collect_report_files(report_dir: Path) -> tuple[list[Path], list[Path]]:
+def is_non_report_payload(path: Path) -> tuple[bool, str]:
+    if any(fnmatch.fnmatch(path.name, pattern) for pattern in NON_REPORT_FILE_PATTERNS):
+        return True, "non_report_filename_pattern"
+    data, load_error = load_json_object(path)
+    if load_error:
+        return False, ""
+    assert data is not None
+    kind = str(data.get("kind") or "")
+    if kind in NON_REPORT_KINDS:
+        return True, f"non_report_kind:{kind}"
+    return False, ""
+
+
+def collect_report_files(report_dir: Path) -> tuple[list[Path], list[tuple[Path, str]]]:
     if not report_dir.exists():
         return [], []
     files = sorted(path for path in report_dir.glob("*.json") if path.is_file())
-    reports = [path for path in files if is_report_candidate(path)]
-    ignored = [path for path in files if not is_report_candidate(path)]
+    reports: list[Path] = []
+    ignored: list[tuple[Path, str]] = []
+    for path in files:
+        ignored_payload, reason = is_non_report_payload(path)
+        if ignored_payload:
+            ignored.append((path, reason))
+        else:
+            reports.append(path)
     return reports, ignored
 
 
@@ -141,7 +171,7 @@ def validate_reports(
 ) -> dict[str, Any]:
     if report_files:
         files = [path if path.is_absolute() else repo_root / path for path in report_files]
-        ignored_files: list[Path] = []
+        ignored_files: list[tuple[Path, str]] = []
     else:
         files, ignored_files = collect_report_files(report_dir)
     results = [validate_report_file(path, repo_root, require_recommended) for path in files]
@@ -168,8 +198,13 @@ def validate_reports(
         "warnings": warnings,
         "report_count": len(results),
         "ignored_count": len(ignored_files),
-        "ignored_files": [relative_or_absolute(path, repo_root) for path in ignored_files],
+        "ignored_files": [relative_or_absolute(path, repo_root) for path, _reason in ignored_files],
+        "ignored_reasons": [
+            {"path": relative_or_absolute(path, repo_root), "reason": reason}
+            for path, reason in ignored_files
+        ],
         "ignored_patterns": list(NON_REPORT_FILE_PATTERNS),
+        "ignored_kinds": sorted(NON_REPORT_KINDS),
         "require_recommended": require_recommended,
         "required_common_fields": list(REQUIRED_COMMON_FIELDS),
         "recommended_common_fields": list(RECOMMENDED_COMMON_FIELDS),
