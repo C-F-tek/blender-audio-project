@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ia_carmine._shared.file_backed_transport import read_text_windows_safe, resolve_path
 from ia_carmine.runtime.heap_gate.runtime_common import Any, provider_heap_lane, read_json, safe_int
 
 GENERIC_WRITE_CAPTURE_LANES = {"gpu1_planner"}
@@ -160,6 +161,20 @@ def _generic_write_report(owner: Any, payload: dict[str, Any]) -> dict[str, Any]
         return {}
     report_path = owner.repo_root / report_ref
     return read_json(report_path)
+
+
+def _generic_write_report_text(owner: Any, report: dict[str, Any], prefix: str) -> str:
+    text = str(report.get(prefix) or "").strip()
+    if text:
+        return text
+    ref = report.get(f"{prefix}_ref") if isinstance(report.get(f"{prefix}_ref"), dict) else {}
+    ref_path = str(ref.get("path") or "").strip()
+    if ref_path:
+        try:
+            return read_text_windows_safe(resolve_path(owner.repo_root, ref_path)).strip()
+        except Exception:
+            pass
+    return str(report.get(f"{prefix}_tail") or "").strip()
 
 
 def _hydrate_generic_write_payload(owner: Any | None, payload: dict[str, Any]) -> dict[str, Any]:
@@ -322,7 +337,9 @@ def generic_write_document_product(owner: Any, events: list[dict[str, Any]]) -> 
         "latest_source_revision": latest_source_revision,
         "latest_consumed_by_gpu1": latest_gpu1 > latest_source_revision,
         "latest_outputs": _tool_outputs(latest) if latest else {},
-        "latest_refined_request": str(report.get("refined_request") or "")[:6000],
+        "latest_refined_request": _generic_write_report_text(
+            owner, report, "refined_request"
+        )[:6000],
         "captures": captures,
         "peer_review_refs": [
             item for item in captures if item.get("lane") in PEER_GENERIC_WRITE_LANES
@@ -419,7 +436,7 @@ def maybe_run_generic_write_followup(
             f"source_tool={tool_name}",
             f"source_revision={source_revision}",
             f"generic_write_outputs={outputs}",
-            f"refined_request_excerpt={str(report.get('refined_request') or '')[:2400]}",
+            f"refined_request_excerpt={_generic_write_report_text(owner, report, 'refined_request')[:2400]}",
             "GPU1 must consume this peer/tool evidence in a new revision; do not repeat the rejected block.",
             "After three consumed generic_write refinements this may close as a readable refined product, including code content, but not as applied source writes.",
         ]

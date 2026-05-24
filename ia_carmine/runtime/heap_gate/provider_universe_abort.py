@@ -234,6 +234,15 @@ def block_provider_universe_run(gate: Any, reason: str, round_id: int, revision:
             correlation_id=f"{gate.stamp}:provider-universe-blocked",
             round_id=round_id,
         )
+    final_response_text = gate.build_final_response_text(gate.read_events())
+    request_input_evidence = gate.request_input_ref_or_tail()
+    response_evidence = gate.response_text_ref_or_tail(
+        final_response_text,
+        name="provider_universe_blocked_response_text",
+        kind="blocked_response_text",
+        producer="provider_universe_abort",
+    )
+    provider_response_evidence = gate.provider_response_refs_or_tails()
     product = {
         "required": True,
         "product_kind": "blocked_continuation_product",
@@ -241,14 +250,14 @@ def block_provider_universe_run(gate: Any, reason: str, round_id: int, revision:
         "product_status": "blocked_with_reason",
         "product_blocked_reason": reason,
         "failed_provider": _failed_provider_from_reason(reason),
-        "request_input": gate.request_text(),
-        "response_text": gate.build_final_response_text(gate.read_events()),
+        **gate.prefixed_text_evidence_fields("request_input", request_input_evidence),
+        **gate.prefixed_text_evidence_fields("response_text", response_evidence),
         "response_source": gate.response_source(),
         "heap_event_refs": [repo_rel(gate.repo_root, gate.heap.paths.events)],
         "provider_refs": gate.provider_refs(),
         "provider_replight_required": True,
         "provider_replight_reports": _provider_replight_reports(gate),
-        "provider_response_texts": gate.provider_response_texts(),
+        "provider_response_refs_or_tails": provider_response_evidence,
         "provider_role_decisions": gate.provider_role_decisions(),
         "missing_requirements": [reason],
         "reason": reason,

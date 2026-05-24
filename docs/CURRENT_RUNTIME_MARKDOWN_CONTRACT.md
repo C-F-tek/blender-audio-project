@@ -27,6 +27,21 @@ Reports must distinguish:
 
 Tool calls that were attempted but failed remain failed tool evidence. They must not be hidden as absence, and they must not be promoted to usable lab evidence without report and target proof.
 
+## File-backed transport semantics
+
+HTTP/API coordinates work at boundaries; it is not the container for the runtime universe. Large operator requests, GPU1 prompt/chat material, heap context, RAG/context chunks, patch candidates, provider outputs and stdout/stderr must be persisted as run artifacts and passed by stable refs.
+
+- Small inline JSON is allowed only for healthcheck, status, metadata and simple job control.
+- Medium/large payloads use `payload_file` or explicit artifact refs with `path`, `kind`, `bytes` and `sha256`.
+- Multi-file context uses `ia_carmine_runtime_payload_manifest` plus semantic chunks and deterministic `read_order`.
+- Artifact refs also declare `source`/provenance; manifest validation checks file existence, bytes and sha256 rather than treating non-empty JSON as proof.
+- `gpu1_dynamic_context_pack` is the active provider context surface; legacy `startup_unified_context_pack` can remain attached evidence but is not the terminal hard blocker.
+- GPU1 keeps its full prompt/chat/product role; the mass is materialized on disk and referenced, not sliced into body excerpts. Ollama/provider reports store prompt refs, bytes, chars and sha256, not the request prompt body.
+- Tool/lab/matrix/debug payloads and results count only through native broker request/result artifacts. Textual tool calls in prose remain non-executable evidence.
+- `runtime_file_window` is a bounded repo-owned artifact reader, not a generic absolute-path reader; oversize limits and paths outside the checkout block with typed errors.
+- Long responses, logs and reports return paths plus short diagnostic tails. Full content stays file-backed.
+- Legacy gateway/deep-planning dispatch surfaces are historical/non-run-unica unless explicitly promoted into the current dynamic-pack/native-broker contract.
+
 ## Final product files
 
 - `CODE_PRODUCT_FULL_PATCH.md` is the final patch/code product. It is reviewable only when it contains concrete diff/code, explicit no-op, already-integrated or non-applicable classification backed by matrix/lab/patch evidence.

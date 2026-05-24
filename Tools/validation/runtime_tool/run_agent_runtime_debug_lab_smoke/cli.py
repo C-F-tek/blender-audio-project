@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +36,12 @@ def run(command: list[str], cwd: Path, timeout: int) -> dict[str, Any]:
         command, cwd=cwd, capture_output=True, text=True, check=False, timeout=timeout
     )
     return {
-        "command": command,
+        "command": [
+            item
+            if len(str(item)) <= 500
+            else f"<large_arg chars={len(str(item))} sha256={hashlib.sha256(str(item).encode('utf-8', errors='replace')).hexdigest()}>"
+            for item in command
+        ],
         "returncode": result.returncode,
         "stdout": result.stdout[-4000:],
         "stderr": result.stderr[-4000:],
@@ -88,6 +95,8 @@ def main() -> int:
     valid_md = repo_root / "output/validation/agent_runtime_debug_lab_valid.md"
     invalid_report = repo_root / "output/validation/agent_runtime_debug_lab_invalid.json"
     invalid_md = repo_root / "output/validation/agent_runtime_debug_lab_invalid.md"
+    large_inline_report = repo_root / "output/validation/agent_runtime_debug_lab_large_inline.json"
+    large_inline_md = repo_root / "output/validation/agent_runtime_debug_lab_large_inline.md"
 
     valid_request = build_request(
         [
@@ -167,6 +176,28 @@ def main() -> int:
         errors.append("invalid debug lab request was not rejected")
     if invalid_data.get("failed_count", 0) < 1:
         errors.append("invalid request did not report failures")
+    large_inline = run(
+        [
+            sys.executable,
+            "-m",
+            "ia_carmine",
+            "agent_runtime_debug_lab",
+            "--repo-root",
+            str(repo_root),
+            "--request-json",
+            '{"body":"' + ("x" * 16100) + '"}',
+            "--output",
+            str(large_inline_report),
+            "--markdown-output",
+            str(large_inline_md),
+        ],
+        cwd=repo_root,
+        timeout=args.timeout_seconds,
+    )
+    if large_inline["returncode"] == 0:
+        errors.append("large inline agent_runtime_debug_lab request-json was accepted")
+    if "request_json_large_requires_request_file" not in str(large_inline.get("stdout") or ""):
+        errors.append("large inline agent_runtime_debug_lab request-json did not emit typed error")
 
     report = {
         "schema_version": 1,
@@ -193,6 +224,10 @@ def main() -> int:
                     "ok": invalid_returncode != 0,
                     "request_transport": "in_memory",
                 },
+            },
+            {
+                "name": "large_inline_request_json",
+                "result": large_inline,
             },
         ],
         "valid_report": valid_data,

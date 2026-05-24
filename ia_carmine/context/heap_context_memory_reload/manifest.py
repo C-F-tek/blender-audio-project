@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import artifact_ref
 from ia_carmine.context.heap_context_memory_reload.common import read_json, repo_rel, sha256_text
 
 
@@ -60,6 +61,18 @@ def build_manifest(
     strict_startup_reload: bool,
     startup_effective_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    request_file = str(artifacts.get("startup_request_file") or "").strip()
+    request_ref = (
+        artifact_ref(
+            request_file,
+            repo_root,
+            kind="operator_request",
+            ref_id="startup_request",
+            producer="heap_context_memory_reload",
+        )
+        if request_file
+        else {}
+    )
     required, optional, blocking, degraded, optional_failed = requirement_status(commands)
     stale_static_context_demoted = "startup_unified_context_pack" in blocking
     if stale_static_context_demoted:
@@ -128,10 +141,10 @@ def build_manifest(
         "stamp": stamp,
         "repo_root": repo_root.as_posix(),
         "project_python": project_python,
-        "request_file": artifacts.get("startup_request_file", ""),
+        "request_file": request_file,
+        "request_ref": request_ref,
         "request_chars": len(request_text),
         "request_sha256": sha256_text(request_text),
-        "request_preview": request_text[:4000],
         "context_delta": context_delta,
         "startup_repo_scan_index": {
             "path": artifacts.get("startup_repo_scan_index_json", ""),
@@ -247,6 +260,7 @@ def build_print_payload(manifest: dict[str, Any], repo_root: Path, manifest_path
         "required_reload_passed": manifest["required_reload_passed"],
         "optional_reload_passed": manifest["optional_reload_passed"],
         "request_file": manifest.get("request_file", ""),
+        "request_ref": manifest.get("request_ref", {}),
         "request_chars": manifest.get("request_chars", 0),
         "request_sha256": manifest.get("request_sha256", ""),
         "context_file_count": manifest.get("context_file_count", 0),

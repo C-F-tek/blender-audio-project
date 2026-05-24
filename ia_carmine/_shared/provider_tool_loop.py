@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -19,7 +20,7 @@ from ia_carmine._shared.provider_tool_schemas import broker_tool_schemas
 from ia_carmine.providers.provider_mesh.runtime.python_runtime import command_env
 def heap_patch_prompt_required(prompt: str) -> bool:
     text = (prompt or "").lower()
-    markers = ("heap chunk/composer contract", "startup_context_digest_for_gpu1", "external heap revision context", "target_files", "forced concrete delta required", "proposal chunks")
+    markers = ("heap chunk/composer contract", "startup_context_digest_for_gpu1", "startup_context_refs_for_gpu1", "external heap revision context", "target_files", "forced concrete delta required", "proposal chunks")
     return any(marker in text for marker in markers)
 def build_heap_patch_proposal_prompt(prompt: str) -> str:
     if not heap_patch_prompt_required(prompt):
@@ -50,7 +51,7 @@ def ollama_tool_call_tool_names() -> list[str]:
     return [
         "build_agent_agnostic_tool_inventory", "build_agent_memory_inventory", "build_agent_transient_request_context",
         "runtime_sqlite_memory", "select_semantic_code_chunks", "semantic_evidence_chunks",
-        "ai_context_pack", "generic_write", "agent_runtime_debug_lab", "run_heap_code_execution_matrix",
+        "ai_context_pack", "runtime_file_refs", "runtime_file_window", "generic_write", "agent_runtime_debug_lab", "run_heap_code_execution_matrix",
         "run_heap_virtual_dev_environment", "synthesize_patch_candidates", "analyze_code_product_artifact",
     ]
 def prompt_explicitly_requires_tool_call(prompt: str) -> bool:
@@ -74,8 +75,17 @@ def ollama_tool_call_selection_prompt(prompt: str, provider_delta: str) -> str:
     return (
         "IA-Carmine provider continuation. You already produced heap delta content. Decide if that same delta needs a broker tool now. "
         f"{decision_rule} Do not replace the heap delta with tool-only output. "
-        f"Broker enriches args. Available broker tools: {tools_available}.\n\nCURRENT_OPERATOR_CONTEXT:\n{(prompt or '')[:3500]}\n\nPROVIDER_HEAP_DELTA_ALREADY_EMITTED:\n{(provider_delta or '')[:1800]}"
+        f"Broker enriches args. Available broker tools: {tools_available}.\n\n"
+        "FILE_BACKED_TRANSPORT:\n"
+        "- HTTP/API bodies are control envelopes only; context mass is in run artifacts.\n"
+        "- Do not echo context or invent chunks. If exact content is needed, call runtime_file_refs or runtime_file_window.\n"
+        f"- operator_context_chars={len(prompt or '')} operator_context_sha256={_sha256_text(prompt or '')}\n"
+        f"- provider_delta_chars={len(provider_delta or '')} provider_delta_sha256={_sha256_text(provider_delta or '')}\n"
     )
+
+
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
 def normalize_ollama_tool_calls(chat_response: dict[str, Any]) -> list[dict[str, Any]]:
     return normalize_ollama_sdk_tool_calls(chat_response)
 def parse_json_contract(text: str) -> dict[str, Any]:

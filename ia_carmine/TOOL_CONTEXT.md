@@ -125,17 +125,24 @@ Use these for provider lanes and hardware-specific diagnostics.
 Representative tools:
 
 ```text
-gpu_deep_planning_supervised
-gpu_deep_planning_review
-gpu_npu_parallel_orchestrator
-npu_gpu_deep_review_auditor
-ollama_tool_gateway
+legacy_gpu_deep_planning_supervised
+legacy_gpu_deep_planning_review
+legacy_gpu_npu_parallel_orchestrator
+legacy_npu_gpu_deep_review_auditor
+legacy_ollama_tool_gateway
 provider_mesh_runtime
 run_local_provider_probe
 check_local_resource_lanes
 build_ollama_gpu0_peer_report
 build_openvino_hardware_governance_report
 ```
+
+The historical gateway/deep-planning/orchestrator names are no longer exposed
+under their old public command names. Their `legacy_*` dispatcher aliases are
+marked `LEGACY_NON_RUN_UNICA_COMMANDS` in `ia_carmine/dispatch.py`. They remain
+inspectable compatibility surfaces, but current run-unica evidence must flow
+through `run`, `heap_context_closure`, `gpu1_dynamic_context_pack` and native
+broker tool-call artifacts.
 
 `check_local_resource_lanes` is a resource/provider preflight, not a static
 source inspection. Its `provider_execution_performed=false` field only means no

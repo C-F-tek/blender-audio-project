@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import read_text_window_bytes
+
 CANONICAL_CONTEXT_FILES = (
     "AGENTS.md",
     "README.md",
@@ -88,11 +90,13 @@ def repo_rel(repo_root: Path, path: Path) -> str:
 
 def read_text(path: Path, max_chars: int = 6000) -> str:
     try:
-        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        text, _next_offset, eof = read_text_window_bytes(
+            path, offset=0, limit=max(1, int(max_chars))
+        )
     except Exception:
         return ""
-    if len(text) > max_chars:
-        return text[:max_chars] + "\n...[truncated]\n"
+    if not eof:
+        return text + "\n...[truncated]\n"
     return text
 
 

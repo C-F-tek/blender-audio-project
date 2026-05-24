@@ -18,6 +18,7 @@ if str(repo_root_for_import) not in sys.path:
 from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
 from ia_carmine._shared.provider_probe_paths import ensure_repo_imports
 from ia_carmine._shared.provider_work_verification import provider_work_status
+from ia_carmine._shared.file_backed_transport import write_text_artifact
 
 
 def _option_supplied(argv: list[str], option: str) -> bool:
@@ -147,6 +148,23 @@ def read_prompt_file(repo_root: Path, prompt_file: str) -> str:
     return path.read_text(encoding="utf-8-sig")
 
 
+def materialize_provider_prompt(
+    repo_root: Path,
+    output_path: Path,
+    prompt: str,
+) -> dict[str, Any]:
+    """Persist the exact provider prompt sent to Ollama as report metadata."""
+    return write_text_artifact(
+        repo_root,
+        output_path.parent / "provider_prompt_payload",
+        name="request_prompt",
+        text=prompt or "",
+        kind="ollama_request_prompt",
+        producer="local_provider_probe",
+        suffix=".md",
+    )
+
+
 def mirror_single_provider_lane(report: dict[str, Any], lane_report: dict[str, Any]) -> dict[str, Any]:
     """Expose the actual provider lane at top level for gates and workload checks."""
     mirror_keys = (
@@ -257,6 +275,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
             partial_output = Path(args.output)
             if not partial_output.is_absolute():
                 partial_output = repo_root / partial_output
+            prompt_ref = materialize_provider_prompt(repo_root, partial_output, effective_prompt)
             lane_reports.append(
                 run_ollama_probe(
                     repo_root,
@@ -279,6 +298,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                     role=args.ollama_role,
                     base_url=args.ollama_base_url,
                     unload_model=not args.defer_unload,
+                    prompt_ref=prompt_ref,
                 )
             )
         except Exception as exc:  # noqa: BLE001 - report-only tool.

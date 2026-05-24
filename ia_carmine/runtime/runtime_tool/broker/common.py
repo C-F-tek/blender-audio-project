@@ -23,7 +23,7 @@ class ToolSpec:
     name: str
     description: str
     allowed_args: tuple[str, ...]
-    builder: Callable[[Path, Path, str, dict[str, Any]], tuple[list[str], dict[str, str]]]
+    builder: Callable[[Path, Path, str, dict[str, Any]], tuple[list[str], dict[str, Any]]]
     input_schema: dict[str, Any] | None = None
 
 

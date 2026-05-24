@@ -77,11 +77,6 @@ class RuntimeGateSourceRefsMixin:
 
     def _request_source_candidate_texts(self) -> list[str]:
         texts = [self.request_text()]
-        startup_context = self.startup_task_file_context(max_preview_chars=20000)
-        if startup_context.get("loaded"):
-            texts.append(
-                str(startup_context.get("request_preview") or startup_context.get("preview") or "")
-            )
         return texts
 
     def request_source_file_candidates(self, limit: int = 24) -> list[str]:

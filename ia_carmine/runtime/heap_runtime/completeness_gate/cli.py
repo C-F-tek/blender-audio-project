@@ -92,9 +92,11 @@ def render_markdown(report: dict[str, Any]) -> str:
             "## Product",
             "",
             f"- Status: `{product.get('status')}`",
-            f"- Request: `{product.get('request_input')}`",
+            f"- Request ref: `{product.get('request_input_ref')}`",
+            f"- Request tail: `{product.get('request_input_tail')}`",
             f"- Response source: `{product.get('response_source')}`",
-            f"- Response text: {product.get('response_text')}",
+            f"- Response ref: `{product.get('response_text_ref')}`",
+            f"- Response tail: {product.get('response_text_tail')}",
             f"- Reason: {product.get('reason')}",
         ]
     )

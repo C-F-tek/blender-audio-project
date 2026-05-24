@@ -24,6 +24,7 @@ docs/COMPACT_EVIDENCE_MODEL.md
 - Check runtime debug-lab reports.
 - Check GPU/NPU runtime tool reports.
 - Keep runtime tool evidence separate from final product artifacts.
+- Guard the file-backed transport contract: HTTP/API coordinates, filesystem artifacts carry mass, provider/tool evidence uses refs plus broker results, and refs expose `source`/`bytes`/`sha256` instead of payload bodies.
 
 ## Representative commands
 
@@ -33,6 +34,7 @@ Use through the validation dispatcher:
 python -m Tools.validation run_agent_runtime_tool_broker_smoke ...
 python -m Tools.validation check_runtime_tool_broker_dispatch_alignment ...
 python -m Tools.validation run_provider_tool_loop_smoke ...
+python -m Tools.validation run_file_backed_transport_contract_smoke ...
 python -m Tools.validation run_provider_tool_evidence_chain_smoke ...
 python -m Tools.validation run_runtime_tool_feedback_loop_smoke ...
 python -m Tools.validation run_runtime_tool_guidance_fallback_smoke ...
@@ -55,6 +57,7 @@ Outputs from this area are validation reports. They help confirm that runtime to
 - File refs are evidence/classification, not source patch targets by themselves.
 - Debug-lab reports are diagnostics, not product.
 - Tool-loop success must not be confused with provider product success.
+- File-backed transport checks must reject operational excerpts, prompt/body slicing and long stdout/stderr/log blobs in API responses.
 - `generic_write` smoke coverage must prove GPU1/GPU0 can expose it through Ollama native tool schemas and that it remains broker evidence until the heap validates the three-refinement product rule.
 - Validation should check flags such as provider execution, tool execution, source writes and patch application when reports expose them.
 

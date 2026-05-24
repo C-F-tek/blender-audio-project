@@ -14,6 +14,7 @@ REPO_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[4]
 if str(REPO_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORT))
 
+from ia_carmine._shared.file_backed_transport import write_large_text_evidence
 from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
 from ia_carmine.providers.ollama.role_models import (
     start_gpu0_vulkan_server,
@@ -359,6 +360,15 @@ def main() -> int:
     leader_packet = load_leader_packet(repo_root, args.leader_packet)
     gpu1_packet = extract_gpu1_closure_decision_packet(leader_packet)
     prompt = render_peer_prompt(request, leader_packet)
+    prompt_evidence = write_large_text_evidence(
+        repo_root,
+        resolve_path(repo_root, args.output).parent / "provider_prompt_artifacts",
+        name="ollama_gpu0_peer_prompt",
+        text=prompt,
+        kind="provider_request_prompt",
+        producer="ollama_gpu0_peer_report",
+        suffix=".md",
+    )
     server_evidence = resolve_server_evidence(repo_root, args.server_evidence, args.base_url)
     gpu0_server = {"started": False, "ready": False, "reason": "disabled"}
     if not args.no_start_gpu0_vulkan_server:
@@ -385,6 +395,7 @@ def main() -> int:
         lane="gpu0_peer",
         role="gpu0_peer_reviewer_refiner",
         base_url=args.base_url,
+        prompt_ref=prompt_evidence.get("ref") or {},
         gpu0_vulkan_policy_verified=_gpu0_vulkan_policy_verified(gpu0_server),
         unload_model=not args.defer_unload,
     )

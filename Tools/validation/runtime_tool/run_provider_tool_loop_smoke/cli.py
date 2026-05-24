@@ -62,6 +62,8 @@ def main() -> int:
         "run_heap_code_execution_matrix",
         "agent_runtime_debug_lab",
         "synthesize_patch_candidates",
+        "runtime_file_refs",
+        "runtime_file_window",
     ):
         if required not in tool_names:
             errors.append(f"Ollama native tool list missing {required}")
@@ -120,6 +122,8 @@ def main() -> int:
     )
     if "generic_write" not in generic_command:
         errors.append("generic_write builder does not invoke ia_carmine generic_write")
+    if "--request-file" not in generic_command or "--operator-request" in generic_command:
+        errors.append("generic_write builder must materialize operator_request as request-file")
     if not generic_outputs.get("json_report") or not generic_outputs.get("markdown_report"):
         errors.append("generic_write builder does not declare JSON/Markdown outputs")
     if "partial_callback" not in inspect.signature(OllamaSession.generate).parameters:
@@ -137,8 +141,10 @@ def main() -> int:
         errors.append("GPU1 must not start a second native chat outside the explicit tool-call gate")
 
     prompt_source = inspect.getsource(RuntimeGateProviderPromptMixin.startup_context_digest)
-    if "artifact_reference_with_excerpt" not in prompt_source or "excerpt only" not in prompt_source:
-        errors.append("GPU1 startup context must use artifact refs with bounded excerpts")
+    if "STARTUP_CONTEXT_REFS_FOR_GPU1" not in prompt_source or "file_backed_artifact_refs" not in prompt_source:
+        errors.append("GPU1 startup context must expose file-backed artifact refs")
+    if "artifact_reference_with_excerpt" in prompt_source or "excerpt only" in prompt_source:
+        errors.append("GPU1 startup context still exposes operational excerpts")
 
     live_status = {
         "provider_lane_statuses": [

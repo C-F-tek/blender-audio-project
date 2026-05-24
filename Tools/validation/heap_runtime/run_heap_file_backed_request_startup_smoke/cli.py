@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test heap request/startup plumbing without runtime memory transport files."""
+"""Smoke-test file-backed heap request/startup transport surfaces."""
 
 from __future__ import annotations
 
@@ -49,10 +49,57 @@ def main() -> int:
             read("ia_carmine/memory/agent_memory/sqlite_report.py"),
         ]
     )
+    file_transport = read("ia_carmine/_shared/file_backed_transport.py")
+    startup_runner = read("ia_carmine/context/heap_context_memory_reload/runner.py")
+    startup_manifest = read("ia_carmine/context/heap_context_memory_reload/manifest.py")
+    rag_startup = read("ia_carmine/context/heap_context_memory_reload/rag_startup.py")
+    gpu1_dynamic_pack = read("ia_carmine/context/heap_context_memory_reload/dynamic_gpu1_context.py")
+    provider_prompt = read("ia_carmine/runtime/heap_gate/provider_prompt.py")
 
     require(
         '"request_transport"] = "inline_cli"' in launcher,
-        "launcher must not write a generated runtime request file",
+        "launcher must keep small direct CLI request coordination explicit",
+        errors,
+    )
+    require(
+        "http_coordinates_filesystem_transports_mass" in file_transport
+        and "write_transport_manifest" in file_transport
+        and "read_json_windows_safe" in file_transport,
+        "shared file-backed transport helper must define manifest/checksum/Windows-safe readers",
+        errors,
+    )
+    require(
+        "_materialize_startup_request(state)" in startup_runner
+        and 'state.output_dir / "payload"' in startup_runner
+        and '"startup_request_file"' in startup_runner,
+        "startup reload must materialize the operator request as a run payload artifact",
+        errors,
+    )
+    require(
+        'state.artifacts.get("startup_request_file")' in rag_startup
+        and 'state.request_text[:4000]' not in rag_startup,
+        "RAG startup must consume the request artifact instead of a sliced inline query",
+        errors,
+    )
+    require(
+        '"request_ref": request_ref' in startup_manifest
+        and '"request_preview"' not in startup_manifest,
+        "startup manifest must expose request_ref metadata instead of request_preview",
+        errors,
+    )
+    require(
+        "ia_carmine_runtime_payload_manifest" in gpu1_dynamic_pack
+        and '"payload_manifest_ref"' in gpu1_dynamic_pack
+        and '"no_operational_excerpts": True' in gpu1_dynamic_pack,
+        "GPU1 dynamic context pack must write a file-backed runtime payload manifest",
+        errors,
+    )
+    require(
+        "STARTUP_CONTEXT_REFS_FOR_GPU1" in provider_prompt
+        and "file_backed_artifact_refs" in provider_prompt
+        and "artifact_reference_with_excerpt" not in provider_prompt
+        and "excerpt only" not in provider_prompt,
+        "GPU1 startup prompt digest must be ref-only and not operational excerpts",
         errors,
     )
     require(
@@ -99,8 +146,8 @@ def main() -> int:
         errors,
     )
     require(
-        "build_sqlite_memory_report(memory_args)" in prepare and "content=content" in prepare,
-        "startup reload must pass operational memory content in memory to SQLite memory",
+        '"--content-file"' in prepare and "startup_operational_memory_write_input.md" in prepare,
+        "startup reload must pass operational memory content as a file-backed payload",
         errors,
     )
     require(

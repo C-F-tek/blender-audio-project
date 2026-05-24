@@ -7,7 +7,29 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
     read_request_file,
     safe_int,
 )
+from ia_carmine._shared.file_backed_transport import (
+    read_text_windows_safe,
+    resolve_path,
+    text_sha256,
+    write_large_text_evidence,
+)
 from ia_carmine.runtime.heap_gate.generic_write_followup import generic_write_document_product
+COORDINATION_FULL_TEXT_KEYS = {
+    "request",
+    "request_input",
+    "request_prompt",
+    "response_text",
+    "provider_raw_response_text",
+    "gpu0_raw_response_text",
+    "observed_request",
+    "observed_response",
+    "gpu1_free_text_evidence",
+    "gpu0_audit",
+    "npu_audit",
+}
+COORDINATION_TEXT_MAP_KEYS = {"provider_response_texts", "provider_contributions"}
+
+
 class RuntimeGateProviderContextMixin:
     def provider_work_dir(self) -> Path:
         if self.output_dir:
@@ -43,10 +65,25 @@ class RuntimeGateProviderContextMixin:
         for report in reversed(self.provider_reports):
             if report.get("lane") != lane:
                 continue
-            text = str(report.get("response_text") or "").strip()
+            text = self.provider_report_response_text(report).strip()
             if text:
                 return text
         return ""
+
+    def provider_report_response_text(self, report: dict[str, Any]) -> str:
+        text = str(report.get("response_text") or "").strip()
+        if text:
+            return text
+        ref = report.get("response_text_ref") if isinstance(report.get("response_text_ref"), dict) else {}
+        ref_path = str(ref.get("path") or "").strip()
+        if ref_path:
+            try:
+                return read_text_windows_safe(resolve_path(self.repo_root, ref_path)).strip()
+            except Exception as exc:  # noqa: BLE001 - surface as warning and fall back to tail.
+                self.warnings.append(
+                    f"provider_response_ref_read_failed:{ref_path}:{type(exc).__name__}: {exc}"
+                )
+        return str(report.get("response_text_tail") or "").strip()
 
     def provider_role_decisions(self) -> dict[str, str]:
         decisions: dict[str, str] = {}
@@ -61,10 +98,158 @@ class RuntimeGateProviderContextMixin:
         responses: dict[str, str] = {}
         for report in self.provider_reports:
             lane = str(report.get("lane") or "")
-            text = str(report.get("response_text") or "").strip()
+            text = self.provider_report_response_text(report).strip()
             if lane and text:
                 responses[lane] = text
         return responses
+
+    def file_backed_text_evidence(
+        self,
+        name: str,
+        text: str,
+        *,
+        kind: str,
+        producer: str,
+        suffix: str = ".txt",
+    ) -> dict[str, Any]:
+        evidence_text = str(text or "")
+        digest = text_sha256(evidence_text)
+        cache = getattr(self, "_file_backed_text_evidence_cache", None)
+        if not isinstance(cache, dict):
+            cache = {}
+            self._file_backed_text_evidence_cache = cache
+        cache_key = f"{kind}:{name}:{digest}"
+        if cache_key in cache:
+            return cache[cache_key]
+        evidence_name = f"{name}_{digest[:12]}" if evidence_text else name
+        evidence = write_large_text_evidence(
+            self.repo_root,
+            self.runtime_context_dir() / "file_backed_text_evidence",
+            name=evidence_name,
+            text=evidence_text,
+            kind=kind,
+            producer=producer,
+            suffix=suffix,
+        )
+        cache[cache_key] = evidence
+        return evidence
+
+    def request_input_ref_or_tail(self) -> dict[str, Any]:
+        return self.file_backed_text_evidence(
+            "request_input",
+            self.request_text(),
+            kind="operator_request",
+            producer="heap_gate",
+            suffix=".md",
+        )
+
+    def response_text_ref_or_tail(
+        self,
+        text: str,
+        *,
+        name: str = "response_text",
+        kind: str = "provider_response_text",
+        producer: str = "heap_gate",
+    ) -> dict[str, Any]:
+        return self.file_backed_text_evidence(
+            name,
+            text,
+            kind=kind,
+            producer=producer,
+            suffix=".md",
+        )
+
+    def provider_response_refs_or_tails(self) -> dict[str, dict[str, Any]]:
+        responses: dict[str, dict[str, Any]] = {}
+        for report in self.provider_reports:
+            lane = str(report.get("lane") or "")
+            text = self.provider_report_response_text(report).strip()
+            if not lane or not text:
+                continue
+            evidence = self.response_text_ref_or_tail(
+                text,
+                name=f"provider_response_{lane}",
+                kind="provider_lane_response",
+                producer=lane,
+            )
+            payload = dict(evidence)
+            payload["provider_report"] = str(report.get("output") or "")
+            payload["lane"] = lane
+            responses[lane] = payload
+        return responses
+
+    def prefixed_text_evidence_fields(
+        self, prefix: str, evidence: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {
+            f"{prefix}_ref": evidence.get("ref") or {},
+            f"{prefix}_chars": evidence.get("chars", 0),
+            f"{prefix}_sha256": evidence.get("sha256", ""),
+            f"{prefix}_tail": evidence.get("tail", ""),
+            f"{prefix}_tail_chars": evidence.get("tail_chars", 0),
+            f"{prefix}_full_text_in_json": False,
+        }
+
+    def json_safe_coordination_payload(
+        self,
+        value: Any,
+        *,
+        name: str,
+        producer: str = "heap_gate_json_report",
+    ) -> Any:
+        """Return a JSON-safe copy where large text fields become refs/tails."""
+        if isinstance(value, list):
+            return [
+                self.json_safe_coordination_payload(item, name=f"{name}_{index}", producer=producer)
+                for index, item in enumerate(value)
+            ]
+        if not isinstance(value, dict):
+            return value
+        payload: dict[str, Any] = {}
+        for key, item in value.items():
+            key_text = str(key)
+            child_name = f"{name}_{key_text}"
+            if key_text in COORDINATION_TEXT_MAP_KEYS and isinstance(item, dict):
+                mapped: dict[str, Any] = {}
+                for lane, text in item.items():
+                    if isinstance(text, str):
+                        evidence = self.response_text_ref_or_tail(
+                            text,
+                            name=f"{child_name}_{lane}",
+                            kind="coordination_text_map_value",
+                            producer=producer,
+                        )
+                        mapped[str(lane)] = evidence
+                    else:
+                        mapped[str(lane)] = self.json_safe_coordination_payload(
+                            text, name=f"{child_name}_{lane}", producer=producer
+                        )
+                payload[f"{key_text}_refs_or_tails"] = mapped
+                continue
+            if key_text in COORDINATION_FULL_TEXT_KEYS and isinstance(item, str):
+                evidence = self.response_text_ref_or_tail(
+                    item,
+                    name=child_name,
+                    kind="coordination_json_text",
+                    producer=producer,
+                )
+                payload.update(self.prefixed_text_evidence_fields(key_text, evidence))
+                continue
+            payload[key_text] = self.json_safe_coordination_payload(
+                item, name=child_name, producer=producer
+            )
+        return payload
+
+    def provider_reports_refs_or_tails(self) -> list[dict[str, Any]]:
+        return [
+            self.json_safe_coordination_payload(
+                report,
+                name=f"provider_report_{index}_{report.get('lane') or 'unknown'}",
+                producer="provider_report_sanitizer",
+            )
+            for index, report in enumerate(self.provider_reports)
+            if isinstance(report, dict)
+        ]
 
     def team_context_summary(self, max_chars: int = 6000) -> str:
         events = self.read_events()
@@ -312,12 +497,22 @@ class RuntimeGateProviderContextMixin:
             return 'Return exactly this JSON object and no prose: {"ok": true, "lane": "ollama"}'
         peer_lines = []
         for lane in ("gpu0_peer", "npu_micro_task_auditor"):
-            text = self.provider_response_text(lane)
-            if text:
-                peer_lines.append(f"{lane}: {text}")
+            evidence = self.provider_response_refs_or_tails().get(lane) or {}
+            ref = evidence.get("ref") if isinstance(evidence.get("ref"), dict) else {}
+            ref_path = str(ref.get("path") or "")
+            if evidence:
+                peer_lines.append(
+                    f"{lane}: ref={ref_path}; chars={evidence.get('chars')}; "
+                    f"sha256={evidence.get('sha256')}; tail:\n{evidence.get('tail') or ''}"
+                )
         peer_context = (
             "\n".join(peer_lines) if peer_lines else "nessun contributo peer ancora disponibile"
         )
+        request_evidence = self.request_input_ref_or_tail()
+        request_ref = (
+            request_evidence.get("ref") if isinstance(request_evidence.get("ref"), dict) else {}
+        )
+        request_ref_path = str(request_ref.get("path") or "")
         team_context = self.team_context_summary(max_chars=2400)
         tool_catalog_limit = max(1, safe_int(getattr(self.args, "tool_catalog_limit", 0), 0))
         tool_catalog_cap = safe_int(getattr(self.args, "provider_prompt_tool_catalog_cap", 0), 0)
@@ -345,7 +540,8 @@ class RuntimeGateProviderContextMixin:
             "Per richieste di refactor/OOB lavora su file esistenti: copia TARGET_FILES verbatim dalla SOURCE_PATH_ALLOWLIST_CONTRACT; nuovi file sono ammessi solo se la richiesta operatore li chiede esplicitamente. "
             "Non applicare patch, non inventare file esistenti, non inventare risultati. "
             "Per richieste complesse usa sezioni: interpretazione richiesta; tool/evidence usate; contributo GPU0; contributo NPU; indagine su file reali; output operativo dettagliato; limiti; prossima azione verificabile. "
-            f"Richiesta utente: {request}\n"
+            f"Richiesta utente artifact: ref={request_ref_path}; chars={request_evidence.get('chars')}; sha256={request_evidence.get('sha256')}\n"
+            f"Richiesta utente tail diagnostica:\n{request_evidence.get('tail') or ''}\n"
             f"Contributi peer heap:\n{peer_context}\n"
             f"Memoria/chunk/context pack condivisi:\n{team_context}\n"
             f"{tool_catalog}\n"
@@ -364,7 +560,7 @@ class RuntimeGateProviderContextMixin:
         for report in reversed(self.provider_reports):
             if report.get("lane") != "gpu1_planner":
                 continue
-            text = str(report.get("response_text") or "").strip()
+            text = self.provider_report_response_text(report).strip()
             if text:
                 return text
         return ""

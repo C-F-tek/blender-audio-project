@@ -90,6 +90,7 @@ def broker_tool_api_definitions(
             "expected_artifacts": _expected_artifacts(name),
             "timeout_seconds": _timeout_seconds(name),
             "lane_permissions": _lane_permissions(name),
+            "transport_policy": _transport_policy(name),
             "handler_resolvable": callable(getattr(spec, "builder", None)),
             "schema_serializable": _json_schema_serializable(input_schema),
         }
@@ -139,6 +140,7 @@ def _side_effect_policy(name: str) -> str:
         "build_agent_transient_request_context",
         "check_python_syntax",
         "select_semantic_code_chunks",
+        "runtime_file_window",
         "runtime_file_refs",
     }
     source_forbidden = {"analyze_code_product_artifact"}
@@ -152,6 +154,8 @@ def _side_effect_policy(name: str) -> str:
 def _expected_artifacts(name: str) -> list[str]:
     if name == "runtime_file_refs":
         return ["runtime_file_refs_json", "runtime_file_refs_markdown"]
+    if name == "runtime_file_window":
+        return ["runtime_file_window_json", "runtime_file_window_markdown"]
     if name == "run_heap_code_execution_matrix":
         return ["code_execution_matrix_json", "code_execution_matrix_markdown"]
     if name == "run_heap_virtual_dev_environment":
@@ -171,6 +175,32 @@ def _timeout_seconds(name: str) -> int:
     if name in {"agent_runtime_debug_lab", "synthesize_patch_candidates"}:
         return 90
     return 60
+
+
+def _transport_policy(name: str) -> dict[str, Any]:
+    blob_args = {
+        "agent_runtime_debug_lab": ["request_json"],
+        "run_heap_code_execution_matrix": ["operator_request"],
+        "synthesize_patch_candidates": ["operator_request"],
+        "generic_write": ["operator_request", "proposal_text"],
+        "runtime_file_refs": ["text"],
+    }.get(name, [])
+    artifact_args = {
+        "agent_runtime_debug_lab": ["request_file"],
+        "run_heap_code_execution_matrix": ["operator_request_file", "evidence_report"],
+        "synthesize_patch_candidates": ["operator_request_file", "evidence_report", "matrix_report"],
+        "generic_write": ["request_file", "proposal_text_file", "provider_report", "evidence_report"],
+        "runtime_file_refs": ["text_file", "target_file", "validation_script"],
+        "runtime_file_window": ["path"],
+    }.get(name, [])
+    return {
+        "principle": "http_coordinates_filesystem_transports_mass",
+        "large_payload_transport": "artifact_ref_or_payload_file",
+        "inline_arg_max_bytes": 16000,
+        "forbidden_inline_blob_args": blob_args,
+        "artifact_ref_args": artifact_args,
+        "responses_return_paths_not_large_blobs": True,
+    }
 
 
 def _lane_permissions(name: str) -> dict[str, str]:

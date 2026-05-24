@@ -10,19 +10,25 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import (
+    read_text_windows_safe,
+    resolve_path,
+    write_large_text_evidence,
+)
 
 def _resolve(repo_root: Path, value: str) -> Path:
     path = Path(value)
     return path if path.is_absolute() else repo_root / path
 
 
-def _read_text(repo_root: Path, value: str, *, limit: int = 12000) -> str:
+def _read_text(repo_root: Path, value: str, *, limit: int | None = None) -> str:
     if not value:
         return ""
     path = _resolve(repo_root, value)
     if not path.is_file():
         return ""
-    return path.read_text(encoding="utf-8-sig", errors="replace")[:limit]
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    return text if limit is None else text[:limit]
 
 
 def _read_json(repo_root: Path, value: str) -> dict[str, Any]:
@@ -79,7 +85,10 @@ def _provider_summary(report: dict[str, Any]) -> dict[str, Any]:
         "provider_block_id",
         "proposal_block_id",
         "refines_block_id",
-        "response_text",
+        "response_text_ref",
+        "response_text_chars",
+        "response_text_sha256",
+        "response_text_tail",
         "target_files",
         "validation_commands",
         "provider_compute_device",
@@ -95,6 +104,20 @@ def _provider_summary(report: dict[str, Any]) -> dict[str, Any]:
         "warnings",
     )
     return {key: report.get(key) for key in keys if key in report}
+
+
+def _provider_response_text(repo_root: Path, report: dict[str, Any]) -> str:
+    text = str(report.get("response_text") or "").strip()
+    if text:
+        return text
+    ref = report.get("response_text_ref") if isinstance(report.get("response_text_ref"), dict) else {}
+    ref_path = str(ref.get("path") or "").strip()
+    if ref_path:
+        try:
+            return read_text_windows_safe(resolve_path(repo_root, ref_path)).strip()
+        except Exception:
+            pass
+    return str(report.get("response_text_tail") or "").strip()
 
 
 def _tool_result_summary(result: dict[str, Any]) -> dict[str, Any]:
@@ -238,16 +261,22 @@ def _build_refined_request(
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = Path(args.repo_root).resolve()
+    output_path = _resolve(repo_root, str(getattr(args, "output", "output/validation/generic_write_md.json")))
     request_text = str(args.operator_request or "").strip()
     if not request_text and args.request_file:
         request_text = _read_text(repo_root, args.request_file)
     provider_report = _read_json(repo_root, args.provider_report)
     proposal_text = str(args.proposal_text or provider_report.get("response_text") or "").strip()
+    if not proposal_text and getattr(args, "proposal_text_file", ""):
+        proposal_text = _read_text(repo_root, args.proposal_text_file)
     evidence_reports = _list_arg(args.evidence_report)
     if args.provider_report and args.provider_report not in evidence_reports:
         evidence_reports.insert(0, args.provider_report)
     evidence_summaries = _evidence_summaries(repo_root, evidence_reports)
     provider_summary = _provider_summary(provider_report)
+    provider_response_full = _provider_response_text(repo_root, provider_report)
+    if provider_response_full:
+        provider_summary["response_text"] = provider_response_full
     if proposal_text and not provider_summary.get("response_text"):
         provider_summary["response_text"] = proposal_text
     capture_mode = str(args.capture_mode or "native_call")
@@ -276,11 +305,28 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         evidence_reports=evidence_reports,
         evidence_summaries=evidence_summaries,
     )
+    refined_request_evidence = write_large_text_evidence(
+        repo_root,
+        output_path.parent / "generic_write_artifacts",
+        name=f"refined_request_{source_lane or 'unknown'}_{source_revision or '0'}",
+        text=refined_request,
+        kind="generic_write_refined_request",
+        producer="generic_write",
+        suffix=".md",
+    )
+    provider_response = str(provider_summary.get("response_text") or "")
+    provider_summary_report = dict(provider_summary)
+    provider_summary_report.pop("response_text", None)
+    provider_summary_report.setdefault("response_text_chars", len(provider_response))
+    provider_summary_report.setdefault(
+        "response_text_sha256",
+        hashlib.sha256(provider_response.encode("utf-8", errors="replace")).hexdigest(),
+    )
+    provider_summary_report.setdefault("response_text_tail", provider_response[-4000:])
     try:
         native_tool_count = int(provider_summary.get("native_tool_call_count") or 0)
     except (TypeError, ValueError):
         native_tool_count = 0
-    provider_response = str(provider_summary.get("response_text") or "")
     source_provider_passed = provider_summary.get("passed") is True
     source_provider_execution_performed = bool(
         provider_summary.get("provider_execution_performed")
@@ -313,15 +359,21 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "tool_calls_absent": capture_mode == "no_tool_capture" or native_tool_count == 0,
         "reason": str(args.reason or ""),
         "request_file": str(args.request_file or ""),
+        "proposal_text_file": str(getattr(args, "proposal_text_file", "") or ""),
         "provider_report": str(args.provider_report or ""),
         "evidence_report": evidence_reports,
         "tool_evidence_summary": evidence_summaries,
-        "provider_summary": provider_summary,
+        "provider_summary": provider_summary_report,
         "provider_response_excerpt": _compact(provider_response),
         "provider_response_sha256": hashlib.sha256(
             provider_response.encode("utf-8", errors="replace")
         ).hexdigest(),
-        "refined_request": refined_request,
+        "refined_request_ref": refined_request_evidence.get("ref") or {},
+        "refined_request_chars": refined_request_evidence.get("chars", 0),
+        "refined_request_sha256": refined_request_evidence.get("sha256", ""),
+        "refined_request_tail": refined_request_evidence.get("tail", ""),
+        "refined_request_tail_chars": refined_request_evidence.get("tail_chars", 0),
+        "refined_request_full_text_in_json": False,
         "action_plan": [
             "resolve verified targets",
             "run virtual dev environment when code targets exist",
@@ -353,6 +405,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def render_markdown(report: dict[str, Any]) -> str:
+    refined_request = _read_ref_text_from_report(report, "refined_request")
     lines = [
         "# Generic Write",
         "",
@@ -363,7 +416,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Next turn required: `{report.get('next_turn_required')}`",
         f"- Provider report: `{report.get('provider_report')}`",
         "",
-        str(report.get("refined_request") or ""),
+        refined_request or str(report.get("refined_request_tail") or ""),
         "",
         "## Guardrails",
         "",
@@ -373,6 +426,18 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _read_ref_text_from_report(report: dict[str, Any], prefix: str) -> str:
+    repo_root = Path(str(report.get("repo_root") or ".")).resolve()
+    ref = report.get(f"{prefix}_ref") if isinstance(report.get(f"{prefix}_ref"), dict) else {}
+    ref_path = str(ref.get("path") or "").strip()
+    if not ref_path:
+        return ""
+    try:
+        return read_text_windows_safe(resolve_path(repo_root, ref_path))
+    except Exception:
+        return ""
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
@@ -380,6 +445,7 @@ def main() -> int:
     parser.add_argument("--operator-request", default="")
     parser.add_argument("--provider-report", default="")
     parser.add_argument("--proposal-text", default="")
+    parser.add_argument("--proposal-text-file", default="")
     parser.add_argument("--capture-mode", choices=("native_call", "no_tool_capture"), default="native_call")
     parser.add_argument("--evidence-report", action="append", default=[])
     parser.add_argument("--source-lane", default="")

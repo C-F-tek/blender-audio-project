@@ -212,6 +212,20 @@ class RuntimeGateRunLoopMixin:
         provider_consumable_metrics = self.provider_consumable_evidence_status(final_events)
         soft_lock_state = runtime_soft_lock_state(self, final_events)
         generic_write_product = generic_write_document_product(self, final_events)
+        request_input_evidence = self.request_input_ref_or_tail()
+        final_response_evidence = self.response_text_ref_or_tail(
+            final_response_text,
+            name="final_response_text",
+            kind="heap_final_response_text",
+            producer="gpu1_exit_coordinator",
+        )
+        provider_raw_response_evidence = self.response_text_ref_or_tail(
+            self.response_text(),
+            name="provider_raw_response_text",
+            kind="gpu1_raw_response_text",
+            producer="gpu1_planner",
+        )
+        provider_response_evidence = self.provider_response_refs_or_tails()
         metrics = {
             "heap_read_count": self.heap_read_count,
             "heap_write_count": self.heap_write_count,
@@ -236,9 +250,11 @@ class RuntimeGateRunLoopMixin:
             "unattempted_requirements": unattempted,
             "failed_requirements": failed_requirements,
             "unsatisfied_requirements": unsatisfied_requirements,
-            "request_input": self.request_text(),
-            "response_text": final_response_text,
-            "provider_raw_response_text": self.response_text(),
+            **self.prefixed_text_evidence_fields("request_input", request_input_evidence),
+            **self.prefixed_text_evidence_fields("response_text", final_response_evidence),
+            **self.prefixed_text_evidence_fields(
+                "provider_raw_response_text", provider_raw_response_evidence
+            ),
             "response_source": self.response_source(),
             "response_text_present": bool(final_response_text),
             "detailed_output_expected": self.detailed_output_expected(),
@@ -295,7 +311,7 @@ class RuntimeGateRunLoopMixin:
                 self.response_text()
             ),
             "provider_refs": self.provider_refs(),
-            "provider_response_texts": self.provider_response_texts(),
+            "provider_response_refs_or_tails": provider_response_evidence,
             "context_artifact_refs": self.broker_output_refs(final_events),
             "shared_evidence_count": len(self.state["shared_evidence"]),
             "shared_memory_evidence_count": 1 if "shared_memory" in completed else 0,
@@ -410,7 +426,7 @@ class RuntimeGateRunLoopMixin:
             "stamp": self.stamp,
             "passed": not self.errors,
             "metrics": metrics,
-            "state": self.state,
+            "state": self.json_safe_coordination_payload(self.state, name="state"),
             "budget_governor": self.budget_governor,
             "heap_snapshot": {
                 "event_count": snapshot.get("event_count"),
@@ -419,14 +435,14 @@ class RuntimeGateRunLoopMixin:
                 "pending_broker_request_count": snapshot.get("pending_broker_request_count"),
             },
             "bridge_reports": final_bridge_reports,
-            "provider_reports": self.provider_reports,
+            "provider_reports": self.provider_reports_refs_or_tails(),
             "heap_runtime_exit_output": exit_output_product,
             "heap_exchange_runtime_exit_product": heap_exchange_exit_product,
             "real_run_input_contract": {
                 "kind": "heap_runtime_completeness_gate_input_contract",
                 "task_file": self.args.task_file,
                 "objective": self.args.objective,
-                "request": self.request_text(),
+                **self.prefixed_text_evidence_fields("request", request_input_evidence),
                 "stamp": self.stamp,
                 "budget_minutes": self.args.budget_minutes,
                 "max_iterations": self.max_iterations,
@@ -442,9 +458,11 @@ class RuntimeGateRunLoopMixin:
                 "heap_snapshot": snapshot.get("snapshot"),
                 "bridge_reports": final_bridge_reports,
                 "provider_report_outputs": [item.get("output") for item in self.provider_reports],
-                "request_input": self.request_text(),
-                "response_text": final_response_text,
-                "provider_raw_response_text": self.response_text(),
+                **self.prefixed_text_evidence_fields("request_input", request_input_evidence),
+                **self.prefixed_text_evidence_fields("response_text", final_response_evidence),
+                **self.prefixed_text_evidence_fields(
+                    "provider_raw_response_text", provider_raw_response_evidence
+                ),
                 "response_source": self.response_source(),
                 "quality_output_signals": final_quality_signals,
                 "response_file_reference_quality": self.response_file_reference_quality(
@@ -470,7 +488,7 @@ class RuntimeGateRunLoopMixin:
                     self.repo_root, self.heap_exchange_paths()["runtime_state"]
                 ),
                 "provider_refs": self.provider_refs(),
-                "provider_response_texts": self.provider_response_texts(),
+                "provider_response_refs_or_tails": provider_response_evidence,
                 "context_artifact_refs": self.broker_output_refs(final_events),
                 "product_status": self.state["product"].get("status"),
                 "product_kind": self.state["product"].get("product_kind"),

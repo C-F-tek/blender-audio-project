@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import write_large_text_evidence
 from ia_carmine._shared.openvino_model_discovery import discover_openvino_tool_model_dir
 from ia_carmine._shared.provider_replight import provider_replight_fields
 from ia_carmine._shared.provider_work_verification import provider_work_status
@@ -76,6 +77,15 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     loaded = bool(child.get("model_loaded"))
     device_verified = bool(child.get("device_verified"))
     preliminary_passed = bool(performed and loaded and device_verified and output_text.strip() and not errors)
+    prompt_evidence = write_large_text_evidence(
+        repo_root,
+        _resolve(repo_root, args.output).parent / "provider_prompt_artifacts",
+        name="openvino_npu_request_prompt",
+        text=args.prompt,
+        kind="provider_request_prompt",
+        producer="openvino_npu_model_probe",
+        suffix=".md",
+    )
     report = {
         "schema_version": 1,
         "kind": "openvino_npu_model_probe",
@@ -95,7 +105,11 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "workload_performed": performed,
         "useful_output_produced": bool(output_text.strip() or child.get("tool_calls")),
         "response_text": output_text,
-        "request_prompt": args.prompt,
+        "request_prompt_ref": prompt_evidence.get("ref") or {},
+        "request_prompt_chars": prompt_evidence.get("chars", 0),
+        "request_prompt_sha256": prompt_evidence.get("sha256", ""),
+        "request_prompt_tail": prompt_evidence.get("tail", ""),
+        "request_prompt_full_text_in_json": False,
         "provider_execution_performed": performed,
         "cpu_provider_fallback_performed": False,
         "npu_micro_provider_model_dir": model_dir,

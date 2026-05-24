@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ia_carmine.context.heap_context_memory_reload.common import read_text
+from ia_carmine.context.heap_context_memory_reload.common import read_text, sha256_text
 
 TASK_CONTEXT_FILE_ROW_LIMIT = 240
 TASK_CONTEXT_PREVIEW_FILE_LIMIT = 16
@@ -166,7 +166,9 @@ def build_operational_memory_write_content(
         "schema_version": 1,
         "kind": "heap_startup_operational_memory_note",
         "stamp": stamp,
-        "request_preview": request[:1200],
+        "request_file": artifacts.get("startup_request_file", ""),
+        "request_chars": len(request or ""),
+        "request_sha256": sha256_text(request),
         "startup_reload_degraded": startup_reload_degraded,
         "context_reload_mode": context_delta.get("reload_mode", ""),
         "context_delta_digest": context_delta.get("current_digest", ""),

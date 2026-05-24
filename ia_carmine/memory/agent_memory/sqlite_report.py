@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import INLINE_TEXT_MAX_CHARS
+
 from .common import (
     is_under,
     read_arg_file,
@@ -49,7 +51,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     output_root = resolve_path(repo_root, "output")
     errors: list[str] = []
     warnings: list[str] = []
-    content_text = args.content
+    content_text = ""
+    if getattr(args, "content", ""):
+        errors.append("content_inline_requires_content_file")
+        if len(str(args.content)) > INLINE_TEXT_MAX_CHARS:
+            errors.append("content_inline_too_large")
     if getattr(args, "content_file", ""):
         try:
             content_text = read_arg_file(repo_root, args.content_file)

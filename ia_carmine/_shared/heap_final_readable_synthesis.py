@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import read_text_windows_safe, resolve_path
+
 from ia_carmine._shared.heap_final_code_product import (
     code_product_items,
     render_code_product_section,
@@ -219,7 +221,8 @@ def generic_write_summary(run_dir: Path, gate: dict[str, Any]) -> list[str]:
             runtime_errors.extend(str(error) for error in as_list(as_dict(result).get("errors")))
     provider_excerpt = str(
         latest_report.get("provider_response_excerpt")
-        or latest_report.get("latest_refined_request")
+        or _text_from_ref(gate, latest_report, "latest_refined_request")
+        or _text_from_ref(gate, latest_report, "refined_request")
         or product.get("latest_refined_request")
         or ""
     )
@@ -275,7 +278,12 @@ def gpu1_raw_evidence_summary(run_dir: Path) -> list[str]:
         if not data:
             continue
         packet = as_dict(data.get("gpu1_closure_decision_packet"))
-        raw = str(data.get("gpu1_free_text_evidence") or data.get("response_text") or "")
+        raw = str(
+            _text_from_ref({"repo_root": str(_repo_root_from_run_dir(run_dir))}, data, "gpu1_free_text_evidence")
+            or data.get("response_text")
+            or data.get("response_text_tail")
+            or ""
+        )
         raw_excerpt = raw.replace("\r\n", "\n").replace("\n", " ")[:1200]
         reject_reason = str(data.get("reject_reason") or "")
         lines.extend(
@@ -298,6 +306,29 @@ def gpu1_raw_evidence_summary(run_dir: Path) -> list[str]:
     if not lines:
         return ["Nessun testo raw GPU1 trovato nei report della run."]
     return lines
+
+
+def _text_from_ref(gate: dict[str, Any], data: dict[str, Any], prefix: str) -> str:
+    text = str(data.get(prefix) or "").strip()
+    if text:
+        return text
+    ref = data.get(f"{prefix}_ref") if isinstance(data.get(f"{prefix}_ref"), dict) else {}
+    ref_path = str(ref.get("path") or "").strip()
+    if ref_path:
+        repo_root = Path(str(gate.get("repo_root") or ".")).resolve()
+        try:
+            return read_text_windows_safe(resolve_path(repo_root, ref_path)).strip()
+        except Exception:
+            pass
+    return str(data.get(f"{prefix}_tail") or "").strip()
+
+
+def _repo_root_from_run_dir(run_dir: Path) -> Path:
+    parts = list(run_dir.resolve(strict=False).parts)
+    for index in range(len(parts) - 1):
+        if parts[index].lower() == "output" and parts[index + 1].lower() == "validation":
+            return Path(*parts[:index])
+    return Path.cwd()
 
 def pointer_graph_chain_summary(metrics: dict[str, Any], pointer: dict[str, Any], soft_lock_state: dict[str, Any]) -> list[str]:
     deferred_count = sum(1 for row in as_list(pointer.get("pointer_closure_table")) if str(as_dict(row).get("closure_status") or "") == "deferred_to_resume")

@@ -560,6 +560,10 @@ class RuntimeGateProposalCycleAMixin:
         )
         self.current_gpu1_closure_decision_packet = gpu1_packet
         clipped = (response_text or "")[:PROPOSAL_ITERATION_MAX_CHARS]
+        gpu1_free_text_evidence = self.response_text_ref_or_tail(
+            response_text or "", name=f"gpu1_free_text_evidence_revision_{revision:03d}",
+            kind="gpu1_free_text_evidence", producer="proposal_cycle_a",
+        )
         data = {
             "schema_version": 1,
             "kind": "heap_proposal_iteration",
@@ -633,16 +637,14 @@ class RuntimeGateProposalCycleAMixin:
             "cpu_closure_validation": soft_lock_state.get("cpu_closure_validation"),
             "closure_quorum_status": soft_lock_state.get("closure_quorum_status"),
             "closure_quorum_reason": soft_lock_state.get("closure_quorum_reason"),
-            "soft_lock_targeted_refine_used": soft_lock_state.get(
-                "soft_lock_targeted_refine_used", False
-            ),
+            "soft_lock_targeted_refine_used": soft_lock_state.get("soft_lock_targeted_refine_used", False),
             "anchored_source_candidates": anchored_sources,
             "previous_iteration_available": bool(previous),
-            "gpu1_free_text_evidence": response_text or "",
-            "gpu1_free_text_evidence_chars": len(response_text or ""),
-            "gpu1_free_text_evidence_sha256": gpu1_packet.get("response_text_sha256") or "",
+            **self.prefixed_text_evidence_fields("gpu1_free_text_evidence", gpu1_free_text_evidence),
+            "gpu1_free_text_evidence_packet_sha256": gpu1_packet.get("response_text_sha256") or "",
             "gpu1_free_text_evidence_visible_even_when_invalid": True,
-            "response_text": clipped,
+            "response_text_preview": clipped,
+            "response_text_tail": gpu1_free_text_evidence.get("tail", ""),
         }
         write_json_report(data, json_path)
         md = render_proposal_iteration_markdown(

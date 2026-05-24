@@ -7,23 +7,54 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import (
+    INLINE_TEXT_MAX_CHARS,
+    artifact_ref,
+    read_json_windows_safe,
+    read_text_windows_safe,
+    validate_runtime_payload_manifest,
+)
 from .common import EVENT_TYPES, LANES, tool_catalog_snapshot
 from .heap import ProviderRuntimeHeap
 
-def parse_payload(raw: str = "", payload_file: str = "") -> dict[str, Any]:
+def parse_payload(
+    raw: str = "",
+    payload_file: str = "",
+    *,
+    repo_root: Path | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     if payload_file:
         path = Path(payload_file)
         if not path.is_absolute():
-            path = Path.cwd() / path
+            path = (repo_root or Path.cwd()) / path
         try:
-            raw = path.read_text(encoding="utf-8-sig")
+            data = read_json_windows_safe(path)
         except OSError as exc:
             raise ValueError(
                 f"payload file unreadable: {path}; error={type(exc).__name__}: {exc}"
             ) from exc
+        except json.JSONDecodeError as exc:
+            raw_preview = read_text_windows_safe(path)[:500].replace("\r", "\\r").replace("\n", "\\n")
+            raise ValueError(
+                f"payload JSON parse failed from file={payload_file}; preview=[{raw_preview}]; error={exc}"
+            ) from exc
+        if data.get("kind") == "ia_carmine_runtime_payload_manifest":
+            validation = validate_runtime_payload_manifest(repo_root or Path.cwd(), path)
+            if not validation.get("passed"):
+                errors = ",".join(str(item) for item in validation.get("errors", [])[:6])
+                raise ValueError(f"payload_manifest_invalid:{errors}")
+        payload_ref = artifact_ref(
+            path,
+            repo_root or Path.cwd(),
+            kind="provider_runtime_blackboard_payload",
+            producer="provider_runtime_blackboard",
+        )
+        return data, payload_ref
 
     if not raw:
-        return {}
+        return {}, {}
+    if len(raw) > INLINE_TEXT_MAX_CHARS:
+        raise ValueError("payload_json_large_requires_payload_file")
 
     try:
         data = json.loads(raw)
@@ -37,7 +68,7 @@ def parse_payload(raw: str = "", payload_file: str = "") -> dict[str, Any]:
 
     if not isinstance(data, dict):
         raise ValueError("payload JSON must be an object")
-    return data
+    return data, {}
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -85,13 +116,30 @@ def main() -> int:
         )
         result = heap.write_snapshot()
     elif args.command == "append-event":
+        try:
+            payload, payload_ref = parse_payload(
+                args.payload_json,
+                args.payload_file,
+                repo_root=repo_root,
+            )
+        except ValueError as exc:
+            result = {
+                "passed": False,
+                "error": str(exc),
+                "provider_execution_performed": False,
+                "patch_application_performed": False,
+                "source_writes_performed": False,
+            }
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            return 2
         event = heap.append_event(
             source=args.source,
             target=args.target or None,
             event_type=args.event_type,
             round_id=args.round,
             correlation_id=args.correlation_id or None,
-            payload=parse_payload(args.payload_json, args.payload_file),
+            payload=payload,
+            payload_ref=payload_ref,
         )
         result = {"passed": True, "event": event, "snapshot": heap.write_snapshot()}
     elif args.command == "tool-catalog":

@@ -61,6 +61,7 @@ class ProviderRuntimeHeap:
         source: str,
         event_type: str,
         payload: dict[str, Any] | None = None,
+        payload_ref: dict[str, Any] | None = None,
         round_id: int | None = None,
         target: str | None = None,
         correlation_id: str | None = None,
@@ -69,8 +70,44 @@ class ProviderRuntimeHeap:
         normalized_type = normalize_event_type(event_type)
         target_lane = normalize_lane(target) if target else None
         raw_payload = safe_dict(payload or {})
-        compacted_payload = compact_payload(raw_payload)
-        raw_payload_json = json.dumps(raw_payload, ensure_ascii=False, sort_keys=True, default=str)
+        if payload_ref:
+            stored_payload = {
+                "payload_file_backed": True,
+                "payload_ref": payload_ref,
+                "payload_kind": str(raw_payload.get("kind") or ""),
+                "payload_keys": sorted(str(key) for key in raw_payload)[:32],
+            }
+            if normalized_type == "broker_request":
+                args = safe_dict(raw_payload.get("args"))
+                stored_payload.update(
+                    {
+                        "tool": str(raw_payload.get("tool") or ""),
+                        "request_id": str(
+                            raw_payload.get("request_id")
+                            or raw_payload.get("id")
+                            or correlation_id
+                            or ""
+                        ),
+                        "lane": str(
+                            raw_payload.get("lane")
+                            or raw_payload.get("owner")
+                            or source_lane
+                        ),
+                        "provider_native_tool_call": bool(
+                            raw_payload.get("provider_native_tool_call")
+                        ),
+                        "args_ref": safe_dict(raw_payload.get("args_ref")),
+                        "args_keys": sorted(str(key) for key in args)[:32],
+                        "reason": str(raw_payload.get("reason") or ""),
+                        "requirement": str(raw_payload.get("requirement") or ""),
+                    }
+                )
+            indexed_payload = stored_payload
+        else:
+            stored_payload = raw_payload
+            indexed_payload = raw_payload
+        compacted_payload = compact_payload(stored_payload)
+        raw_payload_json = json.dumps(stored_payload, ensure_ascii=False, sort_keys=True, default=str)
         compacted_payload_json = json.dumps(
             compacted_payload, ensure_ascii=False, sort_keys=True, default=str
         )
@@ -85,6 +122,8 @@ class ProviderRuntimeHeap:
             "event_type": normalized_type,
             "correlation_id": correlation_id or "",
             "payload": compacted_payload,
+            "payload_ref": payload_ref or {},
+            "payload_file_backed": bool(payload_ref),
             "payload_index": {
                 "sqlite_sidecar": repo_rel(self.repo_root, self.sqlite_index_path()),
                 "table": "payload_blobs",
@@ -104,7 +143,7 @@ class ProviderRuntimeHeap:
         with self.paths.events.open("a", encoding="utf-8", newline="\n") as handle:
             handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
         self.runtime_state.apply_event(event)
-        self._index_event(event, raw_payload)
+        self._index_event(event, indexed_payload)
         return event
 
     def add_event(

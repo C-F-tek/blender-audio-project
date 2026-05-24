@@ -85,6 +85,7 @@ class RuntimeGateHeapExchangeMixin:
                 "available": True,
             },
         ]
+        request_input_evidence = self.request_input_ref_or_tail()
         entry = {
             "schema_version": 1,
             "kind": "heap_exchange_runtime_entry",
@@ -98,7 +99,7 @@ class RuntimeGateHeapExchangeMixin:
             "entry_controls_inputs_only": True,
             "exit_must_produce_concrete_product": True,
             "task_file": self.args.task_file,
-            "request": self.request_text(),
+            **self.prefixed_text_evidence_fields("request", request_input_evidence),
             "runtime_state": repo_rel(self.repo_root, paths["runtime_state"]),
             "lanes": lanes,
             "available_lane_count": len([item for item in lanes if item.get("available")]),
@@ -152,19 +153,34 @@ class RuntimeGateHeapExchangeMixin:
             or "blocked_with_reason"
         )
         file_quality = self.response_file_reference_quality(response_text)
+        request_input_evidence = self.request_input_ref_or_tail()
+        response_evidence = self.response_text_ref_or_tail(
+            response_text,
+            name="heap_exit_response_text",
+            kind="heap_exit_response_text",
+            producer="heap_exchange",
+        )
+        provider_raw_response_evidence = self.response_text_ref_or_tail(
+            self.response_text(),
+            name="heap_exit_provider_raw_response_text",
+            kind="gpu1_raw_response_text",
+            producer="gpu1_planner",
+        )
         product = {
             "schema_version": 1,
             "kind": "heap_runtime_exit_output",
             "generated_at": now_iso(),
             "stamp": self.stamp,
-            "request_input": self.request_text(),
+            **self.prefixed_text_evidence_fields("request_input", request_input_evidence),
             "product_status": product_status,
-            "response_text": response_text,
-            "provider_raw_response_text": self.response_text(),
+            **self.prefixed_text_evidence_fields("response_text", response_evidence),
+            **self.prefixed_text_evidence_fields(
+                "provider_raw_response_text", provider_raw_response_evidence
+            ),
             "source_of_knowledge": "heap_exchange",
             "assembled_by": "gpu1_exit_coordinator",
             "revealed_by": "heap_exchange_runtime_exit",
-            "provider_contributions": self.provider_response_texts(),
+            "provider_contribution_refs_or_tails": self.provider_response_refs_or_tails(),
             "context_artifact_refs": self.broker_output_refs(events),
             "bridge_reports": self.bridge_report_refs(events),
             "quality_output_signals": self.quality_output_signals(response_text, events),

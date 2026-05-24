@@ -7,6 +7,7 @@ import argparse
 import json
 from pathlib import Path
 
+from ia_carmine._shared.file_backed_transport import INLINE_TEXT_MAX_CHARS
 from .reporting import render_markdown, write_reports
 from .runner import run_request
 
@@ -29,6 +30,8 @@ def load_request(path: Path) -> tuple[dict[str, object] | None, str | None]:
 
 
 def load_request_json(text: str) -> tuple[dict[str, object] | None, str | None]:
+    if len(text) > INLINE_TEXT_MAX_CHARS:
+        return None, "request_json_large_requires_request_file"
     try:
         data = json.loads(text)
     except json.JSONDecodeError as exc:

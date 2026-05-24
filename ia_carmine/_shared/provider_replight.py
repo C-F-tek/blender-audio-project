@@ -13,6 +13,16 @@ def estimated_token_count(text: Any) -> int:
     return max(1, len(value.split()))
 
 
+def estimated_token_count_from_chars(value: Any) -> int:
+    try:
+        chars = int(value)
+    except (TypeError, ValueError):
+        return 0
+    if chars <= 0:
+        return 0
+    return max(1, chars // 4)
+
+
 def provider_replight_fields(
     *,
     lane: str,
@@ -42,6 +52,7 @@ def provider_replight_fields(
     prompt_tokens = _int_first(
         report.get("prompt_token_count"),
         report.get("prompt_eval_count"),
+        estimated_token_count_from_chars(report.get("request_prompt_chars")),
         estimated_token_count(report.get("request_prompt") or report.get("request_input")),
     )
     completion_tokens = _int_first(

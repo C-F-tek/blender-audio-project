@@ -21,9 +21,8 @@ def request_query(request: str, objective: str) -> str:
 
 def request_memory_content(request: str, objective: str, stamp: str) -> str:
     digest = sha256(request.encode("utf-8", errors="replace")).hexdigest() if request else ""
-    preview = bounded_text(request, 1000)
     return (
-        f"request_sha256={digest}; request_preview={preview}; "
+        f"request_sha256={digest}; "
         f"objective={bounded_text(objective, 400)}; stamp={stamp}"
     )
 
@@ -77,6 +76,12 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
         startup_text_files.append(repo_rel(owner.repo_root, manifest_path))
     artifacts = manifest.get("artifacts") if isinstance(manifest, dict) else {}
     if isinstance(artifacts, dict):
+        if not operator_request_file:
+            operator_request_file = str(
+                manifest.get("request_file") or artifacts.get("startup_request_file") or ""
+            ).strip()
+            if operator_request_file:
+                startup_text_files.append(operator_request_file)
         for key in (
             "tool_catalog_json",
             "shared_memory_json",

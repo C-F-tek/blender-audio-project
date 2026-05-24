@@ -86,10 +86,11 @@ def run_rag_context_pack(state: ReloadRun) -> None:
         "--markdown-output",
         str(pack_md),
     ]
-    if state.args.request_file:
-        command.extend(["--task-file", str(state.args.request_file)])
+    request_file = str(state.args.request_file or state.artifacts.get("startup_request_file") or "")
+    if request_file:
+        command.extend(["--task-file", request_file])
     else:
-        command.extend(["--query", state.request_text[:4000]])
+        command.extend(["--query", state.request_text])
     if state.args.rag_skip_query_embedding:
         command.append("--skip-query-embedding")
     result = run_tool(

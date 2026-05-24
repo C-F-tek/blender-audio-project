@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import MAX_FILE_WINDOW_CHARS
+
 from .common import ToolSpec
 from .context_builders import (
     build_ai_context_pack_tool,
@@ -27,6 +29,7 @@ from .runtime_builders import (
     generic_write,
     run_heap_code_execution_matrix,
     run_heap_virtual_dev_environment,
+    runtime_file_window,
     runtime_file_refs,
     synthesize_patch_candidates,
 )
@@ -37,6 +40,11 @@ OBJECT = {"type": "object"}
 STRING_OR_ARRAY = {"type": ["string", "array"]}
 BOOL_OR_STRING = {"type": ["boolean", "string"]}
 NUMBER_OR_STRING = {"type": ["integer", "number", "string"]}
+NUMBER_OR_STRING_FILE_WINDOW_LIMIT = {
+    "type": ["integer", "number", "string"],
+    "minimum": 1,
+    "maximum": MAX_FILE_WINDOW_CHARS,
+}
 
 
 def tool_input_schema(
@@ -99,6 +107,7 @@ GENERIC_WRITE_SCHEMA = tool_input_schema(
         "operator_request": STRING,
         "provider_report": STRING,
         "proposal_text": STRING,
+        "proposal_text_file": STRING,
         "capture_mode": STRING,
         "evidence_report": STRING_OR_ARRAY,
         "source_lane": STRING,
@@ -129,6 +138,32 @@ RUNTIME_FILE_REFS_SCHEMA = tool_input_schema(
         "validation_script": STRING_OR_ARRAY,
         "provenance": STRING,
         "strict_patchable_targets": BOOL_OR_STRING,
+    }
+)
+
+RUNTIME_FILE_WINDOW_SCHEMA = tool_input_schema(
+    {
+        "path": STRING,
+        "offset": NUMBER_OR_STRING,
+        "limit": NUMBER_OR_STRING_FILE_WINDOW_LIMIT,
+    },
+    required=("path",),
+)
+
+RUNTIME_SQLITE_MEMORY_SCHEMA = tool_input_schema(
+    {
+        "action": STRING,
+        "scope": STRING,
+        "database": STRING,
+        "persistent_database": STRING,
+        "summary": STRING,
+        "content_file": STRING,
+        "role": STRING,
+        "tag": STRING_OR_ARRAY,
+        "query": STRING,
+        "limit": NUMBER_OR_STRING,
+        "confirm": STRING,
+        "allow_persistent_write": BOOL_OR_STRING,
     }
 )
 
@@ -277,7 +312,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "database",
             "persistent_database",
             "summary",
-            "content",
+            "content_file",
             "role",
             "tag",
             "query",
@@ -286,6 +321,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "allow_persistent_write",
         ),
         builder=runtime_sqlite_memory,
+        input_schema=RUNTIME_SQLITE_MEMORY_SCHEMA,
     ),
     "run_heap_code_execution_matrix": ToolSpec(
         name="run_heap_code_execution_matrix",
@@ -331,6 +367,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "operator_request",
             "provider_report",
             "proposal_text",
+            "proposal_text_file",
             "capture_mode",
             "evidence_report",
             "source_lane",
@@ -370,6 +407,13 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         ),
         builder=runtime_file_refs,
         input_schema=RUNTIME_FILE_REFS_SCHEMA,
+    ),
+    "runtime_file_window": ToolSpec(
+        name="runtime_file_window",
+        description="Read a bounded text window from a file-backed runtime artifact by stable path/ref.",
+        allowed_args=("path", "offset", "limit"),
+        builder=runtime_file_window,
+        input_schema=RUNTIME_FILE_WINDOW_SCHEMA,
     ),
     "analyze_code_product_artifact": ToolSpec(
         name="analyze_code_product_artifact",

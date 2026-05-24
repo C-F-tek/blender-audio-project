@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import write_text_artifact
 from ia_carmine.providers.provider_mesh.runtime.python_runtime import resolve_child_python
 
 from .common import base_outputs, repo_rel, resolve_path, split_values, truthy
@@ -20,7 +21,7 @@ def append_cli_value(command: list[str], flag: str, value: Any) -> None:
 
 def run_heap_code_execution_matrix(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "heap_code_execution_tool")
     debug_report = (
         repo_root
@@ -54,12 +55,27 @@ def run_heap_code_execution_matrix(
         append_cli_value(command, "--validation-arg", validation_arg)
     for evidence_report in split_values(args.get("evidence_report")):
         command.extend(["--evidence-report", evidence_report])
+    operator_request_file = str(args.get("operator_request_file") or "").strip()
+    operator_request = str(args.get("operator_request") or "")
+    transport_refs: list[dict[str, Any]] = []
+    if operator_request and not operator_request_file:
+        request_ref = write_text_artifact(
+            repo_root,
+            out_dir / f"{request_id}_transport_payload",
+            name="operator_request",
+            text=operator_request,
+            kind="operator_request",
+            producer="run_heap_code_execution_matrix",
+            suffix=".md",
+        )
+        operator_request_file = str(request_ref["path"])
+        transport_refs.append(request_ref)
+    if operator_request_file:
+        command.extend(["--operator-request-file", operator_request_file])
     for key, flag in (
         ("timeout_seconds", "--timeout-seconds"),
         ("tail_chars", "--tail-chars"),
         ("max_diff_chars", "--max-diff-chars"),
-        ("operator_request", "--operator-request"),
-        ("operator_request_file", "--operator-request-file"),
         ("max_patch_candidates", "--max-patch-candidates"),
     ):
         if args.get(key) is not None:
@@ -75,12 +91,13 @@ def run_heap_code_execution_matrix(
         "markdown_report": repo_rel(markdown, repo_root),
         "debug_lab_report": repo_rel(debug_report, repo_root),
         "debug_lab_markdown": repo_rel(debug_markdown, repo_root),
+        "transport_artifact_refs": transport_refs,
     }
 
 
 def synthesize_patch_candidates(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "patch_candidate_synthesis")
     candidate_dir = out_dir / f"{request_id}_patch_candidate_diffs"
     command = [
@@ -101,9 +118,24 @@ def synthesize_patch_candidates(
         command.extend(["--target-file", target_file])
     for evidence_report in split_values(args.get("evidence_report")):
         command.extend(["--evidence-report", evidence_report])
+    operator_request_file = str(args.get("operator_request_file") or "").strip()
+    operator_request = str(args.get("operator_request") or "")
+    transport_refs: list[dict[str, Any]] = []
+    if operator_request and not operator_request_file:
+        request_ref = write_text_artifact(
+            repo_root,
+            out_dir / f"{request_id}_transport_payload",
+            name="operator_request",
+            text=operator_request,
+            kind="operator_request",
+            producer="synthesize_patch_candidates",
+            suffix=".md",
+        )
+        operator_request_file = str(request_ref["path"])
+        transport_refs.append(request_ref)
+    if operator_request_file:
+        command.extend(["--operator-request-file", operator_request_file])
     for key, flag in (
-        ("operator_request", "--operator-request"),
-        ("operator_request_file", "--operator-request-file"),
         ("matrix_report", "--matrix-report"),
         ("max_candidates", "--max-candidates"),
         ("timeout_seconds", "--timeout-seconds"),
@@ -114,12 +146,13 @@ def synthesize_patch_candidates(
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),
         "candidate_dir": repo_rel(candidate_dir, repo_root),
+        "transport_artifact_refs": transport_refs,
     }
 
 
 def generic_write(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "generic_write_md")
     command = [
         resolve_child_python(repo_root),
@@ -135,11 +168,41 @@ def generic_write(
     ]
     for evidence_report in split_values(args.get("evidence_report")):
         command.extend(["--evidence-report", evidence_report])
+    transport_refs: list[dict[str, Any]] = []
+    request_file = str(args.get("request_file") or "").strip()
+    operator_request = str(args.get("operator_request") or "")
+    if operator_request and not request_file:
+        request_ref = write_text_artifact(
+            repo_root,
+            out_dir / f"{request_id}_transport_payload",
+            name="operator_request",
+            text=operator_request,
+            kind="operator_request",
+            producer="generic_write",
+            suffix=".md",
+        )
+        request_file = str(request_ref["path"])
+        transport_refs.append(request_ref)
+    if request_file:
+        command.extend(["--request-file", request_file])
+    proposal_text_file = str(args.get("proposal_text_file") or "").strip()
+    proposal_text = str(args.get("proposal_text") or "")
+    if proposal_text and not proposal_text_file:
+        proposal_ref = write_text_artifact(
+            repo_root,
+            out_dir / f"{request_id}_transport_payload",
+            name="proposal_text",
+            text=proposal_text,
+            kind="provider_proposal_text",
+            producer="generic_write",
+            suffix=".md",
+        )
+        proposal_text_file = str(proposal_ref["path"])
+        transport_refs.append(proposal_ref)
+    if proposal_text_file:
+        command.extend(["--proposal-text-file", proposal_text_file])
     for key, flag in (
-        ("request_file", "--request-file"),
-        ("operator_request", "--operator-request"),
         ("provider_report", "--provider-report"),
-        ("proposal_text", "--proposal-text"),
         ("capture_mode", "--capture-mode"),
         ("source_lane", "--source-lane"),
         ("source_revision", "--source-revision"),
@@ -153,12 +216,13 @@ def generic_write(
     return command, {
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),
+        "transport_artifact_refs": transport_refs,
     }
 
 
 def run_heap_virtual_dev_environment(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "heap_virtual_dev_environment")
     command = [
         resolve_child_python(repo_root),
@@ -194,7 +258,7 @@ def run_heap_virtual_dev_environment(
 
 def runtime_file_refs(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "runtime_file_refs")
     command = [
         resolve_child_python(repo_root),
@@ -214,8 +278,20 @@ def runtime_file_refs(
         if isinstance(text_values, list)
         else ([str(text_values)] if str(text_values or "").strip() else [])
     )
-    for chunk in text_chunks[:4]:
-        command.extend(["--text", chunk[:4000]])
+    transport_refs: list[dict[str, Any]] = []
+    transport_dir = out_dir / f"{request_id}_transport_payload"
+    for index, chunk in enumerate(text_chunks, start=1):
+        ref = write_text_artifact(
+            repo_root,
+            transport_dir,
+            name=f"text_{index:03d}",
+            text=chunk,
+            kind="runtime_file_refs_text",
+            producer="runtime_file_refs",
+            suffix=".txt",
+        )
+        command.extend(["--text-file", str(ref["path"])])
+        transport_refs.append(ref)
     for value in split_values(args.get("text_file")):
         command.extend(["--text-file", value])
     for key, flag in (
@@ -230,12 +306,13 @@ def runtime_file_refs(
     return command, {
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),
+        "transport_artifact_refs": transport_refs,
     }
 
 
 def analyze_code_product_artifact(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "code_product_artifact_intake")
     command = [
         resolve_child_python(repo_root),
@@ -255,6 +332,34 @@ def analyze_code_product_artifact(
         command.append("--require-all-integrated")
     if truthy(args.get("apply_safe")) and str(args.get("confirm") or "") == "safe_apply":
         command.append("--apply-safe")
+    return command, {
+        "json_report": repo_rel(report, repo_root),
+        "markdown_report": repo_rel(markdown, repo_root),
+    }
+
+
+def runtime_file_window(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, Any]]:
+    report, markdown = base_outputs(out_dir, request_id, "runtime_file_window")
+    command = [
+        resolve_child_python(repo_root),
+        "-m",
+        "ia_carmine",
+        "runtime_file_window",
+        "--repo-root",
+        ".",
+        "--path",
+        str(args.get("path") or ""),
+        "--offset",
+        str(args.get("offset") or 0),
+        "--limit",
+        str(args.get("limit") or 16000),
+        "--output",
+        str(report),
+        "--markdown-output",
+        str(markdown),
+    ]
     return command, {
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),

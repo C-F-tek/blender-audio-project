@@ -8,11 +8,29 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import (
+    INLINE_TEXT_MAX_CHARS,
+    should_materialize_inline,
+    write_json_artifact,
+    write_text_artifact,
+)
 from ia_carmine._shared.agent_runtime_tool_broker_execution import execute_command_timed
 from Tools.validation._shared.report_utils import read_json_report
 
 from .common import compact_value, execute_debug_lab_in_process, fixture_repo_write, now_iso, output_owned_artifact_write, repo_rel, resolve_path, safe_id, truthy, validate_request_args
 from .registry import TOOL_SPECS
+
+
+TEXT_ARG_FILE_TARGETS = {
+    "run_heap_code_execution_matrix": {"operator_request": "operator_request_file"},
+    "synthesize_patch_candidates": {"operator_request": "operator_request_file"},
+    "generic_write": {"operator_request": "request_file", "proposal_text": "proposal_text_file"},
+    "runtime_file_refs": {"text": "text_file"},
+    "runtime_sqlite_memory": {"content": "content_file"},
+}
+JSON_ARG_FILE_TARGETS = {
+    "agent_runtime_debug_lab": {"request_json": "request_file"},
+}
 
 def extract_tool_requests(data: dict[str, Any]) -> list[dict[str, Any]]:
     requests = data.get("tool_requests", [])
@@ -67,6 +85,8 @@ def load_requests_data(
     if isinstance(request_packet, dict):
         return request_packet, None, "in_memory", []
     if getattr(args, "request_json", ""):
+        if len(str(args.request_json)) > INLINE_TEXT_MAX_CHARS:
+            return {}, None, "inline_json", ["request_json_large_requires_request_file"]
         try:
             data = json.loads(args.request_json)
         except json.JSONDecodeError as exc:
@@ -94,6 +114,7 @@ def execute_tool_request(
     request_id = safe_id(request.get("id"), f"tool_{index:03d}")
     tool_name = str(request.get("tool") or "")
     request_args = request.get("args") if isinstance(request.get("args"), dict) else {}
+    request_args = dict(request_args)
     base_result: dict[str, Any] = {
         "id": request_id,
         "tool": tool_name,
@@ -128,6 +149,17 @@ def execute_tool_request(
             "git_write_performed": False,
         },
     }
+
+    transport_refs = materialize_transport_args(
+        repo_root=repo_root,
+        out_dir=out_dir,
+        request_id=request_id,
+        tool_name=tool_name,
+        request_args=request_args,
+    )
+    if transport_refs:
+        base_result["transport_policy"] = "http_coordinates_filesystem_transports_mass"
+        base_result["transport_artifact_refs"] = transport_refs
 
     base_result["persistent_memory_write_authorized"] = (
         tool_name == "runtime_sqlite_memory"
@@ -165,6 +197,12 @@ def execute_tool_request(
     command, outputs = spec.builder(repo_root, out_dir, request_id, request_args)
     base_result["command"] = command
     base_result["outputs"] = outputs
+    if transport_refs:
+        output_refs = outputs.get("transport_artifact_refs")
+        if isinstance(output_refs, list):
+            output_refs.extend(transport_refs)
+        else:
+            outputs["transport_artifact_refs"] = transport_refs
 
     if dry_run:
         base_result["status"] = "dry_run"
@@ -294,6 +332,72 @@ def execute_tool_request(
                     "report-only manual-review result did not fail broker guardrails"
                 )
     return base_result
+
+
+def materialize_transport_args(
+    *,
+    repo_root: Path,
+    out_dir: Path,
+    request_id: str,
+    tool_name: str,
+    request_args: dict[str, Any],
+) -> list[dict[str, Any]]:
+    refs: list[dict[str, Any]] = []
+    transport_dir = out_dir / f"{request_id}_transport_payload"
+    for source_key, target_key in TEXT_ARG_FILE_TARGETS.get(tool_name, {}).items():
+        if source_key not in request_args or request_args.get(target_key):
+            continue
+        value = request_args.get(source_key)
+        if source_key == "text" and isinstance(value, list):
+            paths: list[str] = []
+            for index, item in enumerate(value, start=1):
+                if not should_materialize_inline(str(item), max_chars=0):
+                    continue
+                ref = write_text_artifact(
+                    repo_root,
+                    transport_dir,
+                    name=f"{source_key}_{index:03d}",
+                    text=str(item),
+                    kind=f"{tool_name}_{source_key}",
+                    producer="agent_runtime_tool_broker",
+                    suffix=".txt",
+                )
+                paths.append(str(ref["path"]))
+                refs.append(ref)
+            if paths:
+                request_args[target_key] = paths
+                request_args.pop(source_key, None)
+            continue
+        if isinstance(value, str) and value:
+            ref = write_text_artifact(
+                repo_root,
+                transport_dir,
+                name=source_key,
+                text=value,
+                kind=f"{tool_name}_{source_key}",
+                producer="agent_runtime_tool_broker",
+                suffix=".md",
+            )
+            request_args[target_key] = str(ref["path"])
+            request_args.pop(source_key, None)
+            refs.append(ref)
+    for source_key, target_key in JSON_ARG_FILE_TARGETS.get(tool_name, {}).items():
+        if source_key not in request_args or request_args.get(target_key):
+            continue
+        value = request_args.get(source_key)
+        if isinstance(value, (dict, list)):
+            ref = write_json_artifact(
+                repo_root,
+                transport_dir,
+                name=source_key,
+                payload=value,
+                kind=f"{tool_name}_{source_key}",
+                producer="agent_runtime_tool_broker",
+            )
+            request_args[target_key] = str(ref["path"])
+            request_args.pop(source_key, None)
+            refs.append(ref)
+    return refs
 
 
 def build_report(args: argparse.Namespace) -> dict[str, Any]:

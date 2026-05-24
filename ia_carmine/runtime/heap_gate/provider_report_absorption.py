@@ -574,6 +574,13 @@ def _publish_claim(
     round_id: int,
 ) -> None:
     operational = bool(provider_report.get("operational_provider_activity"))
+    observed_request_evidence = gate.request_input_ref_or_tail()
+    observed_response_evidence = gate.response_text_ref_or_tail(
+        str(provider_report.get("response_text") or gate.response_text() or ""),
+        name=f"observed_response_{lane}",
+        kind="provider_claim_observed_response",
+        producer=lane,
+    )
     claim = {
         "id": f"{requirement}_claim",
         "from": lane,
@@ -629,8 +636,12 @@ def _publish_claim(
         ),
         "sidecar_target_pointer": provider_report.get("sidecar_target_pointer"),
         "leader_packet": provider_report.get("leader_packet"),
-        "observed_request": gate.request_text(),
-        "observed_response": provider_report.get("response_text") or gate.response_text(),
+        **gate.prefixed_text_evidence_fields(
+            "observed_request", observed_request_evidence
+        ),
+        **gate.prefixed_text_evidence_fields(
+            "observed_response", observed_response_evidence
+        ),
         "execution_mode": "provider_teamwork_unified_parallel",
     }
     if lane == "npu_micro_task_auditor":

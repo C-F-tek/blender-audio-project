@@ -48,7 +48,9 @@ def ready_metrics() -> dict[str, Any]:
         "provider_native_tool_unavailable_required_lanes": [],
         "provider_native_tool_missing_required_lanes": [],
         "provider_semantic_missing_required_lanes": [],
-        "provider_raw_response_text": "GPU1 response with source-backed product evidence.",
+        "provider_raw_response_text_chars": len(
+            "GPU1 response with source-backed product evidence."
+        ),
         "proposal_iteration_artifacts": ["output/validation/proposal_iteration_000.json"],
         "gpu1_closure_decision_packet_valid": True,
         "latest_gpu1_decision": "finalize_product",
@@ -121,7 +123,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         detailed_output_expected=True,
     )
     generic_ready = ready_metrics()
-    generic_ready["provider_raw_response_text"] = ""
+    generic_ready["provider_raw_response_text_chars"] = 0
     generic_ready["response_text_complete"] = False
     generic_ready["quality_output_passed"] = False
     generic_ready["latest_proposal_quality_passed"] = False
@@ -408,7 +410,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
             "provider_start_unattempted_requirement": "runtime_file_refs",
             "budget_exhausted": False,
             "missing_provider_lanes": ["gpu0_peer", "gpu1_planner", "npu_micro_task_auditor"],
-            "provider_raw_response_text": "",
+            "provider_raw_response_text_chars": 0,
             "proposal_iteration_artifacts": [],
             "gpu1_closure_decision_packet_valid": False,
             "gpu0_secondary_schema_valid": False,

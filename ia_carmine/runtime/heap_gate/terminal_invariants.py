@@ -153,7 +153,7 @@ def evaluate_terminal_invariants(
                     "complete provider product run cannot pass without ready product; "
                     f"product_status={metrics.get('product_status')}"
                 )
-        if not metrics.get("provider_raw_response_text") and not generic_product_ready:
+        if safe_int(metrics.get("provider_raw_response_text_chars")) <= 0 and not generic_product_ready:
             errors.append("GPU1 primary center produced no provider response text")
         if not metrics.get("proposal_iteration_artifacts"):
             errors.append("provider product run requires GPU1 proposal/pointer iteration artifacts")

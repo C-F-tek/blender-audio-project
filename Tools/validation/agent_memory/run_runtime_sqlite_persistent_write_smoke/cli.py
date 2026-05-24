@@ -47,6 +47,11 @@ def main() -> int:
     db_path = smoke_dir / "agent_memory.sqlite"
     memory_report = smoke_dir / "persistent_write_report.json"
     memory_md = smoke_dir / "persistent_write_report.md"
+    content_file = smoke_dir / "persistent_write_content.md"
+    content_file.write_text(
+        "Controlled persistent SQLite write smoke: patch bundles must be used for long patches.",
+        encoding="utf-8",
+    )
     command = [
         sys.executable,
         "-m",
@@ -67,8 +72,8 @@ def main() -> int:
         "persistent_write_smoke",
         "--summary",
         "Controlled persistent SQLite write smoke",
-        "--content",
-        "Controlled persistent SQLite write smoke: patch bundles must be used for long patches.",
+        "--content-file",
+        str(content_file),
         "--role",
         "validation_smoke",
         "--tag",

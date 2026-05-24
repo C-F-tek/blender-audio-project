@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import write_json_artifact, write_text_artifact
 from ia_carmine.providers.provider_mesh.runtime.python_runtime import resolve_child_python
 
 from .common import base_outputs, repo_rel, resolve_path, safe_id, split_values, truthy
@@ -12,7 +13,7 @@ from .common import base_outputs, repo_rel, resolve_path, safe_id, split_values,
 
 def build_ai_context_pack_tool(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     profile = str(args.get("profile") or "core_ai_backend")
     basename = safe_id(args.get("basename") or request_id, "ai_context_pack")
     output_dir = resolve_path(
@@ -64,7 +65,7 @@ def build_ai_context_pack_tool(
 
 def build_semantic_evidence_chunk_manifest(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     basename = safe_id(args.get("basename") or request_id, "semantic_evidence_chunks")
     output_dir = resolve_path(
         repo_root,
@@ -109,7 +110,7 @@ def build_semantic_evidence_chunk_manifest(
 
 def build_rag_context_pack_tool(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "rag_context_pack")
     command = [
         resolve_child_python(repo_root),
@@ -151,7 +152,7 @@ def build_rag_context_pack_tool(
 
 def run_agent_runtime_debug_lab(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     request_file = str(args.get("request_file") or "").strip()
     request_json = args.get("request_json")
     report = resolve_path(
@@ -174,8 +175,19 @@ def run_agent_runtime_debug_lab(
         "--markdown-output",
         repo_rel(markdown, repo_root),
     ]
+    transport_refs: list[dict[str, Any]] = []
     if request_json is not None:
-        command = ["in_process", "ia_carmine.runtime.runtime_tool.agent_runtime_debug_lab.runner.run_request"]
+        request_ref = write_json_artifact(
+            repo_root,
+            out_dir / f"{request_id}_transport_payload",
+            name="debug_lab_request",
+            payload=request_json,
+            kind="runtime_debug_lab_request",
+            producer="agent_runtime_debug_lab",
+        )
+        request_file = str(request_ref["path"])
+        transport_refs.append(request_ref)
+        command.extend(["--request-file", request_file])
     elif request_file:
         command.extend(["--request-file", request_file])
     if args.get("timeout_seconds") is not None:
@@ -186,14 +198,30 @@ def run_agent_runtime_debug_lab(
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),
         "request_file": request_file,
-        "request_transport": "in_memory" if request_json is not None else "request_file",
+        "request_transport": "request_file" if request_file else "missing",
+        "transport_artifact_refs": transport_refs,
     }
 
 
 def runtime_sqlite_memory(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "runtime_sqlite_memory")
+    transport_refs: list[dict[str, Any]] = []
+    content_file = str(args.get("content_file") or "").strip()
+    content = str(args.get("content") or "")
+    if content and not content_file:
+        content_ref = write_text_artifact(
+            repo_root,
+            out_dir / f"{request_id}_transport_payload",
+            name="runtime_sqlite_memory_content",
+            text=content,
+            kind="runtime_sqlite_memory_content",
+            producer="runtime_sqlite_memory",
+            suffix=".md",
+        )
+        content_file = str(content_ref["path"])
+        transport_refs.append(content_ref)
     command = [
         resolve_child_python(repo_root),
         "-m",
@@ -216,13 +244,14 @@ def runtime_sqlite_memory(
         ("database", "--database"),
         ("persistent_database", "--persistent-database"),
         ("summary", "--summary"),
-        ("content", "--content"),
         ("role", "--role"),
         ("query", "--query"),
         ("confirm", "--confirm"),
     ):
         if args.get(source) is not None:
             command.extend([flag, str(args[source])])
+    if content_file:
+        command.extend(["--content-file", content_file])
     if args.get("limit") is not None:
         command.extend(["--limit", str(args["limit"])])
     if truthy(args.get("allow_persistent_write")):
@@ -232,4 +261,6 @@ def runtime_sqlite_memory(
     return command, {
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),
+        "content_file": content_file,
+        "transport_artifact_refs": transport_refs,
     }

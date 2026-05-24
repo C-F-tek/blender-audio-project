@@ -11,6 +11,9 @@ from ia_carmine._shared.universo_utils import read_json, repo_rel
 
 
 ARTIFACT_PRIORITY = (
+    "gpu1_dynamic_context_pack_json",
+    "gpu1_dynamic_context_pack_markdown",
+    "rag_context_pack_json",
     "tool_catalog_json",
     "shared_memory_json",
     "operational_memory_status_json",
@@ -119,9 +122,10 @@ def compact_manifest_context(
         "task_file": task_ref.replace("\\", "/"),
         "task_file_mode": "artifact_reference_only_not_ingested",
         "task_file_size_bytes": task_size,
+        "request_file": str(manifest.get("request_file") or ""),
+        "request_ref": manifest.get("request_ref") if isinstance(manifest.get("request_ref"), dict) else {},
         "request_chars": manifest.get("request_chars", 0),
         "request_sha256": manifest.get("request_sha256", ""),
-        "request_preview": str(manifest.get("request_preview") or "")[:1200],
         "passed": manifest.get("passed"),
         "input_ready_before_heap": manifest.get("input_ready_before_heap"),
         "startup_reload_degraded": manifest.get("startup_reload_degraded"),

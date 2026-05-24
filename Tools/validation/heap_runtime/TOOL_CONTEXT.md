@@ -20,6 +20,7 @@ docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 
 - Verify heap runtime completeness gate behavior.
 - Check file-backed startup/request handling.
+- Check that startup request/RAG/GPU1 dynamic context use artifact refs instead of sliced inline transport.
 - Validate startup context ingestion.
 - Validate source allowlist and source anchor behavior.
 - Validate code execution matrix and virtual dev reports.
@@ -61,6 +62,7 @@ Heap runtime validation should protect these boundaries:
 
 ```text
 startup file/context exists != run completed
+runtime payload manifest exists != product acceptance
 runtime evidence != code product
 readable product != apply-ready patch
 negative preview/rewrite != source write

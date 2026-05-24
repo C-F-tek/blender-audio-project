@@ -80,7 +80,12 @@ class RuntimeGateProposalCycleBMixin:
                 "similarity": 0.0,
                 "repeated_unverified_source_refs": [],
             }
-        previous_text = str(previous.get("response_text") or "")
+        previous_text = str(
+            previous.get("response_text_preview")
+            or previous.get("response_text_tail")
+            or previous.get("response_text")
+            or ""
+        )
         current_norm = self.normalized_proposal_text(response_text)
         previous_norm = self.normalized_proposal_text(previous_text)
         similarity = (

@@ -21,6 +21,16 @@ def build_arbiter_product(
     soft_lock_state: dict[str, Any],
 ) -> dict[str, Any]:
     final_response_text = owner.build_final_response_text(events)
+    request_input_evidence = owner.request_input_ref_or_tail()
+    final_response_evidence = owner.response_text_ref_or_tail(
+        final_response_text,
+        name="arbiter_response_text",
+        kind="arbiter_response_text",
+        producer="heap_arbiter",
+    )
+    provider_response_evidence = owner.provider_response_refs_or_tails()
+    gpu0_audit_evidence = provider_response_evidence.get("gpu0_peer") or {}
+    npu_audit_evidence = provider_response_evidence.get("npu_micro_task_auditor") or {}
     generic_product = generic_write_document_product(owner, events)
     peer_reasons = []
     if int(generic_product.get("gpu0_peer_followup_pending_count") or 0) > 0:
@@ -59,12 +69,12 @@ def build_arbiter_product(
         "product_kind": product_kind,
         "status": status,
         "product_status": status,
-        "request_input": owner.request_text(),
-        "response_text": final_response_text,
+        **owner.prefixed_text_evidence_fields("request_input", request_input_evidence),
+        **owner.prefixed_text_evidence_fields("response_text", final_response_evidence),
         "response_source": owner.response_source(),
         "heap_event_refs": [repo_rel(owner.repo_root, owner.heap.paths.events)],
         "provider_refs": owner.provider_refs(),
-        "provider_response_texts": owner.provider_response_texts(),
+        "provider_response_refs_or_tails": provider_response_evidence,
         "context_artifact_refs": owner.broker_output_refs(events),
         "generic_write_document_product": generic_product,
         "generic_write_refined_product": generic_product,
@@ -78,8 +88,8 @@ def build_arbiter_product(
         "provider_role_decisions": owner.provider_role_decisions(),
         "toolused": effective_tool_execution_count > 0,
         "shared_memory_written_and_used": "shared_memory" in owner.completed_requirements(events),
-        "gpu0_audit": owner.provider_response_text("gpu0_peer"),
-        "npu_audit": owner.provider_response_text("npu_micro_task_auditor"),
+        "gpu0_audit_ref_or_tail": gpu0_audit_evidence,
+        "npu_audit_ref_or_tail": npu_audit_evidence,
         "reason": (
             "heap loop consumed tool catalog, memory, current source chunks and provider product evidence"
             if ready

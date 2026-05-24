@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, json, os, re, read_json, repo_rel
+from ia_carmine._shared.file_backed_transport import artifact_ref
 from ia_carmine.runtime.heap_gate.provider_prompt_text import (
     POINTER_DELTA_PROTOCOL,
     provider_invocation_wrapper_text,
@@ -22,55 +23,49 @@ from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
 
 class RuntimeGateProviderPromptMixin:
     def startup_context_digest(self, max_chars: int = 8000, excerpt_chars: int = 1200) -> str:
-        """Build a bounded digest of startup context artifacts for GPU1.
+        """Build a ref-only startup context control surface for GPU1.
 
-        The startup reload already creates tool catalog, memory inventory,
-        operational memory search, transient context and semantic chunks. This
-        digest turns structured artifact refs into active GPU1 context without
-        treating the readable heap task file as the runtime data plane.
+        HTTP/provider bodies coordinate refs. Startup context mass stays in
+        file-backed artifacts with checksums and is loaded through brokered refs.
         """
+        _ = (max_chars, excerpt_chars)
         manifest_path, manifest = self.startup_manifest_from_task_file()
         if not manifest:
             return ""
 
         artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
-        if artifacts.get("gpu1_dynamic_context_pack_markdown"):
-            preferred_keys = (
-                "gpu1_dynamic_context_pack_markdown",
-                "startup_context_pack_markdown",
-                "tool_catalog_markdown",
-                "semantic_code_chunks_markdown",
-                "semantic_evidence_chunks_markdown",
-                "shared_memory_markdown",
-                "operational_memory_search_markdown",
-                "repo_docs_map_markdown",
+        preferred_keys = (
+            "gpu1_dynamic_context_pack_json",
+            "gpu1_dynamic_context_pack_markdown",
+            "rag_context_pack_json",
+            "startup_context_pack_json",
+            "startup_context_pack_markdown",
+            "startup_repo_scan_index_json",
+            "tool_catalog_json",
+            "semantic_code_chunks_json",
+            "semantic_evidence_chunks_json",
+            "shared_memory_json",
+            "operational_memory_search_json",
+            "repo_docs_map_json",
+            "required_context_files_json",
+        )
+        artifact_refs: dict[str, Any] = {}
+        for key in preferred_keys:
+            value = artifacts.get(key)
+            if not isinstance(value, str) or not value.strip():
+                continue
+            ref = artifact_ref(
+                value,
+                self.repo_root,
+                kind=key,
+                ref_id=key,
+                producer="startup_reload",
             )
-        elif artifacts.get("startup_context_pack_markdown"):
-            preferred_keys = (
-                "startup_context_pack_markdown",
-                "shared_memory_markdown",
-                "operational_memory_search_markdown",
-                "tool_catalog_markdown",
-                "semantic_code_chunks_markdown",
-                "semantic_evidence_chunks_markdown",
-                "repo_docs_map_markdown",
-            )
-        else:
-            preferred_keys = (
-            "shared_memory_markdown",
-            "operational_memory_search_markdown",
-            "tool_catalog_markdown",
-            "semantic_code_chunks_markdown",
-            "semantic_evidence_chunks_markdown",
-            "ai_context_pack_markdown",
-            "rag_context_pack_markdown",
-            "ai_context_pack_evidence_markdown",
-            "repo_docs_map_markdown",
-            )
+            if ref.get("exists"):
+                artifact_refs[key] = ref
 
         manifest_summary = {
             "startup_manifest": repo_rel(self.repo_root, manifest_path) if manifest_path else "",
-            "request_preview": str(manifest.get("request_preview") or "")[:1200],
             "request_sha256": manifest.get("request_sha256"),
             "input_ready_before_heap": manifest.get("input_ready_before_heap"),
             "startup_reload_degraded": manifest.get("startup_reload_degraded"),
@@ -79,52 +74,28 @@ class RuntimeGateProviderPromptMixin:
             "context_file_count": manifest.get("context_file_count"),
             "context_files_sample": [str(item).replace("\\", "/") for item in (manifest.get("context_files") or [])[:20]],
             "artifact_keys": sorted(str(key) for key in artifacts),
+            "artifact_refs": artifact_refs,
             "tool_execution_count": len(manifest.get("tool_executions") or []),
             "contract": manifest.get("contract") if isinstance(manifest.get("contract"), dict) else {},
+            "transport_policy": {
+                "principle": "HTTP coordinates; filesystem transports mass.",
+                "provider_body": "control_envelope_and_artifact_refs_only",
+                "no_operational_excerpts": True,
+            },
         }
 
         sections: list[str] = [
             "## startup_manifest\n"
             f"source: {manifest_summary['startup_manifest']}\n"
-            "mode: structured_manifest_summary\n\n"
+            "mode: file_backed_artifact_refs\n\n"
             "```json\n"
-            + json.dumps(manifest_summary, indent=2, ensure_ascii=False, default=str)[:2200]
+            + json.dumps(manifest_summary, indent=2, ensure_ascii=False, default=str)
             + "\n```\n"
         ]
-        remaining = max(1000, int(max_chars)) - len(sections[0])
-        for key in preferred_keys:
-            value = artifacts.get(key)
-            if not isinstance(value, str) or not value.strip():
-                continue
-            path = self.repo_root / value
-            if not path.exists() or not path.is_file():
-                continue
-            try:
-                content = path.read_text(encoding="utf-8-sig")
-            except Exception as exc:  # noqa: BLE001 - context digest must not crash heap.
-                sections.append(f"## {key}\n- unreadable: {value}: {type(exc).__name__}: {exc}\n")
-                continue
-
-            header = (
-                f"## {key}\nsource: {value}\n"
-                "mode: artifact_reference_with_excerpt\n\n"
-            )
-            if key in {"tool_catalog_markdown", "repo_docs_map_markdown"}:
-                content = "\n".join(content.splitlines()[:80])
-            budget = max(0, remaining - len(header) - 128)
-            if budget <= 0:
-                break
-            chunk = content[: min(budget, max(200, int(excerpt_chars)))]
-            if len(content) > len(chunk):
-                chunk += "\n\n...[full content available at source; excerpt only]...\n"
-            sections.append(header + chunk)
-            remaining -= len(sections[-1])
-            if remaining <= 0:
-                break
 
         return (
-            "STARTUP_CONTEXT_DIGEST_FOR_GPU1:\n"
-            "Use this as compact active heap context. Broker tool execution must use native API tool_calls from the provider adapter; Markdown/JSON/prose tool-call text is not executable evidence. Prefer exact repo-relative paths and broker-validated runtime_file_refs.\n\n"
+            "STARTUP_CONTEXT_REFS_FOR_GPU1:\n"
+            "HTTP coordinates; filesystem transports mass. Use these refs as the active heap context control surface. Broker tool execution must use native API tool_calls from the provider adapter; Markdown/JSON/prose tool-call text is not executable evidence. Prefer exact repo-relative paths and broker-validated runtime_file_refs.\n\n"
             + "\n\n".join(sections)
         )
 

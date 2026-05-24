@@ -9,6 +9,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import write_text_artifact
 from ia_carmine.context.agent_context.transient_request_context.cli import build_context as build_transient_context, render_markdown as render_transient_markdown
 from ia_carmine._shared.agent_memory_inventory_cli import DEFAULT_MEMORY_DB, build_inventory as build_memory_inventory, render_markdown as render_memory_inventory_markdown
 from ia_carmine.context.heap_context_memory_reload.builders import build_repo_docs_map, collect_semantic_code_chunks, write_semantic_evidence
@@ -92,6 +93,7 @@ def record_inprocess_tool(
 
 def run_reload(state: ReloadRun) -> int:
     state.output_dir.mkdir(parents=True, exist_ok=True)
+    _materialize_startup_request(state)
     _run_required_context(state)
     _build_startup_repo_scan(state)
     _run_parallel_provider_input_lanes(state)
@@ -151,6 +153,27 @@ def run_reload(state: ReloadRun) -> int:
     print(json.dumps(print_payload, indent=2, ensure_ascii=False))
     strict_startup = bool(state.args.strict_startup_reload or state.args.strict_ai_context_pack)
     return 0 if manifest["passed"] or (manifest["input_ready_before_heap"] and not strict_startup) else 2
+
+
+def _materialize_startup_request(state: ReloadRun) -> None:
+    if getattr(state.args, "request_file", ""):
+        path = Path(str(state.args.request_file))
+        if not path.is_absolute():
+            path = state.repo_root / path
+        state.artifacts["startup_request_file"] = repo_rel(state.repo_root, path)
+        return
+    if not state.request_text:
+        return
+    ref = write_text_artifact(
+        state.repo_root,
+        state.output_dir / "payload",
+        name="request",
+        text=state.request_text,
+        kind="operator_request",
+        producer="heap_context_memory_reload",
+        suffix=".md",
+    )
+    state.artifacts["startup_request_file"] = str(ref["path"])
 
 
 def _build_startup_repo_scan(state: ReloadRun) -> None:

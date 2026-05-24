@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -19,6 +20,7 @@ try:
         RuntimeRefProvenance,
     )
     from ia_carmine.runtime.runtime_tool.file_refs.classifier import extract_target_refs, extract_validation_refs
+    from ia_carmine.runtime.runtime_tool.broker.runtime_builders import runtime_file_refs as build_runtime_file_refs_command
     from Tools.validation._shared.report_utils import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
@@ -32,6 +34,9 @@ except ImportError:
     from ia_carmine.runtime.runtime_tool.file_refs.classifier import (  # type: ignore
         extract_target_refs,
         extract_validation_refs,
+    )
+    from ia_carmine.runtime.runtime_tool.broker.runtime_builders import (  # type: ignore
+        runtime_file_refs as build_runtime_file_refs_command,
     )
     from Tools.validation._shared.report_utils import write_json_report  # type: ignore
 
@@ -63,6 +68,17 @@ VALIDATION_COMMANDS:
         consumers=(RuntimeConsumer.BROKER_TOOL,),
         validation_ref=True,
     )
+    large_text = (text + "\n") * 1200
+    command, outputs = build_runtime_file_refs_command(
+        repo_root,
+        repo_root / "output" / "validation" / "runtime_file_refs_smoke",
+        "file_backed_transport",
+        {"text": [large_text], "strict_patchable_targets": True},
+    )
+    transport_refs = outputs.get("transport_artifact_refs") or []
+    materialized_ref = transport_refs[0] if transport_refs and isinstance(transport_refs[0], dict) else {}
+    materialized_path = repo_root / str(materialized_ref.get("path") or "")
+    materialized_text = materialized_path.read_text(encoding="utf-8") if materialized_path.is_file() else ""
     errors: list[str] = []
     if not any(item.patchable for item in target_refs):
         errors.append("source target was not patchable")
@@ -70,6 +86,19 @@ VALIDATION_COMMANDS:
         errors.append("output artifact was not marked output-only")
     if not validation_refs or not all(item.validation_only for item in validation_refs):
         errors.append("validation command refs were not isolated as validation-only")
+    if "--text-file" not in command or "--text" in command:
+        errors.append("runtime_file_refs builder must materialize inline text as --text-file")
+    if not materialized_path.is_file():
+        errors.append("runtime_file_refs did not write materialized text artifact")
+    if materialized_text != large_text:
+        errors.append("runtime_file_refs materialized text artifact was truncated or changed")
+    actual_sha256 = (
+        hashlib.sha256(materialized_path.read_bytes()).hexdigest()
+        if materialized_path.is_file()
+        else ""
+    )
+    if materialized_ref.get("sha256") != actual_sha256:
+        errors.append("runtime_file_refs materialized text checksum mismatch")
     return {
         "schema_version": 1,
         "kind": "runtime_file_refs_smoke",
@@ -78,6 +107,8 @@ VALIDATION_COMMANDS:
         "errors": errors,
         "target_refs": [item.as_dict() for item in target_refs],
         "validation_refs": [item.as_dict() for item in validation_refs],
+        "transport_command_uses_text_file": "--text-file" in command,
+        "transport_artifact_ref": materialized_ref,
         "source_writes_performed": False,
         "patch_application_performed": False,
     }

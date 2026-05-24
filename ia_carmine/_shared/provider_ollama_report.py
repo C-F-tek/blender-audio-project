@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import (
+    INLINE_TEXT_MAX_CHARS,
+    text_sha256,
+    write_large_text_evidence,
+)
 
 _REPORT_KEYS = (
     "passed",
@@ -28,6 +35,8 @@ _REPORT_KEYS = (
     "gpu_layers",
     "num_thread",
     "prompt",
+    "prompt_ref",
+    "repo_root",
     "response_text",
     "text",
     "propagated_max_new_tokens",
@@ -77,7 +86,52 @@ _REPORT_KEYS = (
 
 
 def ollama_report_context(scope: dict[str, Any]) -> dict[str, Any]:
-    return {key: scope[key] for key in _REPORT_KEYS}
+    return {key: scope.get(key) for key in _REPORT_KEYS}
+
+
+def _response_text_fields(ctx: dict[str, Any], text: str) -> dict[str, Any]:
+    response_text = str(ctx.get("response_text") or "")
+    partial_json = ctx.get("partial_json")
+    repo_root = Path(str(ctx.get("repo_root") or ".")).resolve()
+    fields: dict[str, Any] = {
+        "response_text_chars": len(response_text),
+        "response_text_sha256": text_sha256(response_text),
+        "response_text_tail": response_text[-4000:] if response_text else "",
+        "response_text_tail_chars": min(len(response_text), 4000),
+        "response_text_full_text_in_json": len(response_text) <= INLINE_TEXT_MAX_CHARS,
+        "response_text_transport": "inline_small_control",
+    }
+    if len(response_text) <= INLINE_TEXT_MAX_CHARS:
+        fields["response_text"] = response_text
+        return fields
+
+    base_dir = (
+        Path(str(partial_json)).resolve().parent
+        if partial_json
+        else repo_root / "output" / "validation"
+    )
+    evidence = write_large_text_evidence(
+        repo_root,
+        base_dir / "provider_response_artifacts",
+        name="provider_ollama_response",
+        text=response_text,
+        kind="provider_ollama_response_text",
+        producer="provider_ollama_probe",
+        suffix=".md",
+    )
+    fields.update(
+        {
+            "response_text_ref": evidence.get("ref") or {},
+            "response_text_tail": evidence.get("tail") or fields["response_text_tail"],
+            "response_text_tail_chars": evidence.get(
+                "tail_chars", fields["response_text_tail_chars"]
+            ),
+            "response_text_full_text_in_json": False,
+            "response_text_transport": "artifact_ref",
+            "raw_response_chars": len(text.strip()),
+        }
+    )
+    return fields
 
 
 def build_ollama_probe_report(ctx: dict[str, Any]) -> dict[str, Any]:
@@ -86,8 +140,10 @@ def build_ollama_probe_report(ctx: dict[str, Any]) -> dict[str, Any]:
     native_tool_calls = ctx["native_tool_calls"]
     text = str(ctx["text"] or "")
     prompt = str(ctx["prompt"] or "")
+    prompt_ref = ctx.get("prompt_ref") if isinstance(ctx.get("prompt_ref"), dict) else {}
     partial_json = ctx["partial_json"]
     parsed = ctx["parsed"]
+    response_text_fields = _response_text_fields(ctx, text)
     import time
 
     return {
@@ -119,15 +175,20 @@ def build_ollama_probe_report(ctx: dict[str, Any]) -> dict[str, Any]:
         "num_ctx": ctx["num_ctx"],
         "ollama_gpu_layers_requested": str(ctx["gpu_layers"] or "default"),
         "num_thread": ctx["num_thread"],
-        "request_prompt": prompt,
-        "response_text": ctx["response_text"],
+        "request_prompt_ref": prompt_ref,
+        "request_prompt_chars": len(prompt),
+        "request_prompt_sha256": hashlib.sha256(
+            prompt.encode("utf-8", errors="replace")
+        ).hexdigest(),
+        "request_prompt_transport": "artifact_ref" if prompt_ref else "inline_small_control",
+        **response_text_fields,
         "raw_response_chars": len(text.strip()),
         "max_new_tokens": ctx["propagated_max_new_tokens"],
         "max_new_tokens_source": "operator_heap_propagated",
         "json_contract_requested": ctx["heap_delta_text_required"],
         "json_contract_passed": bool(parsed.json_ok and isinstance(ctx["parsed_json"], dict)),
         "heap_delta_text_required": ctx["heap_delta_text_required"],
-        "heap_delta_text_present": bool(str(ctx["response_text"] or "").strip()),
+        "heap_delta_text_present": bool(response_text_fields.get("response_text_chars")),
         "provider_output_complete": not ctx["response_likely_incomplete"],
         "response_likely_incomplete": ctx["response_likely_incomplete"],
         "proposal_requires_refinement": ctx["response_likely_incomplete"],

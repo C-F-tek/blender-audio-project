@@ -89,7 +89,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_npu_runtime_tool_execution_smoke": "Tools.validation.runtime_tool.npu_runtime_tool_execution_smoke.cli:main",
     "run_npu_runtime_tool_fallback_smoke": "Tools.validation.runtime_tool.npu_runtime_tool_fallback_smoke.cli:main",
     "run_npu_tool_request_contract_smoke": "Tools.validation.provider_mesh.npu_tool_request_contract_smoke.cli:main",
-    "run_ollama_tool_gateway_smoke": "Tools.validation.provider_mesh.ollama_tool_gateway_smoke.cli:main",
+    "legacy_run_ollama_tool_gateway_smoke": "Tools.validation.provider_mesh.ollama_tool_gateway_smoke.cli:main",
     "run_ollama_sdk_adapter_smoke": "Tools.validation.provider_mesh.ollama_sdk_adapter_smoke.cli:main",
     "run_openvino_peer_topology_contract_smoke": "Tools.validation.provider_mesh.openvino_peer_topology_contract_smoke.cli:main",
     "run_operator_product_launcher_smoke": "Tools.validation.workflow_run.operator_product_launcher_smoke.cli:main",
@@ -188,6 +188,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_patchkit_smoke": "Tools.validation.patch_product.run_patchkit_smoke.cli:main",
     "run_provider_tool_evidence_chain_smoke": "Tools.validation.runtime_tool.run_provider_tool_evidence_chain_smoke.cli:main",
     "run_provider_tool_loop_smoke": "Tools.validation.runtime_tool.run_provider_tool_loop_smoke.cli:main",
+    "run_file_backed_transport_contract_smoke": "Tools.validation.runtime_tool.run_file_backed_transport_contract_smoke.cli:main",
     "run_refactor_duplication_audit_smoke": "Tools.validation.docs_hygiene.run_refactor_duplication_audit_smoke.cli:main",
     "run_runtime_evidence_correlation_smoke": "Tools.validation.runtime_universe.run_runtime_evidence_correlation_smoke.cli:main",
     "run_runtime_file_refs_smoke": "Tools.validation.runtime_tool.run_runtime_file_refs_smoke.cli:main",
@@ -202,6 +203,12 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "test_composer_decision": "Tools.validation.heap_final_proposals.test_composer_decision.cli:main",
     "test_proposal_gate": "Tools.validation.heap_final_proposals.test_proposal_gate.cli:main",
 }
+
+LEGACY_NON_RUN_UNICA_VALIDATION_COMMANDS: frozenset[str] = frozenset(
+    {
+        "legacy_run_ollama_tool_gateway_smoke",
+    }
+)
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -24,6 +24,11 @@ from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap, 
 from ia_carmine.runtime.provider_runtime_blackboard.common import resolve_output_path
 from ia_carmine.runtime.runtime_tool.broker.executor import build_report as build_broker_report
 from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
+from ia_carmine._shared.file_backed_transport import (
+    file_sha256,
+    read_json_windows_safe,
+    resolve_path as resolve_transport_path,
+)
 from Tools.validation._shared.report_utils import write_json_report, write_text_report
 
 DEFAULT_OUTPUT = "output/validation/provider_runtime_broker_bridge_{stamp}.json"
@@ -50,8 +55,35 @@ def safe_id(value: Any, fallback: str) -> str:
     return normalized[:96] or fallback
 
 
-def event_to_tool_request(event: dict[str, Any], index: int) -> dict[str, Any]:
+def _payload_from_ref(repo_root: Path, event: dict[str, Any]) -> dict[str, Any]:
     payload = safe_dict(event.get("payload"))
+    payload_ref = safe_dict(event.get("payload_ref")) or safe_dict(payload.get("payload_ref"))
+    ref_path = str(payload_ref.get("path") or "").strip()
+    if not ref_path:
+        return payload
+    try:
+        target = resolve_transport_path(repo_root, ref_path)
+        if not target.is_file():
+            return {**payload, "_payload_ref_error": f"payload_ref_missing:{ref_path}"}
+        expected_bytes = int(payload_ref.get("bytes") or 0)
+        expected_sha = str(payload_ref.get("sha256") or "").strip()
+        actual_bytes = target.stat().st_size
+        actual_sha = file_sha256(target)
+        if expected_bytes and actual_bytes != expected_bytes:
+            return {**payload, "_payload_ref_error": f"payload_ref_bytes_mismatch:{ref_path}"}
+        if expected_sha and actual_sha != expected_sha:
+            return {**payload, "_payload_ref_error": f"payload_ref_sha256_mismatch:{ref_path}"}
+        hydrated = read_json_windows_safe(target)
+    except Exception as exc:  # noqa: BLE001 - bridge report preserves typed failure.
+        return {
+            **payload,
+            "_payload_ref_error": f"payload_ref_unreadable:{ref_path}:{type(exc).__name__}:{exc}",
+        }
+    return {**payload, **hydrated, "payload_ref": payload_ref}
+
+
+def event_to_tool_request(repo_root: Path, event: dict[str, Any], index: int) -> dict[str, Any]:
+    payload = _payload_from_ref(repo_root, event)
     request_id = safe_id(
         event.get("correlation_id") or payload.get("request_id") or payload.get("id"),
         f"heap_request_{index:03d}",
@@ -72,6 +104,7 @@ def event_to_tool_request(event: dict[str, Any], index: int) -> dict[str, Any]:
         "proposal_block_id": str(payload.get("proposal_block_id") or ""),
         "native_tool_call_authority": str(payload.get("native_tool_call_authority") or ""),
         "tool_result_scope": str(payload.get("tool_result_scope") or ""),
+        "payload_ref_error": str(payload.get("_payload_ref_error") or ""),
         "gpu1_followup_required": bool(payload.get("gpu1_followup_required")),
         "cannot_close_product": bool(payload.get("cannot_close_product")),
         "peer_only": bool(payload.get("peer_only")),
@@ -90,7 +123,8 @@ def build_request_packet(
     repo_root: Path, stamp: str, pending: list[dict[str, Any]]
 ) -> dict[str, Any]:
     tool_requests = [
-        event_to_tool_request(event, index) for index, event in enumerate(pending, start=1)
+        event_to_tool_request(repo_root, event, index)
+        for index, event in enumerate(pending, start=1)
     ]
     packet = {
         "schema_version": 1,

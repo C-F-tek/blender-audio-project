@@ -413,6 +413,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "gpu1_dynamic_context_pack_json" in preload_task_docs
         and "gpu1_dynamic_context_pack_markdown" in provider_prompt
         and "startup_context_pack_json" in gate_startup_manifest
+        and "gpu1_dynamic_context_pack_json" in gate_startup_manifest
         and "startup_context_pack_markdown" in provider_prompt
         and "startup_context_pack_json" in provider_teamwork_packet
         and "startup_context_pack_markdown" in provider_teamwork_packet
@@ -426,20 +427,18 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         recommendation="Prefer gpu1_dynamic_context_pack_* in provider prompt and keep startup_context_pack_* only as technical attachment/fallback.",
     )
 
-    unified_preferred_position = provider_prompt.find(
-        'if artifacts.get("gpu1_dynamic_context_pack_markdown")'
-    )
-    static_fallback_position = provider_prompt.find('"ai_context_pack_markdown"', unified_preferred_position)
-    unified_branch_position = provider_prompt.find(
-        '"gpu1_dynamic_context_pack_markdown"', unified_preferred_position
-    )
+    unified_json_position = provider_prompt.find('"gpu1_dynamic_context_pack_json"')
+    unified_markdown_position = provider_prompt.find('"gpu1_dynamic_context_pack_markdown"')
+    legacy_json_position = provider_prompt.find('"startup_context_pack_json"')
+    legacy_markdown_position = provider_prompt.find('"startup_context_pack_markdown"')
     bool_check(
         checks,
         check_id="provider_prompt_prefers_gpu1_dynamic_context_pack",
         passed=(
-            unified_preferred_position >= 0
-            and unified_branch_position > unified_preferred_position
-            and static_fallback_position > unified_branch_position
+            unified_json_position >= 0
+            and unified_markdown_position > unified_json_position
+            and legacy_json_position > unified_markdown_position
+            and legacy_markdown_position > legacy_json_position
         ),
         severity="critical",
         evidence="provider prompt should use gpu1_dynamic_context_pack_markdown first and only fall back to older packs when absent",

@@ -543,9 +543,10 @@ def _probe_generic_write_no_tool_product() -> list[str]:
                     reason="smoke no-tool capture",
                 )
             )
-            if "provider prose output" not in report.get("refined_request", ""):
+            refined_tail = str(report.get("refined_request_tail") or "")
+            if "provider prose output" not in refined_tail:
                 errors.append("generic_write no-tool report does not include provider prose output")
-            if "runtime boom" not in report.get("refined_request", ""):
+            if "runtime boom" not in refined_tail:
                 errors.append("generic_write no-tool report hides failed broker/runtime errors")
             report_path = root / f"generic-write-{revision}.json"
             report_path.write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")

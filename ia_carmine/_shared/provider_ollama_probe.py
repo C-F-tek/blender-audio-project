@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+import hashlib
 import time
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,7 @@ def run_ollama_probe(
     base_url: str | None = None,
     gpu0_vulkan_policy_verified: bool = False,
     unload_model: bool = True,
+    prompt_ref: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     from ia_carmine._shared.provider_tool_loop import (  # noqa: PLC0415
@@ -512,7 +514,11 @@ def run_ollama_probe(
             "ollama_compute_verified": ollama_compute_verified,
             "selected_model": selected_model,
             "response_text": response_text,
-            "request_prompt": prompt or "",
+            "request_prompt_ref": prompt_ref or {},
+            "request_prompt_chars": len(prompt or ""),
+            "request_prompt_sha256": hashlib.sha256(
+                (prompt or "").encode("utf-8", errors="replace")
+            ).hexdigest(),
             "native_tool_loop_supported": provider_native_tool_api_supported,
             "ollama_base_url": effective_base_url,
             "ollama_unload_performed": unload_performed,
