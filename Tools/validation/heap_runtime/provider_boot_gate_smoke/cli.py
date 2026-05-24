@@ -124,7 +124,20 @@ def _check_execution_order() -> dict[str, Any]:
 def _check_dry_run_policy() -> dict[str, Any]:
     from ia_carmine.runtime.run.dry_run_policy import dry_run_contract_policy
 
-    policy = dry_run_contract_policy()
+    policy = dry_run_contract_policy(
+        gpu1_base_url="http://127.0.0.1:11434",
+        gpu0_base_url="http://127.0.0.1:11435",
+        keep_alive="120s",
+        field_sources={
+            "gpu1_base_url": "smoke_fixture",
+            "gpu0_base_url": "smoke_fixture",
+            "keep_alive": "smoke_fixture",
+            "gpu0_model": "smoke_fixture",
+            "npu_model_dir": "smoke_fixture",
+            "npu_micro_start_mode": "smoke_fixture",
+            "allow_npu_device_workload": "smoke_fixture",
+        },
+    )
     errors = []
     boot = policy.get("provider_boot_gate_policy") if isinstance(policy.get("provider_boot_gate_policy"), dict) else {}
     replight = policy.get("provider_replight_policy") if isinstance(policy.get("provider_replight_policy"), dict) else {}

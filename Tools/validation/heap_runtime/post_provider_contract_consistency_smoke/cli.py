@@ -473,6 +473,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "kind": "post_provider_contract_consistency_smoke",
+        "repo_root": repo_root.as_posix(),
         "passed": not errors,
         "checks": checks,
         "details": details,
