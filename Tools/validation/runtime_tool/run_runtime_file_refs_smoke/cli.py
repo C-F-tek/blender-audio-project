@@ -102,6 +102,7 @@ VALIDATION_COMMANDS:
     return {
         "schema_version": 1,
         "kind": "runtime_file_refs_smoke",
+        "repo_root": repo_root.as_posix(),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": not errors,
         "errors": errors,

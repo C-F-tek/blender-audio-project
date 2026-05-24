@@ -1,4 +1,4 @@
-"""Move a ``Tools/<area>/<package>`` tool package under a macro package."""
+﻿"""Move a ``Tools/<area>/<package>`` tool package under a macro package."""
 
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ def replace_module_refs(text: str, old_module: str, new_module: str) -> tuple[st
 def reference_pairs(area: str, source: str, target: str) -> list[tuple[str, str]]:
     return [
         (f"Tools/{area}/{source}/", f"Tools/{area}/{target}/"),
-        (f"Tools\\{area}\\{source}\\", f"Tools\\{area}\\{target.replace('/', '\\')}\\"),
+        (f"Tools\\{area}\\{source}\\", f"Tools\\{area}\\{target_windows}\\"),
     ]
 
 
