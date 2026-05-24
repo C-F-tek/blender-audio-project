@@ -298,6 +298,8 @@ def main() -> int:
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     report = run_smoke()
+    report["repo_root"] = repo_root.as_posix()
+    report.setdefault("warnings", [])
     output = resolve_output_path(repo_root, args.output)
     write_json_report(report, output)
     print(json.dumps({"passed": report["passed"], "output": str(output)}, indent=2))

@@ -74,6 +74,7 @@ def main() -> int:
     report = {
         "schema_version": 1,
         "kind": "rag_broker_alignment_smoke",
+        "repo_root": repo_root.as_posix(),
         "passed": not errors,
         "errors": errors,
         "warnings": [],
@@ -97,4 +98,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
