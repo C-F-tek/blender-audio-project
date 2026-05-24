@@ -161,6 +161,60 @@ class _Owner:
     def request_text(self) -> str:
         return "smoke request"
 
+    def request_input_ref_or_tail(self) -> dict[str, Any]:
+        text = self.request_text()
+        return {
+            "source": "provider_recovery_pointer_contract_smoke",
+            "tail": text[-4000:],
+            "chars": len(text),
+            "full_text_in_json": False,
+        }
+
+    def response_text_ref_or_tail(
+        self,
+        text: str,
+        *,
+        name: str,
+        kind: str,
+        producer: str,
+    ) -> dict[str, Any]:
+        return {
+            "source": producer,
+            "name": name,
+            "kind": kind,
+            "tail": str(text or "")[-4000:],
+            "chars": len(str(text or "")),
+            "full_text_in_json": False,
+        }
+
+    def provider_response_refs_or_tails(self) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for report in self.provider_reports:
+            text = str(report.get("response_text") or "")
+            if not text:
+                continue
+            out.append(
+                {
+                    "lane": report.get("lane"),
+                    "tail": text[-4000:],
+                    "chars": len(text),
+                    "full_text_in_json": False,
+                }
+            )
+        return out
+
+    def prefixed_text_evidence_fields(
+        self,
+        prefix: str,
+        evidence: dict[str, Any],
+    ) -> dict[str, Any]:
+        return {
+            f"{prefix}_tail": evidence.get("tail", ""),
+            f"{prefix}_chars": evidence.get("chars", 0),
+            f"{prefix}_source": evidence.get("source", ""),
+            f"{prefix}_full_text_in_json": evidence.get("full_text_in_json", False),
+        }
+
     def build_final_response_text(self, _events: list[dict[str, Any]]) -> str:
         return "blocked primary failure"
 
@@ -216,7 +270,7 @@ class _Owner:
         self.heap_events.append(event)
 
 
-def run_smoke() -> dict[str, Any]:
+def run_smoke(repo_root: Path) -> dict[str, Any]:
     owner = _Owner()
     status_before = provider_recovery_status(owner, [])
     abort_reason = provider_universe_abort_reason(
@@ -319,12 +373,17 @@ def run_smoke() -> dict[str, Any]:
     return {
         "schema_version": 1,
         "kind": "provider_recovery_pointer_contract_smoke",
+        "repo_root": repo_root.as_posix(),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": all(checks.values()),
         "checks": checks,
         "status_before": status_before,
         "status_after": status_after,
         "errors": [name for name, passed in checks.items() if not passed],
+        "warnings": [],
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
     }
 
 
@@ -349,7 +408,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
-    report = run_smoke()
+    report = run_smoke(repo_root)
     write_json_report(report, repo_root / args.output)
     write_text_report(render_markdown(report), repo_root / args.markdown_output)
     print(json.dumps(report, indent=2, ensure_ascii=False))
