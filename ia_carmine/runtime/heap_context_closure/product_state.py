@@ -38,7 +38,12 @@ def build_product_state(
         and final_result.get("passed")
         and not launcher_contract_errors
     )
-    continuation_required = product_kind == "blocked_continuation_product"
+    continuation_required = bool(
+        final_payload.get("continuation_required")
+        or product_kind == "blocked_continuation_product"
+    )
+    if continuation_required and product_kind == "provider_runtime_blocked_product":
+        product_kind = "blocked_continuation_product"
     product_status = (
         "approved_product"
         if approved

@@ -82,9 +82,10 @@ def run_provider_loop_primary_evidence_checks(repo_root: Path) -> dict[str, Any]
     ).read_text(encoding="utf-8", errors="replace")
     required = [
         "capture_gpu1_primary_evidence_after_provider_join",
+        "capture_gpu1_primary_evidence_before_sidecars",
         "gpu1_primary_evidence_missing",
         "generic_write_capture_failed",
-        "parallel_sidecars_running_after_gpu1_residency_handshake",
+        "async_sidecars_started_after_gpu1_packet",
         "publish_provider_report_native_tool_calls",
     ]
     for marker in required:

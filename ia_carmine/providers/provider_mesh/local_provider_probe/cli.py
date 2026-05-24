@@ -359,6 +359,8 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         ),
         "lane_reports": lane_reports,
         "provider_result_report": provider_report,
+        "canonical_run_provider_evidence": bool(args.canonical_run_provider_evidence),
+        "canonical_run_fingerprint": str(args.canonical_run_fingerprint or ""),
     }
     if args.run_ollama and len(lane_reports) == 1 and isinstance(lane_reports[0], dict):
         return mirror_single_provider_lane(report, lane_reports[0])
@@ -389,6 +391,8 @@ def main() -> int:
     parser.add_argument("--npu-python-exe", default="")
     parser.add_argument("--run-ollama", action="store_true")
     parser.add_argument("--run-npu", action="store_true")
+    parser.add_argument("--canonical-run-provider-evidence", action="store_true")
+    parser.add_argument("--canonical-run-fingerprint", default="")
     raw_argv = sys.argv[1:]
     args = parser.parse_args(raw_argv)
     args.config_sources = _config_sources(args, raw_argv)

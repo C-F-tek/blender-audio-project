@@ -161,6 +161,9 @@ def build_launcher_summary(args: Any, state: dict[str, Any]) -> dict[str, Any]:
         "final_readable_product_markdown": final_result.get("markdown", ""),
         "final_readable_product_text": final_result.get("text", ""),
         "final_readable_product_documents_outputs": final_payload.get("documents_outputs", {}),
+        "plan_product_full_patch": final_payload.get("plan_product_full_patch_output", ""),
+        "plan_product_kind": final_payload.get("plan_product_kind", ""),
+        "plan_product_full_patch_ready": final_payload.get("plan_product_full_patch_ready", False),
         "final_readable_product_zip": final_result.get("documents_zip", ""),
         "final_code_product_contract": code_product_contract,
         "external_heap_contract": external_contract,
@@ -323,7 +326,7 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
         "provider_rejection_reasons": provider_rejection_reasons,
         "proposal_block_count": _safe_int(stats.get("proposal_block_count") or revision.get("proposal_block_count")),
         "pointer_block_count": _safe_int(stats.get("pointer_block_count") or revision.get("pointer_block_count")),
-        "gpu1_block_count": _safe_int(stats.get("gpu1_block_count")),
+        "gpu1_block_count": _safe_int(stats.get("gpu1_block_count") or revision.get("gpu1_block_count")),
         "gpu0_block_count": _safe_int(stats.get("gpu0_block_count") or revision.get("gpu0_block_count")),
         "npu_block_count": _safe_int(stats.get("npu_block_count") or revision.get("npu_block_count")),
         "resume_from_block_id": str(

@@ -64,14 +64,14 @@ def run_provider_loop_hierarchy_checks(repo_root: Path) -> dict[str, Any]:
     )
     if "gpu1_leader_started_before_sidecars" not in execution:
         errors.append("provider loop does not start GPU1 leader before sidecars")
-    if "same_production_window_residency_checked_parallel" not in execution:
-        errors.append("provider loop does not start sidecars in the production window")
+    if "async_packet_review_only" not in execution:
+        errors.append("provider loop does not start sidecars as async packet-review evidence")
     if "gpu1_boot_leader_ready" not in execution:
         errors.append("provider loop does not distinguish GPU1 boot leadership from final evidence")
-    if "capture_gpu1_primary_evidence_after_provider_join" not in execution:
-        errors.append("provider loop captures GPU1 primary evidence before provider join")
-    if "gpu1_primary_evidence_missing_after_provider_join" not in execution:
-        errors.append("provider loop does not block missing GPU1 final evidence after join")
+    if "capture_gpu1_primary_evidence_before_sidecars" not in execution:
+        errors.append("provider loop does not capture GPU1 primary evidence before sidecars")
+    if "gpu1_primary_evidence_missing_before_sidecars" not in execution:
+        errors.append("provider loop does not block missing GPU1 final evidence before sidecars")
     return {"name": "provider_lane_hierarchy", "errors": errors}
 
 

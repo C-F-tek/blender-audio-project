@@ -33,7 +33,7 @@ def build_context_loaded_block(artifacts: dict[str, str]) -> list[str]:
     lines = ["CONTEXT LOADED INTO HEAP:"]
     for key, label in key_labels:
         value = artifacts.get(key, "")
-        lines.append(f"- {label}: `{value or 'not_available'}`")
+        lines.append(f"- {label}: `{value}`")
     return lines
 
 

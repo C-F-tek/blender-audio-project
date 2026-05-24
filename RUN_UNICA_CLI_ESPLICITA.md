@@ -1,5 +1,19 @@
 # Run Unica CLI Esplicita
 
+<!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:START -->
+## Current Runtime/Tool Contract (2026-05-24)
+
+Canonical wording: `docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md`.
+
+- GPU1/NVIDIA primary Ollama lane is the operational center and advances by heap pointer/recovery turns without waiting for GPU0/NPU sidecar completion.
+- GPU0/NPU are `packet_review_only` sidecars: they start only after a reviewable GPU1 packet, do not close product, and remain deferred evidence until a later GPU1 turn consumes their pointer ids.
+- Tool/lab/matrix/debug reporting must distinguish `lab_called`, `lab_report_written`, `lab_usable` and `lab_status`; attempted tool calls are evidence, not automatic usable lab output.
+- `CODE_PRODUCT_FULL_PATCH.md` is the final patch/code product; `PLAN_PRODUCT_FULL_PATCH.md` is the final recomposed GPU1 prompt/chat product, with pointer graph and recovery/congruence as technical attachments.
+- Missing optional values stay empty/null; required missing devices or provider prerequisites raise or block with a typed reason rather than emitting placeholder text.
+- Complete runs require explicit config flags, including `--files-per-round`, `--gpu0-ollama-num-ctx`, `--npu-micro-start-mode`, `--npu-final-wait-seconds` and `--max-degraded-lanes`.
+<!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:END -->
+
+
 Documento operativo root-level per lanciare `python -m ia_carmine.cli run` senza profili impliciti, senza config JSON nascosta e senza fallback tecnici. Ogni parametro operator-facing deve essere dichiarato nella CLI. Se manca un parametro richiesto, la run deve fermarsi prima dei provider.
 
 ## Regole
@@ -47,6 +61,7 @@ $RunArgs = @(
   "--max-provider-revisions", "5",
   "--timeout-seconds", "600",
   "--preflight-timeout-seconds", "90",
+  "--max-degraded-lanes", "0",
 
   "--provider-model", "qwen2.5-coder:14b",
   "--gpu1-base-url", "http://127.0.0.1:11434",
@@ -54,6 +69,7 @@ $RunArgs = @(
   "--gpu0-base-url", "http://127.0.0.1:11435",
   "--gpu0-vulkan-visible-devices", "1",
   "--ollama-num-ctx", "16384",
+  "--gpu0-ollama-num-ctx", "2048",
   "--ollama-gpu-layers", "all",
   "--ollama-context-candidates", "8192,4096",
   "--max-new-tokens", "900",
@@ -65,6 +81,8 @@ $RunArgs = @(
 
   "--npu-model-dir", $NpuModelDir,
   "--npu-micro-timeout-seconds", "60",
+  "--npu-micro-start-mode", "deferred",
+  "--npu-final-wait-seconds", "60",
   "--npu-max-context-chars", "8000",
   "--npu-max-prompt-chars", "1200",
   "--npu-max-new-tokens", "384",

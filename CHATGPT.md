@@ -1,5 +1,19 @@
 # CHATGPT.md — contratto operativo per ChatGPT/GPT in IA-Carmine
 
+<!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:START -->
+## Current Runtime/Tool Contract (2026-05-24)
+
+Canonical wording: `docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md`.
+
+- GPU1/NVIDIA primary Ollama lane is the operational center and advances by heap pointer/recovery turns without waiting for GPU0/NPU sidecar completion.
+- GPU0/NPU are `packet_review_only` sidecars: they start only after a reviewable GPU1 packet, do not close product, and remain deferred evidence until a later GPU1 turn consumes their pointer ids.
+- Tool/lab/matrix/debug reporting must distinguish `lab_called`, `lab_report_written`, `lab_usable` and `lab_status`; attempted tool calls are evidence, not automatic usable lab output.
+- `CODE_PRODUCT_FULL_PATCH.md` is the final patch/code product; `PLAN_PRODUCT_FULL_PATCH.md` is the final recomposed GPU1 prompt/chat product, with pointer graph and recovery/congruence as technical attachments.
+- Missing optional values stay empty/null; required missing devices or provider prerequisites raise or block with a typed reason rather than emitting placeholder text.
+- Complete runs require explicit config flags, including `--files-per-round`, `--gpu0-ollama-num-ctx`, `--npu-micro-start-mode`, `--npu-final-wait-seconds` and `--max-degraded-lanes`.
+<!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:END -->
+
+
 ## Scopo
 
 Questo file definisce come una chat GPT deve entrare nel progetto IA-Carmine senza fingersi runtime, memoria, agente operativo o fonte di verità.
@@ -25,6 +39,7 @@ docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md
 docs/REAL_PRODUCT_RUN_MODEL.md
 docs/COMPACT_EVIDENCE_MODEL.md
 docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md
 docs/CONTEXT_COVERAGE_STATUS.md
 docs/DISPATCHER_CONTEXT_COVERAGE.md
 Tools/CONTEXT_INDEX.md

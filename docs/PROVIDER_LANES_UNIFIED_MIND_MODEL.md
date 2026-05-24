@@ -1,5 +1,19 @@
 # Provider lanes unified mind model
 
+<!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:START -->
+## Current Runtime/Tool Contract (2026-05-24)
+
+Canonical wording: `docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md`.
+
+- GPU1/NVIDIA primary Ollama lane is the operational center and advances by heap pointer/recovery turns without waiting for GPU0/NPU sidecar completion.
+- GPU0/NPU are `packet_review_only` sidecars: they start only after a reviewable GPU1 packet, do not close product, and remain deferred evidence until a later GPU1 turn consumes their pointer ids.
+- Tool/lab/matrix/debug reporting must distinguish `lab_called`, `lab_report_written`, `lab_usable` and `lab_status`; attempted tool calls are evidence, not automatic usable lab output.
+- `CODE_PRODUCT_FULL_PATCH.md` is the final patch/code product; `PLAN_PRODUCT_FULL_PATCH.md` is the final recomposed GPU1 prompt/chat product, with pointer graph and recovery/congruence as technical attachments.
+- Missing optional values stay empty/null; required missing devices or provider prerequisites raise or block with a typed reason rather than emitting placeholder text.
+- Complete runs require explicit config flags, including `--files-per-round`, `--gpu0-ollama-num-ctx`, `--npu-micro-start-mode`, `--npu-final-wait-seconds` and `--max-degraded-lanes`.
+<!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:END -->
+
+
 ## Status
 
 Current compact model for the IA-Carmine multi-provider runtime idea.
@@ -78,7 +92,7 @@ If lanes operate on different context, the result is not a unified mind. It is o
 Time is part of that shared operational picture. A run budget is a counter used
 to choose GPU1 cycles and request a coordinated soft close near the end. GPU0
 and NPU are bounded sidecars with watchdog/timeouts; a selected lane that fails
-to start is a hard universe block, but NPU must not keep the run open as primary
+to start is a hard universe stop, but NPU must not keep the run open as primary
 semantic closer.
 
 Provider revision count is evidence, not a recursion limit. The loop may use it as evidence that revisions happened, but must not stop GPU1 because the count reached an effective maximum.
@@ -93,12 +107,12 @@ GPU1 may move on the pointer graph:
 current block
 -> backtrack to previous/refines block
 -> propagate imports, variables, classes, schema fields, CLI flags and contracts
--> ask GPU0/NPU to re-check impacted blocks in parallel
+-> ask GPU0/NPU to re-check impacted pointer records in parallel
 -> resume forward from resume_from_block_id
 -> compose/refine the final code product from linked blocks
 ```
 
-The final code product must be reconstructed from `previous_block_id`, `refines_block_id`, `resume_from_block_id` and linked GPU1/GPU0/NPU blocks. A long provider answer is still only evidence until the pointer graph and deterministic product boundary can compose it.
+The final code product must be reconstructed from pointer continuity fields such as `previous_block_id`, `refines_block_id` and `resume_from_block_id`. Linked provider pointer records remain evidence until the pointer graph and deterministic product boundary can compose them.
 
 ## Department responsibilities
 

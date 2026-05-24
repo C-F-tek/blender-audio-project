@@ -511,9 +511,16 @@ def _peer_consumed_by_gpu1(pointer_id: str, blocks: list[dict[str, Any]]) -> boo
             str(block.get("refines_block_id") or ""),
             str(block.get("resume_from_block_id") or ""),
         }
-        consumed = block.get("consumed_block_ids") or block.get("consumes_block_ids") or []
-        if isinstance(consumed, list):
-            related.update(str(item) for item in consumed)
+        for key in (
+            "consumed_block_ids",
+            "consumes_block_ids",
+            "consumed_gpu0_block_ids",
+            "consumed_npu_block_ids",
+            "consumed_provider_block_ids",
+        ):
+            consumed = block.get(key) or []
+            if isinstance(consumed, list):
+                related.update(str(item) for item in consumed)
         if pointer_id in related:
             return True
     return False

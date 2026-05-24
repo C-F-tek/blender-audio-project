@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -130,6 +132,35 @@ def run_dir_for(config: LauncherConfig) -> Path:
     return config.intermediate_root / f"heap_context_closure_{config.stamp}"
 
 
+def canonical_run_metadata_path(config: LauncherConfig) -> Path:
+    return run_dir_for(config) / "canonical_run_metadata.json"
+
+
+def canonical_run_fingerprint(config: LauncherConfig) -> str:
+    payload = {
+        "schema_version": 1,
+        "kind": "canonical_run_metadata",
+        "stamp": config.stamp,
+        "effective_universe_config": config.effective_universe_config or {},
+        "field_sources": config.field_sources or {},
+    }
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
+    ).hexdigest()
+
+
+def canonical_run_metadata(config: LauncherConfig) -> dict[str, object]:
+    return {
+        "schema_version": 1,
+        "kind": "canonical_run_metadata",
+        "canonical_entrypoint": "python -m ia_carmine.cli run",
+        "stamp": config.stamp,
+        "fingerprint": canonical_run_fingerprint(config),
+        "effective_universe_config": config.effective_universe_config or {},
+        "field_sources": config.field_sources or {},
+    }
+
+
 def build_heap_command(config: LauncherConfig) -> list[str]:
     cfg = resolve_config(config)
     command = [
@@ -151,6 +182,10 @@ def build_heap_command(config: LauncherConfig) -> list[str]:
         str(cfg.final_root),
         "--revision-context",
         str(cfg.revision_context or ""),
+        "--canonical-run-metadata",
+        str(canonical_run_metadata_path(cfg)),
+        "--canonical-run-fingerprint",
+        canonical_run_fingerprint(cfg),
     ]
     for key, flag in CLI_VALUE_KEYS.items():
         value = getattr(cfg, key)

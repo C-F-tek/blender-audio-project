@@ -80,6 +80,97 @@ def first_json_report(run_dir: Path, values: list[Any]) -> tuple[str, dict[str, 
     return "", {}
 
 
+def _explicit_bool(value: Any) -> bool | None:
+    return value if isinstance(value, bool) else None
+
+
+def lab_status_summary(
+    *, run_dir: Path, gate: dict[str, Any], matrix: dict[str, Any], matrix_path: str
+) -> dict[str, Any]:
+    metrics = as_dict(gate.get("metrics"))
+    virtual_report_path, virtual = first_json_report(
+        run_dir, as_list(metrics.get("virtual_dev_environment_reports"))
+    )
+    debug_report = str(matrix.get("debug_lab_report") or "")
+    if debug_report:
+        debug = read_json(evidence_path(run_dir, debug_report))
+    else:
+        debug_report, debug = first_json_report(
+            run_dir, as_list(metrics.get("runtime_debug_lab_reports"))
+        )
+    target_count = int(matrix.get("target_count") or 0)
+    verified_target_count = int(matrix.get("verified_target_count") or 0)
+    report_refs = [ref for ref in (virtual_report_path, matrix_path, debug_report) if ref]
+    pass_values = {
+        "virtual_dev_environment": _explicit_bool(
+            metrics.get("virtual_dev_environment_passed", virtual.get("passed"))
+        ),
+        "code_execution_matrix": _explicit_bool(
+            matrix.get("passed", metrics.get("code_execution_matrix_passed"))
+        ),
+        "runtime_debug_lab": _explicit_bool(
+            debug.get("passed", matrix.get("debug_lab_passed", metrics.get("runtime_debug_lab_passed")))
+        ),
+    }
+    required_missing = any(
+        bool(metrics.get(required)) and not report
+        for required, report in (
+            ("virtual_dev_environment_required", virtual_report_path),
+            ("code_execution_matrix_required", matrix_path),
+            ("runtime_debug_lab_required", debug_report),
+        )
+    )
+    lab_failed = required_missing or any(value is False for value in pass_values.values())
+    lab_evidence_written = bool(report_refs)
+    lab_called = bool(
+        lab_evidence_written
+        or int(metrics.get("tool_request_count") or 0) > 0
+        or int(metrics.get("tool_execution_count") or 0) > 0
+        or int(metrics.get("provider_native_tool_call_count") or 0) > 0
+        or int(metrics.get("provider_native_tool_loop_requested_count") or 0) > 0
+    )
+    lab_usable = bool(
+        not lab_failed
+        and lab_evidence_written
+        and (
+            verified_target_count > 0
+            or target_count > 0
+            or bool(as_list(virtual.get("targets")))
+            or int(debug.get("operation_count") or debug.get("target_count") or 0) > 0
+        )
+    )
+    if lab_failed:
+        lab_status = "ran_failed"
+    elif not lab_called:
+        lab_status = "not_run"
+    elif not lab_usable:
+        lab_status = "ran_no_targets"
+    elif target_count <= 0 and verified_target_count <= 0:
+        lab_status = "ran_no_targets"
+    else:
+        lab_status = "evidence_available"
+    return {
+        "lab_status": lab_status,
+        "lab_called": lab_called,
+        "lab_evidence_written": lab_evidence_written,
+        "lab_report_written": lab_evidence_written,
+        "lab_usable": lab_usable,
+        "lab_report_refs": report_refs,
+        "lab_pass_values": pass_values,
+        "lab_required_missing": required_missing,
+        "tool_request_count": int(metrics.get("tool_request_count") or 0),
+        "tool_execution_count": int(metrics.get("tool_execution_count") or 0),
+        "provider_native_tool_call_count": int(metrics.get("provider_native_tool_call_count") or 0),
+        "provider_textual_tool_call_count": int(metrics.get("provider_textual_tool_call_count") or 0),
+        "provider_native_tool_loop_requested_count": int(metrics.get("provider_native_tool_loop_requested_count") or 0),
+        "provider_native_tool_missing_lanes": as_list(metrics.get("provider_native_tool_missing_lanes")),
+        "virtual_report_path": virtual_report_path,
+        "virtual": virtual,
+        "debug_report": debug_report,
+        "debug": debug,
+    }
+
+
 def item_has_code_product(item: dict[str, Any]) -> bool:
     status = str(item.get("implementation_status") or "")
     source = str(item.get("source") or "")
@@ -150,8 +241,12 @@ def code_product_items(matrix: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def matrix_has_reviewable_targets(matrix: dict[str, Any]) -> bool:
+    return int(matrix.get("verified_target_count") or matrix.get("target_count") or 0) > 0
+
+
 def code_product_status(matrix: dict[str, Any], gate_product_status: str = "") -> str:
-    if code_product_items(matrix):
+    if code_product_items(matrix) and matrix_has_reviewable_targets(matrix):
         if gate_product_status and gate_product_status != "ready":
             return "BLOCKED_WITH_CODE_PRODUCT_REVIEW"
         return "APPLY_REVIEW_READY"
@@ -171,13 +266,11 @@ def full_code_product_items(matrix: dict[str, Any]) -> list[dict[str, Any]]:
 def render_lab_section(
     *, run_dir: Path, gate: dict[str, Any], matrix: dict[str, Any], matrix_path: str
 ) -> list[str]:
-    metrics = as_dict(gate.get("metrics"))
-    virtual_report_path, virtual = first_json_report(
-        run_dir, as_list(metrics.get("virtual_dev_environment_reports"))
-    )
-    debug_report = str(matrix.get("debug_lab_report") or "")
-    debug_path = evidence_path(run_dir, debug_report) if debug_report else Path()
-    debug = read_json(debug_path) if debug_report else {}
+    lab = lab_status_summary(run_dir=run_dir, gate=gate, matrix=matrix, matrix_path=matrix_path)
+    virtual_report_path = str(lab.get("virtual_report_path") or "")
+    virtual = as_dict(lab.get("virtual"))
+    debug_report = str(lab.get("debug_report") or "")
+    debug = as_dict(lab.get("debug"))
     virtual_targets = as_list(virtual.get("targets"))
     ok_virtual_targets = [
         item
@@ -188,10 +281,31 @@ def render_lab_section(
     ]
     guardrails = as_dict(matrix.get("guardrails"))
     virtual_guardrails = as_dict(virtual.get("guardrails"))
+    lab_status = str(lab.get("lab_status") or "not_run")
+    if lab_status == "evidence_available":
+        intro = "- Il lab non e' una promessa testuale: evidenza operativa disponibile."
+        capability_line = "- Sa usarlo: `True`; lab/matrix/debug hanno evidenza verificabile per target."
+    elif lab_status == "ran_failed":
+        intro = "- Il lab/tooling operativo e' stato tentato, ma almeno una evidenza richiesta e' fallita o manca."
+        capability_line = "- Sa usarlo: `False`; tool/lab tentati ma non validi per chiudere il prodotto."
+    elif lab_status == "ran_no_targets":
+        intro = "- Il lab e' stato tentato, ma non ha prodotto target verificabili."
+        capability_line = "- Sa usarlo: `False`; nessun target verificato da lab/matrix/debug."
+    else:
+        intro = "- Il lab non risulta tentato in questa run."
+        capability_line = "- Sa usarlo: `False`; nessuna evidenza lab/matrix/debug scritta."
     return [
         "## Laboratorio operativo",
         "",
-        "- Il lab non e' una promessa testuale: e' stato chiamato via broker durante la run.",
+        intro,
+        f"- Lab status: `{lab_status}`.",
+        f"- Lab called: `{lab.get('lab_called')}`.",
+        f"- Lab report written: `{lab.get('lab_report_written')}`.",
+        f"- Lab usable: `{lab.get('lab_usable')}`.",
+        f"- Lab evidence written: `{lab.get('lab_evidence_written')}`.",
+        f"- Tool calling attempts: requests=`{lab.get('tool_request_count')}` executions=`{lab.get('tool_execution_count')}` native_provider_calls=`{lab.get('provider_native_tool_call_count')}` textual_tool_calls=`{lab.get('provider_textual_tool_call_count')}`.",
+        f"- Native tool loop requested: `{lab.get('provider_native_tool_loop_requested_count')}`; missing lanes: `{lab.get('provider_native_tool_missing_lanes')}`.",
+        f"- Lab pass values: `{lab.get('lab_pass_values')}`; required_missing=`{lab.get('lab_required_missing')}`.",
         f"- Virtual dev report: `{virtual_report_path}`.",
         f"- Virtual dev passed: `{virtual.get('passed')}` su `{len(ok_virtual_targets)}/{len(virtual_targets)}` target con AST/import/help probe.",
         f"- Validation scripts nel virtual dev: `{virtual.get('validation_count')}`.",
@@ -201,7 +315,7 @@ def render_lab_section(
         f"- Debug lab target count: `{matrix.get('target_count')}`.",
         f"- Guardrails matrix: free_shell=`{guardrails.get('free_shell_exposed')}` source_writes=`{guardrails.get('source_writes_performed')}` patch_apply=`{guardrails.get('patch_application_performed')}` git_write=`{guardrails.get('git_write_performed')}`.",
         f"- Guardrails virtual dev: free_shell=`{virtual_guardrails.get('free_shell_exposed')}` source_writes=`{virtual_guardrails.get('source_writes_performed')}` patch_apply=`{virtual_guardrails.get('patch_application_performed')}` git_write=`{virtual_guardrails.get('git_write_performed')}`.",
-        "- Sa usarlo: `True`; ha caricato moduli, fatto import dinamico, provato --help, lanciato smoke e prodotto code matrix/debug lab evidence.",
+        capability_line,
         "",
     ]
 
@@ -210,11 +324,16 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
     lines = [
         "## Code product",
         "",
-        "Questi sono i diff/code completi usciti dalla matrice deterministica. I chunk GPU1 respinti non sono inclusi qui come prodotto.",
-        "Lo stesso patch/code completo viene pubblicato anche come `CODE_PRODUCT_FULL_PATCH.md` nel pacchetto Documents della run.",
-        "",
     ]
-    product_items = full_code_product_items(matrix)
+    product_items = full_code_product_items(matrix) if matrix_has_reviewable_targets(matrix) else []
+    if product_items:
+        lines.extend(
+            [
+                "Questi sono i diff/code completi usciti dalla matrice deterministica. I chunk GPU1 respinti non sono inclusi qui come prodotto.",
+                "Lo stesso patch/code completo viene pubblicato anche come `CODE_PRODUCT_FULL_PATCH.md` nel pacchetto Documents della run.",
+                "",
+            ]
+        )
     for data in product_items:
         target = str(data.get("target_file") or "")
         sketch = full_code_or_patch(matrix, data)
@@ -235,7 +354,7 @@ def render_code_product_section(matrix: dict[str, Any]) -> list[str]:
             ]
         )
     if not product_items:
-        lines.extend(["- Nessun diff/code effettivo catturato dalla matrix.", ""])
+        lines.extend(["- NO_APPLICABLE_CODE_PRODUCT.", "- Nessun diff/code effettivo catturato dalla matrix.", ""])
     return lines
 
 
@@ -245,7 +364,7 @@ def render_full_code_product_markdown(
     gate_product_status: str = "",
     blocked_reason: str = "",
 ) -> str:
-    product_items = full_code_product_items(matrix)
+    product_items = full_code_product_items(matrix) if matrix_has_reviewable_targets(matrix) else []
     matrix_product_items = code_product_items(matrix)
     matrix_items = as_list(matrix.get("concrete_code_proposals"))
     status = code_product_status(matrix, gate_product_status)
@@ -312,16 +431,18 @@ def render_full_code_product_markdown(
             ]
         )
     if not product_items:
-        marker = (
+        marker = "NO_APPLICABLE_CODE_PRODUCT"
+        detail_marker = (
             "PROVIDER_RUNTIME_BLOCKED_NO_CODE_PRODUCT"
             if provider_runtime_blocked
             else "PROVIDER_REPLIGHT_FAILED_NO_CODE_PRODUCT"
             if "provider_replight_failed" in reason_text
-            else "NO_APPLICABLE_CODE_PRODUCT"
+            else ""
         )
         lines.extend(
             [
                 f"- Marker: `{marker}`.",
+                f"- Block detail marker: `{detail_marker}`.",
                 "- Nessun diff/code effettivo catturato dalla matrix.",
                 f"- Status: `{status}`.",
                 "- Questo artifact non e' un prodotto applicabile: usare la matrix come evidenza di blocco, non come patch.",

@@ -18,7 +18,14 @@ from .io_utils import read_json_quiet, write_json, write_text
 from .markdown import render_lab_markdown, render_run_markdown
 from .models import LauncherConfig
 from .public_documents import default_public_documents_root, mirror_public_documents_package
-from .direct_command import build_heap_command, resolve_config, resolve_project_python, run_dir_for
+from .direct_command import (
+    build_heap_command,
+    canonical_run_metadata,
+    canonical_run_metadata_path,
+    resolve_config,
+    resolve_project_python,
+    run_dir_for,
+)
 
 
 def command_env(repo_root: Path, python_exe: str) -> dict[str, str]:
@@ -151,9 +158,10 @@ def blocked_reason(summary: dict[str, Any], result: dict[str, Any]) -> str:
 def run_heap(config: LauncherConfig, timeout: int | None = None) -> dict[str, Any]:
     cfg = resolve_config(config)
     cfg.final_root.mkdir(parents=True, exist_ok=True)
-    command = build_heap_command(cfg)
     run_dir = run_dir_for(cfg)
     run_dir.mkdir(parents=True, exist_ok=True)
+    write_json(canonical_run_metadata_path(cfg), canonical_run_metadata(cfg))
+    command = build_heap_command(cfg)
     result = run_command(
         command,
         cfg.repo_root,

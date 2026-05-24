@@ -163,4 +163,4 @@ def stage(status: dict[str, Any]) -> str:
         return "model_loaded_only"
     if status.get("device_detected"):
         return "device_detected_only"
-    return "not_available"
+    return ""

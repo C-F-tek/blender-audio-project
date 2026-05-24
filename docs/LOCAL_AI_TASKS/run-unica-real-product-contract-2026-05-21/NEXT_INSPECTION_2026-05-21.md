@@ -11,7 +11,7 @@ request -> startup reload -> heap blackboard -> brokered tools -> GPU1/GPU0/NPU 
 No relevant code surface should remain uninspected.
 
 The flow must remain singular and integrated. Provider evidence, memory and
-pointer blocks from each GPU1/GPU0/NPU round are the reconstruction substrate
+pointer pointer records from each GPU1/GPU0/NPU round are the reconstruction substrate
 for the final product bundle; chat context and raw provider prose are not.
 
 Do not exclude `contractor_universe`: inspect how its `UniverseHeap` and
@@ -107,7 +107,7 @@ Also verify:
 
 ```text
 GPU0 recovery tasks can add pointer information
-GPU0 recovery tasks return to the main GPU1 block
+GPU0 recovery tasks return to the main GPU1 pointer record
 Rejected partial responses restart the cycle with wrong-answer evidence
 GPU1 first turn can be PLAN_THEN_PROPOSAL evidence, not product
 ```

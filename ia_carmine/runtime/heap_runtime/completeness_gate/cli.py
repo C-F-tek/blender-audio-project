@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -210,6 +211,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--npu-device-workload-iterations", type=int, default=None)
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--operator-intent", action="store_true")
+    parser.add_argument("--canonical-run-metadata", default="")
+    parser.add_argument("--canonical-run-fingerprint", default="")
     parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=False)
     parser.add_argument("--timeout-seconds", type=int, default=None)
     parser.add_argument("--provider-model", default="")
@@ -236,6 +239,25 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if args.allow_provider_generation and (
+        not str(args.canonical_run_metadata or "").strip()
+        or not str(args.canonical_run_fingerprint or "").strip()
+    ):
+        print(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "kind": "heap_runtime_completeness_gate_entrypoint_guard",
+                    "passed": False,
+                    "error": "canonical_run_config_required_for_provider_generation",
+                    "canonical_entrypoint": "python -m ia_carmine.cli run",
+                    "diagnostic_without_provider_generation_allowed": True,
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        return 2
     gate = HeapRuntimeCompletenessGate(args)
     report = gate.run()
     output = resolve_output_path(

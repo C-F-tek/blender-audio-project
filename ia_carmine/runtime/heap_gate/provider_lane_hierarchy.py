@@ -53,7 +53,7 @@ def gpu0_ollama_num_ctx_config(args: Any) -> dict[str, Any]:
     cli_value = _positive_int(getattr(args, "gpu0_ollama_num_ctx", 0))
     if not cli_value:
         raise RuntimeError("missing explicit GPU0 context budget; pass --gpu0-ollama-num-ctx")
-    return _cfg(cli_value, "cli_arg", "--gpu0-ollama-num-ctx")
+    return _cfg(cli_value, _source(args, "gpu0_ollama_num_ctx"), "--gpu0-ollama-num-ctx")
 
 
 def gpu0_ollama_num_ctx(args: Any) -> int:
@@ -65,7 +65,7 @@ def gpu0_max_new_tokens_config(args: Any) -> dict[str, Any]:
     if not cli_value:
         raise RuntimeError("missing explicit GPU0 token budget; pass --gpu0-max-new-tokens")
     value = cli_value
-    source = "cli_arg"
+    source = _source(args, "gpu0_max_new_tokens")
     override_path = "--gpu0-max-new-tokens"
     max_new = _positive_int(getattr(args, "max_new_tokens", 0)) or value
     return {
@@ -82,33 +82,33 @@ def gpu0_max_new_tokens(args: Any) -> int:
 def operator_effective_config(args: Any, *, gpu1_ctx: int, gpu0_ctx: int) -> dict[str, Any]:
     gpu0_tokens = gpu0_max_new_tokens_config(args)
     return {
-        "gpu1.ollama_num_ctx": _cfg(gpu1_ctx, "explicit_cli_surface", "--ollama-num-ctx"),
+        "gpu1.ollama_num_ctx": _cfg(gpu1_ctx, _source(args, "ollama_num_ctx"), "--ollama-num-ctx"),
         "gpu1.max_new_tokens": _cfg(
-            _positive_int(getattr(args, "max_new_tokens", 0)), "explicit_cli_surface", "--max-new-tokens"
+            _positive_int(getattr(args, "max_new_tokens", 0)), _source(args, "max_new_tokens"), "--max-new-tokens"
         ),
-        "gpu0.ollama_num_ctx": _cfg(gpu0_ctx, "cli_arg", "--gpu0-ollama-num-ctx"),
+        "gpu0.ollama_num_ctx": _cfg(gpu0_ctx, _source(args, "gpu0_ollama_num_ctx"), "--gpu0-ollama-num-ctx"),
         "gpu0.max_new_tokens": gpu0_tokens,
         "npu.max_context_chars": _cfg(
             _positive_int(getattr(args, "npu_max_context_chars", 0)),
-            "explicit_cli_surface",
+            _source(args, "npu_max_context_chars"),
             "--npu-max-context-chars",
         ),
         "npu.max_prompt_chars": _cfg(
             _positive_int(getattr(args, "npu_max_prompt_chars", 0)),
-            "explicit_cli_surface",
+            _source(args, "npu_max_prompt_chars"),
             "--npu-max-prompt-chars",
         ),
         "npu.max_new_tokens": _cfg(
             _positive_int(getattr(args, "npu_max_new_tokens", 0)),
-            "explicit_cli_surface",
+            _source(args, "npu_max_new_tokens"),
             "--npu-max-new-tokens",
         ),
         "max_provider_revisions": _cfg(
             _positive_int(getattr(args, "max_provider_revisions", 0)),
-            "explicit_cli_surface",
+            _source(args, "max_provider_revisions"),
             "--max-provider-revisions",
         ),
-        "keep_alive": _cfg(str(getattr(args, "keep_alive", "") or ""), "explicit_cli_surface", "--keep-alive"),
+        "keep_alive": _cfg(str(getattr(args, "keep_alive", "") or ""), _source(args, "keep_alive"), "--keep-alive"),
     }
 
 
@@ -124,7 +124,7 @@ def lane_context_budget(
             "kind": "ollama_context_budget",
             "ollama_num_ctx": int(gpu1_ctx),
             "max_new_tokens": int(getattr(args, "max_new_tokens", 0) or 0),
-            "max_new_tokens_source": "explicit_cli_surface",
+            "max_new_tokens_source": _source(args, "max_new_tokens"),
             "max_new_tokens_override_path": "--max-new-tokens",
             "relative_size": "maximum",
         }
@@ -144,14 +144,21 @@ def lane_context_budget(
             "max_context_chars": int(getattr(args, "npu_max_context_chars", 0) or 0),
             "max_prompt_chars": int(getattr(args, "npu_max_prompt_chars", 0) or 0),
             "max_new_tokens": int(getattr(args, "npu_max_new_tokens", 0) or 0),
-            "max_new_tokens_source": "explicit_cli_surface",
+            "max_new_tokens_source": _source(args, "npu_max_new_tokens"),
             "max_new_tokens_override_path": "--npu-max-new-tokens",
             "relative_size": "short_micro",
         }
     return {}
 
 
-def context_hierarchy_payload(args: Any, *, gpu1_ctx: Any | None = None) -> dict[str, Any]:
+def context_hierarchy_payload(
+    args: Any,
+    *,
+    gpu1_ctx: Any | None = None,
+    field_sources: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    if field_sources is not None:
+        setattr(args, "field_sources", dict(field_sources))
     effective_gpu1_ctx = _positive_int(gpu1_ctx or getattr(args, "ollama_num_ctx", 0))
     if not effective_gpu1_ctx:
         raise RuntimeError("missing explicit GPU1 context budget; pass --ollama-num-ctx")
@@ -195,3 +202,12 @@ def _cfg(value: Any, source: str, override_path: str) -> dict[str, Any]:
         "source": source,
         "override_path": override_path,
     }
+
+
+def _source(args: Any, field: str, default: str = "runtime_derived") -> str:
+    sources = getattr(args, "field_sources", {}) or {}
+    if isinstance(sources, dict):
+        source = str(sources.get(field) or "").strip()
+        if source:
+            return source
+    return default

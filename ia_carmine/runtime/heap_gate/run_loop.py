@@ -23,15 +23,18 @@ class RuntimeGateRunLoopMixin:
         while True:
             round_id += 1
             last_round = round_id
+            self.poll_pending_provider_sidecars(round_id)
             events = self.read_events()
             self.planner_step(round_id, events)
             if self.heap.pending_broker_requests():
                 self.run_bridge()
             events = self.read_events()
+            self.poll_pending_provider_sidecars(round_id)
             self.publish_shared_evidence_facts(round_id, events)
             if self.heap.pending_broker_requests():
                 self.run_bridge()
                 events = self.read_events()
+                self.poll_pending_provider_sidecars(round_id)
                 self.publish_shared_evidence_facts(round_id, events)
             if self.provider_start_requirements_complete(events) and not self.provider_reports:
                 self.run_provider_teamwork(round_id)
@@ -56,6 +59,8 @@ class RuntimeGateRunLoopMixin:
                 if self.provider_universe_blocked_reason:
                     break
             if self.provider_reports:
+                self.poll_pending_provider_sidecars(round_id)
+                events = self.read_events()
                 events = self.drain_provider_consumable_evidence(round_id, events)
                 if self.heap.pending_broker_requests():
                     if self.runtime_soft_close_reached():
@@ -92,7 +97,10 @@ class RuntimeGateRunLoopMixin:
                 break
         if self.state["product"].get("status") == "not_ready":
             events = self.read_events()
+            self.poll_pending_provider_sidecars(last_round or self.max_iterations)
+            events = self.read_events()
             self.arbiter_step(last_round or self.max_iterations, events)
+        self.poll_pending_provider_sidecars(last_round or self.max_iterations)
         snapshot = self.heap.write_snapshot()
         runtime_state = safe_dict(snapshot.get("runtime_state"))
         lane_gate = runtime_state_lane_gate(

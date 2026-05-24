@@ -169,7 +169,7 @@ def npu_preflight(
         checks["recommended_workers"] = 2
     else:
         checks["warnings"].append(
-            "NPU device not available; guardrail service will continue in heuristic mode."
+            "NPU device unavailable; guardrail service will continue in heuristic mode."
         )
     return checks
 

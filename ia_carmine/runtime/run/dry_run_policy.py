@@ -37,8 +37,9 @@ def dry_run_contract_policy(
         "provider_parallel_policy": {
             "provider_boot_gate": "gpu1_gpu0_npu_alive_in_same_window_before_replight_or_pointer_loop",
             "gpu1_start": "brief_ollama_gpu_residency_handshake_after_boot_gate",
-            "gpu0_npu_start": "parallel_after_gpu1_residency_proven",
+            "gpu0_npu_start": "async_after_reviewable_gpu1_packet",
             "gpu1_wait_for_full_completion_before_sidecars": False,
+            "gpu1_wait_for_sidecar_completion_before_forward_progress": False,
         },
         "provider_replight_required": True,
         "provider_replight_policy": {

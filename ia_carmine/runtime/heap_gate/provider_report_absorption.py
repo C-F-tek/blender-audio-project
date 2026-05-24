@@ -141,6 +141,8 @@ def absorb_completed_provider_item(
         "sidecar_incongruent",
         "sidecar_product_block_reason",
         "sidecar_recoverable_failure_reason",
+        "sidecar_skipped",
+        "sidecar_skipped_reason",
     ):
         if key in report_data:
             provider_report[key] = report_data.get(key)
@@ -184,19 +186,23 @@ def absorb_completed_provider_item(
             or provider_report.get("expected_gpu1_block_id")
             or ""
         )
-        provider_report["sidecar_incongruent"] = (
-            str(
-                provider_report.get("gpu0_effective_decision")
-                or provider_report.get("gpu0_decision")
-                or ""
-            ).strip().lower()
-            == "incongruent"
-        )
-        provider_report["sidecar_invalid"] = bool(
-            provider_report.get("gpu0_secondary_schema_valid") is not True
-            or provider_report.get("provider_rejection_reason")
-            or provider_report.get("product_blocked_reason")
-        )
+        if provider_report.get("sidecar_skipped"):
+            provider_report["sidecar_incongruent"] = False
+            provider_report["sidecar_invalid"] = False
+        else:
+            provider_report["sidecar_incongruent"] = (
+                str(
+                    provider_report.get("gpu0_effective_decision")
+                    or provider_report.get("gpu0_decision")
+                    or ""
+                ).strip().lower()
+                == "incongruent"
+            )
+            provider_report["sidecar_invalid"] = bool(
+                provider_report.get("gpu0_secondary_schema_valid") is not True
+                or provider_report.get("provider_rejection_reason")
+                or provider_report.get("product_blocked_reason")
+            )
     elif lane == "npu_micro_task_auditor":
         provider_report["audit_for_gpu1_cycle"] = revision
         provider_report["peer_attempt_id"] = provider_report.get("provider_block_id")
@@ -214,14 +220,19 @@ def absorb_completed_provider_item(
         )
         provider_report["sidecar_incongruent"] = False
         provider_report["sidecar_invalid"] = bool(
-            provider_report.get("provider_rejection_reason")
-            or provider_report.get("product_blocked_reason")
-            or provider_report.get("provider_work_verified") is False
-            or str(npu_audit.get("decision") or "").lower().startswith("reject")
+            not provider_report.get("sidecar_skipped")
+            and (
+                provider_report.get("provider_rejection_reason")
+                or provider_report.get("product_blocked_reason")
+                or provider_report.get("provider_work_verified") is False
+                or str(npu_audit.get("decision") or "").lower().startswith("reject")
+            )
         )
     if lane in {"gpu0_peer", "npu_micro_task_auditor"}:
-        provider_report["sidecar_recoverable_failure_reason"] = _sidecar_failure_reason(
-            lane, provider_report
+        provider_report["sidecar_recoverable_failure_reason"] = (
+            ""
+            if provider_report.get("sidecar_skipped")
+            else _sidecar_failure_reason(lane, provider_report)
         )
     provider_report["report_passed"] = bool(provider_report.get("passed"))
     provider_report["diagnostic_only"] = not bool(

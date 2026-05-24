@@ -40,6 +40,16 @@ class RuntimeGateInitMixin:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
         self.repo_root = Path(args.repo_root).resolve()
+        canonical_metadata = self._load_canonical_run_metadata(args)
+        setattr(args, "canonical_run_metadata_payload", canonical_metadata)
+        if isinstance(canonical_metadata.get("field_sources"), dict):
+            setattr(args, "field_sources", dict(canonical_metadata["field_sources"]))
+        if isinstance(canonical_metadata.get("effective_universe_config"), dict):
+            setattr(
+                args,
+                "effective_universe_config",
+                dict(canonical_metadata["effective_universe_config"]),
+            )
         derived_runtime_config: list[dict[str, Any]] = []
         if bool(getattr(args, "allow_provider_generation", False)):
             keep_alive = str(getattr(args, "keep_alive", "") or "").strip().lower()
@@ -124,6 +134,7 @@ class RuntimeGateInitMixin:
         self.gpu1_primary_workload_tokens = 0
         self.leader_source = "none"
         self.sidecars_start_policy = ""
+        self.pending_provider_sidecar_collections: list[dict[str, Any]] = []
         self.parallel_provider_overlap_seconds = 0.0
         self.gpu1_idle_after_primary_seconds = 0.0
         self.sidecar_alone_after_gpu1_seconds = 0.0
@@ -137,6 +148,29 @@ class RuntimeGateInitMixin:
         ).build()
         self.runtime_universe_report_refs: dict[str, str] = {}
         self._code_execution_matrix_targets_cache: list[str] | None = None
+
+    def _load_canonical_run_metadata(self, args: argparse.Namespace) -> dict[str, Any]:
+        path_value = str(getattr(args, "canonical_run_metadata", "") or "").strip()
+        if not path_value:
+            return {}
+        path = Path(path_value)
+        if not path.is_absolute():
+            path = Path(args.repo_root).resolve() / path
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8-sig", errors="replace"))
+        except Exception as exc:  # noqa: BLE001 - surfaced as gate failure.
+            raise RuntimeError(
+                f"canonical_run_config_required_for_provider_generation: cannot read {path}: {exc}"
+            ) from exc
+        if not isinstance(payload, dict):
+            return {}
+        expected = str(getattr(args, "canonical_run_fingerprint", "") or "").strip()
+        actual = str(payload.get("fingerprint") or "").strip()
+        if expected and actual and expected != actual:
+            raise RuntimeError(
+                "canonical_run_config_required_for_provider_generation: fingerprint mismatch"
+            )
+        return payload
 
     def runtime_elapsed_seconds(self) -> float:
         return max(0.0, monotonic() - self.runtime_loop_started_at)

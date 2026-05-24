@@ -94,7 +94,12 @@ class RuntimeGateProviderCommandsMixin:
             if isinstance(report_data.get("standalone_default_fields"), list)
             else []
         )
-        if standalone_default_fields:
+        canonical_provider_evidence = bool(
+            report_data.get("canonical_run_provider_evidence")
+            and str(report_data.get("canonical_run_fingerprint") or "").strip()
+            == str(getattr(self.args, "canonical_run_fingerprint", "") or "").strip()
+        )
+        if standalone_default_fields and not canonical_provider_evidence:
             reason = (
                 "standalone_default_config_not_accepted_as_full_run_provider_evidence:"
                 + ",".join(str(item) for item in standalone_default_fields)
@@ -104,6 +109,10 @@ class RuntimeGateProviderCommandsMixin:
             report_data["provider_work_verified"] = False
             report_data["provider_role_counted"] = False
             report_data["provider_rejection_reason"] = reason
+        elif standalone_default_fields and canonical_provider_evidence:
+            report_data["standalone_default_fields_ignored_reason"] = (
+                "canonical_run_provider_evidence_fingerprint_verified"
+            )
         response_text = str(report_data.get("response_text") or "").strip()
         selected_model = str(report_data.get("selected_model") or "").strip()
         lane_reports = report_data.get("lane_reports")

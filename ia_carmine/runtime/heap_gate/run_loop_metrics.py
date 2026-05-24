@@ -277,6 +277,8 @@ def build_provider_lane_metrics(
         "sidecar_scope_mode": str(
             getattr(owner, "provider_sidecar_scope_mode", "") or "packet_review_only"
         ),
+        "pending_provider_sidecar_count": _pending_provider_sidecar_count(owner),
+        "sidecar_async_pending": bool(_pending_provider_sidecar_count(owner) > 0),
         "parallel_provider_overlap_seconds": getattr(
             owner, "parallel_provider_overlap_seconds", 0.0
         ),
@@ -316,6 +318,11 @@ def build_provider_lane_metrics(
         "npu_native_tool_loop_required": bool(npu_report.get("npu_native_tool_loop_required")),
         "delta_context_mode": "startup_full_once_then_pointer_delta_revisions",
         "soft_close_reached": bool(owner.runtime_soft_close_reached()),
+        "terminal_validation_scope": (
+            "sampled_on_soft_close"
+            if bool(owner.runtime_soft_close_reached())
+            else "full_required_product"
+        ),
         "soft_close_is_finalization_signal_only": bool(
             owner.time_counter_contract.get("soft_close_is_finalization_signal_only")
         ),
@@ -487,18 +494,47 @@ def _lane_has_model_execution(reports: list[dict[str, Any]], lane: str) -> bool:
     return False
 
 
+def _pending_provider_sidecar_count(owner: Any) -> int:
+    total = 0
+    for collection in getattr(owner, "pending_provider_sidecar_collections", []) or []:
+        sidecar_items = (
+            collection.get("sidecar_items")
+            if isinstance(collection, dict)
+            and isinstance(collection.get("sidecar_items"), list)
+            else []
+        )
+        total += sum(
+            1
+            for item in sidecar_items
+            if isinstance(item, dict)
+            and item.get("completed") is None
+            and item.get("process") is not None
+        )
+    return total
+
+
 def _consumed_peer_block_ids(reports: list[dict[str, Any]]) -> list[str]:
     for report in reversed(reports):
         if str(report.get("lane") or "") != GPU1_LANE:
             continue
+        consumed: list[str] = []
         for key in (
             "gpu1_consumed_peer_block_ids",
             "consumed_peer_block_ids",
             "consumed_gpu0_review_block_ids",
+            "consumed_gpu0_block_ids",
+            "consumed_npu_block_ids",
+            "consumed_provider_block_ids",
+            "consumed_block_ids",
         ):
             refs = report.get(key)
             if isinstance(refs, list):
-                return [str(item) for item in refs if str(item).strip()]
+                for item in refs:
+                    value = str(item).strip()
+                    if value and value not in consumed:
+                        consumed.append(value)
+        if consumed:
+            return consumed
     return []
 
 

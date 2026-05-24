@@ -167,6 +167,15 @@ def build_report(repo_root: Path) -> dict[str, Any]:
             errors,
             "provider model/URL/device values must come from explicit resolved CLI config",
         )
+    for rel in (
+        "ia_carmine/runtime/heap_context_closure/cli.py",
+        "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py",
+    ):
+        text = read(repo_root, rel)
+        if "canonical_run_config_required_for_provider_generation" not in text:
+            errors.append(
+                f"{rel}: provider-generation direct entrypoint must require canonical run config"
+            )
 
     tool_plan = files["ia_carmine/runtime/heap_gate/tool_plan_builder.py"]
     for needle in (

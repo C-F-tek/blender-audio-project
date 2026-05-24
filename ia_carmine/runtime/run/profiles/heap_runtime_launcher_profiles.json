@@ -2,27 +2,39 @@
   "schema_version": 3,
   "kind": "heap_runtime_launcher_profiles",
   "profile_control_groups": {
+    "metadata": [
+      "description"
+    ],
     "runtime": [
       "budget_minutes",
       "max_iterations",
       "min_runtime_rounds",
       "min_proposal_iterations",
       "max_rounds",
+      "files_per_round",
       "max_provider_revisions",
       "max_degraded_lanes",
       "timeout_seconds",
       "preflight_timeout_seconds",
-      "allow_provider_generation"
+      "allow_provider_generation",
+      "no_documents"
     ],
     "provider": [
       "provider_model",
+      "gpu1_base_url",
+      "gpu0_model",
+      "gpu0_base_url",
+      "gpu0_vulkan_visible_devices",
       "ollama_num_ctx",
       "gpu0_ollama_num_ctx",
       "ollama_gpu_layers",
+      "ollama_context_candidates",
       "max_new_tokens",
+      "gpu0_max_new_tokens",
       "keep_alive",
       "gpu0_iterations",
       "gpu0_min_seconds",
+      "npu_model_dir",
       "npu_micro_start_mode",
       "npu_micro_timeout_seconds",
       "npu_final_wait_seconds",
@@ -41,7 +53,29 @@
       "semantic_code_chunk_preview_chars",
       "semantic_evidence_chunk_limit",
       "memory_search_limit",
-      "tool_catalog_limit"
+      "tool_catalog_limit",
+      "startup_provider_input_workers",
+      "startup_required_context_profile",
+      "startup_operational_memory_query",
+      "startup_operational_memory_limit",
+      "rag_db",
+      "rag_index_policy",
+      "rag_embedding_endpoint",
+      "rag_embedding_model",
+      "rag_ingest_batch_size",
+      "rag_embed_smoke_batch_size",
+      "rag_chunk_min_chars",
+      "rag_chunk_max_chars",
+      "rag_chunk_overlap_chars",
+      "rag_max_file_size",
+      "rag_top_k",
+      "rag_char_budget",
+      "tool_inventory_roots",
+      "semantic_path_boosts",
+      "ai_context_pack_profile",
+      "code_interpreter_inputs",
+      "duplication_audit_roots",
+      "provider_prompt_tool_catalog_cap"
     ],
     "revision_context": [
       "revision_context_mode",
@@ -52,6 +86,7 @@
       "block_pointer_protocol"
     ],
     "hardware": [
+      "require_ollama_gpu_residency",
       "allow_npu_device_workload",
       "npu_device_workload_seconds",
       "npu_device_workload_iterations"

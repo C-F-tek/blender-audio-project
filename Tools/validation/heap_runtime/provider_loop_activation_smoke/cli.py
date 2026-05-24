@@ -73,6 +73,8 @@ def _check_independent_sidecar_watchdogs(repo_root: Path) -> dict[str, Any]:
     from ia_carmine.runtime.heap_gate.provider_time import build_provider_lane_time_contracts
 
     process_collection = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_process_collection.py")
+    provider_execution = _read(repo_root, "ia_carmine/runtime/heap_gate/provider_execution.py")
+    run_loop = _read(repo_root, "ia_carmine/runtime/heap_gate/run_loop.py")
     args = SimpleNamespace(budget_minutes=5, timeout_seconds=600, npu_micro_timeout_seconds=60)
     contracts = build_provider_lane_time_contracts(args)
     errors: list[str] = []
@@ -84,6 +86,12 @@ def _check_independent_sidecar_watchdogs(repo_root: Path) -> dict[str, Any]:
         errors.append("GPU0 sidecar join after primary is not disabled")
     if contracts["npu_micro_task_auditor"].get("sidecar_join_after_primary_seconds") != 0:
         errors.append("NPU sidecar join after primary is not disabled")
+    if "collect_provider_processes(\n                self,\n                prepared," in provider_execution:
+        errors.append("provider loop still blocks GPU1 on full prepared sidecar join")
+    if "poll_pending_provider_sidecars(round_id)" not in run_loop:
+        errors.append("run loop does not poll async sidecars without blocking GPU1")
+    if "pending_provider_sidecar_collections.append" not in provider_execution:
+        errors.append("provider loop does not retain async sidecar process handles")
     return {"name": "independent_sidecar_watchdogs", "errors": errors}
 
 

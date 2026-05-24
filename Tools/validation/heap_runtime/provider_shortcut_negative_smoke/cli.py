@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -34,6 +35,7 @@ from ia_carmine.runtime.heap_gate.generic_write_followup import (
     generic_write_document_product_eligible,
 )
 from ia_carmine.runtime.heap_gate.provider_recovery import provider_recovery_status
+from ia_carmine.runtime.heap_gate.provider_commands import RuntimeGateProviderCommandsMixin
 from ia_carmine.runtime.heap_gate.provider_teamwork_packet import (
     _provider_packet_tool_catalog_limit,
 )
@@ -112,6 +114,8 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         errors.append("standalone provider tools do not expose standalone_default config sources")
     if not _full_run_rejects_standalone_default_provider_evidence(repo_root):
         errors.append("full-run provider absorption does not reject standalone_default evidence")
+    if not _full_run_accepts_fingerprinted_canonical_provider_evidence(repo_root):
+        errors.append("canonical fingerprinted provider evidence is still rejected as standalone")
     if not _lane_manifest_preserves_derived_config(repo_root):
         errors.append("provider launch manifest does not preserve lane derived_config")
     requirement_report = _requirement_semantics_report()
@@ -377,6 +381,45 @@ def _full_run_rejects_standalone_default_provider_evidence(repo_root: Path) -> b
         and "standalone_default_config_not_accepted_as_full_run_provider_evidence" in source
         and 'report_data["provider_work_verified"] = False' in source
         and 'report_data["provider_role_counted"] = False' in source
+    )
+
+
+def _full_run_accepts_fingerprinted_canonical_provider_evidence(repo_root: Path) -> bool:
+    owner = RuntimeGateProviderCommandsMixin()
+    owner.args = SimpleNamespace(canonical_run_fingerprint="canonical-smoke")
+    owner.repo_root = repo_root
+    owner.provider_execution_performed = False
+    report = {
+        "provider_id": "gpu1_planner",
+        "provider_backend": "ollama",
+        "provider_compute_device": "ollama/gpu1",
+        "provider_loaded": True,
+        "provider_device_verified": True,
+        "device_identity_verified": True,
+        "ollama_full_gpu_verified": True,
+        "ollama_compute_verified": True,
+        "selected_model": "qwen2.5-coder:14b",
+        "completion_token_count": 1024,
+        "eval_count": 1024,
+        "done": True,
+        "response_text": "HEAP_DELTA_PROPOSAL\nTARGET_FILES:\n- ia_carmine/runtime/heap_gate/provider_commands.py\nPATCH_SKETCH:\n```diff\n@@\n+ok\n```",
+        "passed": True,
+        "standalone_default_fields": ["strict_provider_model"],
+        "canonical_run_provider_evidence": True,
+        "canonical_run_fingerprint": "canonical-smoke",
+    }
+    summary = owner.summarize_provider_report(
+        {"lane": "gpu1_planner", "role": "gpu1_provider_planner", "requirement": "gpu1_provider_planner", "output": "gpu1.json"},
+        subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr=""),
+        report,
+    )
+    return bool(
+        summary.get("provider_work_verified")
+        and not str(summary.get("provider_rejection_reason") or "").startswith(
+            "standalone_default_config_not_accepted"
+        )
+        and report.get("standalone_default_fields_ignored_reason")
+        == "canonical_run_provider_evidence_fingerprint_verified"
     )
 
 

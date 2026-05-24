@@ -200,6 +200,13 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
             "gpu1_block_ref": data.get("gpu1_block_ref"),
             "gpu0_review_block_refs": data.get("gpu0_review_block_refs") if isinstance(data.get("gpu0_review_block_refs"), list) else [],
             "npu_audit_block_refs": data.get("npu_audit_block_refs") if isinstance(data.get("npu_audit_block_refs"), list) else [],
+            "observed_gpu1_block_refs": data.get("observed_gpu1_block_refs") if isinstance(data.get("observed_gpu1_block_refs"), list) else [],
+            "observed_gpu0_review_block_refs": data.get("observed_gpu0_review_block_refs") if isinstance(data.get("observed_gpu0_review_block_refs"), list) else [],
+            "observed_npu_audit_block_refs": data.get("observed_npu_audit_block_refs") if isinstance(data.get("observed_npu_audit_block_refs"), list) else [],
+            "observed_provider_block_refs": data.get("observed_provider_block_refs") if isinstance(data.get("observed_provider_block_refs"), list) else [],
+            "consumed_gpu0_block_ids": data.get("consumed_gpu0_block_ids") if isinstance(data.get("consumed_gpu0_block_ids"), list) else [],
+            "consumed_npu_block_ids": data.get("consumed_npu_block_ids") if isinstance(data.get("consumed_npu_block_ids"), list) else [],
+            "consumed_provider_block_ids": data.get("consumed_provider_block_ids") if isinstance(data.get("consumed_provider_block_ids"), list) else [],
             "consumed_block_ids": data.get("consumed_block_ids") if isinstance(data.get("consumed_block_ids"), list) else [],
             "gpu1_closure_decision_packet": data.get("gpu1_closure_decision_packet"),
             "quality_passed": data.get("quality_passed"),
@@ -235,6 +242,14 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
                 "requires_review": data.get("quality_passed") is True,
             },
         }
+        if not block["consumed_block_ids"]:
+            consumed: list[str] = []
+            for key in ("consumed_gpu0_block_ids", "consumed_npu_block_ids", "consumed_provider_block_ids"):
+                for item in block.get(key) or []:
+                    value = str(item).strip()
+                    if value and value not in consumed:
+                        consumed.append(value)
+            block["consumed_block_ids"] = consumed
         if previous_id:
             for existing in blocks:
                 if existing.get("block_id") == previous_id:

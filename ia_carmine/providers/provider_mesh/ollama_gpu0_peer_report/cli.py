@@ -348,6 +348,8 @@ def main() -> int:
     parser.add_argument("--strict-provider-model", action="store_true")
     parser.add_argument("--operator-gpu-observation", default="")
     parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=True)
+    parser.add_argument("--canonical-run-provider-evidence", action="store_true")
+    parser.add_argument("--canonical-run-fingerprint", default="")
     raw_argv = sys.argv[1:]
     args = parser.parse_args(raw_argv)
     config_sources = config_sources_from_argv(raw_argv)
@@ -446,6 +448,8 @@ def main() -> int:
             "standalone_default_fields": [
                 key for key, source in config_sources.items() if source == "standalone_default"
             ],
+            "canonical_run_provider_evidence": bool(args.canonical_run_provider_evidence),
+            "canonical_run_fingerprint": str(args.canonical_run_fingerprint or ""),
             "ollama_base_url": args.base_url,
             "gpu0_vulkan_server": gpu0_server,
             "gpu0_server_evidence_source": gpu0_server.get("gpu0_server_evidence_source")

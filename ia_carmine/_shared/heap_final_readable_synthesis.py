@@ -12,6 +12,7 @@ from ia_carmine._shared.heap_final_code_product import (
     render_code_product_section,
     render_lab_section,
 )
+from ia_carmine._shared.heap_final_hierarchy_summary import provider_hierarchy_summary
 from ia_carmine._shared.provider_replight_markdown import provider_replight_table
 from ia_carmine.runtime.heap_gate.pointer_soft_lock import (
     gpu1_blocked_reason_from_gate,
@@ -91,6 +92,16 @@ def grouped_matrix_items(matrix: dict[str, Any]) -> dict[str, list[dict[str, Any
     for item in code_product_items(matrix):
         grouped.setdefault(matrix_item_group(item), []).append(item)
     return dict(sorted(grouped.items()))
+
+
+def matrix_has_applicable_code_product(matrix: dict[str, Any]) -> bool:
+    if not code_product_items(matrix):
+        return False
+    target_count = int(matrix.get("target_count") or 0)
+    verified_count = int(matrix.get("verified_target_count") or 0)
+    if target_count <= 0 and verified_count <= 0:
+        return False
+    return True
 
 
 def command_catalog(matrix: dict[str, Any]) -> list[str]:
@@ -291,9 +302,9 @@ def gpu1_raw_evidence_summary(run_dir: Path) -> list[str]:
 def pointer_graph_chain_summary(metrics: dict[str, Any], pointer: dict[str, Any], soft_lock_state: dict[str, Any]) -> list[str]:
     deferred_count = sum(1 for row in as_list(pointer.get("pointer_closure_table")) if str(as_dict(row).get("closure_status") or "") == "deferred_to_resume")
     return [
-        f"GPU1 block/revision: `{metrics.get('latest_gpu1_block_id') or 'not_available'}` / `{metrics.get('latest_gpu1_revision') or 'not_available'}`; packet valid: `{metrics.get('gpu1_closure_decision_packet_valid')}`; requires GPU0 review: `{metrics.get('latest_gpu1_block_requires_gpu0_review')}`.",
+        f"GPU1 block/revision: `{metrics.get('latest_gpu1_block_id')}` / `{metrics.get('latest_gpu1_revision')}`; packet valid: `{metrics.get('gpu1_closure_decision_packet_valid')}`; requires GPU0 review: `{metrics.get('latest_gpu1_block_requires_gpu0_review')}`.",
         f"GPU0 current review: `{metrics.get('latest_gpu1_block_reviewed_by_gpu0')}`; schema valid: `{metrics.get('gpu0_secondary_schema_valid')}`; stale: `{metrics.get('latest_gpu0_packet_stale_after_gpu1_packet_rewrite')}`; expected block/revision: `{metrics.get('latest_gpu0_expected_gpu1_block_id')}` / `{metrics.get('latest_gpu0_expected_gpu1_revision')}`.",
-        f"GPU0 retry reason: `{metrics.get('latest_gpu0_decision_override_reason') or soft_lock_state.get('gpu0_closure_reason') or 'not_available'}`; recovery required/attempted: `{metrics.get('provider_recovery_required')}` / `{metrics.get('provider_recovery_attempted')}`; chain: `{metrics.get('provider_recovery_chain') or []}`; deferred/open: `{deferred_count}` / `{soft_lock_state.get('open_pointer_count_final')}`.",
+        f"GPU0 retry reason: `{metrics.get('latest_gpu0_decision_override_reason') or soft_lock_state.get('gpu0_closure_reason')}`; recovery required/attempted: `{metrics.get('provider_recovery_required')}` / `{metrics.get('provider_recovery_attempted')}`; chain: `{metrics.get('provider_recovery_chain') or []}`; deferred/open: `{deferred_count}` / `{soft_lock_state.get('open_pointer_count_final')}`.",
         "Regola: i salti pointer restano ammessi; solo un subgrafo candidato con review GPU0 corrente e peer consumati puo' chiudere.",
     ]
 
@@ -323,49 +334,10 @@ def peer_followup_summary(metrics: dict[str, Any], pointer: dict[str, Any]) -> l
     return [
         f"GPU0 peer follow-up pending: `{gpu0_count}`.",
         f"NPU peer follow-up pending: `{npu_count}`.",
-        f"Ultimo peer pending block: `{latest.get('pointer_id') or 'not_available'}`.",
+        f"Ultimo peer pending block: `{latest.get('pointer_id')}`.",
         f"Azione richiesta: `gpu1_recovery_revision` se sidecar/review pendenti; next revision `{metrics.get('next_gpu1_recovery_revision') or 0}`; budget exhausted `{metrics.get('provider_revision_budget_exhausted')}`.",
         "Regola: GPU0/NPU possono produrre peer/refinement/veto/evidence, ma non chiudono mai il prodotto senza un blocco GPU1 successivo collegato.",
     ]
-
-
-def provider_hierarchy_summary(metrics: dict[str, Any]) -> list[str]:
-    lane_tiers = as_dict(metrics.get("lane_tiers"))
-    authority = as_dict(metrics.get("lane_authority"))
-    lane_budgets = as_dict(metrics.get("lane_context_budgets"))
-    consumed = as_list(metrics.get("consumed_peer_block_ids"))
-    device_map = as_list(metrics.get("device_identity_map"))
-    def budget(lane: str) -> str:
-        data = as_dict(lane_budgets.get(lane))
-        if data.get("ollama_num_ctx"):
-            return f"ctx={data.get('ollama_num_ctx')}, max_new_tokens={data.get('max_new_tokens')} source={data.get('max_new_tokens_source') or 'unknown'} override={data.get('max_new_tokens_override_path') or 'unknown'}"
-        if data.get("max_prompt_chars"):
-            return (
-                f"prompt_chars={data.get('max_prompt_chars')}, "
-                f"context_chars={data.get('max_context_chars')}, "
-                f"max_new_tokens={data.get('max_new_tokens')} source={data.get('max_new_tokens_source') or 'unknown'} override={data.get('max_new_tokens_override_path') or 'unknown'}"
-            )
-        return "not_available"
-    return [
-        f"Context budget hierarchy valid: `{metrics.get('context_hierarchy_valid')}`; scope=`{metrics.get('context_hierarchy_scope') or 'budget_only_not_workload_or_leadership'}`; operator effective config: `{metrics.get('operator_effective_provider_config') or {}}`.",
-        f"GPU1/NVIDIA identity: `{metrics.get('gpu1_lane_identity') or 'GPU1/NVIDIA primary Ollama lane'}`.",
-        f"GPU1 replight health/residency only: `{metrics.get('gpu1_replight_valid')}`; scope=`{metrics.get('gpu1_replight_scope') or 'health_residency_only'}`; mai leadership/prodotto.",
-        f"GPU1 boot leader ready: `{metrics.get('gpu1_boot_leader_ready')}`; autorizza solo avvio sidecar.",
-        f"GPU1 primary workload: `{metrics.get('gpu1_primary_workload_valid')}`; chars=`{metrics.get('gpu1_primary_workload_chars')}`, tokens=`{metrics.get('gpu1_primary_workload_tokens')}`.",
-        f"GPU1 primary evidence: `{metrics.get('gpu1_primary_evidence_valid')}`; source=`{metrics.get('gpu1_primary_evidence_source') or 'not_available'}`; leader_source=`{metrics.get('leader_source') or 'none'}`; gpu1_native_tool_call_count=`{metrics.get('gpu1_native_tool_call_count')}`.",
-        f"Parallel provider overlap / sidecar scope mode: `{metrics.get('sidecar_scope_mode') or 'packet_review_only'}`; start policy=`{metrics.get('sidecars_start_policy') or 'not_available'}`; overlap=`{metrics.get('parallel_provider_overlap_seconds')}`; gpu1_idle_after_primary_seconds=`{metrics.get('gpu1_idle_after_primary_seconds')}`; sidecar_alone_after_gpu1_seconds=`{metrics.get('sidecar_alone_after_gpu1_seconds')}`.",
-        f"GPU1 recovery/congruence: attempted=`{metrics.get('gpu1_recovery_attempted') or metrics.get('provider_recovery_attempted')}`; congruence_check=`{metrics.get('gpu1_congruence_check_performed')}`; sidecar_invalid=`{metrics.get('sidecar_invalid')}`; sidecar_incongruent=`{metrics.get('sidecar_incongruent')}`.",
-        f"GPU1 leader valid: `{metrics.get('gpu1_leader_valid')}`; leader block id: `{metrics.get('gpu1_leader_block_id') or 'not_available'}`.",
-        f"GPU1/NVIDIA: lane_tier=`{lane_tiers.get('gpu1_planner') or 'primary'}`, authority=`{authority.get('gpu1_planner') or 'leader'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('gpu1_planner')}`.",
-        f"GPU0/Vulkan: lane_tier=`{lane_tiers.get('gpu0_peer') or 'coworker_medium'}`, authority=`{authority.get('gpu0_peer') or 'coworker'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('gpu0_peer')}`.",
-        f"NPU/OpenVINO: lane_tier=`{lane_tiers.get('npu_micro_task_auditor') or 'micro_fast'}`, authority=`{authority.get('npu_micro_task_auditor') or 'micro_tool'}`, closure_owner=`gpu1_planner`, context_budget=`{budget('npu_micro_task_auditor')}`.",
-        f"Consumed peer block ids: `{consumed}`; roles observed/verified/invalid: `{metrics.get('roles_observed') or []}` / `{metrics.get('roles_verified') or []}` / `{metrics.get('roles_observed_invalid') or []}`.",
-        f"GPU1 consumed GPU0 peer: `{metrics.get('gpu1_consumed_gpu0_peer')}`; GPU1 consumed NPU peer: `{metrics.get('gpu1_consumed_npu_peer')}`.",
-        f"GPU1 consumed generic_write block ids: `{metrics.get('gpu1_consumed_generic_write_block_ids') or []}`.",
-        "Device identity map: `" + _device_identity_map_text(device_map) + "`.",
-        "Regola: GPU0 puo' produrre testo migliore o piu lungo, ma resta coworker_medium; non diventa primary e non chiude senza consumo GPU1.",
-    ]
-
 
 def closure_display_values(
     soft_lock_state: dict[str, Any],
@@ -384,34 +356,11 @@ def closure_display_values(
         or int(revision.get("gpu1_block_count") or 0) > 0
         or int(revision.get("proposal_block_count") or 0) > 0
     )
-    if gpu1_work_present and gpu1_decision in {"", "not_available"}:
+    if gpu1_work_present and not gpu1_decision:
         gpu1_decision = "gpu1_decision_missing"
     if gpu1_decision == "gpu1_decision_missing":
         gpu0_agreement = "not_evaluated_waiting_for_gpu1_decision"
-    return gpu1_decision or "not_available", gpu0_agreement or "not_available"
-
-
-def _device_identity_map_text(items: list[Any]) -> str:
-    parts: list[str] = []
-    for raw in items:
-        item = as_dict(raw)
-        lane = str(item.get("logical_lane") or "")
-        if not lane:
-            continue
-        backend = str(item.get("provider_backend_device_id") or item.get("provider_compute_device") or "")
-        windows = str(item.get("windows_task_manager_device_hint") or "")
-        vulkan = str(item.get("vulkan_visible_device") or "")
-        name = str(item.get("vulkan_device_name") or "")
-        verified = item.get("device_identity_verified")
-        detail = f"{lane}->{backend}"
-        if vulkan or name:
-            detail += f"->Vulkan {vulkan} {name}".rstrip()
-        if windows:
-            detail += f"->{windows}"
-        detail += f" verified={verified}"
-        parts.append(detail)
-    return "; ".join(parts) if parts else "not_available"
-
+    return gpu1_decision, gpu0_agreement
 
 def validation_summary(
     *,
@@ -452,6 +401,7 @@ def render_markdown(
         decision.get("rejected_count") or len(as_list(decision.get("rejected_proposals")))
     )
     groups = grouped_matrix_items(matrix)
+    has_applicable_code_product = bool(groups) and matrix_has_applicable_code_product(matrix)
     commands = command_catalog(matrix)
     concrete_code_proposal_count = int(
         matrix.get("concrete_code_proposal_count")
@@ -560,7 +510,7 @@ def render_markdown(
     lines = [
         "# IA-Carmine Final Readable Product",
         "",
-        "Prodotto run-owned, deduplicato e orientato alla decisione. Non e' una risposta finale GPU1 e non e' una concatenazione dei blocchi: la run usa i blocchi come evidenza e produce un piano applicabile.",
+        "Prodotto run-owned, deduplicato e orientato alla decisione. Non e' una risposta finale GPU1 e non e' una concatenazione dei blocchi: la run usa i blocchi come evidenza e produce un piano applicabile solo quando esiste un diff verificato.",
         "",
         "## Decisione finale",
         "",
@@ -573,15 +523,15 @@ def render_markdown(
         f"- Resume from block: `{resume_from_block_id}`.",
         f"- Continuation required: `{blocked_continuation}`.",
         f"- Soft lock state: `{soft_lock_state.get('soft_lock_state')}`.",
-        f"- Closure quorum status: `{closure_quorum_status or 'not_available'}`.",
+        f"- Closure quorum status: `{closure_quorum_status}`.",
         f"- GPU1 closure decision: `{gpu1_closure_display}`.",
         f"- GPU0 closure agreement: `{gpu0_closure_display}`.",
-        f"- NPU advisory: `{soft_lock_state.get('npu_closure_advisory') or npu_sidecar_status or 'not_available'}`.",
-        f"- CPU closure validation: `{cpu_closure_display or 'not_available'}`.",
+        f"- NPU advisory: `{soft_lock_state.get('npu_closure_advisory') or npu_sidecar_status}`.",
+        f"- CPU closure validation: `{cpu_closure_display}`.",
         f"- Soft lock extensions: `{soft_lock_state.get('soft_lock_extension_count')}`.",
         f"- Open pointer count final: `{open_pointer_count_final}`.",
             f"- Soft close reason: `{provider_runtime_reason or closure_quorum_reason or gpu1_reason or gate_product_status or provider_decision or soft_lock_state.get('soft_lock_state')}`.",
-            f"- NPU sidecar status: `{npu_sidecar_status or 'not_available'}`.",
+            f"- NPU sidecar status: `{npu_sidecar_status}`.",
             f"- Decisione pratica: {practical_decision}",
             "",
             "## Gerarchia GPU1/GPU0/NPU",
@@ -597,52 +547,69 @@ def render_markdown(
             "",
             *[f"- {line}" for line in peer_followup_summary(metrics, pointer)],
             "",
-            "## Piano applicabile",
-            "",
-        "Questi sono i cambiamenti concreti che fanno avanzare il progetto rispetto all'MD input: final product run-owned, N-turn pointer graph, ambiente virtuale controllato, gate piu severi e verifiche eseguibili.",
-        "",
     ]
-    if not groups:
-        lines.extend(["- Nessuna matrice codice disponibile: prodotto non applicabile.", ""])
-    for group, items in groups.items():
-        lines.extend([f"### {group}", ""])
-        lines.append(f"Ordine: {group_apply_order(group)}.")
-        lines.append("")
-        for item in items:
-            target = str(item.get("target_file") or "")
-            status = str(item.get("implementation_status") or "")
-            git_status = str(item.get("git_status") or "")
-            hunks = item.get("diff_hunk_count")
-            validations = len(as_list(item.get("validation_commands")))
-            lines.extend(
-                [
-                    f"- File: `{target}`",
-                    f"  Scopo: {matrix_item_purpose(item)}.",
-                    f"  Stato: `{status}`, git `{git_status}`, hunks `{hunks}`, validation commands `{validations}`.",
-                    "  Modifiche concrete:",
-                ]
-            )
-            for step in matrix_item_steps(item):
-                lines.append(f"    - {step}.")
-            lines.extend(
-                [
-                    "  Criterio applicazione: separare review/apply dal runtime; non promuovere se il gate resta bloccato.",
-                    "  Decisione: usare come candidato validato o evidence, secondo lo stato finale del gate.",
-                ]
-            )
-        lines.append("")
-    lines.extend(
-        [
-            "## Sequenza di applicazione",
-            "",
-            "1. Usare solo i diff presenti nella matrix come candidati revisionabili.",
-            "2. Verificare che ogni candidato riporti target, origine, guardrail e validation_commands.",
-            "3. Se il gate runtime e' bloccato, mantenere il candidato come evidence e non come apply-ready.",
-            "4. Rieseguire i comandi di validazione prima di qualsiasi applicazione separata.",
-            "5. Accettare APPLY_REVIEW_READY solo quando gate, matrix e patch synthesis sono coerenti.",
-            "",
-        ]
-    )
+    if has_applicable_code_product:
+        lines.extend(
+            [
+                "## Piano applicabile",
+                "",
+                "Questi sono i cambiamenti concreti che fanno avanzare il progetto rispetto all'MD input: final product run-owned, N-turn pointer graph, ambiente virtuale controllato, gate piu severi e verifiche eseguibili.",
+                "",
+            ]
+        )
+        for group, items in groups.items():
+            lines.extend([f"### {group}", ""])
+            lines.append(f"Ordine: {group_apply_order(group)}.")
+            lines.append("")
+            for item in items:
+                target = str(item.get("target_file") or "")
+                status = str(item.get("implementation_status") or "")
+                git_status = str(item.get("git_status") or "")
+                hunks = item.get("diff_hunk_count")
+                validations = len(as_list(item.get("validation_commands")))
+                lines.extend(
+                    [
+                        f"- File: `{target}`",
+                        f"  Scopo: {matrix_item_purpose(item)}.",
+                        f"  Stato: `{status}`, git `{git_status}`, hunks `{hunks}`, validation commands `{validations}`.",
+                        "  Modifiche concrete:",
+                    ]
+                )
+                for step in matrix_item_steps(item):
+                    lines.append(f"    - {step}.")
+                lines.extend(
+                    [
+                        "  Criterio applicazione: separare review/apply dal runtime; non promuovere se il gate resta bloccato.",
+                        "  Decisione: usare come candidato validato o evidence, secondo lo stato finale del gate.",
+                    ]
+                )
+            lines.append("")
+        lines.extend(
+            [
+                "## Sequenza di applicazione",
+                "",
+                "1. Usare solo i diff presenti nella matrix come candidati revisionabili.",
+                "2. Verificare che ogni candidato riporti target, origine, guardrail e validation_commands.",
+                "3. Se il gate runtime e' bloccato, mantenere il candidato come evidence e non come apply-ready.",
+                "4. Rieseguire i comandi di validazione prima di qualsiasi applicazione separata.",
+                "5. Accettare APPLY_REVIEW_READY solo quando gate, matrix e patch synthesis sono coerenti.",
+                "",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "## Prodotto finale di evidenza",
+                "",
+                "- NO_APPLICABLE_CODE_PRODUCT.",
+                "- Nessun diff/code effettivo verificato dalla matrix: il pacchetto finale resta un prodotto di evidenza, non una patch applicabile.",
+                "- `PLAN_PRODUCT_FULL_PATCH.md` e' il prodotto finale tecnico composto dall'heap: piano, pointer graph e prompt/evidenza GPU1 per questa uscita.",
+                "- `CODE_PRODUCT_FULL_PATCH.md` resta il prodotto finale patch/code, ma dichiara NO_APPLICABLE_CODE_PRODUCT se non contiene diff verificati.",
+                "- Pointer graph, prompt/raw GPU1 e blocchi GPU0/NPU restano navigabili e ricostruibili come evidence del percorso runtime.",
+                "- I blocchi GPU1 non patchable o non verificati non vengono promossi a code product: sono conservati come evidenza per recovery/congruence.",
+                "",
+            ]
+        )
     lines.extend(
         render_lab_section(run_dir=run_dir, gate=gate, matrix=matrix, matrix_path=matrix_path)
     )
@@ -659,10 +626,10 @@ def render_markdown(
             "",
             f"- Decisione GPU1: `{gpu1_closure_display}`.",
             f"- Accordo/veto GPU0: `{gpu0_closure_display}`.",
-            f"- Advisory NPU: `{soft_lock_state.get('npu_closure_advisory') or npu_sidecar_status or 'not_available'}`.",
-            f"- Validazione CPU: `{cpu_closure_display or 'not_available'}`.",
-            f"- Stato quorum: `{closure_quorum_status or 'not_available'}`.",
-            f"- Motivo quorum: `{closure_quorum_reason or 'not_available'}`.",
+            f"- Advisory NPU: `{soft_lock_state.get('npu_closure_advisory') or npu_sidecar_status}`.",
+            f"- Validazione CPU: `{cpu_closure_display}`.",
+            f"- Stato quorum: `{closure_quorum_status}`.",
+            f"- Motivo quorum: `{closure_quorum_reason}`.",
             "",
             "## Catena raw GPU1 -> packet CPU -> GPU0 -> quorum",
             "",

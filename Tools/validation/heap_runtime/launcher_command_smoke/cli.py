@@ -238,6 +238,11 @@ def main() -> int:
             "passed": "--allow-provider-generation" in generated_command
             and "--operator-intent" in generated_command,
         },
+        {
+            "name": "canonical_run_metadata_forwarded",
+            "passed": "--canonical-run-metadata" in generated_command
+            and "--canonical-run-fingerprint" in generated_command,
+        },
     ]
     errors = [check["name"] for check in checks if not check.get("passed")]
     report = {

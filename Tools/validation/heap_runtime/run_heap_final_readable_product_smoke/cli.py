@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.heap_final_readable_synthesis import render_markdown
 from ia_carmine.runtime.heap_context_closure.product_state import build_product_state
 from ia_carmine.runtime.heap_gate.gpu1_closure_packet import build_gpu1_closure_decision_packet
 
@@ -496,9 +497,41 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
     product = json.loads(output.read_text(encoding="utf-8-sig")) if output.exists() else {}
     final_md = documents_dir / "FINAL_READABLE_PRODUCT.md"
     full_code_product = documents_dir / "CODE_PRODUCT_FULL_PATCH.md"
+    plan_product_full_patch = documents_dir / "PLAN_PRODUCT_FULL_PATCH.md"
     zip_path = Path(str(documents_dir) + ".zip")
     body = final_md.read_text(encoding="utf-8-sig") if final_md.exists() else ""
     code_product_body = full_code_product.read_text(encoding="utf-8-sig") if full_code_product.exists() else ""
+    plan_product_body = (
+        plan_product_full_patch.read_text(encoding="utf-8-sig")
+        if plan_product_full_patch.exists()
+        else ""
+    )
+    no_product_body = render_markdown(
+        run_dir=run_dir,
+        composer={
+            "operator_decision": {
+                "decision": "BLOCKED_NO_VERIFIED_TARGET",
+                "accepted_count": 0,
+                "rejected_count": 1,
+            }
+        },
+        gate={
+            "metrics": {
+                "product_status": "blocked_with_reason",
+                "provider_revision_budget_exhausted": False,
+            },
+            "provider_execution_performed": False,
+        },
+        postrun={},
+        revision={
+            "resume_from_block_id": "smoke:proposal:001",
+            "gpu1_block_count": 2,
+            "proposal_block_count": 2,
+        },
+        pointer={"blocks": []},
+        matrix={"target_count": 0, "verified_target_count": 0, "concrete_code_proposals": []},
+        matrix_path="",
+    )
     required_phrases = ["Decisione finale", "Final document status", "Piano applicabile", "Sequenza di applicazione", "Laboratorio operativo", "Sa usarlo", "Code product", "Universo pointer e memoria", "Perche il provider non si applica", "Decisione operatore", "Peer follow-up pending", "Capture failed", "Gerarchia GPU1/GPU0/NPU", "GPU1 primary workload", "GPU1 primary evidence", "Generic write", "GPU1/NVIDIA", "GPU0/Vulkan", "coworker_medium", "NPU/OpenVINO", "micro_fast", "context_budget", "Parallel provider overlap", "Device identity map"]
     missing = [phrase for phrase in required_phrases if phrase not in body]
     pointer_reconstruction = (
@@ -541,7 +574,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and pointer_contract.get("single_run_not_single_direction") is True
         and final_md.exists()
         and full_code_product.exists()
+        and plan_product_full_patch.exists()
         and "CODE_PRODUCT_FULL_PATCH" in code_product_body
+        and "PLAN_PRODUCT_FULL_PATCH" in plan_product_body
+        and "technical_plan_product" in product.get("plan_product_kind", "")
         and "ia_carmine/product/code_product/final_readable_product/cli.py" in code_product_body
         and "FULL_DIFF_SENTINEL" in code_product_body
         and TRUNCATED_DIFF_MARKER not in code_product_body
@@ -551,6 +587,14 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         and "ia_carmine/worktree_extra.py" not in code_product_body
         and "Final assembler worktree fallback: `disabled`" in code_product_body
         and "Code product status: `BLOCKED_WITH_CODE_PRODUCT_REVIEW`" in code_product_body
+        and "## Prodotto finale di evidenza" in no_product_body
+        and "NO_APPLICABLE_CODE_PRODUCT" in no_product_body
+        and "PLAN_PRODUCT_FULL_PATCH.md" in no_product_body
+        and "Pointer graph, prompt/raw GPU1" in no_product_body
+        and "## Piano applicabile" not in no_product_body
+        and "## Sequenza di applicazione" not in no_product_body
+        and "- Sa usarlo: `False`" in no_product_body
+        and "e' stato chiamato via broker" not in no_product_body
         and product.get("soft_lock_closure_owner_decision") == "finalize_product"
         and product.get("gpu0_closure_agreement") == "agree_close"
         and product.get("closure_quorum_status") == "ready_to_close"
@@ -573,8 +617,10 @@ def run_smoke(args: argparse.Namespace) -> dict[str, Any]:
         "product_json": str(output),
         "documents_markdown": str(final_md),
         "full_code_product": str(full_code_product),
+        "plan_product_full_patch": str(plan_product_full_patch),
         "documents_zip": str(zip_path),
         "missing_required_phrases": missing,
+        "no_product_markdown_preview": no_product_body[:4000],
         "pointer_reconstruction_passed": product.get("pointer_reconstruction_passed"),
         "pointer_reconstruction": pointer_reconstruction,
         "launcher_reason_preserved": launcher_reason_preserved,

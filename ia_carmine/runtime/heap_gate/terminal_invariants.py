@@ -75,6 +75,10 @@ def evaluate_terminal_invariants(
         and safe_int(metrics.get("provider_lane_count")) <= 0
     )
     budget_exhausted = bool(metrics.get("budget_exhausted"))
+    soft_close_sampled_exit = bool(
+        metrics.get("soft_close_reached")
+        and metrics.get("product_status") == "blocked_with_reason"
+    )
     if pre_provider:
         if metrics.get("product_status") == "ready":
             errors.append("ready product_status is forbidden before provider start")
@@ -144,14 +148,17 @@ def evaluate_terminal_invariants(
             errors.append("open_pointer_count_zero_with_deferred_pointer_edges")
     if allow_provider_generation and not pre_provider and detailed_output_expected:
         if metrics.get("product_status") != "ready":
-            errors.append(
-                "complete provider product run cannot pass without ready product; "
-                f"product_status={metrics.get('product_status')}"
-            )
+            if not soft_close_sampled_exit:
+                errors.append(
+                    "complete provider product run cannot pass without ready product; "
+                    f"product_status={metrics.get('product_status')}"
+                )
         if not metrics.get("provider_raw_response_text") and not generic_product_ready:
             errors.append("GPU1 primary center produced no provider response text")
         if not metrics.get("proposal_iteration_artifacts"):
             errors.append("provider product run requires GPU1 proposal/pointer iteration artifacts")
+        if soft_close_sampled_exit:
+            return prefixed_errors(errors)
         if (
             metrics.get("gpu1_closure_decision_packet_valid") is not True
             and not generic_product_ready

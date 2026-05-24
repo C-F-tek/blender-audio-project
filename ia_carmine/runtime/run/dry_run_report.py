@@ -31,9 +31,11 @@ def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
     command = OperatorProductController(config).build_command()
     effective_universe_config = cfg.effective_universe_config or {}
     field_sources = cfg.field_sources or {}
-    effective_config = context_hierarchy_payload(cfg, gpu1_ctx=cfg.ollama_num_ctx).get(
-        "operator_effective_config", {}
-    )
+    effective_config = context_hierarchy_payload(
+        cfg,
+        gpu1_ctx=cfg.ollama_num_ctx,
+        field_sources=field_sources,
+    ).get("operator_effective_config", {})
     return {
         "schema_version": 1,
         "kind": "operator_universe_run_plan",

@@ -51,6 +51,17 @@ class _Args:
     npu_max_prompt_chars = 1200
     npu_max_new_tokens = 384
     keep_alive = "120s"
+    field_sources = {
+        "gpu0_max_new_tokens": "cli_arg",
+        "gpu0_ollama_num_ctx": "cli_arg",
+        "ollama_num_ctx": "cli_arg",
+        "max_new_tokens": "cli_arg",
+        "npu_max_context_chars": "cli_arg",
+        "npu_max_prompt_chars": "cli_arg",
+        "npu_max_new_tokens": "cli_arg",
+        "max_provider_revisions": "cli_arg",
+        "keep_alive": "cli_arg",
+    }
 
 
 class _Owner:
@@ -236,6 +247,13 @@ def run_smoke() -> dict[str, Any]:
     events_after = maybe_run_provider_recovery(owner, 1, [])
     status_after = provider_recovery_status(owner, events_after)
     config = context_hierarchy_payload(owner.args, gpu1_ctx=owner.args.ollama_num_ctx)
+    repo_root = Path(".").resolve()
+    proposal_source = (
+        repo_root / "ia_carmine/runtime/heap_gate/proposal_cycle_a.py"
+    ).read_text(encoding="utf-8", errors="replace")
+    pointer_source = (
+        repo_root / "ia_carmine/runtime/external_heap/block_pointer_manifest/cli.py"
+    ).read_text(encoding="utf-8", errors="replace")
     checks = {
         "recovery_required_before": status_before.get("provider_recovery_required") is True,
         "gpu0_incongruent_reason_present": "sidecar_incongruent"
@@ -290,6 +308,13 @@ def run_smoke() -> dict[str, Any]:
             and config["operator_effective_config"]["gpu0.ollama_num_ctx"]["source"] == "cli_arg"
         ),
         "status_after_still_graph_based": status_after.get("provider_recovery_required") is True,
+        "gpu1_recovery_persists_consumed_sidecar_ids": (
+            '"consumed_gpu0_block_ids": consumed_gpu0_block_ids' in proposal_source
+            and '"consumed_npu_block_ids": consumed_npu_block_ids' in proposal_source
+            and '"consumed_provider_block_ids": consumed_provider_block_ids'
+            in proposal_source
+            and '"consumed_provider_block_ids":' in pointer_source
+        ),
     }
     return {
         "schema_version": 1,

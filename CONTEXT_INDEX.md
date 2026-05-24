@@ -1,5 +1,19 @@
 # Repository context index
 
+<!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:START -->
+## Current Runtime/Tool Contract (2026-05-24)
+
+Canonical wording: `docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md`.
+
+- GPU1/NVIDIA primary Ollama lane is the operational center and advances by heap pointer/recovery turns without waiting for GPU0/NPU sidecar completion.
+- GPU0/NPU are `packet_review_only` sidecars: they start only after a reviewable GPU1 packet, do not close product, and remain deferred evidence until a later GPU1 turn consumes their pointer ids.
+- Tool/lab/matrix/debug reporting must distinguish `lab_called`, `lab_report_written`, `lab_usable` and `lab_status`; attempted tool calls are evidence, not automatic usable lab output.
+- `CODE_PRODUCT_FULL_PATCH.md` is the final patch/code product; `PLAN_PRODUCT_FULL_PATCH.md` is the final recomposed GPU1 prompt/chat product, with pointer graph and recovery/congruence as technical attachments.
+- Missing optional values stay empty/null; required missing devices or provider prerequisites raise or block with a typed reason rather than emitting placeholder text.
+- Complete runs require explicit config flags, including `--files-per-round`, `--gpu0-ollama-num-ctx`, `--npu-micro-start-mode`, `--npu-final-wait-seconds` and `--max-degraded-lanes`.
+<!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:END -->
+
+
 This is the compact navigation entrypoint for AI and operator context.
 
 ## Core contracts and models
@@ -14,7 +28,8 @@ This is the compact navigation entrypoint for AI and operator context.
 | `docs/PROVIDER_LANES_UNIFIED_MIND_MODEL.md` | Current compact model for Ollama/main provider, GPU0 coworker lane and NPU micro-lane as one operational mind with departments. |
 | `docs/REAL_PRODUCT_RUN_MODEL.md` | Current compact model for evidence-only, blocked and real product run states. |
 | `docs/COMPACT_EVIDENCE_MODEL.md` | Current compact model for raw runtime output, selected compact evidence, AI-to-AI bundles and Git-trackable evidence. |
-| `docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md` | Current compact model for provider proposal, patch plan, code product, PatchKit, repo-patch-runner and reviewed apply boundaries. |
+| `docs/PATCH_CODE_PRODUCT_BOUNDARY_MODEL.md
+docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md` | Current compact model for provider proposal, patch plan, code product, PatchKit, repo-patch-runner and reviewed apply boundaries. |
 
 ## Coverage status
 

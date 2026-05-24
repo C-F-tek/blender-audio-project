@@ -19,7 +19,7 @@ def gpu1_primary_workload_status(report: dict[str, Any]) -> dict[str, Any]:
     provider_stage = str(report.get("provider_stage") or "").strip()
     non_replight = (
         not normalize_bool(report.get("replight_mode"))
-        and provider_stage not in {"health_check_only", "not_available"}
+        and provider_stage != "health_check_only"
     )
     workload_valid = bool(
         report.get("passed") is True

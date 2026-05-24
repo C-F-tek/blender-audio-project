@@ -262,6 +262,34 @@ def main() -> int:
         if isinstance(profile_payload.get("effective_universe_config"), dict)
         else {}
     )
+    provider_effective = (
+        profile_payload.get("operator_effective_provider_config")
+        if isinstance(profile_payload.get("operator_effective_provider_config"), dict)
+        else {}
+    )
+    profile_doc = json.loads(
+        (
+            repo_root
+            / "ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json"
+        ).read_text(encoding="utf-8")
+    )
+    control_groups = (
+        profile_doc.get("profile_control_groups")
+        if isinstance(profile_doc.get("profile_control_groups"), dict)
+        else {}
+    )
+    grouped_fields = {
+        str(field)
+        for values in control_groups.values()
+        for field in (values if isinstance(values, list) else [])
+    }
+    profile_fields = {
+        str(field)
+        for profile in (profile_doc.get("profiles") or {}).values()
+        if isinstance(profile, dict)
+        for field in profile
+    }
+    profile_control_unclassified = sorted(profile_fields - grouped_fields)
     required_fields = sorted(config_field_names() - OPTIONAL_FIELDS)
     profile_missing_required = [
         field
@@ -338,6 +366,25 @@ def main() -> int:
             and "allow_provider_generation" in direct_parameters,
         },
         {
+            "name": "provider_hierarchy_uses_field_sources",
+            "passed": safe_get(provider_effective, "gpu1.ollama_num_ctx", "source")
+            == profile_sources.get("ollama_num_ctx")
+            and safe_get(provider_effective, "gpu1.max_new_tokens", "source")
+            == profile_sources.get("max_new_tokens")
+            and safe_get(provider_effective, "gpu0.ollama_num_ctx", "source")
+            == profile_sources.get("gpu0_ollama_num_ctx")
+            and safe_get(provider_effective, "gpu0.max_new_tokens", "source")
+            == profile_sources.get("gpu0_max_new_tokens")
+            and safe_get(provider_effective, "npu.max_context_chars", "source")
+            == profile_sources.get("npu_max_context_chars")
+            and safe_get(provider_effective, "keep_alive", "source")
+            == profile_sources.get("keep_alive"),
+        },
+        {
+            "name": "profile_control_groups_cover_profile_fields",
+            "passed": not profile_control_unclassified,
+        },
+        {
             "name": "files_per_round_propagated_to_expanded_command",
             "passed": "--files-per-round" in (payload.get("expanded_heap_command") or [])
             and "4" in (payload.get("expanded_heap_command") or []),
@@ -371,6 +418,7 @@ def main() -> int:
         "resolved_result": resolved,
         "profile_result": profile_result,
         "profile_missing_required": profile_missing_required,
+        "profile_control_unclassified": profile_control_unclassified,
         "rejected_config_result": rejected_config_result,
         "operator_mixed_local_result": operator_mixed_local_result,
     }

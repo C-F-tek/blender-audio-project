@@ -140,6 +140,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tool-loop-max-new-tokens", type=int, default=128)
     parser.add_argument("--npu-model-dir", default="")
     parser.add_argument("--leader-packet", default="", help="GPU1 primary advisor leader packet.")
+    parser.add_argument("--canonical-run-provider-evidence", action="store_true")
+    parser.add_argument("--canonical-run-fingerprint", default="")
     return parser.parse_args()
 
 def _task_preview(repo_root: Path, task_file: str, startup_manifest: str, max_chars: int) -> str:
@@ -260,6 +262,8 @@ def _report(
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "passed": npu_real_provider_performed,
         "provider_execution_performed": npu_real_provider_performed,
+        "canonical_run_provider_evidence": bool(args.canonical_run_provider_evidence),
+        "canonical_run_fingerprint": str(args.canonical_run_fingerprint or ""),
         "mode": "peer_micro_audit",
         "sidecar_scope_mode": "packet_review_only",
         "sidecar_scope_contract": (

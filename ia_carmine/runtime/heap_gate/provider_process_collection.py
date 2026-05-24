@@ -131,6 +131,73 @@ def collect_provider_processes(
             time.sleep(0.2)
 
 
+def poll_provider_processes(
+    gate: Any,
+    prepared: list[dict[str, Any]],
+    timeout_seconds: int,
+    round_id: int,
+    revision: int,
+    on_completed: Callable[[dict[str, Any]], None] | None = None,
+) -> int:
+    """Collect finished provider processes without waiting for pending lanes."""
+    pending = [
+        item
+        for item in prepared
+        if item.get("completed") is None and item.get("process") is not None
+    ]
+    now = time.perf_counter()
+    for item in list(pending):
+        process = item.get("process")
+        if process is None:
+            pending.remove(item)
+            continue
+        elapsed = now - float(item.get("started_perf") or now)
+        watchdog = _item_watchdog_seconds(item, timeout_seconds)
+        if process.poll() is None and elapsed <= watchdog:
+            continue
+        command = list(item["command"])
+        if process.poll() is None:
+            terminate_process_tree(process)
+            try:
+                stdout, stderr = process.communicate(timeout=5)
+            except Exception:
+                stdout, stderr = "", "provider watchdog cleanup output collection failed"
+            reason = "provider watchdog timeout"
+            item["completed"] = subprocess.CompletedProcess(
+                command,
+                returncode=124,
+                stdout=stdout or "",
+                stderr=(stderr or "") + f"\n{reason}",
+            )
+            status = "watchdog_timeout"
+        else:
+            stdout, stderr = process.communicate()
+            item["completed"] = subprocess.CompletedProcess(
+                command,
+                returncode=process.returncode,
+                stdout=stdout or "",
+                stderr=stderr or "",
+            )
+            status = "finished"
+        item["completed_at"] = now_iso()
+        item["completed_perf"] = now
+        item["elapsed_seconds"] = round(elapsed, 6)
+        pending.remove(item)
+        _publish_lane_state(gate, item, revision, round_id, status, timeout_seconds)
+        if on_completed is not None:
+            try:
+                on_completed(item)
+            except Exception as exc:  # noqa: BLE001 - one lane must not block peer joins.
+                item["absorb_error"] = f"{type(exc).__name__}: {exc}"
+    return len(
+        [
+            item
+            for item in prepared
+            if item.get("completed") is None and item.get("process") is not None
+        ]
+    )
+
+
 def _item_watchdog_seconds(item: dict[str, Any], fallback_seconds: int) -> float:
     value = float(
         item.get("watchdog_timeout_seconds")

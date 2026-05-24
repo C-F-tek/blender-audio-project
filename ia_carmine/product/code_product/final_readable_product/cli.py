@@ -9,8 +9,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 try:
-    from ia_carmine._shared.heap_final_code_product import code_product_items, code_product_status, render_full_code_product_markdown
+    from ia_carmine._shared.heap_final_code_product import code_product_items, code_product_status, lab_status_summary, matrix_has_reviewable_targets, render_full_code_product_markdown
     from ia_carmine._shared.heap_final_readable_synthesis import closure_display_values, render_markdown
+    from ia_carmine._shared.heap_plan_product_full_patch import render_plan_product_full_patch
     from ia_carmine.product.code_product.final_readable_product.code_matrix_discovery import load_code_matrix
     from ia_carmine.product.code_product.final_readable_product.operator_decision import write_operator_decision
     from ia_carmine.product.code_product.final_readable_product.product_contract import code_product_markdown_metrics, final_product_blockers, real_code_product_ready
@@ -21,8 +22,9 @@ except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from ia_carmine._shared.heap_final_code_product import code_product_items, code_product_status, render_full_code_product_markdown  # type: ignore
+    from ia_carmine._shared.heap_final_code_product import code_product_items, code_product_status, lab_status_summary, matrix_has_reviewable_targets, render_full_code_product_markdown  # type: ignore
     from ia_carmine._shared.heap_final_readable_synthesis import closure_display_values, render_markdown  # type: ignore
+    from ia_carmine._shared.heap_plan_product_full_patch import render_plan_product_full_patch  # type: ignore
     from ia_carmine.product.code_product.final_readable_product.code_matrix_discovery import load_code_matrix  # type: ignore
     from ia_carmine.product.code_product.final_readable_product.operator_decision import write_operator_decision  # type: ignore
     from ia_carmine.product.code_product.final_readable_product.product_contract import code_product_markdown_metrics, final_product_blockers, real_code_product_ready  # type: ignore
@@ -136,6 +138,14 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         gate_product_status,
         blocked_reason=provider_blocked_reason,
     )
+    plan_product_full_patch = render_plan_product_full_patch(
+        run_dir=run_dir,
+        gate=gate,
+        revision=revision,
+        pointer=pointer,
+        matrix=matrix,
+        matrix_path=matrix_path,
+    )
     output = resolve_path(repo_root, args.output or run_dir / "heap_final_readable_product.json")
     markdown_output = resolve_path(
         repo_root, args.markdown_output or run_dir / "heap_final_readable_product.md"
@@ -144,9 +154,11 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         repo_root, args.text_output or run_dir / "heap_final_readable_product.txt"
     )
     full_code_product_output = run_dir / "CODE_PRODUCT_FULL_PATCH.md"
+    plan_product_full_patch_output = run_dir / "PLAN_PRODUCT_FULL_PATCH.md"
     write_text(markdown_output, markdown)
     write_text(text_output, markdown)
     write_text(full_code_product_output, full_code_product)
+    write_text(plan_product_full_patch_output, plan_product_full_patch)
     documents_outputs: dict[str, str] = {}
     documents_zip = ""
     zip_member_count = 0
@@ -161,21 +173,30 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         documents_txt = documents_dir / "FINAL_READABLE_PRODUCT.txt"
         documents_json = documents_dir / "FINAL_READABLE_PRODUCT.json"
         documents_code_product = documents_dir / "CODE_PRODUCT_FULL_PATCH.md"
+        documents_plan_product_full_patch = documents_dir / "PLAN_PRODUCT_FULL_PATCH.md"
         documents_json_path = documents_json
         write_text(documents_md, markdown)
         write_text(documents_txt, markdown)
         write_text(documents_code_product, full_code_product)
+        write_text(documents_plan_product_full_patch, plan_product_full_patch)
         documents_outputs = {
             "documents_markdown": str(documents_md),
             "documents_text": str(documents_txt),
             "documents_json": str(documents_json),
             "documents_code_product": str(documents_code_product),
+            "documents_plan_product_full_patch": str(documents_plan_product_full_patch),
         }
         manifest = str(composer.get("download_manifest_txt") or "")
         if manifest:
             append_download_manifest(
                 Path(manifest).expanduser().resolve(),
-                [documents_md, documents_txt, documents_json, documents_code_product],
+                [
+                    documents_md,
+                    documents_txt,
+                    documents_json,
+                    documents_code_product,
+                    documents_plan_product_full_patch,
+                ],
             )
         if args.zip_documents:
             zip_path_for_later = (
@@ -184,8 +205,19 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
                 else Path(str(documents_dir) + ".zip")
             )
             documents_zip = str(zip_path_for_later)
-    matrix_items = code_product_items(matrix)
+    reviewable_matrix_targets = matrix_has_reviewable_targets(matrix)
+    matrix_items = code_product_items(matrix) if reviewable_matrix_targets else []
     code_product_state = code_product_status(matrix, gate_product_status)
+    matrix_target_count = int(matrix.get("target_count") or 0)
+    verified_target_count = int(matrix.get("verified_target_count") or 0)
+    lab = lab_status_summary(
+        run_dir=run_dir,
+        gate=gate,
+        matrix=matrix,
+        matrix_path=matrix_path,
+    )
+    lab_evidence_written = bool(lab.get("lab_evidence_written"))
+    lab_status = str(lab.get("lab_status") or "not_run")
     provider_decision = str(decision.get("decision") or "")
     concrete_code_proposal_count = len(matrix_items)
     resume_from_block_id = str(revision.get("resume_from_block_id") or "")
@@ -214,7 +246,14 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     soft_lock["soft_lock_closure_owner_decision"] = gpu1_closure_display
     soft_lock["gpu0_closure_agreement"] = gpu0_closure_display
     pointer_closure_blocked = open_pointer_count_final > 0
+    targeted_refine_pending = bool(
+        open_pointer_count_final > 0
+        and closure_quorum_status == "targeted_refine_allowed"
+        and not bool(metrics.get("provider_revision_budget_exhausted"))
+    )
     blocked_continuation = bool(
+        targeted_refine_pending
+        or (
         not provider_runtime_blocked
         and (
         closure_quorum_status == "blocked_continuation_ready"
@@ -227,6 +266,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
                 or gate_product_status == "blocked_with_reason"
                 or gpu1_reason
             )
+        )
         )
         )
     )
@@ -360,6 +400,8 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "cpu_closure_validation": soft_lock.get("cpu_closure_validation", ""),
         "closure_quorum_status": closure_quorum_status,
         "closure_quorum_reason": closure_quorum_reason,
+        "targeted_refine_pending": targeted_refine_pending,
+        "provider_revision_budget_exhausted": metrics.get("provider_revision_budget_exhausted"),
         "soft_lock_targeted_refine_used": soft_lock.get(
             "soft_lock_targeted_refine_used", False
         ),
@@ -427,16 +469,34 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "linked_npu_block_count": revision.get("linked_npu_block_count")
         or revision.get("npu_block_count"),
         "concrete_code_proposal_count": concrete_code_proposal_count,
+        "applicable_code_product": bool(matrix_items),
+        "evidence_product_status": (
+            "CODE_PRODUCT_APPLICABLE" if matrix_items else "NO_APPLICABLE_CODE_PRODUCT"
+        ),
+        "lab_status": lab_status,
+        "lab_called": lab.get("lab_called"),
+        "lab_evidence_written": lab_evidence_written,
+        "lab_report_written": lab.get("lab_report_written"),
+        "lab_usable": lab.get("lab_usable"),
+        "lab_pass_values": lab.get("lab_pass_values"),
+        "lab_required_missing": lab.get("lab_required_missing"),
+        "tool_request_count": lab.get("tool_request_count"),
+        "tool_execution_count": lab.get("tool_execution_count"),
+        "provider_native_tool_call_count": lab.get("provider_native_tool_call_count"),
+        "provider_textual_tool_call_count": lab.get("provider_textual_tool_call_count"),
         "matrix_target_count": matrix.get("target_count"),
         "verified_target_count": matrix.get("verified_target_count"),
         "matrix_report": matrix_path,
         "markdown_output": str(markdown_output),
         "text_output": str(text_output),
         "full_code_product_output": str(full_code_product_output),
+        "plan_product_full_patch_output": str(plan_product_full_patch_output),
         "json_output": str(output),
         "documents_outputs": documents_outputs,
         "documents_zip": documents_zip,
         "zip_member_count": zip_member_count,
+        "plan_product_full_patch_ready": True,
+        "plan_product_kind": "technical_plan_product",
         "provider_execution_performed": pointer.get("provider_execution_performed"),
         "patch_application_performed": gate.get("patch_application_performed"),
         "source_writes_performed": gate.get("source_writes_performed"),

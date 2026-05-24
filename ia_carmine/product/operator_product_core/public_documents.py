@@ -148,6 +148,20 @@ def _ensure_fallback_product_files(
                 "",
             ]
         ),
+        "PLAN_PRODUCT_FULL_PATCH.md": "\n".join(
+            [
+                "# PLAN_PRODUCT_FULL_PATCH",
+                "",
+                "technical_plan_product",
+                "",
+                f"Status: {status or 'blocked_with_reason'}",
+                f"Blocked reason: {reason}",
+                f"Resume from block: {run_report.get('resume_from_block_id') or ''}",
+                "",
+                "This fallback file is a final plan/evidence artifact, not an applicable diff.",
+                "",
+            ]
+        ),
     }
     for name, text in files.items():
         path = root / name

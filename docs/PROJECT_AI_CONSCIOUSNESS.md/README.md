@@ -1,3 +1,5 @@
+
+
 <!-- IA-CARMINE-MD-SPLIT: index -->
 # Indice — PROJECT_AI_CONSCIOUSNESS.md
 

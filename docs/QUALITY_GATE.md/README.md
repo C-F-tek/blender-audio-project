@@ -1,3 +1,5 @@
+
+
 <!-- IA-CARMINE-MD-SPLIT: index -->
 # Indice — QUALITY_GATE.md
 

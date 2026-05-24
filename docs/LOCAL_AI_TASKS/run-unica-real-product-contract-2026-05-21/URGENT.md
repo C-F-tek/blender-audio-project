@@ -64,7 +64,7 @@ operator_authorization_required
 ```
 
 The absence of provider generation must not be used to hide or soften resource
-mechanics, CPU pressure, GPU/NPU probes or a violation of an operator block.
+mechanics, CPU pressure, GPU/NPU probes or a violation of an operator stop.
 
 ## Operator Evidence 2026-05-21
 

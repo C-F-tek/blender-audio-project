@@ -82,13 +82,7 @@ def run_openvino_tool_loop_child_payload(payload: dict[str, Any]) -> dict[str, A
     core = ov.Core()
     devices = list(core.available_devices)
     if device not in devices:
-        return {
-            "performed": False,
-            "supported": False,
-            "classification": "openvino_tool_loop_device_unavailable",
-            "devices": devices,
-            "errors": [f"{device} not available"],
-        }
+        raise RuntimeError(f"{device} device missing")
 
     history = genai.ChatHistory()
     history.set_tools(tools)

@@ -151,6 +151,7 @@ def build_report(
     pointer: dict[str, Any], composer: dict[str, Any], causality: dict[str, Any]
 ) -> dict[str, Any]:
     proposals = proposal_blocks(pointer)
+    gpu1 = peer_blocks(pointer, "gpu1_planner")
     gpu0 = peer_blocks(pointer, "gpu0_reviewer_refiner")
     npu = peer_blocks(pointer, "npu_auditor")
     linked_gpu0 = [block for block in gpu0 if block.get("refines_block_id")]
@@ -282,6 +283,7 @@ def build_report(
         "product_acceptance_status": causality.get("product_acceptance_status"),
         "product_acceptance_passed": causality.get("product_acceptance_passed"),
         "proposal_block_count": len(proposals),
+        "gpu1_block_count": len(gpu1),
         "source_block_count": pointer.get("source_block_count"),
         "pointer_block_count": pointer.get("block_count"),
         "pointer_max_blocks_applied": pointer_limited,

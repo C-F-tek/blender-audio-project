@@ -168,7 +168,7 @@ def _report_has_useful_no_tool_text(report: dict[str, Any]) -> bool:
         or npu_peer_evidence
     )
     provider_stage = str(report.get("provider_stage") or "").strip()
-    if provider_stage in {"health_check_only", "not_available"} and not npu_peer_evidence:
+    if provider_stage == "health_check_only" and not npu_peer_evidence:
         return False
     if report.get("provider_work_verified") is False and not useful_evidence:
         return False

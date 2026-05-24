@@ -74,6 +74,17 @@ def _required_config_value(args: Any, name: str) -> str:
     return value
 
 
+def _canonical_provider_args(gate: Any) -> list[str]:
+    fingerprint = str(getattr(gate.args, "canonical_run_fingerprint", "") or "").strip()
+    if not fingerprint:
+        return []
+    return [
+        "--canonical-run-provider-evidence",
+        "--canonical-run-fingerprint",
+        fingerprint,
+    ]
+
+
 def _gpu0_max_new_tokens(gate: Any) -> int:
     return gpu0_max_new_tokens(gate.args)
 
@@ -271,6 +282,7 @@ def build_provider_command_specs(
                 "--keep-alive",
                 keep_alive,
                 "--defer-unload",
+                *_canonical_provider_args(gate),
                 "--output",
                 repo_rel(gate.repo_root, gpu1_json),
                 *(["--strict-provider-model"] if getattr(gate.args, "strict_provider_model", False) else []),
@@ -324,6 +336,7 @@ def build_provider_command_specs(
                 "--keep-alive",
                 keep_alive,
                 "--defer-unload",
+                *_canonical_provider_args(gate),
                 *startup_args,
                 *(["--leader-packet", leader_packet] if leader_packet else []),
                 *request_args,
@@ -375,6 +388,7 @@ def build_provider_command_specs(
                 str(gate.args.npu_max_prompt_chars),
                 "--tool-loop-max-new-tokens",
                 str(gate.args.npu_max_new_tokens),
+                *_canonical_provider_args(gate),
                 *(["--npu-model-dir", str(getattr(gate.args, "npu_model_dir", ""))] if str(getattr(gate.args, "npu_model_dir", "")).strip() else []),
                 *_npu_device_workload_args(gate),
                 "--output",

@@ -6,9 +6,9 @@ This folder is the operational handoff for debugging the canonical IA-Carmine ru
 
 The objective is not a diagnostic-only package. The objective is a full heap/universe run where the request enters shared runtime state, providers operate with defined roles, tool evidence is absorbed, matrix/lab validation produces concrete patch candidates, and the final package contains a reviewable `CODE_PRODUCT_FULL_PATCH.md` with real non-truncated diffs when a patchable target exists.
 
-The run must stay one integrated recursive flow. The final product bundle must be reconstructed from heap memory, pointer links and GPU1/GPU0/NPU blocks produced at each round, so the system does not depend on chat context or a single provider token window.
+The run must stay one integrated recursive flow. The final product bundle must be reconstructed from heap memory, pointer links and GPU1/GPU0/NPU pointer records produced at each round, so the system does not depend on chat context or a single provider token window.
 
-GPU0 may enrich the pointer graph with coherent propagation information, including text/script/change refs, then return control to the main GPU1 block. When a partial response is rejected, the wrong response becomes explicit evidence and the next cycle must ask GPU1 to change response typology. A first-turn GPU1 plan is allowed only as `PLAN_THEN_PROPOSAL` evidence, not as product.
+GPU0 may enrich the pointer graph with coherent propagation information, including text/script/change refs, then return control to the main GPU1 pointer record. When a partial response is rejected, the wrong response becomes explicit evidence and the next cycle must ask GPU1 to change response typology. A first-turn GPU1 plan is allowed only as `PLAN_THEN_PROPOSAL` evidence, not as product.
 
 `contractor_universe` is not to be excluded. Treat its priority heap and logical
 soft-time clock as the compact model to integrate into the same canonical run,

@@ -16,21 +16,27 @@ from ia_carmine.runtime.heap_gate.provider_coexistence_preflight import (
     enforce_provider_role_coexistence_preflight,
 )
 from ia_carmine.runtime.heap_gate.provider_lane_launch import start_provider_item, write_provider_launch_manifest
-from ia_carmine.runtime.heap_gate.provider_process_collection import collect_provider_processes, terminate_pending_provider_processes
-from ia_carmine._shared.provider_replight import provider_replight_failure_reason
+from ia_carmine.runtime.heap_gate.provider_process_collection import (
+    collect_provider_processes,
+    terminate_pending_provider_processes,
+)
 from ia_carmine.runtime.heap_gate.provider_replight_gate import run_provider_replight_gate
 from ia_carmine.runtime.heap_gate.provider_residency_preflight import wait_for_gpu1_residency_preflight
 from ia_carmine.runtime.heap_gate.provider_report_absorption import absorb_completed_provider_item
 from ia_carmine.runtime.heap_gate.provider_runtime_plan import write_provider_runtime_plan
 from ia_carmine.runtime.heap_gate.provider_teamwork_packet import build_provider_teamwork_leader_packet
 from ia_carmine.runtime.heap_gate.gpu1_closure_packet import packet_from_report
+from ia_carmine.runtime.heap_gate.provider_sidecar_async import (
+    gpu1_packet_reviewable,
+    mark_sidecars_skipped,
+    poll_pending_provider_sidecars,
+)
 from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
     publish_provider_report_native_tool_calls,
 )
 from ia_carmine.runtime.heap_gate.provider_universe_abort import (
     block_provider_universe_run,
     primary_provider_block_reason,
-    recoverable_sidecar_failure_reason,
 )
 
 
@@ -45,6 +51,9 @@ class RuntimeGateProviderExecutionMixin:
         provider_report: dict[str, Any],
     ) -> dict[str, Any]:
         return build_provider_block_contract(self.stamp, lane, revision, provider_report)
+
+    def poll_pending_provider_sidecars(self, round_id: int) -> None:
+        poll_pending_provider_sidecars(self, round_id)
 
     def run_provider_teamwork(self, round_id: int, revision: int = 0) -> None:
         if self.provider_reports and revision <= 0:
@@ -314,24 +323,45 @@ class RuntimeGateProviderExecutionMixin:
                 build_provider_teamwork_leader_packet(self, round_id, revision, leader_prompt),
                 leader_packet,
             )
-            self.sidecars_start_policy = "same_production_window_residency_checked_parallel"
-            for item in sidecar_items:
-                start_provider_item(self, item, round_id, revision)
-            primary_start = primary_items[0].get("started_perf")
-            if primary_start:
-                self.provider_sidecars_start_after_gpu1_seconds = round(
-                    time.perf_counter() - float(primary_start),
-                    6,
-                )
-            write_provider_launch_manifest(
-                self,
-                launch_manifest,
-                prepared,
-                round_id,
-                revision,
-                time_contract,
-                "production_provider_window_all_lanes_started_before_residency_result",
+            primary_status = self.capture_gpu1_primary_evidence_before_sidecars(
+                leader_report_for_packet, round_id
             )
+            leader_valid = bool(primary_status.get("gpu1_primary_evidence_valid"))
+            self.gpu1_leader_valid = leader_valid
+            self.gpu1_leader_block_id = str(
+                leader_report_for_packet.get("provider_block_id")
+                or leader_report_for_packet.get("proposal_block_id")
+                or ""
+            )
+            if not leader_valid:
+                reason = str(
+                    primary_status.get("block_reason")
+                    or "gpu1_primary_evidence_missing"
+                )
+                self.sidecars_start_policy = "skipped_gpu1_primary_evidence_missing"
+                mark_sidecars_skipped(
+                    self,
+                    sidecar_items,
+                    launch_manifest=launch_manifest,
+                    work_dir=work_dir,
+                    round_id=round_id,
+                    revision=revision,
+                    timeout_seconds=timeout_seconds,
+                    reason=reason,
+                    packet=self.current_gpu1_closure_decision_packet,
+                    absorb=absorb,
+                )
+                block_provider_universe_run(self, reason, round_id, revision)
+                write_provider_launch_manifest(
+                    self,
+                    launch_manifest,
+                    prepared,
+                    round_id,
+                    revision,
+                    time_contract,
+                    "gpu1_primary_evidence_missing_before_sidecars",
+                )
+                return
             preflight = wait_for_gpu1_residency_preflight(self, primary_items[0])
             self.gpu1_residency_preflight = preflight
             write_provider_launch_manifest(
@@ -354,12 +384,24 @@ class RuntimeGateProviderExecutionMixin:
                 )
                 terminate_pending_provider_processes(
                     self,
-                    prepared,
+                    primary_items,
                     round_id,
                     revision,
                     f"GPU1 residency preflight failed during production window: {primary_block_reason}",
                 )
-                for item in prepared:
+                mark_sidecars_skipped(
+                    self,
+                    sidecar_items,
+                    launch_manifest=launch_manifest,
+                    work_dir=work_dir,
+                    round_id=round_id,
+                    revision=revision,
+                    timeout_seconds=timeout_seconds,
+                    reason=primary_block_reason,
+                    packet=self.current_gpu1_closure_decision_packet,
+                    absorb=absorb,
+                )
+                for item in primary_items:
                     if item.get("completed") is not None:
                         absorb(item)
                 block_provider_universe_run(self, primary_block_reason, round_id, revision)
@@ -379,104 +421,21 @@ class RuntimeGateProviderExecutionMixin:
                 build_provider_teamwork_leader_packet(self, round_id, revision, leader_prompt),
                 leader_packet,
             )
-            write_provider_launch_manifest(
-                self,
-                launch_manifest,
-                prepared,
-                round_id,
-                revision,
-                time_contract,
-                "parallel_sidecars_running_after_gpu1_residency_handshake",
-            )
-            for item in sidecar_items:
-                if item.get("completed") is not None:
-                    absorb(item)
-            collect_provider_processes(
-                self,
-                prepared,
-                timeout_seconds,
-                round_id,
-                revision,
-                on_completed=absorb,
-            )
-            self.provider_sidecar_scope_mode = "packet_review_only"
-            self.parallel_provider_overlap_seconds = provider_overlap_seconds(
-                primary_items, sidecar_items
-            )
-            self.gpu1_idle_after_primary_seconds = _gpu1_idle_after_primary_seconds(
-                primary_items, sidecar_items
-            )
-            self.sidecar_alone_after_gpu1_seconds = self.gpu1_idle_after_primary_seconds
-            if (
-                sidecar_items
-                and self.parallel_provider_overlap_seconds <= 0
-                and primary_items[0].get("completed_perf") is not None
-            ):
-                self.warnings.append("parallelism_lost_by_serial_leader_gate")
-            missing_replight_lanes = [
-                str(item.get("lane"))
-                for item in prepared
-                if not isinstance(item.get("provider_report"), dict)
-            ]
-            replight_block_reason = (
-                f"provider_replight_failed:{missing_replight_lanes[0]}:missing_provider_report"
-                if missing_replight_lanes
-                else provider_replight_failure_reason(
-                    [
-                        item.get("provider_report")
-                        for item in prepared
-                        if isinstance(item.get("provider_report"), dict)
-                        and not recoverable_sidecar_failure_reason(
-                            item, item.get("provider_report")
-                        )
-                    ]
-                )
-            )
-            if replight_block_reason:
-                block_provider_universe_run(self, replight_block_reason, round_id, revision)
-                write_provider_launch_manifest(
-                    self,
-                    launch_manifest,
-                    prepared,
-                    round_id,
-                    revision,
-                    time_contract,
-                    "provider_replight_failed",
-                )
-                return
-            leader_report = (
-                primary_items[0].get("provider_report")
-                if isinstance(primary_items[0].get("provider_report"), dict)
-                else {}
-            )
-            primary_status = self.capture_gpu1_primary_evidence_after_provider_join(
-                leader_report, round_id
-            )
-            leader_valid = bool(primary_status.get("gpu1_primary_evidence_valid"))
-            self.gpu1_leader_valid = leader_valid
-            self.gpu1_leader_block_id = str(
-                leader_report.get("provider_block_id")
-                or leader_report.get("proposal_block_id")
-                or ""
-            )
-            if not leader_valid:
-                reason = str(
-                    primary_status.get("block_reason")
-                    or "gpu1_primary_evidence_missing"
-                )
-                block_provider_universe_run(self, reason, round_id, revision)
-                write_provider_launch_manifest(
-                    self,
-                    launch_manifest,
-                    prepared,
-                    round_id,
-                    revision,
-                    time_contract,
-                    "gpu1_primary_evidence_missing_after_provider_join",
-                )
-                return
             primary_block_reason = primary_provider_block_reason(primary_items)
             if primary_block_reason:
+                self.sidecars_start_policy = "skipped_gpu1_primary_blocked"
+                mark_sidecars_skipped(
+                    self,
+                    sidecar_items,
+                    launch_manifest=launch_manifest,
+                    work_dir=work_dir,
+                    round_id=round_id,
+                    revision=revision,
+                    timeout_seconds=timeout_seconds,
+                    reason=primary_block_reason,
+                    packet=self.current_gpu1_closure_decision_packet,
+                    absorb=absorb,
+                )
                 block_provider_universe_run(self, primary_block_reason, round_id, revision)
                 write_provider_launch_manifest(
                     self,
@@ -485,9 +444,49 @@ class RuntimeGateProviderExecutionMixin:
                     round_id,
                     revision,
                     time_contract,
-                    "primary_blocked_after_parallel_provider_join",
+                    "primary_blocked_before_sidecars",
                 )
                 return
+            packet_reviewable, packet_reason = gpu1_packet_reviewable(
+                self.current_gpu1_closure_decision_packet,
+                primary_status,
+            )
+            if not packet_reviewable:
+                self.sidecars_start_policy = "skipped_no_reviewable_gpu1_packet"
+                self.provider_sidecar_scope_mode = "packet_review_only"
+                mark_sidecars_skipped(
+                    self,
+                    sidecar_items,
+                    launch_manifest=launch_manifest,
+                    work_dir=work_dir,
+                    round_id=round_id,
+                    revision=revision,
+                    timeout_seconds=timeout_seconds,
+                    reason=packet_reason,
+                    packet=self.current_gpu1_closure_decision_packet,
+                    absorb=absorb,
+                )
+                write_provider_launch_manifest(
+                    self,
+                    launch_manifest,
+                    prepared,
+                    round_id,
+                    revision,
+                    time_contract,
+                    "sidecars_skipped_no_reviewable_gpu1_packet",
+                )
+                return
+            self.sidecars_start_policy = "async_packet_review_only"
+            for item in sidecar_items:
+                start_provider_item(self, item, round_id, revision)
+                if item.get("completed") is not None:
+                    absorb(item)
+            primary_start = primary_items[0].get("started_perf")
+            if primary_start:
+                self.provider_sidecars_start_after_gpu1_seconds = round(
+                    time.perf_counter() - float(primary_start),
+                    6,
+                )
             write_provider_launch_manifest(
                 self,
                 launch_manifest,
@@ -495,8 +494,30 @@ class RuntimeGateProviderExecutionMixin:
                 round_id,
                 revision,
                 time_contract,
-                "parallel_provider_joined_gpu1_evidence_captured",
+                "async_sidecars_started_after_gpu1_packet",
             )
+            self.provider_sidecar_scope_mode = "packet_review_only"
+            self.parallel_provider_overlap_seconds = provider_overlap_seconds(
+                primary_items, sidecar_items
+            )
+            active_sidecar_items = [
+                item for item in sidecar_items if not item.get("absorbed")
+            ]
+            if active_sidecar_items:
+                self.pending_provider_sidecar_collections.append(
+                    {
+                        "prepared": prepared,
+                        "primary_items": primary_items,
+                        "sidecar_items": active_sidecar_items,
+                        "launch_manifest": str(launch_manifest),
+                        "work_dir": str(work_dir),
+                        "revision": revision,
+                        "timeout_seconds": timeout_seconds,
+                        "time_contract": time_contract,
+                    }
+                )
+                self.poll_pending_provider_sidecars(round_id)
+            return
         except BaseException:
             terminate_pending_provider_processes(
                 self,
@@ -628,28 +649,3 @@ class RuntimeGateProviderExecutionMixin:
         return self.capture_gpu1_primary_evidence_after_provider_join(
             leader_report, round_id
         )
-
-
-def _gpu1_idle_after_primary_seconds(
-    primary_items: list[dict[str, Any]],
-    sidecar_items: list[dict[str, Any]],
-) -> float:
-    primary_done = max(
-        (
-            float(item.get("completed_perf") or 0.0)
-            for item in primary_items
-            if item.get("completed_perf") is not None
-        ),
-        default=0.0,
-    )
-    sidecar_done = max(
-        (
-            float(item.get("completed_perf") or 0.0)
-            for item in sidecar_items
-            if item.get("completed_perf") is not None
-        ),
-        default=0.0,
-    )
-    if not primary_done or not sidecar_done:
-        return 0.0
-    return round(max(0.0, sidecar_done - primary_done), 6)

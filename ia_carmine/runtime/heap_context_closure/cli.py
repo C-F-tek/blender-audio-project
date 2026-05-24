@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 
+from ia_carmine._shared.report_io import print_json_report
+
 from .common import DEFAULT_REQUEST
 from .launcher import run_launcher
 
@@ -33,6 +35,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--files-per-round", type=int, default=None)
     parser.add_argument("--allow-provider-generation", action="store_true")
     parser.add_argument("--operator-intent", action="store_true")
+    parser.add_argument("--canonical-run-metadata", default="")
+    parser.add_argument("--canonical-run-fingerprint", default="")
     parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=False)
     parser.add_argument("--provider-model", default="")
     parser.add_argument("--gpu1-base-url", default="")
@@ -124,6 +128,21 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if args.allow_provider_generation and (
+        not str(args.canonical_run_metadata or "").strip()
+        or not str(args.canonical_run_fingerprint or "").strip()
+    ):
+        print_json_report(
+            {
+                "schema_version": 1,
+                "kind": "heap_context_closure_entrypoint_guard",
+                "passed": False,
+                "error": "canonical_run_config_required_for_provider_generation",
+                "canonical_entrypoint": "python -m ia_carmine.cli run",
+                "diagnostic_without_provider_generation_allowed": True,
+            }
+        )
+        return 2
     return run_launcher(args)
 
 

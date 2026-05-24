@@ -599,12 +599,24 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         errors.append("arbiter product must expose peer follow-up as product blocked reason")
     if not all(error.startswith("AI STAI GIOCANDO:") for error in bad_errors):
         errors.append("terminal errors must use AI STAI GIOCANDO prefix")
+    expected_negative_groups = (
+        generic_claims_patch_errors, generic_claims_source_errors, gpu0_followup_errors,
+        npu_followup_errors, generic_capture_failed_errors, context_invalid_errors,
+        gpu0_schema_invalid_errors, gpu0_free_text_decision_errors, gpu1_packet_missing_errors,
+        gpu0_wrong_packet_errors, gpu0_stale_packet_errors, gpu0_missing_review_errors,
+        soft_lock_closed_refine_errors, deferred_zero_open_errors, gpu1_unlinked_refine_errors,
+        leader_missing_errors, primary_workload_missing_errors, primary_evidence_missing_errors,
+        pre_provider_tentable_errors, pre_provider_exhausted_errors, bad_errors, peer_degraded_errors,
+    )
     return {
         "schema_version": 1,
         "kind": "heap_gate_terminal_invariants_smoke",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "repo_root": str(repo_root),
         "passed": not errors,
+        "report_semantics": "nested *_errors are expected negative fixture outputs; top-level errors/unexpected_errors are real smoke failures",
+        "unexpected_error_count": len(errors),
+        "unexpected_errors": errors,
         "ready_error_count": len(ok_errors),
         "generic_write_ready_error_count": len(generic_errors),
         "generic_write_claims_patch_error_count": len(generic_claims_patch_errors),
@@ -651,6 +663,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
         "broken_errors": bad_errors,
         "peer_degraded_error_count": len(peer_degraded_errors),
         "peer_degraded_errors": peer_degraded_errors,
+        "expected_negative_fixture_error_count": sum(len(items) for items in expected_negative_groups),
         "errors": errors,
         "source_writes_performed": False,
         "patch_application_performed": False,

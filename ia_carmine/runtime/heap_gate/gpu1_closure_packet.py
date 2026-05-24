@@ -221,6 +221,8 @@ def gpu1_packet_fingerprint(packet: dict[str, Any] | None) -> str:
         "pointer_action": str(packet.get("pointer_action") or ""),
         "refines_block_id": str(packet.get("refines_block_id") or ""),
         "consumed_gpu0_block_id": str(packet.get("consumed_gpu0_block_id") or ""),
+        "consumed_gpu0_block_ids": _unique_strings(packet.get("consumed_gpu0_block_ids")),
+        "consumed_npu_block_ids": _unique_strings(packet.get("consumed_npu_block_ids")),
         "response_text_sha256": str(packet.get("response_text_sha256") or ""),
         "source": str(packet.get("source") or ""),
     }

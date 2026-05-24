@@ -65,7 +65,15 @@ class RuntimeGateProposalCycleAMixin:
         return f"{self.stamp}:proposal:{int(revision):03d}"
 
     def provider_block_refs_for_revision(self, revision: int) -> dict[str, list[str]]:
-        refs = {"gpu1": [], "gpu0": [], "npu": []}
+        refs = {
+            "gpu1": [],
+            "gpu0": [],
+            "npu": [],
+            "observed_gpu1": [],
+            "observed_gpu0": [],
+            "observed_npu": [],
+            "observed_provider": [],
+        }
         for report in self.provider_reports:
             report_revision = safe_int(report.get("revision"), default=0)
             if report_revision != int(revision):
@@ -74,6 +82,14 @@ class RuntimeGateProposalCycleAMixin:
             if not block_id:
                 continue
             lane = str(report.get("lane") or "")
+            if lane == "gpu1_planner":
+                refs["observed_gpu1"].append(block_id)
+            elif lane == "gpu0_peer":
+                refs["observed_gpu0"].append(block_id)
+            elif lane == "npu_micro_task_auditor":
+                refs["observed_npu"].append(block_id)
+            if lane in {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}:
+                refs["observed_provider"].append(block_id)
             if lane in {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"} and not self._verified_provider_ref(
                 lane, report
             ):
@@ -406,6 +422,10 @@ class RuntimeGateProposalCycleAMixin:
             "gpu1_block_refs": provider_block_refs["gpu1"],
             "gpu0_review_block_refs": provider_block_refs["gpu0"],
             "npu_audit_block_refs": provider_block_refs["npu"],
+            "observed_gpu1_block_refs": provider_block_refs["observed_gpu1"],
+            "observed_gpu0_review_block_refs": provider_block_refs["observed_gpu0"],
+            "observed_npu_audit_block_refs": provider_block_refs["observed_npu"],
+            "observed_provider_block_refs": provider_block_refs["observed_provider"],
             "passed": bool(provider_block_refs["gpu1"] and provider_block_refs["gpu0"] and provider_block_refs["npu"]),
         }
         target_contract = self.proposal_target_contract(
@@ -510,6 +530,15 @@ class RuntimeGateProposalCycleAMixin:
             for item in (getattr(self, "gpu1_consumed_generic_write_block_ids", []) or [])
             if str(item).strip()
         ]
+        consumed_gpu0_block_ids = (
+            [declared_consumed_gpu0_block_id] if declared_consumed_gpu0_block_id else []
+        )
+        consumed_npu_block_ids = list(declared_consumed_npu_block_ids)
+        consumed_provider_block_ids = [
+            item
+            for item in [*consumed_gpu0_block_ids, *consumed_npu_block_ids]
+            if str(item).strip()
+        ]
         gpu1_packet = build_gpu1_closure_decision_packet(
             gpu1_block_id=block_id,
             gpu1_revision=revision,
@@ -524,10 +553,8 @@ class RuntimeGateProposalCycleAMixin:
             pointer_action=pointer_action,
             refines_block_id=declared_refines_block_id,
             consumed_gpu0_block_id=declared_consumed_gpu0_block_id,
-            consumed_gpu0_block_ids=(
-                [declared_consumed_gpu0_block_id] if declared_consumed_gpu0_block_id else []
-            ),
-            consumed_npu_block_ids=declared_consumed_npu_block_ids,
+            consumed_gpu0_block_ids=consumed_gpu0_block_ids,
+            consumed_npu_block_ids=consumed_npu_block_ids,
             response_text=response_text,
             source="proposal_cycle_a",
         )
@@ -561,9 +588,10 @@ class RuntimeGateProposalCycleAMixin:
             "required_refines_block_id": previous_block_id if previous_gpu0_requires_refine else "",
             "required_consumed_gpu0_block_id": previous_gpu0_block_id if previous_gpu0_requires_refine else "",
             "consumed_gpu0_block_id": declared_consumed_gpu0_block_id,
-            "consumed_gpu0_block_ids": (
-                [declared_consumed_gpu0_block_id] if declared_consumed_gpu0_block_id else []
-            ),
+            "consumed_gpu0_block_ids": consumed_gpu0_block_ids,
+            "consumed_npu_block_ids": consumed_npu_block_ids,
+            "consumed_provider_block_ids": consumed_provider_block_ids,
+            "consumed_block_ids": consumed_provider_block_ids,
             "gpu1_refine_continuity": {
                 "required": previous_gpu0_requires_refine,
                 "passed": not continuity_errors,
@@ -577,6 +605,10 @@ class RuntimeGateProposalCycleAMixin:
             "gpu1_block_ref": provider_block_refs["gpu1"][0] if provider_block_refs["gpu1"] else "",
             "gpu0_review_block_refs": provider_block_refs["gpu0"],
             "npu_audit_block_refs": provider_block_refs["npu"],
+            "observed_gpu1_block_refs": provider_block_refs["observed_gpu1"],
+            "observed_gpu0_review_block_refs": provider_block_refs["observed_gpu0"],
+            "observed_npu_audit_block_refs": provider_block_refs["observed_npu"],
+            "observed_provider_block_refs": provider_block_refs["observed_provider"],
             "broker_result_refs": self.broker_output_refs(events),
             "matrix_report_refs": self.code_execution_matrix_reports(events),
             "generic_write_refs": generic_write_refs,
@@ -653,6 +685,11 @@ class RuntimeGateProposalCycleAMixin:
                 "quality_passed": quality_passed,
                 "proposal_progress_passed": bool(proposal_progress.get("passed")),
                 "npu_workload_performed": bool(npu_audit.get("performed")),
+                "consumed_gpu0_block_ids": consumed_gpu0_block_ids,
+                "consumed_npu_block_ids": consumed_npu_block_ids,
+                "consumed_provider_block_ids": consumed_provider_block_ids,
+                "consumed_block_ids": consumed_provider_block_ids,
+                "observed_provider_block_refs": provider_block_refs["observed_provider"],
                 "summary": f"provider proposal revision {revision} persisted as reusable heap chunk",
             }
         )

@@ -1,3 +1,5 @@
+
+
 <!-- IA-CARMINE-MD-SPLIT: index -->
 # Indice — CODE_CONSULTATION_REPORT.md
 

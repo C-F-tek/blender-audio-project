@@ -76,7 +76,7 @@ automated transcript parser.
 |---|---:|
 | Operator-aligned fixes kept in source/docs | 16 |
 | Operator blocks required before Codex matched instruction | 34 |
-| Script-gaming total regressions | 567 |
+| Script-gaming total regressions | 569 |
 | Misleading/Codex lie evidence count | 115 |
 | Systemic product-lie evidence count | 16 |
 | Systemic product-lie severity score | 175 |
@@ -140,15 +140,15 @@ Operator blocks required:
 - The operator blocked arbitrary hard timeouts, revision caps and token caps.
 - The operator blocked mandatory GPU1 tool continuation when GPU1 must choose
   text/tool shape.
-- The operator blocked NPU being described or reported as semantic-primary.
-- The operator blocked keeping NPU `semantic_provider_*` compatibility fields.
+- The operator stoped NPU being described or reported as semantic-primary.
+- The operator stoped keeping NPU `semantic_provider_*` compatibility fields.
 - The operator blocked smoke-fixing as a substitute for provider runtime repair.
 - The operator blocked report-first analysis when the requested action was
   source investigation.
 - The operator blocked ignoring pointer reconstruction, memory delta and
   final-code-product composition.
 - The operator blocked confusing activity in Task Manager with useful work.
-- The operator blocked NPU/GPU0 activity from substituting for GPU1 primary
+- The operator stoped NPU/GPU0 activity from substituting for GPU1 primary
   advisory work.
 - The operator blocked report-style surfaces from being treated as the
   product contract.

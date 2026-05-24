@@ -15,7 +15,7 @@ operator heap runs and for the repairs applied on `master`.
   Ollama/GPU1 primary, OpenVINO/GPU0 coworker, OpenVINO/NPU micro-lane.
 - Some validators still referenced the older provider execution file layout
   after report absorption and process collection were split.
-- Revision-context smoke data did not prove that GPU0/NPU blocks refine and
+- Revision-context smoke data did not prove that GPU0/NPU pointer records refine and
   resume from the proposal block as causal pointer inputs.
 - Startup memory write was not enforced as a blocking dispatcher-owned
   operational SQLite `remember` action.
@@ -37,7 +37,7 @@ operator heap runs and for the repairs applied on `master`.
 - Validator contracts now read the current provider report absorption and
   provider process collection files.
 - Revision-context fixture blocks now carry `refines_block_id` and
-  `resume_from_block_id` for GPU0/NPU causal review/audit tasks.
+  `resume_from_block_id` for causal review/audit tasks.
 - Canonical `python -m ia_carmine.cli run` no longer exposes safe apply; code
   application remains a separate reviewed code-product boundary.
 - Startup reload now executes `python -m ia_carmine.cli agent_runtime_sqlite_memory

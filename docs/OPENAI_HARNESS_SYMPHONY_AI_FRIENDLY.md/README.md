@@ -1,3 +1,5 @@
+
+
 <!-- IA-CARMINE-MD-SPLIT: index -->
 # Indice — OPENAI_HARNESS_SYMPHONY_AI_FRIENDLY.md
 

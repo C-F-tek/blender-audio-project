@@ -40,6 +40,11 @@ def write_provider_launch_manifest(
             "revision_opened_by_gpu1": True,
             "revision_lane_policy": getattr(gate, "provider_revision_lane_policy", {}),
             "provider_model_required": True,
+            "canonical_run_metadata": str(getattr(gate.args, "canonical_run_metadata", "") or ""),
+            "canonical_run_fingerprint": str(getattr(gate.args, "canonical_run_fingerprint", "") or ""),
+            "canonical_provider_report_required": bool(
+                getattr(gate.args, "canonical_run_fingerprint", "")
+            ),
             "provider_model_explicit": bool(
                 str(getattr(gate.args, "provider_model", "")).strip()
                 and str(getattr(gate.args, "provider_model", "")).strip() != "auto"
@@ -121,6 +126,10 @@ def _lane_manifest_item(gate: Any, item: dict[str, Any]) -> dict[str, Any]:
         "audit_for_gpu1_cycle": item.get("audit_for_gpu1_cycle"),
         "cannot_open_revision": lane != PRIMARY_LANE,
         "requirement": item.get("requirement"),
+        "canonical_run_fingerprint": str(getattr(gate.args, "canonical_run_fingerprint", "") or ""),
+        "canonical_provider_report_required": bool(
+            getattr(gate.args, "canonical_run_fingerprint", "")
+        ),
         "role": spec.get("role"),
         "provider_model": spec.get("provider_model", ""),
         "pid": item.get("pid"),
