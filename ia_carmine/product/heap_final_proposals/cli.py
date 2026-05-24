@@ -75,7 +75,7 @@ def main() -> int:
     proposals = _load_gated_proposals(repo_root, run_dir)
     provider_reports = list_provider_reports(run_dir)
     blockers = flatten_quality_blockers(report, proposals, startup_manifest)
-    gpu0_reviews = collect_gpu0_reviews(proposals, provider_reports)
+    gpu0_reviews = collect_gpu0_reviews(proposals, provider_reports, repo_root)
     npu_audits = collect_npu_audits(proposals, provider_reports)
     action_list = build_action_list(blockers, proposals, startup_manifest)
     product_causality = compute_product_causality(

@@ -98,10 +98,11 @@ def _write_heap_request(args: Any, state: dict[str, Any]) -> None:
         revision_context_payload=state["revision_context_payload"],
         revision_context_max_tasks=args.revision_context_max_tasks,
     )
+    heap_request_file = state["run_dir"] / "heap_augmented_request.md"
+    heap_request_file.write_text(heap_request, encoding="utf-8")
     state["heap_request"] = heap_request
-    state["request_transport"] = "inline_cli"
-    if state.get("operator_request_file"):
-        state["request_transport"] = "operator_request_file"
+    state["heap_request_file"] = heap_request_file
+    state["request_transport"] = "heap_augmented_request_file"
 def _empty_result(passed: bool = True, returncode: int | None = 0) -> dict[str, Any]:
     return {
         "passed": passed,

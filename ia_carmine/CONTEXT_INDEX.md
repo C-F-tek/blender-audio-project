@@ -6,15 +6,15 @@ the nearest package family before editing runtime code.
 | Family | Context file |
 | --- | --- |
 | Shared helpers | `ia_carmine/_shared/TOOL_CONTEXT.md` |
-| Runtime run command | `ia_carmine/runtime/runtime/run/TOOL_CONTEXT.md` |
-| Runtime heap gate | `ia_carmine/runtime/runtime/heap_gate/TOOL_CONTEXT.md` |
-| Runtime heap closure | `ia_carmine/runtime/runtime/heap_context_closure/` |
-| Runtime heap exchange | `ia_carmine/runtime/runtime/heap_exchange/TOOL_CONTEXT.md` |
-| Runtime heap provider contracts | `ia_carmine/runtime/runtime/heap_provider/` |
-| Runtime tool broker/registry | `ia_carmine/runtime/runtime/runtime_tool/` |
-| Runtime universe | `ia_carmine/runtime/runtime/runtime_universe/` |
-| Runtime provider blackboard | `ia_carmine/runtime/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md` |
-| Runtime contractor universe | `ia_carmine/runtime/runtime/contractor_universe/TOOL_CONTEXT.md` |
+| Runtime run command | `ia_carmine/runtime/run/TOOL_CONTEXT.md` |
+| Runtime heap gate | `ia_carmine/runtime/heap_gate/TOOL_CONTEXT.md` |
+| Runtime heap closure | `ia_carmine/runtime/heap_context_closure/` |
+| Runtime heap exchange | `ia_carmine/runtime/heap_exchange/TOOL_CONTEXT.md` |
+| Runtime heap provider contracts | `ia_carmine/runtime/heap_provider/` |
+| Runtime tool broker/registry | `ia_carmine/runtime/runtime_tool/` |
+| Runtime universe | `ia_carmine/runtime/runtime_universe/` |
+| Runtime provider blackboard | `ia_carmine/runtime/provider_runtime_blackboard/TOOL_CONTEXT.md` |
+| Runtime contractor universe | `ia_carmine/runtime/contractor_universe/TOOL_CONTEXT.md` |
 | Memory | `ia_carmine/memory/agent_memory/` |
 | Context reload, packs and internal RAG | `ia_carmine/context/` |
 | Provider mesh | `ia_carmine/providers/provider_mesh/TOOL_CONTEXT.md` |

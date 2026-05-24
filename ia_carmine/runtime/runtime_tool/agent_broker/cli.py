@@ -38,6 +38,8 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request-file", default="")
     parser.add_argument("--request-json", default="")
+    parser.add_argument("--payload-file", default="")
+    parser.add_argument("--job-id", default="")
     parser.add_argument("--tool-output-dir", default=None)
     parser.add_argument("--stamp", default=None)
     parser.add_argument("--timeout-seconds", type=int, default=240)

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.file_backed_transport import text_from_ref_or_tail
 from ia_carmine._shared.provider_tool_loop import ollama_tool_call_tool_names
 from ia_carmine._shared.provider_work_verification import provider_work_status
 
@@ -41,13 +43,14 @@ def provider_replight_fields(
         or default_model
         or ""
     ).strip()
-    response_text = str(
-        report.get("response_text")
-        or report.get("provider_heap_delta_text")
-        or report.get("tool_result_summary")
-        or report.get("micro_task_result_summary")
-        or ""
-    ).strip()
+    repo_root = Path(str(report.get("repo_root") or ".")).resolve()
+    response_text = text_from_ref_or_tail(repo_root, report, "response_text").strip()
+    if not response_text:
+        response_text = text_from_ref_or_tail(repo_root, report, "provider_heap_delta_text").strip()
+    if not response_text:
+        response_text = str(
+            report.get("tool_result_summary") or report.get("micro_task_result_summary") or ""
+        ).strip()
     generated_phrase = _first_sentence(response_text)
     prompt_tokens = _int_first(
         report.get("prompt_token_count"),

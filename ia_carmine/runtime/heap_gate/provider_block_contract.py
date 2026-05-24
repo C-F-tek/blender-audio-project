@@ -79,7 +79,11 @@ def operational_provider_activity(
     lane: str,
     provider_report: dict[str, Any],
 ) -> tuple[bool, str]:
-    response_text = str(provider_report.get("response_text") or "").strip()
+    response_text = str(
+        provider_report.get("response_text")
+        or provider_report.get("response_text_tail")
+        or ""
+    ).strip()
     selected_model = str(provider_report.get("selected_model") or "").strip()
     tool_call_count = _safe_int(provider_report.get("native_tool_call_count"))
     tool_calls = provider_report.get("tool_calls") if isinstance(provider_report.get("tool_calls"), list) else []

@@ -8,6 +8,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any
+from ia_carmine._shared.file_backed_transport import write_text_evidence_fields
 from ia_carmine.providers.ollama.tool_calls import (
     normalize_ollama_tool_calls as normalize_ollama_sdk_tool_calls,
 )
@@ -305,14 +306,45 @@ def openvino_tool_loop_report(
     report["available_devices"] = payload.get("devices") or []
     if payload.get("errors"):
         report["errors"].extend(str(item) for item in payload.get("errors") or [])
-    report["provider_heap_delta_text"] = str(payload.get("provider_heap_delta_text") or "")
-    report["response_text"] = str(payload.get("provider_heap_delta_text") or payload.get("response_text") or "")
+    provider_delta = str(payload.get("provider_heap_delta_text") or "")
+    response_text = str(payload.get("provider_heap_delta_text") or payload.get("response_text") or "")
+    evidence_dir = repo_root / "output" / "validation" / "provider_tool_loop_artifacts"
+    report.update(write_text_evidence_fields(
+        repo_root,
+        evidence_dir,
+        prefix="provider_heap_delta_text",
+        name=f"openvino_{device}_provider_heap_delta",
+        text=provider_delta,
+        kind="provider_heap_delta_text",
+        producer="provider_tool_loop",
+        suffix=".md",
+    ))
+    report.update(write_text_evidence_fields(
+        repo_root,
+        evidence_dir,
+        prefix="response_text",
+        name=f"openvino_{device}_response_text",
+        text=response_text,
+        kind="provider_response_text",
+        producer="provider_tool_loop",
+        suffix=".md",
+    ))
     parsed = payload.get("parsed") if isinstance(payload.get("parsed"), dict) else {}
     tool_calls = parsed.get("tool_calls") if isinstance(parsed.get("tool_calls"), list) else []
     structured_call = payload.get("structured_call") if isinstance(payload.get("structured_call"), dict) else {}
-    report["structured_tool_call_text"] = str(payload.get("structured_text") or "")
+    structured_text = str(payload.get("structured_text") or "")
+    report.update(write_text_evidence_fields(
+        repo_root,
+        evidence_dir,
+        prefix="structured_tool_call_text",
+        name=f"openvino_{device}_structured_tool_call_text",
+        text=structured_text,
+        kind="provider_structured_tool_call_text",
+        producer="provider_tool_loop",
+        suffix=".txt",
+    ))
     report["structured_tool_call_payload"] = structured_call
-    structured_decision = str(structured_call.get("decision") or "").strip() or ("call_tool" if "call_tool" in report["structured_tool_call_text"] else "")
+    structured_decision = str(structured_call.get("decision") or "").strip() or ("call_tool" if "call_tool" in structured_text else "")
     if not structured_decision and structured_call.get("tool"):
         structured_decision = "call_tool"
     if not tool_calls and structured_decision == "call_tool" and structured_call.get("tool"):

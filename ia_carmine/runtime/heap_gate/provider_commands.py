@@ -123,7 +123,7 @@ class RuntimeGateProviderCommandsMixin:
             report_data["standalone_default_fields_ignored_reason"] = (
                 "canonical_run_provider_evidence_fingerprint_verified"
             )
-        response_text = str(report_data.get("response_text") or "").strip()
+        response_text = self.provider_report_response_text(report_data).strip()
         selected_model = str(report_data.get("selected_model") or "").strip()
         lane_reports = report_data.get("lane_reports")
         if isinstance(lane_reports, list):
@@ -139,11 +139,10 @@ class RuntimeGateProviderCommandsMixin:
                         or lane_report.get("model")
                         or selected_model
                     ).strip()
-                    response_text = str(
-                        lane_report.get("response_text")
-                        or lane_report.get("text_preview")
-                        or response_text
-                    ).strip()
+                    response_text = (
+                        self.provider_report_response_text(lane_report).strip()
+                        or str(lane_report.get("text_preview") or response_text).strip()
+                    )
                     if not report_data.get("target_files") and lane_report.get("target_files"):
                         report_data["target_files"] = lane_report.get("target_files")
                     if (
@@ -209,7 +208,13 @@ class RuntimeGateProviderCommandsMixin:
                         "product_blocked_reason",
                         "provider_work_verified",
                         "provider_rejection_reason",
-                        "response_text",
+                        "response_text_ref",
+                        "response_text_chars",
+                        "response_text_sha256",
+                        "response_text_tail",
+                        "response_text_tail_chars",
+                        "response_text_full_text_in_json",
+                        "response_text_transport",
                         "raw_response_chars",
                         "heap_delta_text_present",
                         "heap_delta_text_required",
@@ -347,7 +352,12 @@ class RuntimeGateProviderCommandsMixin:
             "provider_rejection_reason": report_data.get("provider_rejection_reason"),
             "device_workload_execution_performed": device_workload_execution,
             "report_kind": report_data.get("kind"),
-            "response_text": response_text,
+            "response_text_ref": report_data.get("response_text_ref", {}),
+            "response_text_chars": report_data.get("response_text_chars", len(response_text)),
+            "response_text_sha256": report_data.get("response_text_sha256", ""),
+            "response_text_tail": report_data.get("response_text_tail", response_text[-4000:]),
+            "response_text_tail_chars": report_data.get("response_text_tail_chars", min(len(response_text), 4000)),
+            "response_text_full_text_in_json": False,
             "tool_calls": tool_calls,
             "textual_tool_calls": textual_tool_calls,
             "rejected_non_native_tool_calls": rejected_non_native_tool_calls,

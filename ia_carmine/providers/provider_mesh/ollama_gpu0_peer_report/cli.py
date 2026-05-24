@@ -14,7 +14,11 @@ REPO_ROOT_FOR_IMPORT = Path(__file__).resolve().parents[4]
 if str(REPO_ROOT_FOR_IMPORT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORT))
 
-from ia_carmine._shared.file_backed_transport import write_large_text_evidence
+from ia_carmine._shared.file_backed_transport import (
+    read_text_windows_safe,
+    write_large_text_evidence,
+    write_text_evidence_fields,
+)
 from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
 from ia_carmine.providers.ollama.role_models import (
     start_gpu0_vulkan_server,
@@ -278,7 +282,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         "## Structured Decision",
         "",
-        str(report.get("response_text") or ""),
+        str(report.get("response_text_tail") or ""),
     ]
     if report.get("free_text_evidence"):
         lines.extend(["", "## Free Text Evidence", "", str(report.get("free_text_evidence") or "")])
@@ -296,6 +300,20 @@ def resolve_path(repo_root: Path, value: str) -> Path:
     if not path.is_absolute():
         path = repo_root / path
     return path.resolve()
+
+
+def _report_response_text(repo_root: Path, report: dict[str, Any]) -> str:
+    text = str(report.get("response_text") or "").strip()
+    if text:
+        return text
+    ref = report.get("response_text_ref") if isinstance(report.get("response_text_ref"), dict) else {}
+    ref_path = str(ref.get("path") or "").strip()
+    if ref_path:
+        try:
+            return read_text_windows_safe(resolve_path(repo_root, ref_path))
+        except Exception:
+            pass
+    return str(report.get("response_text_tail") or "")
 
 
 def _leader_block_id(leader_packet: dict[str, Any]) -> str:
@@ -399,7 +417,8 @@ def main() -> int:
         gpu0_vulkan_policy_verified=_gpu0_vulkan_policy_verified(gpu0_server),
         unload_model=not args.defer_unload,
     )
-    raw_response_text = str(report.get("response_text") or "")
+    output_parent = resolve_path(repo_root, args.output).parent
+    raw_response_text = _report_response_text(repo_root, report)
     gpu0_secondary = parse_gpu0_secondary_response(
         raw_response_text,
         fallback_block_id=_leader_block_id(leader_packet),
@@ -407,7 +426,16 @@ def main() -> int:
         fallback_packet_fingerprint=str(gpu1_packet.get("packet_fingerprint") or ""),
     )
     gpu0_secondary = bind_gpu0_secondary_to_gpu1_packet(gpu0_secondary, leader_packet)
-    report["gpu0_raw_response_text"] = raw_response_text
+    report.update(write_text_evidence_fields(
+        repo_root,
+        output_parent / "provider_response_artifacts",
+        prefix="gpu0_raw_response_text",
+        name="gpu0_raw_response_text",
+        text=raw_response_text,
+        kind="gpu0_raw_response_text",
+        producer="ollama_gpu0_peer_report",
+        suffix=".md",
+    ))
     report["gpu1_closure_decision_packet"] = gpu1_packet
     report["gpu1_closure_decision_packet_present"] = bool(gpu1_packet)
     report["gpu1_closure_decision_packet_valid"] = gpu1_decision_packet_valid(gpu1_packet)
@@ -418,7 +446,16 @@ def main() -> int:
     )
     report["gpu0_one_execution_per_packet"] = True
     report.update(gpu0_secondary)
-    report["response_text"] = gpu0_secondary_decision_text(gpu0_secondary)
+    report.update(write_text_evidence_fields(
+        repo_root,
+        output_parent / "provider_response_artifacts",
+        prefix="response_text",
+        name="gpu0_secondary_decision_text",
+        text=gpu0_secondary_decision_text(gpu0_secondary),
+        kind="gpu0_secondary_decision_text",
+        producer="ollama_gpu0_peer_report",
+        suffix=".md",
+    ))
     runtime_log = _runtime_log_evidence(gpu0_server)
     device_identity = _gpu0_device_identity(gpu0_server)
     workload_verified = _gpu0_workload_verified(report, runtime_log, gpu0_server, device_identity)

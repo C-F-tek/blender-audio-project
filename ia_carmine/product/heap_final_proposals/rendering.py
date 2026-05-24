@@ -8,6 +8,7 @@ from typing import Any
 
 from ia_carmine.product.heap_final_proposals.artifacts import proposal_text_for_review
 from ia_carmine.product.heap_final_proposals.common import repo_rel
+from ia_carmine._shared.file_backed_transport import text_from_ref_or_tail
 
 
 def render_startup_section(repo_root: Path, startup_manifest: dict[str, Any]) -> list[str]:
@@ -205,7 +206,7 @@ def _append_provider_reports(
                     f"- Python: `{workload.get('python_exe')}`",
                 ]
             )
-        summary = str(provider.get("response_text") or "").strip()
+        summary = text_from_ref_or_tail(repo_root, provider, "response_text").strip()
         if summary:
             lines.extend(["", summary[:1600], ""])
 
@@ -234,7 +235,7 @@ def _append_full_proposals(
             lines.extend(["Anchored source candidates:"])
             lines.extend(f"- `{item}`" for item in anchored[:20])
             lines.append("")
-        lines.extend(["```markdown", proposal_text_for_review(proposal, max_proposal_chars), "```", ""])
+        lines.extend(["```markdown", proposal_text_for_review(proposal, max_proposal_chars, repo_root), "```", ""])
 
 
 def _append_context_refs(

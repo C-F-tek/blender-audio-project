@@ -155,6 +155,60 @@ def write_large_text_evidence(
     }
 
 
+def prefixed_text_evidence_fields(prefix: str, evidence: dict[str, Any]) -> dict[str, Any]:
+    """Return JSON coordination fields for a file-backed text artifact."""
+    return {
+        f"{prefix}_ref": evidence.get("ref") or {},
+        f"{prefix}_chars": evidence.get("chars", 0),
+        f"{prefix}_sha256": evidence.get("sha256", ""),
+        f"{prefix}_tail": evidence.get("tail", ""),
+        f"{prefix}_tail_chars": evidence.get("tail_chars", 0),
+        f"{prefix}_full_text_in_json": False,
+    }
+
+
+def write_text_evidence_fields(
+    repo_root: Path,
+    output_dir: Path,
+    *,
+    prefix: str,
+    name: str,
+    text: str,
+    kind: str,
+    producer: str,
+    suffix: str = ".txt",
+) -> dict[str, Any]:
+    """Materialize text and return strict ref/tail fields for runtime JSON."""
+    evidence = write_large_text_evidence(
+        repo_root,
+        output_dir,
+        name=name,
+        text=text,
+        kind=kind,
+        producer=producer,
+        suffix=suffix,
+    )
+    fields = prefixed_text_evidence_fields(prefix, evidence)
+    fields[f"{prefix}_transport"] = "artifact_ref" if evidence.get("ref") else "empty"
+    return fields
+
+
+def text_from_ref_or_tail(repo_root: Path, payload: dict[str, Any], prefix: str) -> str:
+    """Load full text from ref, falling back to legacy inline text then tail."""
+    ref = payload.get(f"{prefix}_ref")
+    if isinstance(ref, dict):
+        ref_path = str(ref.get("path") or "").strip()
+        if ref_path:
+            try:
+                return read_text_windows_safe(resolve_path(repo_root, ref_path))
+            except Exception:
+                pass
+    inline = payload.get(prefix)
+    if isinstance(inline, str) and inline:
+        return inline
+    return str(payload.get(f"{prefix}_tail") or "")
+
+
 def write_json_artifact(
     repo_root: Path,
     output_dir: Path,
@@ -258,14 +312,31 @@ def validate_runtime_payload_manifest(repo_root: Path, manifest_path: str | Path
     """Validate file-backed manifest refs, checksums and chunk order."""
     errors: list[str] = []
     warnings: list[str] = []
+    manifest_file = resolve_path(repo_root, manifest_path)
     try:
-        manifest = read_json_windows_safe(resolve_path(repo_root, manifest_path))
+        manifest = read_json_windows_safe(manifest_file)
     except Exception as exc:  # noqa: BLE001 - report-only validator helper.
         return {
             "passed": False,
             "errors": [f"manifest_unreadable:{type(exc).__name__}:{exc}"],
             "warnings": [],
         }
+
+    if manifest.get("schema_version") != 1:
+        errors.append("manifest_schema_version_not_1")
+    if manifest.get("kind") != "ia_carmine_runtime_payload_manifest":
+        errors.append("manifest_kind_not_ia_carmine_runtime_payload_manifest")
+    job_id = str(manifest.get("job_id") or "").strip()
+    if not job_id:
+        errors.append("manifest_job_id_missing")
+    run_dir_value = str(manifest.get("run_dir") or "").strip()
+    if not run_dir_value:
+        errors.append("manifest_run_dir_missing")
+        run_dir = manifest_file.parent
+    else:
+        run_dir = resolve_path(repo_root, run_dir_value)
+        if not is_path_inside(run_dir, repo_root):
+            errors.append("manifest_run_dir_outside_repo")
 
     refs = manifest.get("artifact_refs")
     if not isinstance(refs, list) or not refs:
@@ -283,11 +354,18 @@ def validate_runtime_payload_manifest(repo_root: Path, manifest_path: str | Path
         if not rel_path:
             errors.append(f"artifact_ref_{index}_path_missing")
             continue
+        raw_path = Path(rel_path)
+        if raw_path.is_absolute():
+            errors.append(f"artifact_ref_{rel_path}_absolute_path_forbidden")
         if not kind:
             errors.append(f"artifact_ref_{rel_path}_kind_missing")
         if not source or source == "unknown":
             errors.append(f"artifact_ref_{rel_path}_source_missing")
         artifact_path = resolve_path(repo_root, rel_path)
+        if not is_path_inside(artifact_path, repo_root):
+            errors.append(f"artifact_ref_{rel_path}_outside_repo")
+        elif run_dir_value and not is_path_inside(artifact_path, run_dir):
+            errors.append(f"artifact_ref_{rel_path}_outside_run_dir")
         if not artifact_path.is_file():
             errors.append(f"artifact_ref_{rel_path}_missing")
             continue
@@ -328,6 +406,26 @@ def validate_runtime_payload_manifest(repo_root: Path, manifest_path: str | Path
             for key in ("chunk_id", "kind", "path", "source", "bytes", "sha256"):
                 if chunk.get(key) in (None, ""):
                     errors.append(f"chunk_{chunk.get('chunk_id') or '?'}_{key}_missing")
+            chunk_rel_path = str(chunk.get("path") or "").strip()
+            if not chunk_rel_path:
+                continue
+            if Path(chunk_rel_path).is_absolute():
+                errors.append(f"chunk_{chunk.get('chunk_id') or '?'}_absolute_path_forbidden")
+            chunk_target = resolve_path(repo_root, chunk_rel_path)
+            if not is_path_inside(chunk_target, repo_root):
+                errors.append(f"chunk_{chunk.get('chunk_id') or '?'}_outside_repo")
+                continue
+            if run_dir_value and not is_path_inside(chunk_target, run_dir):
+                errors.append(f"chunk_{chunk.get('chunk_id') or '?'}_outside_run_dir")
+            if not chunk_target.is_file():
+                errors.append(f"chunk_{chunk.get('chunk_id') or '?'}_missing")
+                continue
+            expected_chunk_bytes = int(chunk.get("bytes") or 0)
+            expected_chunk_sha = str(chunk.get("sha256") or "").strip()
+            if chunk_target.stat().st_size != expected_chunk_bytes:
+                errors.append(f"chunk_{chunk.get('chunk_id') or '?'}_bytes_mismatch")
+            if file_sha256(chunk_target) != expected_chunk_sha:
+                errors.append(f"chunk_{chunk.get('chunk_id') or '?'}_sha256_mismatch")
 
     return {"passed": not errors, "errors": errors, "warnings": warnings}
 

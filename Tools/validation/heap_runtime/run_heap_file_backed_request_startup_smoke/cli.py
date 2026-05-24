@@ -58,8 +58,10 @@ def build_report(repo_root: Path) -> dict[str, object]:
     provider_prompt = read(repo_root, "ia_carmine/runtime/heap_gate/provider_prompt.py")
 
     require(
-        '"request_transport"] = "inline_cli"' in launcher,
-        "launcher must keep small direct CLI request coordination explicit",
+        '"request_transport"] = "heap_augmented_request_file"' in launcher
+        and '"heap_augmented_request.md"' in launcher
+        and '"heap_request_file"' in launcher,
+        "launcher must materialize the augmented heap request as the active request artifact",
         errors,
     )
     require(
@@ -105,9 +107,9 @@ def build_report(repo_root: Path) -> dict[str, object]:
     )
     require(
         "def request_args" in launcher
-        and '"--request-file"' in launcher
-        and '"--request"' in launcher,
-        "launcher must use operator request-file when present and inline only for small direct requests",
+        and 'state.get("heap_request_file")' in launcher
+        and '"--request-file"' in launcher,
+        "launcher child commands must prefer the generated heap request artifact",
         errors,
     )
     require(

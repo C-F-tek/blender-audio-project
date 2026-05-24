@@ -18,7 +18,10 @@ if str(repo_root_for_import) not in sys.path:
 from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
 from ia_carmine._shared.provider_probe_paths import ensure_repo_imports
 from ia_carmine._shared.provider_work_verification import provider_work_status
-from ia_carmine._shared.file_backed_transport import write_text_artifact
+from ia_carmine._shared.file_backed_transport import (
+    write_text_artifact,
+    write_text_evidence_fields,
+)
 
 
 def _option_supplied(argv: list[str], option: str) -> bool:
@@ -177,7 +180,19 @@ def mirror_single_provider_lane(report: dict[str, Any], lane_report: dict[str, A
         "provider_device_verified",
         "provider_execution_performed",
         "provider_loaded",
-        "response_text",
+        "response_text_ref",
+        "response_text_chars",
+        "response_text_sha256",
+        "response_text_tail",
+        "response_text_tail_chars",
+        "response_text_full_text_in_json",
+        "response_text_transport",
+        "provider_heap_delta_text_ref",
+        "provider_heap_delta_text_chars",
+        "provider_heap_delta_text_sha256",
+        "provider_heap_delta_text_tail",
+        "provider_heap_delta_text_tail_chars",
+        "provider_heap_delta_text_full_text_in_json",
         "raw_response_chars",
         "text_preview",
         "target_files",
@@ -248,6 +263,54 @@ def mirror_single_provider_lane(report: dict[str, Any], lane_report: dict[str, A
     report["wrapper_kind"] = report.get("kind")
     report["kind"] = "local_provider_probe"
     return report
+
+
+def _compact_text_fields(
+    repo_root: Path,
+    output_dir: Path,
+    payload: dict[str, Any],
+    *,
+    name: str,
+) -> dict[str, Any]:
+    compact = dict(payload)
+    text_keys = (
+        "response_text",
+        "provider_heap_delta_text",
+        "gpu0_raw_response_text",
+        "request_prompt",
+        "raw_preview",
+    )
+    for key in text_keys:
+        if key not in compact:
+            continue
+        text = str(compact.pop(key) or "")
+        compact.update(write_text_evidence_fields(
+            repo_root,
+            output_dir / "provider_report_artifacts",
+            prefix=key,
+            name=f"{name}_{key}",
+            text=text,
+            kind=f"local_provider_probe_{key}",
+            producer="local_provider_probe",
+            suffix=".md",
+        ))
+    nested = compact.get("openvino_native_tool_loop")
+    if isinstance(nested, dict):
+        compact["openvino_native_tool_loop"] = _compact_text_fields(
+            repo_root,
+            output_dir,
+            nested,
+            name=f"{name}_openvino_native_tool_loop",
+        )
+    child = compact.get("child")
+    if isinstance(child, dict):
+        compact["child"] = _compact_text_fields(
+            repo_root,
+            output_dir,
+            child,
+            name=f"{name}_child",
+        )
+    return compact
 
 
 def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
@@ -362,6 +425,20 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         if str(item.get("provider_compute_device") or "").strip()
     ]
 
+    partial_output = Path(args.output)
+    if not partial_output.is_absolute():
+        partial_output = repo_root / partial_output
+    safe_lane_reports = [
+        _compact_text_fields(
+            repo_root,
+            partial_output.parent,
+            item,
+            name=f"lane_report_{index}_{item.get('lane') or 'unknown'}",
+        )
+        for index, item in enumerate(lane_reports)
+        if isinstance(item, dict)
+    ]
+
     report = {
         "schema_version": 1,
         "kind": "local_provider_probe",
@@ -387,13 +464,13 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "cpu_provider_fallback_performed": any(
             item.get("cpu_provider_fallback_performed") for item in lane_reports
         ),
-        "lane_reports": lane_reports,
+        "lane_reports": safe_lane_reports,
         "provider_result_report": provider_report,
         "canonical_run_provider_evidence": bool(args.canonical_run_provider_evidence),
         "canonical_run_fingerprint": str(args.canonical_run_fingerprint or ""),
     }
-    if args.run_ollama and len(lane_reports) == 1 and isinstance(lane_reports[0], dict):
-        return mirror_single_provider_lane(report, lane_reports[0])
+    if args.run_ollama and len(safe_lane_reports) == 1 and isinstance(safe_lane_reports[0], dict):
+        return mirror_single_provider_lane(report, safe_lane_reports[0])
     return report
 
 def main() -> int:

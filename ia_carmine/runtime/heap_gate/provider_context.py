@@ -71,18 +71,18 @@ class RuntimeGateProviderContextMixin:
         return ""
 
     def provider_report_response_text(self, report: dict[str, Any]) -> str:
-        text = str(report.get("response_text") or "").strip()
-        if text:
-            return text
         ref = report.get("response_text_ref") if isinstance(report.get("response_text_ref"), dict) else {}
         ref_path = str(ref.get("path") or "").strip()
         if ref_path:
             try:
                 return read_text_windows_safe(resolve_path(self.repo_root, ref_path)).strip()
-            except Exception as exc:  # noqa: BLE001 - surface as warning and fall back to tail.
+            except Exception as exc:  # noqa: BLE001
                 self.warnings.append(
                     f"provider_response_ref_read_failed:{ref_path}:{type(exc).__name__}: {exc}"
                 )
+        text = str(report.get("response_text") or "").strip()
+        if text:
+            return text
         return str(report.get("response_text_tail") or "").strip()
 
     def provider_role_decisions(self) -> dict[str, str]:

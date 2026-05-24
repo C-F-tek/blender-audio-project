@@ -102,7 +102,6 @@ check_gpu0_companion_contract
 check_openvino_peer_topology_contract
 run_openvino_peer_topology_contract_smoke
 run_npu_micro_task_companion_smoke
-legacy_run_ollama_tool_gateway_smoke
 run_gpu_planner_json_contract_smoke
 run_gpu_runner_provider_error_smoke
 ```

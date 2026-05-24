@@ -11,8 +11,10 @@ from typing import Any
 from ia_carmine._shared.file_backed_transport import (
     INLINE_TEXT_MAX_CHARS,
     should_materialize_inline,
+    validate_runtime_payload_manifest,
     write_json_artifact,
     write_text_artifact,
+    read_json_windows_safe,
 )
 from ia_carmine._shared.agent_runtime_tool_broker_execution import execute_command_timed
 from Tools.validation._shared.report_utils import read_json_report
@@ -78,6 +80,38 @@ def infer_request_source(requests_data: dict[str, Any], request_path: Path | Non
 def load_requests_data(
     repo_root: Path, args: argparse.Namespace
 ) -> tuple[dict[str, Any], Path | None, str, list[str]]:
+    if getattr(args, "payload_file", ""):
+        payload_path = resolve_path(repo_root, args.payload_file)
+        try:
+            payload_data = read_json_windows_safe(payload_path)
+        except Exception as exc:  # noqa: BLE001
+            return {}, payload_path, "payload_file", [
+                f"payload_file_unreadable:{type(exc).__name__}:{exc}"
+            ]
+        if payload_data.get("kind") == "ia_carmine_runtime_payload_manifest":
+            validation = validate_runtime_payload_manifest(repo_root, payload_path)
+            if not validation.get("passed"):
+                return {}, payload_path, "payload_file", [
+                    "payload_manifest_invalid:" + ",".join(
+                        str(item) for item in validation.get("errors", [])[:6]
+                    )
+                ]
+            broker = payload_data.get("broker") if isinstance(payload_data.get("broker"), dict) else {}
+            request_ref = (
+                broker.get("request_packet_ref")
+                if isinstance(broker.get("request_packet_ref"), dict)
+                else {}
+            )
+            request_path = str(
+                request_ref.get("path")
+                or (payload_data.get("input") or {}).get("request_packet_path")
+                or ""
+            ).strip()
+            if not request_path:
+                return {}, payload_path, "payload_file", ["payload_manifest_missing_request_packet"]
+            request_packet_path = resolve_path(repo_root, request_path)
+            return read_json_report(request_packet_path), request_packet_path, "payload_file", []
+        return payload_data, payload_path, "payload_file", []
     request_data = getattr(args, "request_data", None)
     if isinstance(request_data, dict):
         return request_data, None, "in_memory", []
@@ -216,7 +250,13 @@ def execute_tool_request(
             timeout_seconds=timeout_seconds,
         )
     else:
-        timed = execute_command_timed(command, repo_root, timeout_seconds)
+        timed = execute_command_timed(
+            command,
+            repo_root,
+            timeout_seconds,
+            output_dir=out_dir / f"{request_id}_execution_io",
+            name=request_id,
+        )
     base_result["executed"] = True
     base_result["returncode"] = timed.returncode
     base_result["started_at"] = timed.started_at
@@ -225,6 +265,10 @@ def execute_tool_request(
     base_result["status"] = "executed_ok" if timed.returncode == 0 else "executed_failed"
     base_result["stdout_tail"] = timed.stdout_tail
     base_result["stderr_tail"] = timed.stderr_tail
+    base_result["stdout_ref"] = timed.stdout_ref or {}
+    base_result["stderr_ref"] = timed.stderr_ref or {}
+    base_result["stdout_chars"] = timed.stdout_chars
+    base_result["stderr_chars"] = timed.stderr_chars
     if timed.error:
         base_result["errors"].append(timed.error)
     if timed.returncode != 0:
@@ -448,6 +492,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "kind": "agent_runtime_tool_broker",
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
+        "job_id": str(getattr(args, "job_id", "") or stamp),
+        "payload_file": str(getattr(args, "payload_file", "") or ""),
         "request_file": repo_rel(request_path, repo_root) if request_path else "",
         "request_transport": request_transport,
         "request_kind": requests_data.get("kind"),

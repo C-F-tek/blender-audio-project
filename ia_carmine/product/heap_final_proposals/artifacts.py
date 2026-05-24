@@ -11,6 +11,7 @@ from ia_carmine.product.heap_final_proposals.common import (
     read_text,
     repo_rel,
 )
+from ia_carmine._shared.file_backed_transport import text_from_ref_or_tail
 
 PROVIDER_REPORT_LANES = {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}
 PROVIDER_REPORT_SKIP_KINDS = {
@@ -203,7 +204,10 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
                 "npu_micro_task_piece": data.get("npu_micro_task_piece", []),
                 "npu_workload_audit": data.get("npu_workload_audit", {}),
                 "anchored_source_candidates": data.get("anchored_source_candidates", []),
-                "response_text": data.get("response_text", ""),
+                "response_text_ref": data.get("response_text_ref", {}),
+                "response_text_chars": data.get("response_text_chars", 0),
+                "response_text_sha256": data.get("response_text_sha256", ""),
+                "response_text_tail": data.get("response_text_tail", ""),
             }
         )
     return proposals
@@ -233,7 +237,10 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
                 "passed": data.get("passed"),
                 "provider_execution_performed": provider_report_execution_performed(data),
                 "provider_work_verified": provider_report_execution_performed(data),
-                "response_text": data.get("response_text", ""),
+                "response_text_ref": data.get("response_text_ref", {}),
+                "response_text_chars": data.get("response_text_chars", 0),
+                "response_text_sha256": data.get("response_text_sha256", ""),
+                "response_text_tail": data.get("response_text_tail", ""),
                 "npu_device_workload": data.get("npu_device_workload"),
                 "warnings": data.get("warnings", []),
                 "errors": data.get("errors", []),
@@ -344,18 +351,28 @@ def flatten_quality_blockers(
     return list(dict.fromkeys(blockers))
 
 
-def proposal_text_for_review(proposal: dict[str, Any], max_chars: int | None) -> str:
+def proposal_text_for_review(
+    proposal: dict[str, Any],
+    max_chars: int | None,
+    repo_root: Path | None = None,
+) -> str:
     md_path = proposal.get("markdown_path")
     if isinstance(md_path, Path) and md_path.exists():
         return read_text(md_path, limit=max_chars)
-    text = str(proposal.get("response_text") or "")
+    text = (
+        text_from_ref_or_tail(repo_root, proposal, "response_text")
+        if repo_root is not None
+        else str(proposal.get("response_text_tail") or "")
+    )
     if max_chars is not None and len(text) > max_chars:
         return text[:max_chars] + "\n...[truncated]\n"
     return text
 
 
 def collect_gpu0_reviews(
-    proposals: list[dict[str, Any]], provider_reports: list[dict[str, Any]]
+    proposals: list[dict[str, Any]],
+    provider_reports: list[dict[str, Any]],
+    repo_root: Path | None = None,
 ) -> list[dict[str, Any]]:
     reviews: list[dict[str, Any]] = []
     for proposal in proposals:
@@ -376,7 +393,11 @@ def collect_gpu0_reviews(
                     "source": source,
                     "passed": provider.get("passed"),
                     "provider_execution_performed": provider.get("provider_execution_performed"),
-                    "summary": str(provider.get("response_text") or "")[:1200],
+                    "summary": (
+                        text_from_ref_or_tail(repo_root, provider, "response_text")
+                        if repo_root is not None
+                        else str(provider.get("response_text_tail") or "")
+                    )[:1200],
                     "warnings": provider.get("warnings") or [],
                 }
             )

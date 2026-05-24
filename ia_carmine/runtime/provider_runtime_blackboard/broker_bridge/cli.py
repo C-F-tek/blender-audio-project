@@ -25,9 +25,12 @@ from ia_carmine.runtime.provider_runtime_blackboard.common import resolve_output
 from ia_carmine.runtime.runtime_tool.broker.executor import build_report as build_broker_report
 from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown as render_broker_markdown
 from ia_carmine._shared.file_backed_transport import (
+    artifact_ref,
     file_sha256,
     read_json_windows_safe,
     resolve_path as resolve_transport_path,
+    write_json_artifact,
+    write_transport_manifest,
 )
 from Tools.validation._shared.report_utils import write_json_report, write_text_report
 
@@ -149,7 +152,7 @@ def run_broker(
     *,
     repo_root: Path,
     stamp: str,
-    request_packet: dict[str, Any],
+    request_packet_file: Path,
     tool_output_dir: Path,
     broker_output: Path,
     broker_markdown: Path,
@@ -158,8 +161,8 @@ def run_broker(
 ) -> tuple[int, str, str, dict[str, Any]]:
     broker_args = Namespace(
         repo_root=str(repo_root),
-        request_data=request_packet,
-        request_file="",
+        request_data=None,
+        request_file=repo_rel(repo_root, request_packet_file),
         request_json="",
         tool_output_dir=repo_rel(repo_root, tool_output_dir),
         stamp=stamp,
@@ -418,6 +421,35 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     tool_output_dir = bridge_dir / "tool_outputs"
 
     packet = build_request_packet(repo_root, args.stamp, pending)
+    packet_ref = write_json_artifact(
+        repo_root,
+        bridge_dir,
+        name="request_packet",
+        payload=packet,
+        kind="provider_runtime_broker_request_packet",
+        producer="provider_runtime_broker_bridge",
+    )
+    packet_file = resolve_transport_path(repo_root, str(packet_ref.get("path") or ""))
+    manifest_path = bridge_dir / "request_payload_manifest.json"
+    write_transport_manifest(
+        repo_root,
+        manifest_path,
+        job_id=args.stamp,
+        run_dir=bridge_dir,
+        refs=[packet_ref],
+        extra={
+            "input": {"request_packet_path": packet_ref.get("path")},
+            "broker": {"request_packet_ref": packet_ref},
+            "read_order": ["request_packet"],
+        },
+    )
+    manifest_ref = artifact_ref(
+        manifest_path,
+        repo_root,
+        kind="ia_carmine_runtime_payload_manifest",
+        producer="provider_runtime_broker_bridge",
+        ref_id="provider_runtime_broker_payload_manifest",
+    )
     returncode = 0
     stdout_tail = ""
     stderr_tail = ""
@@ -428,7 +460,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         returncode, stdout_tail, stderr_tail, broker_report = run_broker(
             repo_root=repo_root,
             stamp=args.stamp,
-            request_packet=packet,
+            request_packet_file=packet_file,
             tool_output_dir=tool_output_dir,
             broker_output=broker_output,
             broker_markdown=broker_markdown,
@@ -455,14 +487,19 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "kind": "provider_runtime_broker_bridge",
         "generated_at": now_iso(),
         "stamp": args.stamp,
+        "job_id": args.stamp,
         "passed": not errors,
         "errors": errors,
         "warnings": [],
         "dry_run": bool(args.dry_run),
         "pending_broker_request_count": len(pending),
         "broker_result_event_count": len(broker_result_events),
-        "request_packet": "",
-        "request_transport": "in_memory",
+        "request_packet": packet_ref.get("path") or "",
+        "request_packet_ref": packet_ref,
+        "request_payload_manifest": manifest_ref.get("path") or "",
+        "request_payload_manifest_ref": manifest_ref,
+        "payload_file": manifest_ref.get("path") or "",
+        "request_transport": "payload_file",
         "broker_report": repo_rel(repo_root, broker_output),
         "broker_markdown": repo_rel(repo_root, broker_markdown),
         "tool_output_dir": repo_rel(repo_root, tool_output_dir),

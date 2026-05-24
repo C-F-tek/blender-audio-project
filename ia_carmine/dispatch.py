@@ -59,7 +59,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "semantic_evidence_chunks": "ia_carmine.context.agent_context.semantic_evidence_chunks.cli:main",
     "shared_toolbox_bundle": "ia_carmine.context.agent_context.shared_toolbox_bundle.cli:main",
     "heap_final_proposals": "ia_carmine.product.heap_final_proposals.cli:main",
-    "legacy_ollama_tool_gateway": "ia_carmine.providers.provider_mesh.ollama_tool_gateway.cli:main",
     "operator_product_gui": "ia_carmine.product.operator_product_core.view.cli:main",
     "heap_context_memory_reload": "ia_carmine.context.heap_context_memory_reload.cli:main",
     "agent_review_prepare_pr": "ia_carmine.product.agent_review.review_pr_cli:main",
@@ -70,9 +69,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "provider_runtime_validation_bridge": "ia_carmine.runtime.provider_runtime_blackboard.validation_bridge.cli:main",
     "build_provider_runtime_heap_from_peer_reports": "ia_carmine.runtime.provider_runtime_blackboard.peer_reports.cli:main",
     "megalithic_review_refinement": "ia_carmine.product.repository_product.megalithic_review_refinement.cli:main",
-    "legacy_gpu_deep_planning_review": "ia_carmine.providers.provider_mesh.gpu_deep_planning_review.cli:main",
-    "legacy_gpu_deep_planning_supervised": "ia_carmine.providers.provider_mesh.gpu_deep_planning_supervised.cli:main",
-    "legacy_gpu_npu_parallel_orchestrator": "ia_carmine.providers.provider_mesh.gpu_npu_parallel_orchestrator.cli:main",
     "run": "ia_carmine.runtime.run.cli:main",
     "heap_context_closure": "ia_carmine.runtime.heap_context_closure.cli:main",
     "run_heap_code_execution_tool": "ia_carmine.runtime.heap_runtime.code_execution_tool.cli:main",
@@ -81,7 +77,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_heap_virtual_dev_environment": "ia_carmine.runtime.heap_runtime.virtual_dev_environment.cli:main",
     "generic_write": "ia_carmine.runtime.runtime_tool.generic_write.cli:main",
     "megalithic_repo_review": "ia_carmine.product.repository_product.megalithic_repo_review.cli:main",
-    "legacy_npu_gpu_deep_review_auditor": "ia_carmine.providers.provider_mesh.npu_gpu_deep_review_auditor.cli:main",
     "pipeline_dry_run_matrix": "ia_carmine.product.pipeline.dry_run_matrix.cli:main",
     "repository_update_suggestions": "ia_carmine.product.repository_product.repository_update_suggestions.cli:main",
     "run_parallel_artifact_pipeline": "ia_carmine.product.pipeline.artifact_runner.cli:main",
@@ -98,7 +93,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "ensure_ollama_role_models": "ia_carmine.providers.ollama.role_models:main",
     "ensure_openvino_npu_model": "ia_carmine.providers.provider_mesh.openvino_npu_model_probe.cli:main",
     "ensure_provider_role_coexistence": "ia_carmine.providers.provider_mesh.provider_role_coexistence.cli:main",
-    "legacy_build_openvino_gpu0_workload_report": "ia_carmine.providers.provider_mesh.openvino_gpu0_workload_report.cli:main",
     "build_openvino_hardware_governance_report": "ia_carmine.providers.provider_mesh.openvino_hardware_governance_report.cli:main",
     "build_patch_plan_quality_product_report": "ia_carmine.product.patch_product.patch_plan_quality_product_report.cli:main",
     "build_review_pr_prepare_args": "ia_carmine.product.repository_product.review_pr_prepare_args.cli:main",
@@ -158,16 +152,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "runtime_hardware_capability": "ia_carmine.providers.provider_mesh.hardware_capability.cli:main",
 }
 
-LEGACY_NON_RUN_UNICA_COMMANDS: frozenset[str] = frozenset(
-    {
-        "legacy_ollama_tool_gateway",
-        "legacy_gpu_deep_planning_review",
-        "legacy_gpu_deep_planning_supervised",
-        "legacy_gpu_npu_parallel_orchestrator",
-        "legacy_npu_gpu_deep_review_auditor",
-        "legacy_build_openvino_gpu0_workload_report",
-    }
-)
+LEGACY_NON_RUN_UNICA_COMMANDS: frozenset[str] = frozenset()
 
 
 def _dispatcher() -> ToolDispatcher:

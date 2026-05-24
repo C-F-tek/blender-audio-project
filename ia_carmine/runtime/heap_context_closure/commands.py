@@ -8,6 +8,9 @@ from ia_carmine.product.operator_product_core.cli_contract import HeapRuntimeFla
 
 
 def request_args(state: dict[str, Any]) -> list[str]:
+    request_file = str(state.get("heap_request_file") or "").strip()
+    if request_file:
+        return ["--request-file", request_file]
     request_file = str(state.get("operator_request_file") or "").strip()
     if request_file:
         return ["--request-file", request_file]

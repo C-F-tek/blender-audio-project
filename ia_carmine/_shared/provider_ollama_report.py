@@ -6,9 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from ia_carmine._shared.file_backed_transport import (
-    INLINE_TEXT_MAX_CHARS,
     text_sha256,
-    write_large_text_evidence,
+    write_text_evidence_fields,
 )
 
 _REPORT_KEYS = (
@@ -93,44 +92,22 @@ def _response_text_fields(ctx: dict[str, Any], text: str) -> dict[str, Any]:
     response_text = str(ctx.get("response_text") or "")
     partial_json = ctx.get("partial_json")
     repo_root = Path(str(ctx.get("repo_root") or ".")).resolve()
-    fields: dict[str, Any] = {
-        "response_text_chars": len(response_text),
-        "response_text_sha256": text_sha256(response_text),
-        "response_text_tail": response_text[-4000:] if response_text else "",
-        "response_text_tail_chars": min(len(response_text), 4000),
-        "response_text_full_text_in_json": len(response_text) <= INLINE_TEXT_MAX_CHARS,
-        "response_text_transport": "inline_small_control",
-    }
-    if len(response_text) <= INLINE_TEXT_MAX_CHARS:
-        fields["response_text"] = response_text
-        return fields
-
     base_dir = (
         Path(str(partial_json)).resolve().parent
         if partial_json
         else repo_root / "output" / "validation"
     )
-    evidence = write_large_text_evidence(
+    fields = write_text_evidence_fields(
         repo_root,
         base_dir / "provider_response_artifacts",
+        prefix="response_text",
         name="provider_ollama_response",
         text=response_text,
         kind="provider_ollama_response_text",
         producer="provider_ollama_probe",
         suffix=".md",
     )
-    fields.update(
-        {
-            "response_text_ref": evidence.get("ref") or {},
-            "response_text_tail": evidence.get("tail") or fields["response_text_tail"],
-            "response_text_tail_chars": evidence.get(
-                "tail_chars", fields["response_text_tail_chars"]
-            ),
-            "response_text_full_text_in_json": False,
-            "response_text_transport": "artifact_ref",
-            "raw_response_chars": len(text.strip()),
-        }
-    )
+    fields["raw_response_chars"] = len(text.strip())
     return fields
 
 

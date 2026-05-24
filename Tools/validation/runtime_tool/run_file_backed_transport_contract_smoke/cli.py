@@ -11,6 +11,10 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
+from Tools.validation.runtime_tool.run_file_backed_transport_contract_smoke.helpers import (
+    fake_ollama_report_context,
+)
+
 
 def read(repo_root: Path, rel_path: str) -> str:
     return (repo_root / rel_path).read_text(encoding="utf-8-sig")
@@ -21,12 +25,22 @@ def require(condition: bool, message: str, errors: list[str]) -> None:
         errors.append(message)
 
 
+def extract_first_tool(data: dict[str, object]) -> str:
+    requests = data.get("tool_requests")
+    if not isinstance(requests, list) or not requests:
+        return ""
+    first = requests[0]
+    return str(first.get("tool") or "") if isinstance(first, dict) else ""
+
+
 def build_report(repo_root: Path) -> dict[str, object]:
     from ia_carmine._shared.file_backed_transport import (
         INLINE_TEXT_MAX_CHARS,
         MAX_FILE_WINDOW_CHARS,
         artifact_ref,
         validate_runtime_payload_manifest,
+        write_json_artifact,
+        write_transport_manifest,
     )
     from ia_carmine._shared.provider_ollama_report import build_ollama_probe_report
     from ia_carmine.runtime.provider_runtime_blackboard.cli import parse_payload
@@ -309,7 +323,7 @@ def build_report(repo_root: Path) -> dict[str, object]:
     )
 
     prompt = "PROMPT-BODY-" + ("x" * 100_000)
-    fake_ctx = _fake_ollama_report_context(repo_root, prompt)
+    fake_ctx = fake_ollama_report_context(repo_root, prompt)
     prompt_report = build_ollama_probe_report(fake_ctx)
     require(
         prompt_report.get("request_prompt_chars") == len(prompt)
@@ -321,9 +335,12 @@ def build_report(repo_root: Path) -> dict[str, object]:
     )
     big_response = "RESPONSE-BODY-" + ("y" * 100_000)
     response_report = build_ollama_probe_report(
-        _fake_ollama_report_context(repo_root, prompt="prompt", response_text=big_response)
+        fake_ollama_report_context(repo_root, prompt="prompt", response_text=big_response)
     )
     response_ref = response_report.get("response_text_ref")
+    short_response = build_ollama_probe_report(
+        fake_ollama_report_context(repo_root, prompt="prompt", response_text="ok")
+    )
     require(
         response_report.get("response_text_chars") == len(big_response)
         and response_report.get("response_text_sha256")
@@ -332,6 +349,12 @@ def build_report(repo_root: Path) -> dict[str, object]:
         and response_report.get("response_text") != big_response
         and "response_text" not in response_report,
         "large provider response report must contain ref/hash/tail metadata and not the response body",
+        errors,
+    )
+    require(
+        "response_text" not in short_response
+        and bool(short_response.get("response_text_ref", {}).get("sha256")),
+        "short provider response report must also be artifact-backed",
         errors,
     )
 
@@ -345,7 +368,13 @@ def build_report(repo_root: Path) -> dict[str, object]:
     )
     good_manifest = smoke_dir / "manifest_good.json"
     good_manifest.write_text(
-        json.dumps({"schema_version": 1, "kind": "ia_carmine_runtime_payload_manifest", "artifact_refs": [good_ref]}, indent=2)
+        json.dumps({
+            "schema_version": 1,
+            "kind": "ia_carmine_runtime_payload_manifest",
+            "job_id": "file-backed-smoke",
+            "run_dir": str(smoke_dir.relative_to(repo_root)).replace("\\", "/"),
+            "artifact_refs": [good_ref],
+        }, indent=2)
         + "\n",
         encoding="utf-8",
     )
@@ -353,7 +382,13 @@ def build_report(repo_root: Path) -> dict[str, object]:
     bad_ref["bytes"] = int(bad_ref.get("bytes") or 0) + 1
     bad_manifest = smoke_dir / "manifest_bad.json"
     bad_manifest.write_text(
-        json.dumps({"schema_version": 1, "kind": "ia_carmine_runtime_payload_manifest", "artifact_refs": [bad_ref]}, indent=2)
+        json.dumps({
+            "schema_version": 1,
+            "kind": "ia_carmine_runtime_payload_manifest",
+            "job_id": "file-backed-smoke",
+            "run_dir": str(smoke_dir.relative_to(repo_root)).replace("\\", "/"),
+            "artifact_refs": [bad_ref],
+        }, indent=2)
         + "\n",
         encoding="utf-8",
     )
@@ -518,6 +553,27 @@ def build_report(repo_root: Path) -> dict[str, object]:
         "broker bridge must hydrate file-backed broker_request payloads and preserve tool/args/native flag",
         errors,
     )
+    request_packet_ref = write_json_artifact(
+        repo_root, smoke_dir, name="broker_request_packet",
+        payload={"schema_version": 1, "kind": "agent_runtime_tool_requests", "tool_requests": [hydrated_request]},
+        kind="provider_runtime_broker_request_packet", producer="file_backed_transport_contract_smoke",
+    )
+    broker_manifest = smoke_dir / "broker_payload_manifest.json"
+    write_transport_manifest(
+        repo_root, broker_manifest, job_id="broker-retry-smoke", run_dir=smoke_dir,
+        refs=[request_packet_ref], extra={"broker": {"request_packet_ref": request_packet_ref}},
+    )
+    broker_manifest_data, _, broker_manifest_transport, broker_manifest_errors = load_requests_data(
+        repo_root,
+        SimpleNamespace(request_data=None, request_packet=None, request_json="", request_file="", payload_file=str(broker_manifest)),
+    )
+    require(
+        broker_manifest_transport == "payload_file"
+        and not broker_manifest_errors
+        and extract_first_tool(broker_manifest_data) == "runtime_file_refs",
+        "broker payload_file manifest must hydrate retryable request packet with tool/args",
+        errors,
+    )
 
     large_request_data, _, _, large_request_errors = load_requests_data(
         repo_root,
@@ -526,6 +582,7 @@ def build_report(repo_root: Path) -> dict[str, object]:
             request_packet=None,
             request_json='{"body":"' + ("x" * (INLINE_TEXT_MAX_CHARS + 1)) + '"}',
             request_file="",
+            payload_file="",
         ),
     )
     sqlite_args = {"content": "memory body"}
@@ -602,7 +659,7 @@ def build_report(repo_root: Path) -> dict[str, object]:
         "npu_gpu_deep_review_auditor",
         "build_openvino_gpu0_workload_report",
     }
-    required_legacy = {
+    legacy_names = old_legacy | {
         "legacy_ollama_tool_gateway",
         "legacy_gpu_deep_planning_review",
         "legacy_gpu_deep_planning_supervised",
@@ -611,11 +668,12 @@ def build_report(repo_root: Path) -> dict[str, object]:
         "legacy_build_openvino_gpu0_workload_report",
     }
     require(
-        required_legacy.issubset(set(LEGACY_NON_RUN_UNICA_COMMANDS))
-        and old_legacy.isdisjoint(set(TOOL_MAIN_TARGETS))
-        and "legacy_run_ollama_tool_gateway_smoke" in set(LEGACY_NON_RUN_UNICA_VALIDATION_COMMANDS)
+        legacy_names.isdisjoint(set(TOOL_MAIN_TARGETS))
+        and not set(LEGACY_NON_RUN_UNICA_COMMANDS)
+        and not set(LEGACY_NON_RUN_UNICA_VALIDATION_COMMANDS)
+        and "legacy_run_ollama_tool_gateway_smoke" not in set(VALIDATION_TOOL_MAIN_TARGETS)
         and "run_ollama_tool_gateway_smoke" not in set(VALIDATION_TOOL_MAIN_TARGETS),
-        "legacy gateway/deep-planning commands must move behind legacy_* names",
+        "legacy gateway/deep-planning commands must be absent from live dispatchers",
         errors,
     )
     docs_phrase = "HTTP/API coordinates"
@@ -636,64 +694,6 @@ def build_report(repo_root: Path) -> dict[str, object]:
         "provider_execution_performed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
-    }
-
-
-class _Parsed:
-    json_ok = True
-    def to_dict(self) -> dict[str, object]: return {"ok": True}
-
-
-def _fake_ollama_report_context(
-    repo_root: Path, prompt: str, response_text: str = "response"
-) -> dict[str, object]:
-    return {
-        "selection": {"requested_provider_model": "fake", "selected_provider_model": "fake"},
-        "raw_chat_response": {},
-        "native_tool_calls": [],
-        "text": response_text,
-        "prompt": prompt,
-        "prompt_ref": {
-            "path": "output/validation/fake_prompt.md", "bytes": len(prompt),
-            "sha256": "fake", "source": "smoke",
-        },
-        "repo_root": str(repo_root),
-        "partial_json": str(
-            repo_root / "output" / "validation"
-            / "file_backed_transport_contract_smoke" / "fake_provider.json"
-        ),
-        "parsed": _Parsed(), "provider_lane": "gpu1_planner", "provider_role": "planner",
-        "passed": True, "provider_execution_performed": True,
-        "provider_execution_attempted": True, "provider_io_observed": True,
-        "require_gpu_residency": False,
-        "residency": {"provider_device_verified": True, "ollama_full_gpu_verified": True},
-        "ollama_ps_snapshots": [], "gpu_runtime_summary": {},
-        "ollama_residency_verified": True, "ollama_compute_verified": True,
-        "generation_stats": {"eval_count": 1, "prompt_eval_count": 1, "done": True},
-        "replight": {"replight_passed": True, "replight_blocked_reason": ""},
-        "work_status": {"provider_role_counted": True},
-        "provider_work_verified": True, "replight_mode": False,
-        "started": datetime.now().timestamp(), "selected_model": "fake",
-        "operator_gpu_observation": "", "num_ctx": 16384,
-        "gpu_layers": "all", "num_thread": None, "response_text": response_text,
-        "propagated_max_new_tokens": 64, "heap_delta_text_required": False,
-        "parsed_json": {"ok": True}, "response_likely_incomplete": False,
-        "textual_tool_calls": [], "native_tool_loop_requested": False,
-        "native_tool_loop_relevant": False, "native_tool_api_attempted": False,
-        "native_tool_api_completed": False,
-        "provider_native_tool_call_required": False,
-        "provider_native_tool_api_adapter_available": True,
-        "provider_native_tool_api_supported": True, "provider_native_tool_api_error": "",
-        "provider_native_tool_api_attempt_error": "", "provider_native_tool_api_unavailable": False,
-        "provider_native_tool_api_attempt_failed": False,
-        "provider_native_tool_call_required_unmet": False, "native_tool_decision_prompted": False,
-        "native_classification": "smoke", "errors": [], "warnings": [],
-        "target_files": [], "validation_commands": [], "rejected_validation_refs": [],
-        "models": ["fake"], "server_ready": True, "effective_base_url": "http://127.0.0.1:11434",
-        "server_process": {}, "unload_model": False, "unload_performed": False,
-        "unload_verified": False, "gpu0_vulkan_compute_observed": False,
-        "gpu0_vulkan_sdk_workload_verified": False, "gpu0_vulkan_policy_verified": False,
-        "empty_output": False, "prompt_attempts": [],
     }
 
 

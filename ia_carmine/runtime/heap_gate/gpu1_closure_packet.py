@@ -118,7 +118,7 @@ def build_gpu1_closure_decision_packet(
 
 
 def packet_from_report(report: dict[str, Any], *, source: str = "") -> dict[str, Any]:
-    text = str(report.get("response_text") or "")
+    text = str(report.get("response_text") or report.get("response_text_tail") or "")
     target_files = report.get("target_files") if isinstance(report.get("target_files"), list) else []
     reject_reasons = [
         report.get("gpu1_primary_block_reason"),

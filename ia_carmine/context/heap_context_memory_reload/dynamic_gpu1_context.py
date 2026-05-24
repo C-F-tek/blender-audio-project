@@ -285,6 +285,11 @@ def _write_payload_manifest(
     )
     manifest_path = payload_dir / "manifest.json"
     refs = [request_ref, context_summary_ref, chunks_manifest_ref, *artifact_refs.values()]
+    provider_input_refs = [
+        ref.get("path")
+        for ref in [request_ref, context_summary_ref, chunks_manifest_ref, *artifact_refs.values()]
+        if isinstance(ref, dict) and ref.get("path")
+    ]
     write_transport_manifest(
         repo_root,
         manifest_path,
@@ -302,9 +307,9 @@ def _write_payload_manifest(
             },
             "heap": {"pointer_refs": [], "revision_refs": []},
             "providers": {
-                "gpu1": {"role": "primary_planner", "input_refs": [request_ref.get("path")]},
-                "gpu0": {"role": "packet_review_only", "input_refs": []},
-                "npu": {"role": "packet_review_only", "input_refs": []},
+                "gpu1": {"role": "primary_planner", "input_refs": provider_input_refs},
+                "gpu0": {"role": "packet_review_only", "input_refs": provider_input_refs},
+                "npu": {"role": "packet_review_only", "input_refs": provider_input_refs},
             },
             "broker": {"tool_request_refs": [], "tool_result_refs": []},
             "output": {"report_path": "", "documents_dir": "", "stdout_path": "", "stderr_path": ""},
