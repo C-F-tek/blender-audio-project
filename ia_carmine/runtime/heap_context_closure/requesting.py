@@ -7,7 +7,7 @@ from typing import Any
 
 from ia_carmine._shared.revision_context_prompt import render_revision_context_prompt
 
-from .common import DEFAULT_REQUEST, REVISION_CONTEXT_MARKER
+from .common import REVISION_CONTEXT_MARKER
 
 HARD_STARTUP_REQUIREMENTS = {
     "rag_ollama_embed_preflight",
@@ -34,7 +34,9 @@ def augmented_request(
     revision_context_payload: dict[str, Any] | None = None,
     revision_context_max_tasks: int = 12,
 ) -> str:
-    operator = base_request.strip() or DEFAULT_REQUEST
+    operator = base_request.strip()
+    if not operator:
+        raise ValueError("operator_request_required")
     revision_payload = revision_context_payload or {}
     revision_text = ""
     if REVISION_CONTEXT_MARKER not in operator:

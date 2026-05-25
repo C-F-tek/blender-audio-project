@@ -71,7 +71,7 @@ def open_debug_monitor_window(
             "pid": process.pid,
             "interval": interval,
             "probe_write": probe_write,
-            "command": "python -m Tools.workflow workflow_debug",
+            "command": "python -m Tools.validation validator_unico --mode quick --section workflow_debug",
         },
     )
     return process

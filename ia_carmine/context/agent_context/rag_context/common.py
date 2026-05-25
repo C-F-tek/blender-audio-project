@@ -9,9 +9,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-DEFAULT_DB = "output/ai_runtime_memory/rag/rag.sqlite"
-DEFAULT_EMBEDDING_ENDPOINT = "http://127.0.0.1:11434"
-DEFAULT_EMBEDDING_MODEL = "bge-m3"
+DEFAULT_DB = ""
+DEFAULT_EMBEDDING_ENDPOINT = ""
+DEFAULT_EMBEDDING_MODEL = ""
+DEFAULT_RAG_PROFILE = ""
 DEFAULT_BATCH_SIZE = 8
 DEFAULT_CHUNK_MIN_CHARS = 1500
 DEFAULT_CHUNK_MAX_CHARS = 4000
@@ -54,8 +55,6 @@ EXCLUDED_PARTS = {
     ".npucache",
     ".pytest_cache",
     ".ruff_cache",
-    ".venv",
-    ".venv314",
     "__pycache__",
     "bin",
     "build",
@@ -182,3 +181,22 @@ def db_path_warning(repo_root: Path, db_path: Path) -> str:
         return ""
     return f"rag db path is not obviously ignored by repo policy: {rel}"
 
+
+def require_explicit_rag_runtime_args(
+    args: Any,
+    parser: Any,
+    *,
+    require_embedding: bool,
+) -> None:
+    missing: list[str] = []
+    if not str(getattr(args, "rag_profile", "") or "").strip():
+        missing.append("--rag-profile")
+    if not str(getattr(args, "db", "") or "").strip():
+        missing.append("--db")
+    if require_embedding:
+        if not str(getattr(args, "embedding_endpoint", "") or "").strip():
+            missing.append("--embedding-endpoint")
+        if not str(getattr(args, "embedding_model", "") or "").strip():
+            missing.append("--embedding-model")
+    if missing:
+        parser.error("missing explicit RAG runtime parameter(s): " + ", ".join(missing))

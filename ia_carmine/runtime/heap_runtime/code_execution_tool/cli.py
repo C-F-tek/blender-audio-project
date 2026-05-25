@@ -35,7 +35,7 @@ try:
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
     )
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report
+    from ia_carmine._shared.report_io import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
@@ -64,7 +64,7 @@ except ImportError:
         RuntimeFileRefResolver,
         RuntimeRefProvenance,
     )
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
+    from ia_carmine._shared.report_io import write_json_report, write_text_report  # type: ignore
 
 DEFAULT_OUTPUT = "output/validation/heap_code_execution_tool.json"
 DEFAULT_MARKDOWN = "output/validation/heap_code_execution_tool.md"

@@ -8,7 +8,7 @@ from ia_carmine.providers.npu.paths import find_repo_root
 
 ROOT = find_repo_root(__file__)
 
-DEFAULT_MODEL_DIR = Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov"
+DEFAULT_MODEL_DIR = Path("")
 DEFAULT_CONTEXT = ROOT / "Tools" / "npu" / "context_artifacts" / "npu_code_context.md"
 DEFAULT_CHUNK_DIR = ROOT / "Tools" / "npu" / "npu_code_chunks"
 DEFAULT_OUT = ROOT / "Tools" / "npu" / "npu_context_for_aider.md"

@@ -12,7 +12,7 @@ REPO_ROOT_FOR_IMPORTS = Path(__file__).resolve().parents[4]
 if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
-from Tools.validation._shared.report_utils import (
+from ia_carmine._shared.report_io import (
     resolve_output_path,
     write_json_report,
     write_text_report,

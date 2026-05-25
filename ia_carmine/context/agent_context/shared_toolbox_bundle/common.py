@@ -32,10 +32,7 @@ try:
         resolve_repo_path,
         split_path_values,
     )
-    from Tools.validation.repository_product.github_evidence_bundle import (
-        validate_github_evidence_bundles,
-    )
-    from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
+    from ia_carmine._shared.report_io import resolve_output_path, write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
@@ -53,10 +50,7 @@ except ImportError:
         resolve_repo_path,
         split_path_values,
     )
-    from Tools.validation.repository_product.github_evidence_bundle import (
-        validate_github_evidence_bundles,
-    )
-    from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
+    from ia_carmine._shared.report_io import resolve_output_path, write_json_report
 
 
 DEFAULT_STAMP_FORMAT = "%Y%m%d-%H%M%S"

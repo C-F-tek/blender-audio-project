@@ -16,9 +16,9 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation._shared.report_utils import write_json_report
+    from ia_carmine._shared.report_io import write_json_report
 except ImportError:
-    from Tools.validation._shared.report_utils import (  # type: ignore
+    from ia_carmine._shared.report_io import (  # type: ignore
         write_json_report,
     )
 

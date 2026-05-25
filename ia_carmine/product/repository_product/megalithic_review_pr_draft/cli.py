@@ -20,13 +20,13 @@ from typing import Any
 
 try:
     from ia_carmine._shared.code_patch_plan_common import read_json_object
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report
+    from ia_carmine._shared.report_io import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[3]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from ia_carmine._shared.code_patch_plan_common import read_json_object
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report
+    from ia_carmine._shared.report_io import write_json_report, write_text_report
 
 DEFAULT_REVIEW = "output/ai_pipeline/megalithic_repo_review.json"
 DEFAULT_PROPOSALS = "output/ai_pipeline/megalithic_repo_review_proposals.json"

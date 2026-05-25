@@ -319,7 +319,7 @@ def validate_policy(text_lf: str) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--target", default="Tools/workflow/_powershell/run_unified_local_ai_refactor.ps1")
+    parser.add_argument("--target", required=True)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 

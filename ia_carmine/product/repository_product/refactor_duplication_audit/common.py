@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         read_json_report,
         resolve_output_path,
         write_json_report,
@@ -19,7 +19,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         read_json_report,
         resolve_output_path,
         write_json_report,
@@ -44,7 +44,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
         ),
         "repeated_logic": "Repository-relative and path resolution helper patterns.",
         "existing_helper_available": True,
-        "preferred_existing_helper_or_module": "ia_carmine._shared.github_evidence_bundle_io for evidence-bundle paths; Tools.validation._shared.report_utils for validation output paths.",
+        "preferred_existing_helper_or_module": "ia_carmine._shared.github_evidence_bundle_io for evidence-bundle paths; ia_carmine._shared.report_io for validation output paths.",
         "recommendation_type": "reuse_existing_helper",
         "risk": "medium",
         "schema_or_cli_impact": "none expected if imports preserve path normalization semantics.",
@@ -56,7 +56,7 @@ HELPER_RULES: tuple[dict[str, Any], ...] = (
         ),
         "repeated_logic": "JSON/text read-write helpers repeated across report scripts and smoke tests.",
         "existing_helper_available": True,
-        "preferred_existing_helper_or_module": "Tools.validation._shared.report_utils.write_json_report plus existing evidence-bundle IO helpers for read paths.",
+        "preferred_existing_helper_or_module": "ia_carmine._shared.report_io.write_json_report plus existing evidence-bundle IO helpers for read paths.",
         "recommendation_type": "promote_existing_function",
         "risk": "low",
         "schema_or_cli_impact": "none if UTF-8 and JSON indentation are preserved.",

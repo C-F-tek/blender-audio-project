@@ -77,7 +77,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     helper_reuse_recommendations = [
         "Reuse ia_carmine._shared.github_evidence_bundle_io for evidence-bundle path/text/JSON helpers when semantics match.",
         "Reuse ia_carmine._shared.github_evidence_bundle_artifacts for artifact discovery and chunk pointer metadata.",
-        "Reuse Tools.validation._shared.report_utils for validation output path resolution and JSON report writing.",
+        "Reuse ia_carmine._shared.report_io for validation output path resolution and JSON report writing.",
         "Prefer promoting existing local functions into existing helper modules over creating new generic helper modules.",
     ]
     for item in existing_audit_summary.get("helper_reuse_recommendations") or []:

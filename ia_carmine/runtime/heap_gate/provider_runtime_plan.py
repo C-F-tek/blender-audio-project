@@ -46,7 +46,7 @@ def write_provider_runtime_plan(
         ),
         "strict_provider_model": bool(getattr(gate.args, "strict_provider_model", False)),
         "ollama_context_candidates": parse_context_candidates(
-            str(getattr(gate.args, "ollama_context_candidates", "") or "8192,4096"),
+            str(getattr(gate.args, "ollama_context_candidates", "") or ""),
             int(getattr(gate.args, "ollama_num_ctx", 0) or 0),
         ),
         "operator_gpu_observation": str(getattr(gate.args, "operator_gpu_observation", "") or ""),

@@ -39,7 +39,6 @@ GPU1_NATIVE_CONCRETE_TOOL_NAMES: tuple[str, ...] = (
     "build_agent_agnostic_tool_inventory",
     "build_agent_memory_inventory",
     "build_agent_transient_request_context",
-    "build_python_line_count_csv",
     "ai_context_pack",
     "semantic_evidence_chunks",
 )
@@ -88,7 +87,7 @@ def ollama_tool_visibility(
         if gpu1_concrete_only
         else [
             "build_agent_agnostic_tool_inventory", "build_agent_memory_inventory", "build_agent_transient_request_context",
-            "build_python_line_count_csv", "check_python_syntax", "build_code_interpreter_report",
+            "check_python_syntax", "build_code_interpreter_report",
             "repo_toolchain_probe", "repo_toolchain_command", "repo_search_rg", "repo_search_git_grep",
             "repo_find_fd", "repo_json_query_jq", "repo_powershell_readonly",
             "runtime_sqlite_memory", "rag_context_pack", "select_semantic_code_chunks", "semantic_evidence_chunks",
@@ -247,10 +246,7 @@ def resolve_provider_python(repo_root: Path, python_exe: str | None = None) -> P
     env_python = os.environ.get("IA_CARMINE_PYTHON", "").strip()
     if env_python:
         return Path(env_python).expanduser().resolve()
-    repo_python = repo_root / ".venv" / "Scripts" / "python.exe"
-    if repo_python.is_file():
-        return repo_python.resolve()
-    return Path(sys.executable).resolve()
+    raise RuntimeError("provider_python_explicit_required: pass python_exe or set IA_CARMINE_PYTHON")
 
 def _openvino_tool_loop_child_main() -> int:
     try:

@@ -7,7 +7,7 @@ surface.
 
 from pathlib import Path
 
-from Tools.tool_dispatch import ToolDispatcher
+from ia_carmine._shared.tool_dispatch import INTERNAL, PUBLIC, ToolDispatcher
 
 TOOL_MAIN_TARGETS: dict[str, str] = {
     "agent_memory_routing_policy": "ia_carmine.memory.agent_memory.routing_cli:main",
@@ -33,11 +33,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "agent_review_patch_bundle": "ia_carmine.product.agent_review.patch_bundle_cli:main",
     "agent_review_patch_plan": "ia_carmine.product.agent_review.patch_plan.cli:main",
     "agent_review_warning_policy": "ia_carmine.product.agent_review.warning_policy.cli:main",
-    "ai_context_pack": "ia_carmine.context.agent_context.ai_context_pack.cli:main",
-    "rag_ingest_repo": "ia_carmine.context.agent_context.rag_context.ingest_repo_cli:main",
-    "rag_query_context": "ia_carmine.context.agent_context.rag_context.query_context_cli:main",
-    "rag_build_context_pack": "ia_carmine.context.agent_context.rag_context.build_context_pack_cli:main",
-    "rag_context_pack": "ia_carmine.context.agent_context.rag_context.build_context_pack_cli:main",
     "peer_exchange_packet": "ia_carmine.providers.provider_mesh.peer_exchange_packet.cli:main",
     "deterministic_recommendations": "ia_carmine.product.deterministic_recommendations.cli:main",
     "build_code_interpreter_report": "ia_carmine.product.code_product.interpreter_report.cli:main",
@@ -46,7 +41,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "build_code_patch_docs_followup": "ia_carmine.product.code_product.patch_docs_followup.cli:main",
     "code_product_artifact_intake": "ia_carmine.product.code_product.artifact_intake.cli:main",
     "build_external_heap_revision_context": "ia_carmine.runtime.external_heap.revision_context.cli:main",
-    "heap_runtime_launcher_command": "ia_carmine.runtime.heap_runtime.launcher_command.cli:main",
     "generated_patch_specs_from_proposals": "ia_carmine.product.generated_patch_specs.proposal_cli:main",
     "refactor_duplication_audit": "ia_carmine.product.repository_product.refactor_duplication_audit.cli:main",
     "repository_change_proposals": "ia_carmine.product.repository_product.repository_change_proposals.cli:main",
@@ -70,15 +64,12 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "build_provider_runtime_heap_from_peer_reports": "ia_carmine.runtime.provider_runtime_blackboard.peer_reports.cli:main",
     "megalithic_review_refinement": "ia_carmine.product.repository_product.megalithic_review_refinement.cli:main",
     "run": "ia_carmine.runtime.run.cli:main",
-    "heap_context_closure": "ia_carmine.runtime.heap_context_closure.cli:main",
     "run_heap_code_execution_tool": "ia_carmine.runtime.heap_runtime.code_execution_tool.cli:main",
     "run_heap_code_execution_matrix": "ia_carmine.runtime.heap_runtime.code_execution_tool.cli:main",
-    "run_heap_runtime_completeness_gate": "ia_carmine.runtime.heap_runtime.completeness_gate.cli:main",
     "run_heap_virtual_dev_environment": "ia_carmine.runtime.heap_runtime.virtual_dev_environment.cli:main",
     "generic_write": "ia_carmine.runtime.runtime_tool.generic_write.cli:main",
     "megalithic_repo_review": "ia_carmine.product.repository_product.megalithic_repo_review.cli:main",
     "pipeline_dry_run_matrix": "ia_carmine.product.pipeline.dry_run_matrix.cli:main",
-    "repository_update_suggestions": "ia_carmine.product.repository_product.repository_update_suggestions.cli:main",
     "run_parallel_artifact_pipeline": "ia_carmine.product.pipeline.artifact_runner.cli:main",
     "agent_runtime_tool_broker": "ia_carmine.runtime.runtime_tool.agent_broker.cli:main",
     "build_analysis_input_bundle": "ia_carmine.providers.provider_mesh.analysis_input_bundle.cli:main",
@@ -153,6 +144,13 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
 }
 
 LEGACY_NON_RUN_UNICA_COMMANDS: frozenset[str] = frozenset()
+TOOL_VISIBILITY: dict[str, str] = {name: INTERNAL for name in TOOL_MAIN_TARGETS}
+TOOL_VISIBILITY.update(
+    {
+        "run": PUBLIC,
+        "runtime_tool_broker": PUBLIC,
+    }
+)
 
 
 def _dispatcher() -> ToolDispatcher:
@@ -162,11 +160,13 @@ def _dispatcher() -> ToolDispatcher:
         targets=TOOL_MAIN_TARGETS,
         label="AI",
         display_package="ia_carmine.cli",
+        visibility=TOOL_VISIBILITY,
+        default_visibility=INTERNAL,
     )
 
 
 def available_tools() -> list[str]:
-    return _dispatcher().discovered_tools()
+    return _dispatcher().public_tools()
 
 
 def resolve_tool(raw_name: str):

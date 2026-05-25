@@ -24,112 +24,191 @@ Documento operativo root-level per lanciare `python -m ia_carmine.cli run` senza
 - Prima eseguire sempre il dry-run: deve mostrare `effective_universe_config`, `field_sources` e `expanded_heap_command`.
 - La run reale usa lo stesso array di argomenti del dry-run, senza `--dry-run`.
 
-## Comando Minimo Attuale
+## Template CLI Esplicito
 
 ```powershell
-cd C:\Users\carmi\ProjectsDir\blender-audio-project
-
 $RepoRoot = (Resolve-Path .).Path
-$RepoPy = "C:\Users\carmi\blender\blender-audio-project\.venv\Scripts\python.exe"
+$RepoPy = Read-Host "Python IA_CARMINE_PYTHON completo"
 $env:IA_CARMINE_PYTHON = $RepoPy
 $env:PYTHONPATH = $RepoRoot
 
-$TaskFile = Join-Path $RepoRoot "docs\LOCAL_AI_TASKS\run-unica-real-product-contract-2026-05-21\URGENT.md"
+$TaskFile = Read-Host "Task file completo"
 $Stamp = "run-unica-$(Get-Date -Format yyyyMMdd-HHmmss)"
 $IntermediateRoot = Join-Path $RepoRoot "output\validation\operator_product_launcher_lab"
 $FinalRoot = Join-Path $RepoRoot "output\validation\$Stamp\final_product"
-$NpuModelDir = "C:\Users\carmi\blender\npu-models\Phi-3.5-mini-instruct-int4-cw-ov"
+
+$Gpu1Model = Read-Host "GPU1 Ollama model"
+$Gpu1BaseUrl = Read-Host "GPU1 Ollama base URL"
+$Gpu0Model = Read-Host "GPU0 Ollama/Vulkan model"
+$Gpu0BaseUrl = Read-Host "GPU0 Ollama/Vulkan base URL"
+$Gpu0VulkanVisibleDevices = Read-Host "GPU0 Vulkan visible devices"
+$NpuModelDir = Read-Host "NPU OpenVINO model dir"
+$RagDb = Read-Host "RAG sqlite path"
+$RagEmbeddingEndpoint = Read-Host "RAG embedding endpoint"
+$RagEmbeddingModel = Read-Host "RAG embedding model"
+
+$BudgetMinutes = Read-Host "budget-minutes"
+$MaxIterations = Read-Host "max-iterations"
+$MaxRounds = Read-Host "max-rounds"
+$FilesPerRound = Read-Host "files-per-round"
+$MaxProviderRevisions = Read-Host "max-provider-revisions"
+$TimeoutSeconds = Read-Host "timeout-seconds"
+$PreflightTimeoutSeconds = Read-Host "preflight-timeout-seconds"
+$MaxDegradedLanes = Read-Host "max-degraded-lanes"
+
+$OllamaNumCtx = Read-Host "GPU1 ollama-num-ctx"
+$Gpu0OllamaNumCtx = Read-Host "GPU0 ollama-num-ctx"
+$OllamaGpuLayers = Read-Host "ollama-gpu-layers"
+$OllamaContextCandidates = Read-Host "ollama-context-candidates"
+$MaxNewTokens = Read-Host "GPU1 max-new-tokens"
+$Gpu0MaxNewTokens = Read-Host "GPU0 max-new-tokens"
+$KeepAlive = Read-Host "keep-alive"
+
+$RunLabel = Read-Host "run-label"
+$RevisionContext = Read-Host "revision-context"
+$RevisionContextMaxTasks = Read-Host "revision-context-max-tasks"
+$MinRuntimeRounds = Read-Host "min-runtime-rounds"
+$MinProposalIterations = Read-Host "min-proposal-iterations"
+$Gpu0Iterations = Read-Host "gpu0-iterations"
+$Gpu0MinSeconds = Read-Host "gpu0-min-seconds"
+
+$NpuMicroTimeoutSeconds = Read-Host "npu-micro-timeout-seconds"
+$NpuMicroStartMode = Read-Host "npu-micro-start-mode"
+$NpuFinalWaitSeconds = Read-Host "npu-final-wait-seconds"
+$NpuMaxContextChars = Read-Host "npu-max-context-chars"
+$NpuMaxPromptChars = Read-Host "npu-max-prompt-chars"
+$NpuMaxNewTokens = Read-Host "npu-max-new-tokens"
+$NpuDeviceWorkloadSeconds = Read-Host "npu-device-workload-seconds"
+$NpuDeviceWorkloadIterations = Read-Host "npu-device-workload-iterations"
+
+$StartupMaxMemoryChars = Read-Host "startup-max-memory-chars"
+$StartupMaxContextFiles = Read-Host "startup-max-context-files"
+$StartupScanContextFiles = Read-Host "startup-scan-context-files"
+$StartupMaxCharsPerFile = Read-Host "startup-max-chars-per-file"
+$StartupProviderInputWorkers = Read-Host "startup-provider-input-workers"
+$StartupRequiredContextProfile = Read-Host "startup-required-context-profile"
+$StartupOperationalMemoryQuery = Read-Host "startup-operational-memory-query"
+$StartupOperationalMemoryLimit = Read-Host "startup-operational-memory-limit"
+
+$RagIndexPolicy = Read-Host "rag-index-policy"
+$RagIngestBatchSize = Read-Host "rag-ingest-batch-size"
+$RagEmbedSmokeBatchSize = Read-Host "rag-embed-smoke-batch-size"
+$RagChunkMinChars = Read-Host "rag-chunk-min-chars"
+$RagChunkMaxChars = Read-Host "rag-chunk-max-chars"
+$RagChunkOverlapChars = Read-Host "rag-chunk-overlap-chars"
+$RagMaxFileSize = Read-Host "rag-max-file-size"
+$RagTopK = Read-Host "rag-top-k"
+$RagCharBudget = Read-Host "rag-char-budget"
+
+$ContextDocumentCount = Read-Host "context-document-count"
+$ContextDocumentPreviewChars = Read-Host "context-document-preview-chars"
+$SemanticCodeChunkLimit = Read-Host "semantic-code-chunk-limit"
+$SemanticCodeChunkPreviewChars = Read-Host "semantic-code-chunk-preview-chars"
+$SemanticEvidenceChunkLimit = Read-Host "semantic-evidence-chunk-limit"
+$MemorySearchLimit = Read-Host "memory-search-limit"
+$ToolCatalogLimit = Read-Host "tool-catalog-limit"
+
+$ToolInventoryRoots = Read-Host "tool-inventory-roots"
+$SemanticPathBoosts = Read-Host "semantic-path-boosts"
+$AiContextPackProfile = Read-Host "ai-context-pack-profile"
+$CodeInterpreterInputs = Read-Host "code-interpreter-inputs"
+$DuplicationAuditRoots = Read-Host "duplication-audit-roots"
+$ProviderPromptToolCatalogCap = Read-Host "provider-prompt-tool-catalog-cap"
+
+$AllowProviderGeneration = Read-Host "allow-provider-generation true/false"
+$RequireOllamaGpuResidency = Read-Host "require-ollama-gpu-residency true/false"
+$AllowNpuDeviceWorkload = Read-Host "allow-npu-device-workload true/false"
 
 $RunArgs = @(
   "--repo-root", $RepoRoot,
   "--python-exe", $RepoPy,
   "--request-file", $TaskFile,
-  "--run-label", "spark_direct",
+  "--run-label", $RunLabel,
   "--intermediate-root", $IntermediateRoot,
   "--final-root", $FinalRoot,
   "--stamp", $Stamp,
 
-  "--revision-context", "auto_latest",
-  "--revision-context-max-tasks", "6",
+  "--revision-context", $RevisionContext,
+  "--revision-context-max-tasks", $RevisionContextMaxTasks,
 
-  "--budget-minutes", "5",
-  "--max-iterations", "5",
-  "--min-runtime-rounds", "1",
-  "--min-proposal-iterations", "0",
-  "--max-rounds", "8",
-  "--files-per-round", "4",
-  "--max-provider-revisions", "5",
-  "--timeout-seconds", "600",
-  "--preflight-timeout-seconds", "90",
-  "--max-degraded-lanes", "0",
+  "--budget-minutes", $BudgetMinutes,
+  "--max-iterations", $MaxIterations,
+  "--min-runtime-rounds", $MinRuntimeRounds,
+  "--min-proposal-iterations", $MinProposalIterations,
+  "--max-rounds", $MaxRounds,
+  "--files-per-round", $FilesPerRound,
+  "--max-provider-revisions", $MaxProviderRevisions,
+  "--timeout-seconds", $TimeoutSeconds,
+  "--preflight-timeout-seconds", $PreflightTimeoutSeconds,
+  "--max-degraded-lanes", $MaxDegradedLanes,
 
-  "--provider-model", "qwen2.5-coder:14b",
-  "--gpu1-base-url", "http://127.0.0.1:11434",
-  "--gpu0-model", "qwen3:1.7b",
-  "--gpu0-base-url", "http://127.0.0.1:11435",
-  "--gpu0-vulkan-visible-devices", "1",
-  "--ollama-num-ctx", "16384",
-  "--gpu0-ollama-num-ctx", "2048",
-  "--ollama-gpu-layers", "all",
-  "--ollama-context-candidates", "8192,4096",
-  "--max-new-tokens", "900",
-  "--gpu0-max-new-tokens", "96",
-  "--keep-alive", "120s",
+  "--provider-model", $Gpu1Model,
+  "--gpu1-base-url", $Gpu1BaseUrl,
+  "--gpu0-model", $Gpu0Model,
+  "--gpu0-base-url", $Gpu0BaseUrl,
+  "--gpu0-vulkan-visible-devices", $Gpu0VulkanVisibleDevices,
+  "--ollama-num-ctx", $OllamaNumCtx,
+  "--gpu0-ollama-num-ctx", $Gpu0OllamaNumCtx,
+  "--ollama-gpu-layers", $OllamaGpuLayers,
+  "--ollama-context-candidates", $OllamaContextCandidates,
+  "--max-new-tokens", $MaxNewTokens,
+  "--gpu0-max-new-tokens", $Gpu0MaxNewTokens,
+  "--keep-alive", $KeepAlive,
 
-  "--gpu0-iterations", "16",
-  "--gpu0-min-seconds", "0.1",
+  "--gpu0-iterations", $Gpu0Iterations,
+  "--gpu0-min-seconds", $Gpu0MinSeconds,
 
   "--npu-model-dir", $NpuModelDir,
-  "--npu-micro-timeout-seconds", "60",
-  "--npu-micro-start-mode", "deferred",
-  "--npu-final-wait-seconds", "60",
-  "--npu-max-context-chars", "8000",
-  "--npu-max-prompt-chars", "1200",
-  "--npu-max-new-tokens", "384",
-  "--npu-device-workload-seconds", "3.0",
-  "--npu-device-workload-iterations", "2500",
+  "--npu-micro-timeout-seconds", $NpuMicroTimeoutSeconds,
+  "--npu-micro-start-mode", $NpuMicroStartMode,
+  "--npu-final-wait-seconds", $NpuFinalWaitSeconds,
+  "--npu-max-context-chars", $NpuMaxContextChars,
+  "--npu-max-prompt-chars", $NpuMaxPromptChars,
+  "--npu-max-new-tokens", $NpuMaxNewTokens,
+  "--npu-device-workload-seconds", $NpuDeviceWorkloadSeconds,
+  "--npu-device-workload-iterations", $NpuDeviceWorkloadIterations,
 
-  "--startup-max-memory-chars", "32000",
-  "--startup-max-context-files", "48",
-  "--startup-scan-context-files", "48",
-  "--startup-max-chars-per-file", "8000",
-  "--startup-provider-input-workers", "6",
-  "--startup-required-context-profile", "project_self_improvement",
-  "--startup-operational-memory-query", "operator_product_launcher run-unica heap context closure provider lanes",
-  "--startup-operational-memory-limit", "8",
+  "--startup-max-memory-chars", $StartupMaxMemoryChars,
+  "--startup-max-context-files", $StartupMaxContextFiles,
+  "--startup-scan-context-files", $StartupScanContextFiles,
+  "--startup-max-chars-per-file", $StartupMaxCharsPerFile,
+  "--startup-provider-input-workers", $StartupProviderInputWorkers,
+  "--startup-required-context-profile", $StartupRequiredContextProfile,
+  "--startup-operational-memory-query", $StartupOperationalMemoryQuery,
+  "--startup-operational-memory-limit", $StartupOperationalMemoryLimit,
 
-  "--rag-db", "output/ai_runtime_memory/rag/rag.sqlite",
-  "--rag-index-policy", "auto",
-  "--rag-embedding-endpoint", "http://127.0.0.1:11434",
-  "--rag-embedding-model", "bge-m3",
-  "--rag-ingest-batch-size", "8",
-  "--rag-embed-smoke-batch-size", "8",
-  "--rag-chunk-min-chars", "1500",
-  "--rag-chunk-max-chars", "4000",
-  "--rag-chunk-overlap-chars", "300",
-  "--rag-max-file-size", "250000",
-  "--rag-top-k", "20",
-  "--rag-char-budget", "32000",
+  "--rag-db", $RagDb,
+  "--rag-index-policy", $RagIndexPolicy,
+  "--rag-embedding-endpoint", $RagEmbeddingEndpoint,
+  "--rag-embedding-model", $RagEmbeddingModel,
+  "--rag-ingest-batch-size", $RagIngestBatchSize,
+  "--rag-embed-smoke-batch-size", $RagEmbedSmokeBatchSize,
+  "--rag-chunk-min-chars", $RagChunkMinChars,
+  "--rag-chunk-max-chars", $RagChunkMaxChars,
+  "--rag-chunk-overlap-chars", $RagChunkOverlapChars,
+  "--rag-max-file-size", $RagMaxFileSize,
+  "--rag-top-k", $RagTopK,
+  "--rag-char-budget", $RagCharBudget,
 
-  "--context-document-count", "24",
-  "--context-document-preview-chars", "1200",
-  "--semantic-code-chunk-limit", "32",
-  "--semantic-code-chunk-preview-chars", "1400",
-  "--semantic-evidence-chunk-limit", "24",
-  "--memory-search-limit", "12",
-  "--tool-catalog-limit", "80",
+  "--context-document-count", $ContextDocumentCount,
+  "--context-document-preview-chars", $ContextDocumentPreviewChars,
+  "--semantic-code-chunk-limit", $SemanticCodeChunkLimit,
+  "--semantic-code-chunk-preview-chars", $SemanticCodeChunkPreviewChars,
+  "--semantic-evidence-chunk-limit", $SemanticEvidenceChunkLimit,
+  "--memory-search-limit", $MemorySearchLimit,
+  "--tool-catalog-limit", $ToolCatalogLimit,
 
-  "--tool-inventory-roots", "Tools,ia_carmine",
-  "--semantic-path-boosts", "ia_carmine/runtime/heap_gate,ia_carmine/runtime/run,ia_carmine/context,Tools/validation",
-  "--ai-context-pack-profile", "core_ai_backend",
-  "--code-interpreter-inputs", "ia_carmine,Tools,docs",
-  "--duplication-audit-roots", "ia_carmine,Tools",
-  "--provider-prompt-tool-catalog-cap", "80",
-
-  "--allow-provider-generation",
-  "--require-ollama-gpu-residency",
-  "--allow-npu-device-workload"
+  "--tool-inventory-roots", $ToolInventoryRoots,
+  "--semantic-path-boosts", $SemanticPathBoosts,
+  "--ai-context-pack-profile", $AiContextPackProfile,
+  "--code-interpreter-inputs", $CodeInterpreterInputs,
+  "--duplication-audit-roots", $DuplicationAuditRoots,
+  "--provider-prompt-tool-catalog-cap", $ProviderPromptToolCatalogCap
 )
+
+if ($AllowProviderGeneration -eq "true") { $RunArgs += "--allow-provider-generation" } else { $RunArgs += "--no-allow-provider-generation" }
+if ($RequireOllamaGpuResidency -eq "true") { $RunArgs += "--require-ollama-gpu-residency" } else { $RunArgs += "--no-require-ollama-gpu-residency" }
+if ($AllowNpuDeviceWorkload -eq "true") { $RunArgs += "--allow-npu-device-workload" } else { $RunArgs += "--no-allow-npu-device-workload" }
 
 # Preview: non esegue provider.
 & $RepoPy -m ia_carmine.cli run @RunArgs --dry-run

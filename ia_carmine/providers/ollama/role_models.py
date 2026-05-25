@@ -9,14 +9,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ia_carmine.providers.ollama.config import DEFAULT_BASE_URL, bounded_keep_alive, find_ollama_exe
+from ia_carmine.providers.ollama.config import bounded_keep_alive, find_ollama_exe
 from ia_carmine._shared.ollama_server_process import ollama_host_env, ollama_listen_pid
 from ia_carmine.providers.ollama.sdk_client import OllamaSdkClient, OllamaSdkError
 from ia_carmine.providers.ollama.vulkan_devices import resolve_vulkan_visible_devices
 
-ROLE_DEFAULTS = {
-    "gpu1_planner": ("IA_CARMINE_GPU1_MODEL", "qwen3-coder:latest"),
-    "gpu0_peer": ("IA_CARMINE_GPU0_MODEL", "qwen3:1.7b"),
+ROLE_MODEL_ENV = {
+    "gpu1_planner": "IA_CARMINE_GPU1_MODEL",
+    "gpu0_peer": "IA_CARMINE_GPU0_MODEL",
 }
 
 
@@ -25,24 +25,24 @@ def _option_source(argv: list[str], *options: str) -> str:
         for option in options:
             if token == option or token.startswith(f"{option}="):
                 return "cli_arg"
-    return "standalone_default"
+    return "missing_explicit"
 
 
 def cli_config_sources(argv: list[str]) -> dict[str, str]:
-    gpu1_env, _ = ROLE_DEFAULTS["gpu1_planner"]
-    gpu0_env, _ = ROLE_DEFAULTS["gpu0_peer"]
+    gpu1_env = ROLE_MODEL_ENV["gpu1_planner"]
+    gpu0_env = ROLE_MODEL_ENV["gpu0_peer"]
     return {
         "gpu1_base_url": _option_source(argv, "--gpu1-base-url"),
         "gpu0_base_url": _option_source(argv, "--gpu0-base-url"),
         "gpu1_model": (
             _option_source(argv, "--gpu1-model")
             if _option_source(argv, "--gpu1-model") == "cli_arg"
-            else (f"env:{gpu1_env}" if os.environ.get(gpu1_env, "").strip() else "standalone_default")
+            else (f"env:{gpu1_env}" if os.environ.get(gpu1_env, "").strip() else "missing_explicit")
         ),
         "gpu0_model": (
             _option_source(argv, "--gpu0-model")
             if _option_source(argv, "--gpu0-model") == "cli_arg"
-            else (f"env:{gpu0_env}" if os.environ.get(gpu0_env, "").strip() else "standalone_default")
+            else (f"env:{gpu0_env}" if os.environ.get(gpu0_env, "").strip() else "missing_explicit")
         ),
         "gpu0_vulkan_visible_devices": _option_source(argv, "--gpu0-vulkan-visible-devices"),
         "keep_alive": _option_source(argv, "--keep-alive"),
@@ -53,8 +53,8 @@ def cli_config_sources(argv: list[str]) -> dict[str, str]:
 
 
 def role_model(role: str, explicit: str = "") -> str:
-    env_name, default = ROLE_DEFAULTS[role]
-    return explicit or os.environ.get(env_name, "").strip() or default
+    env_name = ROLE_MODEL_ENV[role]
+    return explicit or os.environ.get(env_name, "").strip()
 
 
 def model_alive(ps_payload: dict[str, Any], model: str) -> bool:
@@ -81,7 +81,7 @@ def ensure_role_models(
     max_new_tokens: int = 16,
     unload_after_check: bool = True,
 ) -> dict[str, Any]:
-    keep_alive = bounded_keep_alive(keep_alive)
+    keep_alive = bounded_keep_alive(keep_alive, default="")
     gpu_layers_requested = gpu_layers_label(gpu_layers)
     num_gpu = gpu_layers_option(gpu_layers)
     models_before = {
@@ -96,6 +96,19 @@ def ensure_role_models(
     errors: list[str] = []
     clients = {"gpu1_planner": gpu1_client, "gpu0_peer": gpu0_client}
     for role, model in roles.items():
+        if not model:
+            role_reports[role] = {
+                "role": role,
+                "model": "",
+                "errors": [f"{role}_model_explicit_required"],
+                "present_before": False,
+                "pull_performed": False,
+                "load_performed": False,
+                "alive_after": False,
+                "alive_after_load": False,
+            }
+            errors.append(f"{role}:model_explicit_required")
+            continue
         report = _ensure_one_role(
             client=clients[role],
             role=role,
@@ -411,8 +424,8 @@ def stop_gpu0_vulkan_server(base_url: str) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--gpu1-base-url", default=DEFAULT_BASE_URL)
-    parser.add_argument("--gpu0-base-url", default="http://127.0.0.1:11435")
+    parser.add_argument("--gpu1-base-url", default="")
+    parser.add_argument("--gpu0-base-url", default="")
     parser.add_argument("--gpu1-model", default="")
     parser.add_argument("--gpu0-model", default="")
     parser.add_argument("--start-gpu0-vulkan-server", action="store_true")
@@ -421,15 +434,30 @@ def main() -> int:
     parser.add_argument("--keep-gpu0-vulkan-server", action="store_true")
     parser.add_argument("--no-pull", action="store_true")
     parser.add_argument("--no-load", action="store_true")
-    parser.add_argument("--keep-alive", default="120s")
+    parser.add_argument("--keep-alive", default="")
     parser.add_argument("--keep-loaded-after-check", action="store_true")
-    parser.add_argument("--num-ctx", type=int, default=2048)
+    parser.add_argument("--num-ctx", type=int, default=0)
     parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default="all")
     parser.add_argument("--max-new-tokens", type=int, default=16)
     parser.add_argument("--output", default="output/validation/ollama_role_models.json")
     parser.add_argument("--markdown-output", default="output/validation/ollama_role_models.md")
     raw_argv = sys.argv[1:]
     args = parser.parse_args(raw_argv)
+    missing = [
+        name
+        for name, value in (
+            ("--gpu1-base-url", args.gpu1_base_url),
+            ("--gpu0-base-url", args.gpu0_base_url),
+            ("--gpu1-model", args.gpu1_model or os.environ.get(ROLE_MODEL_ENV["gpu1_planner"], "")),
+            ("--gpu0-model", args.gpu0_model or os.environ.get(ROLE_MODEL_ENV["gpu0_peer"], "")),
+            ("--keep-alive", args.keep_alive),
+        )
+        if not str(value or "").strip()
+    ]
+    if int(args.num_ctx or 0) <= 0:
+        missing.append("--num-ctx")
+    if missing:
+        parser.error("missing explicit Ollama role parameter(s): " + ", ".join(missing))
     repo_root = Path(args.repo_root).resolve()
     gpu0_server = {"started": False, "ready": False, "reason": "not_requested"}
     if args.start_gpu0_vulkan_server:
@@ -455,9 +483,10 @@ def main() -> int:
     report["gpu1_base_url"] = args.gpu1_base_url
     report["gpu0_base_url"] = args.gpu0_base_url
     report["config_sources"] = cli_config_sources(raw_argv)
-    report["standalone_default_fields"] = [
-        key for key, source in report["config_sources"].items() if source == "standalone_default"
+    report["missing_explicit_fields"] = [
+        key for key, source in report["config_sources"].items() if source == "missing_explicit"
     ]
+    report["standalone_default_fields"] = []
     report["gpu0_vulkan_server"] = gpu0_server
     if args.start_gpu0_vulkan_server and not args.keep_gpu0_vulkan_server and gpu0_server.get("started"):
         report["gpu0_vulkan_server_stop"] = stop_gpu0_vulkan_server(args.gpu0_base_url)

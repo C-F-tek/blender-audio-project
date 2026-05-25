@@ -30,8 +30,10 @@ def main() -> None:
     parser.add_argument("--segment-seconds", type=float, default=DEFAULT_SEGMENT_SECONDS)
     parser.add_argument("--scene-file", action="append", default=[])
     parser.add_argument("--run-ollama", action="store_true")
-    parser.add_argument("--ollama-model", default="qwen2.5-coder:14b")
+    parser.add_argument("--ollama-model", default="")
     args = parser.parse_args()
+    if args.run_ollama and not str(args.ollama_model or "").strip():
+        parser.error("--ollama-model is required when --run-ollama is set")
 
     scene_files = [Path(item) for item in args.scene_file] if args.scene_file else None
     manifest = build_music_context(

@@ -37,6 +37,7 @@ def build_context_pack(
     *,
     repo_root: Path,
     db_path: Path,
+    rag_profile: str = "",
     query: str = "",
     task_file: str = "",
     top_k: int = DEFAULT_TOP_K,
@@ -97,6 +98,7 @@ def build_context_pack(
                 char_budget=max(1, int(char_budget)),
             )
             config = {
+                "rag_profile": rag_profile,
                 "embedding_endpoint": embedding_endpoint,
                 "embedding_model": embedding_model,
                 "query_embedding_performed": bool(vector),
@@ -121,6 +123,7 @@ def build_context_pack(
         "kind": "rag_context_pack",
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
+        "rag_profile": rag_profile,
         "context_pack_id": context_pack_id,
         "query": final_query,
         "task_file": task_file,
@@ -138,6 +141,7 @@ def build_context_pack(
         "token_budget": None,
         "retrieval_event_id": event_id,
         "retrieval_config": {
+            "rag_profile": rag_profile,
             "top_k": top_k,
             "char_budget": char_budget,
             "embedding_endpoint": embedding_endpoint,
@@ -166,6 +170,7 @@ def render_markdown(pack: dict[str, Any]) -> str:
         "",
         f"- Passed: `{pack.get('passed')}`",
         f"- Context pack id: `{pack.get('context_pack_id')}`",
+        f"- RAG profile: `{pack.get('rag_profile')}`",
         f"- Retrieved chunks: `{pack.get('retrieved_count')}`",
         f"- Total selected chars: `{pack.get('total_selected_chars')}`",
         f"- DB: `{pack.get('db_path')}`",

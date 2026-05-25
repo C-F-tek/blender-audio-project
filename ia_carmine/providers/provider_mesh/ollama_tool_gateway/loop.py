@@ -35,7 +35,10 @@ def execute_tool(config: GatewayConfig, request: dict[str, Any]) -> dict[str, An
                 [str(item) for item in tags],
             )
         if tool == "build_context_pack":
-            return build_context_pack(config, str(args.get("profile") or "core_ai_backend"))
+            profile = str(args.get("profile") or "").strip()
+            if not profile:
+                return {"passed": False, "error": "context_pack_profile_explicit_required"}
+            return build_context_pack(config, profile)
         return {"passed": False, "error": f"tool not allowlisted: {tool}"}
     except Exception as exc:  # noqa: BLE001 - report result for model loop.
         return {"passed": False, "error": f"{type(exc).__name__}: {exc}"}

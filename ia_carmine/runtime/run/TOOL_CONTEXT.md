@@ -30,8 +30,8 @@ Current runtime route:
 
 ```text
 operator_product_core
--> heap_context_closure
--> run_heap_runtime_completeness_gate
+-> internal heap context closure module
+-> internal heap runtime completeness gate
 ```
 
 `contractor_universe` is not excluded. It is the compact scheduler/soft-time

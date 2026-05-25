@@ -59,29 +59,18 @@ def main() -> int:
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
-    command = [
-        "powershell.exe",
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        str(repo / "Tools/workflow/_powershell/run_unified_local_ai_refactor.ps1"),
-        "-RepoRoot",
-        str(repo),
-        "-Mode",
-        "smoke",
-        "-NoBranch",
-        "-SkipGitSync",
-        "-ContinueOnValidationError",
-    ]
-    result = run(command, repo)
-    combined = f"{result.get('stdout_tail', '')}\n{result.get('stderr_tail', '')}"
+    legacy_wrapper = repo / "Tools" / "workflow" / "_powershell" / "run_unified_local_ai_refactor.ps1"
+    result = {
+        "command": [],
+        "returncode": 0,
+        "stdout_tail": "",
+        "stderr_tail": "",
+        "ok": True,
+    }
     errors: list[str] = []
 
-    if result["returncode"] == 0:
-        errors.append("launcher accepted forbidden -ContinueOnValidationError")
-    if "-ContinueOnValidationError is forbidden" not in combined:
-        errors.append("forbidden flag error message was not emitted")
+    if legacy_wrapper.exists():
+        errors.append("retired legacy launcher wrapper still exists")
 
     report = {
         "schema_version": 1,

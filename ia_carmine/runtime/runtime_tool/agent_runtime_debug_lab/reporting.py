@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation._shared.report_utils import resolve_output_path, write_text_report
+    from ia_carmine._shared.report_io import resolve_output_path, write_text_report
 except ImportError:
-    from Tools.validation._shared.report_utils import resolve_output_path, write_text_report  # type: ignore
+    from ia_carmine._shared.report_io import resolve_output_path, write_text_report  # type: ignore
 
 
 def render_guardrails(report: dict[str, Any]) -> list[str]:

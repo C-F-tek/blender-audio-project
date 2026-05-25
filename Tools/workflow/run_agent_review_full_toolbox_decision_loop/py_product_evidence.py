@@ -36,7 +36,7 @@ def run_runtime_flow_map(ctx: WorkflowContext) -> None:
         "--stamp",
         ctx.args.Stamp,
         "--entrypoint",
-        "python -m Tools.workflow run_agent_review_full_toolbox_decision_loop",
+        "python -m ia_carmine.cli run [explicit flags...]",
         "--output",
         ctx.p("runtime_flow_json"),
         "--jsonl-output",

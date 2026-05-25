@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import argparse
 import subprocess
 import sys
 import tempfile
@@ -46,6 +47,7 @@ def run_composer(run_dir: Path, allowlist: list[str]) -> dict[str, Any]:
     env = os.environ.copy()
     env["PROPOSAL_ALLOWLIST_PATH"] = str(allowlist_path)
     env["PYTHONPATH"] = str(REPO_ROOT)
+    env["IA_CARMINE_ALLOW_INTERNAL_DISPATCH"] = "1"
     cmd = [
         sys.executable,
         "-m",
@@ -178,11 +180,31 @@ def test_decision_file_lists_targets() -> None:
 
 
 def main() -> int:
-    test_no_verified_target_emits_blocked()
-    test_all_rejected_gives_blocked_provider_review()
-    test_accepted_proposal_gives_patchable()
-    test_forbidden_markers_also_set_blocked()
-    test_decision_file_lists_targets()
+    cases = {
+        "no_verified_target": test_no_verified_target_emits_blocked,
+        "all_rejected": test_all_rejected_gives_blocked_provider_review,
+        "accepted_patchable": test_accepted_proposal_gives_patchable,
+        "forbidden_markers": test_forbidden_markers_also_set_blocked,
+        "decision_targets": test_decision_file_lists_targets,
+    }
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--section",
+        action="append",
+        default=[],
+        help="Optional test section to run. Omit to run all composer decision sections.",
+    )
+    parser.add_argument("--list", action="store_true")
+    args = parser.parse_args()
+    selected = [str(item).strip() for item in args.section or [] if str(item).strip()]
+    if args.list:
+        print(json.dumps({"sections": sorted(cases)}, indent=2))
+        return 0
+    unknown = sorted(set(selected) - set(cases))
+    if unknown:
+        raise SystemExit(f"unknown test section(s): {', '.join(unknown)}")
+    for name in selected or list(cases):
+        cases[name]()
     print("composer decision smoke passed")
     return 0
 

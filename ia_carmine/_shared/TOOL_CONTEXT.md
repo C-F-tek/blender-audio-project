@@ -27,9 +27,9 @@ ensure_ai_context_templates.py
 ```
 
 `report_io.py` is the AI-runtime home for generic JSON/Markdown report I/O.
-Some older `ia_carmine` modules still import generic helpers from
-`Tools.validation._shared.report_utils`; that is a known coupling surface, not
-proof that validation belongs inside the runtime core.
+`codex_failure_counters.py` is the AI-runtime home for operator/product failure
+counter classification. Core modules must not import `Tools.validation` helper
+modules for these shared behaviors.
 
 ## Boundaries
 

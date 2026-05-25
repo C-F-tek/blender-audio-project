@@ -10,8 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-DEFAULT_MODEL = "qwen3.5:cloud"
-DEFAULT_OLLAMA_URL = "http://localhost:11434"
+DEFAULT_MODEL = ""
+DEFAULT_OLLAMA_URL = ""
 DEFAULT_OUTPUT_DIR = "output/ollama_tool_gateway"
 MAX_FILE_CHARS = 12000
 MAX_SEARCH_RESULTS = 20
@@ -50,6 +50,7 @@ TEXT_EXTENSIONS = {
     ".toml",
 }
 
+@dataclass
 class GatewayConfig:
     repo_root: Path
     model: str

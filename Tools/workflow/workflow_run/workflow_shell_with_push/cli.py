@@ -61,7 +61,7 @@ def menu() -> None:
     print("  5  Project storage stats")
     print("  0  Esci")
     print(
-        "\nNota: per tutte le altre operazioni usa python -m Tools.workflow workflow_shell o python -m Tools.workflow start_workflow."
+        "\nNota: per tutte le altre operazioni usa python -m ia_carmine.cli run con flag espliciti."
     )
 
 

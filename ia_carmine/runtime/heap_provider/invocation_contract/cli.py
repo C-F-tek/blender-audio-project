@@ -18,7 +18,7 @@ try:
         build_heap_provider_budget_governor,
         config_from_namespace,
     )
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         resolve_output_path,
         write_json_report,
         write_text_report,
@@ -31,7 +31,7 @@ except ImportError:  # pragma: no cover
         build_heap_provider_budget_governor,
         config_from_namespace,
     )
-    from Tools.validation._shared.report_utils import (  # type: ignore
+    from ia_carmine._shared.report_io import (  # type: ignore
         resolve_output_path,
         write_json_report,
         write_text_report,

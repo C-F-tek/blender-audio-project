@@ -36,6 +36,10 @@ def main() -> int:
     parser.add_argument("--max-search-results", type=int, default=MAX_SEARCH_RESULTS)
     parser.add_argument("--allow-output-read", action="store_true")
     args = parser.parse_args()
+    if not str(args.model or "").strip():
+        raise SystemExit("ollama_tool_gateway_model_explicit_required: pass --model")
+    if not str(args.ollama_url or "").strip():
+        raise SystemExit("ollama_tool_gateway_url_explicit_required: pass --ollama-url")
 
     repo_root = Path(args.repo_root).resolve()
     config = GatewayConfig(

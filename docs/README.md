@@ -123,7 +123,7 @@ Then enforce lane viability with:
 CORE_LANE_COMPLETENESS_CONTRACT.md
 ```
 
-For complete/full profiles, `degraded` and `unavailable` are `unviable`. A full smoke must not pass without valid evidence for required core lanes.
+For complete/full run modes selected by explicit CLI flags, `degraded` and `unavailable` are `unviable`. A full smoke must not pass without valid evidence for required core lanes.
 
 Then open the nearest family context and dispatcher:
 

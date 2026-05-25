@@ -14,7 +14,7 @@ def read_text_limited(path: Path, max_chars: int) -> str:
     if max_chars <= 0 or len(text) <= max_chars:
         return text
 
-    return text[:max_chars] + "\n\n[TRUNCATED BY python -m Tools.npu run_npu_review]\n"
+    return text[:max_chars] + "\n\n[TRUNCATED BY brokered NPU review helper]\n"
 
 
 def split_text(text: str, max_chars: int, overlap_chars: int) -> list[str]:

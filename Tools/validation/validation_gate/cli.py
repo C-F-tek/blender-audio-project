@@ -20,13 +20,21 @@ from .runner import run_gate
 
 DEFAULT_OUTPUT = "output/validation/validation_gate.json"
 DEFAULT_MARKDOWN = "output/validation/validation_gate.md"
+MODE_CHOICES = ("quick", "refactor", "smoke", "deep", "all")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--suite", choices=("quick", "refactor", "smoke", "deep", "all"), default="quick")
-    parser.add_argument("--only", action="append", default=[])
+    parser.add_argument("--mode", choices=MODE_CHOICES, default="")
+    parser.add_argument("--suite", choices=MODE_CHOICES, default="", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--section",
+        action="append",
+        default=[],
+        help="Optional step name to run. Omit to run the full selected mode.",
+    )
+    parser.add_argument("--only", action="append", default=[], help=argparse.SUPPRESS)
     parser.add_argument("--include-heavy", action="store_true")
     parser.add_argument("--include-provider-live", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=300)
@@ -36,6 +44,12 @@ def main() -> int:
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
     args = parser.parse_args()
+
+    selected_mode = str(args.mode or args.suite or "").strip()
+    if not selected_mode:
+        parser.error("missing explicit validation mode: pass --mode")
+    args.suite = selected_mode
+    args.only = [*list(args.only or []), *list(args.section or [])]
 
     repo_root = Path(args.repo_root).resolve()
     if args.list:

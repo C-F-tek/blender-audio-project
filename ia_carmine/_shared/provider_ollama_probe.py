@@ -29,7 +29,7 @@ def run_ollama_probe(
     partial_output: str | Path | None = None,
     require_gpu_residency: bool = True,
     replight_mode: bool = False,
-    context_candidates: str = "8192,4096",
+    context_candidates: str = "",
     strict_provider_model: bool = False,
     operator_gpu_observation: str = "",
     lane: str = "gpu1_planner",
@@ -53,13 +53,25 @@ def run_ollama_probe(
         prompt_explicitly_requires_tool_call,
         provider_delta_requests_native_tool_call,
     )
-    from ia_carmine.providers.ollama import DEFAULT_BASE_URL, OllamaSession, is_server_ready, list_models, list_models_from_disk  # noqa: PLC0415
+    from ia_carmine.providers.ollama import OllamaSession, is_server_ready, list_models, list_models_from_disk  # noqa: PLC0415
     from ia_carmine.runtime.runtime_tool.file_refs.classifier import extract_rejected_validation_refs, extract_target_refs, extract_validation_refs  # noqa: PLC0415
     from ia_carmine.providers.npu.pipeline import parse_provider_result  # noqa: PLC0415
     started = time.perf_counter()
     provider_lane = str(lane or "gpu1_planner").strip()
     provider_role = str(role or ollama_lane_role(provider_lane)).strip()
-    effective_base_url = str(base_url or DEFAULT_BASE_URL)
+    effective_base_url = str(base_url or "").strip()
+    if not effective_base_url:
+        return selection_blocked_report(
+            lane=provider_lane,
+            role=provider_role,
+            model=model,
+            selected_model="",
+            reason="ollama_base_url_explicit_required",
+            selection={"selected_provider_model": "", "blocked": True},
+            elapsed_sec=time.perf_counter() - started,
+            base_url="",
+            server_process={},
+        )
     server_process = server_process_evidence(effective_base_url)
     propagated_max_new_tokens = positive_provider_value("max_new_tokens", max_new_tokens)
     server_ready = is_server_ready(effective_base_url)

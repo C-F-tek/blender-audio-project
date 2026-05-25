@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from Tools.validation._shared.report_utils import write_json_report, write_text_report
+from ia_carmine._shared.report_io import write_json_report, write_text_report
 
 from .builder import build_patch_plan
 from .common import DEFAULT_EVIDENCE, DEFAULT_MARKDOWN, DEFAULT_ORCHESTRATOR, DEFAULT_OUTPUT, resolve_path

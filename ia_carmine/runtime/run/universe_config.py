@@ -22,6 +22,7 @@ OPTIONAL_FIELDS = {
 
 @dataclass
 class UniverseRunConfig:
+    objective: str | None = None
     budget_minutes: int | None = None
     max_iterations: int | None = None
     min_runtime_rounds: int | None = None
@@ -70,6 +71,7 @@ class UniverseRunConfig:
     startup_operational_memory_query: str | None = None
     startup_operational_memory_limit: int | None = None
     rag_db: str | None = None
+    rag_profile: str | None = None
     rag_index_policy: str | None = None
     rag_embedding_endpoint: str | None = None
     rag_embedding_model: str | None = None
@@ -218,16 +220,13 @@ def resolve_universe_config(
     _ = repo_root
     config = UniverseRunConfig()
     sources = {field: "unresolved_missing" for field in config_field_names()}
-    profile_sources = getattr(args, "_profile_applied_fields", {}) or {}
-    if not isinstance(profile_sources, dict):
-        profile_sources = {}
 
-    configured_dests = (provided_dests | set(str(key) for key in profile_sources)) & config_field_names()
+    configured_dests = provided_dests & config_field_names()
     for dest in sorted(configured_dests):
         value = getattr(args, dest)
         current = getattr(config, dest)
         setattr(config, dest, _coerce_value(dest, current, value))
-        sources[dest] = "cli_arg" if dest in provided_dests else str(profile_sources.get(dest) or "profile")
+        sources[dest] = "cli_arg"
 
     missing = sorted(
         field

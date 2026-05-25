@@ -389,7 +389,7 @@ def build_report(
         "errors": [],
         "warnings": [
             "causal_chain_passed does not imply product_acceptance_passed",
-            "this adapter is external to python -m ia_carmine.cli run_heap_runtime_completeness_gate",
+            "this adapter is external to the canonical python -m ia_carmine.cli run entrypoint",
         ],
     }
 

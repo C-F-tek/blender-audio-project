@@ -45,7 +45,7 @@ docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md
 Use through the AI dispatcher:
 
 ```powershell
-python -m ia_carmine.cli agent_runtime_tool_broker ...
+python -m ia_carmine.cli runtime_tool_broker ...
 python -m ia_carmine.cli runtime_tool_broker ...
 python -m ia_carmine.cli build_runtime_tool_capability_manifest ...
 python -m ia_carmine.cli runtime_file_refs ...
@@ -73,6 +73,7 @@ HTTP/API requests to this layer carry small control metadata or `payload_file`/a
 `generic_write` writes refined request/action-plan Markdown/JSON for the next provider turn. It is broker evidence when called by GPU1/GPU0 native tools; after three consumed refinements the heap may expose it as a readable refined product, including code content, without claiming source writes or patch application.
 
 `rag_context_pack` builds the internal SQLite/FTS5/vector context pack as broker evidence. It is a base context requirement when wired into heap startup, but it remains context only: no provider execution, source writes or patch application.
+It requires an explicit `rag_profile`/`--rag-profile`; this is a retrieval profile only and does not select provider models or runtime completeness.
 
 ## Runtime file refs model
 

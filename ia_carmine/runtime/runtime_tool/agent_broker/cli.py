@@ -17,7 +17,7 @@ try:
     from ia_carmine.runtime.runtime_tool.broker.executor import build_report
     from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown
     from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
-    from Tools.validation._shared.report_utils import write_json_report
+    from ia_carmine._shared.report_io import write_json_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
@@ -30,7 +30,7 @@ except ImportError:
     from ia_carmine.runtime.runtime_tool.broker.executor import build_report  # type: ignore
     from ia_carmine.runtime.runtime_tool.broker.markdown import render_markdown  # type: ignore
     from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS  # type: ignore
-    from Tools.validation._shared.report_utils import write_json_report  # type: ignore
+    from ia_carmine._shared.report_io import write_json_report  # type: ignore
 
 
 def main() -> int:

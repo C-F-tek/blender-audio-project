@@ -53,7 +53,7 @@ def build_packet(
         "ia_carmine/context/agent_context/semantic_evidence_chunks/select_code_chunks/cli.py",
         "Tools/validation/agent_context/check_selected_semantic_chunks/cli.py",
         "Tools/validation/pipeline/check_local_ai_adapter_manifest/cli.py",
-        "Tools/workflow/_powershell/run_local_ai_task_via_pipeline.ps1",
+        "ia_carmine/runtime/run/cli.py",
     ]
     for path in fallback_files:
         if (repo_root / path).exists():

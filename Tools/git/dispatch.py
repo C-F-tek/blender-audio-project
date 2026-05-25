@@ -4,19 +4,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from Tools.tool_dispatch import ToolDispatcher
+from ia_carmine._shared.tool_dispatch import ToolDispatcher
 
-TARGETS = {
+TOOL_MAIN_TARGETS = {
     "auto_push_generated_artifacts": "ps1:_powershell/auto_push_generated_artifacts.ps1",
     "auto_push_generated_data": "ps1:_powershell/auto_push_generated_data.ps1",
 }
+TARGETS = TOOL_MAIN_TARGETS
 
 
 def main(argv: list[str] | None = None) -> int:
     return ToolDispatcher(
         package="Tools.git",
         package_dir=Path(__file__).resolve().parent,
-        targets=TARGETS,
+        targets=TOOL_MAIN_TARGETS,
         label="git",
     ).main(argv)
 

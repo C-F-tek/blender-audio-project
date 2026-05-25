@@ -6,14 +6,13 @@ import argparse
 
 from ia_carmine._shared.report_io import print_json_report
 
-from .common import DEFAULT_REQUEST
 from .launcher import run_launcher
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--request", default=DEFAULT_REQUEST)
+    parser.add_argument("--request", default="")
     parser.add_argument(
         "--request-file",
         default="",
@@ -21,6 +20,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--stamp", default="")
+    parser.add_argument("--objective", default="")
     parser.add_argument("--budget-minutes", type=int, default=None)
     parser.add_argument("--max-iterations", type=int, default=None)
     parser.add_argument("--min-runtime-rounds", type=int, default=None)
@@ -84,6 +84,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--startup-scan-context-files", type=int, default=None)
     parser.add_argument("--startup-max-chars-per-file", type=int, default=None)
     parser.add_argument("--rag-db", default="")
+    parser.add_argument("--rag-profile", default="")
     parser.add_argument("--rag-index-policy", choices=("auto", "always", "never"), default="")
     parser.add_argument("--rag-embedding-endpoint", default="")
     parser.add_argument("--rag-embedding-model", default="")
@@ -120,7 +121,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--revision-context",
         default="",
-        help="Revision context path, 'auto_latest' or 'off'. Default auto-loads latest complete heap run context.",
+        help="Revision context path or 'off'. No implicit latest-run lookup is performed.",
     )
     parser.add_argument("--revision-context-max-tasks", type=int, default=None)
     return parser.parse_args()
@@ -128,6 +129,54 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if not str(args.request or "").strip() and not str(args.request_file or "").strip():
+        print_json_report(
+            {
+                "schema_version": 1,
+                "kind": "heap_context_closure_entrypoint_guard",
+                "passed": False,
+                "error": "operator_request_required",
+                "required_flags": ["--request-file"],
+                "canonical_entrypoint": "python -m ia_carmine.cli run",
+            }
+        )
+        return 2
+    if not str(args.output_dir or "").strip():
+        print_json_report(
+            {
+                "schema_version": 1,
+                "kind": "heap_context_closure_entrypoint_guard",
+                "passed": False,
+                "error": "output_dir_required",
+                "required_flags": ["--output-dir"],
+                "canonical_entrypoint": "python -m ia_carmine.cli run",
+            }
+        )
+        return 2
+    if not str(args.stamp or "").strip():
+        print_json_report(
+            {
+                "schema_version": 1,
+                "kind": "heap_context_closure_entrypoint_guard",
+                "passed": False,
+                "error": "stamp_required",
+                "required_flags": ["--stamp"],
+                "canonical_entrypoint": "python -m ia_carmine.cli run",
+            }
+        )
+        return 2
+    if not str(args.objective or "").strip():
+        print_json_report(
+            {
+                "schema_version": 1,
+                "kind": "heap_context_closure_entrypoint_guard",
+                "passed": False,
+                "error": "objective_required",
+                "required_flags": ["--objective"],
+                "canonical_entrypoint": "python -m ia_carmine.cli run",
+            }
+        )
+        return 2
     if args.allow_provider_generation and (
         not str(args.canonical_run_metadata or "").strip()
         or not str(args.canonical_run_fingerprint or "").strip()

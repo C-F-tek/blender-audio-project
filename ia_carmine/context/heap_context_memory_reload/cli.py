@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--startup-scan-context-files", type=int, default=None)
     parser.add_argument("--max-chars-per-file", type=int, default=None)
     parser.add_argument("--rag-db", default="")
+    parser.add_argument("--rag-profile", default="")
     parser.add_argument("--rag-index-policy", choices=("auto", "always", "never"), default="")
     parser.add_argument("--rag-top-k", type=int, default=None)
     parser.add_argument("--rag-char-budget", type=int, default=None)

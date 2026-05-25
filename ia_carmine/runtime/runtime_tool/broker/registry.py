@@ -368,6 +368,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "query",
             "task_file",
             "db",
+            "rag_profile",
             "top_k",
             "char_budget",
             "embedding_endpoint",

@@ -7,7 +7,7 @@ fall back to ``Tools.docs.<tool>:main``.
 
 from pathlib import Path
 
-from Tools.tool_dispatch import ToolDispatcher
+from ia_carmine._shared.tool_dispatch import ToolDispatcher
 
 TOOL_MAIN_TARGETS: dict[str, str] = {
     "build_code_aware_md_coherence": "Tools.docs._shared.code_aware_md_coherence_cli:main",

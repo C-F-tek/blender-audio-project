@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 from pathlib import Path
 from typing import Any
 
@@ -97,3 +98,52 @@ def source_pointer_bundle(repo_root: Path | None, snapshot: dict[str, Any]) -> d
         "tool_pointer_protocol": POINTER_PROTOCOL,
         "evidence_pointers": load_event_pointers(repo_root, snapshot) if repo_root else [],
     }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--snapshot", default="", help="JSON snapshot containing an event_log field.")
+    parser.add_argument("--event-log", default="", help="Event log path used when no snapshot is supplied.")
+    parser.add_argument("--limit", type=int, default=6)
+    parser.add_argument("--output", default="")
+    args = parser.parse_args()
+
+    repo_root = Path(args.repo_root).resolve()
+    snapshot: dict[str, Any] = {}
+    if args.snapshot:
+        snapshot_path = Path(args.snapshot)
+        if not snapshot_path.is_absolute():
+            snapshot_path = repo_root / snapshot_path
+        try:
+            loaded = json.loads(snapshot_path.read_text(encoding="utf-8-sig"))
+            snapshot = loaded if isinstance(loaded, dict) else {}
+        except (OSError, json.JSONDecodeError):
+            snapshot = {}
+    if args.event_log:
+        snapshot["event_log"] = args.event_log
+
+    report = {
+        "schema_version": 1,
+        "kind": "heap_event_pointers",
+        "passed": bool(snapshot.get("event_log")),
+        "repo_root": str(repo_root),
+        "event_log": snapshot.get("event_log") or "",
+        "tool_pointer_protocol": POINTER_PROTOCOL,
+        "evidence_pointers": load_event_pointers(repo_root, snapshot, args.limit),
+        "provider_execution_performed": False,
+        "patch_application_performed": False,
+        "source_writes_performed": False,
+    }
+    if args.output:
+        output = Path(args.output)
+        if not output.is_absolute():
+            output = repo_root / output
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return 0 if report["passed"] else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

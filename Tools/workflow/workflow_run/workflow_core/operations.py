@@ -72,7 +72,7 @@ def run_track_summary(session: WorkflowSession) -> None:
 def run_music_context(
     session: WorkflowSession,
     include_ollama: bool = False,
-    ollama_model: str = "qwen2.5-coder:14b",
+    ollama_model: str = "",
 ) -> None:
     py = python_executable()
     args = [
@@ -92,6 +92,8 @@ def run_music_context(
         session.artifacts["blender_keyframes_json"],
     ]
     if include_ollama:
+        if not str(ollama_model or "").strip():
+            raise ValueError("ollama_model_explicit_required")
         args.extend(["--run-ollama", "--ollama-model", ollama_model])
     run_command(args, operation="build_music_context", metadata={"track_stem": session.track_stem})
     finish_session_operation(session, "build_music_context")

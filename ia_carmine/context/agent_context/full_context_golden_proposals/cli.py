@@ -186,7 +186,7 @@ def build_proposals() -> list[dict[str, Any]]:
             ],
             validation_commands=[
                 "python -m Tools.validation check_docs_links --repo-root . --output output/validation/docs_links.json",
-                "python -m Tools.validation check_validation_report_contract --repo-root . --output output/validation/validation_report_contract.json",
+                "python -m Tools.validation validator_unico --mode quick --section validation_report_contract",
                 "git diff --check",
             ],
             stop_conditions=[
@@ -209,7 +209,7 @@ def build_proposals() -> list[dict[str, Any]]:
                 "The golden run command is long and error-prone. A preset flag can expand to the explicit safe defaults while preserving report-only behavior and explicit provider flags."
             ),
             target_files=[
-                "Tools/workflow/_powershell/run_local_ai_task_via_pipeline.ps1",
+                "ia_carmine/runtime/run/cli.py",
                 "docs/LOCAL_AI_WORKFLOW.md",
             ],
             change_type="wrapper_flag",
@@ -220,7 +220,7 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Document equivalent expanded command for auditability.",
             ],
             validation_commands=[
-                "python -m Tools.workflow run_local_ai_task_via_pipeline -PromptFile docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md -TaskFile docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md -RunDir output/local_ai_runs/full_context_preset_dryrun -FullContextGoldenPath -DryRun",
+                "python -m ia_carmine.cli run --request-file docs/LOCAL_AI_TASKS/full-context-ai-npu-golden-path.md [explicit flags...] --dry-run",
                 "python -m Tools.validation check_validation_report_contract --repo-root . --output output/validation/validation_report_contract.json",
                 "git diff --check",
             ],
@@ -230,7 +230,7 @@ def build_proposals() -> list[dict[str, Any]]:
                 "The preset must not touch Blender runtime files.",
             ],
             suggestion_outputs=[
-                suggestion("Tools/workflow/_powershell/run_local_ai_task_via_pipeline.ps1", "powershell"),
+                suggestion("ia_carmine/runtime/run/cli.py"),
                 suggestion("docs/LOCAL_AI_WORKFLOW.md", "markdown"),
             ],
         ),
@@ -290,7 +290,7 @@ def build_proposals() -> list[dict[str, Any]]:
                 "Document NPU as retrieval/context-preparation lane, not advisory lane.",
             ],
             validation_commands=[
-                'python -m Tools.npu build_npu_knowledge_broker_packet --repo-root . --objective "workflow adapter npu knowledge broker" --output output/ai_pipeline/npu_knowledge_broker_packet.json',
+                'python -m ia_carmine.cli runtime_tool_broker --tool build_npu_knowledge_broker_packet --mode report --repo-root . --objective "workflow adapter npu knowledge broker" --output output/ai_pipeline/npu_knowledge_broker_packet.json',
                 "python -m Tools.validation check_npu_knowledge_broker_packet --repo-root . --packet output/ai_pipeline/npu_knowledge_broker_packet.json --output output/validation/npu_knowledge_broker_packet.json",
                 "git diff --check",
             ],

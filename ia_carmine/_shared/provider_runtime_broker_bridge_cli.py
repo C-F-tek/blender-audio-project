@@ -15,7 +15,7 @@ from ia_carmine.runtime.provider_runtime_blackboard.broker_bridge.cli import (
     DEFAULT_OUTPUT,
     build_report,
 )
-from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
+from ia_carmine._shared.report_io import resolve_output_path, write_json_report, write_text_report
 
 
 def render_markdown(report: dict[str, Any]) -> str:

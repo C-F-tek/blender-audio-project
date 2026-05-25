@@ -79,7 +79,7 @@ def build_context_pack(config: GatewayConfig, profile: str) -> dict[str, Any]:
         [
             "-m", "ia_carmine.context.agent_context.ai_context_pack.cli",
             "--profile",
-            profile or "core_ai_backend",
+            profile,
             "--basename",
             basename,
             "--output-dir",

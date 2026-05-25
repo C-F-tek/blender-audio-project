@@ -34,16 +34,13 @@ from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
     gpu1_decision_packet_valid,
 )
 
-DEFAULT_GPU0_OLLAMA_BASE_URL = "http://127.0.0.1:11435"
-
-
 def config_sources_from_argv(argv: list[str]) -> dict[str, str]:
     def source(*options: str) -> str:
         for token in argv:
             for option in options:
                 if token == option or token.startswith(f"{option}="):
                     return "cli_arg"
-        return "standalone_default"
+        return "missing_explicit"
 
     return {
         "base_url": source("--base-url"),
@@ -331,33 +328,53 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/ollama_gpu0_peer.json")
     parser.add_argument("--markdown-output", default="output/validation/ollama_gpu0_peer.md")
-    parser.add_argument("--base-url", default=DEFAULT_GPU0_OLLAMA_BASE_URL)
+    parser.add_argument("--base-url", default="")
     parser.add_argument("--server-evidence", default="")
     parser.add_argument("--no-start-gpu0-vulkan-server", action="store_true")
-    parser.add_argument("--gpu0-vulkan-visible-devices", default="auto")
+    parser.add_argument("--gpu0-vulkan-visible-devices", default="")
     parser.add_argument("--restart-gpu0-vulkan-server", action="store_true")
     parser.add_argument("--keep-gpu0-vulkan-server", action="store_true")
-    parser.add_argument("--model", default="auto")
+    parser.add_argument("--model", default="")
     parser.add_argument("--request", default="")
     parser.add_argument("--request-file", default="")
     parser.add_argument("--task-file", default="")
     parser.add_argument("--startup-manifest", default="")
     parser.add_argument("--leader-packet", default="")
-    parser.add_argument("--max-new-tokens", type=int, default=384)
-    parser.add_argument("--ollama-num-ctx", type=int, default=8192)
-    parser.add_argument("--ollama-gpu-layers", default="all")
+    parser.add_argument("--max-new-tokens", type=int, default=0)
+    parser.add_argument("--ollama-num-ctx", type=int, default=0)
+    parser.add_argument("--ollama-gpu-layers", default="")
     parser.add_argument("--ollama-num-thread", type=int, default=None)
-    parser.add_argument("--ollama-context-candidates", default="8192,4096")
-    parser.add_argument("--keep-alive", default="120s")
+    parser.add_argument("--ollama-context-candidates", default="")
+    parser.add_argument("--keep-alive", default="")
     parser.add_argument("--defer-unload", action="store_true")
     parser.add_argument("--strict-provider-model", action="store_true")
     parser.add_argument("--operator-gpu-observation", default="")
-    parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=True)
+    parser.add_argument("--require-ollama-gpu-residency", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--canonical-run-provider-evidence", action="store_true")
     parser.add_argument("--canonical-run-fingerprint", default="")
     raw_argv = sys.argv[1:]
     args = parser.parse_args(raw_argv)
     config_sources = config_sources_from_argv(raw_argv)
+    missing = [
+        name
+        for name, value in (
+            ("--base-url", args.base_url),
+            ("--model", args.model),
+            ("--ollama-gpu-layers", args.ollama_gpu_layers),
+            ("--ollama-context-candidates", args.ollama_context_candidates),
+            ("--keep-alive", args.keep_alive),
+            ("--gpu0-vulkan-visible-devices", args.gpu0_vulkan_visible_devices),
+        )
+        if not str(value or "").strip()
+    ]
+    if int(args.max_new_tokens or 0) <= 0:
+        missing.append("--max-new-tokens")
+    if int(args.ollama_num_ctx or 0) <= 0:
+        missing.append("--ollama-num-ctx")
+    if args.require_ollama_gpu_residency is None:
+        missing.append("--require-ollama-gpu-residency/--no-require-ollama-gpu-residency")
+    if missing:
+        parser.error("missing explicit GPU0 Ollama peer parameter(s): " + ", ".join(missing))
 
     repo_root = Path(args.repo_root).resolve()
     request = ""
@@ -490,9 +507,10 @@ def main() -> int:
             "generated_at": datetime.now().isoformat(timespec="seconds"),
             "repo_root": str(repo_root),
             "config_sources": config_sources,
-            "standalone_default_fields": [
-                key for key, source in config_sources.items() if source == "standalone_default"
+            "missing_explicit_fields": [
+                key for key, source in config_sources.items() if source == "missing_explicit"
             ],
+            "standalone_default_fields": [],
             "canonical_run_provider_evidence": bool(args.canonical_run_provider_evidence),
             "canonical_run_fingerprint": str(args.canonical_run_fingerprint or ""),
             "ollama_base_url": args.base_url,

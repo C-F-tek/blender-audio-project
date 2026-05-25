@@ -29,6 +29,8 @@ def main() -> int:
     parser.add_argument("--evidence-basename", default="")
     parser.add_argument("--no-evidence", action="store_true")
     args = parser.parse_args()
+    if not str(args.profile or "").strip():
+        raise SystemExit("ai_context_pack_profile_explicit_required: pass --profile")
 
     repo_root = Path(args.repo_root).resolve()
     basename = sanitize_filename(args.basename or args.profile)

@@ -24,7 +24,7 @@ def parse_context_candidates(value: str | None, fallback: int) -> list[int]:
         if item >= 1024 and item not in parsed:
             parsed.append(item)
     if not parsed:
-        parsed = [int(fallback)] if int(fallback or 0) >= 1024 else [8192, 4096]
+        parsed = [int(fallback)] if int(fallback or 0) >= 1024 else []
     return parsed
 
 
@@ -95,7 +95,14 @@ def select_ollama_provider_model(
     candidates = _candidate_models(requested_model, auto_mode)
     for candidate in candidates:
         if candidate not in available:
-            attempts.append({"model": candidate, "available": False, "fit": False})
+            attempts.append(
+                {
+                    "model": candidate,
+                    "available": False,
+                    "fit": None,
+                    "reason": "model_inventory_missing_runtime_will_verify_ollama",
+                }
+            )
             continue
         size_bytes = _model_size_bytes(candidate, inventory)
         for ctx in contexts:
@@ -129,7 +136,31 @@ def select_ollama_provider_model(
                     "nvidia_gpus": gpus,
                     "ollama_models": sorted(available),
                     "ollama_context_candidates": contexts,
+                    **_vram_estimate_report_fields(attempts[-1], advisory=False),
                 }
+    if explicit_model and attempts:
+        # Ollama is the runtime authority for explicit models. The static size
+        # estimate and local inventory are useful evidence, but they cannot
+        # pre-block an operator-selected model that Ollama may load via its own
+        # runtime/offload policy or report as unavailable with first-hand error.
+        selected_attempt = next((item for item in attempts if item.get("available")), attempts[0])
+        return {
+            "blocked": False,
+            "blocked_reason": "",
+            "requested_provider_model": requested_model,
+            "selected_provider_model": requested_model,
+            "selected_ollama_num_ctx": int(selected_attempt.get("num_ctx") or (contexts[0] if contexts else num_ctx)),
+            "model_switch_reason": "requested_model_exact",
+            "model_selection_policy": model_selection_policy,
+            "model_switch_allowed": model_switch_allowed,
+            "model_switch_performed": False,
+            "provider_model_selection_mismatch": False,
+            "provider_repair_attempts": attempts,
+            "nvidia_gpus": gpus,
+            "ollama_models": sorted(available),
+            "ollama_context_candidates": contexts,
+            **_vram_estimate_report_fields(selected_attempt, advisory=True),
+        }
     reason = _blocked_reason(
         requested_model,
         auto_mode=auto_mode,
@@ -151,6 +182,7 @@ def select_ollama_provider_model(
         "nvidia_gpus": gpus,
         "ollama_models": sorted(available),
         "ollama_context_candidates": contexts,
+        **_vram_estimate_report_fields(attempts[-1] if attempts else {}, advisory=False),
     }
 
 
@@ -219,12 +251,7 @@ def _blocked_reason(
 ) -> str:
     if auto_mode:
         return "provider_model_explicit_required"
-    available_attempts = [item for item in attempts if item.get("available")]
-    if not available_attempts:
-        return "provider_model_explicit_not_installed"
-    if strict:
-        return "strict_provider_model_not_vram_fit"
-    return "provider_model_explicit_not_vram_fit"
+    return "explicit_provider_model_runtime_verification_required"
 
 
 def _fits_vram(size_bytes: int | None, ctx: int, total_mib: int | None) -> tuple[bool | None, str, int | None]:
@@ -235,6 +262,17 @@ def _fits_vram(size_bytes: int | None, ctx: int, total_mib: int | None) -> tuple
     required_mib = int((size_bytes + ctx * CTX_OVERHEAD_BYTES_PER_TOKEN) / (1024 * 1024))
     capacity_mib = int(total_mib * VRAM_SAFETY)
     return required_mib <= capacity_mib, "fits_vram_estimate" if required_mib <= capacity_mib else "exceeds_vram_estimate", required_mib
+
+
+def _vram_estimate_report_fields(attempt: dict[str, Any], *, advisory: bool) -> dict[str, Any]:
+    fit = attempt.get("fit")
+    verification_required = bool(advisory or fit is None)
+    return {
+        "vram_estimate_passed": fit is True,
+        "vram_estimate_reason": str(attempt.get("reason") or ""),
+        "vram_estimate_advisory_only": verification_required,
+        "runtime_load_verification_required": verification_required,
+    }
 
 
 def _switch_reason(requested: str, selected: str, auto_mode: bool) -> str:

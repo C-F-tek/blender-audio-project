@@ -22,9 +22,9 @@ This file exists to prevent documentation ambiguity where a programming AI treat
 
 ## Core rule
 
-In complete profiles, core lanes are not optional by interpretation.
+In complete run modes selected by explicit CLI flags, core lanes are not optional by interpretation.
 
-For complete/full profiles, every required core lane must produce valid evidence.
+For complete/full run modes, every required core lane must produce valid evidence.
 
 ```text
 valid evidence -> lane viable
@@ -52,7 +52,7 @@ product or blocked classification
 compact evidence
 ```
 
-Budget, intensity or profile tuning may reduce depth, token count, rounds or timeouts. It must not remove the semantic perimeter.
+Budget or explicit intensity flags may reduce depth, token count, rounds or timeouts. They must not remove the semantic perimeter.
 
 ## Required core lanes
 
@@ -64,14 +64,14 @@ For complete product-oriented runs, these lanes must be viable:
 | Startup/preload lane | context pack, memory reload, transient context or equivalent startup context evidence |
 | Heap/exchange lane | runtime entry, peer/runtime manifest, exchange/lifecycle evidence, runtime exit |
 | Ollama/main provider lane | provider execution evidence and structured provider output |
-| GPU0 coworker lane | Ollama GPU0/Vulkan peer workload evidence plus review/refinement evidence when selected by complete profile |
-| NPU micro-lane | OpenVINO NPU microtask/audit evidence when selected by complete profile |
-| Runtime tool/broker lane | broker/tool usage evidence, capability manifest, tool loop evidence or explicit no-tool full-profile contract |
+| GPU0 coworker lane | Ollama GPU0/Vulkan peer workload evidence plus review/refinement evidence when selected by explicit complete-run flags |
+| NPU micro-lane | OpenVINO NPU microtask/audit evidence when selected by explicit complete-run flags |
+| Runtime tool/broker lane | broker/tool usage evidence, capability manifest, tool loop evidence or explicit no-tool complete-run contract |
 | CPU/validator lane | validation reports for selected product/runtime contracts |
 | Product boundary lane | code/patch product, explicit no-op/non-applicable product, or blocked product reason |
 | Compact evidence lane | compact evidence summary or selected evidence artifact |
 
-If a complete profile cannot make a required lane viable, the run is not complete. It must fail or produce an explicit blocked/unviable result.
+If explicit complete-run parameters cannot make a required lane viable, the run is not complete. It must fail or produce an explicit blocked/unviable result.
 
 ## Full smoke rule
 
@@ -116,7 +116,7 @@ missing lane can be ignored without failing completeness
 ```text
 Ollama unavailable -> complete run unviable
 GPU0 Ollama/Vulkan visible but no verified workload -> complete run unviable for provider-lane completeness
-NPU unavailable when selected by complete profile -> complete run unviable
+NPU unavailable when selected by explicit complete-run flags -> complete run unviable
 validator unavailable -> product cannot claim validated success
 code product empty -> no-op/non-applicable or blocked product, not apply-ready
 ```
@@ -133,7 +133,7 @@ validated
 failed
 blocked
 not_applicable
-partial_profile
+partial_mode
 ```
 
 Use `degraded` only as diagnostic detail. For complete/full pass/fail semantics, degraded means unviable.

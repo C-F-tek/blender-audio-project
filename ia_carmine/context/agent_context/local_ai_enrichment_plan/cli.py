@@ -139,7 +139,7 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
         make_step(
             "build_semantic_chunks",
             "Build or refresh semantic chunk index",
-            "python -m Tools.npu build_semantic_code_chunks",
+            "python -m ia_carmine.cli runtime_tool_broker --tool build_semantic_code_chunks --mode report",
             "after_step:read_contracts",
             "cpu_indexing",
             depends_on=["read_contracts"],
@@ -199,7 +199,7 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
             make_step(
                 "ollama_gpu_advisory_first",
                 "Run primary Ollama/GPU advisory before optional NPU broker follow-up",
-                "Tools/workflow/_powershell/run_parallel_ai_provider_multistep.ps1",
+                "python -m ia_carmine.cli run [explicit provider flags...]",
                 "after_step:build_agent_state",
                 "ollama_gpu_primary_advisory",
                 depends_on=["build_agent_state"],
@@ -213,7 +213,7 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
             make_step(
                 "npu_knowledge_broker_after_gpu",
                 "Build NPU knowledge-broker packet after GPU advisory is available so NPU does not block the main advisory lane",
-                "python -m Tools.npu build_npu_knowledge_broker_packet",
+                "python -m ia_carmine.cli runtime_tool_broker --tool build_npu_knowledge_broker_packet --mode report",
                 "after_step:ollama_gpu_advisory_first",
                 "npu_context_broker",
                 depends_on=["ollama_gpu_advisory_first", "validate_selected_chunks"],
@@ -225,7 +225,7 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
             make_step(
                 "npu_knowledge_broker_parallel",
                 "Build NPU knowledge-broker packet in parallel with non-provider context preparation",
-                "python -m Tools.npu build_npu_knowledge_broker_packet",
+                "python -m ia_carmine.cli runtime_tool_broker --tool build_npu_knowledge_broker_packet --mode report",
                 "after_step:validate_selected_chunks",
                 "npu_context_broker",
                 depends_on=["validate_selected_chunks"],
@@ -236,7 +236,7 @@ def build_steps(profile: str, complexity: dict[str, Any], basename: str) -> list
             make_step(
                 "optional_ollama_gpu_advisory",
                 "Optional Ollama/GPU advisory only if explicitly requested",
-                "Tools/workflow/_powershell/run_parallel_ai_provider_multistep.ps1",
+                "python -m ia_carmine.cli run [explicit provider flags...]",
                 "explicit_only",
                 "ollama_gpu_primary_advisory",
                 depends_on=["build_agent_state", "npu_knowledge_broker_parallel"],
@@ -360,13 +360,15 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--objective", required=True)
     parser.add_argument("--task-file", default="")
-    parser.add_argument("--profile", choices=("docs", "core", "npu"), default="docs")
+    parser.add_argument("--profile", choices=("docs", "core", "npu"), default="")
     parser.add_argument("--basename", default="local_ai_enrichment_plan")
     parser.add_argument("--output", default="output/ai_pipeline/local_ai_enrichment_plan.json")
     parser.add_argument(
         "--markdown-output", default="output/ai_pipeline/local_ai_enrichment_plan.md"
     )
     args = parser.parse_args()
+    if not str(args.profile or "").strip():
+        raise SystemExit("local_ai_enrichment_profile_explicit_required: pass --profile docs|core|npu")
 
     repo_root = Path(args.repo_root).resolve()
     plan = build_plan(repo_root, args.objective, args.task_file, args.profile, args.basename)

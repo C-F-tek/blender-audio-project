@@ -11,10 +11,17 @@ from ia_carmine.providers.provider_mesh.runtime.python_runtime import resolve_ch
 from .common import base_outputs, repo_rel, resolve_path, safe_id, split_values, truthy
 
 
+def required_tool_arg(args: dict[str, Any], name: str) -> str:
+    value = str(args.get(name) or "").strip()
+    if not value:
+        raise ValueError(f"{name}_explicit_required")
+    return value
+
+
 def build_ai_context_pack_tool(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, Any]]:
-    profile = str(args.get("profile") or "core_ai_backend")
+    profile = required_tool_arg(args, "profile")
     basename = safe_id(args.get("basename") or request_id, "ai_context_pack")
     output_dir = resolve_path(
         repo_root, str(args.get("output_dir") or out_dir / f"{request_id}_context_pack")
@@ -30,8 +37,7 @@ def build_ai_context_pack_tool(
     command = [
         resolve_child_python(repo_root),
         "-m",
-        "ia_carmine",
-        "ai_context_pack",
+        "ia_carmine.context.agent_context.ai_context_pack.cli",
         "--repo-root",
         ".",
         "--profile",
@@ -112,23 +118,30 @@ def build_rag_context_pack_tool(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "rag_context_pack")
+    db = required_tool_arg(args, "db")
+    rag_profile = required_tool_arg(args, "rag_profile")
+    top_k = required_tool_arg(args, "top_k")
+    char_budget = required_tool_arg(args, "char_budget")
+    embedding_endpoint = required_tool_arg(args, "embedding_endpoint")
+    embedding_model = required_tool_arg(args, "embedding_model")
     command = [
         resolve_child_python(repo_root),
         "-m",
-        "ia_carmine",
-        "rag_build_context_pack",
+        "ia_carmine.context.agent_context.rag_context.build_context_pack_cli",
         "--repo-root",
         ".",
         "--db",
-        str(args.get("db") or "output/ai_runtime_memory/rag/rag.sqlite"),
+        db,
+        "--rag-profile",
+        rag_profile,
         "--top-k",
-        str(args.get("top_k") or 20),
+        top_k,
         "--char-budget",
-        str(args.get("char_budget") or 32000),
+        char_budget,
         "--embedding-endpoint",
-        str(args.get("embedding_endpoint") or "http://127.0.0.1:11434"),
+        embedding_endpoint,
         "--embedding-model",
-        str(args.get("embedding_model") or "bge-m3"),
+        embedding_model,
         "--output",
         repo_rel(report, repo_root),
         "--markdown-output",

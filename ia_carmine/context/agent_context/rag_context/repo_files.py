@@ -28,7 +28,7 @@ class RepoFile:
 
 def _has_excluded_part(rel_path: str) -> bool:
     parts = {part for part in rel_path.replace("\\", "/").split("/") if part}
-    return bool(parts & EXCLUDED_PARTS)
+    return bool(parts & EXCLUDED_PARTS) or any(part.startswith(".venv") for part in parts)
 
 
 def _candidate_paths_from_git(repo_root: Path) -> tuple[list[str], str]:
@@ -48,7 +48,11 @@ def _candidate_paths_from_git(repo_root: Path) -> tuple[list[str], str]:
 def _candidate_paths_from_walk(repo_root: Path) -> list[str]:
     paths: list[str] = []
     for root, dirs, files in os.walk(repo_root):
-        dirs[:] = [item for item in dirs if item not in EXCLUDED_PARTS]
+        dirs[:] = [
+            item
+            for item in dirs
+            if item not in EXCLUDED_PARTS and not item.startswith(".venv")
+        ]
         root_path = Path(root)
         for name in files:
             rel = repo_rel(repo_root, root_path / name)

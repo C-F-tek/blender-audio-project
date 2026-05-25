@@ -16,6 +16,7 @@ from .common import (
     DEFAULT_DB,
     DEFAULT_EMBEDDING_ENDPOINT,
     DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_RAG_PROFILE,
     DEFAULT_MAX_FILE_SIZE,
     db_path_warning,
     language_for_suffix,
@@ -23,6 +24,7 @@ from .common import (
     read_json,
     read_text,
     repo_rel,
+    require_explicit_rag_runtime_args,
     resolve_repo_path,
     sha256_text,
     write_json,
@@ -46,6 +48,7 @@ SINGLETON_FINAL_RETRY_DELAYS = (0.75, 2.0, 5.0)
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--rag-profile", default=DEFAULT_RAG_PROFILE)
     parser.add_argument("--db", default=DEFAULT_DB)
     parser.add_argument("--embedding-endpoint", default=DEFAULT_EMBEDDING_ENDPOINT)
     parser.add_argument("--embedding-model", default=DEFAULT_EMBEDDING_MODEL)
@@ -60,7 +63,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-missing-embeddings", action="store_true")
     parser.add_argument("--output", default="output/validation/rag_ingest_repo.json")
     parser.add_argument("--markdown-output", default="output/validation/rag_ingest_repo.md")
-    return parser.parse_args()
+    args = parser.parse_args()
+    require_explicit_rag_runtime_args(
+        args,
+        parser,
+        require_embedding=not bool(args.skip_embeddings),
+    )
+    return args
 
 
 def render_markdown(report: dict) -> str:
@@ -70,6 +79,7 @@ def render_markdown(report: dict) -> str:
         f"- Passed: `{report.get('passed')}`",
         f"- Action: `{report.get('action')}`",
         f"- RAG index ready: `{report.get('rag_index_ready')}`",
+        f"- RAG profile: `{report.get('rag_profile')}`",
         f"- DB: `{report.get('db_path')}`",
         f"- Files indexed: `{report.get('indexed_file_count')}`",
         f"- Files read: `{report.get('read_file_count')}`",
@@ -535,6 +545,7 @@ def main() -> int:
         "kind": "rag_repo_ingest",
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
+        "rag_profile": str(args.rag_profile),
         "passed": not errors,
         "errors": errors,
         "warnings": warnings,

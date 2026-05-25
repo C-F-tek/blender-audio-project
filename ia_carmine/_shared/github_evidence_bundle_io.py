@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation._shared.report_utils import physical_line_count
+    from ia_carmine._shared.report_io import physical_line_count
 except ImportError:  # pragma: no cover - fallback for direct package-local execution.
 
     def physical_line_count(text: str) -> int:

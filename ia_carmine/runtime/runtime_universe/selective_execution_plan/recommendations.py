@@ -197,7 +197,7 @@ def command_sets() -> dict[str, list[str]]:
             r"python -m Tools.validation check_selective_execution_plan --repo-root . --plan .\output\ai_pipeline\selective_execution_plan.json --output .\output\validation\selective_execution_plan.json",
         ],
         "real_gpu_npu_evidence_for_carmine": [
-            r"python -m Tools.workflow run_parallel_ai_provider_multistep `",
+            r"python -m ia_carmine.cli run [explicit provider flags...] `",
             r"  -Profile npu `",
             r"  -RunOllamaProbe `",
             r"  -RunNpuProbe `",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate local AI task pipeline adapter manifests.
 
-The adapter manifest is produced by python -m Tools.workflow run_local_ai_task_via_pipeline
+The adapter manifest is produced by the canonical run/broker surfaces.
 and records which enrichment artifacts were requested/generated, which providers
 were requested, and whether patch application occurred.
 

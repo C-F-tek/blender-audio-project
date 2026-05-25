@@ -134,6 +134,7 @@ def run_reload(state: ReloadRun) -> int:
             "ai_context_pack_profile": str(
                 getattr(state.args, "ai_context_pack_profile", "") or ""
             ),
+            "rag_profile": str(getattr(state.args, "rag_profile", "") or ""),
             "startup_operational_memory_query": str(
                 getattr(state.args, "startup_operational_memory_query", "") or ""
             ),
@@ -598,16 +599,11 @@ def _run_ai_context_pack(state: ReloadRun) -> None:
         [
             state.project_python,
             "-m",
-            "ia_carmine",
-            "ai_context_pack",
+            "ia_carmine.context.agent_context.ai_context_pack.cli",
             "--repo-root",
             ".",
             "--profile",
-            str(
-                getattr(state.args, "ai_context_pack_profile", "")
-                or getattr(state.args, "startup_required_context_profile", "")
-                or "project_self_improvement"
-            ),
+            str(getattr(state.args, "ai_context_pack_profile", "") or ""),
             "--output-dir",
             str(pack_dir),
             "--basename",

@@ -14,6 +14,7 @@ Canonical wording: `docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md`.
 - HTTP/API coordinates only job control and refs; filesystem artifacts carry context mass, heap chunks, provider inputs/outputs, logs and `ia_carmine_runtime_payload_manifest` evidence. Refs include `source`, `bytes` and `sha256`; provider reports must not echo large prompt bodies.
 - Missing optional values stay empty/null; required missing devices or provider prerequisites raise or block with a typed reason rather than emitting placeholder text.
 - Complete runs require explicit config flags, including `--files-per-round`, `--gpu0-ollama-num-ctx`, `--npu-micro-start-mode`, `--npu-final-wait-seconds` and `--max-degraded-lanes`.
+- RAG context uses its own explicit `--rag-profile`; it scopes retrieval/index/query behavior only and must not select provider models, lanes or complete-run semantics.
 <!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:END -->
 
 
@@ -60,7 +61,7 @@ Historical runbooks under `docs/LOCAL_AI_TASKS/**` and session notes under `docs
 | Model-to-code bridge | `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` |
 | Lane completeness contract | `docs/CORE_LANE_COMPLETENESS_CONTRACT.md` |
 | Operator product entrypoint | `python -m ia_carmine.cli run` |
-| Dynamic workflow launcher | `python -m Tools.workflow run_unified_local_ai_refactor` |
+| Dynamic workflow launcher | Retired legacy surface; use `python -m ia_carmine.cli run` with explicit flags |
 | Main provider center | `Ollama / GPU1 / RTX 5080` |
 | Coworker lane | `GPU0 / Ollama Vulkan` |
 | Micro-lane | `NPU / OpenVINO` |
@@ -119,7 +120,7 @@ If evidence cannot be named, the correct status is `not proven`, not `done`.
 
 ## Core lane viability rule
 
-For complete/full profiles, required core lanes are not optional and `degraded` is not acceptable as success.
+For complete/full modes selected by explicit CLI flags, required core lanes are not optional and `degraded` is not acceptable as success.
 
 ```text
 valid evidence -> viable
@@ -179,8 +180,6 @@ Use dispatcher-owned commands instead of launching scattered files by path:
 ```powershell
 python -m ia_carmine.cli <tool> [args...]
 python -m Tools.validation <tool> [args...]
-python -m Tools.workflow <tool> [args...]
-python -m Tools.npu <tool> [args...]
 python -m Tools.docs <tool> [args...]
 python -m Tools.git <tool> [args...]
 python -m Tools.repo_patch_runner <tool> [args...]
@@ -192,8 +191,8 @@ Area and family navigation:
 Tools/CONTEXT_INDEX.md
 ia_carmine/CONTEXT_INDEX.md
 Tools/validation/CONTEXT_INDEX.md
-Tools/workflow/CONTEXT_INDEX.md
-Tools/npu/CONTEXT_INDEX.md
+Tools/workflow/CONTEXT_INDEX.md  # retired command surface
+Tools/npu/CONTEXT_INDEX.md       # retired command surface
 Tools/docs/CONTEXT_INDEX.md
 Tools/git/CONTEXT_INDEX.md
 Tools/repo_patch_runner/CONTEXT_INDEX.md
@@ -372,7 +371,7 @@ implemented code
 -> emits compact evidence
 -> appears in manifest/report/evidence surfaces when relevant
 -> understood by validators or explicitly marked diagnostic
--> has viable evidence in complete/full profiles
+-> has viable evidence in complete/full explicit modes
 ```
 
 Do not stop at an internal helper, isolated smoke script or hidden command.

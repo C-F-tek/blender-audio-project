@@ -16,7 +16,7 @@ from ia_carmine._shared.report_io import print_json_report
 
 from .direct_command import resolve_config, run_dir_for
 from .io_utils import now_stamp
-from .models import DEFAULT_RUN_LABEL, LauncherConfig
+from .models import LauncherConfig
 from .runner import analyze_code_product
 
 PROVIDER_WRAPPER_FLAGS = {"--run", "--run-and-review"}
@@ -32,8 +32,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--request-file", default="")
-    parser.add_argument("--run-label", default=DEFAULT_RUN_LABEL)
-    parser.add_argument("--intermediate-root", default="output/validation/operator_product_launcher")
+    parser.add_argument("--run-label", default="")
+    parser.add_argument("--intermediate-root", default="")
     parser.add_argument("--final-root", default="")
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--stamp", default="")
@@ -75,17 +75,28 @@ def _forward_to_canonical_run(raw_argv: list[str]) -> int:
 
 
 def _review_config(args: argparse.Namespace, repo_root: Path, stamp: str) -> LauncherConfig:
-    final_root = args.final_root or str(
-        Path.home() / "Documents" / f"aicarmine_operator_launcher_{stamp}"
-    )
-    request_file = (
-        Path(args.request_file) if args.request_file else repo_root / "docs" / "README.md"
-    )
+    _ = stamp
+    missing = [
+        flag
+        for flag, value in (
+            ("--run-label", args.run_label),
+            ("--intermediate-root", args.intermediate_root),
+            ("--final-root", args.final_root),
+        )
+        if not str(value or "").strip()
+    ]
+    if missing:
+        raise SystemExit(
+            "missing explicit local review surface parameter(s): " + ", ".join(missing)
+        )
+    if not str(args.request_file or args.code_product or "").strip():
+        raise SystemExit("--request-file or --code-product explicit required")
+    request_file = Path(args.request_file) if args.request_file else Path(args.code_product)
     return LauncherConfig(
         repo_root=repo_root,
         request_file=request_file,
         intermediate_root=Path(args.intermediate_root),
-        final_root=Path(final_root),
+        final_root=Path(args.final_root),
         run_label=args.run_label,
         python_exe=args.python_exe,
         stamp=stamp,
@@ -122,6 +133,7 @@ def main(argv: list[str] | None = None) -> int:
         output_dir,
         apply_safe=args.apply_safe,
         require_all_integrated=args.require_all_integrated,
+        python_exe=args.python_exe,
     )
     report["operator_product_core_cli_mode"] = "local_code_product_review_apply"
     report["provider_run_entrypoint"] = "python -m ia_carmine.cli run"

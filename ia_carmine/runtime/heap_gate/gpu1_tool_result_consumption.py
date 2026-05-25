@@ -13,6 +13,7 @@ from typing import Any
 from ia_carmine.runtime.heap_gate.broker_result_validation import broker_result_passed
 from ia_carmine.runtime.heap_gate.final_product_delta_protocol import section_body
 from ia_carmine.runtime.heap_gate.runtime_common import safe_int
+from ia_carmine.runtime.runtime_tool.tool_cycle_contract import normalize_tool_cycle_status
 
 
 GPU1_LANE = "gpu1_planner"
@@ -65,6 +66,18 @@ def gpu1_tool_result_consumption_state(
         consumed_failed_ids=consumed_failed_ids,
         diagnostic_failed_ids=diagnostic_failed_ids,
     )
+    tool_cycle_statuses = [
+        {
+            "broker_request_id": str(item.get("broker_request_id") or ""),
+            "tool": str(item.get("tool") or ""),
+            **{
+                key: value
+                for key, value in item.items()
+                if key.startswith("tool_")
+            },
+        }
+        for item in ledger
+    ]
     return {
         "gpu1_waiting_for_tool_result": bool(pending_ids or unconsumed_ids),
         "gpu1_requested_tool_call_id": str((first_pending or {}).get("request_id") or ""),
@@ -89,6 +102,7 @@ def gpu1_tool_result_consumption_state(
         "tool_result_diagnostic_failed_by_gpu1_count": len(diagnostic_failed_ids),
         "gpu1_diagnostic_failed_tool_result_ids": diagnostic_failed_ids,
         "gpu1_tool_result_ledger": ledger,
+        "tool_cycle_statuses": tool_cycle_statuses,
         "errors": errors,
         "consumer_text_has_consumed_evidence_section": bool(
             section_body(response_text, "CONSUMED_EVIDENCE").strip()
@@ -104,6 +118,7 @@ def gpu1_tool_result_consumption_state(
             "pending_ids": pending_ids,
             "unconsumed_ids": unconsumed_ids,
             "ledger": ledger,
+            "tool_cycle_statuses": tool_cycle_statuses,
             "blocker": blocker,
         },
     }
@@ -336,6 +351,19 @@ def _tool_result_ledger(
     for request in requests:
         request_id = str(request.get("request_id") or "")
         result = by_result.get(request_id, {})
+        base = {
+            **request,
+            **result,
+            "tool_requested": True,
+            "tool_call_parsed": True,
+            "tool_call_validated": True,
+            "tool_execution_attempted": bool(result),
+            "tool_execution_performed": result.get("returncode") == 0,
+            "tool_result_written": bool(result.get("result_ref")),
+            "tool_result_usable": result.get("passed") is True,
+            "tool_result_consumed_by_provider": request_id in consumed_passed_ids,
+        }
+        cycle = normalize_tool_cycle_status(base)
         out.append(
             {
                 "subturn_id": request.get("subturn_id") or result.get("subturn_id") or "",
@@ -352,6 +380,7 @@ def _tool_result_ledger(
                 "consumed_by_delta": request_id in consumed_passed_ids,
                 "invalid_consumed_failed": request_id in consumed_failed_ids,
                 "diagnostic_failure_cited": request_id in diagnostic_failed_ids,
+                **cycle,
             }
         )
     return out

@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -34,51 +34,23 @@ def resolve_repo_root(value: str) -> Path:
     return Path(value).resolve()
 
 
-def is_complete_heap_run_dir(path: Path) -> bool:
-    return (
-        path.is_dir()
-        and path.name.startswith("heap_context_closure_")
-        and (path / REQUIRED_COMPOSER_JSON).exists()
-    )
-
-
-def latest_run_dir(repo_root: Path) -> Path | None:
-    validation_dir = repo_root / "output" / "validation"
-    if not validation_dir.exists():
-        return None
-    candidates = sorted(
-        [path for path in validation_dir.iterdir() if is_complete_heap_run_dir(path)],
-        key=lambda path: path.stat().st_mtime,
-        reverse=True,
-    )
-    return candidates[0].resolve() if candidates else None
-
-
 def resolve_run_dir(repo_root: Path, value: str) -> Path:
     if value.strip():
         path = Path(value)
         if not path.is_absolute():
             path = repo_root / path
         return path.resolve()
-    latest = latest_run_dir(repo_root)
-    if latest is None:
-        raise SystemExit(
-            "no complete heap_context_closure_* run directory with heap_final_proposal_composer.json found under output/validation"
-        )
-    return latest
+    raise SystemExit("postrun_package_run_dir_explicit_required: pass --run-dir")
 
 
 def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
-    if explicit:
-        return str(Path(explicit).resolve())
-    for candidate in (
-        repo_root / ".venv" / "Scripts" / "python.exe",
-        repo_root / "venv" / "Scripts" / "python.exe",
-        repo_root / ".venv314" / "Scripts" / "python.exe",
-    ):
-        if candidate.exists():
-            return str(candidate.resolve())
-    return sys.executable
+    selected = explicit or os.environ.get("IA_CARMINE_PYTHON", "")
+    if not selected:
+        raise SystemExit("provider_python_explicit_required: pass --python-exe or set IA_CARMINE_PYTHON")
+    path = Path(selected).resolve()
+    if not path.exists():
+        raise SystemExit(f"provider_python_not_found: {path}")
+    return str(path)
 
 
 def run_command(command: list[str], repo_root: Path) -> dict[str, Any]:
@@ -191,7 +163,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--run-dir",
         default="",
-        help="Defaults to latest complete output/validation/heap_context_closure_* directory.",
+        help="Required heap_context_closure run directory.",
     )
     parser.add_argument("--max-block-chars", type=int, default=9000)
     parser.add_argument("--max-blocks", type=int, default=0)

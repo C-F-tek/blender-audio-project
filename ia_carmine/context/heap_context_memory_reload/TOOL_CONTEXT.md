@@ -52,6 +52,7 @@ python -m ia_carmine.cli reconcile_heap_report_with_startup_reload ...
 - Context file count is not product success.
 - A failed partial preload should be reported as degraded, not silently converted into success.
 - Runtime output belongs under `output/**` and is not committed unless converted into compact evidence.
+- RAG preload must receive an explicit `--rag-profile`; it is a retrieval context profile, not a runtime/provider profile.
 
 ## Extension notes
 

@@ -32,7 +32,7 @@ def main() -> int:
     parser.add_argument(
         "--metadata-only",
         action="store_true",
-        help="Ask python -m Tools.npu run_npu_review to write metadata only without loading provider.",
+        help="Ask the brokered NPU review helper to write metadata only without loading provider.",
     )
     parser.add_argument(
         "--npu-python",

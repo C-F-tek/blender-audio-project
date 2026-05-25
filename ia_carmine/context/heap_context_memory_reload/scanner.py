@@ -17,6 +17,8 @@ from ia_carmine.context.heap_context_memory_reload.common import (
 def is_repo_scan_excluded(rel_path: str) -> bool:
     normalized = rel_path.replace("\\", "/").strip("/")
     parts = normalized.split("/")
+    if any(part.startswith(".venv") for part in parts):
+        return True
     for excluded in REPO_SCAN_EXCLUDED_DIRS:
         excluded = excluded.strip("/")
         if not excluded:

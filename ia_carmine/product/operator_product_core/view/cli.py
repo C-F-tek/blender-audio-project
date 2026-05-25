@@ -14,8 +14,6 @@ from typing import Any
 from ia_carmine.product.operator_product_core import DEFAULT_RUN_LABEL, LauncherConfig
 from ia_carmine.product.operator_product_core.controller import OperatorProductController
 from ia_carmine.product.operator_product_core.io_utils import now_stamp
-from ia_carmine.runtime.run.cli import default_final_root, default_task_md
-
 
 class OperatorRunView:
     """View-only Tkinter surface for the shared operator run controller."""
@@ -26,7 +24,7 @@ class OperatorRunView:
         self.messages: queue.Queue[str] = queue.Queue()
         cwd = Path.cwd()
         self.repo_root = tk.StringVar(value=str(cwd))
-        self.request_file = tk.StringVar(value=str(default_task_md()))
+        self.request_file = tk.StringVar(value="")
         self.intermediate_root = tk.StringVar(
             value=str(cwd / "output" / "validation" / "operator_product_launcher_lab")
         )
@@ -182,7 +180,11 @@ class OperatorRunView:
         if not stamp:
             stamp = now_stamp()
             self.stamp.set(stamp)
-        final_root = self.final_root.get().strip() or str(default_final_root(stamp))
+        final_root = self.final_root.get().strip()
+        if not self.request_file.get().strip():
+            raise ValueError("Input MD must be explicit")
+        if not final_root:
+            raise ValueError("Final output dir must be explicit")
         return LauncherConfig(
             repo_root=Path(self.repo_root.get()),
             request_file=Path(self.request_file.get()),

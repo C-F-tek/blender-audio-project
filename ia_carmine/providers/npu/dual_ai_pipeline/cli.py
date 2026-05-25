@@ -20,8 +20,8 @@ def main() -> None:
     parser.add_argument("--skip-npu", action="store_true")
     parser.add_argument("--skip-ollama", action="store_true")
     parser.add_argument("--include-manual", action="store_true")
-    parser.add_argument("--creative-model", default="qwen2.5-coder:14b")
-    parser.add_argument("--technical-model", default="qwen2.5-coder:14b")
+    parser.add_argument("--creative-model", default="")
+    parser.add_argument("--technical-model", default="")
     parser.add_argument("--ollama-base-url", default=None)
     parser.add_argument("--npu-python", default=str(DEFAULT_NPU_PYTHON))
     parser.add_argument("--npu-model-dir", default=str(DEFAULT_MODEL_DIR))
@@ -43,6 +43,11 @@ def main() -> None:
         help="Optional asset inventory JSON with known local Blender/FBX/GLTF assets.",
     )
     args = parser.parse_args()
+    if not args.skip_ollama and (
+        not str(args.creative_model or "").strip()
+        or not str(args.technical_model or "").strip()
+    ):
+        parser.error("--creative-model and --technical-model are required when Ollama is enabled")
 
     apply_default_input_paths(args)
     update_track_paths(args.track_stem, args.analysis_ai_context)

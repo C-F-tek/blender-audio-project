@@ -13,7 +13,7 @@ This package is an implementation lane inside the wider unified local-AI workflo
 Broad local-AI work starts from:
 
 ```text
-Tools/workflow/run_unified_local_ai_refactor.ps1
+python -m ia_carmine.cli run [explicit flags...]
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 ```
 

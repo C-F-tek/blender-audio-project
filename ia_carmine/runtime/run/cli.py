@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -19,7 +18,6 @@ from ia_carmine._shared.live_flow_monitor import CRLF_WARNING_RE
 from ia_carmine.product.operator_product_core import LauncherConfig, OperatorProductController
 from ia_carmine.product.operator_product_core.io_utils import now_stamp
 from ia_carmine.product.operator_product_core.direct_command import resolve_config, resolve_project_python
-from ia_carmine.product.operator_product_core.profiles import apply_profile_to_args
 from ia_carmine.runtime.run.dry_run_report import dry_run_report
 from ia_carmine.runtime.run.preflight_files import PRODUCT_PREFLIGHT_FILES
 from ia_carmine.runtime.run.universe_config import (
@@ -28,61 +26,6 @@ from ia_carmine.runtime.run.universe_config import (
     launcher_config_metadata,
     resolve_universe_config,
 )
-
-DEFAULT_TASK_FILE = "IA-Carmine_GUI_launcher_final_code_product_task.md"
-DEFAULT_INTERMEDIATE_ROOT = "output/validation/operator_product_launcher_lab"
-DEFAULT_BRANCH = "codex/code-product-intake"
-
-def default_task_md() -> Path:
-    home = Path(os.environ.get("USERPROFILE") or Path.home())
-    return home / "Downloads" / DEFAULT_TASK_FILE
-
-def default_final_root(stamp: str) -> Path:
-    return Path("output") / "validation" / stamp / "final_product"
-
-def process_gate_task_path(repo_root: Path, stamp: str) -> Path:
-    return repo_root / "output" / "local_ai_task_inputs" / f"heap-exchange-process-gate-{stamp}.md"
-
-def write_process_gate_task(repo_root: Path, stamp: str) -> Path:
-    task_path = process_gate_task_path(repo_root, stamp)
-    task_path.parent.mkdir(parents=True, exist_ok=True)
-    task_path.write_text(
-        "\n".join(
-            [
-                f"# Heap Exchange Process Gate - {stamp}",
-                "",
-                "## Objective",
-                "",
-                "Execute the IA-Carmine product path through the canonical entrypoint.",
-                "",
-                "## Input Contract",
-                "",
-                "- Entrypoint: `python -m ia_carmine.cli run`.",
-                "- Route: ia_carmine.runtime.run -> operator_product_core -> heap_context_closure -> completeness gate.",
-                "- Provider universe roles are hard requirements for real product runs.",
-                "- Use existing repo modules only; do not create a parallel runner, mode switch or storage layer.",
-                "- Treat this Markdown as controlled task input; startup reload must convert useful context into structured heap evidence.",
-                "",
-                "## Required Runtime Evidence",
-                "",
-                "- Local request enters the heap runtime blackboard.",
-                "- Startup context/memory reload writes structured manifest evidence.",
-                "- GPU1 primary planner, GPU0 coworker/reviewer and NPU microtask auditor publish pointer-linked provider blocks.",
-                "- Matrix/lab evidence validates concrete targets and patch candidates before final product acceptance.",
-                "- Product exit is either reviewable code product evidence or `blocked_with_reason`.",
-                "",
-                "## Failure Policy",
-                "",
-                "A smoke, static report, package write or provider-only proposal is not product success.",
-                "Missing GPU1/GPU0/NPU operational provider evidence is a contract failure, not a warning.",
-                "Smoke/full-run wrappers are downstream verification, not entry commands.",
-                "`patch_application_performed` remains false unless an explicit apply boundary is requested.",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    return task_path
 
 def run_checked(command: list[str], *, cwd: Path) -> None:
     completed = subprocess.run(
@@ -127,8 +70,6 @@ def preflight(repo_root: Path, python_exe: str) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-RepoRoot", "--repo-root", dest="repo_root", default=".")
-    parser.add_argument("--profile", default="")
-    parser.add_argument("--profiles-file", default="")
     parser.add_argument("--print-effective-config", action="store_true")
     parser.add_argument("--emit-expanded-command", action="store_true")
     parser.add_argument("--effective-config-output", default="")
@@ -139,10 +80,10 @@ def build_parser() -> argparse.ArgumentParser:
         dest="request_file",
         default="",
     )
-    parser.add_argument("-ProcessGateTask", dest="process_gate_task", action="store_true")
-    parser.add_argument("--run-label", default="spark_direct")
-    parser.add_argument("--intermediate-root", default=DEFAULT_INTERMEDIATE_ROOT)
+    parser.add_argument("--run-label", default="")
+    parser.add_argument("--intermediate-root", default="")
     parser.add_argument("--final-root", default="")
+    parser.add_argument("--objective", default=None)
     parser.add_argument("-PythonExe", "--python-exe", dest="python_exe", default="")
     parser.add_argument("-Stamp", "--stamp", dest="stamp", default="")
     parser.add_argument("--budget-minutes", type=int, default=None)
@@ -165,7 +106,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--gpu0-model", default=None)
     parser.add_argument("--gpu0-base-url", default=None)
     parser.add_argument("--gpu0-vulkan-visible-devices", default=None)
-    parser.add_argument("--strict-provider-model", action="store_true")
+    parser.add_argument("--strict-provider-model", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("-MaxNewTokens", "--max-new-tokens", dest="max_new_tokens", type=int, default=None)
     parser.add_argument("--gpu0-max-new-tokens", dest="gpu0_max_new_tokens", type=int, default=None)
     parser.add_argument("--ollama-num-ctx", dest="ollama_num_ctx", type=int, default=None)
@@ -192,6 +133,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--startup-scan-context-files", type=int, default=None)
     parser.add_argument("--startup-max-chars-per-file", type=int, default=None)
     parser.add_argument("--rag-db", default=None)
+    parser.add_argument("--rag-profile", default=None)
     parser.add_argument("--rag-index-policy", choices=("auto", "always", "never"), default=None)
     parser.add_argument("--rag-embedding-endpoint", default=None)
     parser.add_argument("--rag-embedding-model", default=None)
@@ -203,7 +145,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--rag-max-file-size", type=int, default=None)
     parser.add_argument("--rag-top-k", type=int, default=None)
     parser.add_argument("--rag-char-budget", type=int, default=None)
-    parser.add_argument("--rag-allow-missing-embeddings", action="store_true")
+    parser.add_argument("--rag-allow-missing-embeddings", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--context-document-count", dest="context_document_count", type=int, default=None)
     parser.add_argument(
         "--context-document-preview-chars",
@@ -242,31 +184,31 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-degraded-lanes", type=int, default=None)
     parser.add_argument(
         "--allow-provider-generation",
-        action="store_true",
-        default=False,
+        action=argparse.BooleanOptionalAction,
+        default=None,
         help="Compatibility flag; real runs request GPU1/GPU0/NPU provider generation by default.",
     )
     parser.add_argument(
         "--require-ollama-gpu-residency",
-        action="store_true",
-        default=False,
+        action=argparse.BooleanOptionalAction,
+        default=None,
         help="Canonical run requires ollama ps accelerator proof for GPU1; CPU-only fallback is blocked.",
     )
     parser.add_argument(
         "--allow-npu-device-workload",
         dest="allow_npu_device_workload",
-        action="store_true",
-        default=False,
+        action=argparse.BooleanOptionalAction,
+        default=None,
         help="Opt in to bounded NPU device workload; semantic NPU audit still runs without it.",
     )
-    parser.add_argument("--skip-startup-reload", action="store_true")
-    parser.add_argument("--strict-startup-reload", action="store_true")
+    parser.add_argument("--skip-startup-reload", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--strict-startup-reload", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--no-documents", action="store_true")
     parser.add_argument("--revision-context", default=None)
     parser.add_argument("--revision-context-max-tasks", type=int, default=None)
     parser.add_argument("--timeout-seconds", type=int, default=None)
     parser.add_argument("--git-sync", action="store_true")
-    parser.add_argument("--branch", default=DEFAULT_BRANCH)
+    parser.add_argument("--branch", default="")
     parser.add_argument("-DryRun", "--dry-run", dest="dry_run", action="store_true")
     return parser
 
@@ -286,13 +228,10 @@ def provided_dests(parser: argparse.ArgumentParser, argv: list[str]) -> set[str]
             found.add(dest)
     return found
 def resolve_request_file(args: argparse.Namespace, repo_root: Path, stamp: str) -> Path:
+    _ = repo_root, stamp
     if args.request_file:
         return Path(args.request_file)
-    if args.process_gate_task:
-        if args.dry_run:
-            return process_gate_task_path(repo_root, stamp)
-        return write_process_gate_task(repo_root, stamp)
-    return default_task_md()
+    raise SystemExit("request_file_explicit_required: pass --request-file")
 
 
 def build_config(
@@ -302,7 +241,21 @@ def build_config(
     resolved_universe: ResolvedUniverseRunConfig,
 ) -> LauncherConfig:
     request_file = resolve_request_file(args, repo_root, stamp)
-    final_root = Path(args.final_root) if args.final_root else default_final_root(stamp)
+    missing_surface = [
+        flag
+        for flag, value in (
+            ("--run-label", args.run_label),
+            ("--intermediate-root", args.intermediate_root),
+            ("--final-root", args.final_root),
+        )
+        if not str(value or "").strip()
+    ]
+    if missing_surface:
+        raise SystemExit(
+            "missing explicit operator run surface parameter(s): "
+            + ", ".join(missing_surface)
+        )
+    final_root = Path(args.final_root)
     metadata = launcher_config_metadata(resolved_universe)
     return LauncherConfig(
         repo_root=repo_root,
@@ -313,6 +266,7 @@ def build_config(
         python_exe=args.python_exe,
         stamp=stamp,
         revision_context=args.revision_context,
+        objective=args.objective,
         budget_minutes=args.budget_minutes,
         max_iterations=args.max_iterations,
         min_runtime_rounds=args.min_runtime_rounds,
@@ -355,6 +309,7 @@ def build_config(
         startup_scan_context_files=args.startup_scan_context_files,
         startup_max_chars_per_file=args.startup_max_chars_per_file,
         rag_db=args.rag_db,
+        rag_profile=args.rag_profile,
         rag_index_policy=args.rag_index_policy,
         rag_embedding_endpoint=args.rag_embedding_endpoint,
         rag_embedding_model=args.rag_embedding_model,
@@ -402,7 +357,6 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(raw_argv)
     repo_root = Path(args.repo_root).resolve()
     supplied_dests = provided_dests(parser, raw_argv)
-    apply_profile_to_args(args, repo_root, supplied_dests)
     resolved_universe = resolve_universe_config(
         repo_root=repo_root,
         args=args,
@@ -419,6 +373,8 @@ def main(argv: list[str] | None = None) -> int:
     if not cfg.request_file.exists() and not plan_only:
         raise SystemExit(f"Task markdown not found: {cfg.request_file}")
     if args.git_sync:
+        if not str(args.branch or "").strip():
+            raise SystemExit("branch_explicit_required_for_git_sync: pass --branch")
         if plan_only:
             print(f"[dry-run] would sync origin/{args.branch}")
         else:

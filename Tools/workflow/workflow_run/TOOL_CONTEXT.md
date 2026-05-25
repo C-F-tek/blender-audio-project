@@ -16,21 +16,15 @@ This area supports operator workflows and local orchestration surfaces. It is se
 - Support Git push helper surfaces where explicitly requested.
 - Provide audio analysis and scene-spec workflow packages when used by application-domain tasks.
 
-## Representative command surface
-
-Use through the workflow dispatcher:
+## Access
 
 ```powershell
-python -m Tools.workflow startup_check ...
-python -m Tools.workflow workflow_debug ...
-python -m Tools.workflow smart_ai_context ...
-python -m Tools.workflow workflow_shell ...
-python -m Tools.workflow workflow_shell_with_push ...
-python -m Tools.workflow git_auto_push ...
-python -m Tools.workflow run_local_ai_artifact_reset ...
-python -m Tools.workflow analyze_audio ...
-python -m Tools.workflow scene_spec ...
+python -m ia_carmine.cli run [explicit flags...]
+python -m Tools.validation validator_unico --mode <mode> [--section <section>]
 ```
+
+Direct workflow dispatcher commands are retired. These packages are implementation
+modules and must not add new wrapper entrypoints.
 
 ## Workflow model
 
@@ -59,4 +53,5 @@ workflow shell logs when explicitly produced
 
 ## Extension notes
 
-When adding workflow helpers, keep them small and register them through `Tools/workflow/dispatch.py`.
+When adding workflow helpers, expose them through canonical run, validation or
+broker mode parameters rather than a new workflow command.

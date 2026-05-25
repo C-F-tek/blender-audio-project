@@ -108,7 +108,7 @@ def main() -> int:
             {
                 "id": "parse_launcher",
                 "type": "powershell_parse",
-                "paths": ["Tools/workflow/_powershell/run_unified_local_ai_refactor.ps1"],
+                "paths": ["ia_carmine/runtime/run/cli.py"],
             },
             {"id": "diff_check", "type": "git_diff_check"},
             {"id": "status_short", "type": "git_status_short"},

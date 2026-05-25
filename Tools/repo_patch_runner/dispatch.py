@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from Tools.tool_dispatch import ToolDispatcher
+from ia_carmine._shared.tool_dispatch import ToolDispatcher
 
 TOOL_MAIN_TARGETS: dict[str, str] = {
     "apply_repo_mods": "Tools.repo_patch_runner.apply_repo_mods.cli:main",

@@ -217,9 +217,7 @@ def _probe_provider_model_selection_policy() -> list[str]:
         "qwen2.5-coder:14b": {"size_bytes": 1},
     }
     selection.ollama_model_inventory = lambda: dict(inventory_payload)
-    selection.nvidia_gpu_inventory = lambda: [
-        {"name": "NVIDIA", "uuid": "GPU-smoke", "memory_total_mib": 100000, "memory_free_mib": 100000}
-    ]
+    selection.nvidia_gpu_inventory = lambda: [{"error": "smoke_does_not_fake_gpu_vram"}]
     errors: list[str] = []
     try:
         explicit = selection.select_ollama_provider_model(
@@ -243,8 +241,12 @@ def _probe_provider_model_selection_policy() -> list[str]:
             context_candidates="8192",
             strict=False,
         )
-        if missing.get("blocked_reason") != "provider_model_explicit_not_installed":
-            errors.append(f"missing explicit model did not block correctly: {missing}")
+        if missing.get("blocked"):
+            errors.append(f"missing explicit model was pre-blocked instead of runtime-verified: {missing}")
+        if missing.get("selected_provider_model") != "qwen3-coder:30b":
+            errors.append(f"missing explicit model did not preserve requested model: {missing}")
+        if missing.get("runtime_load_verification_required") is not True:
+            errors.append(f"missing explicit model did not require runtime verification: {missing}")
         inventory_payload = {
             "qwen3-coder:30b": {"size_bytes": 1},
             "qwen2.5-coder:14b": {"size_bytes": 1},

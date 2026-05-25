@@ -91,10 +91,11 @@ def run_provider_role_coexistence_preflight(
     gpu0_model = str(getattr(gate.args, "gpu0_model", "") or "").strip()
     gpu0_base_url = str(getattr(gate.args, "gpu0_base_url", "") or "").strip()
     gpu0_vulkan_devices = str(getattr(gate.args, "gpu0_vulkan_visible_devices", "") or "").strip()
-    gpu_layers = str(getattr(gate.args, "ollama_gpu_layers", "") or "all").strip()
+    gpu_layers = str(getattr(gate.args, "ollama_gpu_layers", "") or "").strip()
     keep_alive = str(getattr(gate.args, "keep_alive", "") or "").strip()
-    if not gpu0_model or not gpu0_base_url or not gpu0_vulkan_devices or not keep_alive:
-        raise RuntimeError("provider coexistence preflight requires explicit GPU0/base URL/device/keep_alive config")
+    npu_model_dir = str(getattr(gate.args, "npu_model_dir", "") or "").strip()
+    if not gpu1_base_url or not gpu0_model or not gpu0_base_url or not gpu0_vulkan_devices or not gpu_layers or not keep_alive or not npu_model_dir:
+        raise RuntimeError("provider coexistence preflight requires explicit GPU1/GPU0/NPU provider config")
     preflight_max_new_tokens = 4
     npu_hold_seconds = 6
     command = [
@@ -108,6 +109,8 @@ def run_provider_role_coexistence_preflight(
         gate.child_python(),
         "--gpu1-model",
         gpu1_model,
+        "--gpu1-base-url",
+        gpu1_base_url,
         "--gpu0-model",
         gpu0_model,
         "--gpu0-base-url",
@@ -127,15 +130,13 @@ def run_provider_role_coexistence_preflight(
         str(npu_hold_seconds),
         "--npu-timeout-seconds",
         str(max(60, int(getattr(gate.args, "npu_micro_timeout_seconds", 60)) + 30)),
+        "--npu-model-dir",
+        npu_model_dir,
         "--output",
         repo_rel(gate.repo_root, output),
         "--markdown-output",
         repo_rel(gate.repo_root, markdown),
     ]
-    if gpu1_base_url:
-        command.extend(["--gpu1-base-url", gpu1_base_url])
-    if str(getattr(gate.args, "npu_model_dir", "")).strip():
-        command.extend(["--npu-model-dir", str(gate.args.npu_model_dir).strip()])
     completed = subprocess.run(
         command,
         cwd=str(gate.repo_root),

@@ -163,13 +163,12 @@ def check_gpu_lane(repo_root: Path, timeout: float) -> dict[str, Any]:
 
 
 def check_ollama_lane(
-    repo_root: Path, model: str | None, *, probe_generate: bool
+    repo_root: Path, model: str | None, *, base_url: str, probe_generate: bool
 ) -> dict[str, Any]:
     ensure_repo_imports(repo_root)
     started = time.perf_counter()
     try:
         from ia_carmine.providers.ollama import (  # noqa: PLC0415
-            DEFAULT_BASE_URL,
             OllamaSession,
             choose_model,
             is_server_ready,
@@ -186,21 +185,28 @@ def check_ollama_lane(
 
     errors: list[str] = []
     warnings: list[str] = []
-    server_ready = is_server_ready(DEFAULT_BASE_URL)
+    effective_base_url = str(base_url or "").strip()
+    if not effective_base_url:
+        errors.append("ollama_base_url_explicit_required")
+    server_ready = bool(effective_base_url) and is_server_ready(effective_base_url)
     models: list[str] = []
     selected_model: str | None = None
     generated_probe = ""
 
     try:
-        models = list_models(DEFAULT_BASE_URL) if server_ready else list_models_from_disk()
-        selected_model = choose_model(model, models)
+        models = list_models(effective_base_url) if server_ready else list_models_from_disk()
+        if not errors:
+            selected_model = choose_model(model, models)
     except Exception as exc:  # noqa: BLE001 - report-only check.
         errors.append(f"{type(exc).__name__}: {exc}")
 
     if probe_generate and selected_model:
         try:
             with OllamaSession(
-                model=selected_model, shutdown_server=False, unload_model=True
+                model=selected_model,
+                base_url=effective_base_url,
+                shutdown_server=False,
+                unload_model=True,
             ) as session:
                 generated_probe = session.generate(
                     'Return exactly this JSON object and no prose: {"ok": true}',
@@ -229,7 +235,7 @@ def check_ollama_lane(
         "resource_mechanics_semantics": RESOURCE_MECHANICS_SEMANTICS,
         "elapsed_sec": round(time.perf_counter() - started, 4),
         "report": {
-            "base_url": DEFAULT_BASE_URL,
+            "base_url": effective_base_url,
             "server_ready": server_ready,
             "model_count": len(models),
             "selected_model": selected_model,
@@ -252,7 +258,10 @@ def run_checks(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
             (
                 "ollama",
                 lambda: check_ollama_lane(
-                    repo_root, args.model, probe_generate=args.probe_ollama_generate
+                    repo_root,
+                    args.model,
+                    base_url=args.base_url,
+                    probe_generate=args.probe_ollama_generate,
                 ),
             )
         )
@@ -348,6 +357,7 @@ def main() -> int:
     parser.add_argument("--output", default="output/validation/local_ai_resource_lanes.json")
     parser.add_argument("--markdown-output", default="output/validation/local_ai_resource_lanes.md")
     parser.add_argument("--model", help="Preferred Ollama model for selection/probe.")
+    parser.add_argument("--base-url", default="", help="Explicit Ollama base URL for this run.")
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--parallel", action="store_true", help="Run lane checks concurrently.")
     parser.add_argument(

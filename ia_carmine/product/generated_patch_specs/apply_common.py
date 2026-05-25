@@ -24,7 +24,7 @@ from ia_carmine.product.patch_product.patch_suggestion_bundle.common import (
 )
 from ia_carmine.product.patch_product.patch_suggestion_bundle.git_branch import create_review_branch
 from ia_carmine.product.patch_product.patch_suggestion_bundle.operations import apply_operation, normalize_operation
-from Tools.validation._shared.report_utils import (
+from ia_carmine._shared.report_io import (
     resolve_output_path,
     write_json_report,
     write_text_report,

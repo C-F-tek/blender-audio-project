@@ -40,7 +40,7 @@ class CodeContractSpec:
 
 CODE_CONTRACTS: tuple[CodeContractSpec, ...] = (
     CodeContractSpec(
-        path="Tools/workflow/_powershell/run_local_ai_core_tool_activation.ps1",
+        path="ia_carmine/runtime/run/cli.py",
         contract="local_ai_core_tool_activation_guardrails",
         owner_lane="cpu_orchestration",
         consumed_by_lanes=("cpu", "gpu_cuda", "npu"),

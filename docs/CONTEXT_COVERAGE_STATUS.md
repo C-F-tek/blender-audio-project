@@ -68,6 +68,7 @@ docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md
 | --- | --- | --- |
 | Root index | `CONTEXT_INDEX.md` | complete-enough |
 | Dispatcher coverage map | `docs/DISPATCHER_CONTEXT_COVERAGE.md` | complete-enough |
+| Coherence guardrails | `docs/architecture/coherence_guardrails.md` | complete-enough |
 | Tools global index | `Tools/CONTEXT_INDEX.md` | complete-enough |
 | Tools overview | `Tools/TOOL_CONTEXT.md` | partial |
 | ia_carmine overview | `ia_carmine/TOOL_CONTEXT.md` | partial |

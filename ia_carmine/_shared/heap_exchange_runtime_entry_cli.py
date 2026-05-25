@@ -21,7 +21,7 @@ from ia_carmine.runtime.heap_exchange.runtime_entry.cli import (
     repo_path,
     write_public_event,
 )
-from Tools.validation._shared.report_utils import resolve_output_path, write_json_report, write_text_report
+from ia_carmine._shared.report_io import resolve_output_path, write_json_report, write_text_report
 
 
 def render_markdown(report: dict[str, Any]) -> str:

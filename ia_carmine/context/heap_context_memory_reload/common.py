@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -34,9 +34,7 @@ SEMANTIC_CHUNK_ROOTS = (
 )
 REPO_SCAN_EXCLUDED_DIRS = {
     ".git",
-    ".venv",
     "venv",
-    ".venv314",
     "__pycache__",
     ".pytest_cache",
     ".mypy_cache",
@@ -119,16 +117,13 @@ def write_markdown(path: Path, text: str) -> None:
 
 
 def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
-    if explicit:
-        return str(Path(explicit).resolve())
-    for candidate in (
-        repo_root / ".venv" / "Scripts" / "python.exe",
-        repo_root / "venv" / "Scripts" / "python.exe",
-        repo_root / ".venv314" / "Scripts" / "python.exe",
-    ):
-        if candidate.exists():
-            return str(candidate.resolve())
-    return sys.executable
+    selected = explicit or os.environ.get("IA_CARMINE_PYTHON", "")
+    if not selected:
+        raise RuntimeError("provider_python_explicit_required: pass --python-exe or set IA_CARMINE_PYTHON")
+    path = Path(selected).resolve()
+    if not path.exists():
+        raise FileNotFoundError(f"provider_python_not_found: {path}")
+    return str(path)
 
 
 def summarize_artifact(path: Path, repo_root: Path) -> dict[str, Any]:

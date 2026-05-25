@@ -64,6 +64,9 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
     ai_context_pack_profile = str(getattr(owner.args, "ai_context_pack_profile", "") or "").strip()
     if not ai_context_pack_profile:
         raise RuntimeError("missing explicit tool-plan runtime parameter: ai_context_pack_profile")
+    rag_profile = str(getattr(owner.args, "rag_profile", "") or "").strip()
+    if not rag_profile:
+        raise RuntimeError("missing explicit tool-plan runtime parameter: rag_profile")
     startup_text_files: list[str] = []
     operator_request_file = str(getattr(owner.args, "request_file", "") or "").strip()
     if operator_request_file:
@@ -255,6 +258,7 @@ def build_tool_plan(owner: Any) -> list[dict[str, Any]]:
             "args": {
                 "query": query,
                 "task_file": operator_request_file,
+                "rag_profile": rag_profile,
                 "db": str(getattr(owner.args, "rag_db", "") or ""),
                 "top_k": code_chunk_limit,
                 "char_budget": context_count * context_preview,

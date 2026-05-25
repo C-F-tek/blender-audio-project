@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from Tools.validation._shared.report_utils import write_text_report
+from ia_carmine._shared.report_io import write_text_report
 
 FORBIDDEN_PREFIXES = (
     "output/",

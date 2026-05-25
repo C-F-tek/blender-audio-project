@@ -7,7 +7,7 @@ import argparse
 from pathlib import Path
 from typing import Any, Callable
 
-from Tools.validation._shared.report_utils import write_json_report, write_text_report
+from ia_carmine._shared.report_io import write_json_report, write_text_report
 
 RenderMarkdown = Callable[[dict[str, Any]], str]
 SummaryBuilder = Callable[[dict[str, Any], Path, Path], dict[str, Any]]

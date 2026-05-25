@@ -51,7 +51,7 @@ from ia_carmine._shared.universo_utils import (
     repo_rel,
 )
 from ia_carmine._shared.process_tree import terminate_process_tree
-from Tools.validation._shared.report_utils import (
+from ia_carmine._shared.report_io import (
     resolve_output_path,
     write_json_report,
     write_text_report,

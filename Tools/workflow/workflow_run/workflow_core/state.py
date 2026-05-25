@@ -31,9 +31,9 @@ DEFAULT_RENDER_STEM = "spaziotempo_asset_visual_v61b"
 DEFAULT_FRAME_PREFIX = "spaziotempo_v61b_"
 NPU_PYTHON = ROOT / "venvs" / "blender-npu-ai" / "Scripts" / "python.exe"
 AUDIO_PYTHON = ROOT / "venvs" / "blender-audio-ai" / "Scripts" / "python.exe"
-DEFAULT_CREATIVE_MODEL = "qwen2.5-coder:14b"
-DEFAULT_TECHNICAL_MODEL = "qwen2.5-coder:14b"
-DEFAULT_CHAT_MODEL = "qwen2.5-coder:14b"
+DEFAULT_CREATIVE_MODEL = ""
+DEFAULT_TECHNICAL_MODEL = ""
+DEFAULT_CHAT_MODEL = ""
 DEFAULT_SCRIPT_TOKENS = 7000
 
 

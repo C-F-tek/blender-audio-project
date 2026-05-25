@@ -32,7 +32,7 @@ from ia_carmine._shared.file_backed_transport import (
     write_json_artifact,
     write_transport_manifest,
 )
-from Tools.validation._shared.report_utils import write_json_report, write_text_report
+from ia_carmine._shared.report_io import write_json_report, write_text_report
 
 DEFAULT_OUTPUT = "output/validation/provider_runtime_broker_bridge_{stamp}.json"
 DEFAULT_MARKDOWN = "output/validation/provider_runtime_broker_bridge_{stamp}.md"

@@ -25,7 +25,7 @@ try:
         report_level_warnings,
     )
     from ia_carmine.product.patch_product.candidate_synthesis.evidence_diff import build_evidence_candidates
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report
+    from ia_carmine._shared.report_io import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
@@ -43,7 +43,7 @@ except ImportError:
     from ia_carmine.product.patch_product.candidate_synthesis.evidence_diff import (  # type: ignore
         build_evidence_candidates,
     )
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
+    from ia_carmine._shared.report_io import write_json_report, write_text_report  # type: ignore
 
 
 def now_iso() -> str:

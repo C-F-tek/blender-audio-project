@@ -35,7 +35,7 @@ try:
     from ia_carmine.product.deterministic_recommendations import (
         render_markdown as render_recommendations_markdown,
     )
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report
+    from ia_carmine._shared.report_io import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
@@ -53,7 +53,7 @@ except ImportError:
     from ia_carmine.product.deterministic_recommendations import (
         render_markdown as render_recommendations_markdown,
     )
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report  # type: ignore
+    from ia_carmine._shared.report_io import write_json_report, write_text_report  # type: ignore
 
 DEFAULT_EVIDENCE = "output/ai_pipeline/agent_review_evidence_sufficiency.json"
 DEFAULT_ORCHESTRATOR = "output/ai_pipeline/agent_gpu_npu_parallel_orchestrator_live.json"

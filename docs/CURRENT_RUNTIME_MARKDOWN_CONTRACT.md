@@ -84,4 +84,6 @@ Complete/operator-facing runs must provide all required runtime flags explicitly
 --max-degraded-lanes
 ```
 
-Dry-run/effective-config output must expose the real source for each field (`cli_arg`, `profile:<name>`, or `runtime_derived`) and must not claim a hardcoded source.
+Dry-run/effective-config output must expose the real source for each field (`cli_arg`, `optional_unset`, or `runtime_derived`) and must not claim a hardcoded/profile source.
+
+RAG has its own explicit profile surface: `--rag-profile`. It scopes retrieval/index/query context behavior only. It must not select provider models, hardware lanes, complete-run semantics, validator suites or runtime universe profiles.

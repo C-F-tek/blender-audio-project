@@ -11,7 +11,6 @@ from .commands import heap_command, startup_command
 from .common import (
     load_json,
     load_operator_request,
-    now_stamp,
     resolve_project_python,
     resolve_repo_root,
     resolve_revision_context,
@@ -48,12 +47,12 @@ def _prepare_state(args: Any) -> dict[str, Any]:
         args.request,
         args.request_file,
     )
-    stamp = args.stamp or now_stamp()
-    run_dir = (
-        Path(args.output_dir)
-        if args.output_dir
-        else repo_root / "output" / "validation" / f"heap_context_closure_{stamp}"
-    ).resolve()
+    stamp = str(args.stamp or "").strip()
+    if not stamp:
+        raise ValueError("stamp_required")
+    if not str(args.output_dir or "").strip():
+        raise ValueError("output_dir_required")
+    run_dir = Path(args.output_dir).resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
     startup_dir = run_dir / "startup_context_memory_reload"
     return {

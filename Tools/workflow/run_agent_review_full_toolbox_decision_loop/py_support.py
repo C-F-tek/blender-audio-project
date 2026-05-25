@@ -8,7 +8,6 @@ import json
 import os
 import re
 import subprocess
-import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -88,27 +87,12 @@ def normalize_python_candidate(path_value: str) -> str:
 
 def resolve_python(repo_root: Path) -> str:
     env_python = os.environ.get("IA_CARMINE_PYTHON", "")
-    candidates = [
-        env_python,
-        str(repo_root / ".venv/Scripts/python.exe"),
-        str(repo_root / "venv/Scripts/python.exe"),
-        str(repo_root / ".venv314/Scripts/python.exe"),
-    ]
-
-    current = normalize_python_candidate(sys.executable)
-    if current and not is_windowsapps_python(current):
-        candidates.append(current)
-
-    for raw in candidates:
-        if not raw:
-            continue
-        normalized = normalize_python_candidate(raw)
-        if normalized:
-            return normalized
-
-    if sys.executable and not is_windowsapps_python(sys.executable):
-        return sys.executable
-    return "python"
+    normalized = normalize_python_candidate(env_python)
+    if normalized:
+        return normalized
+    raise RuntimeError(
+        "workflow_python_explicit_required: set IA_CARMINE_PYTHON to a repository-owned Python executable"
+    )
 
 
 @dataclass

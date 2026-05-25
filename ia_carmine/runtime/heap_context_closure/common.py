@@ -4,7 +4,6 @@ import json
 import os
 import signal
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -17,7 +16,6 @@ DEFAULT_REQUEST = (
     "usa debug lab e chiudi con composer finale su file persistenti."
 )
 
-REQUIRED_COMPOSER_JSON = "heap_final_proposal_composer.json"
 REVISION_CONTEXT_MARKER = "EXTERNAL HEAP REVISION CONTEXT FROM PREVIOUS RUN"
 WINDOWS_PROVIDER_STATUS_TIMEOUT_SECONDS = 1
 OLLAMA_STOP_TIMEOUT_SECONDS = 5
@@ -36,15 +34,17 @@ def repo_rel(repo_root: Path, path: Path) -> str:
 
 def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
     if explicit:
-        return str(Path(explicit).resolve())
-    for candidate in (
-        repo_root / ".venv" / "Scripts" / "python.exe",
-        repo_root / "venv" / "Scripts" / "python.exe",
-        repo_root / ".venv314" / "Scripts" / "python.exe",
-    ):
-        if candidate.exists():
-            return str(candidate.resolve())
-    return sys.executable
+        path = Path(explicit).expanduser().resolve(strict=False)
+        if not path.is_file():
+            raise SystemExit(f"provider_python_cli_missing: {path}")
+        return str(path)
+    env_python = os.environ.get("IA_CARMINE_PYTHON", "").strip()
+    if env_python:
+        path = Path(env_python).expanduser().resolve(strict=False)
+        if not path.is_file():
+            raise SystemExit(f"provider_python_env_missing: {path}")
+        return str(path)
+    raise SystemExit("provider_python_explicit_required: pass --python-exe or set IA_CARMINE_PYTHON")
 
 def resolve_repo_file(repo_root: Path, value: str) -> Path:
     path = Path(value)
@@ -140,13 +140,10 @@ def terminate_provider_launch_manifest_processes(
             compute_device = str(lane.get("provider_compute_device") or "")
             provider_base_url = str(lane.get("provider_base_url") or "").strip()
             if "gpu0-vulkan" in compute_device:
-                provider_base_url = provider_base_url or "http://127.0.0.1:11435"
-                if provider_base_url not in gpu0_base_urls:
+                if provider_base_url and provider_base_url not in gpu0_base_urls:
                     gpu0_base_urls.append(provider_base_url)
-            elif not provider_base_url:
-                provider_base_url = "http://127.0.0.1:11434"
             model_ref = (provider_model, provider_base_url)
-            if provider_model and model_ref not in provider_models:
+            if provider_model and provider_base_url and model_ref not in provider_models:
                 provider_models.append(model_ref)
             pid = _safe_pid(lane.get("pid"))
             item = {
@@ -216,10 +213,15 @@ def _cleanup_provider_boot_handoff_report(path: Path, report: dict[str, Any]) ->
     stop = payload.get("gpu0_vulkan_server_stop")
     stop = stop if isinstance(stop, dict) else {}
     if stop.get("deferred_until_provider_cleanup"):
-        base_url = str(stop.get("base_url") or "http://127.0.0.1:11435")
-        report.setdefault("gpu0_vulkan_server_stop", []).append(
-            _stop_gpu0_vulkan_server(base_url)
-        )
+        base_url = str(stop.get("base_url") or "").strip()
+        if base_url:
+            report.setdefault("gpu0_vulkan_server_stop", []).append(
+                _stop_gpu0_vulkan_server(base_url)
+            )
+        else:
+            report.setdefault("gpu0_vulkan_server_stop_skipped", []).append(
+                {"source": str(path), "reason": "gpu0_base_url_missing_explicit"}
+            )
 
 def _safe_pid(value: Any) -> int:
     try:
@@ -351,40 +353,10 @@ def write_documents_run_manifest(
     return str(manifest)
 
 
-def is_complete_heap_run_dir(path: Path) -> bool:
-    return (
-        path.is_dir()
-        and path.name.startswith("heap_context_closure_")
-        and (path / REQUIRED_COMPOSER_JSON).exists()
-    )
-
-
-def latest_revision_context(repo_root: Path) -> tuple[Path | None, dict[str, Any], str]:
-    validation_dir = repo_root / "output" / "validation"
-    if not validation_dir.exists():
-        return None, {}, "none"
-    candidates = sorted(
-        [
-            run_dir / "external_heap_revision_context.json"
-            for run_dir in validation_dir.iterdir()
-            if is_complete_heap_run_dir(run_dir)
-            and (run_dir / "external_heap_revision_context.json").exists()
-        ],
-        key=lambda path: path.stat().st_mtime if path.exists() else 0,
-        reverse=True,
-    )
-    if not candidates:
-        return None, {}, "none"
-    path = candidates[0].resolve()
-    return path, load_json(path), "latest_complete_heap_context_closure_with_composer_json"
-
-
 def resolve_revision_context(repo_root: Path, value: str) -> tuple[Path | None, dict[str, Any], str]:
-    mode = str(value or "auto_latest").strip()
+    mode = str(value or "").strip()
     if not mode or mode.lower() in {"off", "none", "false", "0"}:
-        return None, {}, "off"
-    if mode == "auto_latest":
-        return latest_revision_context(repo_root)
+        return None, {}, "off" if mode else "revision_context_missing_explicit"
     path = Path(mode)
     if not path.is_absolute():
         path = repo_root / path

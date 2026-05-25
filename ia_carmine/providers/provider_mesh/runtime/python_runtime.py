@@ -1,15 +1,13 @@
 """Python interpreter and subprocess environment helpers for provider mesh lanes.
 
-The orchestrator must not accidentally fall back to the WindowsApps Python shim
-when a project virtual environment is available. These helpers centralize that
-selection rule so GPU1/Ollama, GPU0/OpenVINO, NPU and broker subprocesses share
-the same interpreter policy.
+The orchestrator must not silently choose a Python runtime. These helpers
+centralize the rule that provider/broker subprocesses use an operator-provided
+runtime only.
 """
 
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 
 from ia_carmine._shared.ollama_provider_selection import controlled_ollama_env_fields
@@ -35,14 +33,11 @@ def normalize_python_candidate(path_value: str) -> str:
 
 
 def iter_python_candidates(repo_root: Path | None = None) -> list[str]:
-    """Return candidates in strict project-preferred order."""
-    root = repo_root or Path.cwd()
+    """Return explicitly configured provider Python candidates only."""
+    _ = repo_root
     return [
         os.environ.get("IA_CARMINE_PYTHON", ""),
-        str(root / ".venv/Scripts/python.exe"),
-        str(root / "venv/Scripts/python.exe"),
-        str(root / ".venv314/Scripts/python.exe"),
-        normalize_python_candidate(getattr(sys, "executable", "")),
+        os.environ.get("SPAZIOTEMPO_NPU_PYTHON", ""),
     ]
 
 
@@ -51,15 +46,13 @@ def resolve_child_python(repo_root: Path | None = None) -> str:
 
     Preference order:
     1. IA_CARMINE_PYTHON when it points at a real file.
-    2. Project virtual environments.
-    3. Current interpreter when it is not the WindowsApps shim.
-    4. Last-resort generic "python".
+    2. SPAZIOTEMPO_NPU_PYTHON when it points at a real file.
     """
     for raw in iter_python_candidates(repo_root):
         normalized = normalize_python_candidate(raw)
         if normalized and not is_windowsapps_python(normalized):
             return normalized
-    return "python"
+    raise RuntimeError("provider_python_explicit_required: set IA_CARMINE_PYTHON")
 
 
 def command_env(repo_root: Path) -> dict[str, str]:

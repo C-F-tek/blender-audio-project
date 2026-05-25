@@ -22,9 +22,11 @@ def generate_scene_chat_reply(
     audio_path: str,
     output_path: Path,
     user_message: str,
-    model: str = "qwen2.5-coder:14b",
+    model: str = "",
     asset_inventory_path: Path | None = None,
 ) -> str:
+    if not str(model or "").strip():
+        raise ValueError("scene_chat_model_explicit_required")
     brief = load_or_create_scene_brief(
         track_stem=track_stem, audio_path=audio_path, output_path=output_path
     )

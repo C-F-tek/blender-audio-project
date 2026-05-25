@@ -18,7 +18,7 @@ from typing import Any
 
 try:
     from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         resolve_output_path,
         write_json_report,
         write_text_report,
@@ -28,7 +28,7 @@ except ImportError:
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
     from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS  # type: ignore
-    from Tools.validation._shared.report_utils import (  # type: ignore
+    from ia_carmine._shared.report_io import (  # type: ignore
         resolve_output_path,
         write_json_report,
         write_text_report,

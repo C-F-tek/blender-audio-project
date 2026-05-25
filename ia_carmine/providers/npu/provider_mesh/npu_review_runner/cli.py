@@ -21,7 +21,7 @@ from .runner import run_chunked, run_onepass, write_metadata_report
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-dir", default=str(DEFAULT_MODEL_DIR))
+    parser.add_argument("--model-dir", default="")
     parser.add_argument("--context")
     parser.add_argument("--chunk-dir")
     parser.add_argument("--out")
@@ -37,9 +37,9 @@ def main() -> None:
     )
     parser.add_argument("--device", default="NPU")
     parser.add_argument("--engine", choices=["npu", "ollama"], default="npu")
-    parser.add_argument("--ollama-model", default="qwen2.5-coder:14b")
-    parser.add_argument("--ollama-base-url", default=None)
-    parser.add_argument("--ollama-keep-alive", default="5m")
+    parser.add_argument("--ollama-model", default="")
+    parser.add_argument("--ollama-base-url", default="")
+    parser.add_argument("--ollama-keep-alive", default="")
     parser.add_argument("--keep-ollama-server", action="store_true")
     parser.add_argument("--keep-ollama-model", action="store_true")
     parser.add_argument("--domain", choices=["code", "music"], default="code")
@@ -59,6 +59,18 @@ def main() -> None:
     parser.add_argument("--skip-final", action="store_true")
 
     args = parser.parse_args()
+    if args.engine == "ollama":
+        missing = []
+        if not str(args.ollama_model or "").strip():
+            missing.append("--ollama-model")
+        if not str(args.ollama_base_url or "").strip():
+            missing.append("--ollama-base-url")
+        if not str(args.ollama_keep_alive or "").strip():
+            missing.append("--ollama-keep-alive")
+        if missing:
+            parser.error("missing explicit Ollama review runner parameter(s): " + ", ".join(missing))
+    if args.engine == "npu" and not str(args.model_dir or "").strip():
+        parser.error("missing explicit NPU review runner parameter: --model-dir")
 
     if args.domain == "music":
         args.context = args.context or str(DEFAULT_MUSIC_CONTEXT)

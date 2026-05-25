@@ -27,7 +27,7 @@ def _config_sources(argv: list[str]) -> dict[str, str]:
             for option in options:
                 if token == option or token.startswith(f"{option}="):
                     return "cli_arg"
-        return "standalone_default"
+        return "missing_explicit"
 
     return {
         "gpu1_base_url": source("--gpu1-base-url"),
@@ -49,18 +49,18 @@ def main() -> int:
     parser.add_argument("--child-npu", action="store_true")
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--python-exe", default="")
-    parser.add_argument("--gpu1-base-url", default="http://127.0.0.1:11434")
-    parser.add_argument("--gpu0-base-url", default="http://127.0.0.1:11435")
+    parser.add_argument("--gpu1-base-url", default="")
+    parser.add_argument("--gpu0-base-url", default="")
     parser.add_argument("--gpu1-model", default="")
-    parser.add_argument("--gpu0-model", default="qwen3:1.7b")
-    parser.add_argument("--gpu0-vulkan-visible-devices", default="auto")
-    parser.add_argument("--keep-alive", default="120s")
-    parser.add_argument("--num-ctx", type=int, default=2048)
-    parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default="all")
-    parser.add_argument("--max-new-tokens", type=int, default=8)
+    parser.add_argument("--gpu0-model", default="")
+    parser.add_argument("--gpu0-vulkan-visible-devices", default="")
+    parser.add_argument("--keep-alive", default="")
+    parser.add_argument("--num-ctx", type=int, default=0)
+    parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default="")
+    parser.add_argument("--max-new-tokens", type=int, default=0)
     parser.add_argument("--npu-model-dir", default="")
-    parser.add_argument("--npu-hold-seconds", type=float, default=8.0)
-    parser.add_argument("--npu-timeout-seconds", type=float, default=90.0)
+    parser.add_argument("--npu-hold-seconds", type=float, default=0.0)
+    parser.add_argument("--npu-timeout-seconds", type=float, default=0.0)
     parser.add_argument("--handoff-provider-loop", action="store_true")
     parser.add_argument("--output", default="output/validation/provider_role_coexistence.json")
     parser.add_argument("--markdown-output", default="output/validation/provider_role_coexistence.md")
@@ -69,6 +69,31 @@ def main() -> int:
     if args.child_npu:
         return _child_npu()
     args._config_sources = _config_sources(raw_argv)
+    missing = [
+        name
+        for name, value in (
+            ("--python-exe", args.python_exe),
+            ("--gpu1-base-url", args.gpu1_base_url),
+            ("--gpu0-base-url", args.gpu0_base_url),
+            ("--gpu1-model", args.gpu1_model),
+            ("--gpu0-model", args.gpu0_model),
+            ("--gpu0-vulkan-visible-devices", args.gpu0_vulkan_visible_devices),
+            ("--keep-alive", args.keep_alive),
+            ("--ollama-gpu-layers", args.ollama_gpu_layers),
+            ("--npu-model-dir", args.npu_model_dir),
+        )
+        if not str(value or "").strip()
+    ]
+    for name, value in (
+        ("--num-ctx", args.num_ctx),
+        ("--max-new-tokens", args.max_new_tokens),
+        ("--npu-hold-seconds", args.npu_hold_seconds),
+        ("--npu-timeout-seconds", args.npu_timeout_seconds),
+    ):
+        if float(value or 0) <= 0:
+            missing.append(name)
+    if missing:
+        parser.error("missing explicit provider coexistence parameter(s): " + ", ".join(missing))
     repo_root = Path(args.repo_root).resolve()
     report = build_report(repo_root, args)
     output = _resolve(repo_root, args.output)
@@ -162,11 +187,12 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "handoff_provider_loop": bool(args.handoff_provider_loop),
         "provider_inactivity_unload_seconds": 120,
         "config_sources": getattr(args, "_config_sources", {}),
-        "standalone_default_fields": [
+        "missing_explicit_fields": [
             key
             for key, source in getattr(args, "_config_sources", {}).items()
-            if source == "standalone_default"
+            if source == "missing_explicit"
         ],
+        "standalone_default_fields": [],
         "coexistence_verified": bool(gpu1["alive_during_coexistence"] and gpu0["alive_during_coexistence"] and npu_alive),
         "requested_provider_model": str(args.gpu1_model or ""),
         "selected_provider_model": str(args.gpu1_model or ""),
@@ -270,11 +296,12 @@ def _blocked_report(repo_root: Path, args: argparse.Namespace, reason: str) -> d
         "handoff_provider_loop": bool(args.handoff_provider_loop),
         "provider_inactivity_unload_seconds": 120,
         "config_sources": getattr(args, "_config_sources", {}),
-        "standalone_default_fields": [
+        "missing_explicit_fields": [
             key
             for key, source in getattr(args, "_config_sources", {}).items()
-            if source == "standalone_default"
+            if source == "missing_explicit"
         ],
+        "standalone_default_fields": [],
         "coexistence_verified": False,
         "requested_provider_model": str(args.gpu1_model or "auto"),
         "model_selection_policy": "provider_model_explicit_required",
@@ -298,15 +325,15 @@ def _start_npu_child(repo_root: Path, args: argparse.Namespace) -> dict[str, Any
     ready_path.parent.mkdir(parents=True, exist_ok=True)
     if ready_path.exists():
         ready_path.unlink()
-        payload = {
-            "repo_root": str(repo_root),
-            "model_dir": args.npu_model_dir,
-            "device": "NPU",
-            "ready_path": str(ready_path),
-            "artifacts_dir": str(ready_path.parent / "provider_role_coexistence_artifacts"),
-            "hold_seconds": max(1.0, float(args.npu_hold_seconds)),
-            "max_new_tokens": max(2, int(args.max_new_tokens)),
-        }
+    payload = {
+        "repo_root": str(repo_root),
+        "model_dir": args.npu_model_dir,
+        "device": "NPU",
+        "ready_path": str(ready_path),
+        "artifacts_dir": str(ready_path.parent / "provider_role_coexistence_artifacts"),
+        "hold_seconds": max(1.0, float(args.npu_hold_seconds)),
+        "max_new_tokens": max(2, int(args.max_new_tokens)),
+    }
     process = subprocess.Popen(
         [str(python_exe), "-m", "ia_carmine.providers.provider_mesh.provider_role_coexistence.cli", "--child-npu"],
         cwd=str(repo_root),

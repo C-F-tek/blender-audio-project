@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 import json
 import re
 import sys
@@ -67,8 +66,9 @@ def read_json_object(path: Path) -> dict[str, Any]:
 
 def load_patch_runner(repo_root: Path) -> tuple[Any, Any]:
     sys.path.insert(0, str(repo_root))
-    module = importlib.import_module("Tools.repo_patch_runner._shared.apply_repo_mods")
-    return module.apply_spec, module.PatchError
+    from ia_carmine._shared.apply_repo_mods import PatchError, apply_spec
+
+    return apply_spec, PatchError
 
 def target_path_error(path: str, repo_root: Path) -> str | None:
     normalized = normalize_repo_path(path)

@@ -124,6 +124,7 @@ def run_smoke() -> dict[str, Any]:
                 args=Namespace(
                     request_file="",
                     rag_db="output/ai_runtime_memory/rag/rag.sqlite",
+                    rag_profile="runtime_code_context",
                     rag_top_k=4,
                     rag_char_budget=8000,
                     rag_embedding_endpoint="mock://fixture",

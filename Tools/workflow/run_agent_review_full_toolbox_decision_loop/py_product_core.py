@@ -47,7 +47,7 @@ def run_post_validation_packet(ctx: WorkflowContext) -> None:
         return
     ctx.run_powershell(
         "Post-validation AI packet",
-        "Tools/workflow/_powershell/run_post_validation_ai_packet.ps1",
+        "ia_carmine/runtime/runtime_tool/broker/registry.py",
         {
             "Profile": "core",
             "ContextFile": existing(

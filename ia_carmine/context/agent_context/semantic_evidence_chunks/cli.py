@@ -53,6 +53,10 @@ def main() -> int:
         help="Optional zip path containing manifest and chunk files.",
     )
     args = parser.parse_args()
+    if not args.no_ollama and (
+        not str(args.ollama_host or "").strip() or not str(args.ollama_model or "").strip()
+    ):
+        parser.error("semantic evidence Ollama mode requires --ollama-host and --ollama-model, or pass --no-ollama")
 
     repo_root = Path(args.repo_root).resolve()
     output_dir = resolve_output_path(repo_root, args.output_dir)

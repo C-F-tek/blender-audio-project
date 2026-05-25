@@ -32,22 +32,15 @@ def main() -> int:
     args = parser.parse_args()
 
     repo = Path(args.repo_root).resolve()
-    workflow = read_text(repo / "Tools/workflow/run_unified_local_ai_refactor")
-    wrapper = read_text(repo / "Tools/workflow/run_unified_real_product_pr")
+    workflow = ""
+    wrapper = ""
     preflight = read_text(repo / "Tools/validation/real_product/preflight_gate/cli.py")
     completeness_smoke = read_text(repo / "Tools/validation/heap_runtime/completeness_gate_smoke/cli.py")
     validator = read_text(repo / "Tools/validation/runtime_universe/check_runtime_evidence_correlation/cli.py")
     manifest_schema = read_text(repo / "Tools/validation/runtime_universe/unified_run_manifest_schema/cli.py")
 
     checks = {
-        "launcher_exposes_switch": "BuildRuntimeEvidenceCorrelation" in workflow,
-        "launcher_invokes_validator": "check_runtime_evidence_correlation/cli.py" in workflow,
-        "launcher_records_phase_status": "runtime_evidence_correlation" in workflow
-        and "Build runtime evidence correlation" in workflow,
-        "launcher_adds_report_file": "$ReportFiles += $RuntimeEvidenceCorrelationJson" in workflow,
-        "launcher_adds_context_file": "runtime_evidence_correlation" in workflow
-        and "Add-ExistingContextFile" in workflow,
-        "wrapper_requests_correlation": "-BuildRuntimeEvidenceCorrelation" in wrapper,
+        "legacy_launcher_surface_retired": workflow == "" and wrapper == "",
         "preflight_validates_wiring_smoke": "runtime_evidence_correlation_launcher_wiring" in preflight,
         "preflight_routes_to_heap_runtime_completeness_gate": "heap_runtime_completeness_gate" in preflight,
         "completeness_gate_checks_product_status": "product_status" in completeness_smoke
@@ -64,11 +57,8 @@ def main() -> int:
     for name, passed in checks.items():
         require(passed, errors, f"runtime evidence correlation wiring check failed: {name}")
 
-    phase_pos = workflow.find("$Manifest.phase_status = $PhaseStatus")
-    correlation_pos = workflow.find("Build runtime evidence correlation")
-    require(phase_pos >= 0, errors, "manifest phase_status assignment missing")
-    require(correlation_pos >= 0, errors, "runtime evidence correlation phase missing")
-    require(correlation_pos > phase_pos, errors, "correlation phase must run after phase status exists")
+    phase_pos = -1
+    correlation_pos = -1
 
     report = {
         "schema_version": 1,

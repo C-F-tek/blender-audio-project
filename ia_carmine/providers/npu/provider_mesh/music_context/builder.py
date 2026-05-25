@@ -36,8 +36,10 @@ def build_music_context(
     analysis_ai_context_path: Path | None = None,
     blender_keyframes_path: Path | None = None,
     run_ollama: bool = False,
-    ollama_model: str = "qwen2.5-coder:14b",
+    ollama_model: str = "",
 ) -> dict:
+    if run_ollama and not str(ollama_model or "").strip():
+        raise ValueError("ollama_model_explicit_required")
     analysis_path = Path(analysis_path or DEFAULT_ANALYSIS).resolve()
     track_summary_path = Path(track_summary_path or DEFAULT_TRACK_SUMMARY).resolve()
     compact_json_path = Path(compact_json_path or DEFAULT_COMPACT_JSON).resolve()

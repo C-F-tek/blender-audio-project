@@ -6,7 +6,7 @@ from pathlib import Path
 
 DEFAULT_TRACK_STEM = "Feel The Light-Luca Vera_Master"
 DEFAULT_WAV_NAME = f"{DEFAULT_TRACK_STEM}.wav"
-DEFAULT_OLLAMA_MODEL = "qwen2.5-coder:14b"
+DEFAULT_OLLAMA_MODEL = ""
 
 
 def default_output_dir(repo_root: Path) -> Path:

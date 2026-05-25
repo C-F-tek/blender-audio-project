@@ -2,14 +2,9 @@
 
 | Family | Context file |
 | --- | --- |
-| PowerShell wrappers | `Tools/npu/_powershell/TOOL_CONTEXT.md` |
-| Dual AI pipeline | `Tools/npu/dual_ai_pipeline/TOOL_CONTEXT.md` |
-| Provider mesh | `Tools/npu/provider_mesh/TOOL_CONTEXT.md` |
+| Retired NPU surface | `Tools/npu/TOOL_CONTEXT.md` |
+| Dual AI implementation modules | `Tools/npu/dual_ai_pipeline/TOOL_CONTEXT.md` |
+| Provider mesh implementation modules | `Tools/npu/provider_mesh/TOOL_CONTEXT.md` |
 
-Canonical command surface:
-
-```powershell
-python -m Tools.npu <tool> [args...]
-```
-
-Public NPU tool names are registered in `Tools/npu/dispatch.py`.
+`Tools.npu` has no public command surface. Select NPU work through explicit
+canonical run flags or broker/helper parameters.

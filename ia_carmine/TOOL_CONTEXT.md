@@ -59,7 +59,6 @@ Representative tools:
 
 ```text
 heap_context_memory_reload
-run_heap_runtime_completeness_gate
 run_heap_code_execution_tool
 run_heap_code_execution_matrix
 run_heap_virtual_dev_environment
@@ -71,6 +70,7 @@ assemble_heap_final_readable_product
 Operational rule:
 
 ```text
+run is the product entrypoint
 provider text != code product
 matrix/lab diff evidence = source for code product
 ```
@@ -109,7 +109,6 @@ Use these when a provider or runtime component must request tool work through a 
 Representative tools:
 
 ```text
-agent_runtime_tool_broker
 runtime_tool_broker
 build_runtime_tool_capability_manifest
 runtime_file_refs

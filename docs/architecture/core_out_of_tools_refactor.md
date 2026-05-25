@@ -135,6 +135,25 @@ Provider checks for this refactor are targeted only:
 Full product runs, full smoke, full toolbox, full GPU/NPU orchestrator runs,
 Blender and FFmpeg are excluded from this refactor acceptance path.
 
+## Current Coherence Guards
+
+The refactor boundary is now guarded by deterministic runtime-universe
+validators:
+
+```powershell
+python -m Tools.validation check_ia_carmine_tools_boundary --repo-root .
+python -m Tools.validation check_dispatcher_targets --repo-root . --all
+python -m Tools.validation check_dispatcher_context_coverage --repo-root .
+python -m Tools.validation check_full_complete_wording_contract --repo-root .
+```
+
+`ToolDispatcher` lives in `ia_carmine._shared.tool_dispatch`; `Tools.*`
+dispatchers import it directly. The previous `Tools/tool_dispatch.py`
+compatibility wrapper has been removed from the active command surface.
+Shared patch runner application logic used by core generated patch-spec review
+lives in `ia_carmine._shared.apply_repo_mods`; `Tools.repo_patch_runner`
+remains the public command wrapper.
+
 ## Validations Executed
 
 | Check | Result |

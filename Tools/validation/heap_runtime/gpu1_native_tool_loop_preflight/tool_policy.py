@@ -5,10 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from ia_carmine._shared.file_backed_transport import MAX_FILE_WINDOW_CHARS
-from Tools.validation.heap_runtime.gpu1_native_tool_loop_preflight.context import (
-    DEFAULT_MEMORY_QUERY,
-)
-
 GPU1_LANE = "gpu1_planner"
 
 
@@ -48,9 +44,9 @@ def normalize_tool_args(
         normalized.setdefault("action", "status")
         normalized.setdefault("scope", "operational")
     if tool == "rag_context_pack":
-        normalized.setdefault("query", DEFAULT_MEMORY_QUERY)
-        normalized.setdefault("top_k", 12)
-        normalized.setdefault("char_budget", 24000)
+        normalized.setdefault("query", str(getattr(runtime_args, "memory_query", "") or ""))
+        normalized.setdefault("top_k", int(getattr(runtime_args, "rag_top_k", 0) or 0))
+        normalized.setdefault("char_budget", int(getattr(runtime_args, "rag_char_budget", 0) or 0))
         normalized.setdefault("allow_missing_query_embedding", "true")
     if tool == "generic_write":
         _normalize_generic_write(normalized, runtime_args, provider_report, broker_report_paths)

@@ -2,7 +2,7 @@
 """Smoke-test external heap launcher command generation.
 
 This smoke does not run providers and does not execute the heap runtime. It only
-checks that profile-driven command generation exposes the expected external heap
+checks that explicit CLI-only command generation exposes the expected external heap
 operator commands and injects an explicitly supplied revision context into the
 reviewable launcher request.
 """
@@ -32,7 +32,90 @@ def env_for(repo_root: Path) -> dict[str, str]:
     env["PYTHONPATH"] = str(repo_root) + (
         os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
     )
+    env["IA_CARMINE_PYTHON"] = sys.executable
     return env
+
+
+def explicit_run_args(revision_context: Path) -> list[str]:
+    return [
+        "--dry-run",
+        "--run-label", "heap_runtime_launcher_command_smoke",
+        "--intermediate-root", "output/validation/heap_runtime_launcher_command_smoke/intermediate",
+        "--final-root", "output/validation/heap_runtime_launcher_command_smoke/final_product",
+        "--objective", "heap runtime launcher command smoke",
+        "--budget-minutes", "5",
+        "--max-iterations", "5",
+        "--min-runtime-rounds", "1",
+        "--min-proposal-iterations", "0",
+        "--max-rounds", "8",
+        "--files-per-round", "4",
+        "--max-provider-revisions", "5",
+        "--timeout-seconds", "600",
+        "--preflight-timeout-seconds", "90",
+        "--revision-context", str(revision_context),
+        "--revision-context-max-tasks", "6",
+        "--provider-model", "explicit_gpu1_model_for_smoke",
+        "--gpu1-base-url", "http://gpu1-ollama.invalid",
+        "--gpu0-model", "explicit_gpu0_model_for_smoke",
+        "--gpu0-base-url", "http://gpu0-ollama.invalid",
+        "--gpu0-vulkan-visible-devices", "1",
+        "--ollama-num-ctx", "16384",
+        "--gpu0-ollama-num-ctx", "2048",
+        "--ollama-gpu-layers", "all",
+        "--ollama-context-candidates", "16384,8192",
+        "--npu-model-dir", "explicit/npu-model",
+        "--max-new-tokens", "900",
+        "--gpu0-max-new-tokens", "96",
+        "--keep-alive", "120s",
+        "--gpu0-iterations", "16",
+        "--gpu0-min-seconds", "0.1",
+        "--npu-micro-start-mode", "deferred",
+        "--npu-micro-timeout-seconds", "60",
+        "--npu-final-wait-seconds", "60",
+        "--npu-max-context-chars", "8000",
+        "--npu-max-prompt-chars", "1200",
+        "--npu-max-new-tokens", "384",
+        "--npu-device-workload-seconds", "3.0",
+        "--npu-device-workload-iterations", "2500",
+        "--startup-max-memory-chars", "32000",
+        "--startup-max-context-files", "48",
+        "--startup-scan-context-files", "48",
+        "--startup-max-chars-per-file", "8000",
+        "--startup-provider-input-workers", "6",
+        "--startup-required-context-profile", "project_self_improvement",
+        "--startup-operational-memory-query", "operator_product_launcher run-unica heap context closure provider lanes",
+        "--startup-operational-memory-limit", "8",
+        "--rag-db", "output/ai_runtime_memory/rag/rag.sqlite",
+        "--rag-profile", "runtime_code_context",
+        "--rag-index-policy", "auto",
+        "--rag-embedding-endpoint", "http://rag-embedding.invalid",
+        "--rag-embedding-model", "bge-m3",
+        "--rag-ingest-batch-size", "8",
+        "--rag-embed-smoke-batch-size", "8",
+        "--rag-chunk-min-chars", "1500",
+        "--rag-chunk-max-chars", "4000",
+        "--rag-chunk-overlap-chars", "300",
+        "--rag-max-file-size", "250000",
+        "--rag-top-k", "20",
+        "--rag-char-budget", "32000",
+        "--context-document-count", "24",
+        "--context-document-preview-chars", "1200",
+        "--semantic-code-chunk-limit", "32",
+        "--semantic-code-chunk-preview-chars", "1400",
+        "--semantic-evidence-chunk-limit", "24",
+        "--memory-search-limit", "12",
+        "--tool-catalog-limit", "80",
+        "--tool-inventory-roots", "Tools,ia_carmine",
+        "--semantic-path-boosts", "ia_carmine/runtime/heap_gate,ia_carmine/runtime/run,ia_carmine/context,Tools/validation",
+        "--ai-context-pack-profile", "core_ai_backend",
+        "--code-interpreter-inputs", "ia_carmine,Tools,docs",
+        "--duplication-audit-roots", "ia_carmine,Tools",
+        "--provider-prompt-tool-catalog-cap", "80",
+        "--max-degraded-lanes", "0",
+        "--allow-provider-generation",
+        "--require-ollama-gpu-residency",
+        "--allow-npu-device-workload",
+    ]
 
 
 def run(command: list[str], repo_root: Path) -> dict[str, Any]:
@@ -161,11 +244,9 @@ def main() -> int:
         "run",
         "--repo-root",
         ".",
-        "--profile",
-        "balanced_external_heap",
-        "--revision-context",
-        str(fixture_path),
-        "--dry-run",
+        "--request-file",
+        "docs/README.md",
+        *explicit_run_args(fixture_path),
         "--effective-config-output",
         str(output_json),
     ]
@@ -187,13 +268,14 @@ def main() -> int:
         {"name": "command_builder_returncode_zero", "passed": result.get("passed") is True},
         {"name": "canonical_run_plan_schema", "passed": payload.get("kind") == "operator_universe_run_plan"},
         {
-            "name": "profile_balanced",
-            "passed": field_sources.get("provider_model") == "profile:balanced_external_heap"
-            and effective.get("max_rounds") == 12,
+            "name": "explicit_cli_config_used",
+            "passed": field_sources.get("provider_model") == "cli_arg"
+            and effective.get("max_rounds") == 8,
         },
         {
             "name": "retired_launcher_command_not_used",
-            "passed": "heap_runtime_launcher_command" not in " ".join(command),
+            "passed": "heap_runtime_launcher_command.py" not in " ".join(command)
+            and "run_heap_runtime_launcher_command" not in " ".join(command),
         },
         {
             "name": "revision_context_selection_explicit",
@@ -231,7 +313,7 @@ def main() -> int:
         },
         {
             "name": "main_command_targets_heap_closure",
-            "passed": "-m ia_carmine.cli heap_context_closure" in generated_command,
+            "passed": "-m ia_carmine.runtime.heap_context_closure.cli" in generated_command,
         },
         {
             "name": "provider_flags_are_unified",

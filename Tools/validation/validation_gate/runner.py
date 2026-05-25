@@ -10,6 +10,8 @@ from typing import Any
 
 from .models import GateStep
 
+INTERNAL_DISPATCH_ENV = "IA_CARMINE_ALLOW_INTERNAL_DISPATCH"
+
 
 def repo_path(repo_root: Path, value: str) -> Path:
     path = Path(value)
@@ -53,7 +55,11 @@ def run_command(step: GateStep, repo_root: Path, *, dry_run: bool) -> dict[str, 
                 capture_output=True,
                 timeout=step.timeout_seconds,
                 check=False,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                env={
+                    **os.environ,
+                    "PYTHONIOENCODING": "utf-8",
+                    INTERNAL_DISPATCH_ENV: "1",
+                },
             )
             result["returncode"] = completed.returncode
             result["stdout_tail"] = (completed.stdout or "")[-12000:]

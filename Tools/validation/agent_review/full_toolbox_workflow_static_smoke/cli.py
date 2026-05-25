@@ -17,7 +17,7 @@ except ImportError:
         write_text_report,
     )
 
-DEFAULT_WORKFLOW = "Tools/workflow/_powershell/run_agent_review_full_toolbox_decision_loop.ps1"
+DEFAULT_WORKFLOW = "python -m ia_carmine.cli run [explicit flags...]"
 DEFAULT_OUTPUT = "output/validation/agent_review_full_toolbox_workflow_static_smoke.json"
 DEFAULT_MARKDOWN = "output/validation/agent_review_full_toolbox_workflow_static_smoke.md"
 

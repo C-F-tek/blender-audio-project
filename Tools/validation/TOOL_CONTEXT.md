@@ -18,12 +18,10 @@ The source of truth for public validation tool names is `Tools/validation/dispat
 
 Use these when a workflow needs one repeatable entry point for a known suite.
 
-Representative tools:
+Public entrypoint:
 
 ```text
-run_validation_gate
-run_core_runtime_guard_suite
-check_validation_report_contract
+validator_unico
 ```
 
 The gate should aggregate evidence, not hide failing details. A passing gate proves only the checked contract, not the entire product.
@@ -32,17 +30,10 @@ The gate should aggregate evidence, not hide failing details. A passing gate pro
 
 Use these to verify startup, heap closure, source allowlists, terminal invariants, code execution and virtual development environment behavior.
 
-Representative tools:
+Public smoke entrypoint:
 
 ```text
-run_heap_runtime_completeness_gate_smoke
-run_heap_code_execution_tool_smoke
-run_heap_virtual_dev_environment_smoke
-run_heap_final_readable_product_smoke
-run_heap_file_backed_request_startup_smoke
-run_heap_source_allowlist_contract_smoke
-run_heap_source_anchor_priority_smoke
-run_heap_gate_terminal_invariants_smoke
+smoke_unico
 ```
 
 Expected checks:
@@ -59,7 +50,7 @@ final readable product is assembled from validated evidence
 
 Use these for lifecycle, observer, manifest, correlation and unified-chain contracts.
 
-Representative tools:
+Internal examples:
 
 ```text
 run_runtime_universe_smoke
@@ -76,7 +67,7 @@ These tools should prevent drift between declared run manifests, actual outputs 
 
 Use these to validate broker dispatch, provider tool loops, runtime file refs, NPU/GPU tool context and runtime tool capability contracts.
 
-Representative tools:
+Internal examples:
 
 ```text
 run_agent_runtime_tool_broker_smoke

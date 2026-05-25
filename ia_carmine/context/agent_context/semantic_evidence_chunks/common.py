@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import re
 import sys
 from datetime import datetime
@@ -11,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         resolve_output_path,
         write_json_report,
         write_text_report,
@@ -20,7 +19,7 @@ except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation._shared.report_utils import (  # type: ignore
+    from ia_carmine._shared.report_io import (  # type: ignore
         resolve_output_path,
         write_json_report,
         write_text_report,
@@ -29,8 +28,8 @@ except ImportError:
 DEFAULT_OUTPUT_DIR = "docs/LOCAL_VALIDATION_EVIDENCE"
 DEFAULT_CHUNK_MAX_CHARS = 12000
 DEFAULT_CHUNK_OVERLAP_LINES = 12
-DEFAULT_OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:14b")
-DEFAULT_OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http:/127.0.0.1:11434")
+DEFAULT_OLLAMA_MODEL = ""
+DEFAULT_OLLAMA_HOST = ""
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")

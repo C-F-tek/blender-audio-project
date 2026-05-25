@@ -145,14 +145,18 @@ def run_ollama_music_agent(
     fallback_context_json: Path | str = DEFAULT_MUSIC_CONTEXT_JSON,
     out_json: Path | str = DEFAULT_OUT_JSON,
     out_md: Path | str = DEFAULT_OUT_MD,
-    model: str = "qwen2.5-coder:14b",
+    model: str = "",
     base_url: str | None = None,
-    keep_alive: str = "5m",
+    keep_alive: str = "",
     max_new_tokens: int = 1800,
     temperature: float = 0.12,
     keep_server: bool = False,
     keep_model: bool = False,
 ) -> dict:
+    if not str(model or "").strip():
+        raise ValueError("ollama_model_explicit_required")
+    if not str(keep_alive or "").strip():
+        raise ValueError("ollama_keep_alive_explicit_required")
     context_path = Path(context_json)
     if not context_path.exists():
         context_path = Path(fallback_context_json)
@@ -214,14 +218,25 @@ def main() -> None:
     parser.add_argument("--fallback-context-json", default=str(DEFAULT_MUSIC_CONTEXT_JSON))
     parser.add_argument("--out-json", default=str(DEFAULT_OUT_JSON))
     parser.add_argument("--out-md", default=str(DEFAULT_OUT_MD))
-    parser.add_argument("--model", default="qwen2.5-coder:14b")
-    parser.add_argument("--base-url", default=None)
-    parser.add_argument("--keep-alive", default="5m")
-    parser.add_argument("--max-new-tokens", type=int, default=1800)
+    parser.add_argument("--model", default="")
+    parser.add_argument("--base-url", default="")
+    parser.add_argument("--keep-alive", default="")
+    parser.add_argument("--max-new-tokens", type=int, default=0)
     parser.add_argument("--temperature", type=float, default=0.12)
     parser.add_argument("--keep-server", action="store_true")
     parser.add_argument("--keep-model", action="store_true")
     args = parser.parse_args()
+    missing = []
+    if not str(args.model or "").strip():
+        missing.append("--model")
+    if not str(args.base_url or "").strip():
+        missing.append("--base-url")
+    if not str(args.keep_alive or "").strip():
+        missing.append("--keep-alive")
+    if int(args.max_new_tokens or 0) <= 0:
+        missing.append("--max-new-tokens")
+    if missing:
+        parser.error("missing explicit Ollama music agent parameter(s): " + ", ".join(missing))
 
     run_ollama_music_agent(
         context_json=args.context_json,

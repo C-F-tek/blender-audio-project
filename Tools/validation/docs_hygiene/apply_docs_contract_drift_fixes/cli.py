@@ -59,7 +59,7 @@ source_writes_performed=false
 NPU review metadata can be emitted without provider loading:
 
 ```powershell
-python -m Tools.npu run_npu_review --metadata-only --metadata-out ./output/validation/npu_review_metadata.json
+python -m ia_carmine.cli runtime_tool_broker --tool npu_review --mode metadata --metadata-out ./output/validation/npu_review_metadata.json
 ```
 
 The `npu_review_metadata` sidecar records advisory role and quality-gate status.
@@ -100,7 +100,7 @@ NPU/OpenVINO reports classified unusable_output are excluded from advisory conte
 File pattern:
 output/validation/npu_review_metadata.json
 Producer:
-python -m Tools.npu run_npu_review --metadata-out
+python -m ia_carmine.cli runtime_tool_broker --tool npu_review --mode metadata --metadata-out
 Consumer:
 validation report contract checks, workload-gate reviewers and local AI handoffs.
 Required fields:

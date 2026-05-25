@@ -56,6 +56,8 @@ def run_step(repo_root: Path, name: str, script: str, output_dir: Path, timeout:
     env = dict(os.environ)
     env["PYTHONPATH"] = str(repo_root)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["IA_CARMINE_ALLOW_INTERNAL_DISPATCH"] = "1"
+    env["IA_CARMINE_PYTHON"] = sys.executable
     completed = subprocess.run(
         command,
         cwd=repo_root,
@@ -116,6 +118,13 @@ def main() -> int:
     )
     parser.add_argument("--step-output-dir", default="output/validation/core_runtime_guard_suite")
     parser.add_argument("--timeout-seconds", type=int, default=180)
+    parser.add_argument(
+        "--section",
+        action="append",
+        default=[],
+        help="Optional discovered smoke name/path fragment to run. Omit to run all discovered guard smokes.",
+    )
+    parser.add_argument("--list", action="store_true")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -125,6 +134,26 @@ def main() -> int:
     step_output_dir.mkdir(parents=True, exist_ok=True)
 
     discovered_steps = discover_core_steps(repo_root)
+    sections = [str(item).strip() for item in args.section or [] if str(item).strip()]
+    if sections:
+        discovered_steps = [
+            item
+            for item in discovered_steps
+            if any(section in item[0] or section in item[1] for section in sections)
+        ]
+    if args.list:
+        report = {
+            "schema_version": 1,
+            "kind": "core_runtime_guard_suite_registry",
+            "repo_root": repo_root.as_posix(),
+            "sections": sections,
+            "steps": [
+                {"name": name, "script": script}
+                for name, script in discovered_steps
+            ],
+        }
+        print(write_json_report(report, None), end="")
+        return 0
     steps = [
         run_step(repo_root, name, script, step_output_dir, args.timeout_seconds)
         for name, script in discovered_steps

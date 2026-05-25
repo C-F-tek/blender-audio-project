@@ -9,7 +9,7 @@ from typing import Any
 
 from ia_carmine._shared.live_flow_monitor import run_monitored_command
 from ia_carmine.runtime.heap_context_closure.common import terminate_provider_launch_manifest_processes
-from Tools.validation._shared.codex_failure_counters import (
+from ia_carmine._shared.codex_failure_counters import (
     apply_codex_failure_counter_updates,
     classify_codex_failure_counters,
 )
@@ -231,6 +231,7 @@ def analyze_code_product(
     apply_safe: bool = False,
     require_all_integrated: bool = False,
     timeout: int | None = None,
+    python_exe: str = "",
 ) -> dict[str, Any]:
     tool_root = Path(__file__).resolve().parents[3]
     output = output_dir / (
@@ -238,7 +239,7 @@ def analyze_code_product(
     )
     markdown = output.with_suffix(".md")
     command = [
-        resolve_project_python(repo_root),
+        resolve_project_python(repo_root, python_exe),
         "-m",
         "ia_carmine.product.code_product.artifact_intake",
         "--repo-root",

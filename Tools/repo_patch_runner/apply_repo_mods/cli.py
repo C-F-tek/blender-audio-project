@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from Tools.repo_patch_runner._shared.apply_repo_mods import (
+from ia_carmine._shared.apply_repo_mods import (
     PatchError,
     _resolve_repo_root,
     _run_git_diff,

@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import argparse
 
-from .common import DEFAULT_MODE_NAME
 from .runner import run_contract
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--stamp", required=True)
-    parser.add_argument("--mode-name", default=DEFAULT_MODE_NAME)
+    parser.add_argument("--mode-name", required=True)
     parser.add_argument("--manifest", default="")
     parser.add_argument("--official-report", default="")
     parser.add_argument("--gpu0-report", default="")

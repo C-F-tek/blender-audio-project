@@ -2,22 +2,19 @@
 
 ## Role
 
-`Tools/workflow/gui` contains the workflow GUI entrypoint registered by `Tools/workflow/dispatch.py`.
+`Tools/workflow/gui` contains retired GUI implementation modules.
 
 The GUI is an operator-facing view/controller surface for workflow launch tasks.
 
 ## Responsibilities
 
 - Provide visual workflow launcher access.
-- Keep GUI entrypoint discoverable via `python -m Tools.workflow gui` or `python -m Tools.workflow workflow_gui`.
+- Do not expose GUI modules as standalone workflow dispatcher commands.
 - Delegate workflow behavior to maintained workflow/runtime packages.
 
 ## Representative commands
 
-```powershell
-python -m Tools.workflow gui
-python -m Tools.workflow workflow_gui
-```
+The public runtime entrypoint remains `python -m ia_carmine.cli run`.
 
 ## Boundaries
 

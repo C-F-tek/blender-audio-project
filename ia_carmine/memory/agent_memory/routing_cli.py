@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from Tools.validation._shared.report_utils import write_json_report
+from ia_carmine._shared.report_io import write_json_report
 
 from .common import resolve_repo_path
 from .routing_requests import DEFAULT_BROKER_REQUEST, DEFAULT_MARKDOWN, DEFAULT_OUTPUT

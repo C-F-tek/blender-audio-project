@@ -7,7 +7,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from Tools.validation._shared.report_utils import resolve_output_path
+from ia_carmine._shared.report_io import resolve_output_path
 
 from .common import (
     CANONICAL_COMPONENTS,

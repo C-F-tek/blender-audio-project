@@ -83,8 +83,8 @@ def build_proposals(
                     "If not legitimate, keep it blocked and document why.",
                 ],
                 validation=[
-                    "python -m Tools.npu build_runtime_output_manifest --repo-root . --output .\\output\\validation\\npu_runtime_output_manifest.json",
-                    "python -m Tools.workflow run_npu_pipeline_helper_validation",
+                    "python -m ia_carmine.cli runtime_tool_broker --tool build_runtime_output_manifest --mode report --repo-root . --output .\\output\\validation\\npu_runtime_output_manifest.json",
+                    "python -m Tools.validation validator_unico --mode quick --section provider_result_parsing",
                 ],
                 stop_conditions=[
                     "A blocked path points to source code, full analysis JSON or an unreviewed generated destination."
@@ -106,7 +106,7 @@ def build_proposals(
                     rationale="One or more local AI resource lanes are unavailable or not ready. Keeping this as observability improves future parallel pipeline work.",
                     target_files=[
                         "ia_carmine/providers/provider_mesh/local_resource_lanes_check/cli.py",
-                        "Tools/workflow/_powershell/run_post_validation_ai_packet.ps1",
+                        "ia_carmine/runtime/runtime_tool/broker/registry.py",
                         "Tools/validation/CONTEXT_INDEX.md",
                     ],
                     change_type="preflight_hardening",
@@ -118,7 +118,7 @@ def build_proposals(
                     ],
                     validation=[
                         "python -m ia_carmine.cli check_local_resource_lanes --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md",
-                        "python -m Tools.workflow run_post_validation_ai_packet -Profile npu -ReportFile output/validation/local_ai_resource_lanes.json",
+                        "python -m ia_carmine.cli runtime_tool_broker --tool repository_update_suggestions --mode report --input output/validation/local_ai_resource_lanes.json",
                     ],
                     stop_conditions=[
                         "A lane probe would need long generation, Blender execution, GPU render or provider behavior changes."
@@ -148,7 +148,7 @@ def build_proposals(
                 ],
                 validation=[
                     "python -m Tools.validation check_validation_report_contract --repo-root . --output .\\output\\validation\\validation_report_contract.json",
-                    "python -m Tools.workflow run_local_validation_after_refactor -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2",
+                    "python -m Tools.validation validator_unico --mode all",
                 ],
                 stop_conditions=[
                     "A proposed normalization would change the meaning of existing report fields."

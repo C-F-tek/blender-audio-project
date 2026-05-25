@@ -16,14 +16,10 @@ def _parameters_source(field_sources: dict[str, Any]) -> str:
         for value in field_sources.values()
         if str(value or "").strip() and str(value or "").strip() != "optional_unset"
     }
-    has_cli = "cli_arg" in values
-    has_profile = any(value.startswith("profile:") for value in values)
-    if has_cli and has_profile:
-        return "profile_plus_explicit_cli_surface_with_visible_effective_config"
-    if has_profile:
-        return "profile_surface_with_visible_effective_config"
-    if has_cli:
+    if values == {"cli_arg"}:
         return "explicit_cli_surface_with_visible_effective_config"
+    if "cli_arg" in values:
+        return "explicit_cli_surface_with_unresolved_optional_config"
     return "unresolved_config_surface"
 
 

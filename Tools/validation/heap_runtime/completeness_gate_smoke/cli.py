@@ -75,6 +75,7 @@ def run_gate(
     stamp: str,
     timeout_seconds: int,
     max_iterations: int,
+    budget_minutes: int,
     provider_model: str,
     allow_provider_generation: bool,
     operator_intent: bool,
@@ -86,6 +87,7 @@ def run_gate(
     )
     run_dir.mkdir(parents=True, exist_ok=True)
     output = run_dir / "heap_runtime_completeness_gate_report.json"
+    markdown = run_dir / "heap_runtime_completeness_gate_report.md"
     child_python, env = provider_child_python_and_env(repo_root)
     command = [
         child_python,
@@ -94,18 +96,28 @@ def run_gate(
         ".",
         "--stamp",
         f"{label}_{stamp}",
+        "--objective",
+        "complete heap runtime gate smoke",
         "--output-dir",
         run_dir.as_posix(),
+        "--output",
+        output.as_posix(),
+        "--markdown-output",
+        markdown.as_posix(),
         "--max-iterations",
         str(max_iterations),
         "--budget-minutes",
-        "5",
+        str(budget_minutes),
         "--max-rounds",
         str(max_iterations),
         "--timeout-seconds",
         str(timeout_seconds),
         "--provider-model",
         provider_model,
+        "--npu-micro-start-mode",
+        "deferred",
+        "--max-degraded-lanes",
+        "0",
     ]
     if allow_provider_generation:
         command.append("--allow-provider-generation")
@@ -223,7 +235,8 @@ def main() -> int:
         "--markdown-output", default="output/validation/heap_runtime_completeness_gate_smoke.md"
     )
     parser.add_argument("--timeout-seconds", type=int, default=0)
-    parser.add_argument("--provider-model", default="qwen2.5-coder:14b")
+    parser.add_argument("--provider-model", default="")
+    parser.add_argument("--budget-minutes", type=int, default=0)
     parser.add_argument("--max-iterations", type=int, default=1)
     parser.add_argument("--idle-stall-seconds", type=int, default=0)
     parser.add_argument("--contract-only", action="store_true")
@@ -271,6 +284,13 @@ def main() -> int:
         write_text_report(render_markdown(report), markdown)
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 0 if report["passed"] else 2
+    missing = []
+    if not str(args.provider_model or "").strip() or str(args.provider_model or "").strip().lower() == "auto":
+        missing.append("--provider-model")
+    if int(args.budget_minutes or 0) <= 0:
+        missing.append("--budget-minutes")
+    if missing:
+        parser.error("missing explicit runtime completeness gate smoke parameter(s): " + ", ".join(missing))
 
     request_text = complete_smoke_request(repo_root)
     runs: list[dict[str, Any]] = []
@@ -283,6 +303,7 @@ def main() -> int:
             stamp,
             args.timeout_seconds,
             max_iterations=max(1, int(args.max_iterations)),
+            budget_minutes=int(args.budget_minutes),
             provider_model=args.provider_model,
             allow_provider_generation=True,
             operator_intent=True,

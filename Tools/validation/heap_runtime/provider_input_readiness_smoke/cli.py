@@ -34,6 +34,10 @@ class _Args:
     code_interpreter_inputs = "ia_carmine,Tools"
     duplication_audit_roots = "ia_carmine,Tools"
     ai_context_pack_profile = "core_ai_backend"
+    rag_profile = "runtime_code_context"
+    rag_db = "output/ai_runtime_memory/rag/rag.sqlite"
+    rag_embedding_endpoint = "mock://fixture"
+    rag_embedding_model = "bge-m3"
     timeout_seconds = 120
 
 

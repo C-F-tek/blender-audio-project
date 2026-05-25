@@ -7,7 +7,7 @@ remaining maintained tools fall back to ``Tools.validation.<tool>:main``.
 
 from pathlib import Path
 
-from Tools.tool_dispatch import ToolDispatcher
+from ia_carmine._shared.tool_dispatch import INTERNAL, PUBLIC, ToolDispatcher
 
 TOOL_MAIN_TARGETS: dict[str, str] = {
     "check_ia_carmine_core_refactor_imports": "Tools.validation.core_refactor.import_compat_smoke.cli:main",
@@ -79,7 +79,9 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_heap_provider_peer_review_events_scope_smoke": "Tools.validation.heap_provider.peer_review_events_scope_smoke.cli:main",
     "run_gpu1_native_tool_loop_preflight": "Tools.validation.heap_runtime.gpu1_native_tool_loop_preflight.cli:main",
     "check_gpu1_one_turn_runtime_gate": "Tools.validation.heap_runtime.gpu1_one_turn_runtime_gate.cli:main",
-    "run_heap_runtime_completeness_gate_smoke": "Tools.validation.heap_runtime.completeness_gate_smoke.cli:main",
+    "run_runtime_tool_cycle_contract_smoke": "Tools.validation.heap_runtime.run_runtime_tool_cycle_contract_smoke.cli:main",
+    "run_gpu1_tool_mpc_governor_smoke": "Tools.validation.heap_runtime.run_gpu1_tool_mpc_governor_smoke.cli:main",
+    "run_heap_final_decision_trace_smoke": "Tools.validation.heap_runtime.run_heap_final_decision_trace_smoke.cli:main",
     "run_provider_boot_gate_smoke": "Tools.validation.heap_runtime.provider_boot_gate_smoke.cli:main",
     "run_provider_loop_activation_smoke": "Tools.validation.heap_runtime.provider_loop_activation_smoke.cli:main",
     "run_heap_runtime_launcher_command_smoke": "Tools.validation.heap_runtime.launcher_command_smoke.cli:main",
@@ -103,7 +105,6 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_real_product_intrinsic_capability_contract_smoke": "Tools.validation.real_product.intrinsic_capability_contract_smoke.cli:main",
     "run_real_product_preflight_gate": "Tools.validation.real_product.preflight_gate.cli:main",
     "run_real_product_preflight_gate_smoke": "Tools.validation.real_product.preflight_gate_smoke.cli:main",
-    "run_real_product_profile_smoke": "Tools.validation.real_product.profile_smoke.cli:main",
     "run_real_product_runtime_mesh_contract_smoke": "Tools.validation.real_product.runtime_mesh_contract_smoke.cli:main",
     "run_real_product_single_entry_exit_smoke": "Tools.validation.real_product.single_entry_exit_smoke.cli:main",
     "run_prepare_review_pr_auto_include_smoke": "Tools.validation.repository_product.prepare_review_pr_auto_include_smoke.cli:main",
@@ -133,6 +134,8 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_unified_run_observer_smoke": "Tools.validation.runtime_universe.unified_run_observer_smoke.cli:main",
     "test_npu_pipeline_helpers": "Tools.validation.pipeline.test_npu_pipeline_helpers.cli:main",
     "unified_chain_contract": "Tools.validation.runtime_universe.unified_chain_contract.cli:main",
+    "validation_gate": "Tools.validation.validation_gate.cli:main",
+    "validator_unico": "Tools.validation.validation_gate.cli:main",
     "apply_docs_contract_drift_fixes": "Tools.validation.docs_hygiene.apply_docs_contract_drift_fixes.cli:main",
     "build_python_line_count_csv": "Tools.validation.docs_hygiene.build_python_line_count_csv.cli:main",
     "build_script_inventory": "Tools.validation.docs_hygiene.build_script_inventory.cli:main",
@@ -152,6 +155,10 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "check_agent_memory_policy": "Tools.validation.agent_memory.check_agent_memory_policy.cli:main",
     "check_ai_model_json": "Tools.validation.pipeline.check_ai_model_json.cli:main",
     "check_core_activation_agnostic_contract": "Tools.validation.runtime_universe.check_core_activation_agnostic_contract.cli:main",
+    "check_ia_carmine_tools_boundary": "Tools.validation.runtime_universe.check_ia_carmine_tools_boundary.cli:main",
+    "check_dispatcher_targets": "Tools.validation.runtime_universe.check_dispatcher_targets.cli:main",
+    "check_dispatcher_context_coverage": "Tools.validation.runtime_universe.check_dispatcher_context_coverage.cli:main",
+    "check_full_complete_wording_contract": "Tools.validation.runtime_universe.check_full_complete_wording_contract.cli:main",
     "check_execution_plan_status": "Tools.validation.runtime_universe.check_execution_plan_status.cli:main",
     "check_full_context_golden_docs_contract": "Tools.validation.agent_context.check_full_context_golden_docs_contract.cli:main",
     "check_full_context_golden_proposals": "Tools.validation.agent_context.check_full_context_golden_proposals.cli:main",
@@ -169,6 +176,7 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_code_edit_proposal_smoke": "Tools.validation.patch_product.run_code_edit_proposal_smoke.cli:main",
     "run_code_product_artifact_intake_smoke": "Tools.validation.code_product.run_code_product_artifact_intake_smoke.cli:main",
     "run_core_runtime_guard_suite": "Tools.validation.runtime_universe.run_core_runtime_guard_suite.cli:main",
+    "smoke_unico": "Tools.validation.runtime_universe.run_core_runtime_guard_suite.cli:main",
     "run_deterministic_recommendation_synthesizer_smoke": "Tools.validation.deterministic_recommendations.run_deterministic_recommendation_synthesizer_smoke.cli:main",
     "run_heap_file_backed_request_startup_smoke": "Tools.validation.heap_runtime.run_heap_file_backed_request_startup_smoke.cli:main",
     "run_heap_final_readable_product_smoke": "Tools.validation.heap_runtime.run_heap_final_readable_product_smoke.cli:main",
@@ -202,10 +210,19 @@ TOOL_MAIN_TARGETS: dict[str, str] = {
     "run_startup_check_cli_contract_smoke": "Tools.validation.workflow_run.run_startup_check_cli_contract_smoke.cli:main",
     "run_substantive_planning_smoke": "Tools.validation.agent_context.run_substantive_planning_smoke.cli:main",
     "test_composer_decision": "Tools.validation.heap_final_proposals.test_composer_decision.cli:main",
+    "test_unico": "Tools.validation.heap_final_proposals.test_composer_decision.cli:main",
     "test_proposal_gate": "Tools.validation.heap_final_proposals.test_proposal_gate.cli:main",
 }
 
 LEGACY_NON_RUN_UNICA_VALIDATION_COMMANDS: frozenset[str] = frozenset()
+TOOL_VISIBILITY: dict[str, str] = {name: INTERNAL for name in TOOL_MAIN_TARGETS}
+TOOL_VISIBILITY.update(
+    {
+        "validator_unico": PUBLIC,
+        "smoke_unico": PUBLIC,
+        "test_unico": PUBLIC,
+    }
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -214,4 +231,6 @@ def main(argv: list[str] | None = None) -> int:
         package_dir=Path(__file__).resolve().parent,
         targets=TOOL_MAIN_TARGETS,
         label="validation",
+        visibility=TOOL_VISIBILITY,
+        default_visibility=INTERNAL,
     ).main(argv)

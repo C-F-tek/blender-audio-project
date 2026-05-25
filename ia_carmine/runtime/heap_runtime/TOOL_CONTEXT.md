@@ -32,10 +32,11 @@ This area bridges runtime orchestration and deterministic product evidence.
 
 ## Typical tool surface
 
-Use via dispatcher:
+Operator product runs use `python -m ia_carmine.cli run ...`. The heap
+runtime gate is invoked internally by the run/closure path, not as an alternate
+public product command.
 
 ```powershell
-python -m ia_carmine.cli run_heap_runtime_completeness_gate ...
 python -m ia_carmine.cli run_heap_code_execution_tool ...
 python -m ia_carmine.cli run_heap_code_execution_matrix ...
 python -m ia_carmine.cli run_heap_virtual_dev_environment ...

@@ -19,6 +19,7 @@ def run(repo_root: Path, command: list[str]) -> dict[str, Any]:
     env["PYTHONPATH"] = str(repo_root) + (
         os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
     )
+    env["IA_CARMINE_PYTHON"] = sys.executable
     completed = subprocess.run(
         command,
         cwd=repo_root,
@@ -72,10 +73,27 @@ def main() -> int:
     )
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
-    base = [sys.executable, "-m", "ia_carmine.cli", "run", "--repo-root", "."]
+    base = [
+        sys.executable,
+        "-m",
+        "ia_carmine.cli",
+        "run",
+        "--repo-root",
+        ".",
+        "--request-file",
+        "docs/README.md",
+    ]
     missing = run(repo_root, [*base, "--dry-run"])
     explicit_args = [
         "--dry-run",
+        "--run-label",
+        "universe_config_resolver_smoke",
+        "--intermediate-root",
+        "output/validation/universe_config_resolver_smoke/intermediate",
+        "--final-root",
+        "output/validation/universe_config_resolver_smoke/final_product",
+        "--objective",
+        "universe config resolver smoke",
         "--budget-minutes",
         "5",
         "--max-iterations",
@@ -95,17 +113,17 @@ def main() -> int:
         "--preflight-timeout-seconds",
         "90",
         "--revision-context",
-        "auto_latest",
+        "off",
         "--revision-context-max-tasks",
         "6",
         "--provider-model",
-        "qwen2.5-coder:14b",
+        "explicit_gpu1_model_for_smoke",
         "--gpu1-base-url",
-        "http://127.0.0.1:11434",
+        "http://gpu1-ollama.invalid",
         "--gpu0-model",
-        "qwen3:1.7b",
+        "explicit_gpu0_model_for_smoke",
         "--gpu0-base-url",
-        "http://127.0.0.1:11435",
+        "http://gpu0-ollama.invalid",
         "--gpu0-vulkan-visible-devices",
         "1",
         "--ollama-num-ctx",
@@ -115,9 +133,9 @@ def main() -> int:
         "--ollama-gpu-layers",
         "all",
         "--ollama-context-candidates",
-        "8192,4096",
+        "16384,8192",
         "--npu-model-dir",
-        "C:/explicit/npu-model",
+        "explicit/npu-model",
         "--max-new-tokens",
         "900",
         "--gpu0-max-new-tokens",
@@ -162,10 +180,12 @@ def main() -> int:
         "8",
         "--rag-db",
         "output/ai_runtime_memory/rag/rag.sqlite",
+        "--rag-profile",
+        "runtime_code_context",
         "--rag-index-policy",
         "auto",
         "--rag-embedding-endpoint",
-        "http://127.0.0.1:11434",
+        "http://rag-embedding.invalid",
         "--rag-embedding-model",
         "bge-m3",
         "--rag-ingest-batch-size",
@@ -220,6 +240,24 @@ def main() -> int:
         repo_root,
         [*base, *explicit_args],
     )
+    false_bool_args = [
+        item
+        for item in explicit_args
+        if item
+        not in {
+            "--allow-provider-generation",
+            "--require-ollama-gpu-residency",
+            "--allow-npu-device-workload",
+        }
+    ]
+    false_bool_args.extend(
+        [
+            "--no-allow-provider-generation",
+            "--no-require-ollama-gpu-residency",
+            "--no-allow-npu-device-workload",
+        ]
+    )
+    resolved_false_booleans = run(repo_root, [*base, *false_bool_args])
     rejected_config_result = run(repo_root, [*base, "--dry-run", "--operator-config", "x.json"])
     operator_mixed_local_result = run(
         repo_root,
@@ -255,6 +293,21 @@ def main() -> int:
     effective = (
         payload.get("effective_universe_config")
         if isinstance(payload.get("effective_universe_config"), dict)
+        else {}
+    )
+    false_bool_payload = (
+        resolved_false_booleans.get("payload")
+        if isinstance(resolved_false_booleans.get("payload"), dict)
+        else {}
+    )
+    false_bool_sources = (
+        false_bool_payload.get("field_sources")
+        if isinstance(false_bool_payload.get("field_sources"), dict)
+        else {}
+    )
+    false_bool_effective = (
+        false_bool_payload.get("effective_universe_config")
+        if isinstance(false_bool_payload.get("effective_universe_config"), dict)
         else {}
     )
     profile_effective = (
@@ -329,7 +382,7 @@ def main() -> int:
             and sources.get("npu_micro_start_mode") == "cli_arg"
             and sources.get("npu_final_wait_seconds") == "cli_arg"
             and sources.get("max_degraded_lanes") == "cli_arg"
-            and effective.get("provider_model") == "qwen2.5-coder:14b"
+            and effective.get("provider_model") == "explicit_gpu1_model_for_smoke"
             and effective.get("files_per_round") == 4
             and effective.get("gpu0_ollama_num_ctx") == 2048
             and effective.get("npu_micro_start_mode") == "deferred"
@@ -337,52 +390,19 @@ def main() -> int:
             and effective.get("max_degraded_lanes") == 0,
         },
         {
-            "name": "profile_surface_resolves_without_hidden_defaults",
-            "passed": profile_result["returncode"] == 0
-            and profile_sources.get("provider_model") == "profile:balanced_external_heap"
-            and profile_sources.get("files_per_round") == "profile:balanced_external_heap"
-            and profile_sources.get("gpu0_ollama_num_ctx") == "profile:balanced_external_heap"
-            and profile_sources.get("npu_micro_start_mode") == "profile:balanced_external_heap"
-            and profile_sources.get("npu_final_wait_seconds") == "profile:balanced_external_heap"
-            and profile_sources.get("max_degraded_lanes") == "profile:balanced_external_heap"
-            and profile_effective.get("provider_model") == "qwen3-coder:latest"
-            and profile_effective.get("files_per_round") == 4
-            and profile_effective.get("npu_micro_start_mode") == "deferred",
+            "name": "no_profile_required_false_booleans_are_expressible",
+            "passed": resolved_false_booleans["returncode"] == 0
+            and false_bool_sources.get("allow_provider_generation") == "cli_arg"
+            and false_bool_sources.get("require_ollama_gpu_residency") == "cli_arg"
+            and false_bool_sources.get("allow_npu_device_workload") == "cli_arg"
+            and false_bool_effective.get("allow_provider_generation") is False
+            and false_bool_effective.get("require_ollama_gpu_residency") is False
+            and false_bool_effective.get("allow_npu_device_workload") is False,
         },
         {
-            "name": "all_profiles_cover_required_universe_fields",
-            "passed": profile_result["returncode"] == 0 and not profile_missing_required,
-        },
-        {
-            "name": "profile_provenance_reported_consistently",
-            "passed": profile_payload.get("parameters_source")
-            == "profile_surface_with_visible_effective_config"
-            and safe_get(boot_policy, "gpu1", "source") == "profile:balanced_external_heap"
-            and safe_get(boot_policy, "gpu0", "source") == "profile:balanced_external_heap"
-            and safe_get(boot_policy, "npu", "source") == "profile:balanced_external_heap"
-            and direct_parameters == profile_effective
-            and "provider_model" in direct_parameters
-            and "npu_max_new_tokens" in direct_parameters
-            and "allow_provider_generation" in direct_parameters,
-        },
-        {
-            "name": "provider_hierarchy_uses_field_sources",
-            "passed": safe_get(provider_effective, "gpu1.ollama_num_ctx", "source")
-            == profile_sources.get("ollama_num_ctx")
-            and safe_get(provider_effective, "gpu1.max_new_tokens", "source")
-            == profile_sources.get("max_new_tokens")
-            and safe_get(provider_effective, "gpu0.ollama_num_ctx", "source")
-            == profile_sources.get("gpu0_ollama_num_ctx")
-            and safe_get(provider_effective, "gpu0.max_new_tokens", "source")
-            == profile_sources.get("gpu0_max_new_tokens")
-            and safe_get(provider_effective, "npu.max_context_chars", "source")
-            == profile_sources.get("npu_max_context_chars")
-            and safe_get(provider_effective, "keep_alive", "source")
-            == profile_sources.get("keep_alive"),
-        },
-        {
-            "name": "profile_control_groups_cover_profile_fields",
-            "passed": not profile_control_unclassified,
+            "name": "canonical_run_rejects_profile_runtime_config",
+            "passed": profile_result["returncode"] != 0
+            and "--profile" in (profile_result["stderr_tail"] + profile_result["stdout_tail"]),
         },
         {
             "name": "files_per_round_propagated_to_expanded_command",
@@ -416,6 +436,7 @@ def main() -> int:
         "errors": errors,
         "missing_result": missing,
         "resolved_result": resolved,
+        "resolved_false_booleans_result": resolved_false_booleans,
         "profile_result": profile_result,
         "profile_missing_required": profile_missing_required,
         "profile_control_unclassified": profile_control_unclassified,

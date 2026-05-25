@@ -32,24 +32,7 @@ def discover_openvino_tool_model_dir(
     explicit = next((os.environ.get(name, "").strip() for name in env_names if os.environ.get(name, "").strip()), "")
     if explicit:
         return str(Path(explicit).expanduser()), "environment"
-    model_name = "Phi-3.5-mini-instruct-int4-cw-ov"
-    roots = (
-        repo_root / "npu-models",
-        repo_root / "models",
-        repo_root.parent / "npu-models",
-        repo_root.parent / "models",
-        repo_root.parent.parent / "npu-models",
-        Path.home() / "blender" / "npu-models",
-        Path.home() / "ProjectsDir" / "npu-models",
-    )
-    for root in roots:
-        for candidate, source in (
-            (root, "local_verified_openvino_model_root"),
-            (root / model_name, "local_verified_legacy_model"),
-        ):
-            if (candidate.expanduser() / "openvino_model.xml").is_file():
-                return str(candidate.expanduser()), source
-    return "", "missing"
+    return "", "missing_explicit_openvino_model_dir"
 
 
 def _model_env_vars_for_device(device: str) -> tuple[str, ...]:

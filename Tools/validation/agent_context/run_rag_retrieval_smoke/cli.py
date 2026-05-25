@@ -101,6 +101,7 @@ def main() -> int:
     pack = build_context_pack(
         repo_root=repo_root,
         db_path=db_path,
+        rag_profile="runtime_code_context",
         query="generic_write evidence",
         embedding_endpoint="mock://fixture",
         embedding_model="bge-m3",
@@ -139,4 +140,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

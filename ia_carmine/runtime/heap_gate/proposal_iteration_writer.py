@@ -42,6 +42,9 @@ from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
     derive_gpu1_decision,
 )
 from ia_carmine.runtime.heap_gate.gpu1_tool_result_consumption import gpu1_tool_result_consumption_state
+from ia_carmine.runtime.heap_gate.gpu1_tool_mpc_governor import (
+    build_gpu1_tool_mpc_governor_report,
+)
 from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import (
     ONE_TURN_SUMMARY_FIELDS,
     strict_one_turn_gate_passed,
@@ -138,6 +141,15 @@ def write_proposal_iteration_artifact(
         errors.extend(str(item) for item in final_product_code_file_read.get("errors") or [])
         final_product_protocol["errors"] = list(dict.fromkeys(errors))
         final_product_protocol["passed"] = False
+    gpu1_mpc_governor = build_gpu1_tool_mpc_governor_report(
+        self,
+        events,
+        response_text=response_text,
+        revision=revision,
+        final_product_protocol=final_product_protocol,
+        final_product_code_file_read_contract=final_product_code_file_read,
+        gpu1_tool_result_consumption=gpu1_tool_state,
+    )
     previous_gpu0_report = (
         self.latest_peer_decision_for_revision("gpu0_peer", int(revision) - 1)
         if int(revision) > 0
@@ -194,6 +206,19 @@ def write_proposal_iteration_artifact(
         *[str(item) for item in gpu1_output_gate.get("issues", [])],
         *[str(item) for item in final_product_protocol.get("errors", [])],
     ]
+    if gpu1_mpc_governor.get("decision") in {
+        "force_consume_tool_result",
+        "block_repeat_tool_call",
+        "force_gpu1_refine",
+        "block_with_reason",
+    }:
+        reject_reasons.append(
+            str(
+                gpu1_mpc_governor.get("first_blocker")
+                or f"gpu1_mpc_governor:{gpu1_mpc_governor.get('decision')}"
+            )
+        )
+        quality_passed = False
     if gpu1_tool_state.get("gpu1_resume_after_tool_result_required"):
         reject_reasons.append(str(gpu1_tool_state.get("gpu1_tool_result_blocker") or "gpu1_requested_tool_result_not_consumed"))
         quality_passed = False
@@ -309,8 +334,12 @@ def write_proposal_iteration_artifact(
         "final_product_action": final_product_protocol.get("action") or "",
         "final_product_delta_valid": bool(final_product_protocol.get("passed")),
         "final_product_protocol": {key: value for key, value in final_product_protocol.items() if key != "delta"},
-        "final_product_code_file_read_contract": final_product_code_file_read,
-        **gpu1_one_turn_gate,
+            "final_product_code_file_read_contract": final_product_code_file_read,
+            "gpu1_mpc_governor_decision": gpu1_mpc_governor.get("decision"),
+            "gpu1_mpc_governor_first_blocker": gpu1_mpc_governor.get("first_blocker"),
+            "gpu1_mpc_governor_total_cost": gpu1_mpc_governor.get("total_cost"),
+            "gpu1_mpc_governor_report": gpu1_mpc_governor,
+            **gpu1_one_turn_gate,
         **{key: value for key, value in gpu1_tool_state.items() if key != "gpu1_tool_result_consumption"},
         "gpu1_tool_result_consumption": gpu1_tool_state.get("gpu1_tool_result_consumption", {}),
         "final_product_requires_file_read": bool(final_product_code_file_read.get("required")),
@@ -422,9 +451,12 @@ def write_proposal_iteration_artifact(
             "gpu1_one_turn_runtime_gate_passed": data.get("gpu1_one_turn_runtime_gate_passed"),
             "gpu1_one_turn_tool_result_consumed": data.get("gpu1_one_turn_tool_result_consumed"),
             "gpu1_one_turn_final_product_delta_valid": data.get("gpu1_one_turn_final_product_delta_valid"),
-            "gpu1_one_turn_blocker": data.get("gpu1_one_turn_blocker"),
-            "gpu1_one_turn_errors": data.get("gpu1_one_turn_errors") or [],
-            "target_files": target_files,
+                "gpu1_one_turn_blocker": data.get("gpu1_one_turn_blocker"),
+                "gpu1_one_turn_errors": data.get("gpu1_one_turn_errors") or [],
+                "gpu1_mpc_governor_decision": data.get("gpu1_mpc_governor_decision"),
+                "gpu1_mpc_governor_first_blocker": data.get("gpu1_mpc_governor_first_blocker"),
+                "gpu1_mpc_governor_total_cost": data.get("gpu1_mpc_governor_total_cost"),
+                "target_files": target_files,
             "quality_passed": quality_passed,
             "proposal_progress_passed": bool(proposal_progress.get("passed")),
             "npu_workload_performed": bool(npu_audit.get("performed")),

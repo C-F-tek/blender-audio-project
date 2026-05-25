@@ -19,20 +19,20 @@ if str(REPO_ROOT_FOR_IMPORTS) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT_FOR_IMPORTS))
 
 try:
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         line_count_for_path as shared_line_count_for_path,
     )
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         load_line_count_csv_map,
         parse_line_count_csv_row,
         resolve_output_path,
         write_json_report,
     )
 except ImportError:  # pragma: no cover - fallback for direct package-local execution.
-    from Tools.validation._shared.report_utils import (  # type: ignore
+    from ia_carmine._shared.report_io import (  # type: ignore
         line_count_for_path as shared_line_count_for_path,
     )
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         load_line_count_csv_map,
         parse_line_count_csv_row,
         resolve_output_path,

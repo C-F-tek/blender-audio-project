@@ -18,6 +18,7 @@ def render_markdown(report: dict) -> str:
         f"- Passed: `{report.get('passed')}`",
         f"- Endpoint: `{report.get('endpoint')}`",
         f"- Model: `{report.get('model')}`",
+        f"- RAG profile: `{report.get('rag_profile')}`",
         f"- Probe performed: `{report.get('probe_performed')}`",
         f"- Embedding count: `{report.get('embedding_count')}`",
     ]
@@ -33,14 +34,28 @@ def render_markdown(report: dict) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--endpoint", default="http://127.0.0.1:11434")
-    parser.add_argument("--model", default="bge-m3")
-    parser.add_argument("--batch-size", type=int, default=8)
-    parser.add_argument("--require-ollama", action="store_true", default=True)
+    parser.add_argument("--endpoint", default="")
+    parser.add_argument("--model", default="")
+    parser.add_argument("--rag-profile", default="")
+    parser.add_argument("--batch-size", type=int, default=0)
+    parser.add_argument("--require-ollama", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--allow-missing-ollama", action="store_true")
     parser.add_argument("--output", default="output/validation/rag_ollama_embed_smoke.json")
     parser.add_argument("--markdown-output", default="output/validation/rag_ollama_embed_smoke.md")
     args = parser.parse_args()
+    missing = []
+    if not str(args.endpoint or "").strip():
+        missing.append("--endpoint")
+    if not str(args.model or "").strip():
+        missing.append("--model")
+    if not str(args.rag_profile or "").strip():
+        missing.append("--rag-profile")
+    if int(args.batch_size or 0) <= 0:
+        missing.append("--batch-size")
+    if args.require_ollama is None:
+        missing.append("--require-ollama/--no-require-ollama")
+    if missing:
+        parser.error("missing explicit RAG Ollama embed smoke parameter(s): " + ", ".join(missing))
     repo_root = Path(args.repo_root).resolve()
     inputs = [f"rag smoke input {index}" for index in range(max(1, int(args.batch_size)))]
     vectors, errors = embed_batch(
@@ -53,6 +68,7 @@ def main() -> int:
     warnings: list[str] = []
     hard_errors: list[str] = []
     require_ollama = bool(args.require_ollama and not args.allow_missing_ollama)
+    provider_execution_attempted = True
     if errors and require_ollama:
         hard_errors.extend(errors)
     elif errors:
@@ -72,12 +88,13 @@ def main() -> int:
         "warnings": warnings,
         "endpoint": args.endpoint,
         "model": args.model,
+        "rag_profile": args.rag_profile,
         "batch_size": args.batch_size,
         "require_ollama": require_ollama,
-        "probe_performed": bool(vectors),
+        "probe_performed": provider_execution_attempted,
         "embedding_count": len(vectors),
         "dimensions": sorted(set(dimensions)),
-        "provider_execution_performed": False,
+        "provider_execution_performed": provider_execution_attempted,
         "patch_application_performed": False,
         "source_writes_performed": False,
     }

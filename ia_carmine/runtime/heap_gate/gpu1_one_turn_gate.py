@@ -180,6 +180,7 @@ def build_gpu1_one_turn_runtime_gate(
         "final_product_delta_runtime_classification": runtime_delta,
         "final_product_protocol": {key: value for key, value in protocol.items() if key != "delta"},
         "gpu1_tool_result_consumption": consumption,
+        "tool_cycle_statuses": consumption.get("tool_cycle_statuses", []),
         "history_ref": artifact_ref(
             history_path,
             getattr(gate, "repo_root", None),

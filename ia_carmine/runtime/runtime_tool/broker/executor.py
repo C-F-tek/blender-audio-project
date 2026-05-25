@@ -18,7 +18,7 @@ from ia_carmine._shared.file_backed_transport import (
     read_json_windows_safe,
 )
 from ia_carmine._shared.agent_runtime_tool_broker_execution import execute_command_timed
-from Tools.validation._shared.report_utils import read_json_report
+from ia_carmine._shared.report_io import read_json_report
 
 from .common import compact_value, execute_debug_lab_in_process, fixture_repo_write, now_iso, output_owned_artifact_write, repo_rel, resolve_path, safe_id, truthy, validate_request_args
 from .registry import TOOL_SPECS

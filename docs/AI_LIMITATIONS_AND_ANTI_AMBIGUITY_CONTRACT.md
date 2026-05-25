@@ -99,13 +99,13 @@ A common AI failure is to make lanes optional because a narrow run, smoke or pro
 
 This is forbidden.
 
-For complete/full profiles:
+For complete/full run modes selected by explicit CLI flags:
 
 ```text
 missing required lane evidence -> unviable
 degraded required lane -> unviable
 unavailable required lane -> unviable
-diagnostic-only required lane -> unviable unless the profile is explicitly diagnostic/partial
+diagnostic-only required lane -> unviable unless the explicit mode is diagnostic/partial
 ```
 
 A full smoke must not pass if a required lane is missing, degraded, unavailable or diagnostic-only.
@@ -121,7 +121,7 @@ NPU micro-lane/auditor
 CPU validators/tooling authority
 ```
 
-If one selected required provider lane is non-operational in a complete/full profile, the provider universe is unviable. The run must not continue as if product progress exists.
+If one selected required provider lane is non-operational in a complete/full run mode, the provider universe is unviable. The run must not continue as if product progress exists.
 
 Correct complete-run outcome:
 

@@ -48,7 +48,7 @@ def _config_sources(args: argparse.Namespace, argv: list[str]) -> dict[str, str]
         "npu_python_exe": "--npu-python-exe",
     }
     return {
-        key: "cli_arg" if _option_supplied(argv, option) else "standalone_default"
+        key: "cli_arg" if _option_supplied(argv, option) else "missing_explicit"
         for key, option in option_map.items()
         if getattr(args, key, None) not in (None, "")
     }
@@ -501,11 +501,12 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "errors": errors,
         "warnings": [],
         "config_sources": getattr(args, "config_sources", {}),
-        "standalone_default_fields": [
+        "missing_explicit_fields": [
             key
             for key, source in getattr(args, "config_sources", {}).items()
-            if source == "standalone_default"
+            if source == "missing_explicit"
         ],
+        "standalone_default_fields": [],
         "provider_execution_performed": any(
             item.get("provider_work_verified") for item in lane_reports
         ),
@@ -550,19 +551,19 @@ def main() -> int:
     parser.add_argument("--gpu1-tool-loop-subturn", type=int, default=0)
     parser.add_argument("--disable-native-chat-tools", action="store_true")
     parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("--max-new-tokens", type=int, default=64)
-    parser.add_argument("--ollama-num-ctx", type=int, default=16384)
+    parser.add_argument("--max-new-tokens", type=int, default=0)
+    parser.add_argument("--ollama-num-ctx", type=int, default=0)
     parser.add_argument("--ollama-gpu-layers", "--ollama-num-gpu", dest="ollama_gpu_layers", default="all")
     parser.add_argument("--ollama-num-thread", type=int, default=None)
-    parser.add_argument("--ollama-context-candidates", default="8192,4096")
+    parser.add_argument("--ollama-context-candidates", default="")
     parser.add_argument("--ollama-base-url", default="")
-    parser.add_argument("--strict-provider-model", action="store_true")
+    parser.add_argument("--strict-provider-model", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--operator-gpu-observation", default="")
     parser.add_argument("--ollama-lane", default="gpu1_planner")
     parser.add_argument("--ollama-role", default="")
-    parser.add_argument("--keep-alive", default="0s")
+    parser.add_argument("--keep-alive", default="")
     parser.add_argument("--defer-unload", action="store_true")
-    parser.add_argument("--require-ollama-gpu-residency", action="store_true", default=True)
+    parser.add_argument("--require-ollama-gpu-residency", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--replight-mode", action="store_true")
     parser.add_argument("--npu-python-exe", default="")
     parser.add_argument("--run-ollama", action="store_true")
@@ -574,6 +575,25 @@ def main() -> int:
     args.config_sources = _config_sources(args, raw_argv)
     if not args.run_ollama and not args.run_npu:
         parser.error("At least one explicit probe flag is required: --run-ollama or --run-npu")
+    if args.run_ollama:
+        missing = [
+            name
+            for name, value in (
+                ("--model", args.model),
+                ("--ollama-base-url", args.ollama_base_url),
+                ("--ollama-context-candidates", args.ollama_context_candidates),
+                ("--keep-alive", args.keep_alive),
+            )
+            if not str(value or "").strip()
+        ]
+        if int(args.max_new_tokens or 0) <= 0:
+            missing.append("--max-new-tokens")
+        if int(args.ollama_num_ctx or 0) <= 0:
+            missing.append("--ollama-num-ctx")
+        if args.require_ollama_gpu_residency is None:
+            missing.append("--require-ollama-gpu-residency/--no-require-ollama-gpu-residency")
+        if missing:
+            parser.error("missing explicit Ollama probe parameter(s): " + ", ".join(missing))
     repo_root = Path(args.repo_root).resolve()
     report = build_report(repo_root, args)
     output = Path(args.output)

@@ -23,7 +23,7 @@ try:
 except ImportError:
     from Tools.validation._shared.report_utils import resolve_output_path, write_json_report  # type: ignore
 
-DEFAULT_WORKFLOW = "Tools/workflow/_powershell/run_local_ai_core_tool_activation.ps1"
+DEFAULT_WORKFLOW = "ia_carmine/runtime/run/cli.py"
 DEFAULT_OUTPUT = "output/validation/core_activation_agnostic_contract.json"
 DEFAULT_MARKDOWN = "output/validation/core_activation_agnostic_contract.md"
 

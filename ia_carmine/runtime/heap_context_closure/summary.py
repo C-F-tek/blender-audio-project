@@ -6,6 +6,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .decision_trace import (
+    build_final_decision_trace,
+    render_final_decision_trace_markdown,
+)
 from .product_state import build_product_state
 from .requesting import startup_artifact_refs
 
@@ -54,7 +58,7 @@ def build_launcher_summary(args: Any, state: dict[str, Any]) -> dict[str, Any]:
         and not launcher_contract_errors
     )
 
-    return {
+    summary = {
         "schema_version": 1,
         "kind": "heap_runtime_context_closure_launcher",
         "stamp": state["stamp"],
@@ -218,6 +222,28 @@ def build_launcher_summary(args: Any, state: dict[str, Any]) -> dict[str, Any]:
         "final_readable_product_stdout_tail": final_result.get("stdout_tail", ""),
         "final_readable_product_stderr_tail": final_result.get("stderr_tail", ""),
     }
+    trace = build_final_decision_trace(
+        args=args,
+        state=state,
+        launcher_summary=summary,
+        code_product_contract=code_product_contract,
+        external_contract=external_contract,
+        product_state=product_state,
+        launcher_contract_errors=launcher_contract_errors,
+    )
+    trace_json = state["run_dir"] / "heap_final_decision_trace.json"
+    trace_md = state["run_dir"] / "heap_final_decision_trace.md"
+    trace_json.write_text(json.dumps(trace, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    trace_md.write_text(render_final_decision_trace_markdown(trace), encoding="utf-8")
+    summary.update(
+        {
+            "final_decision_trace_json": str(trace_json),
+            "final_decision_trace_markdown": str(trace_md),
+            "first_blocker": trace.get("first_blocker", ""),
+            "final_decision": trace.get("final_decision", ""),
+        }
+    )
+    return summary
 
 
 def _list_len(value: Any) -> int:

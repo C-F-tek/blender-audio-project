@@ -11,8 +11,10 @@ from .common import (
     DEFAULT_DB,
     DEFAULT_EMBEDDING_ENDPOINT,
     DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_RAG_PROFILE,
     DEFAULT_TOP_K,
     now_iso,
+    require_explicit_rag_runtime_args,
     resolve_repo_path,
     write_json,
 )
@@ -22,6 +24,7 @@ from .context_pack import build_context_pack, render_markdown
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
+    parser.add_argument("--rag-profile", default=DEFAULT_RAG_PROFILE)
     parser.add_argument("--db", default=DEFAULT_DB)
     parser.add_argument("--query", required=True)
     parser.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
@@ -33,7 +36,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-empty-results", action="store_true")
     parser.add_argument("--output", default="output/validation/rag_query_context.json")
     parser.add_argument("--markdown-output", default="output/validation/rag_query_context.md")
-    return parser.parse_args()
+    args = parser.parse_args()
+    require_explicit_rag_runtime_args(
+        args,
+        parser,
+        require_embedding=not bool(args.skip_query_embedding),
+    )
+    return args
 
 
 def main() -> int:
@@ -42,6 +51,7 @@ def main() -> int:
     pack = build_context_pack(
         repo_root=repo_root,
         db_path=resolve_repo_path(repo_root, args.db),
+        rag_profile=str(args.rag_profile),
         query=args.query,
         top_k=args.top_k,
         char_budget=args.char_budget,

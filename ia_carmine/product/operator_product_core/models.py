@@ -9,6 +9,7 @@ from typing import Any
 DEFAULT_RUN_LABEL = "spark_direct"
 
 CLI_VALUE_KEYS = {
+    "objective": "--objective",
     "budget_minutes": "--budget-minutes",
     "max_iterations": "--max-iterations",
     "min_runtime_rounds": "--min-runtime-rounds",
@@ -50,6 +51,7 @@ CLI_VALUE_KEYS = {
     "startup_scan_context_files": "--startup-scan-context-files",
     "startup_max_chars_per_file": "--startup-max-chars-per-file",
     "rag_db": "--rag-db",
+    "rag_profile": "--rag-profile",
     "rag_index_policy": "--rag-index-policy",
     "rag_embedding_endpoint": "--rag-embedding-endpoint",
     "rag_embedding_model": "--rag-embedding-model",
@@ -102,6 +104,7 @@ class LauncherConfig:
     run_label: str = DEFAULT_RUN_LABEL
     python_exe: str = ""
     stamp: str = ""
+    objective: str | None = None
     revision_context: str | None = None
     budget_minutes: int | None = None
     max_iterations: int | None = None
@@ -145,6 +148,7 @@ class LauncherConfig:
     startup_scan_context_files: int | None = None
     startup_max_chars_per_file: int | None = None
     rag_db: str | None = None
+    rag_profile: str | None = None
     rag_index_policy: str | None = None
     rag_embedding_endpoint: str | None = None
     rag_embedding_model: str | None = None

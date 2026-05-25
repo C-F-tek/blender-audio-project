@@ -18,12 +18,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report
+    from ia_carmine._shared.report_io import write_json_report, write_text_report
 except ImportError:
     repo_root_for_import = Path(__file__).resolve().parents[4]
     if str(repo_root_for_import) not in sys.path:
         sys.path.insert(0, str(repo_root_for_import))
-    from Tools.validation._shared.report_utils import write_json_report, write_text_report
+    from ia_carmine._shared.report_io import write_json_report, write_text_report
 
 
 def load_json(path: Path) -> Any:

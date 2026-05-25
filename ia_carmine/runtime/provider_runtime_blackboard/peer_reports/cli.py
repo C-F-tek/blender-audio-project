@@ -18,7 +18,7 @@ from typing import Any
 try:
     from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict
     from ia_carmine._shared.provider_work_verification import provider_work_status
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         resolve_output_path,
         write_json_report,
         write_text_report,
@@ -29,7 +29,7 @@ except ImportError:
         sys.path.insert(0, str(repo_root_for_import))
     from ia_carmine.runtime.provider_runtime_blackboard import ProviderRuntimeHeap, safe_dict  # type: ignore
     from ia_carmine._shared.provider_work_verification import provider_work_status  # type: ignore
-    from Tools.validation._shared.report_utils import (  # type: ignore
+    from ia_carmine._shared.report_io import (  # type: ignore
         resolve_output_path,
         write_json_report,
         write_text_report,

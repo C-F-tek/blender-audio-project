@@ -2,7 +2,7 @@
 """Validate workflow PowerShell scripts do not invoke bare/system Python.
 
 The IA-Carmine workflow Python policy requires official/provider-capable lanes
-to use the repository-owned interpreter resolved by Tools/workflow/_powershell/python_env.ps1.
+to use the repository-owned interpreter supplied explicitly by the run config.
 System PATH Python, WindowsApps Python and permissive fallback to bare `python`
 are forbidden in workflow lanes.
 """
@@ -128,7 +128,7 @@ def build_report(repo_root: Path, roots: list[str]) -> dict:
         "violation_count": len(violations),
         "passed": len(violations) == 0,
         "policy": {
-            "required_interpreter_source": "repository-owned IA_CARMINE_PYTHON from Tools/workflow/_powershell/python_env.ps1",
+            "required_interpreter_source": "explicit repository-owned IA_CARMINE_PYTHON/run config",
             "forbidden": [
                 "bare python invocation",
                 "bare python.exe invocation",

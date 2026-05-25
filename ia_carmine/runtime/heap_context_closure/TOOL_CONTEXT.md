@@ -1,6 +1,6 @@
 # Heap Context Closure Runtime
 
-`heap_context_closure` is the file-backed launcher for run-unica heap closure.
+The heap context closure package is the internal file-backed launcher for run-unica heap closure.
 
 Current contract:
 
@@ -10,10 +10,10 @@ Current contract:
 - Provider output JSON must carry refs, hashes and bounded tails; full text belongs in provider/composer artifacts.
 - Broker tool execution evidence must pass through broker request/result artifacts, not prose or in-memory packet state.
 
-Primary command:
+Primary operator command:
 
 ```powershell
-python -m ia_carmine.cli heap_context_closure --repo-root . --request-file <request.md> ...
+python -m ia_carmine.cli run ...
 ```
 
 Related surfaces:

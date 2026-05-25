@@ -7,7 +7,7 @@ This README is a technical catalog. It is not the primary command source.
 Primary operator entrypoint:
 
 ```text
-Tools/workflow/run_unified_local_ai_refactor.ps1
+python -m ia_carmine.cli run [explicit flags...]
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/unified-launcher-parameter-decision-map-2026-05-09.md
 docs/LOCAL_AI_TASKS/heap-exchange-and-patchkit-operating-model-2026-05-09.md
@@ -124,7 +124,7 @@ docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
 | Patch planning/spec support | `python -m ia_carmine.cli agent_review_patch_plan`, `generated_patch_specs_from_proposals.py`, `generated_patch_specs_promote_draft.py` | Review-only unless explicit apply is authorized separately. |
 | Patchkit bundles | `patchkit/apply_patch_bundle.py`, `patchkit/*` | Preferred OOB application path for future core patch bundles. |
 | Patch suggestion product | `build_task_patch_suggestion_report.py`, `apply_patch_suggestion_bundle.py`, `agent_review_prepare_pr.py` | Markdown/task suggestion product, deterministic apply, review PR preparation. |
-| Runtime broker/evidence | `python -m ia_carmine.cli agent_runtime_tool_broker`, `python -m ia_carmine.cli build_runtime_tool_capability_manifest` | Broker-measured tool calls and normalized status. |
+| Runtime broker/evidence | `python -m ia_carmine.cli runtime_tool_broker`, `python -m ia_carmine.cli build_runtime_tool_capability_manifest` | Broker-measured tool calls and normalized status. |
 | Capability and bundle evidence | capability manifest packages/builders, `python -m ia_carmine.cli shared_toolbox_bundle` | Handoff context for available tools/hardware lanes and run state. |
 | Production bundle | `python -m ia_carmine.cli shared_toolbox_bundle` | AI-to-AI evidence and patch-plan handoff. |
 | Evidence bundles | `build_github_evidence_bundle.py`, full-run bundle ZIP tools | Compact GitHub evidence only; raw `output/**` stays ignored. |
@@ -336,11 +336,11 @@ Relevant owners:
 |---|---|
 | Canonical non-GUI run | `python -m ia_carmine.cli run` |
 | GUI view | `python -m ia_carmine.cli operator_product_gui` |
-| Strict startup launcher | internal `heap_context_closure` tool |
+| Strict startup launcher | internal heap context closure module |
 | Context/memory preload | `python -m ia_carmine.cli heap_context_memory_reload` |
 | Required docs initialization | `ensure_ai_context_required_files.py` |
 | Startup-to-heap reconciliation | `reconcile_heap_report_with_startup_reload.py` |
-| Heap universe / provider loop | `python -m ia_carmine.cli run_heap_runtime_completeness_gate` |
+| Heap universe / provider loop | internal completeness gate invoked by `python -m ia_carmine.cli run` |
 | Final assembly | `python -m ia_carmine.cli heap_final_proposals` |
 | SQLite operational memory | `python -m ia_carmine.cli agent_runtime_sqlite_memory` |
 | Tool catalog | `python -m ia_carmine.cli build_agent_agnostic_tool_inventory` |

@@ -38,19 +38,23 @@ Read these before treating any tool, dispatcher, smoke or provider artifact as p
 | `Tools/git` | `Tools/git/TOOL_CONTEXT.md` | `Tools/git/CONTEXT_INDEX.md` |
 | `Tools/repo_patch_runner` | `Tools/repo_patch_runner/TOOL_CONTEXT.md` | `Tools/repo_patch_runner/CONTEXT_INDEX.md` |
 
-## Command surface
+## Public command surface
 
 ```powershell
-python -m Tools.<area> <tool> [args...]
+python -m ia_carmine.cli run [explicit flags...]
+python -m ia_carmine.cli runtime_tool_broker [explicit tool args...]
+python -m Tools.validation validator_unico --mode <mode> [--section <section>]
+python -m Tools.validation smoke_unico [--section <section>]
+python -m Tools.validation test_unico [--section <section>]
 ```
 
-Dispatchers:
+Dispatcher modules:
 
 ```text
 ia_carmine/dispatch.py
 Tools/validation/dispatch.py
-Tools/workflow/dispatch.py
-Tools/npu/dispatch.py
+Tools/workflow/dispatch.py  # retired, no public tools
+Tools/npu/dispatch.py       # retired, no public tools
 Tools/docs/dispatch.py
 Tools/git/dispatch.py
 Tools/repo_patch_runner/dispatch.py

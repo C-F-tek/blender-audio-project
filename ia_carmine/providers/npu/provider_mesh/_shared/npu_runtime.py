@@ -15,12 +15,7 @@ DEFAULT_NPU_PYTHON = (
     if os.name == "nt"
     else ROOT / ".venv" / "bin" / "python"
 )
-DEFAULT_MODEL_DIR = Path(
-    os.environ.get(
-        "SPAZIOTEMPO_NPU_MODEL_DIR",
-        Path.home() / "blender" / "npu-models" / "Phi-3.5-mini-instruct-int4-cw-ov",
-    )
-)
+DEFAULT_MODEL_DIR = Path(os.environ["SPAZIOTEMPO_NPU_MODEL_DIR"]) if os.environ.get("SPAZIOTEMPO_NPU_MODEL_DIR") else None
 DEFAULT_TIMEOUT_SEC = float(os.environ.get("SPAZIOTEMPO_NPU_PREFLIGHT_TIMEOUT", "30"))
 
 
@@ -76,7 +71,7 @@ def _parse_last_json_line(text: str) -> Any:
 
 def npu_preflight(
     python_exe: Path | str | None = None,
-    model_dir: Path | str = DEFAULT_MODEL_DIR,
+    model_dir: Path | str | None = DEFAULT_MODEL_DIR,
     timeout: float = DEFAULT_TIMEOUT_SEC,
 ) -> dict[str, Any]:
     """Return a defensive OpenVINO/NPU readiness report.
@@ -85,15 +80,15 @@ def npu_preflight(
     NPU stack is not ready, callers can continue with deterministic guardrails.
     """
     python_exe = Path(python_exe) if python_exe else resolve_project_python(ROOT)
-    model_dir = Path(model_dir)
+    model_dir = Path(model_dir) if model_dir else None
 
     checks: dict[str, Any] = {
         "schema_version": 2,
         "generated_at": utc_now(),
         "python_exe": str(python_exe),
-        "model_dir": str(model_dir),
+        "model_dir": str(model_dir or ""),
         "python_exists": python_exe.exists(),
-        "model_dir_exists": model_dir.exists(),
+        "model_dir_exists": bool(model_dir and model_dir.exists()),
         "python_starts": False,
         "python_version": None,
         "openvino_import": False,
@@ -111,6 +106,10 @@ def npu_preflight(
     if not checks["python_exists"]:
         checks["errors"].append(f"NPU Python not found: {python_exe}")
         checks["warnings"].append("Using deterministic heuristic guardrail fallback.")
+        return checks
+    if model_dir is None:
+        checks["errors"].append("npu_model_dir_explicit_required")
+        checks["warnings"].append("NPU model path must come from explicit config or SPAZIOTEMPO_NPU_MODEL_DIR.")
         return checks
 
     ok, text, _ = _run_python(

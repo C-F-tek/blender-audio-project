@@ -36,8 +36,8 @@ Use those contracts first when you need to decide whether a command, smoke, arti
 | --- | --- | --- |
 | `ia_carmine/dispatch.py` | `python -m ia_carmine.cli <tool>` | macro-families indexed |
 | `Tools/validation/dispatch.py` | `python -m Tools.validation <tool>` | macro-families indexed |
-| `Tools/workflow/dispatch.py` | `python -m Tools.workflow <tool>` | macro-families indexed |
-| `Tools/npu/dispatch.py` | `python -m Tools.npu <tool>` | macro-families indexed |
+| `Tools/workflow/dispatch.py` | retired/no public tools | command surface retired |
+| `Tools/npu/dispatch.py` | retired/no public tools | command surface retired |
 | `Tools/docs/dispatch.py` | `python -m Tools.docs <tool>` | partially indexed |
 | `Tools/git/dispatch.py` | `python -m Tools.git <tool>` | indexed |
 | `Tools/repo_patch_runner/dispatch.py` | `python -m Tools.repo_patch_runner <tool>` | indexed |
@@ -113,6 +113,22 @@ When a dispatcher adds a new public tool family:
 3. update `docs/CONTEXT_COVERAGE_STATUS.md`;
 4. update `docs/IA_UNIVERSE_MODEL_TO_CODE_MAP.md` if the family changes model-to-code meaning;
 5. update this dispatcher coverage document if the family changes coverage status.
+
+## Coherence guard validators
+
+Runtime-universe coherence checks are registered under
+`Tools/validation/dispatch.py`:
+
+```powershell
+python -m Tools.validation check_ia_carmine_tools_boundary --repo-root .
+python -m Tools.validation check_dispatcher_targets --repo-root . --all
+python -m Tools.validation check_dispatcher_context_coverage --repo-root .
+python -m Tools.validation check_full_complete_wording_contract --repo-root .
+```
+
+They verify the `ia_carmine`/`Tools` boundary, public dispatcher target
+importability, dispatcher family context coverage and risky full/complete/product
+wording. They are deterministic validation checks and do not execute providers.
 
 ## Guardrails
 

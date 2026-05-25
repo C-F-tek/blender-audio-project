@@ -18,13 +18,13 @@ from typing import Any
 from ia_carmine.runtime.heap_exchange.io import append_jsonl, load_jsonl
 
 try:
-    from Tools.validation._shared.report_utils import (
+    from ia_carmine._shared.report_io import (
         resolve_output_path,
         write_json_report,
         write_text_report,
     )
 except ImportError:  # pragma: no cover
-    from Tools.validation._shared.report_utils import (  # type: ignore
+    from ia_carmine._shared.report_io import (  # type: ignore
         resolve_output_path,
         write_json_report,
         write_text_report,

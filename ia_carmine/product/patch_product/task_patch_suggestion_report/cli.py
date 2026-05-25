@@ -15,7 +15,7 @@ from ia_carmine.product.patch_product.patch_suggestion_bundle.task_markdown impo
     build_task_patch_suggestion_report,
     write_markdown,
 )
-from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
+from ia_carmine._shared.report_io import resolve_output_path, write_json_report
 
 
 def main() -> int:

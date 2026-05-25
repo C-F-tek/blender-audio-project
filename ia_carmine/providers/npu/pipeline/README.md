@@ -7,7 +7,7 @@ It is not the primary operator entrypoint and not the provider mesh owner.
 Current command, owner and flow references:
 
 ```text
-Tools/workflow/run_unified_local_ai_refactor.ps1
+python -m ia_carmine.cli run [explicit provider/lane flags...]
 docs/LOCAL_AI_TASKS/unified-local-ai-refactor-launcher.md
 docs/LOCAL_AI_TASKS/code-derived-ai-toolchain-map-2026-05-07.md
 docs/LOCAL_AI_TASKS/single-owner-scripts-and-flow-boundaries-2026-05-07.md
@@ -100,7 +100,7 @@ provider behavior changes
 | `Tools/npu/provider_mesh/_shared/ollama_runtime.py` | runtime-adjacent helper | Do not imply execution unless called by an explicit provider command. |
 | `Tools/npu/provider_mesh/_shared/npu_runtime.py` | runtime-adjacent helper | Keep separate from planned provider descriptors. |
 | `Tools/npu/run_npu_review.py` | explicit local diagnostic/review helper | Not the unified launcher. |
-| `Tools/npu/run_npu_context.ps1` | explicit local context/review wrapper | Useful local helper; not canonical full 0-to-10 path. |
+| `python -m ia_carmine.cli runtime_tool_broker` | explicit broker/helper path | Canonical helper surface for local context/review actions. |
 | `Tools/npu/provider_mesh/provider_result_report.py` | supporting report builder | Converts provider result data into report surfaces; bundle/evidence visibility required when promoted. |
 | `ia_carmine/providers/provider_mesh/npu_gpu_deep_review_auditor/cli.py` | diagnostic/support lane | Not primary advisory proof by itself. |
 | `ia_carmine/providers/provider_mesh/gpu_npu_parallel_orchestrator/cli.py` | provider orchestration lane | Prefer unified launcher; verify current caller before changing behavior. |

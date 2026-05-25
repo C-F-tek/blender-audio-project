@@ -46,7 +46,7 @@ CURRENT_POINTER:
 - resume_from_block_id=<id-or-empty>
 
 TARGET_FILES:
-- Tools/workflow/run_unified_local_ai_refactor.ps1
+- python -m ia_carmine.cli run [explicit flags...]
 
 IMPLEMENTATION_CHANGES:
 ```powershell
@@ -55,7 +55,7 @@ function Invoke-HeapEntry {
     pass
 }
 
-& $RepoPy -m py_compile .\\Tools\\workflow\\run_unified_local_ai_refactor.ps1
+& $RepoPy -m py_compile .\\ia_carmine\\runtime\\run\\cli.py
 ```
 ```"""
 

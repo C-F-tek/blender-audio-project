@@ -30,7 +30,7 @@ from ia_carmine.product.patch_product.patch_suggestion_bundle.operations import 
     discover_operations,
 )
 from ia_carmine.product.patch_product.patch_suggestion_bundle.product import build_manual_review_product
-from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
+from ia_carmine._shared.report_io import resolve_output_path, write_json_report
 
 
 def parse_args() -> argparse.Namespace:

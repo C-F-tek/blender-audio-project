@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import sys
+import os
 from pathlib import Path
 
 from .cli_contract import build_heap_runtime_argv, provider_flags_from_selection
@@ -14,15 +14,18 @@ from .models import CLI_FLAG_KEYS, CLI_VALUE_KEYS, LauncherConfig
 
 def resolve_project_python(repo_root: Path, explicit: str = "") -> str:
     if explicit:
-        return str(Path(explicit).resolve())
-    for candidate in (
-        repo_root / ".venv" / "Scripts" / "python.exe",
-        repo_root / "venv" / "Scripts" / "python.exe",
-        repo_root / ".venv314" / "Scripts" / "python.exe",
-    ):
-        if candidate.exists():
-            return str(candidate.resolve())
-    return sys.executable
+        return _existing_python(explicit, "cli")
+    env_python = os.environ.get("IA_CARMINE_PYTHON", "").strip()
+    if env_python:
+        return _existing_python(env_python, "env")
+    raise RuntimeError("provider_python_explicit_required: pass --python-exe or set IA_CARMINE_PYTHON")
+
+
+def _existing_python(value: str, source: str) -> str:
+    path = Path(value).expanduser()
+    if not path.is_file():
+        raise RuntimeError(f"provider_python_{source}_missing: {path}")
+    return str(path.resolve())
 
 
 def resolve_config(config: LauncherConfig) -> LauncherConfig:
@@ -87,6 +90,7 @@ def resolve_config(config: LauncherConfig) -> LauncherConfig:
         startup_scan_context_files=config.startup_scan_context_files,
         startup_max_chars_per_file=config.startup_max_chars_per_file,
         rag_db=config.rag_db,
+        rag_profile=config.rag_profile,
         rag_index_policy=config.rag_index_policy,
         rag_embedding_endpoint=config.rag_embedding_endpoint,
         rag_embedding_model=config.rag_embedding_model,
@@ -166,8 +170,7 @@ def build_heap_command(config: LauncherConfig) -> list[str]:
     command = [
         cfg.python_exe,
         "-m",
-        "ia_carmine.cli",
-        "heap_context_closure",
+        "ia_carmine.runtime.heap_context_closure.cli",
         "--repo-root",
         str(cfg.repo_root),
         "--python-exe",

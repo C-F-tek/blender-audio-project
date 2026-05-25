@@ -16,13 +16,9 @@ Canonical wording: `docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md`.
 
 ## Purpose
 
-This directory contains the operator-facing and AI-facing tool surface for IA-Carmine. The post-refactor convention is to avoid launching scattered legacy files directly and to prefer package dispatchers:
+This directory contains the operator-facing and AI-facing tool surface for IA-Carmine. The public surface is intentionally small: canonical run, one validation gate, one smoke suite, one test surface and one broker/helper surface. Retired workflow/NPU packages are implementation modules, not command surfaces.
 
-```powershell
-python -m Tools.<area> <tool> [tool args...]
-```
-
-The shared dispatcher implementation is `Tools/tool_dispatch.py`. Area dispatchers map stable tool names to concrete package CLIs or controlled PowerShell wrappers.
+The shared dispatcher implementation is `ia_carmine/_shared/tool_dispatch.py`. Area dispatchers map stable tool names to concrete package CLIs or controlled PowerShell wrappers; `Tools` owns public compatibility and operator utility surfaces, not core dispatcher code.
 
 ## Areas
 
@@ -30,8 +26,8 @@ The shared dispatcher implementation is `Tools/tool_dispatch.py`. Area dispatche
 | --- | --- | --- | --- |
 | `ia_carmine` | `ia_carmine/TOOL_CONTEXT.md` | `python -m ia_carmine.cli <tool>` | Heap runtime, provider lanes, context/memory, code product, patch product, AI-to-AI bundle artifacts. |
 | `Tools/validation` | `Tools/validation/TOOL_CONTEXT.md` | `python -m Tools.validation <tool>` | Validators, smoke tests, gates, contracts, readiness checks. |
-| `Tools/workflow` | `Tools/workflow/TOOL_CONTEXT.md` | `python -m Tools.workflow <tool>` | Operator workflow wrappers, GUI/shell surfaces, startup and orchestration scripts. |
-| `Tools/npu` | `Tools/npu/TOOL_CONTEXT.md` | `python -m Tools.npu <tool>` | NPU/provider mesh support, context builders, music/code/manual packets. |
+| `Tools/workflow` | `Tools/workflow/TOOL_CONTEXT.md` | retired | Importable workflow implementation modules only. |
+| `Tools/npu` | `Tools/npu/TOOL_CONTEXT.md` | retired | Importable NPU/provider implementation modules only. |
 | `Tools/docs` | `Tools/docs/TOOL_CONTEXT.md` | `python -m Tools.docs <tool>` | Documentation hygiene, repo/tool surface audit, Markdown split/coherence helpers. |
 | `Tools/git` | `Tools/git/TOOL_CONTEXT.md` | `python -m Tools.git <tool>` | Controlled Git helper wrappers for generated artifacts/data. |
 | `Tools/repo_patch_runner` | `Tools/repo_patch_runner/TOOL_CONTEXT.md` | `python -m Tools.repo_patch_runner <tool>` | Controlled repository patch runner utilities. |

@@ -16,6 +16,7 @@ REQUIRED_ARGS = {
     "query",
     "task_file",
     "db",
+    "rag_profile",
     "top_k",
     "char_budget",
     "embedding_endpoint",
@@ -30,7 +31,7 @@ def render_markdown(report: dict) -> str:
         "",
         f"- Passed: `{report.get('passed')}`",
         f"- Tool registered: `{report.get('tool_registered')}`",
-        f"- Command contains rag_build_context_pack: `{report.get('command_contains_cli')}`",
+        f"- Command targets RAG context-pack CLI: `{report.get('command_contains_cli')}`",
     ]
     if report.get("errors"):
         lines.extend(["", "## Errors", ""])
@@ -61,12 +62,16 @@ def main() -> int:
         "smoke-rag",
         {
             "query": "generic_write evidence",
+            "db": "output/ai_runtime_memory/rag/rag.sqlite",
+            "rag_profile": "runtime_code_context",
             "top_k": 3,
             "char_budget": 2000,
+            "embedding_endpoint": "mock://fixture",
+            "embedding_model": "bge-m3",
             "skip_query_embedding": True,
         },
     )
-    command_contains = "rag_build_context_pack" in command
+    command_contains = "ia_carmine.context.agent_context.rag_context.build_context_pack_cli" in command
     if not command_contains:
         errors.append("builder command does not call rag_build_context_pack")
     if sorted(outputs) != ["json_report", "markdown_report"]:

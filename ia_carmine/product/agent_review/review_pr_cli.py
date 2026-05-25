@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from ia_carmine.product.patch_product.patch_suggestion_bundle.git_branch import create_review_branch, validate_branch_name
-from Tools.validation._shared.report_utils import resolve_output_path, write_json_report
+from ia_carmine._shared.report_io import resolve_output_path, write_json_report
 
 from .review_pr_common import (
     create_commit,

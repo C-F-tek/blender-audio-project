@@ -13,10 +13,7 @@ from ia_carmine._shared.file_backed_transport import artifact_ref, write_text_ar
 from ia_carmine._shared.provider_tool_loop import ollama_tool_call_tool_names
 
 
-DEFAULT_MEMORY_QUERY = (
-    "run-unica GPU1 native tool loop FINAL_PRODUCT pointer heap context closure "
-    "runtime memory tool catalog"
-)
+DEFAULT_MEMORY_QUERY = ""
 
 
 def read_json(path: Path) -> Any:
@@ -404,7 +401,7 @@ def _run_startup_reload(args: argparse.Namespace, repo_root: Path, work_dir: Pat
         repo_root,
         startup_dir / "payload",
         name="gpu1_isolated_preflight_request",
-        text=args.operator_prompt or DEFAULT_MEMORY_QUERY,
+        text=args.operator_prompt or args.memory_query,
         kind="gpu1_isolated_preflight_startup_request",
         producer="gpu1_native_tool_loop_preflight",
         suffix=".md",
@@ -423,23 +420,25 @@ def _run_startup_reload(args: argparse.Namespace, repo_root: Path, work_dir: Pat
         "--stamp",
         f"{stamp}-gpu1-preflight-startup",
         "--startup-provider-input-workers",
-        "4",
+        str(args.startup_provider_input_workers),
         "--startup-required-context-profile",
-        "project_self_improvement",
+        args.startup_required_context_profile,
         "--ai-context-pack-profile",
-        "core_ai_backend",
+        args.ai_context_pack_profile,
         "--startup-operational-memory-query",
-        args.memory_query or DEFAULT_MEMORY_QUERY,
+        args.memory_query,
         "--startup-operational-memory-limit",
-        "8",
+        str(args.startup_operational_memory_limit),
         "--rag-db",
-        "output/ai_runtime_memory/rag/rag.sqlite",
+        args.rag_db,
+        "--rag-profile",
+        args.rag_profile,
         "--rag-index-policy",
-        "auto",
+        args.rag_index_policy,
         "--rag-top-k",
-        "12",
+        str(args.rag_top_k),
         "--rag-char-budget",
-        "24000",
+        str(args.rag_char_budget),
         "--rag-embedding-endpoint",
         args.base_url,
         "--rag-embedding-model",
@@ -468,7 +467,6 @@ def _tool_catalog_prompt_block() -> str:
         "semantic_evidence_chunks": "produce chunk/evidence semantici file-backed",
         "runtime_file_refs": "risolve/verifica ref da text_file/path di artifact o target_file di sorgente; path e' alias accettato",
         "runtime_file_window": "legge una finestra reale di contenuto file/artifact; args path, offset, limit",
-        "build_python_line_count_csv": "inventario concreto delle linee Python sorgente",
     }
     lines = [
         f"- {name}: {purpose.get(name, 'broker tool IA-Carmine concreto allowlisted')}"

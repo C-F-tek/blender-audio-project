@@ -12,12 +12,14 @@ from pathlib import Path
 
 DEFAULT_MODELS: tuple[str, ...] = ()
 DEFAULT_OLLAMA_THREAD_FRACTION = 0.85
-DEFAULT_OLLAMA_NUM_CTX = 16384
-DEFAULT_OLLAMA_INACTIVITY_UNLOAD = "120s"
+DEFAULT_OLLAMA_NUM_CTX = 0
+DEFAULT_OLLAMA_INACTIVITY_UNLOAD = ""
 
 
 def normalize_base_url(value: str | None) -> str:
-    base_url = value or "http://127.0.0.1:11434"
+    base_url = str(value or "").strip()
+    if not base_url:
+        return ""
     if not base_url.startswith(("http://", "https://")):
         base_url = "http://" + base_url
     return base_url.rstrip("/")
@@ -58,7 +60,7 @@ def default_ollama_num_ctx() -> int:
             continue
         if parsed >= 4096:
             return parsed
-    return DEFAULT_OLLAMA_NUM_CTX
+    raise RuntimeError("ollama_num_ctx_explicit_required")
 
 
 def bounded_keep_alive(
@@ -69,11 +71,15 @@ def bounded_keep_alive(
 ) -> str:
     text = str(value if value is not None else "").strip().lower()
     if text in {"", "default", "auto"}:
+        if not default:
+            raise RuntimeError("ollama_keep_alive_explicit_required")
         return default
     if text in {"0", "0s"}:
         return "0s"
     seconds = _keep_alive_seconds(text)
     if seconds is None:
+        if not default:
+            raise RuntimeError(f"invalid_ollama_keep_alive: {value!r}")
         return default
     return f"{min(seconds, max_seconds)}s"
 
@@ -121,13 +127,14 @@ def ollama_home() -> Path:
     env_home = os.environ.get("OLLAMA_MODELS")
     if env_home:
         return Path(env_home).expanduser().resolve().parent
-    return Path.home() / ".ollama"
+    raise RuntimeError("ollama_models_explicit_required")
 
 
-def manifest_root() -> Path:
-    models_dir = Path(
-        os.environ.get("OLLAMA_MODELS", str(Path.home() / ".ollama" / "models"))
-    ).expanduser()
+def manifest_root() -> Path | None:
+    raw_models_dir = os.environ.get("OLLAMA_MODELS", "").strip()
+    if not raw_models_dir:
+        return None
+    models_dir = Path(raw_models_dir).expanduser()
     return models_dir / "manifests"
 
 
@@ -140,25 +147,6 @@ def find_ollama_exe() -> Path | None:
     which_path = shutil.which("ollama")
     if which_path:
         candidates.append(Path(which_path))
-
-    local_app = os.environ.get("LOCALAPPDATA")
-    program_files = os.environ.get("ProgramFiles")
-    user_profile = os.environ.get("USERPROFILE")
-
-    if local_app:
-        candidates.extend(
-            [
-                Path(local_app) / "Programs" / "Ollama" / "ollama.exe",
-                Path(local_app) / "Ollama" / "ollama.exe",
-                Path(local_app) / "Microsoft" / "WindowsApps" / "ollama.exe",
-            ]
-        )
-    if program_files:
-        candidates.append(Path(program_files) / "Ollama" / "ollama.exe")
-    if user_profile:
-        candidates.append(
-            Path(user_profile) / "AppData" / "Local" / "Programs" / "Ollama" / "ollama.exe"
-        )
 
     for candidate in candidates:
         try:
@@ -202,6 +190,8 @@ def start_server(
 
 def list_models_from_disk() -> list[str]:
     root = manifest_root()
+    if root is None:
+        return []
     if not root.exists():
         return []
     names = []
@@ -228,6 +218,4 @@ def choose_model(preferred_model: str | None, available_models: list[str]) -> st
     model = str(preferred_model or "").strip()
     if not model or model.lower() == "auto":
         raise RuntimeError("provider_model_explicit_required")
-    if model in available_models:
-        return model
-    raise RuntimeError(f"provider_model_explicit_not_installed: {model}")
+    return model

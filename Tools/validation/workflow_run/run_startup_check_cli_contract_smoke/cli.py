@@ -61,7 +61,7 @@ def write_markdown(report: dict, path: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Smoke python -m Tools.workflow startup_check CLI output contract."
+        description="Smoke retired workflow startup-check contract through canonical validation routing."
     )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", required=True)

@@ -25,8 +25,6 @@ from ia_carmine.runtime.heap_gate.provider_prompt import RuntimeGateProviderProm
 from ia_carmine.runtime.heap_gate.provider_refinement import RuntimeGateProviderRefinementMixin
 from ia_carmine.runtime.heap_gate.run_loop import RuntimeGateRunLoopMixin
 from ia_carmine.runtime.heap_gate.runtime_common import (
-    DEFAULT_MARKDOWN,
-    DEFAULT_OUTPUT,
     resolve_output_path,
     safe_dict,
     write_json_report,
@@ -119,10 +117,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stamp", default="")
     parser.add_argument(
         "--objective",
-        default=(
-            "prove complete heap-driven teamwork loop over repository context, "
-            "shared memory, brokered tools and all provider lanes"
-        ),
+        default="",
     )
     parser.add_argument(
         "--request",
@@ -154,7 +149,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--tool",
-        default="run_gpu_planner_json_contract_smoke",
+        default="",
         help="Compatibility flag; complete gate uses its internal readiness tool plan.",
     )
     parser.add_argument("--max-iterations", type=int, default=None)
@@ -179,6 +174,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--memory-search-limit", type=int, default=None)
     parser.add_argument("--tool-catalog-limit", type=int, default=None)
     parser.add_argument("--rag-db", default="")
+    parser.add_argument("--rag-profile", default="")
     parser.add_argument("--rag-embedding-endpoint", default="")
     parser.add_argument("--rag-embedding-model", default="")
     parser.add_argument("--max-new-tokens", type=int, default=None)
@@ -197,7 +193,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--npu-model-dir", default="")
     parser.add_argument("--operator-gpu-observation", default="")
     parser.add_argument("--keep-alive", default="")
-    parser.add_argument("--npu-micro-start-mode", default="deferred")
+    parser.add_argument("--npu-micro-start-mode", default="")
     parser.add_argument("--npu-micro-timeout-seconds", type=int, default=None)
     parser.add_argument("--npu-final-wait-seconds", type=int, default=None)
     parser.add_argument("--npu-max-context-chars", type=int, default=None)
@@ -226,7 +222,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--provider-prompt-tool-catalog-cap", type=int, default=None)
     parser.add_argument("--gpu0-iterations", type=int, default=None)
     parser.add_argument("--gpu0-min-seconds", type=float, default=None)
-    parser.add_argument("--max-degraded-lanes", type=int, default=0)
+    parser.add_argument("--max-degraded-lanes", type=int, default=None)
     parser.add_argument("--output-dir", default="")
     parser.add_argument("--events", default="")
     parser.add_argument("--snapshot", default="")
@@ -234,13 +230,47 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bridge-dir", default="")
     parser.add_argument("--bridge-output", default="")
     parser.add_argument("--bridge-markdown-output", default="")
-    parser.add_argument("--output", default=DEFAULT_OUTPUT)
-    parser.add_argument("--markdown-output", default=DEFAULT_MARKDOWN)
+    parser.add_argument("--output", default="")
+    parser.add_argument("--markdown-output", default="")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    missing = []
+    if not str(args.objective or "").strip():
+        missing.append("--objective")
+    if not (
+        str(args.request or "").strip()
+        or str(args.request_file or "").strip()
+        or str(args.startup_manifest or "").strip()
+        or str(args.task_file or "").strip()
+    ):
+        missing.append("--request-file")
+    if not str(args.npu_micro_start_mode or "").strip():
+        missing.append("--npu-micro-start-mode")
+    if args.max_degraded_lanes is None:
+        missing.append("--max-degraded-lanes")
+    if not str(args.output or "").strip():
+        missing.append("--output")
+    if not str(args.markdown_output or "").strip():
+        missing.append("--markdown-output")
+    if missing:
+        print(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "kind": "heap_runtime_completeness_gate_entrypoint_guard",
+                    "passed": False,
+                    "error": "explicit_runtime_gate_args_required",
+                    "missing_flags": missing,
+                    "canonical_entrypoint": "python -m ia_carmine.cli run",
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        return 2
     if args.allow_provider_generation and (
         not str(args.canonical_run_metadata or "").strip()
         or not str(args.canonical_run_fingerprint or "").strip()
@@ -262,14 +292,8 @@ def main() -> int:
         return 2
     gate = HeapRuntimeCompletenessGate(args)
     report = gate.run()
-    output = resolve_output_path(
-        gate.repo_root,
-        gate.path_arg(args.output, DEFAULT_OUTPUT).format(stamp=gate.stamp),
-    )
-    markdown = resolve_output_path(
-        gate.repo_root,
-        gate.path_arg(args.markdown_output, DEFAULT_MARKDOWN).format(stamp=gate.stamp),
-    )
+    output = resolve_output_path(gate.repo_root, args.output.format(stamp=gate.stamp))
+    markdown = resolve_output_path(gate.repo_root, args.markdown_output.format(stamp=gate.stamp))
     write_json_report(report, output)
     write_text_report(render_markdown(report), markdown)
     print_json_report(report)

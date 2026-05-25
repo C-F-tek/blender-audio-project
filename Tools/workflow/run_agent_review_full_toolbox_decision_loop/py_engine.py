@@ -108,7 +108,7 @@ def run_static_foundation(ctx: WorkflowContext) -> None:
     if not ctx.args.SkipMemoryReload:
         ctx.run_powershell(
             "Full memory/tool regeneration",
-            "Tools/workflow/_powershell/run_full_memory_tool_regeneration.ps1",
+            "python -m ia_carmine.cli runtime_tool_broker --tool build_agent_memory_inventory",
             {
                 "RepoRoot": ".",
                 "Stamp": ctx.p("artifact_stamp"),

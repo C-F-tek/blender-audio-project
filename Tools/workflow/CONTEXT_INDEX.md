@@ -2,14 +2,10 @@
 
 | Family | Context file |
 | --- | --- |
-| PowerShell wrappers | `Tools/workflow/_powershell/TOOL_CONTEXT.md` |
-| GUI | `Tools/workflow/gui/TOOL_CONTEXT.md` |
-| Workflow run packages | `Tools/workflow/workflow_run/TOOL_CONTEXT.md` |
+| Retired workflow surface | `Tools/workflow/TOOL_CONTEXT.md` |
+| GUI implementation modules | `Tools/workflow/gui/TOOL_CONTEXT.md` |
+| Workflow run implementation modules | `Tools/workflow/workflow_run/TOOL_CONTEXT.md` |
 
-Canonical command surface:
-
-```powershell
-python -m Tools.workflow <tool> [args...]
-```
-
-Public workflow tool names are registered in `Tools/workflow/dispatch.py`.
+`Tools.workflow` has no public command surface. Use `python -m ia_carmine.cli run`
+with explicit flags for runs, and use the canonical validation/broker commands
+for checks and helper/tool execution.

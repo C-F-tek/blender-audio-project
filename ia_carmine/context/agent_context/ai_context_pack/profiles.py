@@ -6,7 +6,7 @@ from typing import Any
 
 DEFAULT_OUTPUT_DIR = "output/ai_context_packs"
 DEFAULT_EVIDENCE_DIR = "docs/LOCAL_VALIDATION_EVIDENCE"
-DEFAULT_PROFILE = "project_self_improvement"
+DEFAULT_PROFILE = ""
 DEFAULT_MAX_TOTAL_CHARS = 64000
 DEFAULT_MAX_FILE_CHARS = 4000
 PACK_KIND = "ai_context_pack"

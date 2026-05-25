@@ -15,11 +15,13 @@ input request -> shared heap -> brokered tools -> shared memory/context/chunks -
 
 The operator-facing product entrypoint is:
 
-Tools/workflow/run_unified_real_product_pr.ps1
+```powershell
+python -m ia_carmine.cli run ...
+```
 
-The internal dynamic launcher is:
-
-Tools/workflow/run_unified_local_ai_refactor.ps1
+PowerShell workflow wrappers are launch helpers only. They must require explicit
+operator values and must not introduce model, profile, task, endpoint or budget
+defaults.
 
 The heap runtime completeness gate is not a product generator by itself. It validates that the runtime universe is connected before the larger real-product run uses it.
 
@@ -29,8 +31,6 @@ The heap universe can now be extended by external, gate-safe adapters. These ada
 
 Current external heap adapters:
 
-- `ia_carmine/runtime/run/profiles/heap_runtime_launcher_profiles.json`
-- `ia_carmine/runtime/heap_runtime/launcher_command/cli.py`
 - `ia_carmine/product/heap_final_proposals/normalize_final_causality/cli.py`
 - `ia_carmine/runtime/external_heap/block_pointer_manifest/cli.py`
 - `ia_carmine/runtime/external_heap/block_response/cli.py`
@@ -52,9 +52,13 @@ Runtime intent:
 - NPU can audit old pointers in parallel for guardrails, placeholders, invented paths, undeclared source writes and repeated output.
 - The final operator package can include a file-based long response composed from persisted blocks.
 
-The revision context feed is currently performed by `build_heap_runtime_launcher_command.py`: operational profiles use `revision_context_mode = auto_latest`, load the latest `external_heap_revision_context.json` when present, and inject a bounded task summary into the generated `--request`. This keeps the gate unchanged while allowing the next run to consume previous pointer tasks.
+Revision context is explicit input to the canonical run. The runtime must not
+select an implicit latest run or profile-derived revision context.
 
-The standard operator path is to generate the run command through `python -m ia_carmine.cli heap_runtime_launcher_command`, execute the generated `command`, then execute the generated `postrun_package_command`. The post-run package command calls `ia_carmine/runtime/external_heap/postrun_package/cli.py` and runs the external sequence in order for the latest or selected `heap_context_closure_*` run:
+The standard operator path is to execute `python -m ia_carmine.cli run ...` with
+all required values supplied on the command line. Post-run packaging may call
+`ia_carmine/runtime/external_heap/postrun_package/cli.py` internally for the
+selected `heap_context_closure_*` run:
 
 1. causality normalization;
 2. block pointer manifest generation;
@@ -63,7 +67,8 @@ The standard operator path is to generate the run command through `python -m ia_
 
 It does not replace the old composer. It consumes the old composer JSON and attaches the new long-response/revision artifacts to the same Documents package when the composer exposes `documents_dir`.
 
-For manual debugging, `build_heap_runtime_launcher_command.py` still exposes individual block pointer and revision-context commands. Those are diagnostics/step-through paths; the standard path is the post-run package command.
+Manual debugging may call adapter modules directly, but those modules are not
+alternate product run surfaces.
 
 ## Runtime policy
 

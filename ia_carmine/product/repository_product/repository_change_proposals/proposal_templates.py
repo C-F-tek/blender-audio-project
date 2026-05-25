@@ -37,7 +37,7 @@ def ai_workload_quality_remediation_proposal(
         ],
         validation=[
             "python -m Tools.validation check_ai_workload_report_quality --repo-root . --output .\\output\\validation\\ai_workload_report_quality.json",
-            "python -m Tools.workflow run_post_validation_ai_packet -Profile npu -OutputDir output/ai_packets -Basename npu_ollama_real_workload_after_tests -ProposalBasename npu_ollama_real_workload_proposals -ContextFile output/ai_packets/npu_real_workload_report.md,output/ai_packets/ollama_gpu_real_workload_report.md -ReportFile output/validation/ai_workload_report_quality.json,output/validation/local_ai_resource_lanes.json,output/validation/provider_result_report.json,output/validation/local_provider_probe.json,output/validation/npu_runtime_output_manifest.json",
+            "python -m ia_carmine.cli runtime_tool_broker --tool repository_update_suggestions --mode report --input output/validation/ai_workload_report_quality.json",
         ],
         stop_conditions=[
             "Any change would execute providers implicitly or by default.",
@@ -76,9 +76,9 @@ def provider_report_adoption_proposal() -> dict[str, Any]:
         ],
         validation=[
             "python -m Tools.validation check_provider_result_parsing --repo-root . --output .\\output\\validation\\provider_result_parsing.json",
-            "python -m Tools.npu build_provider_result_report --repo-root . --use-samples --output .\\output\\validation\\provider_result_report.json",
+            "python -m ia_carmine.cli runtime_tool_broker --tool build_provider_result_report --mode report --repo-root . --output .\\output\\validation\\provider_result_report.json",
             "python -m ia_carmine.cli run_local_provider_probe --repo-root . --run-ollama --run-npu --output .\\output\\validation\\local_provider_probe.json",
-            "python -m Tools.workflow run_npu_pipeline_helper_validation",
+            "python -m Tools.validation validator_unico --mode quick --section provider_result_parsing",
         ],
         stop_conditions=[
             "Any change would execute providers from the legacy runtime path.",
@@ -99,9 +99,9 @@ def post_validation_loop_hardening_proposal() -> dict[str, Any]:
             "The next safe milestone is consolidating the internal loop so future coding/test cycles produce stable reports, packets, proposals and stop conditions without adding new runtime features."
         ),
         target_files=[
-            "Tools/workflow/_powershell/run_local_validation_after_refactor.ps1",
-            "Tools/workflow/_powershell/run_npu_pipeline_helper_validation.ps1",
-            "Tools/workflow/_powershell/run_post_validation_ai_packet.ps1",
+            "Tools/validation/validation_gate/cli.py",
+            "ia_carmine/runtime/runtime_tool/broker/registry.py",
+            "ia_carmine/product/repository_product/repository_change_proposals/cli.py",
             "ia_carmine/product/repository_product/repository_update_suggestions/cli.py",
             "ia_carmine/product/repository_product/repository_change_proposals/cli.py",
             "Tools/validation/CONTEXT_INDEX.md",
@@ -119,10 +119,10 @@ def post_validation_loop_hardening_proposal() -> dict[str, Any]:
         ],
         validation=[
             "python -m Tools.validation check_provider_result_parsing --repo-root . --output .\\output\\validation\\provider_result_parsing.json",
-            "python -m Tools.npu build_provider_result_report --repo-root . --use-samples --output .\\output\\validation\\provider_result_report.json",
+            "python -m ia_carmine.cli runtime_tool_broker --tool build_provider_result_report --mode report --repo-root . --output .\\output\\validation\\provider_result_report.json",
             "python -m ia_carmine.cli check_local_resource_lanes --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md",
             "python -m ia_carmine.cli run_local_provider_probe --repo-root . --run-ollama --run-npu --output .\\output\\validation\\local_provider_probe.json",
-            "python -m Tools.workflow run_local_validation_after_refactor -SkipPull -ContinueOnError -MatrixWorkers 12 -RepeatCases 2",
+            "python -m Tools.validation validator_unico --mode all",
         ],
         stop_conditions=[
             "Any change would add new provider execution to default validation without an explicit flag.",
@@ -153,9 +153,9 @@ def default_npu_observability_proposal() -> dict[str, Any]:
             "Keep every output advisory and generated under output/.",
         ],
         validation=[
-            "python -m Tools.workflow run_npu_pipeline_helper_validation",
+            "python -m Tools.validation validator_unico --mode quick --section provider_result_parsing",
             "python -m ia_carmine.cli check_local_resource_lanes --repo-root . --parallel --output .\\output\\validation\\local_ai_resource_lanes.json --markdown-output .\\output\\validation\\local_ai_resource_lanes.md",
-            "python -m Tools.workflow run_post_validation_ai_packet -Profile npu -OutputDir output/ai_packets -Basename npu_after_tests -ReportFile output/validation/local_ai_resource_lanes.json -ReportFile output/validation/npu_runtime_output_manifest.json",
+            "python -m ia_carmine.cli runtime_tool_broker --tool repository_update_suggestions --mode report --input output/validation/local_ai_resource_lanes.json --input output/validation/npu_runtime_output_manifest.json",
         ],
         stop_conditions=[
             "Any change requires modifying provider execution, prompt prose, Blender runtime or generated indexes manually."

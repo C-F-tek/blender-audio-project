@@ -40,6 +40,8 @@ def run_step(
     script: str,
     timeout_seconds: int,
     extra_args: list[str] | None = None,
+    provider_model: str = "",
+    provider_base_url: str = "",
 ) -> dict[str, Any]:
     started = time.time()
     output = repo_root / "output/validation" / f"real_product_preflight_{name}.json"
@@ -63,7 +65,9 @@ def run_step(
                 "--markdown-output",
                 str(output.with_suffix(".md")),
                 "--model",
-                "qwen3-coder:latest",
+                provider_model,
+                "--base-url",
+                provider_base_url,
                 "--timeout",
                 str(max(10, min(timeout_seconds, 60))),
                 "--parallel",
@@ -214,16 +218,28 @@ def main() -> int:
         action="store_true",
         help="Acknowledge this smoke is downstream verification, not a product entrypoint.",
     )
-    parser.add_argument("--provider-model", default="qwen3-coder:latest")
-    parser.add_argument("--provider-base-url", default="http://127.0.0.1:11434")
-    parser.add_argument("--provider-num-ctx", type=int, default=8192)
-    parser.add_argument("--provider-max-new-tokens", type=int, default=700)
+    parser.add_argument("--provider-model", default="")
+    parser.add_argument("--provider-base-url", default="")
+    parser.add_argument("--provider-num-ctx", type=int, default=0)
+    parser.add_argument("--provider-max-new-tokens", type=int, default=0)
     parser.add_argument("--gpu1-native-tool-loop-preflight", action="store_true")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     output = resolve_output_path(repo_root, args.output)
     markdown_output = resolve_output_path(repo_root, args.markdown_output)
+    if args.complete_provider_smoke or args.gpu1_native_tool_loop_preflight:
+        missing = []
+        if not str(args.provider_model or "").strip():
+            missing.append("--provider-model")
+        if not str(args.provider_base_url or "").strip():
+            missing.append("--provider-base-url")
+        if int(args.provider_num_ctx or 0) <= 0:
+            missing.append("--provider-num-ctx")
+        if int(args.provider_max_new_tokens or 0) <= 0:
+            missing.append("--provider-max-new-tokens")
+        if missing:
+            parser.error("missing explicit provider preflight parameter(s): " + ", ".join(missing))
     if args.complete_provider_smoke and not args.downstream_verification:
         report = {
             "schema_version": 1,
@@ -365,7 +381,15 @@ def main() -> int:
                         str(args.provider_max_new_tokens),
                     ]
                 )
-            step = run_step(repo_root, name, script, args.timeout_seconds, extra_args)
+            step = run_step(
+                repo_root,
+                name,
+                script,
+                args.timeout_seconds,
+                extra_args,
+                provider_model=str(args.provider_model or ""),
+                provider_base_url=str(args.provider_base_url or ""),
+            )
         steps.append(step)
         if not step.get("passed"):
             errors.append(f"preflight step failed: {name}")
