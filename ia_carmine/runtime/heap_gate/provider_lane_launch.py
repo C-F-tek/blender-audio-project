@@ -1,6 +1,7 @@
 """Provider lane process launch and launch manifest helpers."""
 from __future__ import annotations
 import time
+from ia_carmine._shared.ollama_provider_selection import provider_model_policy_fields
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     Path,
@@ -25,6 +26,11 @@ def write_provider_launch_manifest(
     stage: str,
 ) -> None:
     metrics = _parallel_window_metrics(prepared)
+    requested_model = str(getattr(gate.args, "provider_model", "") or "auto")
+    selected_model = str(getattr(gate, "selected_provider_model", "") or "")
+    model_policy = provider_model_policy_fields(
+        requested_model
+    )
     write_json_report(
         {
             "kind": "provider_launch_manifest",
@@ -47,10 +53,18 @@ def write_provider_launch_manifest(
             ),
             "provider_model_explicit": bool(
                 str(getattr(gate.args, "provider_model", "")).strip()
-                and str(getattr(gate.args, "provider_model", "")).strip() != "auto"
+                and str(getattr(gate.args, "provider_model", "")).strip().lower() != "auto"
             ),
-            "requested_provider_model": str(getattr(gate.args, "provider_model", "") or "auto"),
-            "selected_provider_model": str(getattr(gate, "selected_provider_model", "") or ""),
+            "requested_provider_model": requested_model,
+            "selected_provider_model": selected_model,
+            "model_selection_policy": model_policy["model_selection_policy"],
+            "model_switch_allowed": bool(model_policy["model_switch_allowed"]),
+            "model_switch_performed": bool(model_policy["model_switch_performed"]),
+            "provider_model_selection_mismatch": bool(
+                selected_model
+                and requested_model.lower() != "auto"
+                and selected_model != requested_model
+            ),
             "selected_ollama_num_ctx": getattr(gate, "selected_ollama_num_ctx", None),
             "strict_provider_model": bool(getattr(gate.args, "strict_provider_model", False)),
             "provider_runtime_plan": getattr(gate, "provider_runtime_plan", ""),
@@ -132,6 +146,11 @@ def _lane_manifest_item(gate: Any, item: dict[str, Any]) -> dict[str, Any]:
         ),
         "role": spec.get("role"),
         "provider_model": spec.get("provider_model", ""),
+        "requested_provider_model": spec.get("requested_provider_model", ""),
+        "selected_provider_model": spec.get("selected_provider_model", ""),
+        "model_selection_policy": spec.get("model_selection_policy", ""),
+        "model_switch_allowed": spec.get("model_switch_allowed", False),
+        "model_switch_performed": spec.get("model_switch_performed", False),
         "pid": item.get("pid"),
         "started_at": item.get("started_at"),
         "completed_at": item.get("completed_at"),

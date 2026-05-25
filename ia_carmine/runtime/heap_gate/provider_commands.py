@@ -5,6 +5,7 @@ from ia_carmine.runtime.heap_gate.provider_time import build_provider_time_count
 from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine._shared.provider_tool_schemas import is_api_native_tool_call
 from ia_carmine._shared.provider_work_verification import provider_work_status
+from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import ONE_TURN_SUMMARY_FIELDS
 def _empty_report_value(value: Any) -> bool:
     return value is None or value == "" or value == [] or value == {}
 def _provider_report_response_text(owner: Any, report: dict[str, Any]) -> str:
@@ -183,6 +184,13 @@ class RuntimeGateProviderCommandsMixin:
                         "closure_owner",
                         "context_budget",
                         "provider_model",
+                        "requested_provider_model",
+                        "selected_provider_model",
+                        "model_switch_reason",
+                        "model_switch_allowed",
+                        "model_switch_performed",
+                        "model_selection_policy",
+                        "provider_model_selection_mismatch",
                         "provider_loaded",
                         "generated_phrase",
                         "prompt_token_count",
@@ -238,6 +246,7 @@ class RuntimeGateProviderCommandsMixin:
                         "gpu1_tool_loop_closed",
                         "eval_count",
                         "prompt_eval_count",
+                        *ONE_TURN_SUMMARY_FIELDS,
                     ):
                         if key in lane_report and _empty_report_value(report_data.get(key)):
                             report_data[key] = lane_report.get(key)
@@ -348,6 +357,15 @@ class RuntimeGateProviderCommandsMixin:
             "closure_owner": report_data.get("closure_owner") or spec.get("closure_owner"),
             "context_budget": report_data.get("context_budget") or spec.get("context_budget"),
             "provider_model": report_data.get("provider_model"),
+            "requested_provider_model": report_data.get("requested_provider_model"),
+            "selected_provider_model": report_data.get("selected_provider_model"),
+            "model_switch_reason": report_data.get("model_switch_reason"),
+            "model_switch_allowed": report_data.get("model_switch_allowed"),
+            "model_switch_performed": report_data.get("model_switch_performed"),
+            "model_selection_policy": report_data.get("model_selection_policy"),
+            "provider_model_selection_mismatch": report_data.get(
+                "provider_model_selection_mismatch"
+            ),
             "provider_loaded": report_data.get("provider_loaded"),
             "generated_phrase": report_data.get("generated_phrase"),
             "prompt_token_count": report_data.get("prompt_token_count"),
@@ -455,6 +473,13 @@ class RuntimeGateProviderCommandsMixin:
             "stdout_tail": (completed.stdout or "")[-1000:],
             "stderr_tail": (completed.stderr or "")[-1000:],
         }
+        summary.update(
+            {
+                key: report_data.get(key)
+                for key in ONE_TURN_SUMMARY_FIELDS
+                if key in report_data
+            }
+        )
         if lane == "npu_micro_task_auditor":
             summary.update(
                 {

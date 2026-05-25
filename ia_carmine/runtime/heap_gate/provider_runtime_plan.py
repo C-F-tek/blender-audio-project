@@ -7,6 +7,7 @@ from ia_carmine._shared.ollama_provider_selection import (
     nvidia_gpu_inventory,
     ollama_model_inventory,
     parse_context_candidates,
+    provider_model_policy_fields,
 )
 from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import context_hierarchy_payload
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, repo_rel, write_json_report
@@ -21,11 +22,24 @@ def write_provider_runtime_plan(
     reports: list[dict[str, Any]] | None = None,
 ) -> Path:
     path = work_dir / "provider_runtime_plan.json"
+    requested_model = str(getattr(gate.args, "provider_model", "") or "auto")
+    selected_model = str(getattr(gate, "selected_provider_model", "") or "")
+    model_policy = provider_model_policy_fields(
+        requested_model
+    )
     payload = {
         "kind": "provider_runtime_plan",
         "stage": stage,
-        "requested_provider_model": str(getattr(gate.args, "provider_model", "") or "auto"),
-        "selected_provider_model": str(getattr(gate, "selected_provider_model", "") or ""),
+        "requested_provider_model": requested_model,
+        "selected_provider_model": selected_model,
+        "model_selection_policy": model_policy["model_selection_policy"],
+        "model_switch_allowed": bool(model_policy["model_switch_allowed"]),
+        "model_switch_performed": bool(model_policy["model_switch_performed"]),
+        "provider_model_selection_mismatch": bool(
+            selected_model
+            and requested_model.lower() != "auto"
+            and selected_model != requested_model
+        ),
         "selected_ollama_num_ctx": getattr(gate, "selected_ollama_num_ctx", None),
         "provider_lane_hierarchy": context_hierarchy_payload(
             gate.args, gpu1_ctx=getattr(gate, "selected_ollama_num_ctx", None)
@@ -61,6 +75,10 @@ def _compact_reports(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "requested_provider_model",
         "selected_provider_model",
         "model_switch_reason",
+        "model_switch_allowed",
+        "model_switch_performed",
+        "model_selection_policy",
+        "provider_model_selection_mismatch",
         "lane_tier",
         "authority",
         "closure_owner",

@@ -11,6 +11,10 @@ from ia_carmine.runtime.heap_gate.provider_lane_launch import (
 )
 from ia_carmine.runtime.heap_gate.provider_process_collection import collect_provider_processes
 from ia_carmine.runtime.heap_gate.broker_result_validation import broker_result_passed
+from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import (
+    build_gpu1_one_turn_runtime_gate,
+    one_turn_gate_summary,
+)
 from ia_carmine.runtime.heap_gate.gpu1_tool_result_messages import gpu1_tool_result_payload
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, json, read_json, repo_rel, write_json_report
 from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
@@ -43,6 +47,7 @@ def run_gpu1_native_tool_chat_loop(
     base_command = list(primary_item["command"])
     base_spec = deepcopy(primary_item["spec"])
     last_item = primary_item
+    subturn_reports: list[dict[str, Any]] = []
     max_subturns = max(1, min(MAX_GPU1_NATIVE_TOOL_SUBTURNS, int(getattr(gate.args, "max_provider_revisions", 5) or 5)))
     passed_request_ids: list[str] = []
     failed_request_ids: list[str] = []
@@ -83,6 +88,8 @@ def run_gpu1_native_tool_chat_loop(
         if item.get("completed") is not None:
             absorb(item)
         report = item.get("provider_report") if isinstance(item.get("provider_report"), dict) else {}
+        if report:
+            subturn_reports.append(report)
         _append_assistant_message(gate, history_path, report)
         calls = report.get("tool_calls") if isinstance(report.get("tool_calls"), list) else []
         if not calls:
@@ -123,6 +130,15 @@ def run_gpu1_native_tool_chat_loop(
                 passed_request_ids.append(request_id)
             else:
                 failed_request_ids.append(request_id)
+        _append_causal_resume_message(
+            gate,
+            history_path,
+            report=report,
+            results=results,
+            passed_request_ids=passed_request_ids,
+            failed_request_ids=failed_request_ids,
+            next_subturn=subturn + 1,
+        )
         _persist_loop_state(gate, report, history_path, closed=False, subturn=subturn)
         last_item = item
     else:
@@ -144,6 +160,17 @@ def run_gpu1_native_tool_chat_loop(
             failed_request_ids=failed_request_ids,
             absorb=absorb,
         )
+        report = last_item.get("provider_report") if isinstance(last_item.get("provider_report"), dict) else {}
+        if report:
+            subturn_reports.append(report)
+    _attach_one_turn_gate(
+        gate,
+        last_item=last_item,
+        revision=revision,
+        subturn_reports=subturn_reports,
+        history_path=history_path,
+        work_dir=work_dir,
+    )
     return last_item
 
 
@@ -271,15 +298,70 @@ def _append_soft_stop_message(
                 "CONSUMED_EVIDENCE:\n"
                 f"{joined}\n"
                 "NEXT_RUNTIME_INTENT:\n"
-                "- close_gpu1_tool_loop_after_soft_stop\n"
+                "- answer_operator_if_evidence_sufficient_else_emit_typed_non_product_diagnostic\n"
                 "DIAGNOSTIC_TOOL_FAILURES:\n"
                 f"{failed_joined}\n"
                 "FINAL_PRODUCT_DELTA:\n"
-                "Write the actual operator-facing product now, grounded in concrete tool facts.\n"
+                "If the consumed evidence is enough, answer the operator task concretely. "
+                "If it is not enough, emit the concrete blocker and required next runtime "
+                "action; the runtime will classify that diagnostic as non-product.\n"
             ),
         }
     )
     write_json_report(history, history_path)
+
+
+def _attach_one_turn_gate(
+    gate: Any,
+    *,
+    last_item: dict[str, Any],
+    revision: int,
+    subturn_reports: list[dict[str, Any]],
+    history_path: Path,
+    work_dir: Path,
+) -> None:
+    final_report = (
+        last_item.get("provider_report")
+        if isinstance(last_item.get("provider_report"), dict)
+        else {}
+    )
+    output_path = work_dir / f"gpu1_one_turn_runtime_gate_revision{revision:03d}.json"
+    gate_report = build_gpu1_one_turn_runtime_gate(
+        gate,
+        revision=revision,
+        final_report=final_report,
+        subturn_reports=subturn_reports,
+        events=gate.read_events(),
+        history_path=history_path,
+        output_path=output_path,
+    )
+    summary = one_turn_gate_summary(gate_report, gate.repo_root)
+    if final_report:
+        final_report.update(summary)
+        _rewrite_provider_report_with_one_turn_fields(gate, final_report)
+    last_item["gpu1_one_turn_runtime_gate"] = gate_report
+    last_item["gpu1_one_turn_runtime_gate_path"] = summary.get(
+        "gpu1_one_turn_runtime_gate_path"
+    )
+    gate.gpu1_one_turn_runtime_gate = gate_report
+    gate.gpu1_one_turn_runtime_gate_path = summary.get("gpu1_one_turn_runtime_gate_path")
+    gate.gpu1_one_turn_runtime_gate_passed = summary.get(
+        "gpu1_one_turn_runtime_gate_passed"
+    )
+
+
+def _rewrite_provider_report_with_one_turn_fields(gate: Any, report: dict[str, Any]) -> None:
+    output_ref = str(report.get("output") or "")
+    if not output_ref:
+        return
+    output_path = Path(output_ref)
+    if not output_path.is_absolute():
+        output_path = gate.repo_root / output_path
+    persisted = read_json(output_path)
+    if not isinstance(persisted, dict):
+        persisted = {}
+    persisted.update(report)
+    write_json_report(persisted, output_path)
 
 
 def _subturn_output_path(work_dir: Path, revision: int, subturn: int) -> Path:
@@ -377,11 +459,17 @@ def _append_tool_result_messages(
         history.append(
             {
                 "role": "tool",
+                "name": str(result.get("tool") or ""),
+                "tool_call_id": tool_call_id,
                 "tool_name": str(result.get("tool") or ""),
+                "broker_request_id": request_id,
+                "result_ref": _result_ref(result),
                 "content": json.dumps(
                     {
-                        **_tool_result_message_payload(gate, result),
+                        **_tool_result_message_payload(gate, result, tool_call_id=tool_call_id),
                         "tool_call_id": tool_call_id,
+                        "broker_request_id": request_id,
+                        "result_ref": _result_ref(result),
                     },
                     ensure_ascii=False,
                     sort_keys=True,
@@ -392,8 +480,73 @@ def _append_tool_result_messages(
     write_json_report(history, history_path)
 
 
-def _tool_result_message_payload(gate: Any, result: dict[str, Any]) -> dict[str, Any]:
-    return gpu1_tool_result_payload(gate.repo_root, result)
+def _append_causal_resume_message(
+    gate: Any,
+    history_path: Path,
+    *,
+    report: dict[str, Any],
+    results: list[dict[str, Any]],
+    passed_request_ids: list[str],
+    failed_request_ids: list[str],
+    next_subturn: int,
+) -> None:
+    history = _read_history(history_path)
+    sidecar_pending = _sidecar_review_refs(gate.read_events())
+    result_lines = []
+    for result in results:
+        request_id = str(result.get("request_id") or result.get("normalized_request_id") or "")
+        result_lines.append(
+            f"- id={request_id} tool={result.get('tool')} "
+            f"returncode={result.get('returncode')} "
+            f"passed={broker_result_passed(result, repo_root=gate.repo_root)} "
+            f"result_ref={_result_ref(result)}"
+        )
+    history.append(
+        {
+            "role": "user",
+            "content": (
+                "GPU1_CAUSAL_RESUME_CONTEXT:\n"
+                f"- next_subturn=subturn{next_subturn}\n"
+                f"- previous_provider_block_id={report.get('provider_block_id') or ''}\n"
+                f"- previous_proposal_block_id={report.get('proposal_block_id') or ''}\n"
+                "- passed broker request ids eligible for CONSUMED_EVIDENCE:\n"
+                + ("\n".join(f"  - {item}" for item in passed_request_ids if item) or "  - none")
+                + "\n- failed broker request ids diagnostic only:\n"
+                + ("\n".join(f"  - {item}" for item in failed_request_ids if item) or "  - none")
+                + "\n- broker results just reinjected as role=tool:\n"
+                + ("\n".join(result_lines) or "  - none")
+                + "\n- unconsumed GPU0/NPU sidecar review refs:\n"
+                + ("\n".join(f"  - {item}" for item in sidecar_pending) or "  - none")
+                + "\nRULES: consume only passed broker request ids in CONSUMED_EVIDENCE; "
+                "put failed ids only in DIAGNOSTIC_TOOL_FAILURES. If you correct/refine "
+                "a previous GPU1 block or peer rejection, set refines_block_id.\n"
+            ),
+        }
+    )
+    write_json_report(history, history_path)
+
+
+def _tool_result_message_payload(gate: Any, result: dict[str, Any], *, tool_call_id: str) -> dict[str, Any]:
+    return gpu1_tool_result_payload(gate.repo_root, result, tool_call_id=tool_call_id)
+
+
+def _result_ref(result: dict[str, Any]) -> str:
+    outputs = result.get("outputs") if isinstance(result.get("outputs"), dict) else {}
+    return str(outputs.get("json_report") or result.get("broker_report") or "")
+
+
+def _sidecar_review_refs(events: list[dict[str, Any]]) -> list[str]:
+    refs: list[str] = []
+    for event in events:
+        payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+        lane = str(payload.get("lane") or "")
+        if lane not in {"gpu0_peer", "npu_micro_task_auditor"}:
+            continue
+        for key in ("provider_report", "provider_block_id", "proposal_block_id"):
+            value = str(payload.get(key) or "").strip()
+            if value and value not in refs:
+                refs.append(value)
+    return refs[:24]
 
 
 def _expected_request_links(gate: Any, report: dict[str, Any]) -> list[dict[str, str]]:

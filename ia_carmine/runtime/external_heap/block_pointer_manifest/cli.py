@@ -27,6 +27,10 @@ from typing import Any
 
 from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine.runtime.heap_gate.pointer_soft_lock import pointer_closure_summary
+from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import (
+    ONE_TURN_SUMMARY_FIELDS,
+    strict_one_turn_gate_passed,
+)
 
 from .provider_graph import provider_blocks, provider_rejections
 
@@ -275,6 +279,11 @@ def proposal_blocks(repo_root: Path, run_dir: Path, max_block_chars: int) -> lis
                     and data.get("final_product_delta_valid") is True
                 ),
             },
+            **{
+                key: data.get(key)
+                for key in ONE_TURN_SUMMARY_FIELDS
+                if key in data
+            },
         }
         if not block["consumed_block_ids"]:
             consumed: list[str] = []
@@ -332,6 +341,34 @@ def build_pointer_edges(blocks: list[dict[str, Any]]) -> list[dict[str, str]]:
                     }
                 )
     return edges
+
+
+def _block_id(block: dict[str, Any]) -> str:
+    return str(block.get("block_id") or "").strip()
+
+
+def latest_proposal_delta_current(
+    proposals: list[dict[str, Any]],
+) -> tuple[bool, str, str]:
+    """Return whether the current proposal chain ends on an applied delta."""
+    if not proposals:
+        return False, "", ""
+    latest_index = len(proposals) - 1
+    latest = proposals[latest_index]
+    latest_id = _block_id(latest)
+    if latest.get("delta_applied") is True:
+        return True, latest_id, ""
+    for block in proposals[latest_index + 1 :]:
+        if block.get("delta_applied") is not True:
+            continue
+        targets = {
+            str(block.get("previous_block_id") or "").strip(),
+            str(block.get("refines_block_id") or "").strip(),
+            str(block.get("resume_from_block_id") or "").strip(),
+        }
+        if latest_id and latest_id in targets:
+            return True, latest_id, ""
+    return False, latest_id, "latest_gpu1_delta_rejected_or_unapplied"
 
 
 def build_report(
@@ -408,6 +445,21 @@ def build_report(
     provider_execution_performed = any(
         normalize_bool(block.get("provider_work_verified")) for block in source_providers
     )
+    gpu1_one_turn_gate_blocks = [
+        block
+        for block in source_proposals
+        if block.get("gpu1_one_turn_runtime_gate_present")
+    ]
+    gpu1_one_turn_gate_passed = any(
+        strict_one_turn_gate_passed(block) for block in source_proposals
+    )
+    gpu1_one_turn_gate_blockers = sorted(
+        {
+            str(block.get("gpu1_one_turn_blocker") or "")
+            for block in source_proposals
+            if str(block.get("gpu1_one_turn_blocker") or "").strip()
+        }
+    )
     resource_mechanics_performed = any(
         block_resource_mechanics_performed(block) for block in all_blocks
     )
@@ -431,7 +483,14 @@ def build_report(
         and provider_execution_performed
         and not unlinked_peer_blocks
     )
-    proposal_graph_product_passed = bool(source_proposals and all_delta_applied_blocks)
+    (
+        latest_gpu1_delta_current,
+        latest_gpu1_delta_block_id,
+        latest_gpu1_delta_blocker,
+    ) = latest_proposal_delta_current(source_proposals)
+    proposal_graph_product_passed = bool(
+        source_proposals and all_delta_applied_blocks and latest_gpu1_delta_current
+    )
     errors: list[str] = []
     warnings: list[str] = []
     if not source_proposals and provider_graph_recoverable:
@@ -440,6 +499,8 @@ def build_report(
         errors.append("proposal_block_count is zero")
     if source_proposals and not all_delta_applied_blocks:
         errors.append("final_product_composer_only_collaged_blocks")
+    if source_proposals and all_delta_applied_blocks and not latest_gpu1_delta_current:
+        errors.append(latest_gpu1_delta_blocker or "latest_gpu1_delta_rejected_or_unapplied")
     if source_proposals and not edges:
         errors.append("edge_count is zero")
     if provider_mode_observed:
@@ -451,6 +512,9 @@ def build_report(
             errors.append("provider work rejected: " + ",".join(provider_rejection_reasons))
         if unlinked_peer_blocks:
             errors.append(f"provider peer blocks lack refines edge: {unlinked_peer_blocks}")
+        if not gpu1_one_turn_gate_passed:
+            blocker = gpu1_one_turn_gate_blockers[0] if gpu1_one_turn_gate_blockers else "gpu1_one_turn_runtime_gate_missing"
+            errors.append(f"gpu1_one_turn_runtime_gate_failed:{blocker}")
     proposal_graph_product_passed = proposal_graph_product_passed and not errors
     final_product_passed = proposal_graph_product_passed and not provider_graph_recoverable
     return {
@@ -462,6 +526,9 @@ def build_report(
         "protocol": "external_heap_block_pointer_v1",
         "passed": not errors,
         "proposal_graph_product_passed": proposal_graph_product_passed,
+        "latest_gpu1_delta_current": latest_gpu1_delta_current,
+        "latest_gpu1_delta_block_id": latest_gpu1_delta_block_id,
+        "latest_gpu1_delta_blocker": latest_gpu1_delta_blocker,
         "provider_graph_recoverable": provider_graph_recoverable,
         "final_product_passed": final_product_passed,
         "pointer_product_contract": POINTER_PRODUCT_CONTRACT,
@@ -515,6 +582,12 @@ def build_report(
             "soft_lock_targeted_refine_used", False
         ),
         "provider_execution_performed": provider_execution_performed,
+        "gpu1_one_turn_runtime_gate_passed": gpu1_one_turn_gate_passed,
+        "source_gpu1_one_turn_gate_count": len(gpu1_one_turn_gate_blocks),
+        "gpu1_one_turn_gate_failed_count": sum(
+            1 for block in gpu1_one_turn_gate_blocks if not strict_one_turn_gate_passed(block)
+        ),
+        "gpu1_one_turn_gate_blockers": gpu1_one_turn_gate_blockers,
         "resource_mechanics_performed": resource_mechanics_performed,
         "resource_probe_performed": any(
             normalize_bool(block.get("resource_probe_performed")) for block in all_blocks

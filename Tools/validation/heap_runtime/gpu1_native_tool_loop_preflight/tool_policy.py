@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from ia_carmine._shared.file_backed_transport import MAX_FILE_WINDOW_CHARS
 from Tools.validation.heap_runtime.gpu1_native_tool_loop_preflight.context import (
     DEFAULT_MEMORY_QUERY,
-    repair_runtime_file_window_args,
 )
 
 GPU1_LANE = "gpu1_planner"
@@ -24,13 +22,26 @@ def normalize_tool_args(
 ) -> dict[str, Any]:
     normalized = dict(raw_args)
     if tool == "runtime_file_window":
-        startup = getattr(runtime_args, "startup_context", {})
-        if isinstance(startup, dict):
-            normalized = repair_runtime_file_window_args(normalized, Path(runtime_args.repo_root), startup)
+        normalized_from: dict[str, str] = {}
+        if "length" in normalized and "limit" not in normalized:
+            normalized["limit"] = normalized.pop("length")
+            normalized_from["limit"] = "length"
         normalized.setdefault("offset", 0)
         requested = _positive_int(normalized.get("limit"), 0)
         configured = _positive_int(getattr(runtime_args, "file_window_limit", 16000), 16000)
         normalized["limit"] = min(MAX_FILE_WINDOW_CHARS, max(requested, configured))
+        startup = getattr(runtime_args, "startup_context", {})
+        refs = startup.get("refs") if isinstance(startup, dict) else {}
+        manifest_ref = refs.get("startup_manifest_ref") if isinstance(refs, dict) else {}
+        manifest_path = str(manifest_ref.get("path") or "").strip() if isinstance(manifest_ref, dict) else ""
+        if manifest_path:
+            normalized.setdefault("startup_manifest", manifest_path)
+        normalized.setdefault("strict_startup_refs", True)
+        if normalized_from:
+            prior = normalized.get("argument_normalized_from")
+            merged = dict(prior) if isinstance(prior, dict) else {}
+            merged.update(normalized_from)
+            normalized["argument_normalized_from"] = merged
     if tool == "runtime_file_refs":
         _normalize_runtime_file_refs(normalized)
     if tool == "runtime_sqlite_memory":
@@ -58,8 +69,13 @@ def tool_argument_errors(tool: str, args: dict[str, Any]) -> list[str]:
         has_file = bool(str(args.get("proposal_text_file") or "").strip())
         if not has_text and not has_file:
             return ["generic_write_requires_proposal_text_or_file"]
-    if tool == "runtime_file_window" and _positive_int(args.get("limit"), 0) < 4000:
-        return ["runtime_file_window_too_small_for_universe_preflight"]
+    if tool == "runtime_file_window":
+        errors: list[str] = []
+        if not str(args.get("path") or args.get("ref_id") or "").strip():
+            errors.append("runtime_file_window_requires_ref_id_or_startup_path")
+        if _positive_int(args.get("limit"), 0) < 4000:
+            errors.append("runtime_file_window_too_small_for_universe_preflight")
+        return errors
     return []
 
 

@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any
 
+from ia_carmine._shared.ollama_provider_selection import provider_model_policy_fields
+
 OPTIONAL_FIELDS = {
     "strict_provider_model",
     "ollama_num_thread",
@@ -237,6 +239,9 @@ def resolve_universe_config(
             "missing explicit Universo IA run parameter(s); provide CLI flags: "
             f"{', '.join(missing)}"
         )
+    provider_model = str(config.provider_model or "").strip()
+    if not provider_model or provider_model.lower() == "auto":
+        raise SystemExit("provider_model_explicit_required; pass --provider-model <model>")
     for field in OPTIONAL_FIELDS:
         if sources.get(field) == "unresolved_missing":
             sources[field] = "optional_unset"
@@ -256,4 +261,7 @@ def launcher_config_metadata(resolved: ResolvedUniverseRunConfig) -> dict[str, A
     return {
         "effective_universe_config": asdict(resolved.config),
         "field_sources": dict(resolved.field_sources),
+        "provider_model_selection": provider_model_policy_fields(
+            resolved.config.provider_model
+        ),
     }

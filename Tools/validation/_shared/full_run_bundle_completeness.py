@@ -142,6 +142,43 @@ def validate_required_recursive_roots(
     return errors, checks
 
 
+def provider_complete_or_full_report(report: dict[str, Any]) -> bool:
+    if not report.get("provider_execution_performed") and not report.get("allow_provider_generation"):
+        return False
+    profile_text = " ".join(
+        str(report.get(key) or "")
+        for key in (
+            "run_profile",
+            "profile",
+            "execution_profile",
+            "provider_profile",
+            "runtime_profile",
+        )
+    ).lower()
+    if "complete" in profile_text or "full" in profile_text:
+        return True
+    if report.get("max_degraded_lanes") == 0:
+        return True
+    artifacts = report.get("artifacts") if isinstance(report.get("artifacts"), list) else []
+    return any(
+        isinstance(item, dict)
+        and "provider_teamwork" in str(item.get("path") or "").replace("\\", "/")
+        for item in artifacts
+    )
+
+
+def one_turn_gate_in_bundle(report: dict[str, Any], members: set[str]) -> bool:
+    artifacts = report.get("artifacts") if isinstance(report.get("artifacts"), list) else []
+    for item in artifacts:
+        if not isinstance(item, dict):
+            continue
+        kind = str(item.get("kind") or "")
+        path = str(item.get("path") or "").replace("\\", "/")
+        if kind == "gpu1_one_turn_runtime_gate" or "gpu1_one_turn_runtime_gate" in path:
+            return bool(item.get("included_in_zip")) or path.lstrip("./") in members
+    return any("gpu1_one_turn_runtime_gate" in name for name in members)
+
+
 def validate_bundle(
     repo_root: Path, zip_path: Path, report_path: Path | None, required_recursive_roots: list[str]
 ) -> dict[str, Any]:
@@ -166,6 +203,10 @@ def validate_bundle(
             )
             errors.extend(artifact_errors)
             warnings.extend(artifact_warnings)
+            if provider_complete_or_full_report(report) and not one_turn_gate_in_bundle(
+                report, members
+            ):
+                errors.append("gpu1_one_turn_runtime_gate_missing_from_provider_bundle")
     else:
         warnings.append("no completeness report provided; ZIP-only validation is limited")
 
@@ -189,6 +230,9 @@ def validate_bundle(
         "zip_member_count": len(members),
         "artifact_checks": artifact_checks,
         "required_recursive_root_checks": root_checks,
+        "gpu1_one_turn_runtime_gate_present": bool(
+            report and one_turn_gate_in_bundle(report, members)
+        ),
         "errors": errors,
         "warnings": warnings,
         "provider_execution_performed": False,

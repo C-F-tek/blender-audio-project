@@ -304,8 +304,9 @@ class RuntimeGateRunLoopMixin:
                 "generic_write_capture_failed_count", 0
             ),
             "generic_write_lanes": generic_write_product.get("generic_write_lanes", []),
-            "generic_write_document_product": generic_write_product,
-            "generic_write_refined_product": generic_write_product,
+            "generic_write_refined_request": generic_write_product,
+            "compat_legacy_generic_write_document_product": generic_write_product,
+            "compat_legacy_generic_write_refined_product": generic_write_product,
             "historical_tool_context_refs": self.historical_tool_context_files(),
             "response_file_reference_quality": self.response_file_reference_quality(
                 self.response_text()

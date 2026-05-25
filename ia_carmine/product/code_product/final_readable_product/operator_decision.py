@@ -17,10 +17,19 @@ def write_operator_decision(
     soft_lock: dict[str, Any],
     provider_blocked_reason: str,
     provider_replight_reports: list[Any],
+    gpu1_one_turn: dict[str, Any] | None,
     open_pointer_count_final: int,
     blocked_continuation: bool,
     write_text: Any,
 ) -> None:
+    gpu1_one_turn = _as_dict(gpu1_one_turn)
+    one_turn_state = (
+        "passed"
+        if gpu1_one_turn.get("gpu1_one_turn_runtime_gate_passed") is True
+        else "failed"
+        if gpu1_one_turn.get("gpu1_one_turn_runtime_gate_present")
+        else "missing"
+    )
     replight_lines = [
         "provider_replight_health_residency_only:",
         *[
@@ -48,6 +57,11 @@ def write_operator_decision(
         f"npu_closure_advisory={soft_lock.get('npu_closure_advisory') or ''}",
         f"cpu_closure_validation={soft_lock.get('cpu_closure_validation') or ''}",
         f"provider_blocked_reason={provider_blocked_reason}",
+        f"gpu1_one_turn_runtime_gate={one_turn_state}",
+        f"gpu1_one_turn_runtime_gate_path={gpu1_one_turn.get('gpu1_one_turn_runtime_gate_path') or ''}",
+        f"gpu1_one_turn_tool_result_consumed={str(gpu1_one_turn.get('gpu1_one_turn_tool_result_consumed') is True).lower()}",
+        f"gpu1_one_turn_final_product_delta_valid={str(gpu1_one_turn.get('gpu1_one_turn_final_product_delta_valid') is True).lower()}",
+        f"gpu1_one_turn_blocker={gpu1_one_turn.get('gpu1_one_turn_blocker') or ''}",
         *replight_lines,
         f"open_pointer_count_final={open_pointer_count_final}",
         (

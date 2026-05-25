@@ -87,6 +87,8 @@ def _normalize_qwen_template_tool_calls(content: str) -> list[dict[str, Any]]:
 def _normalize_qwen_content_json_tool_call(content: str) -> list[dict[str, Any]]:
     """Adapter fallback for qwen2.5-coder on Ollama when chat(tools=...) emits raw JSON."""
     stripped, fenced = _single_json_payload(_strip_qwen_template_tokens(content))
+    if fenced:
+        return []
     if not (stripped.startswith("{") and stripped.endswith("}")):
         return []
     try:
@@ -103,21 +105,13 @@ def _normalize_qwen_content_json_tool_call(content: str) -> list[dict[str, Any]]
             "id": "qwen_content_json_tool_call_001",
             "tool": name,
             "requirement": "",
-            "reason": (
-                "ollama_qwen_content_json_fence_tool_call_adapter"
-                if fenced
-                else "ollama_qwen_content_json_tool_call_adapter"
-            ),
+            "reason": "ollama_qwen_content_json_tool_call_adapter",
             "args": args,
             "native_provider": "ollama",
-            "native_shape": (
-                "ollama-qwen2.5-coder.chat_tools.content_json_fence_adapter"
-                if fenced
-                else "ollama-qwen2.5-coder.chat_tools.content_json_adapter"
-            ),
+            "native_shape": "ollama-qwen2.5-coder.chat_tools.content_json_adapter",
             "adapter_native": True,
             "adapter_strict_json": True,
-            "adapter_single_fenced_json": fenced,
+            "adapter_single_fenced_json": False,
         }
     ]
 

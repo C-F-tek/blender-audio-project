@@ -54,17 +54,17 @@ def build_heap_patch_proposal_prompt(prompt: str) -> str:
         "IA-CARMINE GPU1 HEAP PARTICIPATION MODE.\n"
         "You are the GPU1 planner/worker inside the existing heap/pointer/veto loop. Do not collapse the run into a tool-only or JSON-only answer.\n"
         "Use startup artifacts, memory, source anchors, tool catalog, prior vetoes and pointer context as evidence.\n"
-        "First write the normal heap proposal/revision text. Keep HEAP_POINTER_DELTA_PROTOCOL alive: reason over the universe, choose/reject targets, expose uncertainty and preserve veto/pointer continuity.\n"
+        "First write the normal heap proposal/revision text through FINAL_PRODUCT_DELTA. Keep HEAP_POINTER_DELTA_PROTOCOL alive: reason over the universe, choose/reject targets, expose uncertainty and preserve veto/pointer continuity.\n"
         "A provider-native tool-call turn may follow only when the prompt explicitly requires broker execution or the primary text is empty; it is not the proposal itself.\n"
         "Ollama uses ollama-python chat tools and message.tool_calls only for that continuation. OpenVINO lanes attach equivalent structured reports only for NPU micro-audit. Tool calls are extra broker actions, not a replacement for heap text.\n\n"
         "BEGIN_HEAP_CONTEXT_AND_POINTERS\n"
         f"{prompt.rstrip()}\n"
         "END_HEAP_CONTEXT_AND_POINTERS\n\n"
         "GPU1 RESPONSE CONTRACT:\n"
-        "- Write Markdown/plain heap-delta text, not a JSON-only envelope.\n"
-        "- Include # HEAP_DELTA_PROPOSAL.\n"
-        "- Include EXIT_DECISION=PATCHABLE_TARGET or EXIT_DECISION=NO_PATCHABLE_TARGET.\n"
-        "- Include POINTER_ACTION=STAY_FORWARD | BACKTRACK_PROPAGATE | RESUME_FORWARD | SPLIT_TASKS | NO_PATCHABLE_TARGET.\n"
+        "- Write Markdown/plain heap-delta text inside FINAL_PRODUCT_DELTA, not a JSON-only envelope.\n"
+        "- Include FINAL_PRODUCT_KIND, FINAL_PRODUCT_ACTION, CURRENT_POINTER, CONSUMED_EVIDENCE, NEXT_RUNTIME_INTENT and FINAL_PRODUCT_DELTA.\n"
+        "- Use FINAL_PRODUCT_ACTION for append/replace/supersede/refine/blocked semantics.\n"
+        "- Put any blocked/no-target continuation reason in NEXT_RUNTIME_INTENT and FINAL_PRODUCT_DELTA, not legacy EXIT_DECISION or POINTER_ACTION fields.\n"
         "- Include TARGET_FILES, PROBLEM, EVIDENCE, IMPLEMENTATION_CHANGES, PATCH_SKETCH, VALIDATION_COMMANDS and RISKS.\n"
         "- TARGET_FILES must be exact repo-relative files that exist in the runtime universe.\n"
         "- If no local target is verified, say NO_PATCHABLE_TARGET with a concrete blocked reason.\n"
@@ -76,26 +76,69 @@ def gpu1_native_concrete_tool_names() -> list[str]:
     return list(GPU1_NATIVE_CONCRETE_TOOL_NAMES)
 
 
+def ollama_tool_visibility(
+    *,
+    include_generic_write: bool = True,
+    gpu1_concrete_only: bool = False,
+) -> dict[str, Any]:
+    from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
+
+    desired = (
+        gpu1_native_concrete_tool_names()
+        if gpu1_concrete_only
+        else [
+            "build_agent_agnostic_tool_inventory", "build_agent_memory_inventory", "build_agent_transient_request_context",
+            "build_python_line_count_csv", "check_python_syntax", "build_code_interpreter_report",
+            "repo_toolchain_probe", "repo_toolchain_command", "repo_search_rg", "repo_search_git_grep",
+            "repo_find_fd", "repo_json_query_jq", "repo_powershell_readonly",
+            "runtime_sqlite_memory", "rag_context_pack", "select_semantic_code_chunks", "semantic_evidence_chunks",
+            "ai_context_pack", "runtime_file_refs", "runtime_file_window", "agent_runtime_debug_lab",
+            "run_heap_code_execution_matrix", "run_heap_virtual_dev_environment", "synthesize_patch_candidates",
+            "analyze_code_product_artifact",
+        ]
+    )
+    if include_generic_write and not gpu1_concrete_only and "generic_write" not in desired:
+        desired.insert(desired.index("agent_runtime_debug_lab"), "generic_write")
+    actual: list[str] = []
+    hidden_reasons: dict[str, str] = {}
+    for name in desired:
+        spec = TOOL_SPECS.get(name)
+        if spec is None:
+            hidden_reasons[name] = "tool_not_registered"
+            continue
+        if not callable(getattr(spec, "builder", None)):
+            hidden_reasons[name] = "tool_handler_unresolved"
+            continue
+        if gpu1_concrete_only and (name == "generic_write" or getattr(spec, "broker_only", False)):
+            hidden_reasons[name] = "not_gpu1_concrete_tool_loop_tool"
+            continue
+        actual.append(name)
+    for name, spec in sorted(TOOL_SPECS.items()):
+        if name in actual or name in hidden_reasons:
+            continue
+        if gpu1_concrete_only:
+            hidden_reasons[name] = "not_in_gpu1_primary_tool_loop_registry"
+        elif getattr(spec, "broker_only", False):
+            hidden_reasons[name] = "broker_only"
+    return {
+        "available_tool_names": actual,
+        "actual_chat_tool_names": actual,
+        "actual_chat_tool_schema_count": len(actual),
+        "hidden_tool_names": sorted(hidden_reasons),
+        "hidden_tool_reasons": hidden_reasons,
+    }
+
+
 def ollama_tool_call_tool_names(
     *,
     include_generic_write: bool = True,
     gpu1_concrete_only: bool = False,
 ) -> list[str]:
-    if gpu1_concrete_only:
-        return gpu1_native_concrete_tool_names()
-    names = [
-        "build_agent_agnostic_tool_inventory", "build_agent_memory_inventory", "build_agent_transient_request_context",
-        "build_python_line_count_csv", "check_python_syntax", "build_code_interpreter_report",
-        "repo_toolchain_probe", "repo_toolchain_command", "repo_search_rg", "repo_search_git_grep",
-        "repo_find_fd", "repo_json_query_jq", "repo_powershell_readonly",
-        "runtime_sqlite_memory", "rag_context_pack", "select_semantic_code_chunks", "semantic_evidence_chunks",
-        "ai_context_pack", "runtime_file_refs", "runtime_file_window", "agent_runtime_debug_lab",
-        "run_heap_code_execution_matrix", "run_heap_virtual_dev_environment", "synthesize_patch_candidates",
-        "analyze_code_product_artifact",
-    ]
-    if include_generic_write:
-        names.insert(names.index("agent_runtime_debug_lab"), "generic_write")
-    return names
+    visibility = ollama_tool_visibility(
+        include_generic_write=include_generic_write,
+        gpu1_concrete_only=gpu1_concrete_only,
+    )
+    return list(visibility["actual_chat_tool_names"])
 def prompt_explicitly_requires_tool_call(prompt: str) -> bool:
     markers = (
         "must call",
@@ -132,7 +175,8 @@ def provider_delta_requests_native_tool_call(provider_delta: str) -> bool:
 def ollama_tool_call_fallback_prompt() -> str:
     return (
         "IA-Carmine native tool decision. If the heap delta needs live broker evidence, call the best broker tool through message.tool_calls; "
-        "otherwise answer NO_TOOL_NEEDED with the reason. Matrix, lab and patch synthesis are available, with broker-enriched args. "
+        "otherwise answer NO_TOOL_NEEDED with the reason. Use only concrete GPU1 chat tools exposed in actual_chat_tool_names; "
+        "generic_write, matrix, lab and patch synthesis are late-stage/diagnostic surfaces outside the primary GPU1 tool loop. "
         "This is a continuation of the provider heap delta, not a replacement."
     )
 def ollama_tool_call_selection_prompt(
@@ -149,7 +193,7 @@ def ollama_tool_call_selection_prompt(
     )
     tools_available = ", ".join(ollama_tool_call_tool_names(gpu1_concrete_only=True))
     decision_rule = (
-        "Keep heap proposal text as primary. GPU1 may drive operative broker requests and owns the FINAL_PRODUCT_DELTA stream. GPU0 has the same Ollama tool-call schema but its results are peer-only refinement/veto/evidence that require a later GPU1 consumption turn. NPU tool calls are diagnostic/veto evidence only. For code product, matrix, lab, patch synthesis, runtime refs or memory gaps, choose one broker tool through message.tool_calls. Use generic_write only as an explicit native tool_call when the current lane cannot yet produce code and needs a refined request/next-turn plan; prose without a native tool_call remains raw GPU1 text evidence and cannot verify workload, lab, matrix, patch or product. "
+        "Keep heap proposal text as primary. GPU1 may drive operative broker requests and owns the FINAL_PRODUCT_DELTA stream. GPU0 has the same Ollama tool-call schema but its results are peer-only refinement/veto/evidence that require a later GPU1 consumption turn. NPU tool calls are diagnostic/veto evidence only. For source, runtime refs, memory, RAG, toolchain or context gaps, choose one concrete GPU1 chat tool through message.tool_calls. Do not call generic_write, matrix, lab, patch synthesis or code-product analyzer from the primary GPU1 tool loop; prose without a native tool_call remains raw GPU1 text evidence and cannot verify workload, lab, matrix, patch or product. "
         "Use NO_TOOL_NEEDED only when current heap/matrix evidence already proves no broker action can improve the delta."
         if tool_relevant
         else "If yes, call one tool through message.tool_calls; otherwise answer NO_TOOL_NEEDED with reason."

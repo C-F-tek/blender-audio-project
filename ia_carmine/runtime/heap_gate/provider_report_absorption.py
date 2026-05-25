@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ia_carmine._shared.file_backed_transport import report_text_preview
+from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import ONE_TURN_SUMMARY_FIELDS
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     Path,
@@ -144,6 +145,7 @@ def absorb_completed_provider_item(
         "sidecar_recoverable_failure_reason",
         "sidecar_skipped",
         "sidecar_skipped_reason",
+        *ONE_TURN_SUMMARY_FIELDS,
     ):
         if key in report_data:
             provider_report[key] = report_data.get(key)
@@ -433,6 +435,11 @@ def _publish_provider_report(
             "npu_decision_authority": provider_report.get("npu_decision_authority"),
             "source_file": provider_report.get("output"),
             "summary": str(provider_report.get("response_text") or "")[:500],
+            **{
+                key: provider_report.get(key)
+                for key in ONE_TURN_SUMMARY_FIELDS
+                if key in provider_report
+            },
         }
     )
     _publish_claim(gate, lane, requirement, correlation, provider_report, round_id)
@@ -535,6 +542,11 @@ def _provider_peer_block_payload(
             "sidecar_recoverable_failure_reason"
         ),
         "sidecar_target_pointer": provider_report.get("sidecar_target_pointer"),
+        **{
+            key: provider_report.get(key)
+            for key in ONE_TURN_SUMMARY_FIELDS
+            if key in provider_report
+        },
     }
     if lane == "npu_micro_task_auditor":
         payload["npu_micro_provider_execution_performed"] = provider_report.get(
@@ -641,6 +653,11 @@ def _publish_claim(
             "sidecar_recoverable_failure_reason"
         ),
         "sidecar_target_pointer": provider_report.get("sidecar_target_pointer"),
+        **{
+            key: provider_report.get(key)
+            for key in ONE_TURN_SUMMARY_FIELDS
+            if key in provider_report
+        },
         "leader_packet": provider_report.get("leader_packet"),
         **gate.prefixed_text_evidence_fields(
             "observed_request", observed_request_evidence

@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from ia_carmine._shared.provider_work_verification import provider_work_status
+from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import strict_one_turn_gate_passed
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -157,6 +158,37 @@ def _provider_work_verified(provider: dict[str, Any], lane: str = "") -> bool:
     )
     status = provider_work_status(lane=provider_lane, report=provider)
     return bool(status.get("provider_work_verified"))
+
+
+def gpu1_one_turn_gate_status(composer: dict[str, Any]) -> dict[str, Any]:
+    sources = [
+        *[item for item in composer.get("proposals") or [] if isinstance(item, dict)],
+        *[item for item in composer.get("provider_reports") or [] if isinstance(item, dict)],
+    ]
+    paths = [
+        str(item.get("gpu1_one_turn_runtime_gate_path") or "")
+        for item in sources
+        if str(item.get("gpu1_one_turn_runtime_gate_path") or "").strip()
+    ]
+    blockers = [
+        str(item.get("gpu1_one_turn_blocker") or "")
+        for item in sources
+        if str(item.get("gpu1_one_turn_blocker") or "").strip()
+    ]
+    passed = [item for item in sources if strict_one_turn_gate_passed(item)]
+    failed = [
+        item
+        for item in sources
+        if item.get("gpu1_one_turn_runtime_gate_present")
+        and not strict_one_turn_gate_passed(item)
+    ]
+    return {
+        "passed_count": len(passed),
+        "failed_count": len(failed),
+        "paths": list(dict.fromkeys(paths)),
+        "blockers": list(dict.fromkeys(blockers)),
+        "passed": bool(passed),
+    }
 
 
 def compute_causal_chain(
@@ -301,6 +333,9 @@ def compute_product_acceptance(
         reasons.append(f"blocking_issue_count={len(blockers)}")
     if rejected_count > 0 and accepted_count <= 0:
         reasons.append("all proposal chunks rejected")
+    one_turn = gpu1_one_turn_gate_status(composer)
+    if provider_execution_performed(composer) and not one_turn.get("passed"):
+        reasons.append("gpu1_one_turn_runtime_gate_failed_or_missing")
 
     if not reasons:
         status = "passed"
@@ -321,6 +356,7 @@ def compute_product_acceptance(
         "final_product_delta_applied_count": accepted_delta_count,
         "rejected_proposal_count": rejected_count,
         "blocking_issue_count": len(blockers),
+        "gpu1_one_turn_runtime_gate": one_turn,
         "reasons": reasons,
     }
 
@@ -332,6 +368,7 @@ def build_report(
 ) -> dict[str, Any]:
     causal_chain = compute_causal_chain(composer, pointer_manifest)
     product_acceptance = compute_product_acceptance(composer, pointer_manifest)
+    one_turn = gpu1_one_turn_gate_status(composer)
     return {
         "schema_version": 1,
         "kind": "external_heap_final_causality_normalization",
@@ -345,6 +382,7 @@ def build_report(
         "legacy_product_causality_passed": composer.get("product_causality_passed"),
         "causal_chain": causal_chain,
         "product_acceptance": product_acceptance,
+        "gpu1_one_turn_runtime_gate": one_turn,
         "provider_execution_performed": provider_execution_performed(composer),
         "patch_application_performed": False,
         "source_writes_performed": False,
@@ -365,6 +403,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Product acceptance status: `{report['product_acceptance_status']}`",
         f"- Product acceptance passed: `{report['product_acceptance_passed']}`",
         f"- Provider execution performed: `{report['provider_execution_performed']}`",
+        f"- GPU1 one-turn gate passed count: `{report.get('gpu1_one_turn_runtime_gate', {}).get('passed_count', 0)}`",
         "",
         "## Causal chain reasons",
         "",
@@ -382,6 +421,11 @@ def render_markdown(report: dict[str, Any]) -> str:
         if product_reasons
         else lines.append("- none")
     )
+    gate = report.get("gpu1_one_turn_runtime_gate", {})
+    lines.extend(["", "## GPU1 one-turn runtime gate", ""])
+    lines.append(f"- Passed: `{gate.get('passed')}`")
+    lines.append(f"- Paths: `{', '.join(gate.get('paths') or []) or 'none'}`")
+    lines.append(f"- Blockers: `{', '.join(gate.get('blockers') or []) or 'none'}`")
     return "\n".join(lines) + "\n"
 
 

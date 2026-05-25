@@ -10,11 +10,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-DEFAULT_MODELS = (
-    "qwen3-coder:latest",
-    "autumnzsd/qwen2.5-coder-tools:latest",
-    "qwen2.5-coder:14b",
-)
+DEFAULT_MODELS: tuple[str, ...] = ()
 DEFAULT_OLLAMA_THREAD_FRACTION = 0.85
 DEFAULT_OLLAMA_NUM_CTX = 16384
 DEFAULT_OLLAMA_INACTIVITY_UNLOAD = "120s"
@@ -229,12 +225,9 @@ def list_models_from_disk() -> list[str]:
 
 
 def choose_model(preferred_model: str | None, available_models: list[str]) -> str:
-    if preferred_model and preferred_model in available_models:
-        return preferred_model
-    for model in DEFAULT_MODELS:
-        if model in available_models:
-            return model
-    if available_models:
-        return available_models[0]
-    wanted = preferred_model or " or ".join(DEFAULT_MODELS)
-    raise RuntimeError(f"No Ollama models are available. Install or pull: {wanted}")
+    model = str(preferred_model or "").strip()
+    if not model or model.lower() == "auto":
+        raise RuntimeError("provider_model_explicit_required")
+    if model in available_models:
+        return model
+    raise RuntimeError(f"provider_model_explicit_not_installed: {model}")

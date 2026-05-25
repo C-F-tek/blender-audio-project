@@ -53,6 +53,7 @@ RESOURCE_MECHANICS_BOOL_KEYS = {
     "mechanical_not_static_read",
 }
 SKIP_KINDS = {
+    "gpu1_one_turn_runtime_gate",
     "provider_launch_manifest",
     "provider_role_coexistence",
     "provider_runtime_plan",

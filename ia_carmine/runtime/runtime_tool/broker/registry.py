@@ -123,6 +123,8 @@ GENERIC_WRITE_SCHEMA = tool_input_schema(
         "peer_followup_required": BOOL_OR_STRING,
         "provider_role": STRING,
         "reason": STRING,
+        "broker_request_id": STRING,
+        "source_broker_request_id": STRING,
     }
 )
 
@@ -152,10 +154,17 @@ RUNTIME_FILE_REFS_SCHEMA = tool_input_schema(
 RUNTIME_FILE_WINDOW_SCHEMA = tool_input_schema(
     {
         "path": STRING,
+        "ref_id": STRING,
+        "broker_request_id": STRING,
+        "source_broker_request_id": STRING,
+        "source_report_ref": STRING,
         "offset": NUMBER_OR_STRING,
         "limit": NUMBER_OR_STRING_FILE_WINDOW_LIMIT,
+        "length": NUMBER_OR_STRING_FILE_WINDOW_LIMIT,
+        "startup_manifest": STRING,
+        "strict_startup_refs": BOOL_OR_STRING,
+        "argument_normalized_from": OBJECT,
     },
-    required=("path",),
 )
 
 RUNTIME_SQLITE_MEMORY_SCHEMA = tool_input_schema(
@@ -203,6 +212,8 @@ REPO_SEARCH_SCHEMA = tool_input_schema(
         "max_results": NUMBER_OR_STRING,
         "max_count": NUMBER_OR_STRING,
         "context": NUMBER_OR_STRING,
+        "broker_request_id": STRING,
+        "source_broker_request_id": STRING,
         "ignore_case": BOOL_OR_STRING,
         "fixed_strings": BOOL_OR_STRING,
         "hidden": BOOL_OR_STRING,
@@ -430,6 +441,8 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "fixed_strings",
             "hidden",
             "timeout_seconds",
+            "broker_request_id",
+            "source_broker_request_id",
         ),
         builder=repo_search_rg,
         input_schema=REPO_SEARCH_SCHEMA,
@@ -445,6 +458,8 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "ignore_case",
             "fixed_strings",
             "timeout_seconds",
+            "broker_request_id",
+            "source_broker_request_id",
         ),
         builder=repo_search_git_grep,
         input_schema=REPO_SEARCH_SCHEMA,
@@ -452,14 +467,14 @@ TOOL_SPECS: dict[str, ToolSpec] = {
     "repo_find_fd": ToolSpec(
         name="repo_find_fd",
         description="Discover repository files through fd with bounded file-backed output.",
-        allowed_args=("query", "pattern", "path", "extension", "max_results", "hidden", "timeout_seconds"),
+        allowed_args=("query", "pattern", "path", "extension", "max_results", "hidden", "timeout_seconds", "broker_request_id", "source_broker_request_id"),
         builder=repo_find_fd,
         input_schema=REPO_FIND_FD_SCHEMA,
     ),
     "repo_json_query_jq": ToolSpec(
         name="repo_json_query_jq",
         description="Query repository JSON artifacts/files through jq with bounded file-backed output.",
-        allowed_args=("path", "query", "filter", "timeout_seconds"),
+        allowed_args=("path", "query", "filter", "timeout_seconds", "broker_request_id", "source_broker_request_id"),
         builder=repo_json_query_jq,
         input_schema=REPO_JSON_QUERY_JQ_SCHEMA,
     ),
@@ -532,6 +547,8 @@ TOOL_SPECS: dict[str, ToolSpec] = {
             "peer_followup_required",
             "provider_role",
             "reason",
+            "broker_request_id",
+            "source_broker_request_id",
         ),
         builder=generic_write,
         input_schema=GENERIC_WRITE_SCHEMA,
@@ -568,7 +585,19 @@ TOOL_SPECS: dict[str, ToolSpec] = {
     "runtime_file_window": ToolSpec(
         name="runtime_file_window",
         description="Read a bounded text window from a file-backed runtime artifact by stable path/ref.",
-        allowed_args=("path", "offset", "limit"),
+        allowed_args=(
+            "path",
+            "ref_id",
+            "offset",
+            "limit",
+            "length",
+            "startup_manifest",
+            "strict_startup_refs",
+            "argument_normalized_from",
+            "broker_request_id",
+            "source_broker_request_id",
+            "source_report_ref",
+        ),
         builder=runtime_file_window,
         input_schema=RUNTIME_FILE_WINDOW_SCHEMA,
     ),

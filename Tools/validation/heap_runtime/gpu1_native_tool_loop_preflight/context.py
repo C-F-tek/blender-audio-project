@@ -311,8 +311,8 @@ def empty_delta_repair_message(
         "content": (
             "GPU1_EMPTY_FINAL_PRODUCT_DELTA_REPAIR.\n"
             "Il subturn precedente ha provato a chiudere, ma FINAL_PRODUCT_DELTA era vuoto.\n"
-            "Questo non e' accettabile: se vuoi scrivere con un tool, chiama generic_write con proposal_text/proposal_text_file non vuoto; "
-            "se hai abbastanza evidence, rispondi ora con un FINAL_PRODUCT_DELTA non vuoto.\n"
+            "Questo non e' accettabile: se hai abbastanza evidence, rispondi ora con un "
+            "FINAL_PRODUCT_DELTA non vuoto; se manca evidence, chiama un tool concreto del catalogo GPU1.\n"
             "Non ripetere runtime_file_window a meno che ti serva nuova evidence reale.\n"
             "Se chiudi, cita gli evidence id gia' consumati:\n"
             f"{joined}\n"
@@ -383,26 +383,6 @@ def _artifact_for_manifest(repo_root: Path, manifest: dict[str, Any], key: str) 
     if not value:
         return {}
     return artifact_ref(repo_path(repo_root, value), repo_root, kind=key, producer="heap_context_memory_reload")
-
-
-def repair_runtime_file_window_args(args: dict[str, Any], repo_root: Path, startup: dict[str, Any]) -> dict[str, Any]:
-    out = dict(args)
-    value = str(out.get("path") or "").strip()
-    if not value:
-        return out
-    current = repo_path(repo_root, value)
-    if current.exists():
-        return out
-    wanted_name = Path(value).name.lower()
-    refs = startup.get("refs") if isinstance(startup.get("refs"), dict) else {}
-    for ref in refs.values():
-        if not isinstance(ref, dict):
-            continue
-        candidate = str(ref.get("path") or "").strip()
-        if candidate and Path(candidate).name.lower() == wanted_name and repo_path(repo_root, candidate).exists():
-            out["path"] = candidate
-            return out
-    return out
 
 
 def _find_latest_startup_manifest(repo_root: Path) -> Path | None:

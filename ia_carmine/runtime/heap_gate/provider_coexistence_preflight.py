@@ -7,7 +7,7 @@ from ia_carmine.runtime.heap_gate.provider_lane_policy import (
     NPU_LANE,
     PRIMARY_LANE,
 )
-from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import preferred_gpu1_model
+from ia_carmine._shared.ollama_provider_selection import provider_model_is_auto
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     Path,
@@ -203,33 +203,30 @@ def _gpu0_model() -> str:
 
 
 def _gpu1_model(gate: Any) -> str:
-    candidates = [
-        getattr(gate, "selected_provider_model", ""),
-    ]
-    for report in getattr(gate, "provider_replight_reports", []) or []:
-        if isinstance(report, dict) and str(report.get("lane") or "") == PRIMARY_LANE:
-            candidates.extend(
-                [
-                    report.get("selected_provider_model"),
-                    report.get("selected_model"),
-                    report.get("provider_model"),
-                ]
-            )
-    if bool(getattr(gate.args, "strict_provider_model", False)):
-        candidates.append(getattr(gate.args, "provider_model", ""))
-    candidates.append(
-        preferred_gpu1_model(
-            getattr(gate.args, "provider_model", ""),
-            strict=bool(getattr(gate.args, "strict_provider_model", False)),
+    requested = str(getattr(gate.args, "provider_model", "") or "").strip()
+    if not requested or provider_model_is_auto(requested):
+        raise RuntimeError("provider_model_explicit_required")
+    selected = str(getattr(gate, "selected_provider_model", "") or "").strip()
+    if selected and selected != requested:
+        raise RuntimeError(
+            "provider_model_selection_mismatch:"
+            f"requested={requested}:selected={selected}"
         )
-    )
-    if not bool(getattr(gate.args, "strict_provider_model", False)):
-        candidates.append(getattr(gate.args, "provider_model", ""))
-    for value in candidates:
-        model = str(value or "").strip()
-        if model and model.lower() != "auto":
-            return model
-    return preferred_gpu1_model("", strict=False)
+    for report in getattr(gate, "provider_replight_reports", []) or []:
+        if not isinstance(report, dict) or str(report.get("lane") or "") != PRIMARY_LANE:
+            continue
+        report_model = str(
+            report.get("selected_provider_model")
+            or report.get("selected_model")
+            or report.get("provider_model")
+            or ""
+        ).strip()
+        if report_model and report_model != requested:
+            raise RuntimeError(
+                "provider_model_selection_mismatch:"
+                f"requested={requested}:selected={report_model}"
+            )
+    return requested
 
 
 def _gpu1_base_url(gate: Any) -> str:

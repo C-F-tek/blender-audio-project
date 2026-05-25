@@ -51,7 +51,7 @@ def main() -> int:
     parser.add_argument("--python-exe", default="")
     parser.add_argument("--gpu1-base-url", default="http://127.0.0.1:11434")
     parser.add_argument("--gpu0-base-url", default="http://127.0.0.1:11435")
-    parser.add_argument("--gpu1-model", default="qwen2.5-coder:14b")
+    parser.add_argument("--gpu1-model", default="")
     parser.add_argument("--gpu0-model", default="qwen3:1.7b")
     parser.add_argument("--gpu0-vulkan-visible-devices", default="auto")
     parser.add_argument("--keep-alive", default="120s")
@@ -83,6 +83,12 @@ def main() -> int:
 
 def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     errors: list[str] = []
+    if not _explicit_gpu1_model(args.gpu1_model):
+        return _blocked_report(
+            repo_root,
+            args,
+            "provider_model_explicit_required",
+        )
     gpu0_server = start_gpu0_vulkan_server(
         base_url=args.gpu0_base_url,
         repo_root=repo_root,
@@ -162,6 +168,12 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
             if source == "standalone_default"
         ],
         "coexistence_verified": bool(gpu1["alive_during_coexistence"] and gpu0["alive_during_coexistence"] and npu_alive),
+        "requested_provider_model": str(args.gpu1_model or ""),
+        "selected_provider_model": str(args.gpu1_model or ""),
+        "model_selection_policy": "explicit_provider_model_exact",
+        "model_switch_allowed": False,
+        "model_switch_performed": False,
+        "provider_model_selection_mismatch": False,
         "roles": {"gpu1_planner": gpu1, "gpu0_peer": gpu0, "npu_micro_task_auditor": npu.get("ready_payload", {})},
         "coexistence_snapshot": coexistence,
         "unload": unload,
@@ -239,6 +251,44 @@ def _load_ollama_role(
         "last_generate_response_metadata": {
             key: value for key, value in last_response.items() if key not in {"response", "context"}
         },
+    }
+
+
+def _explicit_gpu1_model(value: str) -> bool:
+    model = str(value or "").strip()
+    return bool(model and model.lower() != "auto")
+
+
+def _blocked_report(repo_root: Path, args: argparse.Namespace, reason: str) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "kind": "provider_role_coexistence",
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "repo_root": str(repo_root),
+        "passed": False,
+        "errors": [reason],
+        "handoff_provider_loop": bool(args.handoff_provider_loop),
+        "provider_inactivity_unload_seconds": 120,
+        "config_sources": getattr(args, "_config_sources", {}),
+        "standalone_default_fields": [
+            key
+            for key, source in getattr(args, "_config_sources", {}).items()
+            if source == "standalone_default"
+        ],
+        "coexistence_verified": False,
+        "requested_provider_model": str(args.gpu1_model or "auto"),
+        "model_selection_policy": "provider_model_explicit_required",
+        "model_switch_allowed": False,
+        "model_switch_performed": False,
+        "provider_model_selection_mismatch": False,
+        "roles": {},
+        "coexistence_snapshot": {},
+        "unload": {},
+        "npu_exit": {},
+        "gpu0_vulkan_server": {},
+        "gpu0_vulkan_server_stop": {},
+        "patch_application_performed": False,
+        "source_writes_performed": False,
     }
 
 

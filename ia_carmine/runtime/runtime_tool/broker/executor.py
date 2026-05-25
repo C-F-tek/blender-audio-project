@@ -245,6 +245,7 @@ def execute_tool_request(
     tool_name = str(request.get("tool") or "")
     request_args = request.get("args") if isinstance(request.get("args"), dict) else {}
     request_args = dict(request_args)
+    request_args.setdefault("broker_request_id", request_id)
     base_result: dict[str, Any] = {
         "id": request_id,
         "tool": tool_name,

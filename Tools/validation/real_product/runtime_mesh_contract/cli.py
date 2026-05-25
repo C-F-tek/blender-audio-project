@@ -67,7 +67,12 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     runner = read_text(repo_root / "ia_carmine/product/operator_product_core/runner.py")
     heap_gate = read_text(repo_root / "ia_carmine/runtime/heap_runtime/completeness_gate/cli.py")
     heap_run_loop = read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop.py")
-    heap_run_loop_metrics = read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metrics.py")
+    heap_run_loop_metrics = "\n".join(
+        (
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metrics.py"),
+            read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metric_helpers.py"),
+        )
+    )
     budget = read_text(repo_root / "ia_carmine/runtime/heap_provider/budget_governor/cli.py")
     invocation = read_text(repo_root / "ia_carmine/runtime/heap_provider/invocation_contract/cli.py")
     product_package = read_text(repo_root / "ia_carmine/runtime/heap_runtime/product_package/cli.py")
@@ -96,6 +101,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
     provider_execution = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_execution.py")
     provider_absorption = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_report_absorption.py")
     provider_collection = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_process_collection.py")
+    gpu1_one_turn_gate = read_text(repo_root / "ia_carmine/runtime/heap_gate/gpu1_one_turn_gate.py")
+    gpu1_chat_loop = read_text(repo_root / "ia_carmine/runtime/heap_gate/gpu1_native_tool_chat_loop.py")
+    terminal_invariants = read_text(repo_root / "ia_carmine/runtime/heap_gate/terminal_invariants.py")
     provider_runtime = "\n".join((provider_execution, provider_absorption, provider_collection))
     provider_teamwork_packet = read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_teamwork_packet.py")
     heap_context_launcher = read_text(repo_root / "ia_carmine/runtime/heap_context_closure/launcher.py")
@@ -210,6 +218,21 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(provider_runtime, "started_at")
         and has(provider_absorption, "provider_process_id")
         and has(provider_runtime, "provider_teamwork_unified_parallel"),
+        "gpu1_one_turn_runtime_gate_contract": exists(
+            repo_root, "ia_carmine/runtime/heap_gate/gpu1_one_turn_gate.py"
+        )
+        and has(gpu1_one_turn_gate, "gpu1_one_turn_runtime_gate")
+        and has(gpu1_one_turn_gate, "gpu1_one_turn_runtime_gate_passed")
+        and has(gpu1_one_turn_gate, "gpu1_one_turn_broker_request_count")
+        and has(gpu1_one_turn_gate, "gpu1_one_turn_errors")
+        and has(gpu1_one_turn_gate, "gpu1_one_turn_tool_result_consumed")
+        and has(gpu1_one_turn_gate, "gpu1_one_turn_final_product_delta_valid")
+        and has(gpu1_one_turn_gate, "gpu0_npu_started_before_gpu1_one_turn_closed")
+        and has(gpu1_chat_loop, "build_gpu1_one_turn_runtime_gate")
+        and has(provider_execution, "skipped_gpu1_one_turn_gate_failed")
+        and has(heap_run_loop_metrics, "gpu1_one_turn_runtime_gate_passed")
+        and has(heap_run_loop_metrics, "gpu1_one_turn_strict_fields_passed")
+        and has(terminal_invariants, "gpu1_one_turn_runtime_gate_missing_or_failed"),
     }
     order = [
         "task_md_in",
@@ -236,6 +259,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "intrinsic_contract_present",
         "openvino_peer_topology_contract",
         "gpu0_npu_provider_contract",
+        "gpu1_one_turn_runtime_gate_contract",
     ]
     errors = [f"missing runtime mesh capability: {name}" for name in order if not checks.get(name)]
     return {

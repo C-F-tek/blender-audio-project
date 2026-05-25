@@ -78,6 +78,14 @@ def gpu1_tool_result_text(payload: dict[str, Any]) -> str:
                 "RUNTIME_FILE_REFS_COMPACT_END",
             ]
         )
+    if payload.get("runtime_file_window_search_refs"):
+        lines.extend(
+            [
+                "RUNTIME_FILE_WINDOW_SEARCH_REFS_BEGIN",
+                json.dumps(payload["runtime_file_window_search_refs"], indent=2, ensure_ascii=False),
+                "RUNTIME_FILE_WINDOW_SEARCH_REFS_END",
+            ]
+        )
     if payload.get("runtime_file_window_text") is not None:
         lines.extend(
             [
@@ -145,6 +153,21 @@ def _compact_report(report: dict[str, Any], *, max_ref_items: int) -> dict[str, 
         compact["source_ref"] = report["source_ref"]
     if isinstance(report.get("refs"), list):
         compact["refs_sample_count"] = min(len(report["refs"]), max_ref_items)
+    search_refs = report.get("runtime_file_window_authorized_refs")
+    if isinstance(search_refs, list):
+        compact["runtime_file_window_search_ref_count"] = len(search_refs)
+        compact["runtime_file_window_search_refs_sample"] = search_refs[:max_ref_items]
+    for key in (
+        "producer",
+        "broker_authorized",
+        "request_id",
+        "broker_request_id",
+        "source_broker_request_id",
+        "source_report_ref",
+        "tool_report_ref",
+    ):
+        if key in report:
+            compact[key] = report.get(key)
     return compact
 
 
@@ -179,6 +202,11 @@ def _add_concrete_tool_result_payload(
     payload["concrete_tool_result_text"] = text[:max_text_chars]
     payload["concrete_tool_result_text_chars"] = int(report.get("result_text_chars") or len(text))
     payload["concrete_tool_command"] = report.get("command")
+    if isinstance(report.get("matches"), list):
+        payload["structured_matches"] = report["matches"][:24]
+    search_refs = report.get("runtime_file_window_authorized_refs")
+    if isinstance(search_refs, list) and search_refs:
+        payload["runtime_file_window_search_refs"] = search_refs[:24]
 
 
 def _add_runtime_file_refs_payload(
@@ -216,6 +244,12 @@ def _add_runtime_file_refs_payload(
 
 
 def _next_step_hint(tool: str, report: dict[str, Any]) -> str:
+    if tool in {"repo_search_rg", "repo_search_git_grep", "repo_find_fd", "repo_json_query_jq"}:
+        return (
+            "Use a structured match's runtime_file_window_ref_id with runtime_file_window ref_id. "
+            "Set startup_manifest/source_report_ref to this tool_report_ref and pass the same "
+            "source_broker_request_id; do not copy the matched path directly."
+        )
     if tool == "runtime_file_refs":
         return "Choose verified repo_relative refs and call runtime_file_window for real content."
     if tool == "runtime_file_window":

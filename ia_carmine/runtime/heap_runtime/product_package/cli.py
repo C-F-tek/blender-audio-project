@@ -78,9 +78,20 @@ def compact_report(path: Path, repo_root: Path) -> dict[str, Any]:
                 "decision_count",
                 "candidate_operation_count",
                 "product_status",
+                "gpu1_one_turn_runtime_gate_present",
+                "gpu1_one_turn_runtime_gate_path",
+                "gpu1_one_turn_runtime_gate_passed",
             )
             if key in data["metrics"]
         }
+        for key in (
+            "gpu1_one_turn_runtime_gate_present",
+            "gpu1_one_turn_runtime_gate_path",
+            "gpu1_one_turn_runtime_gate_passed",
+            "gpu1_one_turn_blocker",
+        ):
+            if key in data["metrics"]:
+                item[key] = data["metrics"].get(key)
     if data and isinstance(data.get("state"), dict):
         product = data["state"].get("product")
         if isinstance(product, dict):
@@ -163,6 +174,9 @@ def write_manifest(output_dir: Path, report: dict[str, Any]) -> dict[str, Any]:
         "reports": [item["path"] for item in report["reports"]],
         "artifacts": [item["path"] for item in report["artifacts"]],
         "guardrails": report["guardrails"],
+        "gpu1_one_turn_runtime_gate_present": report.get("gpu1_one_turn_runtime_gate_present"),
+        "gpu1_one_turn_runtime_gate_path": report.get("gpu1_one_turn_runtime_gate_path"),
+        "gpu1_one_turn_runtime_gate_passed": report.get("gpu1_one_turn_runtime_gate_passed"),
     }
     (output_dir / "heap_runtime_product_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
@@ -180,6 +194,9 @@ def write_evidence_index(output_dir: Path, report: dict[str, Any]) -> dict[str, 
         "product_status": report["product_status"],
         "report_summaries": report["reports"],
         "artifact_manifest": report["artifacts"],
+        "gpu1_one_turn_runtime_gate_present": report.get("gpu1_one_turn_runtime_gate_present"),
+        "gpu1_one_turn_runtime_gate_path": report.get("gpu1_one_turn_runtime_gate_path"),
+        "gpu1_one_turn_runtime_gate_passed": report.get("gpu1_one_turn_runtime_gate_passed"),
     }
     (output_dir / "heap_runtime_product_evidence_index.json").write_text(
         json.dumps(evidence, indent=2, ensure_ascii=False) + "\n",
@@ -254,8 +271,19 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     product_status, product_reason, status_errors = infer_product_status(
         [item for item in reports if item["exists"]]
     )
+    one_turn = gpu1_one_turn_gate_status(reports, artifacts)
+    provider_active = any(
+        item.get("provider_execution_performed") is True
+        or (isinstance(item.get("metrics"), dict) and item["metrics"].get("provider_execution_performed") is True)
+        for item in reports
+    )
 
     errors = list(status_errors)
+    if provider_active:
+        if not one_turn["present"]:
+            errors.append("gpu1_one_turn_runtime_gate_missing")
+        elif not one_turn["passed"]:
+            errors.append("gpu1_one_turn_runtime_gate_failed")
     passed = not errors and product_status in {"ready", "blocked_with_reason"}
 
     output_path = resolve_repo_path(repo_root, args.output)
@@ -273,6 +301,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "reports": reports,
         "artifacts": artifacts,
         "provider_execution_performed": False,
+        "gpu1_one_turn_runtime_gate_present": one_turn["present"],
+        "gpu1_one_turn_runtime_gate_path": one_turn["path"],
+        "gpu1_one_turn_runtime_gate_passed": one_turn["passed"],
         "patch_application_performed": False,
         "source_writes_performed": False,
         "errors": errors,
@@ -303,6 +334,30 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     )
     write_json_report(report, output_path)
     return report
+
+
+def gpu1_one_turn_gate_status(
+    reports: list[dict[str, Any]],
+    artifacts: list[dict[str, Any]],
+) -> dict[str, Any]:
+    for item in reports:
+        if item.get("kind") == "gpu1_one_turn_runtime_gate":
+            return {
+                "present": True,
+                "path": str(item.get("path") or ""),
+                "passed": item.get("passed") is True,
+            }
+        if item.get("gpu1_one_turn_runtime_gate_present"):
+            return {
+                "present": True,
+                "path": str(item.get("gpu1_one_turn_runtime_gate_path") or item.get("path") or ""),
+                "passed": item.get("gpu1_one_turn_runtime_gate_passed") is True,
+            }
+    for item in artifacts:
+        path = str(item.get("path") or "")
+        if "gpu1_one_turn_runtime_gate" in path:
+            return {"present": True, "path": path, "passed": bool(item.get("exists"))}
+    return {"present": False, "path": "", "passed": False}
 
 
 def parse_args() -> argparse.Namespace:

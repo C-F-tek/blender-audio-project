@@ -6,6 +6,10 @@ import json
 from typing import Any
 
 from ia_carmine._shared.file_backed_transport import write_text_artifact
+from ia_carmine._shared.ollama_provider_selection import (
+    provider_model_is_auto,
+    provider_model_policy_fields,
+)
 from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
     GPU0_LANE,
     GPU1_LANE,
@@ -14,7 +18,6 @@ from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import (
     gpu0_ollama_num_ctx,
     lane_context_budget,
     lane_hierarchy,
-    preferred_gpu1_model,
 )
 from ia_carmine.runtime.heap_gate.provider_time import build_provider_lane_time_contracts
 from ia_carmine.runtime.heap_gate.runtime_common import Path, repo_rel
@@ -73,6 +76,20 @@ def _required_config_value(args: Any, name: str) -> str:
     if not value:
         raise RuntimeError(f"missing explicit provider runtime parameter: {name}")
     return value
+
+
+def _gpu1_model_policy(gate: Any, configured_model: str) -> dict[str, Any]:
+    policy = provider_model_policy_fields(configured_model)
+    selected = str(getattr(gate, "selected_provider_model", "") or "").strip()
+    if provider_model_is_auto(configured_model):
+        raise RuntimeError("provider_model_explicit_required")
+    if selected and selected != configured_model:
+        raise RuntimeError(
+            "provider_model_selection_mismatch:"
+            f"requested={configured_model}:selected={selected}"
+        )
+    policy["selected_provider_model"] = configured_model
+    return policy
 
 
 def _canonical_provider_args(gate: Any) -> list[str]:
@@ -226,12 +243,11 @@ def build_provider_command_specs(
         "native_tool_timeout_seconds", npu_timeout
     )
     configured_gpu1_model = _required_config_value(gate.args, "provider_model")
-    gpu1_model = str(
-        getattr(gate, "selected_provider_model", "")
-        or preferred_gpu1_model(
-            configured_gpu1_model,
-            strict=bool(getattr(gate.args, "strict_provider_model", False)),
-        )
+    gpu1_policy = _gpu1_model_policy(gate, configured_gpu1_model)
+    gpu1_model = str(gpu1_policy["selected_provider_model"])
+    gpu1_strict_model = (
+        bool(getattr(gate.args, "strict_provider_model", False))
+        or not provider_model_is_auto(configured_gpu1_model)
     )
     gpu0_model = _required_config_value(gate.args, "gpu0_model")
     gpu0_base_url = _required_config_value(gate.args, "gpu0_base_url")
@@ -264,6 +280,11 @@ def build_provider_command_specs(
             ),
             "output": gpu1_json,
             "provider_model": gpu1_model,
+            "requested_provider_model": configured_gpu1_model,
+            "selected_provider_model": gpu1_model,
+            "model_switch_allowed": bool(gpu1_policy["model_switch_allowed"]),
+            "model_switch_performed": bool(gpu1_policy["model_switch_performed"]),
+            "model_selection_policy": gpu1_policy["model_selection_policy"],
             "provider_backend": "ollama",
             "provider_base_url": gpu1_base_url,
             "provider_compute_device": "ollama/gpu1",
@@ -301,7 +322,7 @@ def build_provider_command_specs(
                 *_canonical_provider_args(gate),
                 "--output",
                 repo_rel(gate.repo_root, gpu1_json),
-                *(["--strict-provider-model"] if getattr(gate.args, "strict_provider_model", False) else []),
+                *(["--strict-provider-model"] if gpu1_strict_model else []),
                 *(["--operator-gpu-observation", str(getattr(gate.args, "operator_gpu_observation", ""))] if str(getattr(gate.args, "operator_gpu_observation", "")).strip() else []),
             ],
         },

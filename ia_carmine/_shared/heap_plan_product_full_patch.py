@@ -103,6 +103,15 @@ def _proposal_entry(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
 def _apply_delta(composed: list[dict[str, Any]], entry: dict[str, Any]) -> str:
     action = str(entry.get("action") or "").lower()
     if action == "append":
+        if composed:
+            previous = str(entry.get("previous_block_id") or "").strip()
+            accepted_ids = {
+                str(item.get("block_id") or "").strip()
+                for item in composed
+                if str(item.get("block_id") or "").strip()
+            }
+            if not previous or previous not in accepted_ids:
+                return "final_product_delta_append_previous_mismatch_rejected"
         composed.append(entry)
         return "appended"
     target = str(entry.get("refines_block_id") or entry.get("previous_block_id") or "")
@@ -126,16 +135,18 @@ def _compose_final_product(
         if entry["valid"]:
             status = _apply_delta(composed, entry)
             if status.endswith("_rejected"):
+                raw_errors = [
+                    *entry.get("errors", []),
+                    status,
+                ]
+                if "target_missing" in status:
+                    raw_errors.insert(-1, "final_product_delta_target_missing")
                 rejected.append(
                     {
                         **entry,
                         "raw_text": entry.get("text") or "",
                         "raw_source": "final_product_delta_ref",
-                        "raw_errors": [
-                            *entry.get("errors", []),
-                            "final_product_delta_target_missing",
-                            status,
-                        ],
+                        "raw_errors": raw_errors,
                     }
                 )
                 continue

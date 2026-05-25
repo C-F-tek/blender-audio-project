@@ -26,6 +26,17 @@ def validate_contract_only(repo_root: Path) -> list[str]:
         ),
         "provider_execution": read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_execution.py"),
         "provider_absorption": read_text(repo_root / "ia_carmine/runtime/heap_gate/provider_report_absorption.py"),
+        "gpu1_one_turn_gate": read_text(repo_root / "ia_carmine/runtime/heap_gate/gpu1_one_turn_gate.py"),
+        "gpu1_chat_loop": read_text(repo_root / "ia_carmine/runtime/heap_gate/gpu1_native_tool_chat_loop.py"),
+        "run_loop_metrics": "\n".join(
+            (
+                read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metrics.py"),
+                read_text(repo_root / "ia_carmine/runtime/heap_gate/run_loop_metric_helpers.py"),
+            )
+        ),
+        "terminal_invariants": read_text(repo_root / "ia_carmine/runtime/heap_gate/terminal_invariants.py"),
+        "provider_selection": read_text(repo_root / "ia_carmine/_shared/ollama_provider_selection.py"),
+        "ollama_config": read_text(repo_root / "ia_carmine/providers/ollama/config.py"),
         "startup_context": read_text(repo_root / "ia_carmine/runtime/heap_gate/startup_context.py"),
         "startup_manifest": read_text(repo_root / "ia_carmine/runtime/heap_gate/startup_manifest_context.py"),
         "matrix_lab": read_text(repo_root / "ia_carmine/runtime/heap_gate/matrix_lab.py"),
@@ -52,6 +63,26 @@ def validate_contract_only(repo_root: Path) -> list[str]:
         "provider_required_when_enabled": "provider_teamwork_universe_required"
         in files["run_loop"],
         "matrix_consumes_evidence": "evidence_report" in files["matrix_lab"],
+        "gpu1_one_turn_helper_exists": "kind = gpu1_one_turn_runtime_gate"
+        in files["gpu1_one_turn_gate"]
+        or "GATE_KIND = \"gpu1_one_turn_runtime_gate\"" in files["gpu1_one_turn_gate"],
+        "gpu1_chat_loop_calls_one_turn_helper": "build_gpu1_one_turn_runtime_gate"
+        in files["gpu1_chat_loop"],
+        "provider_execution_blocks_sidecars_on_one_turn": "skipped_gpu1_one_turn_gate_failed"
+        in files["provider_execution"],
+        "run_loop_metrics_exposes_one_turn": "gpu1_one_turn_runtime_gate_passed"
+        in files["run_loop_metrics"],
+        "terminal_invariants_block_one_turn_missing": "gpu1_one_turn_runtime_gate_missing_or_failed"
+        in files["terminal_invariants"],
+        "no_runtime_preflight_import": "Tools.validation.heap_runtime.gpu1_native_tool_loop_preflight"
+        not in "\n".join(files.values()),
+        "explicit_provider_model_exact_policy": "explicit_provider_model_exact"
+        in files["provider_selection"]
+        and "provider_model_explicit_required" in files["provider_selection"],
+        "provider_selection_no_hardcoded_fallback": "FALLBACK_ORDER"
+        not in files["provider_selection"]
+        and "qwen2.5-coder:14b" not in files["provider_selection"]
+        and "qwen2.5-coder:14b" not in files["ollama_config"],
     }
     return [
         f"missing heap runtime completeness contract: {key}"

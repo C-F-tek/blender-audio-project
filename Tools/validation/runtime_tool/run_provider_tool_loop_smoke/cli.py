@@ -5,9 +5,13 @@ import argparse
 import inspect
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from Tools.validation.runtime_tool.provider_tool_loop_search_chain import (
+    run_search_window_chain_smoke,
+)
 
 
 def ensure_repo(repo_root: Path) -> None:
@@ -136,6 +140,13 @@ def main() -> int:
         != "ollama-qwen2.5-coder.chat_tools.content_json_adapter"
     ):
         errors.append("qwen content JSON adapter did not normalize strict chat-tools JSON")
+    fenced_json_chat = {
+        "message": {
+            "content": '```json\n{"name":"runtime_file_window","arguments":{"path":"README.md"}}\n```'
+        }
+    }
+    if normalize_ollama_tool_calls(fenced_json_chat, allow_content_json_adapter=True):
+        errors.append("fenced JSON content must not be normalized as a native Ollama tool call")
     command, _outputs = run_heap_code_execution_matrix(
         repo_root,
         repo_root / "output" / "validation" / "provider_tool_loop_smoke",
@@ -162,6 +173,10 @@ def main() -> int:
         errors.append("generic_write builder must materialize operator_request as request-file")
     if not generic_outputs.get("json_report") or not generic_outputs.get("markdown_report"):
         errors.append("generic_write builder does not declare JSON/Markdown outputs")
+
+    search_chain_errors, strict_window_output = run_search_window_chain_smoke(repo_root)
+    errors.extend(search_chain_errors)
+
     if "partial_callback" not in inspect.signature(OllamaSession.generate).parameters:
         errors.append("Ollama generate must expose partial_callback for GPU1 checkpoints")
     if "partial_output" not in inspect.signature(run_ollama_probe).parameters:
@@ -204,6 +219,43 @@ def main() -> int:
     tool_result_owner = ToolResultOwner()
     tool_result_owner.repo_root = repo_root
 
+    if strict_window_output is not None:
+        strict_request_id = "provider_tool_loop_smoke_strict_window"
+        strict_payload = {
+            "request_id": strict_request_id,
+            "tool": "runtime_file_window",
+            "lane": "gpu1_planner",
+            "provider_native_tool_call": True,
+            "revision": 9,
+            "gpu1_tool_loop_subturn": 0,
+            "provider_block_id": "block:strict",
+            "chat_history_ref": {"path": "chat/history.json"},
+            "returncode": 0,
+            "executed": True,
+            "blocked": False,
+            "errors": [],
+            "summary": {"passed": True},
+            "outputs": {"json_report": str(strict_window_output)},
+        }
+        strict_events = [
+            {"event_type": "broker_request", "payload": strict_payload},
+            {"event_type": "broker_result", "payload": strict_payload},
+        ]
+        strict_consumption = gpu1_tool_result_consumption_state(
+            tool_result_owner,
+            strict_events,
+            response_text=f"CONSUMED_EVIDENCE:\n- {strict_request_id}\n",
+            report={
+                "revision": 9,
+                "gpu1_tool_loop_subturn": 1,
+                "chat_history_ref": {"path": "chat/history.json"},
+            },
+        )
+        if strict_consumption.get("tool_result_consumed_by_gpu1") is not True:
+            errors.append("passed strict runtime_file_window result was not consumable by GPU1")
+        if strict_consumption.get("gpu1_consumed_tool_result_ids") != [strict_request_id]:
+            errors.append("GPU1 strict window consumption did not preserve only the passed request id")
+
     request_payload = {
         "request_id": request_id,
         "tool": "runtime_file_window",
@@ -238,10 +290,12 @@ def main() -> int:
             "chat_history_ref": {"path": "chat/history.json"},
         },
     )
-    if not consumption.get("tool_result_consumed_by_gpu1"):
-        errors.append("GPU1 tool result cited in later subturn was not marked consumed")
+    if consumption.get("tool_result_consumed_by_gpu1"):
+        errors.append("failed broker result must not become consumed GPU1 product evidence")
     if consumption.get("tool_result_consumed_passed_by_gpu1_count") != 0:
         errors.append("failed broker result must not become passed GPU1 product evidence")
+    if request_id not in (consumption.get("gpu1_invalid_consumed_failed_tool_result_ids") or []):
+        errors.append("failed broker result cited in CONSUMED_EVIDENCE was not typed invalid")
     if broker_result_passed(failed_result_payload):
         errors.append("broker_result_passed accepted summary.passed=false")
     stale_consumption = gpu1_tool_result_consumption_state(

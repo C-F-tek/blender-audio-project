@@ -5,6 +5,7 @@ from typing import Any
 from ia_carmine.product.operator_product_core import LauncherConfig, OperatorProductController
 from ia_carmine.product.operator_product_core.direct_command import resolve_config, run_dir_for
 from ia_carmine.product.operator_product_core.public_documents import default_public_documents_root
+from ia_carmine._shared.ollama_provider_selection import provider_model_policy_fields
 from ia_carmine.runtime.heap_gate.provider_lane_hierarchy import context_hierarchy_payload
 from ia_carmine.runtime.run.dry_run_policy import dry_run_contract_policy
 
@@ -28,6 +29,7 @@ def _parameters_source(field_sources: dict[str, Any]) -> str:
 
 def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
     cfg = resolve_config(config)
+    model_policy = provider_model_policy_fields(str(cfg.provider_model or "auto"))
     command = OperatorProductController(config).build_command()
     effective_universe_config = cfg.effective_universe_config or {}
     field_sources = cfg.field_sources or {}
@@ -52,8 +54,11 @@ def dry_run_report(config: LauncherConfig) -> dict[str, Any]:
         "provider_model_required": True,
         "provider_model_default_auto": False,
         "requested_provider_model": str(cfg.provider_model or "auto"),
-        "provider_model_explicit": str(cfg.provider_model or "auto") != "auto",
+        "provider_model_explicit": str(cfg.provider_model or "auto").lower() != "auto",
         "provider_model": str(cfg.provider_model or "auto"),
+        "model_switch_allowed": bool(model_policy["model_switch_allowed"]),
+        "model_switch_performed": False,
+        "model_selection_policy": model_policy["model_selection_policy"],
         "effective_universe_config": effective_universe_config,
         "field_sources": field_sources,
         "expanded_heap_command": command,

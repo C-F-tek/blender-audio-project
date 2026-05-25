@@ -110,7 +110,32 @@ def _copy_selected_run_artifacts(run_report: dict[str, Any], target: Path) -> li
             destination = target / name
             shutil.copy2(source, destination)
             outputs.append(str(destination))
+    for source in _gpu1_one_turn_gate_sources(run_report, run_dir):
+        if source.is_file():
+            destination = target / source.name
+            shutil.copy2(source, destination)
+            outputs.append(str(destination))
     return outputs
+
+
+def _gpu1_one_turn_gate_sources(run_report: dict[str, Any], run_dir: Path) -> list[Path]:
+    values: list[str] = []
+    for payload in (run_report.get("launcher_summary_payload"), run_report):
+        if isinstance(payload, dict):
+            values.append(str(payload.get("gpu1_one_turn_runtime_gate_path") or ""))
+    sources: list[Path] = []
+    for value in values:
+        if not value:
+            continue
+        path = Path(value)
+        if not path.is_absolute():
+            repo_root = run_dir.parent.parent.parent if len(run_dir.parents) >= 3 else run_dir
+            path = repo_root / value if value.startswith("output/") else run_dir / value
+        sources.append(path)
+    provider_dir = run_dir / "provider_teamwork"
+    if provider_dir.is_dir():
+        sources.extend(provider_dir.glob("gpu1_one_turn_runtime_gate*.json"))
+    return sorted({path.resolve(strict=False) for path in sources})
 
 
 def _ensure_fallback_product_files(

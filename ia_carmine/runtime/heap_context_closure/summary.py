@@ -172,6 +172,24 @@ def build_launcher_summary(args: Any, state: dict[str, Any]) -> dict[str, Any]:
         "final_readable_product_zip": final_result.get("documents_zip", ""),
         "final_code_product_contract": code_product_contract,
         "external_heap_contract": external_contract,
+        "gpu1_one_turn_runtime_gate_present": bool(
+            final_payload.get("gpu1_one_turn_runtime_gate_present")
+            or external_contract.get("gpu1_one_turn_runtime_gate_present")
+        ),
+        "gpu1_one_turn_runtime_gate_path": (
+            final_payload.get("gpu1_one_turn_runtime_gate_path")
+            or external_contract.get("gpu1_one_turn_runtime_gate_path")
+            or ""
+        ),
+        "gpu1_one_turn_runtime_gate_passed": bool(
+            final_payload.get("gpu1_one_turn_runtime_gate_passed")
+            or external_contract.get("gpu1_one_turn_runtime_gate_passed")
+        ),
+        "gpu1_one_turn_blocker": (
+            final_payload.get("gpu1_one_turn_blocker")
+            or external_contract.get("gpu1_one_turn_blocker")
+            or ""
+        ),
         "launcher_contract_errors": launcher_contract_errors,
         **product_state,
         "download_hint": composer_report.get("download_hint", ""),
@@ -282,11 +300,14 @@ def _code_product_contract(state: dict[str, Any], final_payload: dict[str, Any])
             and not metrics.get("truncation_marker")
         )
     )
-    text_product_ready = bool(final_payload.get("text_product_ready"))
+    final_product_delta_applied_count = _safe_int(
+        final_payload.get("final_product_delta_applied_count")
+    )
+    text_product_ready = bool(
+        final_payload.get("text_product_ready") and final_product_delta_applied_count > 0
+    )
     final_product_surface_ready = bool(
-        final_payload.get("final_product_surface_ready")
-        or real_code_product_ready
-        or text_product_ready
+        real_code_product_ready or text_product_ready
     )
     return {
         "path": str(code_product_path or ""),
@@ -295,9 +316,7 @@ def _code_product_contract(state: dict[str, Any], final_payload: dict[str, Any])
         "text_product_ready": text_product_ready,
         "final_product_surface_ready": final_product_surface_ready,
         "plan_product_kind": str(final_payload.get("plan_product_kind") or ""),
-        "final_product_delta_applied_count": _safe_int(
-            final_payload.get("final_product_delta_applied_count")
-        ),
+        "final_product_delta_applied_count": final_product_delta_applied_count,
         "metrics": metrics,
         "final_document_status": final_payload.get("final_document_status"),
         "blocking_reasons": _list_or_empty(final_payload.get("blocking_reasons")),
@@ -354,6 +373,20 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
         causality.get("product_acceptance_passed"),
         long_response.get("product_acceptance_passed"),
     )
+    causality_gate = _dict_or_empty(causality.get("gpu1_one_turn_runtime_gate"))
+    one_turn_paths = (
+        _list_or_empty(pointer.get("gpu1_one_turn_runtime_gate_paths"))
+        or _list_or_empty(causality_gate.get("paths"))
+    )
+    one_turn_blockers = (
+        _list_or_empty(pointer.get("gpu1_one_turn_gate_blockers"))
+        or _list_or_empty(causality_gate.get("blockers"))
+    )
+    one_turn_passed = _first_bool(
+        pointer.get("gpu1_one_turn_runtime_gate_passed"),
+        causality_gate.get("passed"),
+        long_response.get("gpu1_one_turn_runtime_gate_passed"),
+    )
     reported_long_response_ready = long_response.get("long_response_product_ready") is True
     long_response_product_ready = bool(
         final_product_delta_applied_count > 0
@@ -386,6 +419,12 @@ def _external_heap_contract(external_payload: dict[str, Any]) -> dict[str, Any]:
         "revision_context_passed": bool(revision.get("passed")),
         "pointer_manifest_path": str(external_payload.get("pointer_manifest_json") or ""),
         "pointer_manifest_passed": bool(pointer.get("passed")),
+        "gpu1_one_turn_runtime_gate_present": bool(
+            pointer.get("source_gpu1_one_turn_gate_count") or one_turn_paths
+        ),
+        "gpu1_one_turn_runtime_gate_path": str(one_turn_paths[0] if one_turn_paths else ""),
+        "gpu1_one_turn_runtime_gate_passed": one_turn_passed,
+        "gpu1_one_turn_blocker": str(one_turn_blockers[0] if one_turn_blockers else ""),
         "roles_present": sorted(roles),
         "missing_roles": sorted(
             {"gpu1_planner", "gpu0_reviewer_refiner", "npu_auditor"} - roles
@@ -427,14 +466,19 @@ def _launcher_contract_errors(
     final_payload: dict[str, Any],
 ) -> list[str]:
     errors: list[str] = []
+    final_product_delta_applied_count = _safe_int(
+        final_payload.get("final_product_delta_applied_count")
+        or code_product_contract.get("final_product_delta_applied_count")
+    )
     text_product_ready = bool(
-        final_payload.get("text_product_ready")
-        or code_product_contract.get("text_product_ready")
+        (
+            final_payload.get("text_product_ready")
+            or code_product_contract.get("text_product_ready")
+        )
+        and final_product_delta_applied_count > 0
     )
     final_product_surface_ready = bool(
-        final_payload.get("final_product_surface_ready")
-        or code_product_contract.get("final_product_surface_ready")
-        or code_product_contract.get("real_code_product_ready")
+        code_product_contract.get("real_code_product_ready")
         or text_product_ready
     )
     if not final_result.get("passed"):
@@ -466,6 +510,16 @@ def _launcher_contract_errors(
             errors.append("external heap causal chain did not pass")
         if not external_contract.get("product_acceptance_passed"):
             errors.append("external heap product acceptance did not pass")
+        if not external_contract.get("gpu1_one_turn_runtime_gate_present"):
+            errors.append("gpu1_one_turn_runtime_gate_missing")
+        elif not external_contract.get("gpu1_one_turn_runtime_gate_passed"):
+            errors.append(
+                "gpu1_one_turn_runtime_gate_failed:"
+                + str(
+                    external_contract.get("gpu1_one_turn_blocker")
+                    or "gpu1_one_turn_runtime_gate_failed"
+                )
+            )
         if external_contract.get("provider_rejection_reasons"):
             errors.append(
                 "provider work rejected: "

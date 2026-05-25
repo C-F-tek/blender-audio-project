@@ -275,6 +275,10 @@ def _consumed_generic_write_refs(owner: Any) -> set[str]:
 
 
 def generic_write_document_product_eligible(owner: Any, events: list[dict[str, Any]]) -> bool:
+    return False
+
+
+def generic_write_refined_request_ready(owner: Any, events: list[dict[str, Any]]) -> bool:
     results = passed_generic_write_results(events, owner=owner)
     if len(results) < GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS:
         return False
@@ -307,9 +311,11 @@ def generic_write_document_product(owner: Any, events: list[dict[str, Any]]) -> 
     lanes = [str(payload.get("lane") or "") for payload in results]
     captures = [_capture_summary(owner, payload) for payload in results]
     consumed_count = generic_write_consumed_round_count(owner, events)
+    refined_request_ready = generic_write_refined_request_ready(owner, events)
     return {
-        "eligible": generic_write_document_product_eligible(owner, events),
-        "kind": "generic_write_refined_product",
+        "eligible": False,
+        "diagnostic_evidence_ready": refined_request_ready,
+        "kind": "generic_write_refined_request",
         "minimum_refinements": GENERIC_WRITE_PRODUCT_MIN_REFINEMENTS,
         "refinement_count": consumed_count,
         "generic_write_consumed_round_count": consumed_count,
@@ -347,9 +353,10 @@ def generic_write_document_product(owner: Any, events: list[dict[str, Any]]) -> 
         "gpu1_consumed_generic_write_block_ids": list(
             getattr(owner, "gpu1_consumed_generic_write_block_ids", []) or []
         ),
-        "code_product_allowed_after_three_refinements": True,
-        "product_includes_provider_communication": True,
-        "readable_code_content_allowed": True,
+        "code_product_allowed_after_three_refinements": False,
+        "product_includes_provider_communication": False,
+        "refined_request_includes_provider_communication": True,
+        "readable_code_content_allowed": False,
         "patch_application_performed": False,
         "source_writes_performed": False,
     }
@@ -438,7 +445,7 @@ def maybe_run_generic_write_followup(
             f"generic_write_outputs={outputs}",
             f"refined_request_excerpt={_generic_write_report_text(owner, report, 'refined_request')[:2400]}",
             "GPU1 must consume this peer/tool evidence in a new revision; do not repeat the rejected block.",
-            "After three consumed generic_write refinements this may close as a readable refined product, including code content, but not as applied source writes.",
+            "Even after three consumed generic_write refinements this remains diagnostic/refined-request evidence; it cannot close a readable/code product without a later GPU1 FINAL_PRODUCT_DELTA.",
         ]
     )
     owner.publish(

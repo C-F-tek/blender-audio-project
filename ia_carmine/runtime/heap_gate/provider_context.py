@@ -12,7 +12,7 @@ from ia_carmine._shared.file_backed_transport import (
     text_sha256,
     write_large_text_evidence,
 )
-from ia_carmine.runtime.heap_gate.generic_write_followup import generic_write_document_product
+from ia_carmine._shared.provider_tool_schemas import provider_tool_protocol
 from ia_carmine.runtime.heap_gate.gpu1_tool_result_consumption import (
     gpu1_tool_result_resume_prompt_block,
 )
@@ -416,9 +416,6 @@ class RuntimeGateProviderContextMixin:
     def build_final_response_text(self, events: list[dict[str, Any]]) -> str:
         base_response = self.response_text().strip()
         if not base_response:
-            generic_product = generic_write_document_product(self, events)
-            if generic_product.get("eligible") and generic_product.get("latest_refined_request"):
-                return str(generic_product.get("latest_refined_request") or "").strip()
             return ""
         if not self.detailed_output_expected():
             return base_response
@@ -555,7 +552,7 @@ class RuntimeGateProviderContextMixin:
             f"{source_allowlist_contract}\n"
             f"Feedback qualitativo heap da eventuale giro precedente:\n{revision_feedback}\n"
             "BROKER_NATIVE_TOOL_RULE: GPU1 e' la lane Ollama primaria e puo' guidare broker tools e produrre FINAL_PRODUCT_DELTA. GPU0/NPU sono sidecar packet_review_only: possono produrre solo peer_refinement, veto o evidence_request strutturati legati al packet GPU1 corrente; free text/no-tool resta raw_sidecar_evidence e non diventa operativo. Nel loop nativo GPU1 usa solo tool concreti registrati con schema+handler: repo_toolchain_probe, repo_search_rg, repo_search_git_grep, repo_find_fd, repo_json_query_jq, repo_powershell_readonly, repo_toolchain_command, runtime_file_refs, runtime_file_window, memoria/RAG/context/chunk tools. Non chiedere generic_write, debug lab, matrix, virtual env, patch synthesis o code-product analyzer come strumenti esplorativi GPU1: sono fasi deterministic/late-stage fuori dal tool loop primario.\n"
-            "QWEN25_CODER_TOOL_FORMAT_RULE: quando serve un tool, usa il canale Ollama `session.chat(..., tools=...)`. Per qwen2.5-coder:14b la forma nativa del template e' ESATTAMENTE <tool_call>{\"name\":...,\"arguments\":...}</tool_call> senza altro testo; `message.tool_calls[]` e il whole-message JSON adapter stretto del percorso chat(tools=...) sono equivalenti. Il risultato rientra nel turno successivo come role=tool/<tool_response>. Markdown, fenced JSON, prose o JSON fuori dal percorso tools non sono eseguibili.\n"
+            f"{self.gpu1_tool_protocol_prompt_block()}"
             "GPU1_TOOL_RESULT_CONSUMPTION_RULE: se in un turno precedente hai chiesto un broker tool, il packet resta pending_tool_result finche' tu GPU1 non riprendi con lo stesso contesto, leggi il tool_result e lo citi in CONSUMED_EVIDENCE/tool_or_matrix_refs. tool_result_written non basta: diventa evidence operativa solo con tool_result_consumed_by_gpu1. GPU0/NPU non devono revisionare packet GPU1 incompleti in attesa di tool_result.\n"
             "FILE_READ_GROUNDING_RULE: runtime_file_refs/SOURCE_PATH_ALLOWLIST_CONTRACT prova solo path verificati, non contenuto letto. Per FINAL_PRODUCT_KIND=code o text_and_code, e per qualunque PATCH_SKETCH_UNIFIED_DIFF, devi prima chiamare nativamente runtime_file_window sui target, ricevere tool_result brokerato riuscito, e citare quel result in CONSUMED_EVIDENCE/tool_or_matrix_refs. Senza file-read reale puoi emettere solo FINAL_PRODUCT_KIND=text oppure gpu1_decision=needs_refine con NEXT_RUNTIME_INTENT che richiede runtime_file_window sui target. Non produrre diff da memoria, prompt, allowlist, raw text o basename ricordati.\n"
             "Regola: rispondi come delta GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati da runtime_file_refs/SOURCE_PATH_ALLOWLIST_CONTRACT e poi letti da runtime_file_window, non gli artifact output/validation e non basename ricordati. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
@@ -577,6 +574,52 @@ class RuntimeGateProviderContextMixin:
             "Valori vietati per GPU1: FINAL_PRODUCT_KIND=blocked, FINAL_PRODUCT_ACTION=blocked, FINAL_PRODUCT_ACTION=block.\n"
             "Per richieste implementative devi produrre un blocco operativo solo dopo avere letto i target con runtime_file_window. Usa sezioni TARGET_FILES, PROBLEM, IMPLEMENTATION_CHANGES, PATCH_SKETCH_UNIFIED_DIFF, VALIDATION_COMMANDS, RISKS, EXIT_DECISION solo quando puoi fondarle su file-read brokerato. PATCH_SKETCH_UNIFIED_DIFF deve essere un blocco ```diff con diff --git a/<path> b/<path> su path allowlisted e letto; se non hai file-read riuscito usa FINAL_PRODUCT_KIND=text o gpu1_decision=needs_refine e chiedi runtime_file_window in NEXT_RUNTIME_INTENT. TARGET_FILES deve essere copiato esattamente da Allowed source paths; non citare path non allowlisted nemmeno in PROBLEM/EVIDENCE/PATCH_SKETCH_UNIFIED_DIFF. La tua proposta e' evidenza: la parte code del FINAL_PRODUCT sara' valida solo se file-read brokerato + matrix/synthesis estraggono e validano il diff.\n"
             "Risposta finale completa e chiusa:"
+        )
+
+    def gpu1_tool_protocol_prompt_block(self) -> str:
+        from ia_carmine._shared.provider_tool_loop import ollama_tool_visibility
+
+        selected = str(
+            getattr(self, "selected_provider_model", "")
+            or getattr(self.args, "provider_model", "")
+            or ""
+        ).strip()
+        protocol = provider_tool_protocol(selected)
+        family = str(protocol.get("model_family") or "default-native-only")
+        visibility = ollama_tool_visibility(
+            include_generic_write=False,
+            gpu1_concrete_only=True,
+        )
+        tools = ", ".join(visibility["actual_chat_tool_names"])
+        visibility_block = (
+            "GPU1_ACTUAL_CHAT_TOOLS: "
+            f"{tools}\n"
+            "GPU1_ACTUAL_CHAT_TOOL_SCHEMA_COUNT: "
+            f"{visibility['actual_chat_tool_schema_count']}\n"
+            "GPU1_HIDDEN_TOOL_NAMES: "
+            f"{', '.join(visibility['hidden_tool_names'][:32])}\n"
+        )
+        if family == "qwen2.5-coder":
+            return (
+                visibility_block
+                +
+                "QWEN25_CODER_TOOL_FORMAT_RULE: quando serve un tool, usa il canale "
+                "Ollama `session.chat(..., tools=...)`. Per qwen2.5-coder la forma "
+                "nativa del template e' ESATTAMENTE "
+                '<tool_call>{"name":...,"arguments":...}</tool_call> senza altro '
+                "testo; `message.tool_calls[]` e il whole-message JSON adapter "
+                "stretto del percorso chat(tools=...) sono equivalenti. Il risultato "
+                "rientra nel turno successivo come role=tool/<tool_response>. "
+                "Markdown, fenced JSON, prose o JSON fuori dal percorso tools non "
+                "sono eseguibili.\n"
+            )
+        return (
+            visibility_block
+            +
+            "GPU1_NATIVE_TOOL_FORMAT_RULE: quando serve un tool, usa solo il canale "
+            "Ollama `session.chat(..., tools=...)` e `message.tool_calls[]`. Per il "
+            f"modello selezionato `{selected or family}` non usare adapter qwen2.5, "
+            "fenced JSON, prose o JSON fuori dal percorso tools: non sono eseguibili.\n"
         )
 
     def response_text(self) -> str:

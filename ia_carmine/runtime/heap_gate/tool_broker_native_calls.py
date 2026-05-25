@@ -12,6 +12,9 @@ from ia_carmine._shared.file_backed_transport import (
 )
 from ia_carmine._shared.provider_work_rejections import role_for
 from ia_carmine._shared.provider_tool_schemas import is_api_native_tool_call
+from ia_carmine.runtime.heap_gate.native_tool_arg_enrichment import (
+    enrich_runtime_file_window_args,
+)
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     append_unique,
@@ -86,7 +89,7 @@ def provider_plan_item_for_tool_call(
         )
         args = dict(call.get("args") or {})
         if tool_name == "runtime_file_window":
-            _enrich_runtime_file_window_args(owner, args)
+            enrich_runtime_file_window_args(owner, args)
         if tool_name == "runtime_file_refs":
             _normalize_runtime_file_refs_args(args)
         return {
@@ -99,36 +102,6 @@ def provider_plan_item_for_tool_call(
             or f"provider native tool_call requested allowlisted tool {tool_name}",
         }
     return None
-
-def _enrich_runtime_file_window_args(owner: Any, args: dict[str, Any]) -> None:
-    if str(args.get("path") or "").strip():
-        return
-    candidate = ""
-    for key in ("target_file", "file", "filepath"):
-        value = args.get(key)
-        if isinstance(value, str) and value.strip():
-            candidate = value.strip()
-            break
-        if isinstance(value, list):
-            candidate = next((str(item).strip() for item in value if str(item).strip()), "")
-            if candidate:
-                break
-    if not candidate:
-        try:
-            targets = list(owner.code_execution_matrix_targets() or [])
-        except Exception:
-            targets = []
-        candidate = next((str(item).strip() for item in targets if str(item).strip()), "")
-    if not candidate:
-        try:
-            candidates = list(owner.real_source_file_candidates(limit=1) or [])
-        except Exception:
-            candidates = []
-        candidate = next((str(item).strip() for item in candidates if str(item).strip()), "")
-    if candidate:
-        args["path"] = candidate
-    args.setdefault("offset", 0)
-    args.setdefault("limit", 16000)
 
 def _normalize_runtime_file_refs_args(args: dict[str, Any]) -> None:
     path_value = args.pop("path", "")

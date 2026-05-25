@@ -178,7 +178,7 @@ def provider_time_counter_prompt_text(contract: dict[str, Any]) -> str:
             "- GPU1/GPU0 Ollama residency stays alive across provider revisions so lanes can call back into each other.",
             "- Release short-lived child processes at lane boundaries when useful; unload Ollama models only at production-cycle provider cleanup.",
             "- If the pointer universe reaches a ready product with evidence before soft_close_after_seconds, exit through product_signal immediately.",
-            "- Near soft_close_after_seconds, close coherently: emit HEAP_DELTA_PROPOSAL or EXIT_DECISION=NO_PATCHABLE_TARGET with pointers.",
+            "- Near soft_close_after_seconds, close coherently: emit FINAL_PRODUCT_DELTA or EXIT_DECISION=NO_PATCHABLE_TARGET with pointers.",
             "- Soft close is not permission to truncate pointer recursion; continue propagation/refinement unless the heap has ready evidence or an explicit blocked reason.",
             "- At soft close enter SOFT_LOCK_STATE=closing_open_pointers: do not start broad exploration; close, merge, veto, refine, classify, or defer existing pointers.",
             "- Every open pointer must become merged_into_final_product, rejected_with_reason, superseded_by_pointer, deferred_to_resume, blocked_external_dependency, or requires_operator_input.",

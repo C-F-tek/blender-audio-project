@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ia_carmine._shared.ollama_provider_selection import provider_model_is_auto
 from ia_carmine._shared.provider_replight import provider_replight_failure_reason
 from ia_carmine.runtime.heap_gate.provider_command_specs import build_provider_command_specs
 from ia_carmine.runtime.heap_gate.runtime_common import (
@@ -79,6 +80,21 @@ def _remember_selected_gpu1(gate: Any, report: dict[str, Any]) -> None:
     selected = str(
         report.get("selected_provider_model") or report.get("selected_model") or ""
     ).strip()
+    requested = str(getattr(gate.args, "provider_model", "") or "").strip()
+    if requested and not provider_model_is_auto(requested) and selected and selected != requested:
+        reason = (
+            "provider_model_selection_mismatch:"
+            f"requested={requested}:selected={selected}"
+        )
+        report["replight_passed"] = False
+        report["replight_blocked_reason"] = reason
+        report["product_blocked_reason"] = reason
+        errors = report.get("errors")
+        if not isinstance(errors, list):
+            errors = []
+            report["errors"] = errors
+        errors.append("provider_model_selection_mismatch")
+        return
     if selected:
         gate.selected_provider_model = selected
     try:

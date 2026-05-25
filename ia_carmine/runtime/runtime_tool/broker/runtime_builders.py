@@ -434,6 +434,19 @@ def runtime_file_window(
     repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
 ) -> tuple[list[str], dict[str, Any]]:
     report, markdown = base_outputs(out_dir, request_id, "runtime_file_window")
+    normalized_args = dict(args)
+    normalized_from: dict[str, str] = {}
+    if "length" in normalized_args and "limit" not in normalized_args:
+        normalized_args["limit"] = normalized_args.pop("length")
+        normalized_from["limit"] = "length"
+    if normalized_from:
+        existing = normalized_args.get("argument_normalized_from")
+        merged = existing if isinstance(existing, dict) else {}
+        merged.update(normalized_from)
+        normalized_args["argument_normalized_from"] = merged
+    args_file = out_dir / f"{request_id}_runtime_file_window_args.json"
+    args_file.parent.mkdir(parents=True, exist_ok=True)
+    args_file.write_text(json.dumps(normalized_args, indent=2, ensure_ascii=False), encoding="utf-8")
     command = [
         resolve_child_python(repo_root),
         "-m",
@@ -441,18 +454,27 @@ def runtime_file_window(
         "runtime_file_window",
         "--repo-root",
         ".",
-        "--path",
-        str(args.get("path") or ""),
         "--offset",
-        str(args.get("offset") or 0),
+        str(normalized_args.get("offset") or 0),
         "--limit",
-        str(args.get("limit") or 16000),
+        str(normalized_args.get("limit") or 16000),
         "--output",
         str(report),
         "--markdown-output",
         str(markdown),
+        "--request-args-file",
+        repo_rel(args_file, repo_root),
     ]
+    if normalized_args.get("path") is not None:
+        command.extend(["--path", str(normalized_args.get("path") or "")])
+    if normalized_args.get("ref_id") is not None:
+        command.extend(["--ref-id", str(normalized_args.get("ref_id") or "")])
+    if normalized_args.get("startup_manifest") is not None:
+        command.extend(["--startup-manifest", str(normalized_args.get("startup_manifest") or "")])
+    if truthy(normalized_args.get("strict_startup_refs")):
+        command.append("--strict-startup-refs")
     return command, {
         "json_report": repo_rel(report, repo_root),
         "markdown_report": repo_rel(markdown, repo_root),
+        "args_file": repo_rel(args_file, repo_root),
     }

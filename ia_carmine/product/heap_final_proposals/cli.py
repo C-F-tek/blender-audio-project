@@ -30,6 +30,10 @@ from ia_carmine.product.heap_final_proposals.common import (
 from ia_carmine.product.heap_final_proposals.documents import write_documents_package
 from ia_carmine.product.heap_final_proposals.rendering import render_markdown
 from ia_carmine._shared.report_io import print_json_report
+from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import (
+    ONE_TURN_SUMMARY_FIELDS,
+    strict_one_turn_gate_passed,
+)
 
 try:
     from ia_carmine._shared.heap_proposal_gate import build_operator_decision, gate_proposals, load_allowlist
@@ -194,6 +198,7 @@ def _build_result(
 ) -> dict[str, Any]:
     accepted = [item for item in proposals if item.get("accepted")]
     rejected = [item for item in proposals if not item.get("accepted")]
+    one_turn = _one_turn_summary(proposals, provider_reports)
     return {
         "schema_version": 1,
         "kind": "heap_final_proposal_composer",
@@ -207,6 +212,7 @@ def _build_result(
         "accepted_proposal_count": len(accepted),
         "rejected_proposal_count": len(rejected),
         "provider_report_count": len(provider_reports),
+        **one_turn,
         "gpu0_review_count": len(gpu0_reviews),
         "npu_audit_count": len(npu_audits),
         "blocking_issue_count": len(blockers),
@@ -257,6 +263,7 @@ def _proposal_summary(item: dict[str, Any]) -> dict[str, Any]:
         "npu_micro_task_piece",
         "npu_workload_audit",
         "anchored_source_candidates",
+        *ONE_TURN_SUMMARY_FIELDS,
     )
     return {key: item.get(key) for key in keys}
 
@@ -272,6 +279,40 @@ def _provider_summary(repo_root: Path, item: dict[str, Any]) -> dict[str, Any]:
         "npu_device_workload": item.get("npu_device_workload"),
         "errors": item.get("errors"),
         "warnings": item.get("warnings"),
+        **{
+            key: item.get(key)
+            for key in ONE_TURN_SUMMARY_FIELDS
+            if key in item
+        },
+    }
+
+
+def _one_turn_summary(
+    proposals: list[dict[str, Any]],
+    provider_reports: list[dict[str, Any]],
+) -> dict[str, Any]:
+    sources = [*proposals, *provider_reports]
+    paths = [
+        str(item.get("gpu1_one_turn_runtime_gate_path") or "")
+        for item in sources
+        if str(item.get("gpu1_one_turn_runtime_gate_path") or "").strip()
+    ]
+    blockers = [
+        str(item.get("gpu1_one_turn_blocker") or "")
+        for item in sources
+        if str(item.get("gpu1_one_turn_blocker") or "").strip()
+    ]
+    passed = sum(1 for item in sources if strict_one_turn_gate_passed(item))
+    failed = sum(
+        1
+        for item in sources
+        if item.get("gpu1_one_turn_runtime_gate_present") and not strict_one_turn_gate_passed(item)
+    )
+    return {
+        "gpu1_one_turn_gate_passed_count": passed,
+        "gpu1_one_turn_gate_failed_count": failed,
+        "gpu1_one_turn_gate_blockers": list(dict.fromkeys(blockers)),
+        "gpu1_one_turn_runtime_gate_paths": list(dict.fromkeys(paths)),
     }
 
 

@@ -248,11 +248,12 @@ class RuntimeGateProviderPromptMixin:
         sections = self.section_presence(
             delta_text,
             (
-                "HEAP_DELTA_PROPOSAL",
-                "EXIT_DECISION=",
-                "POINTER_ACTION=",
+                "FINAL_PRODUCT_KIND",
+                "FINAL_PRODUCT_ACTION",
                 "CURRENT_POINTER",
-                "CURRENT_ITERATION_SCOPE",
+                "CONSUMED_EVIDENCE",
+                "NEXT_RUNTIME_INTENT",
+                "FINAL_PRODUCT_DELTA",
                 "TARGET_FILES",
                 "PROBLEM",
                 "EVIDENCE",
@@ -264,7 +265,17 @@ class RuntimeGateProviderPromptMixin:
                 "RISKS",
             ),
         )
+        final_protocol_sections = {
+            "FINAL_PRODUCT_KIND",
+            "FINAL_PRODUCT_ACTION",
+            "CURRENT_POINTER",
+            "CONSUMED_EVIDENCE",
+            "NEXT_RUNTIME_INTENT",
+            "FINAL_PRODUCT_DELTA",
+        }
         missing = [name for name, present in sections.items() if not present]
+        final_protocol_missing = [name for name in missing if name in final_protocol_sections]
+        final_product_delta_protocol_invalid = bool(delta_text.strip() and final_protocol_missing)
         file_quality = self.response_file_reference_quality(delta_text)
         events = self.read_events()
         no_patchable_target_forced = False
@@ -289,27 +300,26 @@ class RuntimeGateProviderPromptMixin:
             ]
             delta_text = "\n".join(
                 [
-                    "# HEAP_DELTA_PROPOSAL",
-                    "EXIT_DECISION=NO_PATCHABLE_TARGET",
-                    "POINTER_ACTION=STAY_FORWARD",
+                    "FINAL_PRODUCT_KIND: text",
+                    "FINAL_PRODUCT_ACTION: append",
                     "CURRENT_POINTER:",
                     "- previous_block_id=",
                     "- refines_block_id=",
                     "- resume_from_block_id=",
                     "",
-                    "CURRENT_ITERATION_SCOPE:",
-                    "- Deterministic heap guardrail converted a provider proposal because it referenced source paths that are not verified repo-relative targets.",
+                    "CONSUMED_EVIDENCE:",
+                    "- deterministic_file_reference_validation",
+                    "NEXT_RUNTIME_INTENT:",
+                    "- blocked_no_verified_target",
                     "",
-                    "BLOCKED_NO_VERIFIED_TARGET_REASON:",
+                    "FINAL_PRODUCT_DELTA:",
+                    "Deterministic heap guardrail converted a provider proposal because it referenced source paths that are not verified repo-relative targets.",
+                    "",
+                    "Diagnostic blocked reason:",
                     "- Provider output referenced source paths that failed SOURCE_PATH_ALLOWLIST_CONTRACT.",
                     "- No verified repo-relative source target remained patchable after deterministic file-reference validation.",
                     "- Suppressed unverified source refs: "
                     + (", ".join(sanitized_refs) if sanitized_refs else "none"),
-                    "",
-                    "PATCH_DECISION:",
-                    "- No patch generated.",
-                    "- No fake diff emitted.",
-                    "- No source writes performed.",
                     "",
                     "VALIDATION_COMMANDS:",
                     "- Not applicable: no verified target file exists for this proposal.",
@@ -341,7 +351,7 @@ class RuntimeGateProviderPromptMixin:
                 }
             )
         pointer_action_match = re.search(
-            r"(?im)^\\s*POINTER_ACTION\\s*=\\s*([^\\n\\r]+)", delta_text or ""
+            r"(?im)^\\s*FINAL_PRODUCT_ACTION\\s*[:=]\\s*([^\\n\\r]+)", delta_text or ""
         )
         pointer_action = pointer_action_match.group(1).strip() if pointer_action_match else ""
 
@@ -425,6 +435,7 @@ class RuntimeGateProviderPromptMixin:
                 f"- missing_delta_sections={missing}",
                 f"- gpu0_secondary_schema_valid={secondary.get('gpu0_secondary_schema_valid')}",
                 f"- gpu0_checked_current_packet={secondary.get('gpu0_checked_current_packet')}",
+                f"- final_product_delta_protocol_invalid={final_product_delta_protocol_invalid}",
                 f"- gpu0_decision={final_decision}",
                 f"- role_decision={secondary.get('role_decision')}",
             ]
@@ -441,6 +452,7 @@ class RuntimeGateProviderPromptMixin:
                 "gpu0_unanchored_reasons": secondary.get("gpu0_unanchored_reasons") or [],
                 "pointer_action": pointer_action,
                 "missing_delta_sections": missing,
+                "final_product_delta_protocol_invalid": final_product_delta_protocol_invalid,
                 "missing_required_sections": secondary.get("missing_required_sections") or missing,
                 "incongruence_reasons": secondary.get("incongruence_reasons") or [],
                 "veto_reasons": secondary.get("veto_reasons") or [],
@@ -466,18 +478,12 @@ class RuntimeGateProviderPromptMixin:
             pointer_missing = [
                 name
                 for name in missing
-                if name
-                in {
-                    "POINTER_ACTION=",
-                    "CURRENT_POINTER",
-                    "CURRENT_ITERATION_SCOPE",
-                    "PROPAGATION_TASKS",
-                    "BACKLOG_TASKS",
-                }
+                if name in final_protocol_sections
             ]
             npu_guardrails_passed = bool(
                 pointer_action
                 and not pointer_missing
+                and not final_product_delta_protocol_invalid
                 and not placeholder_hits
                 and not forbidden_claims
                 and "VALIDATION_COMMANDS" in (delta_text or "")
@@ -487,6 +493,7 @@ class RuntimeGateProviderPromptMixin:
                 f"- revision={revision}",
                 f"- pointer_action={pointer_action or 'missing'}",
                 f"- pointer_sections_missing={pointer_missing}",
+                f"- final_product_delta_protocol_invalid={final_product_delta_protocol_invalid}",
                 f"- placeholder_hits={placeholder_hits}",
                 f"- forbidden_runtime_claims={forbidden_claims}",
                 f"- validation_commands_present={'VALIDATION_COMMANDS' in (delta_text or '')}",
@@ -498,6 +505,7 @@ class RuntimeGateProviderPromptMixin:
                 "revision": revision,
                 "pointer_action": pointer_action,
                 "pointer_sections_missing": pointer_missing,
+                "final_product_delta_protocol_invalid": final_product_delta_protocol_invalid,
                 "placeholder_hits": placeholder_hits,
                 "forbidden_runtime_claims": forbidden_claims,
                 "validation_commands_present": "VALIDATION_COMMANDS" in (delta_text or ""),

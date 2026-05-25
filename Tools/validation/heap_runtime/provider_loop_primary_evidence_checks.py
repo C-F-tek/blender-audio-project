@@ -42,8 +42,17 @@ def run_provider_loop_primary_evidence_checks(repo_root: Path) -> dict[str, Any]
     if generic["leader_source"] == "generic_write":
         errors.append("GPU1 generic_write still sets leader_source=generic_write")
 
+    native_request_id = "gpu1-native-runtime-file-refs"
     native_events = [
+        _broker_request(
+            request_id=native_request_id,
+            tool="runtime_file_refs",
+            lane="gpu1_planner",
+            revision=0,
+            provider_block_id="test:gpu1_planner:000",
+        ),
         _broker_result(
+            request_id=native_request_id,
             tool="runtime_file_refs",
             lane="gpu1_planner",
             revision=0,
@@ -56,13 +65,28 @@ def run_provider_loop_primary_evidence_checks(repo_root: Path) -> dict[str, Any]
     native_report = dict(text_report)
     native_report["native_tool_call_count"] = 1
     native_report["provider_block_id"] = "test:gpu1_planner:000"
-    native = gpu1_primary_evidence_status(None, native_report, native_events)
-    if native["leader_source"] != "native_tool_result":
-        errors.append("GPU1 native tool evidence did not set leader_source=native_tool_result")
+    native_report["gpu1_tool_loop_subturn"] = 1
+    native_report["response_text"] = (
+        "FINAL_PRODUCT_KIND: text\n"
+        "FINAL_PRODUCT_ACTION: append\n"
+        "CURRENT_POINTER:\n"
+        "- previous_block_id=gpu1-native-runtime-file-refs\n"
+        "- refines_block_id=\n"
+        "- resume_from_block_id=subturn1\n"
+        "CONSUMED_EVIDENCE:\n"
+        "- gpu1-native-runtime-file-refs\n"
+        "NEXT_RUNTIME_INTENT:\n"
+        "- answer_operator\n"
+        "FINAL_PRODUCT_DELTA:\n"
+        "Concrete operator answer grounded in consumed native tool evidence.\n"
+    )
+    native = gpu1_primary_evidence_status(_FakeOwner(repo_root), native_report, native_events)
+    if native["leader_source"] != "native_tool_result_consumed_by_gpu1":
+        errors.append("GPU1 consumed native tool evidence did not become primary evidence")
 
     fake_native = gpu1_primary_evidence_status(None, text_report, native_events)
-    if fake_native["leader_source"] == "native_tool_result":
-        errors.append("GPU1 native_tool_result is still valid when native_tool_call_count is 0")
+    if fake_native["leader_source"] != "none":
+        errors.append("GPU1 native result can still become evidence without consumed follow-up")
 
     failed_events = [
         _broker_result(
@@ -77,9 +101,16 @@ def run_provider_loop_primary_evidence_checks(repo_root: Path) -> dict[str, Any]
     if not failed["gpu1_generic_write_capture_failed"]:
         errors.append("failed GPU1 generic_write capture is not exposed")
 
-    execution_source = (
-        repo_root / "ia_carmine/runtime/heap_gate/provider_execution.py"
-    ).read_text(encoding="utf-8", errors="replace")
+    execution_source = "\n".join(
+        (
+            (repo_root / "ia_carmine/runtime/heap_gate/provider_execution.py").read_text(
+                encoding="utf-8", errors="replace"
+            ),
+            (repo_root / "ia_carmine/runtime/heap_gate/provider_primary_evidence.py").read_text(
+                encoding="utf-8", errors="replace"
+            ),
+        )
+    )
     required = [
         "capture_gpu1_primary_evidence_after_provider_join",
         "capture_gpu1_primary_evidence_before_sidecars",
@@ -117,6 +148,7 @@ def _gpu1_report(
 
 def _broker_result(
     *,
+    request_id: str = "test-native-request",
     tool: str,
     lane: str,
     revision: int,
@@ -131,6 +163,8 @@ def _broker_result(
         "event_type": "broker_result",
         "payload": {
             "tool": tool,
+            "request_id": request_id,
+            "normalized_request_id": request_id,
             "lane": lane,
             "revision": revision,
             "returncode": returncode,
@@ -142,3 +176,41 @@ def _broker_result(
             "provider_block_id": provider_block_id,
         },
     }
+
+
+def _broker_request(
+    *,
+    request_id: str,
+    tool: str,
+    lane: str,
+    revision: int,
+    provider_block_id: str,
+) -> dict[str, Any]:
+    return {
+        "event_type": "broker_request",
+        "payload": {
+            "request_id": request_id,
+            "tool": tool,
+            "lane": lane,
+            "revision": revision,
+            "provider_native_tool_call": True,
+            "provider_block_id": provider_block_id,
+            "gpu1_tool_loop_subturn": 0,
+        },
+    }
+
+
+class _FakeOwner:
+    def __init__(self, repo_root: Path) -> None:
+        self.repo_root = repo_root
+
+    def broker_results(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [
+            item.get("payload", {})
+            for item in events
+            if item.get("event_type") == "broker_result"
+            and isinstance(item.get("payload"), dict)
+        ]
+
+    def provider_report_response_text(self, report: dict[str, Any]) -> str:
+        return str(report.get("response_text") or "")

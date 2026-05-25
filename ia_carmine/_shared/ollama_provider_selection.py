@@ -8,12 +8,8 @@ from typing import Any
 from ia_carmine.providers.ollama.sdk_client import OllamaSdkClient
 
 
-FALLBACK_ORDER = (
-    "qwen2.5-coder:14b",
-    "qwen3-coder:latest",
-    "autumnzsd/qwen2.5-coder-tools:latest",
-    "qwen3:1.7b",
-)
+EXPLICIT_PROVIDER_MODEL_POLICY = "explicit_provider_model_exact"
+AUTO_PROVIDER_MODEL_POLICY = "provider_model_explicit_required"
 CTX_OVERHEAD_BYTES_PER_TOKEN = 128 * 1024
 VRAM_SAFETY = 0.90
 
@@ -87,13 +83,16 @@ def select_ollama_provider_model(
 ) -> dict[str, Any]:
     requested_model = str(requested or "auto").strip() or "auto"
     auto_mode = requested_model.lower() == "auto"
+    explicit_model = not auto_mode
+    model_selection_policy = provider_model_selection_policy(requested_model)
+    model_switch_allowed = False
     contexts = parse_context_candidates(context_candidates, num_ctx)
     inventory = ollama_model_inventory()
     available = _merge_available_model_inventory(available_models, inventory)
     gpus = nvidia_gpu_inventory()
     total_mib = _first_gpu_total_mib(gpus)
     attempts: list[dict[str, Any]] = []
-    candidates = _candidate_models(requested_model, auto_mode, strict, available)
+    candidates = _candidate_models(requested_model, auto_mode)
     for candidate in candidates:
         if candidate not in available:
             attempts.append({"model": candidate, "available": False, "fit": False})
@@ -114,21 +113,28 @@ def select_ollama_provider_model(
                 }
             )
             if fit is not False:
+                mismatch = explicit_model and candidate != requested_model
                 return {
-                    "blocked": False,
+                    "blocked": bool(mismatch),
+                    "blocked_reason": "provider_model_selection_mismatch" if mismatch else "",
                     "requested_provider_model": requested_model,
                     "selected_provider_model": candidate,
                     "selected_ollama_num_ctx": ctx,
                     "model_switch_reason": _switch_reason(requested_model, candidate, auto_mode),
+                    "model_selection_policy": model_selection_policy,
+                    "model_switch_allowed": model_switch_allowed,
+                    "model_switch_performed": False,
+                    "provider_model_selection_mismatch": mismatch,
                     "provider_repair_attempts": attempts,
                     "nvidia_gpus": gpus,
                     "ollama_models": sorted(available),
                     "ollama_context_candidates": contexts,
                 }
-    reason = (
-        "strict_provider_model_not_vram_fit"
-        if strict
-        else "provider_model_auto_no_installed_model_fits_full_gpu_vram"
+    reason = _blocked_reason(
+        requested_model,
+        auto_mode=auto_mode,
+        strict=bool(strict),
+        attempts=attempts,
     )
     return {
         "blocked": True,
@@ -137,10 +143,37 @@ def select_ollama_provider_model(
         "selected_provider_model": requested_model if not auto_mode else "",
         "selected_ollama_num_ctx": contexts[0] if contexts else num_ctx,
         "model_switch_reason": reason,
+        "model_selection_policy": model_selection_policy,
+        "model_switch_allowed": model_switch_allowed,
+        "model_switch_performed": False,
+        "provider_model_selection_mismatch": False,
         "provider_repair_attempts": attempts,
         "nvidia_gpus": gpus,
         "ollama_models": sorted(available),
         "ollama_context_candidates": contexts,
+    }
+
+
+def provider_model_is_auto(value: str | None) -> bool:
+    return str(value or "auto").strip().lower() == "auto"
+
+
+def provider_model_selection_policy(value: str | None) -> str:
+    return (
+        AUTO_PROVIDER_MODEL_POLICY
+        if provider_model_is_auto(value)
+        else EXPLICIT_PROVIDER_MODEL_POLICY
+    )
+
+
+def provider_model_policy_fields(value: str | None) -> dict[str, Any]:
+    auto_mode = provider_model_is_auto(value)
+    return {
+        "requested_provider_model": str(value or "auto").strip() or "auto",
+        "provider_model_explicit": not auto_mode,
+        "model_switch_allowed": False,
+        "model_switch_performed": False,
+        "model_selection_policy": provider_model_selection_policy(value),
     }
 
 
@@ -173,19 +206,25 @@ def operator_gpu_observation_block_reason(text: str) -> str:
     return ""
 
 
-def _candidate_models(requested: str, auto_mode: bool, strict: bool, available: list[str]) -> list[str]:
-    if strict and not auto_mode:
-        return [requested]
-    ordered = list(FALLBACK_ORDER)
+def _candidate_models(requested: str, auto_mode: bool) -> list[str]:
+    return [] if auto_mode else [requested]
+
+
+def _blocked_reason(
+    requested: str,
+    *,
+    auto_mode: bool,
+    strict: bool,
+    attempts: list[dict[str, Any]],
+) -> str:
     if auto_mode:
-        return [item for item in ordered if item in available] + [item for item in available if item not in ordered]
-    if requested == "qwen2.5-coder:14b":
-        return [requested] + [item for item in ordered if item != requested]
-    return [
-        "qwen2.5-coder:14b",
-        requested,
-        *[item for item in ordered if item not in {"qwen2.5-coder:14b", requested}],
-    ]
+        return "provider_model_explicit_required"
+    available_attempts = [item for item in attempts if item.get("available")]
+    if not available_attempts:
+        return "provider_model_explicit_not_installed"
+    if strict:
+        return "strict_provider_model_not_vram_fit"
+    return "provider_model_explicit_not_vram_fit"
 
 
 def _fits_vram(size_bytes: int | None, ctx: int, total_mib: int | None) -> tuple[bool | None, str, int | None]:
@@ -200,10 +239,10 @@ def _fits_vram(size_bytes: int | None, ctx: int, total_mib: int | None) -> tuple
 
 def _switch_reason(requested: str, selected: str, auto_mode: bool) -> str:
     if auto_mode:
-        return "auto_selected_vram_fit_model"
+        return "auto_selected_configured_model"
     if requested == selected:
-        return "requested_model_fits_full_gpu_vram"
-    return "requested_model_not_vram_fit_auto_switched"
+        return "requested_model_exact"
+    return "provider_model_selection_mismatch"
 
 
 def _merge_available_model_inventory(

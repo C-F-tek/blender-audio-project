@@ -47,6 +47,7 @@ def run_ollama_probe(
         broker_tool_schemas,
         heap_patch_prompt_required,
         normalize_ollama_tool_calls,
+        ollama_tool_visibility,
         ollama_tool_call_tool_names,
         parse_json_contract,
         prompt_explicitly_requires_tool_call,
@@ -126,6 +127,17 @@ def run_ollama_probe(
     provider_native_tool_api_unavailable_for_resume = False
     native_tool_api_attempted = False
     native_tool_api_completed = False
+    tool_visibility: dict[str, Any] = {
+        "available_tool_names": [],
+        "actual_chat_tool_names": [],
+        "actual_chat_tool_schema_count": 0,
+        "hidden_tool_names": [],
+        "hidden_tool_reasons": {},
+    }
+    actual_chat_tool_names: list[str] = []
+    actual_chat_tool_schema_count = 0
+    hidden_tool_names: list[str] = []
+    hidden_tool_reasons: dict[str, str] = {}
     write_partial = PartialWriter(
         path=partial_json,
         markdown_path=partial_markdown_output,
@@ -191,15 +203,23 @@ def run_ollama_probe(
                 else:
                     try:
                         native_tool_api_attempted = True
+                        tool_visibility = ollama_tool_visibility(
+                            include_generic_write=not native_tool_chat_loop_mode,
+                            gpu1_concrete_only=native_tool_chat_loop_mode,
+                        )
                         chat_tool_names = ollama_tool_call_tool_names(
                             include_generic_write=not native_tool_chat_loop_mode,
                             gpu1_concrete_only=native_tool_chat_loop_mode,
                         )
+                        actual_chat_tool_names = list(tool_visibility["actual_chat_tool_names"])
+                        hidden_tool_names = list(tool_visibility["hidden_tool_names"])
+                        hidden_tool_reasons = dict(tool_visibility["hidden_tool_reasons"])
                         chat_tools = (
                             broker_tool_schemas(chat_tool_names)
                             if native_tool_chat_tools_enabled
                             else None
                         )
+                        actual_chat_tool_schema_count = len(chat_tools or [])
                         raw_chat_response = session.chat(
                             chat_messages,
                             tools=chat_tools,
@@ -228,6 +248,10 @@ def run_ollama_probe(
                                 "max_new_tokens_source": "operator_heap_propagated",
                                 "native_tool_loop_requested": True,
                                 "native_tool_chat_tools_enabled": native_tool_chat_tools_enabled,
+                                "actual_chat_tool_names": actual_chat_tool_names,
+                                "actual_chat_tool_schema_count": actual_chat_tool_schema_count,
+                                "hidden_tool_names": hidden_tool_names,
+                                "hidden_tool_reasons": hidden_tool_reasons,
                                 "native_tool_api_supported": True,
                                 "native_tool_api_attempted": True,
                                 "native_tool_api_completed": False,
@@ -290,6 +314,10 @@ def run_ollama_probe(
                                 "max_new_tokens_source": "operator_heap_propagated",
                                 "native_tool_loop_requested": True,
                                 "native_tool_chat_tools_enabled": native_tool_chat_tools_enabled,
+                                "actual_chat_tool_names": actual_chat_tool_names,
+                                "actual_chat_tool_schema_count": actual_chat_tool_schema_count,
+                                "hidden_tool_names": hidden_tool_names,
+                                "hidden_tool_reasons": hidden_tool_reasons,
                                 "native_tool_api_supported": True,
                                 "native_tool_api_attempted": True,
                                 "native_tool_api_completed": True,
@@ -411,7 +439,9 @@ def run_ollama_probe(
         native_classification = "provider_textual_tool_call_not_executable"
         warnings.append(
             "Provider emitted tool-call-shaped JSON/text in assistant.content. "
-            "Only message.tool_calls[] or the exact qwen2.5-coder <tool_call> template envelope is broker executable."
+            "Only message.tool_calls[], the exact qwen2.5-coder <tool_call> template envelope, "
+            "or strict whole-message JSON in the chat(tools=...) adapter is broker executable; "
+            "fenced JSON and prose are not executable evidence."
         )
     elif native_tool_loop_relevant and provider_native_tool_call_required:
         native_classification = "ollama_native_tool_not_selected_for_heap_delta"

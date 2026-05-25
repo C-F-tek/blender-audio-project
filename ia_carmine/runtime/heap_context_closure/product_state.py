@@ -14,16 +14,19 @@ def build_product_state(
     launcher_contract_errors: list[str],
 ) -> dict[str, Any]:
     real_code_product_ready = bool(code_product_contract.get("real_code_product_ready"))
+    final_product_delta_applied_count = _safe_int(
+        code_product_contract.get("final_product_delta_applied_count")
+        or final_payload.get("final_product_delta_applied_count")
+        or 0
+    )
     text_product_ready = bool(
-        code_product_contract.get("text_product_ready")
-        or final_payload.get("text_product_ready")
+        (
+            code_product_contract.get("text_product_ready")
+            or final_payload.get("text_product_ready")
+        )
+        and final_product_delta_applied_count > 0
     )
-    final_product_surface_ready = bool(
-        code_product_contract.get("final_product_surface_ready")
-        or final_payload.get("final_product_surface_ready")
-        or real_code_product_ready
-        or text_product_ready
-    )
+    final_product_surface_ready = bool(real_code_product_ready or text_product_ready)
     plan_product_kind = str(
         final_payload.get("plan_product_kind")
         or code_product_contract.get("plan_product_kind")
@@ -37,7 +40,7 @@ def build_product_state(
             product_kind = "text_and_code_product"
         elif real_code_product_ready:
             product_kind = "code_patch_product"
-        elif text_product_ready or plan_product_kind == "final_product_text_surface":
+        elif text_product_ready:
             product_kind = "text_product"
         elif external_contract.get("resume_from_block_id") and external_contract.get(
             "provider_execution_performed"
@@ -105,9 +108,7 @@ def build_product_state(
             "text_product_ready": text_product_ready,
             "final_product_surface_ready": final_product_surface_ready,
             "plan_product_kind": plan_product_kind,
-            "final_product_delta_applied_count": code_product_contract.get(
-                "final_product_delta_applied_count", 0
-            ),
+            "final_product_delta_applied_count": final_product_delta_applied_count,
             "provider_execution_performed": bool(
                 external_contract.get("provider_execution_performed")
             ),
@@ -185,3 +186,10 @@ def _final_payload_reason(final_payload: dict[str, Any]) -> str:
         if value:
             return value
     return ""
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default

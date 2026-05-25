@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 """Decision-oriented synthesis for heap final readable products."""
-
 from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any
-
 from ia_carmine._shared.file_backed_transport import read_text_evidence
-
 from ia_carmine._shared.heap_final_code_product import (
     code_product_items,
     render_code_product_section,
@@ -21,24 +17,16 @@ from ia_carmine.runtime.heap_gate.pointer_soft_lock import (
     render_pointer_closure_markdown_lines,
     soft_lock_state_from_reports,
 )
-
-
 def as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
-
-
 def as_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
-
-
 def read_json(path: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception:
         return {}
     return data if isinstance(data, dict) else {}
-
-
 def uniq(values: list[str]) -> list[str]:
     seen: set[str] = set()
     out: list[str] = []
@@ -161,7 +149,7 @@ def provider_rejection_summary(decision: dict[str, Any], revision: dict[str, Any
     )
     if provider_graph_recoverable:
         lines = [
-            "Provider graph recuperabile: GPU1/GPU0/NPU hanno lasciato evidenza operativa nello stesso heap, ma manca un HEAP_DELTA_PROPOSAL concreto.",
+            "Provider graph recuperabile: GPU1/GPU0/NPU hanno lasciato evidenza operativa nello stesso heap, ma manca un FINAL_PRODUCT_DELTA concreto.",
             "Prossima azione: `recover_missing_proposal_chunk` dentro la run unica; non applicare patch e non promuovere provider prose a prodotto.",
             "Il product bundle deve essere ricostruito dai pointer/memoria/blocchi della run, non da un flow esterno o da testo incollato in chat.",
         ]
@@ -186,7 +174,10 @@ def provider_rejection_summary(decision: dict[str, Any], revision: dict[str, Any
 def generic_write_summary(run_dir: Path, gate: dict[str, Any]) -> list[str]:
     metrics = as_dict(gate.get("metrics"))
     product = as_dict(
-        metrics.get("generic_write_refined_product")
+        metrics.get("generic_write_refined_request")
+        or metrics.get("compat_legacy_generic_write_refined_product")
+        or metrics.get("compat_legacy_generic_write_document_product")
+        or metrics.get("generic_write_refined_product")
         or metrics.get("generic_write_document_product")
     )
     failed_count = int(
@@ -238,13 +229,13 @@ def generic_write_summary(run_dir: Path, gate: dict[str, Any]) -> list[str]:
         f"Capture count: `{product.get('capture_count')}`; no-tool capture: `{product.get('generic_write_no_tool_capture_count')}`.",
         f"Capture failed: `{failed_count}`.",
         f"Lane catturate: `{product.get('generic_write_lanes') or metrics.get('generic_write_lanes') or []}`.",
-        f"Eligible refined product: `{product.get('eligible')}`; ultimo consumato da GPU1: `{product.get('latest_consumed_by_gpu1')}`.",
+        f"Diagnostic evidence ready: `{product.get('diagnostic_evidence_ready')}`; product eligible: `False`; ultimo consumato da GPU1: `{product.get('latest_consumed_by_gpu1')}`.",
         f"Ultima source lane: `{product.get('latest_source_lane')}`; capture mode: `{latest_report.get('capture_mode') or ''}`.",
         f"Tool calls assenti: `{latest_report.get('tool_calls_absent')}`; output report: `{latest_outputs.get('json_report') or ''}`.",
         "Provider prose excerpt: " + (provider_excerpt[:1200] or "non disponibile"),
         "Capture excerpts: " + (" | ".join(capture_lines) if capture_lines else "non disponibili"),
         "Runtime/tool errors catturati: " + (", ".join(runtime_errors[:8]) if runtime_errors else "nessuno"),
-        "Semantica: `generic_write` e' prodotto leggibile/codice proposto, non patch applicata e non source write.",
+        "Semantica: `generic_write` e' diagnostic/refined request evidence per un turno GPU1 successivo, non prodotto leggibile, codice proposto, patch applicata o source write.",
     ]
 
 
@@ -330,7 +321,10 @@ def pointer_graph_chain_summary(metrics: dict[str, Any], pointer: dict[str, Any]
 
 def peer_followup_summary(metrics: dict[str, Any], pointer: dict[str, Any]) -> list[str]:
     product = as_dict(
-        metrics.get("generic_write_refined_product")
+        metrics.get("generic_write_refined_request")
+        or metrics.get("compat_legacy_generic_write_refined_product")
+        or metrics.get("compat_legacy_generic_write_document_product")
+        or metrics.get("generic_write_refined_product")
         or metrics.get("generic_write_document_product")
     )
     gpu0_count = int(
@@ -357,6 +351,19 @@ def peer_followup_summary(metrics: dict[str, Any], pointer: dict[str, Any]) -> l
         f"Ultimo peer pending block: `{latest.get('pointer_id')}`.",
         f"Azione richiesta: `gpu1_recovery_revision` se sidecar/review pendenti; next revision `{metrics.get('next_gpu1_recovery_revision') or 0}`; budget exhausted `{metrics.get('provider_revision_budget_exhausted')}`.",
         "Regola: GPU0/NPU possono produrre peer/refinement/veto/evidence, ma non chiudono mai il prodotto senza un blocco GPU1 successivo collegato.",
+    ]
+
+
+def gpu1_one_turn_gate_summary(metrics: dict[str, Any]) -> list[str]:
+    return [
+        f"one-turn gate passed: `{metrics.get('gpu1_one_turn_runtime_gate_passed')}`.",
+        f"Gate report: `{metrics.get('gpu1_one_turn_runtime_gate_path') or ''}`.",
+        f"Native tool calls: `{metrics.get('gpu1_one_turn_native_tool_call_count')}`.",
+        f"Broker results passed: `{metrics.get('gpu1_one_turn_broker_result_passed_count')}`.",
+        f"role=tool reinjected: `{metrics.get('gpu1_one_turn_role_tool_reinjected')}`.",
+        f"Broker result consumed: `{metrics.get('gpu1_one_turn_tool_result_consumed')}`.",
+        f"Final product delta valid: `{metrics.get('gpu1_one_turn_final_product_delta_valid')}`.",
+        f"Blocker: `{metrics.get('gpu1_one_turn_blocker') or ''}`.",
     ]
 
 def closure_display_values(
@@ -559,6 +566,10 @@ def render_markdown(
             *[f"- {line}" for line in provider_hierarchy_summary(metrics)],
             "",
             *provider_replight_table(gate),
+            "## GPU1 one-turn runtime gate",
+            "",
+            *[f"- {line}" for line in gpu1_one_turn_gate_summary(metrics)],
+            "",
             "## Generic write evidence",
             "",
             *[f"- {line}" for line in generic_write_summary(run_dir, gate)],

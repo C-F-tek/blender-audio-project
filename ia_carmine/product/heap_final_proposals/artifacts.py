@@ -12,6 +12,10 @@ from ia_carmine.product.heap_final_proposals.common import (
     repo_rel,
 )
 from ia_carmine._shared.file_backed_transport import text_from_ref_or_tail
+from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import (
+    ONE_TURN_SUMMARY_FIELDS,
+    strict_one_turn_gate_passed,
+)
 
 PROVIDER_REPORT_LANES = {"gpu1_planner", "gpu0_peer", "npu_micro_task_auditor"}
 PROVIDER_REPORT_SKIP_KINDS = {
@@ -114,6 +118,11 @@ def compute_product_causality(
         failed_reasons.append("product_status=ready without provider execution evidence")
     if product_status == "ready" and proposal_count == 0:
         failed_reasons.append("product_status=ready without proposal iteration artifacts")
+    if provider_execution and not any(
+        item.get("accepted") and strict_one_turn_gate_passed(item)
+        for item in proposals
+    ):
+        failed_reasons.append("provider execution without accepted gpu1 one-turn runtime gate")
     if not startup_manifest:
         unknown_reasons.append("startup manifest missing")
     if not report:
@@ -208,6 +217,11 @@ def list_proposals(run_dir: Path) -> list[dict[str, Any]]:
                 "response_text_chars": data.get("response_text_chars", 0),
                 "response_text_sha256": data.get("response_text_sha256", ""),
                 "response_text_tail": data.get("response_text_tail", ""),
+                **{
+                    key: data.get(key)
+                    for key in ONE_TURN_SUMMARY_FIELDS
+                    if key in data
+                },
             }
         )
     return proposals
@@ -244,6 +258,11 @@ def list_provider_reports(run_dir: Path) -> list[dict[str, Any]]:
                 "npu_device_workload": data.get("npu_device_workload"),
                 "warnings": data.get("warnings", []),
                 "errors": data.get("errors", []),
+                **{
+                    key: data.get(key)
+                    for key in ONE_TURN_SUMMARY_FIELDS
+                    if key in data
+                },
             }
         )
     return reports
@@ -334,6 +353,16 @@ def flatten_quality_blockers(
     for error in implementation.get("errors") or []:
         blockers.append(str(error))
     for proposal in proposals:
+        if proposal.get("provider_execution_performed") and not strict_one_turn_gate_passed(
+            proposal
+        ):
+            blockers.append(
+                "gpu1_one_turn_runtime_gate_failed:"
+                + str(
+                    proposal.get("gpu1_one_turn_blocker")
+                    or "gpu1_one_turn_runtime_gate_missing"
+                )
+            )
         impl = (
             proposal.get("implementation_quality")
             if isinstance(proposal.get("implementation_quality"), dict)

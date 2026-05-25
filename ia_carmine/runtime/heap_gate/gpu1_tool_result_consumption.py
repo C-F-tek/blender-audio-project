@@ -33,12 +33,12 @@ def gpu1_tool_result_consumption_state(
     request_ids = _unique([item["request_id"] for item in requests])
     result_ids = _unique([item["request_id"] for item in results])
     report_subturn = safe_int(report.get("gpu1_tool_loop_subturn"), default=-1)
-    consumed = _consumed_results(response_text, results, report_subturn=report_subturn)
-    consumed_ids = _unique([item["request_id"] for item in consumed])
-    consumed_passed = [item for item in consumed if item.get("passed")]
+    raw_consumed = _consumed_results(response_text, results, report_subturn=report_subturn)
+    consumed_passed = [item for item in raw_consumed if item.get("passed")]
     consumed_passed_ids = _unique([item["request_id"] for item in consumed_passed])
-    consumed_failed = [item for item in consumed if not item.get("passed")]
+    consumed_failed = [item for item in raw_consumed if not item.get("passed")]
     consumed_failed_ids = _unique([item["request_id"] for item in consumed_failed])
+    consumed_ids = consumed_passed_ids
     diagnostic_failed = _diagnostic_failed_results(
         response_text,
         results,
@@ -46,14 +46,25 @@ def gpu1_tool_result_consumption_state(
     )
     diagnostic_failed_ids = _unique([item["request_id"] for item in diagnostic_failed])
     pending_ids = [item for item in request_ids if item not in result_ids]
-    accounted_ids = _unique([*consumed_ids, *diagnostic_failed_ids])
+    accounted_ids = _unique([*consumed_passed_ids, *diagnostic_failed_ids, *consumed_failed_ids])
     unconsumed_ids = [item for item in result_ids if item not in accounted_ids]
     first_pending = _first_by_id(requests, pending_ids) or _first_by_id(results, unconsumed_ids)
     blocker = ""
-    if pending_ids:
+    errors: list[str] = []
+    if consumed_failed_ids:
+        blocker = "gpu1_consumed_failed_tool_result_as_evidence"
+        errors.append(blocker)
+    elif pending_ids:
         blocker = "gpu1_tool_result_pending"
     elif unconsumed_ids:
         blocker = "gpu1_requested_tool_result_not_consumed"
+    ledger = _tool_result_ledger(
+        requests,
+        results,
+        consumed_passed_ids=consumed_passed_ids,
+        consumed_failed_ids=consumed_failed_ids,
+        diagnostic_failed_ids=diagnostic_failed_ids,
+    )
     return {
         "gpu1_waiting_for_tool_result": bool(pending_ids or unconsumed_ids),
         "gpu1_requested_tool_call_id": str((first_pending or {}).get("request_id") or ""),
@@ -68,26 +79,31 @@ def gpu1_tool_result_consumption_state(
         "gpu1_unconsumed_tool_result_ids": unconsumed_ids,
         "gpu1_tool_result_blocker": blocker,
         "tool_result_written": bool(result_ids),
-        "tool_result_consumed_by_gpu1": bool(consumed_ids),
+        "tool_result_consumed_by_gpu1": bool(consumed_passed_ids),
         "tool_result_written_count": len(result_ids),
         "tool_result_consumed_by_gpu1_count": len(consumed_ids),
         "tool_result_consumed_passed_by_gpu1_count": len(consumed_passed_ids),
         "tool_result_consumed_failed_by_gpu1_count": len(consumed_failed_ids),
         "gpu1_consumed_failed_tool_result_ids": consumed_failed_ids,
+        "gpu1_invalid_consumed_failed_tool_result_ids": consumed_failed_ids,
         "tool_result_diagnostic_failed_by_gpu1_count": len(diagnostic_failed_ids),
         "gpu1_diagnostic_failed_tool_result_ids": diagnostic_failed_ids,
+        "gpu1_tool_result_ledger": ledger,
+        "errors": errors,
         "consumer_text_has_consumed_evidence_section": bool(
             section_body(response_text, "CONSUMED_EVIDENCE").strip()
         ),
         "gpu1_tool_result_consumption": {
             "requested": requests,
             "results": results,
-            "consumed": consumed,
+            "consumed": consumed_passed,
             "consumed_passed": consumed_passed,
             "consumed_failed": consumed_failed,
+            "invalid_consumed_failed": consumed_failed,
             "diagnostic_failed": diagnostic_failed,
             "pending_ids": pending_ids,
             "unconsumed_ids": unconsumed_ids,
+            "ledger": ledger,
             "blocker": blocker,
         },
     }
@@ -142,6 +158,10 @@ def _gpu1_native_tool_requests(events: list[dict[str, Any]]) -> list[dict[str, A
                 "gpu1_tool_loop_subturn": safe_int(payload.get("gpu1_tool_loop_subturn"), default=-1),
                 "tool_call_id": str(payload.get("tool_call_id") or ""),
                 "tool_call_index": payload.get("tool_call_index"),
+                "subturn_id": f"subturn{safe_int(payload.get('gpu1_tool_loop_subturn'), default=-1)}",
+                "assistant_tool_call_id": str(payload.get("tool_call_id") or ""),
+                "broker_request_id": request_id,
+                "args_ref": payload.get("payload_ref") if isinstance(payload.get("payload_ref"), dict) else {},
                 "chat_history_ref": payload.get("chat_history_ref") if isinstance(payload.get("chat_history_ref"), dict) else {},
             }
         )
@@ -178,6 +198,10 @@ def _gpu1_native_tool_results(owner: Any, events: list[dict[str, Any]]) -> list[
                 "gpu1_tool_loop_subturn": safe_int(payload.get("gpu1_tool_loop_subturn"), default=-1),
                 "tool_call_id": str(payload.get("tool_call_id") or ""),
                 "tool_call_index": payload.get("tool_call_index"),
+                "subturn_id": f"subturn{safe_int(payload.get('gpu1_tool_loop_subturn'), default=-1)}",
+                "assistant_tool_call_id": str(payload.get("tool_call_id") or ""),
+                "broker_request_id": request_id,
+                "result_ref": _first_result_ref(refs, payload),
                 "chat_history_ref": payload.get("chat_history_ref") if isinstance(payload.get("chat_history_ref"), dict) else {},
             }
         )
@@ -286,6 +310,51 @@ def _result_refs(payload: dict[str, Any]) -> list[str]:
         if value:
             refs.append(value)
     return _unique(refs)
+
+
+def _first_result_ref(refs: list[str], payload: dict[str, Any]) -> str:
+    outputs = payload.get("outputs") if isinstance(payload.get("outputs"), dict) else {}
+    preferred = str(outputs.get("json_report") or "").strip()
+    if preferred:
+        return preferred
+    for ref in refs:
+        if ref and ref != str(payload.get("request_id") or ""):
+            return ref
+    return ""
+
+
+def _tool_result_ledger(
+    requests: list[dict[str, Any]],
+    results: list[dict[str, Any]],
+    *,
+    consumed_passed_ids: list[str],
+    consumed_failed_ids: list[str],
+    diagnostic_failed_ids: list[str],
+) -> list[dict[str, Any]]:
+    by_result = {str(item.get("request_id") or ""): item for item in results}
+    out: list[dict[str, Any]] = []
+    for request in requests:
+        request_id = str(request.get("request_id") or "")
+        result = by_result.get(request_id, {})
+        out.append(
+            {
+                "subturn_id": request.get("subturn_id") or result.get("subturn_id") or "",
+                "assistant_tool_call_id": request.get("assistant_tool_call_id") or result.get("assistant_tool_call_id") or "",
+                "broker_request_id": request_id,
+                "tool": request.get("tool") or result.get("tool") or "",
+                "args_ref": request.get("args_ref") or {},
+                "returncode": result.get("returncode"),
+                "passed": result.get("passed") is True,
+                "result_ref": result.get("result_ref") or "",
+                "chat_history_ref": request.get("chat_history_ref") or result.get("chat_history_ref") or {},
+                "provider_block_id": request.get("provider_block_id") or result.get("provider_block_id") or "",
+                "proposal_block_id": request.get("proposal_block_id") or result.get("proposal_block_id") or "",
+                "consumed_by_delta": request_id in consumed_passed_ids,
+                "invalid_consumed_failed": request_id in consumed_failed_ids,
+                "diagnostic_failure_cited": request_id in diagnostic_failed_ids,
+            }
+        )
+    return out
 
 
 def _request_id(payload: dict[str, Any]) -> str:

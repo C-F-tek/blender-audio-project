@@ -142,6 +142,18 @@ def _same_gpu1_revision(payload: dict[str, Any], report: dict[str, Any]) -> bool
     return False
 
 
+def _report_text(owner: Any, report: dict[str, Any]) -> str:
+    if not report:
+        return ""
+    try:
+        return str(owner.provider_report_response_text(report) or "")
+    except Exception:
+        return str(
+            report_text_required_full(getattr(owner, "repo_root", None), report).get("text")
+            or ""
+        )
+
+
 def _provider_native_tool_result_valid(payload: dict[str, Any], report: dict[str, Any]) -> bool:
     if str(payload.get("tool") or "") == "generic_write":
         return False

@@ -76,7 +76,11 @@ def _tool_result_message(repo_root: Path, result: dict[str, Any], tool_call_id: 
     payload = gpu1_tool_result_payload(repo_root, result, tool_call_id=tool_call_id)
     return {
         "role": "tool",
+        "name": str(result.get("tool") or ""),
+        "tool_call_id": tool_call_id,
         "tool_name": str(result.get("tool") or ""),
+        "broker_request_id": str(result.get("request_id") or ""),
+        "result_ref": str((result.get("outputs") or {}).get("json_report") or ""),
         "content": gpu1_tool_result_text(payload),
     }
 
@@ -386,9 +390,19 @@ def _run(args: argparse.Namespace) -> dict[str, Any]:
             "chat_history_ref": history_ref,
         },
     )
+    all_broker_reports_passed = bool(
+        broker_reports and all(item.get("passed") for item in broker_reports)
+    )
+    tool_result_failed_count = sum(
+        1 for item in all_results if not broker_result_passed(item, repo_root=repo_root)
+    )
     combined_broker = {
-        "passed": bool(broker_reports and any(item.get("passed") for item in broker_reports)),
-        "all_tool_reports_passed": bool(broker_reports and all(item.get("passed") for item in broker_reports)),
+        "passed": bool(
+            all_broker_reports_passed
+            and all_results
+            and tool_result_failed_count == 0
+        ),
+        "all_tool_reports_passed": all_broker_reports_passed,
         "failed_tool_report_count": sum(1 for item in broker_reports if not item.get("passed")),
         "tool_request_count": sum(int(item.get("tool_request_count") or 0) for item in broker_reports),
         "tool_execution_count": sum(int(item.get("tool_execution_count") or 0) for item in broker_reports),
@@ -396,9 +410,7 @@ def _run(args: argparse.Namespace) -> dict[str, Any]:
         "tool_result_passed_count": sum(
             1 for item in all_results if broker_result_passed(item, repo_root=repo_root)
         ),
-        "tool_result_failed_count": sum(
-            1 for item in all_results if not broker_result_passed(item, repo_root=repo_root)
-        ),
+        "tool_result_failed_count": tool_result_failed_count,
         "broker_report_refs": [
             artifact_ref(path, repo_root, kind="gpu1_native_tool_broker_report")
             for path in broker_report_paths
@@ -557,6 +569,9 @@ def _report(
         not errors
         and total_native_tool_calls > 0
         and int(broker_report.get("tool_execution_count") or 0) > 0
+        and broker_report.get("passed") is True
+        and broker_report.get("all_tool_reports_passed") is True
+        and int(broker_report.get("tool_result_failed_count") or 0) == 0
         and consumption.get("tool_result_consumed_by_gpu1") is True
         and final_native_tool_calls == 0
         and operator_delta_valid
@@ -607,10 +622,11 @@ def _report(
             kind="gpu1_native_tool_loop_delta_readable",
             producer="gpu1_native_tool_loop_preflight",
         ),
-        "delta_review_tool": "generic_write",
-        "delta_review_tool_result_written": bool(delta_review.get("tool_result")),
+        "delta_review_tool": "deterministic_semantic_validator",
+        "delta_review_tool_result_written": False,
         "delta_review_tool_passed": bool(delta_review.get("passed")),
-        "delta_review_broker_report_ref": delta_review.get("broker_report_ref") or {},
+        "delta_review_broker_report_ref": {},
+        "delta_review_report_ref": delta_review.get("review_report_ref") or {},
         "delta_review_input_ref": delta_review.get("delta_ref") or {},
         "final_product_delta_ref": delta_review.get("delta_ref") or {},
         "request_id": evidence.get("request_id") or "",
@@ -658,7 +674,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--output", default="output/validation/gpu1_native_tool_loop_preflight.json")
-    parser.add_argument("--model", default="qwen2.5-coder:14b")
+    parser.add_argument(
+        "--model",
+        required=True,
+        help="Explicit GPU1 Ollama model. No fallback/default model is allowed.",
+    )
     parser.add_argument("--base-url", default="http://127.0.0.1:11434")
     parser.add_argument("--num-ctx", type=int, default=8192)
     parser.add_argument("--max-new-tokens", type=int, default=700)
@@ -675,6 +695,8 @@ def main() -> int:
     parser.add_argument("--operator-prompt-file", default="")
     parser.add_argument("--stamp", default="")
     args = parser.parse_args()
+    if not str(args.model or "").strip() or str(args.model or "").strip().lower() == "auto":
+        parser.error("--model must be an explicit model name; auto/fallback is not allowed")
     report = _run(args)
     print(write_json_report(report), end="")
     return 0 if report.get("passed") else 2

@@ -26,6 +26,8 @@ class ToolSpec:
     allowed_args: tuple[str, ...]
     builder: Callable[[Path, Path, str, dict[str, Any]], tuple[list[str], dict[str, Any]]]
     input_schema: dict[str, Any] | None = None
+    categories: tuple[str, ...] = ()
+    broker_only: bool = False
 
 
 def now_iso() -> str:

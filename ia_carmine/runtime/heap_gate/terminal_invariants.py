@@ -92,6 +92,9 @@ def _classify_message(message: str, metrics: dict[str, Any]) -> dict[str, Any]:
             "rejected GPU1 proposal did not trigger mandatory provider revision retry",
             "gpu1_tool_result_pending",
             "gpu1_requested_tool_result_not_consumed",
+            "gpu1_one_turn_tool_result_not_consumed",
+            "gpu1_one_turn_role_tool_reinjection_missing",
+            "gpu1_one_turn_broker_result_missing",
         )
     ):
         category = RECOVERY_BLOCKER
@@ -174,8 +177,12 @@ def _evaluate_terminal_invariant_messages(
             errors.append(f"{key} must be >0")
     if metrics.get("product_status") not in {"ready", "blocked_with_reason"}:
         errors.append("product_status must be ready or blocked_with_reason")
-    generic_product = metrics.get("generic_write_refined_product") or metrics.get(
-        "generic_write_document_product"
+    generic_product = (
+        metrics.get("generic_write_refined_request")
+        or metrics.get("compat_legacy_generic_write_refined_product")
+        or metrics.get("compat_legacy_generic_write_document_product")
+        or metrics.get("generic_write_refined_product")
+        or metrics.get("generic_write_document_product")
     )
     generic_product = generic_product if isinstance(generic_product, dict) else {}
     generic_product_ready = bool(generic_product.get("eligible"))
@@ -288,6 +295,14 @@ def _evaluate_terminal_invariant_messages(
             errors.append("provider product run requires GPU1 proposal/pointer iteration artifacts")
         if soft_close_sampled_exit:
             return errors
+        if metrics.get("gpu1_one_turn_runtime_gate_passed") is not True:
+            blocker = str(
+                metrics.get("gpu1_one_turn_blocker")
+                or "gpu1_one_turn_runtime_gate_missing"
+            )
+            errors.append(f"gpu1_one_turn_runtime_gate_missing_or_failed:{blocker}")
+            if blocker:
+                errors.append(blocker)
         if metrics.get("latest_final_product_delta_valid") is not True:
             final_product_protocol_errors = [
                 str(item)
@@ -476,14 +491,15 @@ def _evaluate_terminal_invariant_messages(
             "gpu1_leader_not_consuming_peer_evidence: ready product requires a later GPU1 block that consumes GPU0/NPU peer evidence"
         )
     if metrics.get("product_status") == "ready" and generic_product.get("eligible"):
+        errors.append("generic_write refined request evidence cannot make product eligible")
         if safe_int(generic_product.get("refinement_count")) < safe_int(
             generic_product.get("minimum_refinements")
         ):
-            errors.append("generic_write refined product requires the configured minimum refinements")
+            errors.append("generic_write refined request evidence requires the configured minimum refinements")
         if generic_product.get("patch_application_performed"):
-            errors.append("generic_write refined product cannot claim patch application")
+            errors.append("generic_write refined request evidence cannot claim patch application")
         if generic_product.get("source_writes_performed"):
-            errors.append("generic_write refined product cannot claim source writes")
+            errors.append("generic_write refined request evidence cannot claim source writes")
     if allow_provider_generation and not pre_provider and metrics.get("missing_provider_lanes"):
         errors.append(
             "provider generation requires all three provider lanes; missing: "

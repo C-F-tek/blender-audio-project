@@ -154,6 +154,11 @@ def final_product_protocol(response_text: str) -> dict[str, Any]:
         "action": action,
         "delta": delta,
         "delta_chars": len(delta),
+        "previous_block_id": pointer_field(response_text, "previous_block_id"),
+        "refines_block_id": pointer_field(response_text, "refines_block_id"),
+        "resume_from_block_id": pointer_field(response_text, "resume_from_block_id"),
+        "consumed_evidence_text": consumed_evidence,
+        "diagnostic_tool_failures_text": section_body(response_text, "DIAGNOSTIC_TOOL_FAILURES"),
         "current_pointer_present": current_pointer_present,
         "pointer_fields_present": pointer_fields_present,
         "pointer_protocol_operational": pointer_operational,
@@ -207,6 +212,11 @@ def _json_final_product_protocol(response_text: str) -> dict[str, Any] | None:
         "action": action,
         "delta": delta,
         "delta_chars": len(delta),
+        "previous_block_id": str(pointer_dict.get("previous_block_id") or ""),
+        "refines_block_id": str(pointer_dict.get("refines_block_id") or ""),
+        "resume_from_block_id": str(pointer_dict.get("resume_from_block_id") or ""),
+        "consumed_evidence_text": json.dumps(consumed, ensure_ascii=False) if not isinstance(consumed, str) else consumed,
+        "diagnostic_tool_failures_text": json.dumps(payload.get("DIAGNOSTIC_TOOL_FAILURES"), ensure_ascii=False),
         "current_pointer_present": bool(pointer_dict),
         "pointer_fields_present": pointer_fields_present,
         "pointer_protocol_operational": pointer_operational,
@@ -214,6 +224,128 @@ def _json_final_product_protocol(response_text: str) -> dict[str, Any] | None:
         "next_runtime_intent_present": intent_present,
         "errors": errors,
     }
+
+
+def final_product_delta_runtime_classification(
+    response_text: str,
+    *,
+    protocol: dict[str, Any] | None = None,
+    consumption: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Classify whether a syntactically valid delta is operator product evidence."""
+    protocol = protocol if isinstance(protocol, dict) else final_product_protocol(response_text)
+    consumption = consumption if isinstance(consumption, dict) else {}
+    delta = str(protocol.get("delta") or "").strip()
+    lowered = delta.lower()
+    consumed_failed_ids = [
+        str(item)
+        for item in (
+            consumption.get("gpu1_invalid_consumed_failed_tool_result_ids")
+            or consumption.get("gpu1_consumed_failed_tool_result_ids")
+            or []
+        )
+        if str(item).strip()
+    ]
+    errors: list[str] = []
+    classification = "operator_product_delta"
+    if protocol.get("pointer_protocol_operational") is not True:
+        errors.append("gpu1_pointer_protocol_not_operational")
+        classification = "raw_gpu1_text_evidence"
+    if consumed_failed_ids:
+        errors.append("gpu1_consumed_failed_tool_result_as_evidence")
+        classification = "diagnostic_non_product_delta"
+    if _looks_like_tool_loop_summary(lowered):
+        errors.append("gpu1_delta_tool_loop_summary_not_operator_product")
+        classification = "diagnostic_non_product_delta"
+    if _dominates_failed_tool_discussion(lowered):
+        errors.append("gpu1_delta_failed_tool_summary_not_operator_product")
+        classification = "diagnostic_non_product_delta"
+    if _looks_like_correction(delta) and not str(protocol.get("refines_block_id") or "").strip():
+        errors.append("gpu1_delta_correction_missing_refines_block_id")
+        if classification == "operator_product_delta":
+            classification = "raw_gpu1_text_evidence"
+    if not delta:
+        errors.append("gpu1_final_product_delta_missing")
+        classification = "raw_gpu1_text_evidence"
+    errors = list(dict.fromkeys(errors))
+    return {
+        "classification": classification,
+        "operator_delta_valid": not errors,
+        "final_product_delta_valid": bool(protocol.get("passed") and not errors),
+        "errors": errors,
+        "consumed_failed_tool_result_ids": consumed_failed_ids,
+        "previous_block_id": str(protocol.get("previous_block_id") or ""),
+        "refines_block_id": str(protocol.get("refines_block_id") or ""),
+        "resume_from_block_id": str(protocol.get("resume_from_block_id") or ""),
+    }
+
+
+def _looks_like_tool_loop_summary(lowered_delta: str) -> bool:
+    blocked_phrases = (
+        "tool loop has reached its soft stop",
+        "tool loop has reached its subturn budget",
+        "following findings have been made",
+        "summary of the tool loop execution",
+        "this final product provides a summary of the tool loop execution",
+    )
+    if any(phrase in lowered_delta for phrase in blocked_phrases):
+        return True
+    section_markers = (
+        "toolchain probe",
+        "runtime file window",
+        "diagnostic tool failures",
+        "next steps",
+        "broker result",
+    )
+    product_markers = (
+        "target_files",
+        "implementation_changes",
+        "validation_commands",
+        "patch_sketch",
+        "operator",
+        "fix",
+        "correction",
+    )
+    return (
+        sum(1 for marker in section_markers if marker in lowered_delta) >= 3
+        and not any(marker in lowered_delta for marker in product_markers)
+    )
+
+
+def _dominates_failed_tool_discussion(lowered_delta: str) -> bool:
+    failure_hits = sum(
+        lowered_delta.count(marker)
+        for marker in (
+            "failed tool",
+            "tool failed",
+            "diagnostic tool failures",
+            "returncode",
+            "file not found",
+            "runtime_file_window_path_not_in_startup_refs",
+        )
+    )
+    product_hits = sum(
+        lowered_delta.count(marker)
+        for marker in ("target_files", "implementation_changes", "validation_commands", "patch", "answer")
+    )
+    return failure_hits >= 2 and product_hits == 0
+
+
+def _looks_like_correction(delta: str) -> bool:
+    lowered = delta.lower()
+    return any(
+        marker in lowered
+        for marker in (
+            "corregg",
+            "correction",
+            "refine",
+            "rifiut",
+            "rejected",
+            "veto",
+            "previous error",
+            "errore precedente",
+        )
+    )
 
 
 def _json_object(response_text: str) -> dict[str, Any]:

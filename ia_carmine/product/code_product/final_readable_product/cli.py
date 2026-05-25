@@ -17,6 +17,7 @@ try:
     from ia_carmine.product.code_product.final_readable_product.product_contract import code_product_markdown_metrics, final_product_blockers, real_code_product_ready
     from ia_carmine.product.code_product.final_readable_product.pointer_reconstruction import build_pointer_reconstruction
     from ia_carmine.runtime.heap_gate.pointer_soft_lock import gpu1_blocked_reason_from_gate, soft_lock_state_from_reports
+    from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import ONE_TURN_SUMMARY_FIELDS
     from ia_carmine._shared.report_io import print_json_report
 except ImportError:  # pragma: no cover
     repo_root_for_import = Path(__file__).resolve().parents[4]
@@ -30,6 +31,7 @@ except ImportError:  # pragma: no cover
     from ia_carmine.product.code_product.final_readable_product.product_contract import code_product_markdown_metrics, final_product_blockers, real_code_product_ready  # type: ignore
     from ia_carmine.product.code_product.final_readable_product.pointer_reconstruction import build_pointer_reconstruction  # type: ignore
     from ia_carmine.runtime.heap_gate.pointer_soft_lock import gpu1_blocked_reason_from_gate, soft_lock_state_from_reports  # type: ignore
+    from ia_carmine.runtime.heap_gate.gpu1_one_turn_gate import ONE_TURN_SUMMARY_FIELDS  # type: ignore
     from ia_carmine._shared.report_io import print_json_report  # type: ignore
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
@@ -67,6 +69,44 @@ def count_from_decision(decision: dict[str, Any], key: str, items: list[Any]) ->
         return max(len(items), int(decision.get(key) or 0))
     except (TypeError, ValueError):
         return len(items)
+
+
+def one_turn_fields_from_metrics(metrics: dict[str, Any]) -> dict[str, Any]:
+    fields = {
+        key: metrics.get(key)
+        for key in ONE_TURN_SUMMARY_FIELDS
+        if key in metrics
+    }
+    fields.setdefault("gpu1_one_turn_runtime_gate_present", False)
+    fields.setdefault("gpu1_one_turn_runtime_gate_passed", False)
+    fields.setdefault("gpu1_one_turn_blocker", "")
+    fields.setdefault("gpu1_one_turn_errors", [])
+    return fields
+
+
+def one_turn_gate_required(
+    *,
+    gate: dict[str, Any],
+    metrics: dict[str, Any],
+    composer: dict[str, Any],
+    pointer: dict[str, Any],
+    revision: dict[str, Any],
+) -> bool:
+    sources = (gate, metrics, composer, pointer, revision)
+    for source in sources:
+        if source.get("provider_execution_performed") is True:
+            return True
+        if source.get("allow_provider_generation") is True:
+            return True
+        if source.get("provider_generation_enabled") is True:
+            return True
+    if int(composer.get("provider_report_count") or 0) > 0:
+        return True
+    if as_list(composer.get("provider_reports")):
+        return True
+    if int(metrics.get("provider_lane_count") or 0) > 0:
+        return True
+    return False
 
 
 def product_kind_from_surfaces(
@@ -148,6 +188,14 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     pointer_reconstruction = build_pointer_reconstruction(pointer, revision)
     decision = as_dict(composer.get("operator_decision"))
     metrics = as_dict(gate.get("metrics"))
+    gpu1_one_turn = one_turn_fields_from_metrics(metrics)
+    gpu1_one_turn_required = one_turn_gate_required(
+        gate=gate,
+        metrics=metrics,
+        composer=composer,
+        pointer=pointer,
+        revision=revision,
+    )
     gate_product_status = str(metrics.get("product_status") or "")
     gate_state_product = as_dict(as_dict(gate.get("state")).get("product"))
     provider_rejection_reasons = as_list(pointer.get("provider_rejection_reasons")) or as_list(
@@ -339,10 +387,11 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         concrete_code_proposal_count=concrete_code_proposal_count,
         code_product_metrics=code_product_report,
     )
-    text_product_ready = (
-        "Text surface status: `FINAL_PRODUCT_TEXT_SURFACE_AVAILABLE`" in plan_product_full_patch
-    )
     final_product_delta_applied_count = plan_product_full_patch.count("### Applied Delta ")
+    text_product_ready = bool(
+        "Text surface status: `FINAL_PRODUCT_TEXT_SURFACE_AVAILABLE`" in plan_product_full_patch
+        and final_product_delta_applied_count > 0
+    )
     final_product_surface_ready = bool(code_product_ready or text_product_ready)
     latest_final_product_kind = str(metrics.get("latest_final_product_kind") or "").strip()
     code_surface_required = bool(
@@ -373,11 +422,25 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
             product_acceptance_passed if isinstance(product_acceptance_passed, bool) else None
         ),
     )
+    if (
+        gpu1_one_turn_required
+        and gpu1_one_turn.get("gpu1_one_turn_runtime_gate_passed") is not True
+    ):
+        blockers.append(
+            "gpu1_one_turn_runtime_gate_failed:"
+            + str(
+                gpu1_one_turn.get("gpu1_one_turn_blocker")
+                or "gpu1_one_turn_runtime_gate_missing"
+            )
+        )
     blockers.extend(str(item) for item in pointer_reconstruction.get("errors", []))
     if open_pointer_count_final > 0:
         blockers.append("pointer closure has open pointers")
     generic_product = as_dict(
-        metrics.get("generic_write_refined_product")
+        metrics.get("generic_write_refined_request")
+        or metrics.get("compat_legacy_generic_write_refined_product")
+        or metrics.get("compat_legacy_generic_write_document_product")
+        or metrics.get("generic_write_refined_product")
         or metrics.get("generic_write_document_product")
     )
     peer_pending_reasons = []
@@ -395,6 +458,17 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         peer_pending_reasons.append("gpu1_primary_evidence_missing")
     if metrics.get("gpu1_leader_valid") is False:
         peer_pending_reasons.append("gpu1_leader_missing")
+    if (
+        gpu1_one_turn_required
+        and gpu1_one_turn.get("gpu1_one_turn_runtime_gate_passed") is not True
+    ):
+        peer_pending_reasons.append(
+            "gpu1_one_turn_runtime_gate_failed:"
+            + str(
+                gpu1_one_turn.get("gpu1_one_turn_blocker")
+                or "gpu1_one_turn_runtime_gate_missing"
+            )
+        )
     if (
         metrics.get("leader_source") == "native_tool_result"
         and int(metrics.get("gpu1_native_tool_call_count") or 0) <= 0
@@ -429,23 +503,30 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
             soft_lock=soft_lock,
             provider_blocked_reason=provider_blocked_reason,
             provider_replight_reports=as_list(metrics.get("provider_replight_reports")),
+            gpu1_one_turn=gpu1_one_turn,
             open_pointer_count_final=open_pointer_count_final,
             blocked_continuation=blocked_continuation,
             write_text=write_text,
         )
         documents_outputs["operator_decision"] = str(operator_decision_path)
+    report_passed = bool(
+        markdown.strip()
+        and markdown_output.exists()
+        and final_product_surface_ready
+        and not blockers
+    )
+    product_blocked_reason = ""
+    if not report_passed:
+        product_blocked_reason = str(
+            (blockers[0] if blockers else "") or final_soft_close_reason
+        )
     report = {
         "schema_version": 1,
         "kind": "heap_final_readable_product",
         "generated_at": now_iso(),
         "repo_root": str(repo_root),
         "run_dir": str(run_dir),
-        "passed": bool(
-            markdown.strip()
-            and markdown_output.exists()
-            and final_product_surface_ready
-            and not blockers
-        ),
+        "passed": report_passed,
         "final_document_status": final_document_status,
         "decision": decision.get("decision"),
         "product_kind": report_product_kind,
@@ -454,7 +535,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "resume_from_block_id": resume_from_block_id,
         "continuation_required": blocked_continuation,
         "soft_close_reason": final_soft_close_reason,
-        "product_blocked_reason": "" if final_product_surface_ready else final_soft_close_reason,
+        "product_blocked_reason": product_blocked_reason,
         "causal_chain_passed": causal_chain_passed,
         "product_acceptance_passed": product_acceptance_passed,
         "causality_json": str(causality_path) if causality_path.exists() else "",
@@ -498,6 +579,16 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         "gpu1_primary_workload_tokens": metrics.get("gpu1_primary_workload_tokens"),
         "leader_source": metrics.get("leader_source", ""),
         "gpu1_native_tool_call_count": metrics.get("gpu1_native_tool_call_count"),
+        "gpu1_one_turn_runtime_gate_present": gpu1_one_turn.get("gpu1_one_turn_runtime_gate_present"),
+        "gpu1_one_turn_runtime_gate_path": gpu1_one_turn.get("gpu1_one_turn_runtime_gate_path"),
+        "gpu1_one_turn_runtime_gate_passed": gpu1_one_turn.get("gpu1_one_turn_runtime_gate_passed"),
+        "gpu1_one_turn_native_tool_call_count": gpu1_one_turn.get("gpu1_one_turn_native_tool_call_count"),
+        "gpu1_one_turn_broker_result_passed_count": gpu1_one_turn.get("gpu1_one_turn_broker_result_passed_count"),
+        "gpu1_one_turn_role_tool_reinjected": gpu1_one_turn.get("gpu1_one_turn_role_tool_reinjected"),
+        "gpu1_one_turn_tool_result_consumed": gpu1_one_turn.get("gpu1_one_turn_tool_result_consumed"),
+        "gpu1_one_turn_final_product_delta_valid": gpu1_one_turn.get("gpu1_one_turn_final_product_delta_valid"),
+        "gpu1_one_turn_blocker": gpu1_one_turn.get("gpu1_one_turn_blocker"),
+        "gpu1_one_turn_errors": gpu1_one_turn.get("gpu1_one_turn_errors"),
         "sidecars_start_policy": metrics.get("sidecars_start_policy", ""),
         "parallel_provider_overlap_seconds": metrics.get(
             "parallel_provider_overlap_seconds"

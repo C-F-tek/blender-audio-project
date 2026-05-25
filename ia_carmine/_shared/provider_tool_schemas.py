@@ -11,7 +11,6 @@ API_NATIVE_TOOL_CALL_SHAPES = {
     ("ollama", "ollama-python.message.tool_calls[].function"),
     ("ollama", "ollama-qwen-template.content.<tool_call>"),
     ("ollama", "ollama-qwen2.5-coder.chat_tools.content_json_adapter"),
-    ("ollama", "ollama-qwen2.5-coder.chat_tools.content_json_fence_adapter"),
 }
 
 
@@ -236,7 +235,7 @@ def _transport_policy(name: str) -> dict[str, Any]:
         "synthesize_patch_candidates": ["operator_request_file", "evidence_report", "matrix_report"],
         "generic_write": ["request_file", "proposal_text_file", "provider_report", "evidence_report"],
         "runtime_file_refs": ["text_file", "target_file", "validation_script"],
-        "runtime_file_window": ["path"],
+        "runtime_file_window": ["path", "ref_id", "startup_manifest"],
         "repo_search_rg": ["path"],
         "repo_search_git_grep": ["path"],
         "repo_find_fd": ["path"],

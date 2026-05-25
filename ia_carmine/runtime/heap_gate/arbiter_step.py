@@ -7,7 +7,6 @@ from ia_carmine.runtime.heap_gate.arbiter_product import (
     publish_candidate_operation,
 )
 from ia_carmine.runtime.heap_gate.generic_write_followup import (
-    generic_write_document_product_eligible,
     generic_write_followup_pending_count,
     gpu0_peer_followup_pending_count,
     npu_peer_followup_pending_count,
@@ -30,7 +29,7 @@ def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) ->
     ready = not missing
     bridge_refs = owner.bridge_report_refs(events)
     effective_tool_execution_count = owner.effective_tool_execution_count(events)
-    generic_product_ready = generic_write_document_product_eligible(owner, events)
+    generic_product_ready = False
     pending_broker_requests = list(
         getattr(getattr(owner, "heap", None), "pending_broker_requests", lambda: [])()
     )

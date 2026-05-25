@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 
+from ia_carmine._shared.ollama_provider_selection import provider_model_is_auto
 from ia_carmine._shared.ollama_gpu_residency import (
     gpu_residency_summary,
     ollama_ps_snapshot,
@@ -29,10 +30,10 @@ def wait_for_gpu1_residency_preflight(
     started_perf = float(item.get("started_perf") or time.perf_counter())
     output_path = Path(item.get("spec", {}).get("output") or "")
     spec = item.get("spec") if isinstance(item.get("spec"), dict) else {}
+    requested = str(getattr(gate.args, "provider_model", "") or "").strip()
     model = str(
         spec.get("provider_model")
-        or getattr(gate, "selected_provider_model", "")
-        or getattr(gate.args, "provider_model", "")
+        or ("" if provider_model_is_auto(requested) else requested)
         or ""
     ).strip()
     full_gpu_requested = str(getattr(gate.args, "ollama_gpu_layers", "") or "all").lower() in {
@@ -63,6 +64,17 @@ def wait_for_gpu1_residency_preflight(
                 or ""
             ).strip()
             if report_model:
+                if requested and not provider_model_is_auto(requested) and report_model != requested:
+                    return _preflight_result(
+                        "provider_model_selection_mismatch",
+                        False,
+                        started_perf,
+                        {
+                            **last_report,
+                            "product_blocked_reason": "provider_model_selection_mismatch",
+                        },
+                        snapshots,
+                    )
                 model = report_model
             if bool(last_report.get("provider_device_verified")):
                 return _preflight_result(

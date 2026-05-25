@@ -138,6 +138,52 @@ def explicit_provider_execution_from_reports(*reports: dict[str, Any]) -> bool:
     )
 
 
+def gpu1_one_turn_from_reports(*reports: dict[str, Any]) -> dict[str, Any]:
+    for report in reports:
+        if not isinstance(report, dict):
+            continue
+        causality_gate = report.get("gpu1_one_turn_runtime_gate")
+        if isinstance(causality_gate, dict):
+            paths = causality_gate.get("paths") if isinstance(causality_gate.get("paths"), list) else []
+            blockers = (
+                causality_gate.get("blockers")
+                if isinstance(causality_gate.get("blockers"), list)
+                else []
+            )
+            return {
+                "gpu1_one_turn_runtime_gate_passed": causality_gate.get("passed") is True,
+                "gpu1_one_turn_runtime_gate_path": str(paths[0] if paths else ""),
+                "gpu1_one_turn_blocker": str(blockers[0] if blockers else ""),
+            }
+        if "gpu1_one_turn_runtime_gate_passed" in report:
+            paths = (
+                report.get("gpu1_one_turn_runtime_gate_paths")
+                if isinstance(report.get("gpu1_one_turn_runtime_gate_paths"), list)
+                else []
+            )
+            blockers = (
+                report.get("gpu1_one_turn_gate_blockers")
+                if isinstance(report.get("gpu1_one_turn_gate_blockers"), list)
+                else []
+            )
+            return {
+                "gpu1_one_turn_runtime_gate_passed": report.get("gpu1_one_turn_runtime_gate_passed") is True,
+                "gpu1_one_turn_runtime_gate_path": str(
+                    report.get("gpu1_one_turn_runtime_gate_path")
+                    or (paths[0] if paths else "")
+                ),
+                "gpu1_one_turn_blocker": str(
+                    report.get("gpu1_one_turn_blocker")
+                    or (blockers[0] if blockers else "")
+                ),
+            }
+    return {
+        "gpu1_one_turn_runtime_gate_passed": False,
+        "gpu1_one_turn_runtime_gate_path": "",
+        "gpu1_one_turn_blocker": "gpu1_one_turn_runtime_gate_missing",
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
@@ -279,6 +325,12 @@ def main() -> int:
     pointer_report = read_json_object(pointer_json)
     long_response_report = read_json_object(long_response_json)
     revision_report = read_json_object(revision_json)
+    gpu1_one_turn = gpu1_one_turn_from_reports(
+        pointer_report,
+        causality_report,
+        long_response_report,
+        revision_report,
+    )
 
     causality_passed = json_file_bool(causality_json, "causal_chain_passed")
     product_acceptance_passed = json_file_bool(causality_json, "product_acceptance_passed")
@@ -318,6 +370,13 @@ def main() -> int:
             long_response_report,
             revision_report,
         ),
+        "gpu1_one_turn_runtime_gate_passed": gpu1_one_turn.get(
+            "gpu1_one_turn_runtime_gate_passed"
+        ),
+        "gpu1_one_turn_runtime_gate_path": gpu1_one_turn.get(
+            "gpu1_one_turn_runtime_gate_path"
+        ),
+        "gpu1_one_turn_blocker": gpu1_one_turn.get("gpu1_one_turn_blocker"),
         "patch_application_performed": False,
         "source_writes_performed": False,
         "results": results,

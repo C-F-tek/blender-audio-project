@@ -11,6 +11,11 @@ from typing import Any
 
 from ia_carmine._shared.file_backed_transport import write_text_artifact
 from ia_carmine.runtime.runtime_tool.broker.common import now_iso, repo_rel
+from ia_carmine.runtime.runtime_tool.broker.search_window_refs import (
+    attach_broker_report_metadata,
+    attach_runtime_file_window_search_refs,
+    source_broker_request_id as broker_request_source_id,
+)
 
 MAX_RESULT_CHARS = 64000
 DEFAULT_TIMEOUT_SECONDS = 45
@@ -45,6 +50,7 @@ def main(argv: list[str] | None = None) -> int:
 
     output = _safe_output_path(repo_root, ns.output)
     markdown = _safe_output_path(repo_root, ns.markdown_output)
+    attach_broker_report_metadata(repo_root, report, tool_args, output)
     output.parent.mkdir(parents=True, exist_ok=True)
     markdown.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -188,12 +194,17 @@ def _repo_search_rg(repo_root: Path, args: dict[str, Any], *, timeout_seconds: i
     for glob in _split(args.get("glob")):
         command.extend(["--glob", glob])
     command.append(query)
-    command.extend(str(path) for path in paths)
+    command.extend(repo_rel(path, repo_root) for path in paths)
     result = _run(command, repo_root, timeout_seconds=timeout_seconds)
     passed = result.returncode in {0, 1}
     lines = [line for line in result.stdout.splitlines() if line.strip()]
     max_results = _positive_int(args.get("max_results"), 200)
     clipped = lines[:max_results]
+    matches = _rg_matches(repo_root, clipped)
+    source_broker_request_id = broker_request_source_id(args)
+    authorized_refs = attach_runtime_file_window_search_refs(
+        "repo_search_rg", matches, source_broker_request_id
+    )
     return _base_report(
         "repo_search_rg",
         passed=passed,
@@ -201,7 +212,14 @@ def _repo_search_rg(repo_root: Path, args: dict[str, Any], *, timeout_seconds: i
         stdout="\n".join(clipped),
         stderr=result.stderr,
         returncode=result.returncode,
-        extra={"match_count": len(lines), "returned_match_count": len(clipped), "query": query},
+        extra={
+            "match_count": len(lines),
+            "returned_match_count": len(clipped),
+            "query": query,
+            "source_broker_request_id": source_broker_request_id,
+            "matches": matches,
+            "runtime_file_window_authorized_refs": authorized_refs,
+        },
     )
 
 
@@ -223,6 +241,11 @@ def _repo_search_git_grep(repo_root: Path, args: dict[str, Any], *, timeout_seco
     lines = [line for line in result.stdout.splitlines() if line.strip()]
     max_results = _positive_int(args.get("max_results"), 200)
     clipped = lines[:max_results]
+    matches = _git_grep_matches(repo_root, clipped)
+    source_broker_request_id = broker_request_source_id(args)
+    authorized_refs = attach_runtime_file_window_search_refs(
+        "repo_search_git_grep", matches, source_broker_request_id
+    )
     return _base_report(
         "repo_search_git_grep",
         passed=passed,
@@ -230,7 +253,14 @@ def _repo_search_git_grep(repo_root: Path, args: dict[str, Any], *, timeout_seco
         stdout="\n".join(clipped),
         stderr=result.stderr,
         returncode=result.returncode,
-        extra={"match_count": len(lines), "returned_match_count": len(clipped), "query": query},
+        extra={
+            "match_count": len(lines),
+            "returned_match_count": len(clipped),
+            "query": query,
+            "source_broker_request_id": source_broker_request_id,
+            "matches": matches,
+            "runtime_file_window_authorized_refs": authorized_refs,
+        },
     )
 
 
@@ -243,12 +273,17 @@ def _repo_find_fd(repo_root: Path, args: dict[str, Any], *, timeout_seconds: int
         command.append("--hidden")
     for extension in _split(args.get("extension")):
         command.extend(["--extension", extension.lstrip(".")])
-    command.extend([pattern, str(path)])
+    command.extend([pattern, repo_rel(path, repo_root)])
     result = _run(command, repo_root, timeout_seconds=timeout_seconds)
     passed = result.returncode in {0, 1}
     lines = [line for line in result.stdout.splitlines() if line.strip()]
     max_results = _positive_int(args.get("max_results"), 250)
     clipped = lines[:max_results]
+    matches = _fd_matches(repo_root, clipped)
+    source_broker_request_id = broker_request_source_id(args)
+    authorized_refs = attach_runtime_file_window_search_refs(
+        "repo_find_fd", matches, source_broker_request_id
+    )
     return _base_report(
         "repo_find_fd",
         passed=passed,
@@ -256,7 +291,14 @@ def _repo_find_fd(repo_root: Path, args: dict[str, Any], *, timeout_seconds: int
         stdout="\n".join(clipped),
         stderr=result.stderr,
         returncode=result.returncode,
-        extra={"match_count": len(lines), "returned_match_count": len(clipped), "pattern": pattern},
+        extra={
+            "match_count": len(lines),
+            "returned_match_count": len(clipped),
+            "pattern": pattern,
+            "source_broker_request_id": source_broker_request_id,
+            "matches": matches,
+            "runtime_file_window_authorized_refs": authorized_refs,
+        },
     )
 
 
@@ -266,6 +308,11 @@ def _repo_json_query_jq(repo_root: Path, args: dict[str, Any], *, timeout_second
     query = str(args.get("filter") or args.get("query") or ".").strip() or "."
     command = [exe, query, str(path)]
     result = _run(command, repo_root, timeout_seconds=timeout_seconds)
+    matches = _jq_matches(repo_root, path, result.stdout)
+    source_broker_request_id = broker_request_source_id(args)
+    authorized_refs = attach_runtime_file_window_search_refs(
+        "repo_json_query_jq", matches, source_broker_request_id
+    )
     return _base_report(
         "repo_json_query_jq",
         passed=result.returncode == 0,
@@ -273,7 +320,13 @@ def _repo_json_query_jq(repo_root: Path, args: dict[str, Any], *, timeout_second
         stdout=result.stdout,
         stderr=result.stderr,
         returncode=result.returncode,
-        extra={"path": repo_rel(path, repo_root), "filter": query},
+        extra={
+            "path": repo_rel(path, repo_root),
+            "filter": query,
+            "source_broker_request_id": source_broker_request_id,
+            "matches": matches,
+            "runtime_file_window_authorized_refs": authorized_refs,
+        },
     )
 
 
@@ -351,6 +404,100 @@ def _base_report(
     }
     report.update(extra or {})
     return report
+
+
+def _rg_matches(repo_root: Path, lines: list[str]) -> list[dict[str, Any]]:
+    matches: list[dict[str, Any]] = []
+    for line in lines:
+        parts = line.split(":", 3)
+        if len(parts) < 4:
+            continue
+        rel = _repo_relative_or_value(repo_root, parts[0])
+        try:
+            line_number = int(parts[1])
+            column = int(parts[2])
+        except ValueError:
+            continue
+        snippet = parts[3][:500]
+        matches.append(
+            {
+                "path": rel,
+                "repo_relative": rel,
+                "line": line_number,
+                "column": column,
+                "match": snippet,
+                "snippet": snippet,
+            }
+        )
+    return matches
+
+
+def _git_grep_matches(repo_root: Path, lines: list[str]) -> list[dict[str, Any]]:
+    matches: list[dict[str, Any]] = []
+    for line in lines:
+        parts = line.split(":", 2)
+        if len(parts) < 3:
+            continue
+        rel = _repo_relative_or_value(repo_root, parts[0])
+        try:
+            line_number = int(parts[1])
+        except ValueError:
+            continue
+        snippet = parts[2][:500]
+        matches.append(
+            {
+                "path": rel,
+                "repo_relative": rel,
+                "line": line_number,
+                "column": None,
+                "match": snippet,
+                "snippet": snippet,
+            }
+        )
+    return matches
+
+
+def _fd_matches(repo_root: Path, lines: list[str]) -> list[dict[str, Any]]:
+    matches: list[dict[str, Any]] = []
+    for line in lines:
+        rel = _repo_relative_or_value(repo_root, line.strip())
+        if not rel:
+            continue
+        matches.append(
+            {
+                "path": rel,
+                "repo_relative": rel,
+                "line": None,
+                "match": rel,
+                "snippet": rel,
+            }
+        )
+    return matches
+
+
+def _jq_matches(repo_root: Path, path: Path, stdout: str) -> list[dict[str, Any]]:
+    text = (stdout or "").strip()
+    rel = repo_rel(path, repo_root)
+    if not text:
+        return []
+    return [
+        {
+            "path": rel,
+            "repo_relative": rel,
+            "line": None,
+            "match": text[:500],
+            "snippet": text[:500],
+        }
+    ]
+
+
+def _repo_relative_or_value(repo_root: Path, value: str) -> str:
+    if not value:
+        return ""
+    path = Path(value)
+    if not path.is_absolute():
+        return value.replace("\\", "/")
+    return repo_rel(path, repo_root)
 
 
 def _invalid(kind: str, error: str) -> dict[str, Any]:

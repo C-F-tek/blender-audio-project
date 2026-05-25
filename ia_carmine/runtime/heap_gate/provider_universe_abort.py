@@ -338,6 +338,12 @@ def _provider_replight_reports(gate: Any) -> list[dict[str, Any]]:
                 "requested_provider_model": report.get("requested_provider_model"),
                 "selected_provider_model": report.get("selected_provider_model") or report.get("selected_model"),
                 "model_switch_reason": report.get("model_switch_reason"),
+                "model_switch_allowed": report.get("model_switch_allowed"),
+                "model_switch_performed": report.get("model_switch_performed"),
+                "model_selection_policy": report.get("model_selection_policy"),
+                "provider_model_selection_mismatch": report.get(
+                    "provider_model_selection_mismatch"
+                ),
                 "provider_backend": report.get("provider_backend"),
                 "provider_compute_device": report.get("provider_compute_device"),
                 "full_gpu_residency_required": report.get("full_gpu_residency_required"),
