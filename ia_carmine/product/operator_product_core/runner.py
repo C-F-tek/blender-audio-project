@@ -281,7 +281,11 @@ def run_operator_lab(
     review_report: dict[str, Any] = {}
     safe_apply_report: dict[str, Any] = {}
     errors: list[str] = []
-    code_product_blocker_details = code_product_blockers(metrics, review_report)
+    product_kind = str(run_report.get("product_kind") or "")
+    review_required = reviewable_code_product(metrics) or product_kind in {
+        "code_patch_product",
+        "text_and_code_product",
+    }
     artifact_intake_performed = False
     artifact_intake_skipped_reason = ""
     if reviewable_code_product(metrics) and code_product is not None:
@@ -293,12 +297,16 @@ def run_operator_lab(
             if not run_report.get("passed")
             else "no_reviewable_code_product"
         )
-    if reviewable_code_product(metrics) or run_report.get("product_kind") == "code_patch_product":
+    code_product_blocker_details = (
+        code_product_blockers(metrics, review_report) if review_required else []
+    )
+    if review_required:
         errors.extend(code_product_blocker_details)
     product_blocked_reason = str(run_report.get("product_blocked_reason") or "")
     if not product_blocked_reason and errors:
         product_blocked_reason = errors[0]
-    passed = bool(run_report.get("passed")) and bool(review_report.get("passed")) and not errors
+    review_passed = bool(review_report.get("passed")) if review_required else True
+    passed = bool(run_report.get("passed")) and review_passed and not errors
     if passed:
         product_status = "reviewable_product"
     elif run_report.get("continuation_required"):
@@ -322,6 +330,7 @@ def run_operator_lab(
         "provider_generation_required": True,
         "provider_generation_requested": bool(run_report.get("provider_generation_requested")),
         "product_kind": run_report.get("product_kind") or "diagnostic_decision_product",
+        "review_required": review_required,
         "artifact_intake_performed": artifact_intake_performed,
         "artifact_intake_skipped_reason": artifact_intake_skipped_reason,
         "code_product_blockers": code_product_blocker_details,

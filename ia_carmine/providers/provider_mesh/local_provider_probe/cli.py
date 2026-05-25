@@ -19,6 +19,7 @@ from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
 from ia_carmine._shared.provider_probe_paths import ensure_repo_imports
 from ia_carmine._shared.provider_work_verification import provider_work_status
 from ia_carmine._shared.file_backed_transport import (
+    artifact_ref,
     compact_text_fields as shared_compact_text_fields,
     write_text_artifact,
 )
@@ -151,6 +152,25 @@ def read_prompt_file(repo_root: Path, prompt_file: str) -> str:
     return path.read_text(encoding="utf-8-sig")
 
 
+def read_chat_history_file(repo_root: Path, chat_history_file: str) -> list[dict[str, Any]]:
+    if not chat_history_file:
+        return []
+    path = Path(chat_history_file)
+    if not path.is_absolute():
+        path = repo_root / path
+    payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(payload, list):
+        raise ValueError("chat_history_file root must be a JSON list")
+    return [item for item in payload if isinstance(item, dict)]
+
+
+def _first_user_content(messages: list[dict[str, Any]]) -> str:
+    for item in messages:
+        if str(item.get("role") or "") == "user":
+            return str(item.get("content") or "")
+    return ""
+
+
 def materialize_provider_prompt(
     repo_root: Path,
     output_path: Path,
@@ -198,6 +218,12 @@ def mirror_single_provider_lane(report: dict[str, Any], lane_report: dict[str, A
         "target_files",
         "validation_commands",
         "tool_calls",
+        "assistant_message",
+        "chat_history_ref",
+        "chat_history_message_count",
+        "gpu1_tool_loop_subturn",
+        "gpu1_waiting_for_tool_result",
+        "gpu1_tool_loop_closed",
         "textual_tool_calls",
         "native_tool_loop_requested",
         "native_tool_loop_supported",
@@ -210,6 +236,7 @@ def mirror_single_provider_lane(report: dict[str, Any], lane_report: dict[str, A
         "provider_native_tool_api_supported",
         "provider_native_tool_api_error",
         "provider_native_tool_api_attempt_error",
+        "provider_native_tool_api_unavailable_for_resume",
         "provider_native_tool_api_unavailable",
         "provider_native_tool_api_attempt_failed",
         "provider_native_tool_call_required_unmet",
@@ -327,6 +354,21 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
     lane_reports: list[dict[str, Any]] = []
     errors: list[str] = []
     effective_prompt = args.prompt
+    chat_messages: list[dict[str, Any]] | None = None
+    chat_history_ref: dict[str, Any] = {}
+    if getattr(args, "chat_history_file", ""):
+        try:
+            chat_messages = read_chat_history_file(repo_root, args.chat_history_file)
+            effective_prompt = _first_user_content(chat_messages) or effective_prompt
+            chat_history_ref = artifact_ref(
+                args.chat_history_file,
+                repo_root,
+                kind="gpu1_native_tool_chat_history",
+                ref_id="gpu1_native_tool_chat_history",
+                producer="local_provider_probe",
+            )
+        except Exception as exc:  # noqa: BLE001 - report-only tool.
+            errors.append(f"chat_history_file: {type(exc).__name__}: {exc}")
     if getattr(args, "prompt_file", ""):
         try:
             file_prompt = read_prompt_file(repo_root, args.prompt_file)
@@ -336,7 +378,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
             errors.append(f"prompt_file: {type(exc).__name__}: {exc}")
     if args.run_ollama:
         try:
-            if not args.replight_mode:
+            if not args.replight_mode and chat_messages is None:
                 effective_prompt = build_heap_patch_proposal_prompt(effective_prompt)
             partial_output = Path(args.output)
             if not partial_output.is_absolute():
@@ -347,6 +389,7 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                     repo_root,
                     args.model,
                     effective_prompt,
+                    messages=chat_messages,
                     max_new_tokens=propagated_positive_int(
                         "max_new_tokens", args.max_new_tokens
                     ),
@@ -365,6 +408,9 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
                     base_url=args.ollama_base_url,
                     unload_model=not args.defer_unload,
                     prompt_ref=prompt_ref,
+                    chat_history_ref=chat_history_ref,
+                    gpu1_tool_loop_subturn=args.gpu1_tool_loop_subturn,
+                    native_tool_chat_tools_enabled=not args.disable_native_chat_tools,
                 )
             )
         except Exception as exc:  # noqa: BLE001 - report-only tool.
@@ -471,9 +517,21 @@ def build_report(repo_root: Path, args: argparse.Namespace) -> dict[str, Any]:
         "provider_result_report": provider_report,
         "canonical_run_provider_evidence": bool(args.canonical_run_provider_evidence),
         "canonical_run_fingerprint": str(args.canonical_run_fingerprint or ""),
+        "chat_history_file": str(args.chat_history_file or ""),
+        "chat_history_output": str(args.chat_history_output or ""),
+        "gpu1_tool_loop_subturn": int(args.gpu1_tool_loop_subturn or 0),
+        "native_tool_chat_tools_enabled": not args.disable_native_chat_tools,
     }
     if args.run_ollama and len(safe_lane_reports) == 1 and isinstance(safe_lane_reports[0], dict):
-        return mirror_single_provider_lane(report, safe_lane_reports[0])
+        mirrored = mirror_single_provider_lane(report, safe_lane_reports[0])
+        if args.chat_history_output and chat_messages is not None:
+            out = Path(args.chat_history_output)
+            if not out.is_absolute():
+                out = repo_root / out
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(json.dumps(chat_messages, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            mirrored["chat_history_output"] = str(out)
+        return mirrored
     return report
 
 def main() -> int:
@@ -483,6 +541,10 @@ def main() -> int:
     parser.add_argument("--model", help="Preferred Ollama model.")
     parser.add_argument("--prompt", default="")
     parser.add_argument("--prompt-file", default="")
+    parser.add_argument("--chat-history-file", default="")
+    parser.add_argument("--chat-history-output", default="")
+    parser.add_argument("--gpu1-tool-loop-subturn", type=int, default=0)
+    parser.add_argument("--disable-native-chat-tools", action="store_true")
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--ollama-num-ctx", type=int, default=16384)

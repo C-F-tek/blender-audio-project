@@ -67,6 +67,28 @@ def count_from_decision(decision: dict[str, Any], key: str, items: list[Any]) ->
         return max(len(items), int(decision.get(key) or 0))
     except (TypeError, ValueError):
         return len(items)
+
+
+def product_kind_from_surfaces(
+    *,
+    provider_runtime_blocked: bool,
+    blocked_continuation: bool,
+    code_product_ready: bool,
+    text_product_ready: bool,
+) -> str:
+    if provider_runtime_blocked:
+        return "provider_runtime_blocked_product"
+    if blocked_continuation:
+        return "blocked_continuation_product"
+    if code_product_ready and text_product_ready:
+        return "text_and_code_product"
+    if code_product_ready:
+        return "code_patch_product"
+    if text_product_ready:
+        return "text_product"
+    return "diagnostic_decision_product"
+
+
 def append_download_manifest(manifest_path: Path, paths: list[Path]) -> None:
     if not manifest_path:
         return
@@ -322,6 +344,18 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     )
     final_product_delta_applied_count = plan_product_full_patch.count("### Applied Delta ")
     final_product_surface_ready = bool(code_product_ready or text_product_ready)
+    latest_final_product_kind = str(metrics.get("latest_final_product_kind") or "").strip()
+    code_surface_required = bool(
+        latest_final_product_kind in {"code", "text_and_code"}
+        or code_product_ready
+        or concrete_code_proposal_count > 0
+    )
+    report_product_kind = product_kind_from_surfaces(
+        provider_runtime_blocked=provider_runtime_blocked,
+        blocked_continuation=blocked_continuation,
+        code_product_ready=code_product_ready,
+        text_product_ready=text_product_ready,
+    )
     blockers = final_product_blockers(
         markdown_output=markdown_output,
         final_document_status=final_document_status,
@@ -329,6 +363,8 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         code_product_metrics=code_product_report,
         code_product_ready=code_product_ready,
         text_product_ready=text_product_ready,
+        final_product_kind=latest_final_product_kind or report_product_kind,
+        code_surface_required=code_surface_required,
         pointer=pointer,
         revision=revision,
         matrix=matrix,
@@ -386,7 +422,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         write_operator_decision(
             operator_decision_path,
             final_document_status=final_document_status,
-            product_kind="provider_runtime_blocked_product" if provider_runtime_blocked else "blocked_continuation_product" if blocked_continuation else "code_or_text_product_candidate",
+            product_kind=report_product_kind,
             product_status=gate_product_status,
             gpu1_reason=gpu1_reason,
             resume_from_block_id=resume_from_block_id,
@@ -412,7 +448,7 @@ def build_report(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
         ),
         "final_document_status": final_document_status,
         "decision": decision.get("decision"),
-        "product_kind": "provider_runtime_blocked_product" if provider_runtime_blocked else "blocked_continuation_product" if final_document_status == "BLOCKED_CONTINUATION_PRODUCT" else "code_or_text_product_candidate",
+        "product_kind": report_product_kind,
         "product_status": gate_product_status,
         "product_approval_status": "blocked" if blocked_continuation else code_product_state,
         "resume_from_block_id": resume_from_block_id,

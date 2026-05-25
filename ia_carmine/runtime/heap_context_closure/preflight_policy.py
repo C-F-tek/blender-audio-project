@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 RUNTIME_BLOCKING_STEPS = {
+    "gpu1_native_tool_loop_preflight",
     "provider_lane_activation",
 }
 

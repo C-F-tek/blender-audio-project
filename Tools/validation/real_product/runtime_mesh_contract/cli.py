@@ -161,7 +161,9 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         "product_readiness": has(runner, "launcher_passed")
         and has(runner, "code_product_metrics")
         and has(final_product, "render_code_product_section")
-        and has(final_readable_product, "real_code_product_ready")
+        and has(final_readable_product, "final_product_surface_ready")
+        and has(final_readable_product, "text_product_ready")
+        and has(final_readable_product, "final_product_delta_applied_count")
         and has(final_readable_product, "final_product_blockers")
         and has(final_readable_product, "truncation_marker"),
         "prepare_review_pr_product": '"agent_review_prepare_pr"' in dispatch,

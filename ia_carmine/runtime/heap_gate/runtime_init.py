@@ -133,6 +133,11 @@ class RuntimeGateInitMixin:
         self.gpu1_primary_workload_chars = 0
         self.gpu1_primary_workload_tokens = 0
         self.leader_source = "none"
+        self.gpu1_waiting_for_tool_result = False
+        self.gpu1_requested_tool_call_id = ""
+        self.gpu1_requested_tool_name = ""
+        self.gpu1_resume_after_tool_result_required = False
+        self.gpu1_consumed_tool_result_ids: list[str] = []
         self.sidecars_start_policy = ""
         self.pending_provider_sidecar_collections: list[dict[str, Any]] = []
         self.parallel_provider_overlap_seconds = 0.0

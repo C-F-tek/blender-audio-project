@@ -17,7 +17,6 @@ from ia_carmine.runtime.heap_gate.provider_coexistence_preflight import (
 )
 from ia_carmine.runtime.heap_gate.provider_lane_launch import start_provider_item, write_provider_launch_manifest
 from ia_carmine.runtime.heap_gate.provider_process_collection import (
-    collect_provider_processes,
     terminate_pending_provider_processes,
 )
 from ia_carmine.runtime.heap_gate.provider_replight_gate import run_provider_replight_gate
@@ -26,6 +25,9 @@ from ia_carmine.runtime.heap_gate.provider_report_absorption import absorb_compl
 from ia_carmine.runtime.heap_gate.provider_runtime_plan import write_provider_runtime_plan
 from ia_carmine.runtime.heap_gate.provider_teamwork_packet import build_provider_teamwork_leader_packet
 from ia_carmine.runtime.heap_gate.gpu1_closure_packet import packet_from_report
+from ia_carmine.runtime.heap_gate.gpu1_native_tool_chat_loop import (
+    run_gpu1_native_tool_chat_loop,
+)
 from ia_carmine.runtime.heap_gate.provider_sidecar_async import (
     gpu1_packet_reviewable,
     mark_sidecars_skipped,
@@ -290,28 +292,19 @@ class RuntimeGateProviderExecutionMixin:
                 )
                 return
 
-            for item in primary_items:
-                start_provider_item(self, item, round_id, revision)
-            write_provider_launch_manifest(
+            primary_items[0] = run_gpu1_native_tool_chat_loop(
                 self,
-                launch_manifest,
-                prepared,
-                round_id,
-                revision,
-                time_contract,
-                "gpu1_leader_started_before_sidecars",
+                primary_item=primary_items[0],
+                prepared=prepared,
+                work_dir=work_dir,
+                launch_manifest=launch_manifest,
+                round_id=round_id,
+                revision=revision,
+                timeout_seconds=timeout_seconds,
+                time_contract=time_contract,
+                leader_prompt=leader_prompt,
+                absorb=absorb,
             )
-            collect_provider_processes(
-                self,
-                primary_items,
-                timeout_seconds,
-                round_id,
-                revision,
-                on_completed=absorb,
-            )
-            for item in primary_items:
-                if item.get("completed") is not None:
-                    absorb(item)
             leader_report_for_packet = (
                 primary_items[0].get("provider_report")
                 if isinstance(primary_items[0].get("provider_report"), dict)
@@ -341,7 +334,14 @@ class RuntimeGateProviderExecutionMixin:
                     primary_status.get("block_reason")
                     or "gpu1_primary_evidence_missing"
                 )
-                self.sidecars_start_policy = "skipped_gpu1_primary_evidence_missing"
+                pending_tool_resume = bool(
+                    primary_status.get("gpu1_resume_after_tool_result_required")
+                )
+                self.sidecars_start_policy = (
+                    "skipped_gpu1_tool_result_pending"
+                    if pending_tool_resume
+                    else "skipped_gpu1_primary_evidence_missing"
+                )
                 mark_sidecars_skipped(
                     self,
                     sidecar_items,
@@ -354,7 +354,6 @@ class RuntimeGateProviderExecutionMixin:
                     packet=self.current_gpu1_closure_decision_packet,
                     absorb=absorb,
                 )
-                block_provider_universe_run(self, reason, round_id, revision)
                 write_provider_launch_manifest(
                     self,
                     launch_manifest,
@@ -362,8 +361,14 @@ class RuntimeGateProviderExecutionMixin:
                     round_id,
                     revision,
                     time_contract,
-                    "gpu1_primary_evidence_missing_before_sidecars",
+                    (
+                        "sidecars_skipped_gpu1_tool_result_pending"
+                        if pending_tool_resume
+                        else "gpu1_primary_evidence_missing_before_sidecars"
+                    ),
                 )
+                if not pending_tool_resume:
+                    block_provider_universe_run(self, reason, round_id, revision)
                 return
             preflight = wait_for_gpu1_residency_preflight(self, primary_items[0])
             self.gpu1_residency_preflight = preflight
@@ -584,8 +589,40 @@ class RuntimeGateProviderExecutionMixin:
             evidence.get("gpu1_primary_evidence_source") or ""
         )
         self.leader_source = str(evidence.get("leader_source") or "none")
+        self.gpu1_waiting_for_tool_result = bool(
+            evidence.get("gpu1_waiting_for_tool_result")
+        )
+        self.gpu1_requested_tool_call_id = str(
+            evidence.get("gpu1_requested_tool_call_id") or ""
+        )
+        self.gpu1_requested_tool_name = str(
+            evidence.get("gpu1_requested_tool_name") or ""
+        )
+        self.gpu1_resume_after_tool_result_required = bool(
+            evidence.get("gpu1_resume_after_tool_result_required")
+        )
+        self.gpu1_consumed_tool_result_ids = [
+            str(item)
+            for item in (evidence.get("gpu1_consumed_tool_result_ids") or [])
+            if str(item).strip()
+        ]
+        self.gpu1_tool_result_pending_ids = [
+            str(item)
+            for item in (evidence.get("gpu1_tool_result_pending_ids") or [])
+            if str(item).strip()
+        ]
+        self.gpu1_unconsumed_tool_result_ids = [
+            str(item)
+            for item in (evidence.get("gpu1_unconsumed_tool_result_ids") or [])
+            if str(item).strip()
+        ]
         if not self.gpu1_primary_workload_valid:
             block_reason = "gpu1_primary_workload_missing"
+        elif evidence.get("gpu1_resume_after_tool_result_required"):
+            block_reason = str(
+                evidence.get("gpu1_tool_result_blocker")
+                or "gpu1_requested_tool_result_not_consumed"
+            )
         elif evidence.get("gpu1_generic_write_capture_failed"):
             block_reason = "generic_write_capture_failed"
         elif not self.gpu1_primary_evidence_valid:

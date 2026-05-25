@@ -2,13 +2,22 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
 from ia_carmine._shared.file_backed_transport import write_text_artifact
 from ia_carmine.providers.provider_mesh.runtime.python_runtime import resolve_child_python
 
-from .common import base_outputs, repo_rel, resolve_path, split_values, truthy
+from .common import (
+    base_outputs,
+    normalized_child_path,
+    real_source_target_path,
+    repo_rel,
+    resolve_path,
+    split_values,
+    truthy,
+)
 
 
 def append_cli_value(command: list[str], flag: str, value: Any) -> None:
@@ -17,6 +26,83 @@ def append_cli_value(command: list[str], flag: str, value: Any) -> None:
         command.append(f"{flag}={text}")
     else:
         command.extend([flag, text])
+
+
+def _concrete_tool_command(
+    repo_root: Path,
+    out_dir: Path,
+    request_id: str,
+    args: dict[str, Any],
+    tool_name: str,
+) -> tuple[list[str], dict[str, Any]]:
+    report, markdown = base_outputs(out_dir, request_id, tool_name)
+    args_file = out_dir / f"{request_id}_{tool_name}_args.json"
+    args_file.parent.mkdir(parents=True, exist_ok=True)
+    args_file.write_text(json.dumps(args, indent=2, ensure_ascii=False), encoding="utf-8")
+    command = [
+        resolve_child_python(repo_root),
+        "-m",
+        "ia_carmine.runtime.runtime_tool.broker.concrete_tool_cli",
+        "--repo-root",
+        ".",
+        "--tool",
+        tool_name,
+        "--args-file",
+        repo_rel(args_file, repo_root),
+        "--output",
+        repo_rel(report, repo_root),
+        "--markdown-output",
+        repo_rel(markdown, repo_root),
+    ]
+    if args.get("timeout_seconds") is not None:
+        command.extend(["--timeout-seconds", str(args["timeout_seconds"])])
+    return command, {
+        "json_report": repo_rel(report, repo_root),
+        "markdown_report": repo_rel(markdown, repo_root),
+        "args_file": repo_rel(args_file, repo_root),
+    }
+
+
+def repo_toolchain_probe(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, Any]]:
+    return _concrete_tool_command(repo_root, out_dir, request_id, args, "repo_toolchain_probe")
+
+
+def repo_toolchain_command(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, Any]]:
+    return _concrete_tool_command(repo_root, out_dir, request_id, args, "repo_toolchain_command")
+
+
+def repo_search_rg(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, Any]]:
+    return _concrete_tool_command(repo_root, out_dir, request_id, args, "repo_search_rg")
+
+
+def repo_search_git_grep(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, Any]]:
+    return _concrete_tool_command(repo_root, out_dir, request_id, args, "repo_search_git_grep")
+
+
+def repo_find_fd(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, Any]]:
+    return _concrete_tool_command(repo_root, out_dir, request_id, args, "repo_find_fd")
+
+
+def repo_json_query_jq(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, Any]]:
+    return _concrete_tool_command(repo_root, out_dir, request_id, args, "repo_json_query_jq")
+
+
+def repo_powershell_readonly(
+    repo_root: Path, out_dir: Path, request_id: str, args: dict[str, Any]
+) -> tuple[list[str], dict[str, Any]]:
+    return _concrete_tool_command(repo_root, out_dir, request_id, args, "repo_powershell_readonly")
 
 
 def run_heap_code_execution_matrix(
@@ -292,6 +378,12 @@ def runtime_file_refs(
         )
         command.extend(["--text-file", str(ref["path"])])
         transport_refs.append(ref)
+    for value in split_values(args.get("path")):
+        rel_path = normalized_child_path(repo_root, value)
+        if rel_path and real_source_target_path(rel_path):
+            command.extend(["--target-file", rel_path])
+        else:
+            command.extend(["--text-file", rel_path or value])
     for value in split_values(args.get("text_file")):
         command.extend(["--text-file", value])
     for key, flag in (

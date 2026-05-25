@@ -22,6 +22,27 @@ from ia_carmine._shared.openvino_model_discovery import (
 )
 from ia_carmine._shared.provider_tool_schemas import broker_tool_schemas
 from ia_carmine.providers.provider_mesh.runtime.python_runtime import command_env
+
+GPU1_NATIVE_CONCRETE_TOOL_NAMES: tuple[str, ...] = (
+    "repo_toolchain_probe",
+    "repo_toolchain_command",
+    "repo_search_rg",
+    "repo_search_git_grep",
+    "repo_find_fd",
+    "repo_json_query_jq",
+    "repo_powershell_readonly",
+    "runtime_file_refs",
+    "runtime_file_window",
+    "select_semantic_code_chunks",
+    "rag_context_pack",
+    "runtime_sqlite_memory",
+    "build_agent_agnostic_tool_inventory",
+    "build_agent_memory_inventory",
+    "build_agent_transient_request_context",
+    "build_python_line_count_csv",
+    "ai_context_pack",
+    "semantic_evidence_chunks",
+)
 def heap_patch_prompt_required(prompt: str) -> bool:
     text = (prompt or "").lower()
     markers = ("heap chunk/composer contract", "startup_context_digest_for_gpu1", "startup_context_refs_for_gpu1", "external heap revision context", "target_files", "forced concrete delta required", "proposal chunks")
@@ -51,31 +72,95 @@ def build_heap_patch_proposal_prompt(prompt: str) -> str:
         "- Mention needed tool evidence in the proposal, but do not pretend prose is execution; the native tool-call continuation will execute through the broker.\n"
     )
 
-def ollama_tool_call_tool_names() -> list[str]:
-    return [
+def gpu1_native_concrete_tool_names() -> list[str]:
+    return list(GPU1_NATIVE_CONCRETE_TOOL_NAMES)
+
+
+def ollama_tool_call_tool_names(
+    *,
+    include_generic_write: bool = True,
+    gpu1_concrete_only: bool = False,
+) -> list[str]:
+    if gpu1_concrete_only:
+        return gpu1_native_concrete_tool_names()
+    names = [
         "build_agent_agnostic_tool_inventory", "build_agent_memory_inventory", "build_agent_transient_request_context",
-        "runtime_sqlite_memory", "select_semantic_code_chunks", "semantic_evidence_chunks",
-        "ai_context_pack", "runtime_file_refs", "runtime_file_window", "generic_write", "agent_runtime_debug_lab", "run_heap_code_execution_matrix",
-        "run_heap_virtual_dev_environment", "synthesize_patch_candidates", "analyze_code_product_artifact",
+        "build_python_line_count_csv", "check_python_syntax", "build_code_interpreter_report",
+        "repo_toolchain_probe", "repo_toolchain_command", "repo_search_rg", "repo_search_git_grep",
+        "repo_find_fd", "repo_json_query_jq", "repo_powershell_readonly",
+        "runtime_sqlite_memory", "rag_context_pack", "select_semantic_code_chunks", "semantic_evidence_chunks",
+        "ai_context_pack", "runtime_file_refs", "runtime_file_window", "agent_runtime_debug_lab",
+        "run_heap_code_execution_matrix", "run_heap_virtual_dev_environment", "synthesize_patch_candidates",
+        "analyze_code_product_artifact",
     ]
+    if include_generic_write:
+        names.insert(names.index("agent_runtime_debug_lab"), "generic_write")
+    return names
 def prompt_explicitly_requires_tool_call(prompt: str) -> bool:
-    markers = ("must call", "devi chiamare", "use a native tool call", "by calling run_heap", "calling run_heap", "call run_heap")
+    markers = (
+        "must call",
+        "devi chiamare",
+        "chiama nativamente",
+        "force native tool call",
+        "richiede tool_call nativa",
+        "by calling run_heap",
+        "calling run_heap",
+        "call run_heap",
+    )
     return any(marker in (prompt or "").lower() for marker in markers)
+
+def provider_delta_requests_native_tool_call(provider_delta: str) -> bool:
+    text = (provider_delta or "").lower()
+    if not text:
+        return False
+    markers = (
+        "runtime_file_window",
+        "runtime_read_file",
+        "native tool call",
+        "tool_call",
+        "tool_result",
+        "file-read",
+        "file read",
+        "patch_sketch_unified_diff",
+        "```diff",
+        "final_product_kind: code",
+        "final_product_kind=code",
+        "final_product_kind: text_and_code",
+        "final_product_kind=text_and_code",
+    )
+    return any(marker in text for marker in markers)
 def ollama_tool_call_fallback_prompt() -> str:
     return (
         "IA-Carmine native tool decision. If the heap delta needs live broker evidence, call the best broker tool through message.tool_calls; "
         "otherwise answer NO_TOOL_NEEDED with the reason. Matrix, lab and patch synthesis are available, with broker-enriched args. "
         "This is a continuation of the provider heap delta, not a replacement."
     )
-def ollama_tool_call_selection_prompt(prompt: str, provider_delta: str) -> str:
-    tool_relevant = heap_patch_prompt_required(prompt) or prompt_explicitly_requires_tool_call(prompt)
-    tools_available = ", ".join(ollama_tool_call_tool_names())
+def ollama_tool_call_selection_prompt(
+    prompt: str,
+    provider_delta: str,
+    *,
+    force_tool_call: bool = False,
+) -> str:
+    tool_relevant = (
+        force_tool_call
+        or heap_patch_prompt_required(prompt)
+        or prompt_explicitly_requires_tool_call(prompt)
+        or provider_delta_requests_native_tool_call(provider_delta)
+    )
+    tools_available = ", ".join(ollama_tool_call_tool_names(gpu1_concrete_only=True))
     decision_rule = (
         "Keep heap proposal text as primary. GPU1 may drive operative broker requests and owns the FINAL_PRODUCT_DELTA stream. GPU0 has the same Ollama tool-call schema but its results are peer-only refinement/veto/evidence that require a later GPU1 consumption turn. NPU tool calls are diagnostic/veto evidence only. For code product, matrix, lab, patch synthesis, runtime refs or memory gaps, choose one broker tool through message.tool_calls. Use generic_write only as an explicit native tool_call when the current lane cannot yet produce code and needs a refined request/next-turn plan; prose without a native tool_call remains raw GPU1 text evidence and cannot verify workload, lab, matrix, patch or product. "
         "Use NO_TOOL_NEEDED only when current heap/matrix evidence already proves no broker action can improve the delta."
         if tool_relevant
         else "If yes, call one tool through message.tool_calls; otherwise answer NO_TOOL_NEEDED with reason."
     )
+    if force_tool_call:
+        decision_rule = (
+            "The prior GPU1 delta explicitly requires broker evidence. You MUST emit one "
+            "API-native Ollama message.tool_calls entry now. Do not answer NO_TOOL_NEEDED. "
+            "If source content is needed for code or text_and_code, call runtime_file_window; "
+            "the broker enriches args from the current run context."
+        )
     return (
         "IA-Carmine provider continuation. You already produced heap delta content. Decide if that same delta needs a broker tool now. "
         f"{decision_rule} Do not replace the heap delta with tool-only output. "
@@ -90,8 +175,17 @@ def ollama_tool_call_selection_prompt(prompt: str, provider_delta: str) -> str:
 
 def _sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
-def normalize_ollama_tool_calls(chat_response: dict[str, Any]) -> list[dict[str, Any]]:
-    return normalize_ollama_sdk_tool_calls(chat_response)
+def normalize_ollama_tool_calls(
+    chat_response: dict[str, Any],
+    *,
+    allow_content_json_adapter: bool = False,
+    allow_template_adapter: bool = True,
+) -> list[dict[str, Any]]:
+    return normalize_ollama_sdk_tool_calls(
+        chat_response,
+        allow_content_json_adapter=allow_content_json_adapter,
+        allow_template_adapter=allow_template_adapter,
+    )
 def parse_json_contract(text: str) -> dict[str, Any]:
     candidate = (text or "").strip()
     if candidate.startswith("```"):

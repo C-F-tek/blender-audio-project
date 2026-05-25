@@ -2,15 +2,44 @@
 
 from __future__ import annotations
 
+import json
 import re
-from pathlib import Path
 from typing import Any
 
 from ia_carmine._shared.provider_tool_schemas import (
     broker_tool_api_definitions,
     validate_broker_tool_api_definitions,
 )
-from ia_carmine.runtime.heap_gate.runtime_common import read_json, safe_dict, safe_int
+from ia_carmine.runtime.heap_gate.broker_result_validation import (
+    broker_result_passed,
+    broker_result_report,
+)
+from ia_carmine.runtime.heap_gate.runtime_common import safe_dict
+
+PROTOCOL_SECTION_NAMES = (
+    "FINAL_PRODUCT_KIND",
+    "FINAL_PRODUCT_ACTION",
+    "CURRENT_POINTER",
+    "CONSUMED_EVIDENCE",
+    "NEXT_RUNTIME_INTENT",
+    "FINAL_PRODUCT_DELTA",
+    "TARGET_FILES",
+    "PROBLEM",
+    "IMPLEMENTATION_CHANGES",
+    "PATCH_SKETCH_UNIFIED_DIFF",
+    "VALIDATION_COMMANDS",
+    "RISKS",
+    "EXIT_DECISION",
+)
+
+
+def normalize_markdown_protocol_markers(response_text: str) -> str:
+    names = "|".join(re.escape(name) for name in PROTOCOL_SECTION_NAMES)
+    return re.sub(
+        rf"(?im)^(\s*(?:[-*]\s*)?(?:#+\s*)?)\*\*((?:{names}))\s*([=:])\*\*",
+        r"\1\2\3",
+        response_text or "",
+    )
 
 
 def pointer_field_declared(response_text: str, field_name: str) -> bool:
@@ -50,27 +79,15 @@ def pointer_field(response_text: str, field_name: str) -> str:
 
 
 def scalar_field(response_text: str, field_name: str) -> str:
-    pattern = rf"(?im)^\s*(?:[-*]\s*)?(?:#+\s*)?{re.escape(field_name)}\s*(?:=|:)\s*`?([A-Za-z_]+)`?"
+    response_text = normalize_markdown_protocol_markers(response_text)
+    pattern = rf"(?im)^\s*(?:[-*]\s*)?(?:#+\s*)?\*{{0,2}}{re.escape(field_name)}\*{{0,2}}\s*(?:=|:)\s*`?([A-Za-z_]+)`?"
     match = re.search(pattern, response_text or "")
     return match.group(1).strip().lower() if match else ""
 
 
 def section_body(response_text: str, section_name: str) -> str:
-    section_names = (
-        "FINAL_PRODUCT_KIND",
-        "FINAL_PRODUCT_ACTION",
-        "CURRENT_POINTER",
-        "CONSUMED_EVIDENCE",
-        "NEXT_RUNTIME_INTENT",
-        "FINAL_PRODUCT_DELTA",
-        "TARGET_FILES",
-        "PROBLEM",
-        "IMPLEMENTATION_CHANGES",
-        "PATCH_SKETCH_UNIFIED_DIFF",
-        "VALIDATION_COMMANDS",
-        "RISKS",
-        "EXIT_DECISION",
-    )
+    response_text = normalize_markdown_protocol_markers(response_text)
+    section_names = PROTOCOL_SECTION_NAMES
     if section_name == "FINAL_PRODUCT_DELTA":
         section_names = (
             "FINAL_PRODUCT_KIND",
@@ -85,21 +102,25 @@ def section_body(response_text: str, section_name: str) -> str:
         )
     stop_names = "|".join(re.escape(name) for name in section_names if name != section_name)
     pattern = (
-        rf"(?ims)^\s*(?:#+\s*)?{re.escape(section_name)}\s*(?:=|:)?\s*"
-        rf"(.*?)(?=^\s*(?:#+\s*)?(?:{stop_names})\b|\Z)"
+        rf"(?ims)^\s*(?:[-*]\s*)?(?:#+\s*)?\*{{0,2}}{re.escape(section_name)}\*{{0,2}}\s*(?:=|:)?\s*"
+        rf"(.*?)(?=^\s*(?:[-*]\s*)?(?:#+\s*)?\*{{0,2}}(?:{stop_names})\*{{0,2}}\b|\Z)"
     )
     match = re.search(pattern, response_text or "")
     return match.group(1).strip() if match else ""
 
 
 def final_product_protocol(response_text: str) -> dict[str, Any]:
+    response_text = normalize_markdown_protocol_markers(response_text)
+    json_protocol = _json_final_product_protocol(response_text)
+    if json_protocol is not None:
+        return json_protocol
     allowed_kinds = {"text", "code", "text_and_code"}
     allowed_actions = {"append", "replace", "supersede", "refine"}
     kind = scalar_field(response_text, "FINAL_PRODUCT_KIND")
     action = scalar_field(response_text, "FINAL_PRODUCT_ACTION")
     delta = section_body(response_text, "FINAL_PRODUCT_DELTA")
     current_pointer_present = bool(
-        re.search(r"(?im)^\s*(?:#+\s*)?CURRENT_POINTER\b", response_text or "")
+        re.search(r"(?im)^\s*(?:[-*]\s*)?(?:#+\s*)?\*{0,2}CURRENT_POINTER\*{0,2}\b", response_text or "")
     )
     pointer_fields_present = {
         "previous_block_id": pointer_field_declared(response_text, "previous_block_id"),
@@ -142,6 +163,75 @@ def final_product_protocol(response_text: str) -> dict[str, Any]:
     }
 
 
+def _json_final_product_protocol(response_text: str) -> dict[str, Any] | None:
+    payload = _json_object(response_text)
+    if not payload or not any(str(key).startswith("FINAL_PRODUCT_") for key in payload):
+        return None
+    allowed_kinds = {"text", "code", "text_and_code"}
+    allowed_actions = {"append", "replace", "supersede", "refine"}
+    kind = str(payload.get("FINAL_PRODUCT_KIND") or "").strip().lower()
+    action = str(payload.get("FINAL_PRODUCT_ACTION") or "").strip().lower()
+    delta = str(payload.get("FINAL_PRODUCT_DELTA") or "").strip()
+    pointer = payload.get("CURRENT_POINTER")
+    pointer_items = pointer if isinstance(pointer, list) else [pointer]
+    pointer_dict = next((item for item in pointer_items if isinstance(item, dict)), {})
+    pointer_fields_present = {
+        "previous_block_id": bool(str(pointer_dict.get("previous_block_id") or "").strip()),
+        "refines_block_id": "refines_block_id" in pointer_dict,
+        "resume_from_block_id": bool(str(pointer_dict.get("resume_from_block_id") or "").strip()),
+    }
+    consumed = payload.get("CONSUMED_EVIDENCE")
+    consumed_present = bool(consumed if isinstance(consumed, list) else str(consumed or "").strip())
+    intent = payload.get("NEXT_RUNTIME_INTENT")
+    intent_present = bool(intent if isinstance(intent, list) else str(intent or "").strip())
+    errors: list[str] = []
+    if kind not in allowed_kinds:
+        errors.append("gpu1_final_product_kind_invalid_or_missing")
+    if action not in allowed_actions:
+        errors.append("gpu1_final_product_action_invalid_or_missing")
+    if kind == "blocked" or action in {"blocked", "block"}:
+        errors.append("gpu1_blocked_not_allowed_as_final_product_delta")
+    if not delta:
+        errors.append("gpu1_final_product_delta_missing")
+    missing_pointer_fields = [name for name, present in pointer_fields_present.items() if not present]
+    pointer_operational = bool(isinstance(pointer_dict, dict) and pointer_dict and not missing_pointer_fields)
+    if not pointer_operational:
+        errors.append("gpu1_pointer_protocol_not_operational")
+    if not consumed_present:
+        errors.append("gpu1_consumed_evidence_section_missing")
+    if not intent_present:
+        errors.append("gpu1_next_runtime_intent_missing")
+    return {
+        "passed": not errors,
+        "kind": kind,
+        "action": action,
+        "delta": delta,
+        "delta_chars": len(delta),
+        "current_pointer_present": bool(pointer_dict),
+        "pointer_fields_present": pointer_fields_present,
+        "pointer_protocol_operational": pointer_operational,
+        "consumed_evidence_present": consumed_present,
+        "next_runtime_intent_present": intent_present,
+        "errors": errors,
+    }
+
+
+def _json_object(response_text: str) -> dict[str, Any]:
+    candidate = (response_text or "").strip()
+    if candidate.startswith("```"):
+        lines = candidate.splitlines()
+        if lines and lines[0].strip().startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        candidate = "\n".join(lines).strip()
+    try:
+        value = json.loads(candidate)
+    except Exception:
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
 def response_mentions_code_diff(response_text: str) -> bool:
     return bool(
         re.search(r"(?im)^\s*(?:#+\s*)?PATCH_SKETCH_UNIFIED_DIFF\b", response_text or "")
@@ -157,25 +247,16 @@ def broker_file_read_results(owner: Any, events: list[dict[str, Any]]) -> list[d
             continue
         outputs = safe_dict(payload.get("outputs"))
         summary = safe_dict(payload.get("summary"))
-        report = {}
-        json_report = str(outputs.get("json_report") or "").strip()
-        if json_report:
-            report_path = Path(json_report)
-            if not report_path.is_absolute():
-                report_path = owner.repo_root / report_path
-            report = read_json(report_path)
-        report_passed = report.get("passed") if report else summary.get("passed")
         if payload.get("provider_native_tool_call") is not True:
             continue
-        if payload.get("blocked"):
+        if not broker_result_passed(
+            payload,
+            repo_root=getattr(owner, "repo_root", None),
+            require_report_passed=True,
+        ):
             continue
-        if safe_int(payload.get("returncode"), default=1) != 0:
-            continue
-        errors = payload.get("errors") if isinstance(payload.get("errors"), list) else []
-        if errors:
-            continue
-        if report_passed is not True:
-            continue
+        report = broker_result_report(payload, repo_root=getattr(owner, "repo_root", None))
+        json_report = str(outputs.get("json_report") or "").strip()
         refs = [
             str(payload.get("request_id") or ""),
             str(payload.get("normalized_request_id") or ""),

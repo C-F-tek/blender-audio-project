@@ -9,14 +9,42 @@ from ia_carmine.runtime.runtime_tool.broker.common import default_input_schema
 
 API_NATIVE_TOOL_CALL_SHAPES = {
     ("ollama", "ollama-python.message.tool_calls[].function"),
+    ("ollama", "ollama-qwen-template.content.<tool_call>"),
+    ("ollama", "ollama-qwen2.5-coder.chat_tools.content_json_adapter"),
+    ("ollama", "ollama-qwen2.5-coder.chat_tools.content_json_fence_adapter"),
 }
 
 
-def is_api_native_tool_call(call: dict[str, Any], *, lane: str = "") -> bool:
+def provider_tool_protocol(model: str = "") -> dict[str, Any]:
+    normalized = (model or "").lower()
+    if "qwen3-coder" in normalized:
+        return {
+            "model_family": "qwen3-coder",
+            "allow_template_adapter": False,
+            "allow_content_json_adapter": False,
+            "accepted_shapes": {("ollama", "ollama-python.message.tool_calls[].function")},
+        }
+    if "qwen2.5-coder" in normalized or "qwen2.5" in normalized:
+        return {
+            "model_family": "qwen2.5-coder",
+            "allow_template_adapter": True,
+            "allow_content_json_adapter": True,
+            "accepted_shapes": API_NATIVE_TOOL_CALL_SHAPES,
+        }
+    return {
+        "model_family": "default-native-only",
+        "allow_template_adapter": False,
+        "allow_content_json_adapter": False,
+        "accepted_shapes": {("ollama", "ollama-python.message.tool_calls[].function")},
+    }
+
+
+def is_api_native_tool_call(call: dict[str, Any], *, lane: str = "", model: str = "") -> bool:
     """Return true only for provider API tool-call objects, not text JSON."""
     provider = str(call.get("native_provider") or "").strip()
     shape = str(call.get("native_shape") or "").strip()
-    if (provider, shape) in API_NATIVE_TOOL_CALL_SHAPES:
+    accepted = provider_tool_protocol(model).get("accepted_shapes") or API_NATIVE_TOOL_CALL_SHAPES
+    if (provider, shape) in accepted:
         return True
     if lane == "npu_micro_task_auditor" and provider == "openvino_genai":
         return False
@@ -142,6 +170,13 @@ def _side_effect_policy(name: str) -> str:
         "select_semantic_code_chunks",
         "runtime_file_window",
         "runtime_file_refs",
+        "repo_toolchain_probe",
+        "repo_toolchain_command",
+        "repo_search_rg",
+        "repo_search_git_grep",
+        "repo_find_fd",
+        "repo_json_query_jq",
+        "repo_powershell_readonly",
     }
     source_forbidden = {"analyze_code_product_artifact"}
     if name in source_forbidden:
@@ -156,6 +191,16 @@ def _expected_artifacts(name: str) -> list[str]:
         return ["runtime_file_refs_json", "runtime_file_refs_markdown"]
     if name == "runtime_file_window":
         return ["runtime_file_window_json", "runtime_file_window_markdown"]
+    if name in {
+        "repo_toolchain_probe",
+        "repo_toolchain_command",
+        "repo_search_rg",
+        "repo_search_git_grep",
+        "repo_find_fd",
+        "repo_json_query_jq",
+        "repo_powershell_readonly",
+    }:
+        return [f"{name}_json", f"{name}_markdown"]
     if name == "run_heap_code_execution_matrix":
         return ["code_execution_matrix_json", "code_execution_matrix_markdown"]
     if name == "run_heap_virtual_dev_environment":
@@ -192,6 +237,12 @@ def _transport_policy(name: str) -> dict[str, Any]:
         "generic_write": ["request_file", "proposal_text_file", "provider_report", "evidence_report"],
         "runtime_file_refs": ["text_file", "target_file", "validation_script"],
         "runtime_file_window": ["path"],
+        "repo_search_rg": ["path"],
+        "repo_search_git_grep": ["path"],
+        "repo_find_fd": ["path"],
+        "repo_json_query_jq": ["path"],
+        "repo_powershell_readonly": ["path"],
+        "repo_toolchain_command": ["path", "target"],
     }.get(name, [])
     return {
         "principle": "http_coordinates_filesystem_transports_mass",

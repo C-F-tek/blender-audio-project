@@ -43,6 +43,13 @@ def main() -> int:
     from ia_carmine.providers.ollama.session import OllamaSession
     from ia_carmine._shared.provider_ollama_probe import run_ollama_probe
     from ia_carmine.runtime.heap_gate.run_loop_metrics import build_provider_lane_metrics
+    from ia_carmine.runtime.heap_gate.broker_result_validation import broker_result_passed
+    from ia_carmine.runtime.heap_gate.gpu1_tool_result_consumption import (
+        gpu1_tool_result_consumption_state,
+    )
+    from ia_carmine.runtime.heap_gate.tool_broker_native_calls import (
+        provider_native_tool_request_id,
+    )
     from ia_carmine.runtime.runtime_tool.broker.common import validate_request_args
     from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
 
@@ -100,6 +107,35 @@ def main() -> int:
     calls = normalize_ollama_tool_calls(fake_chat)
     if not calls or calls[0].get("tool") != "run_heap_code_execution_matrix":
         errors.append("ollama native tool_calls normalization failed")
+    qwen_template_chat = {
+        "message": {
+            "content": (
+                '<tool_call>\n'
+                '{"name":"runtime_file_window","arguments":{"path":"README.md","offset":0,"limit":200}}\n'
+                "</tool_call>"
+            )
+        }
+    }
+    qwen_template_calls = normalize_ollama_tool_calls(qwen_template_chat)
+    if not qwen_template_calls or qwen_template_calls[0].get("tool") != "runtime_file_window":
+        errors.append("qwen template-native <tool_call> normalization failed")
+    naked_json_chat = {
+        "message": {
+            "content": '{"name":"runtime_file_window","arguments":{"path":"README.md"}}'
+        }
+    }
+    if normalize_ollama_tool_calls(naked_json_chat):
+        errors.append("naked JSON content must not be normalized as a native Ollama tool call")
+    qwen_json_adapter_calls = normalize_ollama_tool_calls(
+        naked_json_chat,
+        allow_content_json_adapter=True,
+    )
+    if (
+        not qwen_json_adapter_calls
+        or qwen_json_adapter_calls[0].get("native_shape")
+        != "ollama-qwen2.5-coder.chat_tools.content_json_adapter"
+    ):
+        errors.append("qwen content JSON adapter did not normalize strict chat-tools JSON")
     command, _outputs = run_heap_code_execution_matrix(
         repo_root,
         repo_root / "output" / "validation" / "provider_tool_loop_smoke",
@@ -135,10 +171,91 @@ def main() -> int:
         errors.append("GPU1 partial checkpoint must expose a human-readable markdown artifact")
     if "explicit_tool_call_required = prompt_explicitly_requires_tool_call" not in ollama_probe_source:
         errors.append("GPU1 native tool loop must require an explicit tool-call request")
-    native_gate = ollama_probe_source.find("if native_tool_loop_relevant:")
-    native_chat = ollama_probe_source.find("raw_chat_response = session.chat(")
-    if native_gate < 0 or native_chat < native_gate:
-        errors.append("GPU1 must not start a second native chat outside the explicit tool-call gate")
+    if "messages is not None" not in ollama_probe_source or "session.chat(\n                            chat_messages" not in ollama_probe_source:
+        errors.append("GPU1 native tool loop must send the full chat history through session.chat(messages, tools=...)")
+
+    request_id = provider_native_tool_request_id(
+        "smoke-stamp",
+        {
+            "revision": 7,
+            "gpu1_tool_loop_subturn": 0,
+            "provider_block_id": "block:alpha",
+            "output": "provider_teamwork/gpu1_ollama_provider_probe.json",
+        },
+        {"id": "tool-call:1"},
+        tool="runtime_file_window",
+        call_index=2,
+    )
+    for fragment in ("rev7", "sub0", "idx002", "blkblock_alpha", "calltool-call_1", "runtime_file_window"):
+        if fragment not in request_id:
+            errors.append(f"provider-native request id missing correlation fragment {fragment}")
+
+    class ToolResultOwner:
+        def broker_results(self, events: list[dict[str, object]]) -> list[dict[str, object]]:
+            return [
+                event.get("payload", {})
+                for event in events
+                if event.get("event_type") == "broker_result"
+            ]
+
+        def provider_report_response_text(self, report: dict[str, object]) -> str:
+            return str(report.get("response_text") or "")
+
+    tool_result_owner = ToolResultOwner()
+    tool_result_owner.repo_root = repo_root
+
+    request_payload = {
+        "request_id": request_id,
+        "tool": "runtime_file_window",
+        "lane": "gpu1_planner",
+        "provider_native_tool_call": True,
+        "revision": 7,
+        "gpu1_tool_loop_subturn": 0,
+        "provider_block_id": "block:alpha",
+        "chat_history_ref": {"path": "chat/history.json"},
+    }
+    failed_result_payload = {
+        **request_payload,
+        "returncode": 0,
+        "executed": True,
+        "blocked": False,
+        "errors": [],
+        "summary": {"passed": False},
+        "outputs": {},
+    }
+    tool_events = [
+        {"event_type": "broker_request", "payload": request_payload},
+        {"event_type": "broker_result", "payload": failed_result_payload},
+    ]
+    consumer_text = f"CONSUMED_EVIDENCE:\n- tool_or_matrix_refs={request_id}\n"
+    consumption = gpu1_tool_result_consumption_state(
+        tool_result_owner,
+        tool_events,
+        response_text=consumer_text,
+        report={
+            "revision": 7,
+            "gpu1_tool_loop_subturn": 1,
+            "chat_history_ref": {"path": "chat/history.json"},
+        },
+    )
+    if not consumption.get("tool_result_consumed_by_gpu1"):
+        errors.append("GPU1 tool result cited in later subturn was not marked consumed")
+    if consumption.get("tool_result_consumed_passed_by_gpu1_count") != 0:
+        errors.append("failed broker result must not become passed GPU1 product evidence")
+    if broker_result_passed(failed_result_payload):
+        errors.append("broker_result_passed accepted summary.passed=false")
+    stale_consumption = gpu1_tool_result_consumption_state(
+        tool_result_owner,
+        tool_events,
+        response_text=consumer_text,
+        report={
+            "revision": 8,
+            "gpu1_tool_loop_subturn": 1,
+            "chat_history_ref": {"path": "chat/history.json"},
+        },
+    )
+    if stale_consumption.get("tool_result_consumed_by_gpu1"):
+        errors.append("GPU1 consumed a tool result from a different revision")
 
     prompt_source = inspect.getsource(RuntimeGateProviderPromptMixin.startup_context_digest)
     if "STARTUP_CONTEXT_REFS_FOR_GPU1" not in prompt_source or "file_backed_artifact_refs" not in prompt_source:

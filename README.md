@@ -8,7 +8,7 @@ Canonical wording: `docs/CURRENT_RUNTIME_MARKDOWN_CONTRACT.md`.
 - GPU1/NVIDIA primary Ollama lane is the operational center and advances by heap pointer/recovery turns without waiting for GPU0/NPU sidecar completion.
 - GPU0/NPU are `packet_review_only` sidecars: they start only after a reviewable GPU1 packet, do not close product, and remain deferred evidence until a later GPU1 turn consumes their pointer ids.
 - Tool/lab/matrix/debug reporting must distinguish `lab_called`, `lab_report_written`, `lab_usable` and `lab_status`; attempted tool calls are evidence, not automatic usable lab output.
-- `CODE_PRODUCT_FULL_PATCH.md` is the final patch/code product; `PLAN_PRODUCT_FULL_PATCH.md` is the final recomposed GPU1 prompt/chat product, with pointer graph and recovery/congruence as technical attachments.
+- `FINAL_PRODUCT` is single: text, code, or text+code. `PLAN_PRODUCT_FULL_PATCH.md` is its text/prose surface; `CODE_PRODUCT_FULL_PATCH.md` is its code/diff surface only when verified code exists.
 - Missing optional values stay empty/null; required missing devices or provider prerequisites raise or block with a typed reason rather than emitting placeholder text.
 - Complete runs require explicit config flags, including `--files-per-round`, `--gpu0-ollama-num-ctx`, `--npu-micro-start-mode`, `--npu-final-wait-seconds` and `--max-degraded-lanes`.
 <!-- IA-CARMINE-CURRENT-RUNTIME-CONTRACT:END -->
@@ -127,8 +127,8 @@ automated transcript parser.
 | Operator blocks required | 34 | Cases where the operator had to stop or redirect Codex because it drifted into smoke/preflight/report/prose/script-gaming behavior. |
 | Script-gaming total regression count | 571 | Cases where Codex reintroduced code shape already rejected or removed in the same work window. |
 | Misleading/Codex lie evidence count | 115 | Cases where Codex/report formatting was recorded as misleading rather than merely broken. |
-| Systemic product-lie evidence count | 16 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
-| Systemic product-lie severity score | 175 | Sum of severity weights for structural product lies; operator override may exceed the normal `5` severity. |
+| Systemic product-lie evidence count | 18 | Cases where validation/report/prose/chopped context replaced the promised MD/pointer/final-product path. |
+| Systemic product-lie severity score | 185 | Sum of severity weights for structural product lies; operator override may exceed the normal `5` severity. |
 
 Detailed evidence is maintained in
 `docs/AI_SESSION_NOTES/provider-universe-chat-failure-ledger-2026-05-20.md`.

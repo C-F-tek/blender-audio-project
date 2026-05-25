@@ -13,6 +13,9 @@ from ia_carmine._shared.file_backed_transport import (
     write_large_text_evidence,
 )
 from ia_carmine.runtime.heap_gate.generic_write_followup import generic_write_document_product
+from ia_carmine.runtime.heap_gate.gpu1_tool_result_consumption import (
+    gpu1_tool_result_resume_prompt_block,
+)
 COORDINATION_FULL_TEXT_KEYS = {
     "request",
     "request_input",
@@ -430,7 +433,9 @@ class RuntimeGateProviderContextMixin:
         )
         gpu1_text = base_response or "GPU1 non ha prodotto una risposta testuale utile."
         lines = [
-            "## Sintesi heap dettagliata",
+            "## diagnostic_heap_summary",
+            "",
+            "Questa sezione e' diagnostica: non e' product readiness e non sostituisce PLAN_PRODUCT_FULL_PATCH.md quando esiste una superficie FINAL_PRODUCT_DELTA composta.",
             "",
             "### Interpretazione richiesta",
             f"La richiesta operatore è stata trattata come task complesso: {self.request_text()}",
@@ -518,6 +523,10 @@ class RuntimeGateProviderContextMixin:
         source_allowlist_contract = self.render_source_allowlist_contract(limit=32)
         runtime_universe_summary = self.runtime_universe_prompt_summary(limit=tool_catalog_limit)
         matrix_feedback = self.matrix_patch_candidate_feedback(self.read_events())
+        tool_result_resume = gpu1_tool_result_resume_prompt_block(
+            self,
+            self.read_events(),
+        )
         revision_feedback = (
             self.provider_revision_feedback or "nessun feedback correttivo precedente"
         )
@@ -541,10 +550,13 @@ class RuntimeGateProviderContextMixin:
             f"{tool_catalog}\n"
             f"{runtime_universe_summary}\n"
             f"{matrix_feedback}\n"
+            f"{tool_result_resume}\n"
             f"File sorgente reali candidati verificati nel repository/context:\n{source_candidates}\n"
             f"{source_allowlist_contract}\n"
             f"Feedback qualitativo heap da eventuale giro precedente:\n{revision_feedback}\n"
-            "BROKER_NATIVE_TOOL_RULE: GPU1 e' la lane Ollama primaria e puo' guidare broker tools e produrre FINAL_PRODUCT_DELTA. GPU0/NPU sono sidecar packet_review_only: possono produrre solo peer_refinement, veto o evidence_request strutturati legati al packet GPU1 corrente; free text/no-tool resta raw_sidecar_evidence e non diventa generic_write operativo. Usa generic_write solo da GPU1 se non puoi ancora produrre codice ma puoi raffinare richiesta/piano. Usa run_heap_virtual_dev_environment, run_heap_code_execution_matrix, agent_runtime_debug_lab e synthesize_patch_candidates quando il codice richiede prova eseguibile. Dopo tre generic_write GPU1 consumati puoi produrre un delta leggibile anche con contenuto codice, ma non fingere patch applicate o source write.\n"
+            "BROKER_NATIVE_TOOL_RULE: GPU1 e' la lane Ollama primaria e puo' guidare broker tools e produrre FINAL_PRODUCT_DELTA. GPU0/NPU sono sidecar packet_review_only: possono produrre solo peer_refinement, veto o evidence_request strutturati legati al packet GPU1 corrente; free text/no-tool resta raw_sidecar_evidence e non diventa operativo. Nel loop nativo GPU1 usa solo tool concreti registrati con schema+handler: repo_toolchain_probe, repo_search_rg, repo_search_git_grep, repo_find_fd, repo_json_query_jq, repo_powershell_readonly, repo_toolchain_command, runtime_file_refs, runtime_file_window, memoria/RAG/context/chunk tools. Non chiedere generic_write, debug lab, matrix, virtual env, patch synthesis o code-product analyzer come strumenti esplorativi GPU1: sono fasi deterministic/late-stage fuori dal tool loop primario.\n"
+            "QWEN25_CODER_TOOL_FORMAT_RULE: quando serve un tool, usa il canale Ollama `session.chat(..., tools=...)`. Per qwen2.5-coder:14b la forma nativa del template e' ESATTAMENTE <tool_call>{\"name\":...,\"arguments\":...}</tool_call> senza altro testo; `message.tool_calls[]` e il whole-message JSON adapter stretto del percorso chat(tools=...) sono equivalenti. Il risultato rientra nel turno successivo come role=tool/<tool_response>. Markdown, fenced JSON, prose o JSON fuori dal percorso tools non sono eseguibili.\n"
+            "GPU1_TOOL_RESULT_CONSUMPTION_RULE: se in un turno precedente hai chiesto un broker tool, il packet resta pending_tool_result finche' tu GPU1 non riprendi con lo stesso contesto, leggi il tool_result e lo citi in CONSUMED_EVIDENCE/tool_or_matrix_refs. tool_result_written non basta: diventa evidence operativa solo con tool_result_consumed_by_gpu1. GPU0/NPU non devono revisionare packet GPU1 incompleti in attesa di tool_result.\n"
             "FILE_READ_GROUNDING_RULE: runtime_file_refs/SOURCE_PATH_ALLOWLIST_CONTRACT prova solo path verificati, non contenuto letto. Per FINAL_PRODUCT_KIND=code o text_and_code, e per qualunque PATCH_SKETCH_UNIFIED_DIFF, devi prima chiamare nativamente runtime_file_window sui target, ricevere tool_result brokerato riuscito, e citare quel result in CONSUMED_EVIDENCE/tool_or_matrix_refs. Senza file-read reale puoi emettere solo FINAL_PRODUCT_KIND=text oppure gpu1_decision=needs_refine con NEXT_RUNTIME_INTENT che richiede runtime_file_window sui target. Non produrre diff da memoria, prompt, allowlist, raw text o basename ricordati.\n"
             "Regola: rispondi come delta GPU1 del team heap; se servono file esistenti usa solo i file sorgente candidati verificati da runtime_file_refs/SOURCE_PATH_ALLOWLIST_CONTRACT e poi letti da runtime_file_window, non gli artifact output/validation e non basename ricordati. Cita i tool storici/runtime consumati quando la richiesta richiede analisi, stato, igiene, tool, repo o output dettagliato.\n"
             "FINAL_PRODUCT_DELTA_PROTOCOL obbligatorio in ogni turno GPU1:\n"

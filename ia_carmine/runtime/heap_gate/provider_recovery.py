@@ -10,6 +10,9 @@ from ia_carmine.runtime.heap_gate.provider_lane_policy import (
     NPU_LANE,
     PRIMARY_LANE as GPU1_LANE,
 )
+from ia_carmine.runtime.heap_gate.gpu1_tool_result_consumption import (
+    gpu1_tool_result_consumption_state,
+)
 from ia_carmine.runtime.heap_gate.runtime_common import Any
 
 
@@ -21,6 +24,8 @@ RECOVERY_REASON_NPU_PENDING = "npu_followup_pending"
 RECOVERY_REASON_REJECTED_PROPOSAL = "rejected_gpu1_proposal"
 RECOVERY_REASON_SIDECAR_INVALID = "sidecar_invalid"
 RECOVERY_REASON_SIDECAR_INCONGRUENT = "sidecar_incongruent"
+RECOVERY_REASON_GPU1_TOOL_PENDING = "gpu1_tool_result_pending"
+RECOVERY_REASON_GPU1_TOOL_UNCONSUMED = "gpu1_requested_tool_result_not_consumed"
 RECOVERABLE_PROVIDER_RECOVERY_REASONS = {
     RECOVERY_REASON_GPU0_INVALID,
     RECOVERY_REASON_GPU0_WRONG_PACKET,
@@ -29,6 +34,8 @@ RECOVERABLE_PROVIDER_RECOVERY_REASONS = {
     RECOVERY_REASON_NPU_PENDING,
     RECOVERY_REASON_SIDECAR_INVALID,
     RECOVERY_REASON_SIDECAR_INCONGRUENT,
+    RECOVERY_REASON_GPU1_TOOL_PENDING,
+    RECOVERY_REASON_GPU1_TOOL_UNCONSUMED,
 }
 REPORT_TEXT_PREFIXES = ("gpu0_raw_response_text", "free_text_evidence", "response_text")
 
@@ -50,6 +57,11 @@ def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[s
     roles_verified = _roles_verified(reports)
     roles_observed_invalid = _roles_observed_invalid(reports)
     reasons: list[str] = []
+    tool_state = gpu1_tool_result_consumption_state(owner, events, report=latest_gpu1)
+    if tool_state.get("gpu1_resume_after_tool_result_required"):
+        reasons.append(
+            str(tool_state.get("gpu1_tool_result_blocker") or RECOVERY_REASON_GPU1_TOOL_UNCONSUMED)
+        )
 
     gpu0_review_target = _gpu0_review_target(latest_gpu0, latest_proposal)
     if latest_gpu0 and latest_gpu0.get("gpu0_secondary_schema_valid") is not True:
@@ -132,6 +144,7 @@ def provider_recovery_status(owner: Any, events: list[dict[str, Any]]) -> dict[s
         "gpu1_congruence_check_required": recovery_required,
         "gpu1_congruence_check_performed": recovery_attempted,
         "unconsumed_peer_block_ids": unconsumed_peer_blocks,
+        **tool_state,
         "roles_observed": roles_observed,
         "roles_verified": roles_verified,
         "roles_observed_invalid": roles_observed_invalid,
@@ -208,6 +221,26 @@ def _recovery_feedback(owner: Any, status: dict[str, Any]) -> str:
     peer_blocks = [str(item) for item in status.get("unconsumed_peer_block_ids") or []]
     if peer_blocks:
         lines.append("- unconsumed_peer_block_ids=" + ",".join(peer_blocks))
+    pending_tool_ids = [
+        str(item)
+        for item in (status.get("gpu1_pending_tool_result_ids") or [])
+        if str(item).strip()
+    ]
+    unconsumed_tool_ids = [
+        str(item)
+        for item in (status.get("gpu1_unconsumed_tool_result_ids") or [])
+        if str(item).strip()
+    ]
+    if pending_tool_ids or unconsumed_tool_ids:
+        lines.extend(
+            [
+                "- GPU1_TOOL_RESULT_RESUME_REQUIRED=true",
+                "- same_gpu1_must_resume_after_tool_result=true",
+                "- GPU0/NPU must wait until GPU1 cites these tool ids/refs in CONSUMED_EVIDENCE/tool_or_matrix_refs.",
+                "- pending_tool_result_ids=" + ",".join(pending_tool_ids),
+                "- unconsumed_tool_result_ids=" + ",".join(unconsumed_tool_ids),
+            ]
+        )
     latest_gpu0 = _latest_report(list(getattr(owner, "provider_reports", []) or []), GPU0_LANE)
     latest_npu = _latest_report(list(getattr(owner, "provider_reports", []) or []), NPU_LANE)
     if latest_gpu0:

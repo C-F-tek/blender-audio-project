@@ -99,7 +99,7 @@ class RuntimeGateProviderPromptMixin:
 
         return (
             "STARTUP_CONTEXT_REFS_FOR_GPU1:\n"
-            "HTTP coordinates; filesystem transports mass. Use these refs as the active heap context control surface. Broker tool execution must use native API tool_calls from the provider adapter; Markdown/JSON/prose tool-call text is not executable evidence. Prefer exact repo-relative paths and broker-validated runtime_file_refs.\n\n"
+            "HTTP coordinates; filesystem transports mass. Use these refs as the active heap context control surface. Broker tool execution must use native API tool_calls from the provider adapter, the exact qwen2.5-coder <tool_call>{...}</tool_call> template-native envelope, or the strict whole-message JSON adapter only inside chat(tools=...); Markdown, fenced JSON and prose tool-call text are not executable evidence. Prefer exact repo-relative paths and broker-validated runtime_file_refs.\n\n"
             + "\n\n".join(sections)
         )
 

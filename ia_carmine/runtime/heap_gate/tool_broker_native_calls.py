@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import re
+
 from ia_carmine._shared.file_backed_transport import (
     report_text,
     report_text_required_full,
@@ -16,7 +19,6 @@ from ia_carmine.runtime.heap_gate.runtime_common import (
     provider_patch_synthesis_plan,
 )
 from ia_carmine.runtime.runtime_tool.broker.registry import TOOL_SPECS
-
 PRIMARY_NATIVE_TOOL_CALL_LANES = {"gpu1_planner"}
 PEER_NATIVE_TOOL_CALL_LANES = {"gpu0_peer"}
 OPERATIVE_NATIVE_TOOL_CALL_LANES = PRIMARY_NATIVE_TOOL_CALL_LANES | PEER_NATIVE_TOOL_CALL_LANES
@@ -29,6 +31,35 @@ EVIDENCE_ENRICHED_TOOLS = {
     "synthesize_patch_candidates",
 }
 
+def provider_native_tool_request_id(
+    stamp: str,
+    report: dict[str, Any],
+    call: dict[str, Any],
+    *,
+    tool: str,
+    call_index: int,
+) -> str:
+    call_id = _token(str(call.get("id") or f"{tool}_{call_index:03d}"))
+    revision = _token(str(report.get("revision") if report.get("revision") is not None else "none"))
+    subturn = _token(
+        str(
+            report.get("gpu1_tool_loop_subturn")
+            if report.get("gpu1_tool_loop_subturn") is not None
+            else "none"
+        )
+    )
+    block_id = _token(str(report.get("provider_block_id") or report.get("proposal_block_id") or "noblock"))
+    provider_report = str(report.get("output") or report.get("provider_report") or "")
+    report_key = hashlib.sha1(provider_report.encode("utf-8", errors="ignore")).hexdigest()[:10] if provider_report else "noreport"
+    return (
+        f"{stamp}:provider-native:rev{revision}:sub{subturn}:idx{call_index:03d}:"
+        f"blk{block_id}:rpt{report_key}:call{call_id}:{_token(tool)}"
+    )
+
+
+def _token(value: str) -> str:
+    token = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(value or "").strip())
+    return (token or "none")[:80]
 
 def provider_plan_item_for_tool_call(
     owner: Any, call: dict[str, Any], events: list[dict[str, Any]]
@@ -53,17 +84,74 @@ def provider_plan_item_for_tool_call(
             if tool_name == "generic_write"
             else f"provider_native_{tool_name}"
         )
+        args = dict(call.get("args") or {})
+        if tool_name == "runtime_file_window":
+            _enrich_runtime_file_window_args(owner, args)
+        if tool_name == "runtime_file_refs":
+            _normalize_runtime_file_refs_args(args)
         return {
             "stage": 99,
             "requirement": requirement or fallback_requirement,
             "id": f"provider-native-{tool_name}",
             "tool": tool_name,
-            "args": dict(call.get("args") or {}),
+            "args": args,
             "reason": call.get("reason")
             or f"provider native tool_call requested allowlisted tool {tool_name}",
         }
     return None
 
+def _enrich_runtime_file_window_args(owner: Any, args: dict[str, Any]) -> None:
+    if str(args.get("path") or "").strip():
+        return
+    candidate = ""
+    for key in ("target_file", "file", "filepath"):
+        value = args.get(key)
+        if isinstance(value, str) and value.strip():
+            candidate = value.strip()
+            break
+        if isinstance(value, list):
+            candidate = next((str(item).strip() for item in value if str(item).strip()), "")
+            if candidate:
+                break
+    if not candidate:
+        try:
+            targets = list(owner.code_execution_matrix_targets() or [])
+        except Exception:
+            targets = []
+        candidate = next((str(item).strip() for item in targets if str(item).strip()), "")
+    if not candidate:
+        try:
+            candidates = list(owner.real_source_file_candidates(limit=1) or [])
+        except Exception:
+            candidates = []
+        candidate = next((str(item).strip() for item in candidates if str(item).strip()), "")
+    if candidate:
+        args["path"] = candidate
+    args.setdefault("offset", 0)
+    args.setdefault("limit", 16000)
+
+def _normalize_runtime_file_refs_args(args: dict[str, Any]) -> None:
+    path_value = args.pop("path", "")
+    if not path_value:
+        return
+    values = path_value if isinstance(path_value, list) else [path_value]
+    existing_text = args.get("text_file")
+    existing_target = args.get("target_file")
+    text_files = [str(item) for item in existing_text] if isinstance(existing_text, list) else ([str(existing_text)] if existing_text else [])
+    target_files = [str(item) for item in existing_target] if isinstance(existing_target, list) else ([str(existing_target)] if existing_target else [])
+    for item in values:
+        value = str(item or "").strip()
+        normalized = value.replace("\\", "/")
+        if not value:
+            continue
+        if normalized.startswith(("ia_carmine/", "Tools/", "docs/", "AGENTS.md", "CHATGPT.md", "README.md")):
+            target_files.append(value)
+        else:
+            text_files.append(value)
+    if text_files:
+        args["text_file"] = text_files
+    if target_files:
+        args["target_file"] = target_files
 
 def publish_provider_native_tool_calls(
     owner: Any, round_id: int, events: list[dict[str, Any]]
@@ -72,7 +160,6 @@ def publish_provider_native_tool_calls(
     for report in owner.provider_reports:
         published += _publish_report_native_tool_calls(owner, report, round_id, events)
     return published
-
 
 def publish_provider_report_native_tool_calls(
     owner: Any, report: dict[str, Any], round_id: int, events: list[dict[str, Any]]
@@ -85,6 +172,7 @@ def _publish_report_native_tool_calls(
 ) -> int:
     published = 0
     lane = str(report.get("lane") or "provider")
+    model = str(report.get("selected_model") or report.get("model") or "")
     source = provider_heap_lane(lane)
     output = str(report.get("output") or "")
     calls = report.get("tool_calls") if isinstance(report.get("tool_calls"), list) else []
@@ -97,7 +185,7 @@ def _publish_report_native_tool_calls(
         if unique_id in owner.provider_native_tool_call_ids:
             continue
         owner.provider_native_tool_call_ids.add(unique_id)
-        if not is_api_native_tool_call(call, lane=lane):
+        if not is_api_native_tool_call(call, lane=lane, model=model):
             _publish_non_native_tool_call_diagnostic(owner, source, lane, output, call, unique_id, round_id)
             continue
         if tool_name == "generic_write" and lane in SIDECAR_NATIVE_TOOL_CALL_LANES:
@@ -115,7 +203,13 @@ def _publish_report_native_tool_calls(
             _publish_unmapped_native_call(owner, source, lane, output, call, unique_id, round_id)
             continue
         _enrich_provider_native_tool_args(owner, report, output, call, plan_item)
-        request_id = f"{owner.stamp}:provider-native:{call_id}:{plan_item['tool']}"
+        request_id = provider_native_tool_request_id(
+            str(owner.stamp),
+            report,
+            call,
+            tool=plan_item["tool"],
+            call_index=index,
+        )
         _publish_need_and_request(owner, report, call, plan_item, request_id, round_id)
         published += 1
     if (
@@ -137,9 +231,9 @@ def _lane_tool_authority(lane: str) -> dict[str, Any]:
     if lane in PRIMARY_NATIVE_TOOL_CALL_LANES:
         return {
             "native_tool_call_authority": "primary_broker_authority",
-            "tool_result_scope": "primary_product_evidence",
-            "gpu1_followup_required": False,
-            "cannot_close_product": False,
+            "tool_result_scope": "primary_pending_gpu1_resume_evidence",
+            "gpu1_followup_required": True,
+            "cannot_close_product": True,
             "peer_only": False,
         }
     if lane in PEER_NATIVE_TOOL_CALL_LANES:
@@ -475,6 +569,12 @@ def _publish_need_and_request(
     output = str(report.get("output") or "")
     call_id = str(call.get("id") or f"{plan_item['tool']}_001")
     authority = _lane_tool_authority(lane)
+    subturn = report.get("gpu1_tool_loop_subturn")
+    chat_history_ref = (
+        report.get("chat_history_ref")
+        if isinstance(report.get("chat_history_ref"), dict)
+        else {}
+    )
     need = {
         "id": f"need_provider_native_{plan_item['requirement']}_{call_id}",
         "owner": lane,
@@ -488,9 +588,27 @@ def _publish_need_and_request(
         "provider_block_id": report.get("provider_block_id"),
         "proposal_block_id": report.get("proposal_block_id"),
         "revision": report.get("revision"),
+        "gpu1_tool_loop_subturn": subturn,
+        "tool_call_id": call_id,
+        "tool_call_index": _call_index_from_request_id(request_id),
+        "chat_history_ref": chat_history_ref,
         "round": round_id,
         **authority,
     }
+    gpu1_resume_required = bool(lane in PRIMARY_NATIVE_TOOL_CALL_LANES)
+    if gpu1_resume_required:
+        need.update(
+            {
+                "gpu1_waiting_for_tool_result": True,
+                "gpu1_requested_tool_call_id": request_id,
+                "gpu1_requested_tool_name": plan_item["tool"],
+                "gpu1_resume_after_tool_result_required": True,
+            }
+        )
+        owner.gpu1_waiting_for_tool_result = True
+        owner.gpu1_requested_tool_call_id = request_id
+        owner.gpu1_requested_tool_name = str(plan_item["tool"])
+        owner.gpu1_resume_after_tool_result_required = True
     append_unique(owner.state["needs"], need)
     owner.publish(
         source,
@@ -510,10 +628,23 @@ def _publish_need_and_request(
         "provider_report": output,
         "lane": lane,
         "revision": report.get("revision"),
+        "gpu1_tool_loop_subturn": subturn,
+        "tool_call_id": call_id,
+        "tool_call_index": _call_index_from_request_id(request_id),
+        "chat_history_ref": chat_history_ref,
         "provider_block_id": report.get("provider_block_id"),
         "proposal_block_id": report.get("proposal_block_id"),
         **authority,
     }
+    if gpu1_resume_required:
+        tool_request.update(
+            {
+                "gpu1_waiting_for_tool_result": True,
+                "gpu1_requested_tool_call_id": request_id,
+                "gpu1_requested_tool_name": plan_item["tool"],
+                "gpu1_resume_after_tool_result_required": True,
+            }
+        )
     if plan_item.get("nonblocking"):
         tool_request["nonblocking"] = True
     append_unique(owner.state["tool_requests"], tool_request)
@@ -531,11 +662,28 @@ def _publish_need_and_request(
         "tool": tool_request["tool"],
         "args_keys": sorted(str(key) for key in (tool_request.get("args") or {}))[:32],
         "lane": lane,
+        "revision": report.get("revision"),
+        "gpu1_tool_loop_subturn": subturn,
+        "tool_call_id": call_id,
+        "tool_call_index": _call_index_from_request_id(request_id),
+        "chat_history_ref": chat_history_ref,
+        "provider_report": output,
+        "provider_block_id": report.get("provider_block_id"),
+        "proposal_block_id": report.get("proposal_block_id"),
         "provider_native_tool_call": True,
         "payload_file_backed": True,
         "payload_ref": request_ref,
         "payload_kind": "provider_native_broker_request",
     }
+    if gpu1_resume_required:
+        event_payload.update(
+            {
+                "gpu1_waiting_for_tool_result": True,
+                "gpu1_requested_tool_call_id": request_id,
+                "gpu1_requested_tool_name": plan_item["tool"],
+                "gpu1_resume_after_tool_result_required": True,
+            }
+        )
     owner.publish(
         source,
         "broker_request",
@@ -545,3 +693,8 @@ def _publish_need_and_request(
         round_id=round_id,
     )
     owner.tool_request_count += 1
+
+
+def _call_index_from_request_id(request_id: str) -> int | None:
+    match = re.search(r":idx(\d+):", request_id)
+    return int(match.group(1)) if match else None

@@ -128,10 +128,29 @@ def _run_preflight(args: Any, state: dict[str, Any]) -> None:
             "--timeout-seconds",
             str(args.preflight_timeout_seconds),
         ]
+        if args.allow_provider_generation:
+            command.extend(
+                [
+                    "--gpu1-native-tool-loop-preflight",
+                    "--downstream-verification",
+                    "--provider-model",
+                    str(args.provider_model),
+                    "--provider-base-url",
+                    str(args.gpu1_base_url),
+                    "--provider-num-ctx",
+                    str(args.ollama_num_ctx),
+                    "--provider-max-new-tokens",
+                    str(min(int(args.max_new_tokens or 700), 900)),
+                ]
+            )
         result = run_command(
             command,
             state["repo_root"],
-            timeout_seconds=max(30, int(args.preflight_timeout_seconds) + 30),
+            timeout_seconds=max(
+                30,
+                int(args.preflight_timeout_seconds)
+                + (120 if args.allow_provider_generation else 30),
+            ),
             flow_dir=state["run_dir"],
             phase="preflight",
         )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ia_carmine._shared.file_backed_transport import report_text_preview
 from ia_carmine.runtime.heap_gate.runtime_common import (
     Any,
     Path,
@@ -575,8 +576,13 @@ def _publish_claim(
 ) -> None:
     operational = bool(provider_report.get("operational_provider_activity"))
     observed_request_evidence = gate.request_input_ref_or_tail()
+    lane_response = report_text_preview(
+        getattr(gate, "repo_root", None),
+        provider_report,
+        prefixes=("response_text", "provider_heap_delta_text", "structured_text"),
+    )
     observed_response_evidence = gate.response_text_ref_or_tail(
-        str(provider_report.get("response_text") or gate.response_text() or ""),
+        str(lane_response.get("text") or ""),
         name=f"observed_response_{lane}",
         kind="provider_claim_observed_response",
         producer=lane,

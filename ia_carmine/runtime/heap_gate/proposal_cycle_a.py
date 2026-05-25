@@ -41,6 +41,7 @@ from ia_carmine.runtime.heap_gate.gpu1_closure_packet import (
     build_gpu1_closure_decision_packet,
     derive_gpu1_decision,
 )
+from ia_carmine.runtime.heap_gate.gpu1_tool_result_consumption import gpu1_tool_result_consumption_state
 from ia_carmine.runtime.heap_gate.gpu0_secondary_decision import normalize_gpu0_decision
 from ia_carmine.runtime.heap_gate.generic_write_followup import passed_generic_write_results
 from ia_carmine._shared.provider_work_verification import provider_work_status
@@ -419,6 +420,7 @@ class RuntimeGateProposalCycleAMixin:
         target_files = target_contract["verified_declared_target_files"]
         validation_commands = self.proposal_validation_commands(response_text, revision)
         final_product_protocol = build_final_product_protocol(response_text)
+        gpu1_tool_state = gpu1_tool_result_consumption_state(self, events, response_text=response_text)
         final_product_code_file_read = code_file_read_contract(
             self,
             response_text=response_text,
@@ -487,6 +489,9 @@ class RuntimeGateProposalCycleAMixin:
             *[str(item) for item in gpu1_output_gate.get("issues", [])],
             *[str(item) for item in final_product_protocol.get("errors", [])],
         ]
+        if gpu1_tool_state.get("gpu1_resume_after_tool_result_required"):
+            reject_reasons.append(str(gpu1_tool_state.get("gpu1_tool_result_blocker") or "gpu1_requested_tool_result_not_consumed"))
+            quality_passed = False
         continuity_errors: list[str] = []
         if previous_gpu0_requires_refine:
             if not declared_refines_block_id or declared_refines_block_id != previous_block_id:
@@ -516,26 +521,16 @@ class RuntimeGateProposalCycleAMixin:
                 "reject_reason": "; ".join(dict.fromkeys(item for item in reject_reasons if item)),
             },
         )
-        evidence_refs = [
-            *provider_block_refs["gpu1"],
-            *self.broker_output_refs(events),
-            *self.code_execution_matrix_reports(events),
-        ]
+        evidence_refs = [*provider_block_refs["gpu1"], *self.broker_output_refs(events), *self.code_execution_matrix_reports(events)]
         generic_write_refs = self.generic_write_refs_for_revision(events, revision)
         consumed_generic_write_refs = [
             str(item)
             for item in (getattr(self, "gpu1_consumed_generic_write_block_ids", []) or [])
             if str(item).strip()
         ]
-        consumed_gpu0_block_ids = (
-            [declared_consumed_gpu0_block_id] if declared_consumed_gpu0_block_id else []
-        )
+        consumed_gpu0_block_ids = [declared_consumed_gpu0_block_id] if declared_consumed_gpu0_block_id else []
         consumed_npu_block_ids = list(declared_consumed_npu_block_ids)
-        consumed_provider_block_ids = [
-            item
-            for item in [*consumed_gpu0_block_ids, *consumed_npu_block_ids]
-            if str(item).strip()
-        ]
+        consumed_provider_block_ids = [item for item in [*consumed_gpu0_block_ids, *consumed_npu_block_ids] if str(item).strip()]
         gpu1_packet = build_gpu1_closure_decision_packet(
             gpu1_block_id=block_id,
             gpu1_revision=revision,
@@ -552,6 +547,8 @@ class RuntimeGateProposalCycleAMixin:
             consumed_gpu0_block_id=declared_consumed_gpu0_block_id,
             consumed_gpu0_block_ids=consumed_gpu0_block_ids,
             consumed_npu_block_ids=consumed_npu_block_ids,
+            gpu1_tool_result_consumption=gpu1_tool_state,
+            gpu1_consumed_tool_result_ids=gpu1_tool_state.get("gpu1_consumed_tool_result_ids"),
             response_text=response_text,
             source="proposal_cycle_a",
         )
@@ -595,12 +592,10 @@ class RuntimeGateProposalCycleAMixin:
             "final_product_kind": final_product_protocol.get("kind") or "",
             "final_product_action": final_product_protocol.get("action") or "",
             "final_product_delta_valid": bool(final_product_protocol.get("passed")),
-            "final_product_protocol": {
-                key: value
-                for key, value in final_product_protocol.items()
-                if key != "delta"
-            },
+            "final_product_protocol": {key: value for key, value in final_product_protocol.items() if key != "delta"},
             "final_product_code_file_read_contract": final_product_code_file_read,
+            **{key: value for key, value in gpu1_tool_state.items() if key != "gpu1_tool_result_consumption"},
+            "gpu1_tool_result_consumption": gpu1_tool_state.get("gpu1_tool_result_consumption", {}),
             "final_product_requires_file_read": bool(final_product_code_file_read.get("required")),
             "final_product_file_read_verified": bool(final_product_code_file_read.get("verified")),
             "final_product_file_read_refs": final_product_code_file_read.get("consumed_file_read_refs", []),

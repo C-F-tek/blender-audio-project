@@ -46,6 +46,11 @@ def build_provider_lane_metrics(
         if latest_proposal
         else {}
     )
+    latest_gpu1_tool_result_state = safe_dict(
+        latest_proposal.get("gpu1_tool_result_consumption")
+        if latest_proposal
+        else {}
+    )
     latest_gpu1_packet = extract_gpu1_closure_decision_packet(latest_proposal)
     gpu0_review = safe_dict(
         provider_reports_by_lane.get("gpu0_peer", {}).get("gpu0_operational_review")
@@ -413,6 +418,57 @@ def build_provider_lane_metrics(
             latest_code_file_read_contract.get("tool_api_errors")
             if isinstance(latest_code_file_read_contract.get("tool_api_errors"), list)
             else []
+        ),
+        "gpu1_waiting_for_tool_result": bool(
+            latest_proposal.get("gpu1_waiting_for_tool_result")
+            if latest_proposal
+            else getattr(owner, "gpu1_waiting_for_tool_result", False)
+        ),
+        "gpu1_requested_tool_call_id": str(
+            (latest_proposal or {}).get("gpu1_requested_tool_call_id")
+            or getattr(owner, "gpu1_requested_tool_call_id", "")
+            or ""
+        ),
+        "gpu1_requested_tool_name": str(
+            (latest_proposal or {}).get("gpu1_requested_tool_name")
+            or getattr(owner, "gpu1_requested_tool_name", "")
+            or ""
+        ),
+        "gpu1_resume_after_tool_result_required": bool(
+            (latest_proposal or {}).get("gpu1_resume_after_tool_result_required")
+            or getattr(owner, "gpu1_resume_after_tool_result_required", False)
+        ),
+        "gpu1_consumed_tool_result_ids": (
+            latest_proposal.get("gpu1_consumed_tool_result_ids")
+            if isinstance((latest_proposal or {}).get("gpu1_consumed_tool_result_ids"), list)
+            else list(getattr(owner, "gpu1_consumed_tool_result_ids", []) or [])
+        ),
+        "gpu1_tool_result_pending_ids": (
+            latest_proposal.get("gpu1_tool_result_pending_ids")
+            if isinstance((latest_proposal or {}).get("gpu1_tool_result_pending_ids"), list)
+            else latest_proposal.get("gpu1_pending_tool_result_ids")
+            if isinstance((latest_proposal or {}).get("gpu1_pending_tool_result_ids"), list)
+            else latest_gpu1_tool_result_state.get("pending_ids")
+            if isinstance(latest_gpu1_tool_result_state.get("pending_ids"), list)
+            else list(getattr(owner, "gpu1_tool_result_pending_ids", []) or [])
+        ),
+        "gpu1_unconsumed_tool_result_ids": (
+            latest_proposal.get("gpu1_unconsumed_tool_result_ids")
+            if isinstance((latest_proposal or {}).get("gpu1_unconsumed_tool_result_ids"), list)
+            else latest_gpu1_tool_result_state.get("unconsumed_ids")
+            if isinstance(latest_gpu1_tool_result_state.get("unconsumed_ids"), list)
+            else list(getattr(owner, "gpu1_unconsumed_tool_result_ids", []) or [])
+        ),
+        "gpu1_tool_result_blocker": str(
+            (latest_proposal or {}).get("gpu1_tool_result_blocker")
+            or latest_gpu1_tool_result_state.get("blocker")
+            or ""
+        ),
+        "tool_result_written_count": safe_int(
+            (latest_proposal or {}).get("tool_result_written_count")
+        ),
+        "tool_result_consumed_by_gpu1_count": safe_int(
+            (latest_proposal or {}).get("tool_result_consumed_by_gpu1_count")
         ),
         "latest_final_product_diff_present": bool(
             latest_code_file_read_contract.get("diff_present")

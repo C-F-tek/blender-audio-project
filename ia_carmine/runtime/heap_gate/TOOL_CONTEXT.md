@@ -76,7 +76,7 @@ CPU/helper -> broker, validator, lab, composer
 - `provider_revision_count` is positive evidence only. It must not be compared to an effective max to cut GPU1 recursion.
 - Do not weaken gates to make a run pass.
 - Do not convert all context files into patch targets.
-- `generic_write` is a broker evidence tool for refined request/action-plan turns. A GPU1/GPU0/NPU no-tool capture or call forces a later GPU1 revision; after three consumed refinements it can close as `generic_write_refined_product`, including code content, but it still cannot claim patch application or source writes.
+- `generic_write` is a broker evidence/refinement tool for request/action-plan turns. A GPU1/GPU0/NPU no-tool capture or call forces a later GPU1 revision; it never closes as the final product by itself. The product must still pass through a GPU1 `FINAL_PRODUCT_DELTA`; `generic_write` cannot claim patch application or source writes.
 
 ## Expected downstream outputs
 

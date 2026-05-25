@@ -27,6 +27,13 @@ from .inventory_builders import (
 from .runtime_builders import (
     analyze_code_product_artifact,
     generic_write,
+    repo_find_fd,
+    repo_json_query_jq,
+    repo_powershell_readonly,
+    repo_search_git_grep,
+    repo_search_rg,
+    repo_toolchain_command,
+    repo_toolchain_probe,
     run_heap_code_execution_matrix,
     run_heap_virtual_dev_environment,
     runtime_file_window,
@@ -132,6 +139,7 @@ VIRTUAL_DEV_ENVIRONMENT_SCHEMA = tool_input_schema(
 
 RUNTIME_FILE_REFS_SCHEMA = tool_input_schema(
     {
+        "path": STRING_OR_ARRAY,
         "text": STRING_OR_ARRAY,
         "text_file": STRING_OR_ARRAY,
         "target_file": STRING_OR_ARRAY,
@@ -164,6 +172,76 @@ RUNTIME_SQLITE_MEMORY_SCHEMA = tool_input_schema(
         "limit": NUMBER_OR_STRING,
         "confirm": STRING,
         "allow_persistent_write": BOOL_OR_STRING,
+    }
+)
+
+REPO_TOOLCHAIN_PROBE_SCHEMA = tool_input_schema(
+    {
+        "tool": STRING_OR_ARRAY,
+        "tools": STRING_OR_ARRAY,
+        "timeout_seconds": NUMBER_OR_STRING,
+    }
+)
+
+REPO_TOOLCHAIN_COMMAND_SCHEMA = tool_input_schema(
+    {
+        "command": STRING,
+        "path": STRING,
+        "target": STRING,
+        "configuration": STRING,
+        "timeout_seconds": NUMBER_OR_STRING,
+    },
+    required=("command",),
+)
+
+REPO_SEARCH_SCHEMA = tool_input_schema(
+    {
+        "query": STRING,
+        "pattern": STRING,
+        "path": STRING_OR_ARRAY,
+        "glob": STRING_OR_ARRAY,
+        "max_results": NUMBER_OR_STRING,
+        "max_count": NUMBER_OR_STRING,
+        "context": NUMBER_OR_STRING,
+        "ignore_case": BOOL_OR_STRING,
+        "fixed_strings": BOOL_OR_STRING,
+        "hidden": BOOL_OR_STRING,
+        "timeout_seconds": NUMBER_OR_STRING,
+    }
+)
+
+REPO_FIND_FD_SCHEMA = tool_input_schema(
+    {
+        "query": STRING,
+        "pattern": STRING,
+        "path": STRING,
+        "extension": STRING_OR_ARRAY,
+        "max_results": NUMBER_OR_STRING,
+        "hidden": BOOL_OR_STRING,
+        "timeout_seconds": NUMBER_OR_STRING,
+    }
+)
+
+REPO_JSON_QUERY_JQ_SCHEMA = tool_input_schema(
+    {
+        "path": STRING,
+        "query": STRING,
+        "filter": STRING,
+        "timeout_seconds": NUMBER_OR_STRING,
+    },
+    required=("path",),
+)
+
+REPO_POWERSHELL_READONLY_SCHEMA = tool_input_schema(
+    {
+        "operation": STRING,
+        "path": STRING,
+        "pattern": STRING,
+        "filter": STRING,
+        "max_results": NUMBER_OR_STRING,
+        "recurse": BOOL_OR_STRING,
+        "simple_match": BOOL_OR_STRING,
+        "timeout_seconds": NUMBER_OR_STRING,
     }
 )
 
@@ -323,6 +401,84 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         builder=runtime_sqlite_memory,
         input_schema=RUNTIME_SQLITE_MEMORY_SCHEMA,
     ),
+    "repo_toolchain_probe": ToolSpec(
+        name="repo_toolchain_probe",
+        description="Probe concrete local tools available to the repository: rg, fd, jq, PowerShell, dotnet, msbuild, ninja and VS Code CLI.",
+        allowed_args=("tool", "tools", "timeout_seconds"),
+        builder=repo_toolchain_probe,
+        input_schema=REPO_TOOLCHAIN_PROBE_SCHEMA,
+    ),
+    "repo_toolchain_command": ToolSpec(
+        name="repo_toolchain_command",
+        description="Run allowlisted concrete toolchain commands only: dotnet_info/build/test, msbuild_version, ninja_version/build, code_version.",
+        allowed_args=("command", "path", "target", "configuration", "timeout_seconds"),
+        builder=repo_toolchain_command,
+        input_schema=REPO_TOOLCHAIN_COMMAND_SCHEMA,
+    ),
+    "repo_search_rg": ToolSpec(
+        name="repo_search_rg",
+        description="Search repository text through ripgrep with bounded file-backed output.",
+        allowed_args=(
+            "query",
+            "pattern",
+            "path",
+            "glob",
+            "max_results",
+            "max_count",
+            "context",
+            "ignore_case",
+            "fixed_strings",
+            "hidden",
+            "timeout_seconds",
+        ),
+        builder=repo_search_rg,
+        input_schema=REPO_SEARCH_SCHEMA,
+    ),
+    "repo_search_git_grep": ToolSpec(
+        name="repo_search_git_grep",
+        description="Search tracked repository text through git grep with bounded file-backed output.",
+        allowed_args=(
+            "query",
+            "pattern",
+            "path",
+            "max_results",
+            "ignore_case",
+            "fixed_strings",
+            "timeout_seconds",
+        ),
+        builder=repo_search_git_grep,
+        input_schema=REPO_SEARCH_SCHEMA,
+    ),
+    "repo_find_fd": ToolSpec(
+        name="repo_find_fd",
+        description="Discover repository files through fd with bounded file-backed output.",
+        allowed_args=("query", "pattern", "path", "extension", "max_results", "hidden", "timeout_seconds"),
+        builder=repo_find_fd,
+        input_schema=REPO_FIND_FD_SCHEMA,
+    ),
+    "repo_json_query_jq": ToolSpec(
+        name="repo_json_query_jq",
+        description="Query repository JSON artifacts/files through jq with bounded file-backed output.",
+        allowed_args=("path", "query", "filter", "timeout_seconds"),
+        builder=repo_json_query_jq,
+        input_schema=REPO_JSON_QUERY_JQ_SCHEMA,
+    ),
+    "repo_powershell_readonly": ToolSpec(
+        name="repo_powershell_readonly",
+        description="Run read-only PowerShell Get-ChildItem or Select-String over repo paths; no arbitrary shell command.",
+        allowed_args=(
+            "operation",
+            "path",
+            "pattern",
+            "filter",
+            "max_results",
+            "recurse",
+            "simple_match",
+            "timeout_seconds",
+        ),
+        builder=repo_powershell_readonly,
+        input_schema=REPO_POWERSHELL_READONLY_SCHEMA,
+    ),
     "run_heap_code_execution_matrix": ToolSpec(
         name="run_heap_code_execution_matrix",
         description="Generate and execute a guarded compile/test/diff matrix for concrete heap code proposals.",
@@ -398,6 +554,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         name="runtime_file_refs",
         description="Resolve provider/operator file refs into local patchable targets, validation refs and rejected artifact refs.",
         allowed_args=(
+            "path",
             "text",
             "text_file",
             "target_file",

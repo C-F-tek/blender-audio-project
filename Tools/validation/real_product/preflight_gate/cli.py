@@ -215,6 +215,10 @@ def main() -> int:
         help="Acknowledge this smoke is downstream verification, not a product entrypoint.",
     )
     parser.add_argument("--provider-model", default="qwen3-coder:latest")
+    parser.add_argument("--provider-base-url", default="http://127.0.0.1:11434")
+    parser.add_argument("--provider-num-ctx", type=int, default=8192)
+    parser.add_argument("--provider-max-new-tokens", type=int, default=700)
+    parser.add_argument("--gpu1-native-tool-loop-preflight", action="store_true")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -286,6 +290,16 @@ def main() -> int:
             "heap_provider_invocation_contract",
             "Tools/validation/heap_provider/invocation_contract_smoke/cli.py",
         ),
+        *(
+            [
+                (
+                    "gpu1_native_tool_loop_preflight",
+                    "Tools/validation/heap_runtime/gpu1_native_tool_loop_preflight/cli.py",
+                )
+            ]
+            if args.gpu1_native_tool_loop_preflight
+            else []
+        ),
         (
             heap_gate_step_name,
             "Tools/validation/heap_runtime/completeness_gate_smoke/cli.py",
@@ -338,6 +352,19 @@ def main() -> int:
             extra_args = []
             if name == "heap_runtime_completeness_gate_complete":
                 extra_args.extend(["--provider-model", args.provider_model])
+            if name == "gpu1_native_tool_loop_preflight":
+                extra_args.extend(
+                    [
+                        "--model",
+                        args.provider_model,
+                        "--base-url",
+                        args.provider_base_url,
+                        "--num-ctx",
+                        str(args.provider_num_ctx),
+                        "--max-new-tokens",
+                        str(args.provider_max_new_tokens),
+                    ]
+                )
             step = run_step(repo_root, name, script, args.timeout_seconds, extra_args)
         steps.append(step)
         if not step.get("passed"):
@@ -349,7 +376,7 @@ def main() -> int:
     )
     if args.complete_provider_smoke and not provider_execution_performed:
         errors.append("complete provider smoke requested but no provider execution was observed")
-    if not args.complete_provider_smoke:
+    if not args.complete_provider_smoke and not args.gpu1_native_tool_loop_preflight:
         warnings.append(
             "preflight is contract/static coverage only; it is not complete provider smoke evidence"
         )
@@ -367,6 +394,9 @@ def main() -> int:
         "passed": not failed_steps and not errors,
         "preflight_only": not args.complete_provider_smoke,
         "complete_provider_smoke_performed": bool(args.complete_provider_smoke),
+        "gpu1_native_tool_loop_preflight_performed": bool(
+            args.gpu1_native_tool_loop_preflight
+        ),
         "product_entry_allowed": not args.complete_provider_smoke
         or args.downstream_verification,
         "provider_execution_performed": provider_execution_performed,

@@ -46,6 +46,10 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     generic_ready["quality_output_passed"] = False
     generic_ready["latest_proposal_quality_passed"] = False
     generic_ready["latest_proposal_reject_reason"] = "response_file_reference_quality failed"
+    generic_ready["latest_final_product_delta_valid"] = False
+    generic_ready["latest_final_product_protocol_errors"] = [
+        "generic_write_requires_later_gpu1_final_product_delta"
+    ]
     generic_ready["provider_revision_count"] = 3
     generic_ready["latest_gpu0_review_decision"] = "refine_required"
     generic_ready["latest_gpu0_role_decision"] = "refine_once"
@@ -393,8 +397,8 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     errors: list[str] = []
     if ok_errors:
         errors.append("ready metric set produced terminal errors")
-    if generic_errors:
-        errors.append("generic_write three-refinement product produced terminal errors")
+    if not any("gpu1_final_product_delta_missing" in error for error in generic_errors):
+        errors.append("generic_write evidence must require a later GPU1 FINAL_PRODUCT_DELTA")
     if not any("cannot claim patch application" in error for error in generic_claims_patch_errors):
         errors.append("generic_write product must reject fake patch application claims")
     if not any("cannot claim source writes" in error for error in generic_claims_source_errors):
@@ -535,7 +539,7 @@ def run_smoke(repo_root: Path) -> dict[str, Any]:
     if broken_counters.get("product_acceptance_blocker_increment") < 1:
         errors.append("ready matrix failure must increment product acceptance blocker")
     expected_negative_groups = (
-        generic_claims_patch_errors, generic_claims_source_errors, gpu0_followup_errors,
+        generic_errors, generic_claims_patch_errors, generic_claims_source_errors, gpu0_followup_errors,
         npu_followup_errors, generic_capture_failed_errors, context_invalid_errors,
         gpu0_schema_invalid_errors, gpu0_free_text_decision_errors, gpu1_packet_missing_errors,
         gpu0_wrong_packet_errors, gpu0_stale_packet_errors, gpu0_missing_review_errors,

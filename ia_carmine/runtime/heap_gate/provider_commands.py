@@ -45,9 +45,10 @@ class RuntimeGateProviderCommandsMixin:
                 payload.get("native_tool_loop_performed")
             )
             calls = payload.get("tool_calls") if isinstance(payload.get("tool_calls"), list) else []
+            model = str(payload.get("selected_model") or payload.get("model") or report_data.get("selected_model") or "")
             for call in calls:
                 if isinstance(call, dict):
-                    if is_api_native_tool_call(call, lane=lane):
+                    if is_api_native_tool_call(call, lane=lane, model=model):
                         tool_calls.append(call)
                     else:
                         rejected_non_native_tool_calls.append(
@@ -196,6 +197,7 @@ class RuntimeGateProviderCommandsMixin:
                         "provider_native_tool_api_supported",
                         "provider_native_tool_api_error",
                         "provider_native_tool_api_attempt_error",
+                        "provider_native_tool_api_unavailable_for_resume",
                         "provider_native_tool_api_unavailable",
                         "provider_native_tool_api_attempt_failed",
                         "provider_native_tool_call_required_unmet",
@@ -228,6 +230,12 @@ class RuntimeGateProviderCommandsMixin:
                         "provider_output_complete",
                         "response_likely_incomplete",
                         "prompt_attempts",
+                        "assistant_message",
+                        "chat_history_ref",
+                        "chat_history_message_count",
+                        "gpu1_tool_loop_subturn",
+                        "gpu1_waiting_for_tool_result",
+                        "gpu1_tool_loop_closed",
                         "eval_count",
                         "prompt_eval_count",
                     ):
@@ -249,10 +257,16 @@ class RuntimeGateProviderCommandsMixin:
             report_data["provider_rejection_reason"] = reason
             report_data["provider_work_verified"] = False
             report_data["provider_role_counted"] = False
-        elif report_data.get("provider_native_tool_api_unavailable"):
+        elif report_data.get("provider_native_tool_api_unavailable") or report_data.get(
+            "provider_native_tool_api_unavailable_for_resume"
+        ):
             reason = (
                 str(report_data.get("provider_rejection_reason") or "").strip()
-                or "provider_native_tool_api_unavailable"
+                or (
+                    "provider_native_tool_api_unavailable_for_resume"
+                    if report_data.get("provider_native_tool_api_unavailable_for_resume")
+                    else "provider_native_tool_api_unavailable"
+                )
             )
             errors.append(reason)
             report_data["errors"] = errors
@@ -366,6 +380,12 @@ class RuntimeGateProviderCommandsMixin:
             "response_text_tail_chars": report_data.get("response_text_tail_chars", min(len(response_text), 4000)),
             "response_text_full_text_in_json": False,
             "tool_calls": tool_calls,
+            "assistant_message": report_data.get("assistant_message") or {},
+            "chat_history_ref": report_data.get("chat_history_ref") or {},
+            "chat_history_message_count": report_data.get("chat_history_message_count"),
+            "gpu1_tool_loop_subturn": report_data.get("gpu1_tool_loop_subturn"),
+            "gpu1_waiting_for_tool_result": report_data.get("gpu1_waiting_for_tool_result"),
+            "gpu1_tool_loop_closed": report_data.get("gpu1_tool_loop_closed"),
             "textual_tool_calls": textual_tool_calls,
             "rejected_non_native_tool_calls": rejected_non_native_tool_calls,
             "native_tool_loop_requested": native_tool_loop_requested,
@@ -391,6 +411,9 @@ class RuntimeGateProviderCommandsMixin:
             ),
             "provider_native_tool_api_attempt_error": report_data.get(
                 "provider_native_tool_api_attempt_error"
+            ),
+            "provider_native_tool_api_unavailable_for_resume": report_data.get(
+                "provider_native_tool_api_unavailable_for_resume"
             ),
             "provider_native_tool_api_unavailable": report_data.get(
                 "provider_native_tool_api_unavailable"

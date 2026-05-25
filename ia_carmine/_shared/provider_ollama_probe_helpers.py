@@ -167,10 +167,12 @@ def parsed_contract_fields(
         or text
         or ""
     ).strip()
-    textual_tool_calls = parsed_json.get("tool_calls") or parsed_json.get("TOOL_CALLS") or []
-    if not isinstance(textual_tool_calls, list):
-        textual_tool_calls = []
-    if not textual_tool_calls and parsed_json.get("name"):
+    textual_tool_calls: list[Any] = []
+    if not native_tool_calls:
+        textual_tool_calls = parsed_json.get("tool_calls") or parsed_json.get("TOOL_CALLS") or []
+        if not isinstance(textual_tool_calls, list):
+            textual_tool_calls = []
+    if not textual_tool_calls and not native_tool_calls and parsed_json.get("name"):
         textual_tool_calls = [{
             "tool": str(parsed_json.get("name")),
             "args": parsed_json.get("arguments")

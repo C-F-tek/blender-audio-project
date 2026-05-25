@@ -203,8 +203,6 @@ def run_arbiter_step(owner: Any, round_id: int, events: list[dict[str, Any]]) ->
 
 
 def _product_kind(ready: bool, generic_ready: bool, closure_quorum_status: str) -> str:
-    if ready and generic_ready:
-        return "generic_write_refined_product"
     if ready:
         return "final_product_approved"
     if closure_quorum_status == "blocked_continuation_ready":

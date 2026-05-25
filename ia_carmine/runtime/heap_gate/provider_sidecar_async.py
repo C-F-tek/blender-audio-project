@@ -89,6 +89,16 @@ def gpu1_packet_reviewable(
     packet: dict[str, Any],
     primary_status: dict[str, Any],
 ) -> tuple[bool, str]:
+    if (
+        packet.get("gpu1_resume_after_tool_result_required") is True
+        or primary_status.get("gpu1_resume_after_tool_result_required") is True
+    ):
+        blocker = str(
+            packet.get("gpu1_tool_result_blocker")
+            or primary_status.get("gpu1_tool_result_blocker")
+            or "gpu1_tool_result_pending"
+        )
+        return False, f"gpu1_packet_not_reviewable:{blocker}"
     if not gpu1_decision_packet_valid(packet):
         errors = packet.get("packet_errors") if isinstance(packet.get("packet_errors"), list) else []
         reason = ",".join(str(item) for item in errors if str(item).strip())

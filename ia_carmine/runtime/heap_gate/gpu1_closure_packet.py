@@ -71,12 +71,15 @@ def build_gpu1_closure_decision_packet(
     consumed_gpu0_block_id: str = "",
     consumed_gpu0_block_ids: list[Any] | tuple[Any, ...] | None = None,
     consumed_npu_block_ids: list[Any] | tuple[Any, ...] | None = None,
+    gpu1_tool_result_consumption: dict[str, Any] | None = None,
+    gpu1_consumed_tool_result_ids: list[Any] | tuple[Any, ...] | None = None,
     response_text: str = "",
     source: str = "",
 ) -> dict[str, Any]:
     decision = normalize_gpu1_decision(gpu1_decision)
     if decision == GPU1_DECISION_MISSING:
         decision = ""
+    tool_state = gpu1_tool_result_consumption if isinstance(gpu1_tool_result_consumption, dict) else {}
     payload = {
         "schema_version": 1,
         "kind": GPU1_PACKET_KIND,
@@ -98,6 +101,24 @@ def build_gpu1_closure_decision_packet(
         "consumed_gpu0_block_id": str(consumed_gpu0_block_id or ""),
         "consumed_gpu0_block_ids": _unique_strings(consumed_gpu0_block_ids),
         "consumed_npu_block_ids": _unique_strings(consumed_npu_block_ids),
+        "gpu1_waiting_for_tool_result": bool(tool_state.get("gpu1_waiting_for_tool_result")),
+        "gpu1_requested_tool_call_id": str(tool_state.get("gpu1_requested_tool_call_id") or ""),
+        "gpu1_requested_tool_name": str(tool_state.get("gpu1_requested_tool_name") or ""),
+        "gpu1_resume_after_tool_result_required": bool(
+            tool_state.get("gpu1_resume_after_tool_result_required")
+        ),
+        "gpu1_consumed_tool_result_ids": _unique_strings(
+            gpu1_consumed_tool_result_ids
+            if gpu1_consumed_tool_result_ids is not None
+            else tool_state.get("gpu1_consumed_tool_result_ids")
+        ),
+        "gpu1_pending_tool_result_ids": _unique_strings(
+            tool_state.get("gpu1_pending_tool_result_ids")
+        ),
+        "gpu1_unconsumed_tool_result_ids": _unique_strings(
+            tool_state.get("gpu1_unconsumed_tool_result_ids")
+        ),
+        "gpu1_tool_result_blocker": str(tool_state.get("gpu1_tool_result_blocker") or ""),
         "response_text_sha256": _sha256(response_text),
         "source": str(source or ""),
     }
@@ -163,6 +184,10 @@ def packet_from_report(
         exit_decision=str(report.get("exit_decision") or ""),
         pointer_action=str(report.get("pointer_action") or ""),
         refines_block_id=str(report.get("refines_block_id") or ""),
+        gpu1_tool_result_consumption=report,
+        gpu1_consumed_tool_result_ids=report.get("gpu1_consumed_tool_result_ids")
+        if isinstance(report.get("gpu1_consumed_tool_result_ids"), list)
+        else [],
         response_text=text,
         source=source or "provider_report",
     )
@@ -197,6 +222,8 @@ def gpu1_decision_packet_errors(packet: dict[str, Any] | None) -> list[str]:
         errors.append("gpu1_revision_missing")
     if packet.get("generic_write_used_as_decision") is True:
         errors.append("generic_write_used_as_gpu1_decision")
+    if packet.get("gpu1_resume_after_tool_result_required") is True:
+        errors.append(str(packet.get("gpu1_tool_result_blocker") or "gpu1_tool_result_pending"))
     return errors
 
 
@@ -219,6 +246,13 @@ def gpu1_packet_fingerprint(packet: dict[str, Any] | None) -> str:
         "consumed_gpu0_block_id": str(packet.get("consumed_gpu0_block_id") or ""),
         "consumed_gpu0_block_ids": _unique_strings(packet.get("consumed_gpu0_block_ids")),
         "consumed_npu_block_ids": _unique_strings(packet.get("consumed_npu_block_ids")),
+        "gpu1_resume_after_tool_result_required": packet.get("gpu1_resume_after_tool_result_required") is True,
+        "gpu1_requested_tool_call_id": str(packet.get("gpu1_requested_tool_call_id") or ""),
+        "gpu1_requested_tool_name": str(packet.get("gpu1_requested_tool_name") or ""),
+        "gpu1_consumed_tool_result_ids": _unique_strings(packet.get("gpu1_consumed_tool_result_ids")),
+        "gpu1_pending_tool_result_ids": _unique_strings(packet.get("gpu1_pending_tool_result_ids")),
+        "gpu1_unconsumed_tool_result_ids": _unique_strings(packet.get("gpu1_unconsumed_tool_result_ids")),
+        "gpu1_tool_result_blocker": str(packet.get("gpu1_tool_result_blocker") or ""),
         "response_text_sha256": str(packet.get("response_text_sha256") or ""),
         "source": str(packet.get("source") or ""),
     }

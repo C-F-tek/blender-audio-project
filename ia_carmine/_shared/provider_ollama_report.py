@@ -54,14 +54,21 @@ _REPORT_KEYS = (
     "provider_native_tool_api_supported",
     "provider_native_tool_api_error",
     "provider_native_tool_api_attempt_error",
+    "provider_native_tool_api_unavailable_for_resume",
     "provider_native_tool_api_unavailable",
     "provider_native_tool_api_attempt_failed",
     "provider_native_tool_call_required_unmet",
+    "provider_textual_tool_call_not_executable",
     "native_tool_decision_prompted",
     "native_classification",
     "errors",
     "warnings",
     "raw_chat_response",
+    "assistant_message",
+    "chat_history_ref",
+    "chat_history_message_count",
+    "gpu1_tool_loop_subturn",
+    "native_tool_chat_loop_mode",
     "target_files",
     "validation_commands",
     "rejected_validation_refs",
@@ -170,7 +177,18 @@ def build_ollama_probe_report(ctx: dict[str, Any]) -> dict[str, Any]:
         "response_likely_incomplete": ctx["response_likely_incomplete"],
         "proposal_requires_refinement": ctx["response_likely_incomplete"],
         "tool_calls": native_tool_calls,
+        "assistant_message": ctx.get("assistant_message") or {},
+        "chat_history_ref": ctx.get("chat_history_ref") or {},
+        "chat_history_message_count": ctx.get("chat_history_message_count") or 0,
+        "gpu1_tool_loop_subturn": ctx.get("gpu1_tool_loop_subturn") or 0,
+        "gpu1_native_tool_chat_loop": bool(ctx.get("native_tool_chat_loop_mode")),
+        "gpu1_waiting_for_tool_result": bool(native_tool_calls),
+        "gpu1_tool_loop_closed": not bool(native_tool_calls),
         "textual_tool_calls": ctx["textual_tool_calls"],
+        "provider_textual_tool_call_not_executable": bool(
+            ctx.get("provider_textual_tool_call_not_executable")
+        ),
+        "provider_textual_tool_call_count": len(ctx["textual_tool_calls"]),
         "native_tool_loop_provider": "ollama",
         "native_tool_loop_requested": ctx["native_tool_loop_requested"],
         "native_tool_loop_relevant": ctx["native_tool_loop_relevant"],
@@ -185,6 +203,9 @@ def build_ollama_probe_report(ctx: dict[str, Any]) -> dict[str, Any]:
         "provider_native_tool_api_attempt_error": ctx[
             "provider_native_tool_api_attempt_error"
         ],
+        "provider_native_tool_api_unavailable_for_resume": bool(
+            ctx.get("provider_native_tool_api_unavailable_for_resume")
+        ),
         "provider_native_tool_api_unavailable": ctx["provider_native_tool_api_unavailable"],
         "provider_native_tool_api_attempt_failed": ctx[
             "provider_native_tool_api_attempt_failed"

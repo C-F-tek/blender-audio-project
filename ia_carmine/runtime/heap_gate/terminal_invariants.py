@@ -90,6 +90,8 @@ def _classify_message(message: str, metrics: dict[str, Any]) -> dict[str, Any]:
             "gpu0_review_invalid_requires_gpu1_retry",
             "gpu1_recovery_revision_missing_after_sidecar_join",
             "rejected GPU1 proposal did not trigger mandatory provider revision retry",
+            "gpu1_tool_result_pending",
+            "gpu1_requested_tool_result_not_consumed",
         )
     ):
         category = RECOVERY_BLOCKER
@@ -286,10 +288,7 @@ def _evaluate_terminal_invariant_messages(
             errors.append("provider product run requires GPU1 proposal/pointer iteration artifacts")
         if soft_close_sampled_exit:
             return errors
-        if (
-            metrics.get("latest_final_product_delta_valid") is not True
-            and not generic_product_ready
-        ):
+        if metrics.get("latest_final_product_delta_valid") is not True:
             final_product_protocol_errors = [
                 str(item)
                 for item in (metrics.get("latest_final_product_protocol_errors") or [])
@@ -301,10 +300,15 @@ def _evaluate_terminal_invariant_messages(
             errors.append("gpu1_final_product_delta_missing" + (f": {detail}" if detail else ""))
             if "gpu1_blocked_not_allowed_as_final_product_delta" in final_product_protocol_errors:
                 errors.append("gpu1_blocked_not_allowed_as_final_product_delta")
+        if metrics.get("gpu1_resume_after_tool_result_required"):
+            blocker = str(
+                metrics.get("gpu1_tool_result_blocker")
+                or "gpu1_requested_tool_result_not_consumed"
+            )
+            errors.append(blocker)
         if (
             metrics.get("latest_final_product_requires_file_read")
             and metrics.get("latest_final_product_file_read_verified") is not True
-            and not generic_product_ready
         ):
             file_read_errors = [
                 str(item)
@@ -337,7 +341,6 @@ def _evaluate_terminal_invariant_messages(
                 )
         if (
             metrics.get("latest_final_product_pointer_protocol_operational") is not True
-            and not generic_product_ready
         ):
             errors.append("gpu1_pointer_protocol_not_operational")
         if (

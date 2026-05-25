@@ -56,6 +56,8 @@ def final_product_blockers(
     matrix: dict[str, Any],
     gate: dict[str, Any],
     text_product_ready: bool = False,
+    final_product_kind: str = "",
+    code_surface_required: bool = False,
     product_acceptance_passed: bool | None = None,
 ) -> list[str]:
     blockers: list[str] = []
@@ -89,11 +91,17 @@ def final_product_blockers(
         blockers.append("revision context has no linked NPU audit block")
     if not truthy(pointer.get("provider_execution_performed")):
         blockers.append("provider execution is not proven by verified pointer evidence")
-    if matrix and matrix.get("passed") is not True and not text_product_ready:
+    kind = str(final_product_kind or "").strip()
+    text_only_surface = text_product_ready and not code_surface_required and kind in {
+        "",
+        "text",
+        "text_product",
+    }
+    if matrix and matrix.get("passed") is not True and code_surface_required:
         blockers.append("code execution matrix did not pass")
     if not markdown_output.exists():
         blockers.append("final readable markdown was not written")
-    if text_product_ready:
+    if text_only_surface:
         return blockers
     if final_document_status in {"DIAGNOSTIC_REVIEW_READY", "NO_APPLICABLE_CODE_PRODUCT"}:
         blockers.append(f"final document status is not a real code product: {final_document_status}")

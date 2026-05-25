@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from ia_carmine._shared.file_backed_transport import report_text_required_full
 from ia_carmine._shared.provider_work_rejections import looks_like_handshake, normalize_bool
+from ia_carmine.runtime.heap_gate.broker_result_validation import broker_result_passed
 from ia_carmine.runtime.heap_gate.generic_write_followup import failed_generic_write_results
+from ia_carmine.runtime.heap_gate.final_product_delta_protocol import (
+    code_file_read_contract,
+    final_product_protocol,
+)
+from ia_carmine.runtime.heap_gate.gpu1_tool_result_consumption import (
+    gpu1_tool_result_consumption_state,
+)
 from ia_carmine.runtime.heap_gate.runtime_common import Any, Path, safe_int
 
 
@@ -51,20 +59,49 @@ def gpu1_primary_evidence_status(
         for payload in failed_generic_write_results(events, owner=owner)
         if _same_gpu1_revision(payload, report)
     ]
-    native_passed = [
-        payload
-        for event in events
-        if event.get("event_type") == "broker_result"
-        for payload in [event.get("payload") if isinstance(event.get("payload"), dict) else {}]
-        if _provider_native_tool_result_valid(payload, report)
+    tool_state = (
+        gpu1_tool_result_consumption_state(owner, events, report=report)
+        if owner is not None
+        else {}
+    )
+    response_text = _report_text(owner, report) if owner is not None else ""
+    consumed_ids = [
+        str(item)
+        for item in (tool_state.get("gpu1_consumed_tool_result_ids") or [])
+        if str(item).strip()
     ]
-    source = "native_tool_result" if native_passed else ""
+    consumed_passed_ids = [
+        str(item)
+        for item in (tool_state.get("gpu1_consumed_passed_tool_result_ids") or [])
+        if str(item).strip()
+    ]
+    source = "native_tool_result_consumed_by_gpu1" if consumed_passed_ids else ""
+    if tool_state.get("gpu1_resume_after_tool_result_required"):
+        source = ""
+    elif owner is not None and response_text:
+        protocol = final_product_protocol(response_text)
+        code_read = code_file_read_contract(
+            owner,
+            response_text=response_text,
+            protocol=protocol,
+            target_files=[
+                str(item)
+                for item in (report.get("target_files") or [])
+                if str(item).strip()
+            ],
+            events=events,
+        )
+        if protocol.get("passed") and (
+            not code_read.get("required") or code_read.get("verified")
+        ):
+            source = source or "gpu1_final_product_delta"
     return {
         "gpu1_primary_evidence_valid": bool(source),
         "gpu1_primary_evidence_source": source,
         "leader_source": source or "none",
         "gpu1_generic_write_capture_valid": False,
         "gpu1_generic_write_capture_failed": bool(generic_failed),
+        **tool_state,
     }
 
 
@@ -88,23 +125,6 @@ def provider_overlap_seconds(
         )
         best = max(best, overlap)
     return round(max(0.0, best), 6)
-
-
-def _broker_result_passed(payload: dict[str, Any]) -> bool:
-    errors = payload.get("errors") if isinstance(payload.get("errors"), list) else []
-    summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
-    returncode = payload.get("returncode")
-    executed = payload.get("executed")
-    execution_ok = (
-        (returncode is not None and safe_int(returncode, default=1) == 0)
-        or executed is True
-    )
-    return bool(
-        not payload.get("blocked")
-        and not errors
-        and execution_ok
-        and summary.get("passed") is not False
-    )
 
 
 def _same_gpu1_revision(payload: dict[str, Any], report: dict[str, Any]) -> bool:
@@ -136,4 +156,4 @@ def _provider_native_tool_result_valid(payload: dict[str, Any], report: dict[str
         report_id = str(report.get(key) or "").strip()
         if report_id and payload_id != report_id:
             return False
-    return _broker_result_passed(payload)
+    return broker_result_passed(payload)

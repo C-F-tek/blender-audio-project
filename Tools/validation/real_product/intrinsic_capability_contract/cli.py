@@ -93,9 +93,10 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(runner, "operator_product_lab_summary.json")
         and has(final_product, "render_code_product_section"),
         "product_readiness": has(runner, "launcher_passed")
-        and has(runner, "CODE_PRODUCT_FULL_PATCH.md")
         and has(runner, "code_product_metrics")
-        and has(final_readable_product, "real_code_product_ready")
+        and has(final_readable_product, "final_product_surface_ready")
+        and has(final_readable_product, "text_product_ready")
+        and has(final_readable_product, "final_product_delta_applied_count")
         and has(final_readable_product, "final_product_blockers")
         and has(final_readable_product, "truncation_marker")
         and has(artifact_intake, "--apply-safe"),
@@ -104,7 +105,7 @@ def build_report(repo_root: Path) -> dict[str, Any]:
         and has(prepare, "draft"),
         "final_pr_product": has(runner, "code_product_metrics")
         and has(runner, "review_report")
-        and has(runner, "diff_git_blocks"),
+        and has(runner, "review_required"),
     }
     order = [
         "task_md_input",
