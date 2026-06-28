@@ -1,0 +1,2106 @@
+70265d95 HEAD@{0}: checkout: moving from master to codex/urgent-run-unica-evidence-manifest
+70265d95 HEAD@{1}: pull --ff-only origin master: Fast-forward
+e941ca86 HEAD@{2}: checkout: moving from master to master
+e941ca86 HEAD@{3}: reset: moving to origin/master
+4ef07a90 HEAD@{4}: checkout: moving from master to master
+4ef07a90 HEAD@{5}: reset: moving to origin/master
+4ef07a90 HEAD@{6}: checkout: moving from local/pr300-day0-baseline to master
+4ef07a90 HEAD@{7}: reset: moving to 4ef07a90a07853a04b326567254991321b2b8df4
+4ef07a90 HEAD@{8}: checkout: moving from codex/code-product-intake to local/pr300-day0-baseline
+2b5b3741 HEAD@{9}: reset: moving to origin/codex/code-product-intake
+2b5b3741 HEAD@{10}: checkout: moving from 4ef07a90a07853a04b326567254991321b2b8df4 to codex/code-product-intake
+4ef07a90 HEAD@{11}: checkout: moving from codex/code-product-intake to 4ef07a90a07853a04b326567254991321b2b8df4
+2b5b3741 HEAD@{12}: reset: moving to origin/codex/code-product-intake
+2b5b3741 HEAD@{13}: checkout: moving from codex/code-product-intake to codex/code-product-intake
+2b5b3741 HEAD@{14}: reset: moving to origin/codex/code-product-intake
+2b5b3741 HEAD@{15}: checkout: moving from codex/code-product-intake to codex/code-product-intake
+2b5b3741 HEAD@{16}: checkout: moving from codex/code-product-intake to codex/code-product-intake
+2b5b3741 HEAD@{17}: reset: moving to HEAD
+2b5b3741 HEAD@{18}: checkout: moving from codex/code-product-intake to codex/code-product-intake
+2b5b3741 HEAD@{19}: reset: moving to origin/codex/code-product-intake
+2b5b3741 HEAD@{20}: checkout: moving from codex/code-product-intake to codex/code-product-intake
+2b5b3741 HEAD@{21}: reset: moving to HEAD
+2b5b3741 HEAD@{22}: commit: add code product intake safe apply
+4ef07a90 HEAD@{23}: checkout: moving from master to codex/code-product-intake
+4ef07a90 HEAD@{24}: pull --ff-only origin master: Fast-forward
+c2b2b1c9 HEAD@{25}: checkout: moving from codex/day-0-app-foundation to master
+52845ff8 HEAD@{26}: commit: day 0 heap lab final product
+c2b2b1c9 HEAD@{27}: checkout: moving from master to codex/day-0-app-foundation
+c2b2b1c9 HEAD@{28}: checkout: moving from master to master
+c2b2b1c9 HEAD@{29}: checkout: moving from master to master
+c2b2b1c9 HEAD@{30}: merge refactor/heap-universo-moderate: Fast-forward
+6fdcd752 HEAD@{31}: pull --ff-only origin master: Fast-forward
+4c3ce1af HEAD@{32}: checkout: moving from refactor/heap-universo-moderate to master
+c2b2b1c9 HEAD@{33}: commit: chore: sync local work
+2278f9e9 HEAD@{34}: checkout: moving from codex/ollama-tool-gateway to refactor/heap-universo-moderate
+2278f9e9 HEAD@{35}: checkout: moving from codex/ollama-tool-gateway to codex/ollama-tool-gateway
+2278f9e9 HEAD@{36}: checkout: moving from codex/heap-universe-resume-docs-fixes to codex/ollama-tool-gateway
+ef634d90 HEAD@{37}: commit: fix(ai): detect terminal no-patchable revisions from guardrail flags
+79f8832b HEAD@{38}: commit: fix(ai): treat no-patchable heap revisions as terminal
+6a66eb12 HEAD@{39}: commit: fix(ai): sanitize non-concrete heap revision context
+78f946c1 HEAD@{40}: commit (cherry-pick): fix(ai): coerce invented-source heap proposals to no-patchable target
+a2bd167a HEAD@{41}: checkout: moving from codex/heap-universe-resume-docs-fixes to codex/heap-universe-resume-docs-fixes
+a2bd167a HEAD@{42}: checkout: moving from master to codex/heap-universe-resume-docs-fixes
+4c3ce1af HEAD@{43}: reset: moving to origin/master
+1a74e038 HEAD@{44}: checkout: moving from codex/heap-universe-resume-docs-fixes to master
+a2bd167a HEAD@{45}: cherry-pick: fix(ai): load heap events before provider peer review quality
+24196b2e HEAD@{46}: checkout: moving from master to codex/heap-universe-resume-docs-fixes
+1a74e038 HEAD@{47}: commit: fix(ai): load heap events before provider peer review quality
+4c3ce1af HEAD@{48}: checkout: moving from codex/heap-universe-resume-docs-fixes to master
+24196b2e HEAD@{49}: commit: fix(ai): treat rejected heap previews as negative examples
+5058ff36 HEAD@{50}: commit: fix(ai): constrain GPU1 proposals to verified source paths
+bf697cf0 HEAD@{51}: commit: fix(ai): pass startup raw context files through file list
+28b7765c HEAD@{52}: commit: fix(ai): pass startup raw context files through file list
+202c2cf7 HEAD@{53}: commit: fix(ai): pass heap startup request through files
+dc2cafd2 HEAD@{54}: commit: fix(ai): pass heap events into provider peer review
+562f4afd HEAD@{55}: commit: fix(ai): isolate heap revision symbol extraction text
+58a829c4 HEAD@{56}: checkout: moving from master to codex/heap-universe-resume-docs-fixes
+4c3ce1af HEAD@{57}: reset: moving to HEAD
+4c3ce1af HEAD@{58}: reset: moving to HEAD
+4c3ce1af HEAD@{59}: commit: fix(ai): align native heap revision prompt with command builder
+45354166 HEAD@{60}: pull --ff-only origin master: Fast-forward
+89ff9333 HEAD@{61}: pull --ff-only origin master: Fast-forward
+b61adf41 HEAD@{62}: pull --ff-only origin master: Fast-forward
+4f74f1c1 HEAD@{63}: pull --ff-only origin master: Fast-forward
+29e6883c HEAD@{64}: pull --ff-only origin master: Fast-forward
+2eb47917 HEAD@{65}: pull --ff-only origin master: Fast-forward
+c1734a4e HEAD@{66}: pull --ff-only origin master: Fast-forward
+94498011 HEAD@{67}: pull --ff-only origin master: Fast-forward
+5d0ff7c0 HEAD@{68}: pull --ff-only origin master: Fast-forward
+7f5f2492 HEAD@{69}: commit: fix(ai): preserve explicit provider workload execution
+6f5751a7 HEAD@{70}: pull --ff-only origin master: Fast-forward
+f7097c3a HEAD@{71}: pull --ff-only origin master: Fast-forward
+c370a67b HEAD@{72}: pull --ff-only origin master: Fast-forward
+f6244ea6 HEAD@{73}: commit: fix(ai): order heap startup context before snapshot
+173bf4a6 HEAD@{74}: commit: fix(ai): load startup task file into heap before providers
+7dce19e3 HEAD@{75}: commit: fix(ai): reuse startup reload scripts for full repo context scan
+debae363 HEAD@{76}: commit: fix(ai): make heap peers review GPU1 pointer deltas
+0b52134c HEAD@{77}: commit: fix(ai): make GPU1 use incremental heap pointer protocol
+04cde5cb HEAD@{78}: pull --ff-only origin master: Fast-forward
+485ddd06 HEAD@{79}: commit: fix(ai): run provider teamwork lanes concurrently
+b5979e74 HEAD@{80}: commit: fix(ai): feed GPU1 heap context through prompt files
+c25a4a9d HEAD@{81}: commit: fix(ai): decode oversized provider wrapper argv correctly
+b5c5f101 HEAD@{82}: commit: fix(ai): wrap oversized provider argv on Windows
+5e17eff1 HEAD@{83}: commit: fix(ai): seed semantic startup artifacts into heap gate
+ccd3959f HEAD@{84}: commit: fix(ai): force concrete delta after heap proposal veto
+0212b55b HEAD@{85}: commit: fix(ai): propagate provider execution into heap revision context
+3ccb3640 HEAD@{86}: commit: fix(ai): keep all provider lanes in external heap postrun
+753af025 HEAD@{87}: commit: fix(ai): preserve npu blocks in external heap postrun
+c21323a6 HEAD@{88}: commit: fix(ai): publish startup manifest broker results on broker lane
+1d5399d0 HEAD@{89}: commit: fix(ai): seed heap gate from startup reload manifest
+6c8ee363 HEAD@{90}: commit: fix(ai): forward heap max rounds into completeness gate
+087d246e HEAD@{91}: commit: fix(ai): enrich heap revision context ingress
+b5cb0fc8 HEAD@{92}: commit: fix(ai): keep cross-lane proposal veto inside heap loop
+19f35194 HEAD@{93}: pull --rebase origin master (finish): returning to refs/heads/master
+19f35194 HEAD@{94}: pull --rebase origin master (pick): fix(ai): sync long response documents json after copy
+f15480ca HEAD@{95}: pull --rebase origin master (start): checkout f15480cacc887587634eac4d9e739cfb02fc9ce7
+60d96db6 HEAD@{96}: commit: fix(ai): sync long response documents json after copy
+977760bf HEAD@{97}: pull --ff-only origin master: Fast-forward
+78fae95c HEAD@{98}: checkout: moving from master to master
+78fae95c HEAD@{99}: merge codex/external-heap-launcher-profiles: Fast-forward
+cb18efdb HEAD@{100}: checkout: moving from codex/external-heap-launcher-profiles to master
+78fae95c HEAD@{101}: checkout: moving from codex/external-heap-launcher-profiles to codex/external-heap-launcher-profiles
+78fae95c HEAD@{102}: pull --ff-only origin codex/external-heap-launcher-profiles: Fast-forward
+0a9c2597 HEAD@{103}: checkout: moving from codex/external-heap-launcher-profiles to codex/external-heap-launcher-profiles
+0a9c2597 HEAD@{104}: pull --ff-only origin codex/external-heap-launcher-profiles: Fast-forward
+011cfcd7 HEAD@{105}: checkout: moving from codex/external-heap-launcher-profiles to codex/external-heap-launcher-profiles
+011cfcd7 HEAD@{106}: pull --ff-only origin codex/external-heap-launcher-profiles: Fast-forward
+cf70037e HEAD@{107}: checkout: moving from codex/external-heap-launcher-profiles to codex/external-heap-launcher-profiles
+cf70037e HEAD@{108}: pull --ff-only origin codex/external-heap-launcher-profiles: Fast-forward
+7e7c7b92 HEAD@{109}: checkout: moving from codex/external-heap-launcher-profiles to codex/external-heap-launcher-profiles
+7e7c7b92 HEAD@{110}: pull --ff-only origin codex/external-heap-launcher-profiles: Fast-forward
+5226a425 HEAD@{111}: checkout: moving from codex/external-heap-launcher-profiles to codex/external-heap-launcher-profiles
+5226a425 HEAD@{112}: pull --ff-only origin codex/external-heap-launcher-profiles: Fast-forward
+65747030 HEAD@{113}: checkout: moving from codex/external-heap-launcher-profiles to codex/external-heap-launcher-profiles
+65747030 HEAD@{114}: checkout: moving from master to codex/external-heap-launcher-profiles
+cb18efdb HEAD@{115}: commit: fix(ai): wire external heap memory and causality
+bf24b795 HEAD@{116}: pull --ff-only origin master: Fast-forward
+d269a786 HEAD@{117}: checkout: moving from codex/heap-loop-problems-20260511 to master
+a8c510de HEAD@{118}: commit: fix(ai): adapt external heap preload reconciliation
+285e6190 HEAD@{119}: checkout: moving from master to codex/heap-loop-problems-20260511
+d269a786 HEAD@{120}: checkout: moving from master to master
+d269a786 HEAD@{121}: rebase (finish): returning to refs/heads/master
+d269a786 HEAD@{122}: rebase (pick): docs(ai): document standalone heap universe tool surface
+f708913f HEAD@{123}: rebase (start): checkout origin/master
+2f491913 HEAD@{124}: commit: docs(ai): document standalone heap universe tool surface
+63d3a75f HEAD@{125}: rebase (finish): returning to refs/heads/master
+63d3a75f HEAD@{126}: rebase (pick): fix(ai): reload heap context and refine proposals inside heap loop
+9e720a93 HEAD@{127}: rebase (start): checkout origin/master
+d86fd95f HEAD@{128}: commit: fix(ai): reload heap context and refine proposals inside heap loop
+dd9e3f84 HEAD@{129}: pull --ff-only origin master: Fast-forward
+ca6dd34d HEAD@{130}: pull --ff-only origin master: Fast-forward
+4646de31 HEAD@{131}: pull --ff-only origin master: Fast-forward
+944b55e9 HEAD@{132}: pull --ff-only origin master: Fast-forward
+cc6ac4cf HEAD@{133}: commit: fix(ai): harden heap proposal quality gate
+64147b59 HEAD@{134}: commit: feat(ai): anchor heap provider revisions and proposal chunks
+9e1c03bf HEAD@{135}: commit: feat(ai): broker runtime debug lab in heap product gate
+32eb28c3 HEAD@{136}: checkout: moving from master to master
+32eb28c3 HEAD@{137}: commit: fix(ai): harden heap runtime product readiness contract
+abb24fe0 HEAD@{138}: commit: docs(ai): restore required heap context contracts
+49c5d0dd HEAD@{139}: commit: feat(ai): reconnect historical context tools to heap heartbeat
+61696b38 HEAD@{140}: commit: feat(ai): make heap heartbeat peer responses tool-driven
+5d8b5ee7 HEAD@{141}: rebase (finish): returning to refs/heads/master
+5d8b5ee7 HEAD@{142}: rebase (pick): feat(ai): make heap heartbeat provider response cumulative
+2f103dde HEAD@{143}: rebase (pick): feat(ai): add real request heartbeat to heap runtime core
+87306e38 HEAD@{144}: rebase (start): checkout origin/master
+6b5b47a9 HEAD@{145}: commit: feat(ai): make heap heartbeat provider response cumulative
+a527ef05 HEAD@{146}: commit: feat(ai): add real request heartbeat to heap runtime core
+b427d5b2 HEAD@{147}: commit: fix(ai): use canonical provider python resolver in heap gate
+1cc866e2 HEAD@{148}: commit: fix(ai): enforce repo python resolver in heap completeness smoke
+cbf57586 HEAD@{149}: commit: fix(ai): enforce provider venv and runbook model in heap gate
+57fac55d HEAD@{150}: commit: fix(ai): align heap completeness preflight model with runbook
+c987cf89 HEAD@{151}: commit: feat(ai): validate full provider teamwork in heap runtime universe
+d2566d57 HEAD@{152}: commit: refactor(ai): rename heap runtime lab to completeness gate
+b2eb08e8 HEAD@{153}: commit: fix(ai): align runtime mesh profile with heap sqlite broker capability
+26cc873a HEAD@{154}: commit: fix(ai): keep heap completeness gate output inside run universe
+ca44459a HEAD@{155}: commit: refactor(ai): promote heap check to completeness gate
+c09274fb HEAD@{156}: revert: Revert "feat(ai): add heap-mediated provider team exchange lab"
+5e46740f HEAD@{157}: commit: feat(ai): add heap-mediated provider team exchange lab
+ad36a702 HEAD@{158}: commit: chore(ai): remove final legacy 0to10 wording
+4264def3 HEAD@{159}: commit: chore(ai): remove remaining legacy 0to10 references
+0a361e68 HEAD@{160}: commit: chore(ai): remove retired 0to10 legacy docs and evidence
+3957f426 HEAD@{161}: checkout: moving from master to master
+3957f426 HEAD@{162}: commit: refactor(ai): cut legacy residues from heap runtime product path
+752a9fce HEAD@{163}: commit: refactor(ai): replace 0to10 legacy lanes with heap runtime contracts
+fa2d5189 HEAD@{164}: checkout: moving from CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-123147 to master
+fa2d5189 HEAD@{165}: checkout: moving from master to CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-123147
+fa2d5189 HEAD@{166}: checkout: moving from master to master
+fa2d5189 HEAD@{167}: pull --ff-only origin master: Fast-forward
+ad0124a0 HEAD@{168}: checkout: moving from CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-122610 to master
+ad0124a0 HEAD@{169}: checkout: moving from master to CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-122610
+ad0124a0 HEAD@{170}: checkout: moving from master to master
+ad0124a0 HEAD@{171}: checkout: moving from CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-121451 to master
+bcc7dd4b HEAD@{172}: commit: fix(ai): defer official adapter concrete patch-spec gate
+ad0124a0 HEAD@{173}: checkout: moving from master to CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-121451
+ad0124a0 HEAD@{174}: checkout: moving from master to master
+ad0124a0 HEAD@{175}: commit: fix(ai): align real product preflight with startup runtime flow mesh
+b29b26d5 HEAD@{176}: commit: feat(ai): wire runtime flow map into full toolbox workflow
+1ceb37e6 HEAD@{177}: commit: feat(ai): add runtime flow map evidence builder
+b978ddab HEAD@{178}: commit: fix(ai): run provider triad through startup heap mesh
+e9bcbb80 HEAD@{179}: pull --ff-only origin master: Fast-forward
+da6ec78a HEAD@{180}: checkout: moving from CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-105313 to master
+e9bcbb80 HEAD@{181}: commit: fix(ai): fail real-product proposal builds without concrete operations
+da6ec78a HEAD@{182}: checkout: moving from master to CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-105313
+da6ec78a HEAD@{183}: checkout: moving from master to master
+da6ec78a HEAD@{184}: commit: fix(ai): require live provider gate for real product runs
+0b42365d HEAD@{185}: cherry-pick: fix(ai): hard fail provider fallback in real product runs
+8fc63428 HEAD@{186}: checkout: moving from CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-103521 to master
+9d47c4ca HEAD@{187}: commit: fix(ai): hard fail provider fallback in real product runs
+8fc63428 HEAD@{188}: checkout: moving from master to CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260510-103521
+8fc63428 HEAD@{189}: checkout: moving from master to master
+8fc63428 HEAD@{190}: commit: fix(ai): wire real product context into official adapter
+463ef40e HEAD@{191}: checkout: moving from master to master
+463ef40e HEAD@{192}: checkout: moving from master to master
+463ef40e HEAD@{193}: checkout: moving from CARMINEai/real-product-heap-exchange-process-gate-20260510-102006-20260510-102006 to master
+463ef40e HEAD@{194}: checkout: moving from master to CARMINEai/real-product-heap-exchange-process-gate-20260510-102006-20260510-102006
+463ef40e HEAD@{195}: checkout: moving from master to master
+463ef40e HEAD@{196}: commit: fix(ai): align real product smoke with bounded reset
+2345d77a HEAD@{197}: commit: fix(ai): use bounded pre-run artifact reset
+8512b697 HEAD@{198}: commit: fix(ai): skip active reset artifacts during cleanup
+0507f17d HEAD@{199}: commit: fix(ai): replace stale launcher default task
+21cc90df HEAD@{200}: commit: feat(ai): reuse reset lane for real product pre-clean
+8f534c38 HEAD@{201}: commit: fix(ai): ignore output-only dirtiness for review apply gates
+f5082ccd HEAD@{202}: commit: fix(ai): suppress metadata companions for concrete specs
+df587489 HEAD@{203}: commit: fix(ai): harden runtime heap evidence discovery
+2f94b56b HEAD@{204}: pull --ff-only origin master: Fast-forward
+d4bef85f HEAD@{205}: checkout: moving from master to master
+d4bef85f HEAD@{206}: pull --ff-only origin master: Fast-forward
+a04fb226 HEAD@{207}: checkout: moving from master to master
+a04fb226 HEAD@{208}: pull --ff-only origin master: Fast-forward
+fbc323a0 HEAD@{209}: checkout: moving from CARMINEai/real-product-heap-exchange-process-gate-20260510-003859-20260510-003859 to master
+fbc323a0 HEAD@{210}: checkout: moving from master to CARMINEai/real-product-heap-exchange-process-gate-20260510-003859-20260510-003859
+fbc323a0 HEAD@{211}: checkout: moving from master to master
+fbc323a0 HEAD@{212}: checkout: moving from master to master
+fbc323a0 HEAD@{213}: checkout: moving from master to master
+fbc323a0 HEAD@{214}: pull --ff-only origin master: Fast-forward
+a951238b HEAD@{215}: checkout: moving from CARMINEai/real-product-heap-exchange-process-gate-20260510-001916-20260510-001916 to master
+a951238b HEAD@{216}: checkout: moving from master to CARMINEai/real-product-heap-exchange-process-gate-20260510-001916-20260510-001916
+a951238b HEAD@{217}: checkout: moving from master to master
+a951238b HEAD@{218}: pull --ff-only origin master: Fast-forward
+e6d642ef HEAD@{219}: checkout: moving from master to master
+e6d642ef HEAD@{220}: checkout: moving from master to master
+e6d642ef HEAD@{221}: pull --ff-only origin master: Fast-forward
+5220eb57 HEAD@{222}: checkout: moving from CARMINEai/real-product-heap-exchange-process-gate-20260510-000717-20260510-000717 to master
+5220eb57 HEAD@{223}: checkout: moving from master to CARMINEai/real-product-heap-exchange-process-gate-20260510-000717-20260510-000717
+5220eb57 HEAD@{224}: checkout: moving from master to master
+5220eb57 HEAD@{225}: pull --ff-only origin master: Fast-forward
+9a5e1bfe HEAD@{226}: checkout: moving from CARMINEai/real-product-heap-exchange-process-gate-20260509-235955-20260509-235955 to master
+9a5e1bfe HEAD@{227}: checkout: moving from master to CARMINEai/real-product-heap-exchange-process-gate-20260509-235955-20260509-235955
+9a5e1bfe HEAD@{228}: checkout: moving from master to master
+9a5e1bfe HEAD@{229}: pull --ff-only origin master: Fast-forward
+1c7f9bdf HEAD@{230}: checkout: moving from master to master
+1c7f9bdf HEAD@{231}: pull --ff-only origin master: Fast-forward
+92317b82 HEAD@{232}: checkout: moving from master to master
+92317b82 HEAD@{233}: pull --ff-only origin master: Fast-forward
+f75bc1d5 HEAD@{234}: checkout: moving from master to master
+f75bc1d5 HEAD@{235}: pull --ff-only origin master: Fast-forward
+356de52e HEAD@{236}: checkout: moving from codex/real-product-single-entry-exit to master
+930847a3 HEAD@{237}: commit: feat(ai): add real product single entry exit mode
+356de52e HEAD@{238}: checkout: moving from master to codex/real-product-single-entry-exit
+356de52e HEAD@{239}: checkout: moving from master to master
+356de52e HEAD@{240}: pull --ff-only origin master: Fast-forward
+7deebf50 HEAD@{241}: checkout: moving from codex/review-pr-final-product-contract to master
+7e4c6d6f HEAD@{242}: commit: test(ai): add review PR final product contract
+7deebf50 HEAD@{243}: checkout: moving from master to codex/review-pr-final-product-contract
+7deebf50 HEAD@{244}: checkout: moving from master to master
+7deebf50 HEAD@{245}: pull --ff-only origin master: Fast-forward
+fb76fd17 HEAD@{246}: checkout: moving from codex/runtime-evidence-correlation-manifest-schema to master
+b5cfa93b HEAD@{247}: commit: test(ai): require runtime evidence correlation in manifest
+fb76fd17 HEAD@{248}: checkout: moving from master to codex/runtime-evidence-correlation-manifest-schema
+fb76fd17 HEAD@{249}: checkout: moving from master to master
+fb76fd17 HEAD@{250}: pull --ff-only origin master: Fast-forward
+0b7be667 HEAD@{251}: checkout: moving from codex/real-product-profile-correlation-hardening to master
+978c7313 HEAD@{252}: commit: test(ai): require runtime evidence correlation in real profile
+0b7be667 HEAD@{253}: checkout: moving from master to codex/real-product-profile-correlation-hardening
+0b7be667 HEAD@{254}: checkout: moving from master to master
+0b7be667 HEAD@{255}: pull --ff-only origin master: Fast-forward
+c9afa2ef HEAD@{256}: checkout: moving from codex/runtime-evidence-correlation-wiring-hardening to master
+d3a9d12d HEAD@{257}: commit: test(ai): harden runtime evidence correlation launcher wiring
+c9afa2ef HEAD@{258}: checkout: moving from master to codex/runtime-evidence-correlation-wiring-hardening
+c9afa2ef HEAD@{259}: pull --ff-only origin master: Fast-forward
+405ab374 HEAD@{260}: checkout: moving from codex/runtime-evidence-correlation-launcher-wiring to master
+e5496ce6 HEAD@{261}: commit: feat(ai): emit runtime evidence correlation from launcher
+405ab374 HEAD@{262}: checkout: moving from master to codex/runtime-evidence-correlation-launcher-wiring
+405ab374 HEAD@{263}: checkout: moving from master to master
+405ab374 HEAD@{264}: pull --ff-only origin master: Fast-forward
+28b5e29e HEAD@{265}: checkout: moving from codex/runtime-evidence-correlation-gate to master
+56a4d734 HEAD@{266}: commit: feat(ai): add runtime evidence correlation gate
+28b5e29e HEAD@{267}: checkout: moving from master to codex/runtime-evidence-correlation-gate
+28b5e29e HEAD@{268}: checkout: moving from master to master
+28b5e29e HEAD@{269}: checkout: moving from master to master
+28b5e29e HEAD@{270}: pull --ff-only origin master: Fast-forward
+e5e3ea8d HEAD@{271}: checkout: moving from codex/wire-openvino-peer-topology-preflight to master
+9f53dd66 HEAD@{272}: commit: feat(ai): wire OpenVINO peer topology into preflight
+e5e3ea8d HEAD@{273}: checkout: moving from master to codex/wire-openvino-peer-topology-preflight
+e5e3ea8d HEAD@{274}: checkout: moving from master to master
+e5e3ea8d HEAD@{275}: pull --ff-only origin master: Fast-forward
+7b722d09 HEAD@{276}: checkout: moving from codex/openvino-peer-topology-contract to master
+947124a0 HEAD@{277}: commit: feat(ai): add OpenVINO peer topology contract
+7b722d09 HEAD@{278}: checkout: moving from master to codex/openvino-peer-topology-contract
+7b722d09 HEAD@{279}: checkout: moving from master to master
+7b722d09 HEAD@{280}: pull --ff-only origin master: Fast-forward
+92727849 HEAD@{281}: checkout: moving from codex/mandatory-preflight-provider-hardening to master
+9f407cda HEAD@{282}: commit: feat(ai): require preflight before real product runtime
+92727849 HEAD@{283}: checkout: moving from master to codex/mandatory-preflight-provider-hardening
+92727849 HEAD@{284}: checkout: moving from master to master
+92727849 HEAD@{285}: pull --ff-only origin master: Fast-forward
+fb74e9ca HEAD@{286}: checkout: moving from codex/real-product-preflight-gate to master
+66988851 HEAD@{287}: commit: feat(ai): add real product preflight gate
+fb74e9ca HEAD@{288}: checkout: moving from master to codex/real-product-preflight-gate
+fb74e9ca HEAD@{289}: checkout: moving from master to master
+fb74e9ca HEAD@{290}: pull --ff-only origin master: Fast-forward
+4d4b3947 HEAD@{291}: checkout: moving from codex/runtime-mesh-full-chain-gate to master
+45273ad9 HEAD@{292}: commit: fix(ai): make runtime mesh contract inspect distributed SQLite FTS
+ec13cc26 HEAD@{293}: checkout: moving from codex/runtime-mesh-full-chain-gate to codex/runtime-mesh-full-chain-gate
+ec13cc26 HEAD@{294}: commit: feat(ai): gate product PR chain on runtime mesh contract
+4d4b3947 HEAD@{295}: checkout: moving from master to codex/runtime-mesh-full-chain-gate
+4d4b3947 HEAD@{296}: checkout: moving from master to master
+4d4b3947 HEAD@{297}: pull --ff-only origin master: Fast-forward
+a8f319c6 HEAD@{298}: checkout: moving from codex/real-product-runtime-mesh-contract to master
+e9a215be HEAD@{299}: commit: feat(ai): add real product runtime mesh contract
+a8f319c6 HEAD@{300}: checkout: moving from master to codex/real-product-runtime-mesh-contract
+a8f319c6 HEAD@{301}: checkout: moving from master to master
+a8f319c6 HEAD@{302}: pull --ff-only origin master: Fast-forward
+4c8e697d HEAD@{303}: checkout: moving from codex/real-product-intrinsic-capability-contract to master
+19282339 HEAD@{304}: commit: feat(ai): add real product intrinsic capability contract
+4c8e697d HEAD@{305}: checkout: moving from master to codex/real-product-intrinsic-capability-contract
+4c8e697d HEAD@{306}: checkout: moving from master to master
+4c8e697d HEAD@{307}: pull --ff-only origin master: Fast-forward
+032e3162 HEAD@{308}: checkout: moving from codex/review-pr-readiness-parallel-hardening to master
+267da94b HEAD@{309}: commit: fix(ai): harden review PR readiness contracts
+032e3162 HEAD@{310}: checkout: moving from master to codex/review-pr-readiness-parallel-hardening
+032e3162 HEAD@{311}: checkout: moving from master to master
+032e3162 HEAD@{312}: pull --ff-only origin master: Fast-forward
+9250d02d HEAD@{313}: checkout: moving from codex/review-pr-product-readiness-gate to master
+a8d8a944 HEAD@{314}: commit: feat(ai): add review PR product readiness gate
+9250d02d HEAD@{315}: checkout: moving from master to codex/review-pr-product-readiness-gate
+9250d02d HEAD@{316}: checkout: moving from master to master
+9250d02d HEAD@{317}: pull --ff-only origin master: Fast-forward
+de9eb861 HEAD@{318}: checkout: moving from codex/review-pr-product-input-gate to master
+c75beedc HEAD@{319}: commit: fix(ai): gate review PR preparation on product inputs
+de9eb861 HEAD@{320}: checkout: moving from master to codex/review-pr-product-input-gate
+de9eb861 HEAD@{321}: checkout: moving from master to master
+de9eb861 HEAD@{322}: checkout: moving from master to master
+de9eb861 HEAD@{323}: pull --ff-only origin master: Fast-forward
+b2d26302 HEAD@{324}: checkout: moving from codex/real-product-npu-peer-mode to master
+a63fad92 HEAD@{325}: commit: feat(ai): start real product profile with NPU peer mode
+b2d26302 HEAD@{326}: checkout: moving from master to codex/real-product-npu-peer-mode
+b2d26302 HEAD@{327}: checkout: moving from master to master
+b2d26302 HEAD@{328}: pull --ff-only origin master: Fast-forward
+c8d3429e HEAD@{329}: checkout: moving from codex/real-product-draft-pr-doc-consistency to master
+f1e2c478 HEAD@{330}: checkout: moving from codex/real-product-draft-pr-doc-consistency to codex/real-product-draft-pr-doc-consistency
+f1e2c478 HEAD@{331}: commit: docs(ai): align real product draft PR support
+c8d3429e HEAD@{332}: checkout: moving from master to codex/real-product-draft-pr-doc-consistency
+c8d3429e HEAD@{333}: checkout: moving from master to master
+c8d3429e HEAD@{334}: checkout: moving from master to master
+c8d3429e HEAD@{335}: checkout: moving from master to master
+c8d3429e HEAD@{336}: pull --ff-only origin master: Fast-forward
+76e28291 HEAD@{337}: checkout: moving from codex/add-real-run-product-profile to master
+23ed0e30 HEAD@{338}: commit: fix(ai): expose real product profile runtime controls
+b5a47941 HEAD@{339}: reset: moving to origin/codex/add-real-run-product-profile
+7d4a6e5c HEAD@{340}: checkout: moving from codex/add-real-run-product-profile to codex/add-real-run-product-profile
+7d4a6e5c HEAD@{341}: rebase (abort): returning to refs/heads/codex/add-real-run-product-profile
+b5a47941 HEAD@{342}: rebase (start): checkout origin/codex/add-real-run-product-profile
+7d4a6e5c HEAD@{343}: commit: fix(ai): expose real product profile runtime controls
+b1472169 HEAD@{344}: commit: test(ai): align product chain smoke with ensured heap entry
+38111ee4 HEAD@{345}: checkout: moving from codex/add-real-run-product-profile to codex/add-real-run-product-profile
+38111ee4 HEAD@{346}: commit: feat(ai): add real product PR profile
+76e28291 HEAD@{347}: checkout: moving from master to codex/add-real-run-product-profile
+76e28291 HEAD@{348}: checkout: moving from master to master
+76e28291 HEAD@{349}: pull --ff-only origin master: Fast-forward
+dcdbe76f HEAD@{350}: checkout: moving from codex/add-task-ingress-contract to master
+3b316104 HEAD@{351}: commit: feat(ai): add task ingress contract to heap exchange
+dcdbe76f HEAD@{352}: checkout: moving from master to codex/add-task-ingress-contract
+dcdbe76f HEAD@{353}: checkout: moving from master to master
+dcdbe76f HEAD@{354}: pull --ff-only origin master: Fast-forward
+a900b51b HEAD@{355}: checkout: moving from codex/heap-exchange-closure-audit-gate to master
+74554080 HEAD@{356}: commit: test(ai): inspect distributed heap closure product chain
+776db603 HEAD@{357}: commit: feat(ai): add heap exchange closure audit gate
+a900b51b HEAD@{358}: checkout: moving from master to codex/heap-exchange-closure-audit-gate
+a900b51b HEAD@{359}: checkout: moving from master to master
+a900b51b HEAD@{360}: pull --ff-only origin master: Fast-forward
+05dcb021 HEAD@{361}: checkout: moving from codex/always-emit-heap-peer-runtime-manifest to master
+e62f5fd4 HEAD@{362}: checkout: moving from codex/always-emit-heap-peer-runtime-manifest to codex/always-emit-heap-peer-runtime-manifest
+e62f5fd4 HEAD@{363}: commit: feat(ai): always emit heap peer runtime manifest
+05dcb021 HEAD@{364}: checkout: moving from master to codex/always-emit-heap-peer-runtime-manifest
+05dcb021 HEAD@{365}: checkout: moving from master to master
+05dcb021 HEAD@{366}: pull --ff-only origin master: Fast-forward
+6451f8cb HEAD@{367}: checkout: moving from codex/extract-review-pr-args-builder to master
+4dcb39f6 HEAD@{368}: checkout: moving from codex/extract-review-pr-args-builder to codex/extract-review-pr-args-builder
+4dcb39f6 HEAD@{369}: commit: fix(ai): align heap peer audit lane semantics
+a0ee8f2e HEAD@{370}: checkout: moving from codex/extract-review-pr-args-builder to codex/extract-review-pr-args-builder
+a0ee8f2e HEAD@{371}: commit: feat(ai): require heap peer runtime evidence
+b0a1d2b2 HEAD@{372}: checkout: moving from codex/extract-review-pr-args-builder to codex/extract-review-pr-args-builder
+b0a1d2b2 HEAD@{373}: commit: feat(ai): require provider tool evidence in unified chain
+c3ff443a HEAD@{374}: checkout: moving from codex/extract-review-pr-args-builder to codex/extract-review-pr-args-builder
+c3ff443a HEAD@{375}: commit: refactor(ai): quarantine legacy aliases and validate unified manifest
+641876c5 HEAD@{376}: checkout: moving from codex/extract-review-pr-args-builder to codex/extract-review-pr-args-builder
+641876c5 HEAD@{377}: commit: refactor(ai): extract review PR prepare args builder
+6451f8cb HEAD@{378}: checkout: moving from master to codex/extract-review-pr-args-builder
+6451f8cb HEAD@{379}: checkout: moving from master to master
+6451f8cb HEAD@{380}: pull --ff-only origin master: Fast-forward
+560cd9c1 HEAD@{381}: checkout: moving from codex/extract-unified-chain-gate-builder to master
+4a7a0a38 HEAD@{382}: commit: refactor(ai): extract unified chain contract args builder
+560cd9c1 HEAD@{383}: checkout: moving from master to codex/extract-unified-chain-gate-builder
+560cd9c1 HEAD@{384}: checkout: moving from master to master
+560cd9c1 HEAD@{385}: pull --ff-only origin master: Fast-forward
+0eb99358 HEAD@{386}: checkout: moving from codex/absorb-full0to10-legacy-alias-into-unified-run to master
+efee4109 HEAD@{387}: commit: refactor(ai): clarify light full0to10 legacy wrapper
+64708c93 HEAD@{388}: checkout: moving from codex/absorb-full0to10-legacy-alias-into-unified-run to codex/absorb-full0to10-legacy-alias-into-unified-run
+64708c93 HEAD@{389}: commit: refactor(ai): absorb full0to10 aliases into unified run
+0eb99358 HEAD@{390}: checkout: moving from master to codex/absorb-full0to10-legacy-alias-into-unified-run
+0eb99358 HEAD@{391}: checkout: moving from master to master
+0eb99358 HEAD@{392}: pull --ff-only origin master: Fast-forward
+2eadc689 HEAD@{393}: checkout: moving from codex/fix-unified-chain-contract-final-gate to master
+800aa83f HEAD@{394}: commit: test(ai): mark full0to10 smoke as unified run legacy alias
+de4371e4 HEAD@{395}: checkout: moving from codex/fix-unified-chain-contract-final-gate to codex/fix-unified-chain-contract-final-gate
+de4371e4 HEAD@{396}: commit: test(ai): validate unified run PR product chain
+34194499 HEAD@{397}: checkout: moving from codex/fix-unified-chain-contract-final-gate to codex/fix-unified-chain-contract-final-gate
+34194499 HEAD@{398}: commit: fix(ai): run unified chain contract as final product gate
+2eadc689 HEAD@{399}: checkout: moving from master to codex/fix-unified-chain-contract-final-gate
+2eadc689 HEAD@{400}: checkout: moving from master to master
+2eadc689 HEAD@{401}: pull --ff-only origin master: Fast-forward
+5603789b HEAD@{402}: checkout: moving from codex/wire-review-pr-auto-include-apply-report to master
+e3eba06e HEAD@{403}: pull --ff-only origin codex/wire-review-pr-auto-include-apply-report: Fast-forward
+c9e2fcf5 HEAD@{404}: checkout: moving from codex/wire-review-pr-auto-include-apply-report to codex/wire-review-pr-auto-include-apply-report
+c9e2fcf5 HEAD@{405}: commit: fix(ai): require concrete review PR product in chain
+8fdb2bae HEAD@{406}: pull --ff-only origin codex/wire-review-pr-auto-include-apply-report: Fast-forward
+8cbfb1b7 HEAD@{407}: checkout: moving from codex/wire-review-pr-auto-include-apply-report to codex/wire-review-pr-auto-include-apply-report
+8cbfb1b7 HEAD@{408}: checkout: moving from codex/wire-review-pr-auto-include-apply-report to codex/wire-review-pr-auto-include-apply-report
+8cbfb1b7 HEAD@{409}: commit: fix(ai): auto-include review PR paths from apply report
+5603789b HEAD@{410}: checkout: moving from master to codex/wire-review-pr-auto-include-apply-report
+5603789b HEAD@{411}: checkout: moving from master to master
+5603789b HEAD@{412}: pull --ff-only origin master: Fast-forward
+b378c8d1 HEAD@{413}: checkout: moving from codex/fix-heap-exchange-review-pr-product-chain to master
+4635a940 HEAD@{414}: commit: fix(ai): build heap exit after review PR patch product
+b378c8d1 HEAD@{415}: checkout: moving from master to codex/fix-heap-exchange-review-pr-product-chain
+b378c8d1 HEAD@{416}: checkout: moving from master to master
+b378c8d1 HEAD@{417}: pull --ff-only origin master: Fast-forward
+a3f8bfd5 HEAD@{418}: checkout: moving from codex/heap-exchange-knowledge-surface-contract to master
+e92cd2c8 HEAD@{419}: checkout: moving from master to codex/heap-exchange-knowledge-surface-contract
+a3f8bfd5 HEAD@{420}: pull --ff-only origin master: Fast-forward
+68dfc08c HEAD@{421}: checkout: moving from codex/fix-hygiene-planner-delete-marker-guard to master
+9a15ffbc HEAD@{422}: pull --ff-only origin codex/fix-hygiene-planner-delete-marker-guard: Fast-forward
+68dfc08c HEAD@{423}: checkout: moving from codex/fix-hygiene-planner-delete-marker-guard to codex/fix-hygiene-planner-delete-marker-guard
+68dfc08c HEAD@{424}: checkout: moving from master to codex/fix-hygiene-planner-delete-marker-guard
+68dfc08c HEAD@{425}: checkout: moving from master to master
+68dfc08c HEAD@{426}: pull --ff-only origin master: Fast-forward
+096d7336 HEAD@{427}: checkout: moving from codex/tighten-repo-hygiene-delete-selection to master
+52dbd35c HEAD@{428}: commit: fix(ai): tighten repository hygiene delete selection
+096d7336 HEAD@{429}: checkout: moving from master to codex/tighten-repo-hygiene-delete-selection
+096d7336 HEAD@{430}: checkout: moving from master to master
+096d7336 HEAD@{431}: checkout: moving from codex/repo-hygiene-cleanup-pass to master
+a5ed94a7 HEAD@{432}: checkout: moving from codex/repo-hygiene-cleanup-pass to codex/repo-hygiene-cleanup-pass
+a5ed94a7 HEAD@{433}: commit: chore(docs): apply reviewed repository hygiene cleanup
+096d7336 HEAD@{434}: checkout: moving from master to codex/repo-hygiene-cleanup-pass
+096d7336 HEAD@{435}: pull --ff-only origin master: Fast-forward
+12d80e3e HEAD@{436}: checkout: moving from codex/patchkit-bundle-contract-validator to master
+2eeacea4 HEAD@{437}: checkout: moving from master to codex/patchkit-bundle-contract-validator
+12d80e3e HEAD@{438}: pull --ff-only origin master: Fast-forward
+f8710a87 HEAD@{439}: checkout: moving from codex/docs-old-md-cleanup-patchkit-bundle to master
+404d8174 HEAD@{440}: checkout: moving from master to codex/docs-old-md-cleanup-patchkit-bundle
+f8710a87 HEAD@{441}: pull --ff-only origin master: Fast-forward
+525e261a HEAD@{442}: checkout: moving from codex/reusable-patchkit-controlled-bundles to master
+64013f34 HEAD@{443}: pull --ff-only origin codex/reusable-patchkit-controlled-bundles: Fast-forward
+6b354bfa HEAD@{444}: pull --ff-only origin codex/reusable-patchkit-controlled-bundles: Fast-forward
+bdf63129 HEAD@{445}: checkout: moving from codex/heap-exchange-runtime-lifecycle to codex/reusable-patchkit-controlled-bundles
+4304ca25 HEAD@{446}: commit: feat(ai): wire heap exchange runtime lifecycle
+87e4ef6b HEAD@{447}: merge origin/codex/heap-exchange-runtime-lifecycle: Merge made by the 'ort' strategy.
+365fb71f HEAD@{448}: merge origin/codex/heap-exchange-runtime-lifecycle: Merge made by the 'ort' strategy.
+86197b6d HEAD@{449}: checkout: moving from codex/heap-exchange-runtime-lifecycle to codex/heap-exchange-runtime-lifecycle
+86197b6d HEAD@{450}: checkout: moving from codex/heap-exchange-runtime-lifecycle to codex/heap-exchange-runtime-lifecycle
+86197b6d HEAD@{451}: merge origin/master: Merge made by the 'ort' strategy.
+7c0f8986 HEAD@{452}: checkout: moving from CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260509-131029 to codex/heap-exchange-runtime-lifecycle
+525e261a HEAD@{453}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-heap_exchange_process_gate_20260509-131029 to CARMINEai/heap-exchange-process-gate-heap_exchange_process_gate_20260509-131029
+525e261a HEAD@{454}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-heap_exchange_process_gate_20260509-131029
+525e261a HEAD@{455}: checkout: moving from master to master
+525e261a HEAD@{456}: checkout: moving from master to master
+525e261a HEAD@{457}: pull --ff-only origin master: Fast-forward
+4a8650a6 HEAD@{458}: checkout: moving from codex/stabilize-heap-exchange-review-bridge to master
+a7b3dd74 HEAD@{459}: commit: fix(workflow): stabilize heap exchange review bridge
+4a8650a6 HEAD@{460}: checkout: moving from master to codex/stabilize-heap-exchange-review-bridge
+4a8650a6 HEAD@{461}: checkout: moving from codex/publish-heap-exchange-events-before-review-bridge to master
+4a8650a6 HEAD@{462}: checkout: moving from master to codex/publish-heap-exchange-events-before-review-bridge
+4a8650a6 HEAD@{463}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-heap_exchange_process_gate_20260509-123904 to master
+4a8650a6 HEAD@{464}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-heap_exchange_process_gate_20260509-123904
+4a8650a6 HEAD@{465}: checkout: moving from master to master
+4a8650a6 HEAD@{466}: checkout: moving from master to master
+4a8650a6 HEAD@{467}: pull --ff-only origin master: Fast-forward
+c16a61d8 HEAD@{468}: checkout: moving from codex/wire-unified-chain-contract-gate to master
+600c6e8c HEAD@{469}: commit: fix(workflow): wire unified chain contract gate
+2cb71313 HEAD@{470}: commit: fix(workflow): wire unified chain contract gate
+d044b8c8 HEAD@{471}: checkout: moving from codex/unified-chain-contract-gate to codex/wire-unified-chain-contract-gate
+214ae823 HEAD@{472}: checkout: moving from CARMINEai/full-process-capability-gate-full_process_capability_gate_20260509-115319 to codex/unified-chain-contract-gate
+c16a61d8 HEAD@{473}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-full_process_capability_gate_20260509-115319 to CARMINEai/full-process-capability-gate-full_process_capability_gate_20260509-115319
+c16a61d8 HEAD@{474}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-full_process_capability_gate_20260509-115319
+c16a61d8 HEAD@{475}: checkout: moving from master to master
+c16a61d8 HEAD@{476}: pull --ff-only origin master: Fast-forward
+51141dec HEAD@{477}: checkout: moving from codex/force-repo-python-in-unified-launcher to master
+0e409094 HEAD@{478}: commit: fix(workflow): add repo python and structured launcher error gates
+51141dec HEAD@{479}: checkout: moving from master to codex/force-repo-python-in-unified-launcher
+51141dec HEAD@{480}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-runtime_debug_lab_broker_full_pr_20260509-111439 to master
+51141dec HEAD@{481}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-runtime_debug_lab_broker_full_pr_20260509-111439
+51141dec HEAD@{482}: checkout: moving from master to master
+51141dec HEAD@{483}: pull --ff-only origin master: Fast-forward
+2af0d8ed HEAD@{484}: checkout: moving from codex/forbid-continue-on-validation-error to master
+9795bd00 HEAD@{485}: commit: fix(workflow): forbid continue-on-validation-error
+2af0d8ed HEAD@{486}: checkout: moving from master to codex/forbid-continue-on-validation-error
+2af0d8ed HEAD@{487}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-process_gate_full_10m_20260509-105741 to master
+2af0d8ed HEAD@{488}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-process_gate_full_10m_20260509-105741
+2af0d8ed HEAD@{489}: checkout: moving from master to master
+2af0d8ed HEAD@{490}: pull --ff-only origin master: Fast-forward
+05b43256 HEAD@{491}: checkout: moving from codex/fix-unified-observer-jsonl-locking to master
+1df73d15 HEAD@{492}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-process_gate_full_10m_20260509-104343 to codex/fix-unified-observer-jsonl-locking
+05b43256 HEAD@{493}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-process_gate_full_10m_20260509-104343
+05b43256 HEAD@{494}: checkout: moving from master to master
+05b43256 HEAD@{495}: checkout: moving from master to master
+05b43256 HEAD@{496}: pull --ff-only origin master: Fast-forward
+01a1b913 HEAD@{497}: checkout: moving from codex/restrict-generated-patch-spec-discovery-stamp to master
+5edda421 HEAD@{498}: commit: fix(ai): restrict generated patch spec discovery to current stamp
+01a1b913 HEAD@{499}: checkout: moving from master to codex/restrict-generated-patch-spec-discovery-stamp
+01a1b913 HEAD@{500}: checkout: moving from CARMINEai/runtime-debug-lab-broker-registration-runtime_debug_lab_broker_full_10m_20260509-103204 to master
+01a1b913 HEAD@{501}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-runtime_debug_lab_broker_full_10m_20260509-103204 to CARMINEai/runtime-debug-lab-broker-registration-runtime_debug_lab_broker_full_10m_20260509-103204
+01a1b913 HEAD@{502}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-runtime_debug_lab_broker_full_10m_20260509-103204
+01a1b913 HEAD@{503}: checkout: moving from CARMINEai/runtime-debug-lab-broker-registration-runtime_debug_lab_broker_full_10m_20260509-102706 to master
+01a1b913 HEAD@{504}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-runtime_debug_lab_broker_full_10m_20260509-102706 to CARMINEai/runtime-debug-lab-broker-registration-runtime_debug_lab_broker_full_10m_20260509-102706
+01a1b913 HEAD@{505}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-runtime_debug_lab_broker_full_10m_20260509-102706
+01a1b913 HEAD@{506}: checkout: moving from master to master
+01a1b913 HEAD@{507}: checkout: moving from master to master
+01a1b913 HEAD@{508}: checkout: moving from master to master
+01a1b913 HEAD@{509}: pull --ff-only origin master: Fast-forward
+2e1e142f HEAD@{510}: checkout: moving from codex/task-patch-markdown-authoring-hardening to master
+90dcfab2 HEAD@{511}: pull --ff-only origin codex/task-patch-markdown-authoring-hardening: Fast-forward
+ed6ac6e9 HEAD@{512}: checkout: moving from master to codex/task-patch-markdown-authoring-hardening
+2e1e142f HEAD@{513}: checkout: moving from master to master
+2e1e142f HEAD@{514}: checkout: moving from codex/debug-lab-pr-tool-smoke-20260509-095054 to master
+78648dc0 HEAD@{515}: commit: docs(ai): smoke patch suggestion review PR chain
+2e1e142f HEAD@{516}: checkout: moving from master to codex/debug-lab-pr-tool-smoke-20260509-095054
+2e1e142f HEAD@{517}: pull --ff-only origin master: Fast-forward
+174f366c HEAD@{518}: checkout: moving from codex/fix-gpu0-companion-module-invocation to master
+b3659da2 HEAD@{519}: commit: fix(ai): invoke GPU0 workload report as module
+174f366c HEAD@{520}: checkout: moving from master to codex/fix-gpu0-companion-module-invocation
+174f366c HEAD@{521}: checkout: moving from master to master
+174f366c HEAD@{522}: checkout: moving from master to master
+174f366c HEAD@{523}: pull --ff-only origin master: Fast-forward
+7493b0db HEAD@{524}: checkout: moving from codex/agent-runtime-debug-lab-line-budget to master
+b84813a6 HEAD@{525}: commit: chore(ai): keep debug lab runner within line budget
+7493b0db HEAD@{526}: checkout: moving from master to codex/agent-runtime-debug-lab-line-budget
+7493b0db HEAD@{527}: checkout: moving from master to master
+7493b0db HEAD@{528}: pull --ff-only origin master: Fast-forward
+7c125554 HEAD@{529}: checkout: moving from codex/agent-runtime-debug-lab-mvp to master
+4df08d09 HEAD@{530}: commit: fix(ai): use real PowerShell parser in debug lab
+3ca85c5f HEAD@{531}: checkout: moving from codex/agent-runtime-debug-lab-mvp to codex/agent-runtime-debug-lab-mvp
+3ca85c5f HEAD@{532}: commit: feat(ai): add agent runtime debug lab MVP
+7c125554 HEAD@{533}: checkout: moving from master to codex/agent-runtime-debug-lab-mvp
+7c125554 HEAD@{534}: checkout: moving from master to master
+7c125554 HEAD@{535}: pull --ff-only origin master: Fast-forward
+bebae03c HEAD@{536}: checkout: moving from codex/generated-patch-specs-review-pr-lane to master
+2c03e440 HEAD@{537}: commit: fix(workflow): pass draft flag to review PR preparation
+4e557891 HEAD@{538}: checkout: moving from codex/generated-patch-specs-review-pr-lane to codex/generated-patch-specs-review-pr-lane
+4e557891 HEAD@{539}: commit: feat(workflow): create review PR from generated patch specs
+bebae03c HEAD@{540}: checkout: moving from master to codex/generated-patch-specs-review-pr-lane
+bebae03c HEAD@{541}: pull --ff-only origin master: Fast-forward
+503c6d1b HEAD@{542}: checkout: moving from master to master
+503c6d1b HEAD@{543}: pull --ff-only origin master: Fast-forward
+a806c888 HEAD@{544}: checkout: moving from codex/fix-python-bom-syntax-errors to master
+f343c34f HEAD@{545}: commit: fix(ai): normalize python files with UTF-8 BOM syntax errors
+a806c888 HEAD@{546}: checkout: moving from master to codex/fix-python-bom-syntax-errors
+a806c888 HEAD@{547}: checkout: moving from master to master
+a806c888 HEAD@{548}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_proposal_10m_20260509-083335 to master
+a806c888 HEAD@{549}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_proposal_10m_20260509-083335
+a806c888 HEAD@{550}: checkout: moving from master to master
+a806c888 HEAD@{551}: pull --ff-only origin master: Fast-forward
+ddf289e7 HEAD@{552}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_10m_20260509-014028 to master
+ddf289e7 HEAD@{553}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_10m_20260509-014028
+ddf289e7 HEAD@{554}: checkout: moving from master to master
+ddf289e7 HEAD@{555}: pull --ff-only origin master: Fast-forward
+de9222a9 HEAD@{556}: checkout: moving from master to master
+de9222a9 HEAD@{557}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_10m_20260509-012812 to master
+de9222a9 HEAD@{558}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_10m_20260509-012812
+de9222a9 HEAD@{559}: checkout: moving from codex/harden-ollama-provider-probe to master
+44da9834 HEAD@{560}: commit: fix(ai): harden Ollama provider probe diagnostics
+de9222a9 HEAD@{561}: checkout: moving from codex/harden-ollama-provider-probe to codex/harden-ollama-provider-probe
+de9222a9 HEAD@{562}: checkout: moving from master to codex/harden-ollama-provider-probe
+de9222a9 HEAD@{563}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_10m_20260509-011011 to master
+de9222a9 HEAD@{564}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_10m_20260509-011011
+de9222a9 HEAD@{565}: checkout: moving from master to master
+de9222a9 HEAD@{566}: pull --ff-only origin master: Fast-forward
+22a4b222 HEAD@{567}: checkout: moving from codex/fix-provider-probe-npu-python-policy to master
+e87c9dfc HEAD@{568}: commit: fix(workflow): pass explicit NPU Python to provider probes
+22a4b222 HEAD@{569}: checkout: moving from master to codex/fix-provider-probe-npu-python-policy
+22a4b222 HEAD@{570}: checkout: moving from master to master
+22a4b222 HEAD@{571}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_10m_20260509-004627 to master
+22a4b222 HEAD@{572}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_10m_20260509-004627
+22a4b222 HEAD@{573}: checkout: moving from master to master
+22a4b222 HEAD@{574}: checkout: moving from master to master
+22a4b222 HEAD@{575}: checkout: moving from master to master
+22a4b222 HEAD@{576}: pull --ff-only origin master: Fast-forward
+8948d0f2 HEAD@{577}: checkout: moving from codex/fix-official-multistep-python-policy to master
+9d808f2e HEAD@{578}: commit: fix(workflow): propagate repository Python to official multistep provider
+8948d0f2 HEAD@{579}: checkout: moving from master to codex/fix-official-multistep-python-policy
+8948d0f2 HEAD@{580}: checkout: moving from master to master
+8948d0f2 HEAD@{581}: checkout: moving from master to master
+8948d0f2 HEAD@{582}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_20m_20260509-000728 to master
+8948d0f2 HEAD@{583}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_20m_20260509-000728
+8948d0f2 HEAD@{584}: checkout: moving from master to master
+8948d0f2 HEAD@{585}: checkout: moving from master to master
+8948d0f2 HEAD@{586}: checkout: moving from master to master
+8948d0f2 HEAD@{587}: checkout: moving from codex/local-ai-smoke-extended_observer_smoke_20260509-000300 to master
+8948d0f2 HEAD@{588}: checkout: moving from master to codex/local-ai-smoke-extended_observer_smoke_20260509-000300
+8948d0f2 HEAD@{589}: checkout: moving from master to master
+8948d0f2 HEAD@{590}: pull --ff-only origin master: Fast-forward
+ae7021bb HEAD@{591}: checkout: moving from codex/extended-observer-consoles to master
+3c9c69a6 HEAD@{592}: pull --ff-only origin codex/extended-observer-consoles: Fast-forward
+19cd3c51 HEAD@{593}: checkout: moving from codex/extended-observer-consoles to codex/extended-observer-consoles
+19cd3c51 HEAD@{594}: commit: feat(workflow): add extended observer consoles
+ae7021bb HEAD@{595}: checkout: moving from master to codex/extended-observer-consoles
+ae7021bb HEAD@{596}: checkout: moving from master to master
+ae7021bb HEAD@{597}: pull --ff-only origin master: Fast-forward
+d4ea7cf3 HEAD@{598}: checkout: moving from codex/local-ai-smoke-observer_smoke_20260508-233729 to master
+d4ea7cf3 HEAD@{599}: checkout: moving from master to codex/local-ai-smoke-observer_smoke_20260508-233729
+d4ea7cf3 HEAD@{600}: checkout: moving from codex/fix-observer-early-init to master
+7680fa10 HEAD@{601}: commit: fix(workflow): initialize observer before long launcher phases
+53bc2320 HEAD@{602}: commit: fix(workflow): initialize observer before long launcher phases
+d4ea7cf3 HEAD@{603}: checkout: moving from codex/fix-observer-early-init to codex/fix-observer-early-init
+d4ea7cf3 HEAD@{604}: checkout: moving from master to codex/fix-observer-early-init
+d4ea7cf3 HEAD@{605}: pull --ff-only origin master: Fast-forward
+e09377f4 HEAD@{606}: checkout: moving from codex/unified-hardening-observer-npu to master
+572fa1d1 HEAD@{607}: commit: feat(workflow): add observer consoles and NPU companion lane
+e09377f4 HEAD@{608}: checkout: moving from master to codex/unified-hardening-observer-npu
+e09377f4 HEAD@{609}: checkout: moving from master to master
+e09377f4 HEAD@{610}: pull --ff-only origin master: Fast-forward
+96d7558c HEAD@{611}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_20m_20260508-223522 to master
+96d7558c HEAD@{612}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_20m_20260508-223522
+96d7558c HEAD@{613}: checkout: moving from codex/post-run-hardening-no-implicit-legacy to master
+3ee38318 HEAD@{614}: commit: fix(workflow): harden split markdown and legacy lanes
+96d7558c HEAD@{615}: checkout: moving from master to codex/post-run-hardening-no-implicit-legacy
+96d7558c HEAD@{616}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_20260508-214951 to master
+96d7558c HEAD@{617}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_full_20260508-214951
+96d7558c HEAD@{618}: checkout: moving from master to master
+96d7558c HEAD@{619}: pull --ff-only origin master: Fast-forward
+066dd181 HEAD@{620}: checkout: moving from master to master
+066dd181 HEAD@{621}: checkout: moving from codex/fix-context-pack-split-md to master
+dc8f6388 HEAD@{622}: commit: fix(ai): support split markdown directories in context packs
+066dd181 HEAD@{623}: checkout: moving from master to codex/fix-context-pack-split-md
+066dd181 HEAD@{624}: checkout: moving from codex/local-ai-agent_state_context_pack_contract_full_validation_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_fast_20260508-213116 to master
+066dd181 HEAD@{625}: checkout: moving from master to codex/local-ai-agent_state_context_pack_contract_full_validation_md_official_patch_specs_provider_python_smoke-agent_runtime_debug_lab_fast_20260508-213116
+066dd181 HEAD@{626}: checkout: moving from master to master
+066dd181 HEAD@{627}: pull --ff-only origin master: Fast-forward
+3c772643 HEAD@{628}: checkout: moving from master to master
+3c772643 HEAD@{629}: pull --ff-only origin master: Fast-forward
+1a169a41 HEAD@{630}: checkout: moving from codex/fix-official-provider-python-20260508 to master
+869af3e6 HEAD@{631}: commit: fix(workflow): enforce repository Python across workflow lanes
+0151bbf7 HEAD@{632}: pull --ff-only: Fast-forward
+7d096a88 HEAD@{633}: checkout: moving from master to codex/fix-official-provider-python-20260508
+1a169a41 HEAD@{634}: checkout: moving from codex/prepare-review-pr-draft-flag to master
+2234e7c4 HEAD@{635}: checkout: moving from master to codex/prepare-review-pr-draft-flag
+1a169a41 HEAD@{636}: checkout: moving from master to master
+1a169a41 HEAD@{637}: pull --ff-only origin master: Fast-forward
+181a73d8 HEAD@{638}: checkout: moving from master to master
+181a73d8 HEAD@{639}: pull --ff-only origin master: Fast-forward
+01de7c9c HEAD@{640}: checkout: moving from codex/md-split-validator-smoke to master
+8d4e1b0f HEAD@{641}: checkout: moving from master to codex/md-split-validator-smoke
+01de7c9c HEAD@{642}: checkout: moving from master to master
+01de7c9c HEAD@{643}: pull --ff-only origin master: Fast-forward
+f7d3364d HEAD@{644}: checkout: moving from codex/md-dir-validator-hardening to master
+94480aac HEAD@{645}: checkout: moving from master to codex/md-dir-validator-hardening
+f7d3364d HEAD@{646}: checkout: moving from master to master
+f7d3364d HEAD@{647}: checkout: moving from master to master
+f7d3364d HEAD@{648}: pull --ff-only origin master: Fast-forward
+e37b9e50 HEAD@{649}: checkout: moving from master to master
+e37b9e50 HEAD@{650}: pull --ff-only origin master: Fast-forward
+e7e7bb27 HEAD@{651}: checkout: moving from codex/auto-review-pr-include-paths to master
+17b54263 HEAD@{652}: commit: docs(ai): remove legacy root markdown split folder
+837a5105 HEAD@{653}: commit: docs(ai): migrate markdown split folders to policy layout
+030285fc HEAD@{654}: commit: feat(ai): auto-discover review PR include paths
+e7e7bb27 HEAD@{655}: checkout: moving from master to codex/auto-review-pr-include-paths
+e7e7bb27 HEAD@{656}: checkout: moving from master to master
+e7e7bb27 HEAD@{657}: pull --ff-only origin master: Fast-forward
+01d07587 HEAD@{658}: checkout: moving from codex/fix-official-provider-python-20260508 to master
+7d096a88 HEAD@{659}: pull --ff-only origin codex/fix-official-provider-python-20260508: Fast-forward
+aadebca4 HEAD@{660}: pull --ff-only origin codex/fix-official-provider-python-20260508: Fast-forward
+286d6df3 HEAD@{661}: pull --ff-only origin codex/fix-official-provider-python-20260508: Fast-forward
+e199116d HEAD@{662}: checkout: moving from codex/fix-official-provider-python-20260508 to codex/fix-official-provider-python-20260508
+e199116d HEAD@{663}: checkout: moving from codex/fix-official-provider-python-20260508 to codex/fix-official-provider-python-20260508
+e199116d HEAD@{664}: checkout: moving from master to codex/fix-official-provider-python-20260508
+01d07587 HEAD@{665}: pull --ff-only origin master: Fast-forward
+9b4ea921 HEAD@{666}: checkout: moving from codex/fix-unified-phase-exitcode-20260508 to master
+bd4c4970 HEAD@{667}: pull --ff-only origin codex/fix-unified-phase-exitcode-20260508: Fast-forward
+c268dd34 HEAD@{668}: checkout: moving from codex/fix-unified-phase-exitcode-20260508 to codex/fix-unified-phase-exitcode-20260508
+c268dd34 HEAD@{669}: checkout: moving from master to codex/fix-unified-phase-exitcode-20260508
+9b4ea921 HEAD@{670}: checkout: moving from master to master
+9b4ea921 HEAD@{671}: pull --ff-only origin master: Fast-forward
+69eb3193 HEAD@{672}: checkout: moving from CARMINEai/mini-product-pr-mini_product_pr_20260508-080630 to master
+8387d35c HEAD@{673}: commit: docs(ai): add review PR evidence readme_product_workflow_trace_fix_20260508-091000
+96672a44 HEAD@{674}: commit: feat(ai): document markdown-to-pr product workflow
+e5275ba0 HEAD@{675}: commit: feat(ai): harden product PR chain smoke
+7d5c706b HEAD@{676}: commit: docs(ai): add review PR evidence mini_product_pr_20260508-080630
+4620b033 HEAD@{677}: commit: docs(ai): add mini product PR smoke
+69eb3193 HEAD@{678}: checkout: moving from master to CARMINEai/mini-product-pr-mini_product_pr_20260508-080630
+69eb3193 HEAD@{679}: pull --ff-only origin master: Fast-forward
+8d38867d HEAD@{680}: checkout: moving from codex/docs-align-unified-launcher-code to master
+e7db9b6f HEAD@{681}: checkout: moving from master to codex/docs-align-unified-launcher-code
+8d38867d HEAD@{682}: checkout: moving from master to master
+8d38867d HEAD@{683}: checkout: moving from master to master
+8d38867d HEAD@{684}: checkout: moving from master to master
+8d38867d HEAD@{685}: checkout: moving from master to master
+8d38867d HEAD@{686}: checkout: moving from master to master
+8d38867d HEAD@{687}: checkout: moving from codex/wire-patch-suggestion-product-gate to master
+4b719dea HEAD@{688}: checkout: moving from master to codex/wire-patch-suggestion-product-gate
+8d38867d HEAD@{689}: pull --ff-only origin master: Fast-forward
+73d9f6ed HEAD@{690}: checkout: moving from codex/patch-suggestion-product-separation-validator to master
+3bcb0ed5 HEAD@{691}: pull --ff-only origin codex/patch-suggestion-product-separation-validator: Fast-forward
+84621199 HEAD@{692}: checkout: moving from codex/patch-suggestion-product-separation-validator to codex/patch-suggestion-product-separation-validator
+84621199 HEAD@{693}: checkout: moving from master to codex/patch-suggestion-product-separation-validator
+73d9f6ed HEAD@{694}: pull --ff-only origin master: Fast-forward
+76206b27 HEAD@{695}: checkout: moving from CARMINEai/final-product-real-patch-final_product_real_patch_20260507-220300 to master
+fbc5c24f HEAD@{696}: commit: fix(ai): wire provider python and refined review gate
+ba307376 HEAD@{697}: commit: docs(ai): add review PR evidence final_product_real_patch_20260507-220300
+87ba65b5 HEAD@{698}: commit: docs(ai): apply final product patch suggestion
+291510f9 HEAD@{699}: checkout: moving from CARMINEai/pr206-patch-suggestion-product-pr206_review_pr_fullrun_20260507-214000 to CARMINEai/final-product-real-patch-final_product_real_patch_20260507-220300
+291510f9 HEAD@{700}: commit: fix(ai): switch review branch before deterministic apply
+12c69f5b HEAD@{701}: checkout: moving from CARMINEai/final-product-real-patch-final_product_real_patch_20260507-215000 to CARMINEai/pr206-patch-suggestion-product-pr206_review_pr_fullrun_20260507-214000
+9fb8b252 HEAD@{702}: commit: docs(ai): add review PR evidence final_product_real_patch_20260507-215000
+df610076 HEAD@{703}: commit: docs(ai): apply final product patch suggestion
+12c69f5b HEAD@{704}: checkout: moving from CARMINEai/pr206-patch-suggestion-product-pr206_review_pr_fullrun_20260507-214000 to CARMINEai/final-product-real-patch-final_product_real_patch_20260507-215000
+12c69f5b HEAD@{705}: commit: feat(ai): support task markdown patch apply PR lane
+c3d3fb7f HEAD@{706}: commit: fix(ai): finalize review PR evidence metadata
+fa9cad69 HEAD@{707}: commit: docs(ai): add review PR evidence pr206_review_pr_fullrun_20260507-214000
+1514067d HEAD@{708}: commit: feat(ai): harden patch suggestion product final phase
+a044ff48 HEAD@{709}: checkout: moving from codex/apply-python-doc-suggestion-wave1 to CARMINEai/pr206-patch-suggestion-product-pr206_review_pr_fullrun_20260507-214000
+a044ff48 HEAD@{710}: commit: fix(ai): classify generated and planned consistency references
+752a1dc5 HEAD@{711}: commit: fix(ai): include current suggestion reports in final phase
+b3864562 HEAD@{712}: checkout: moving from codex/apply-python-doc-suggestion-wave1 to codex/apply-python-doc-suggestion-wave1
+b3864562 HEAD@{713}: commit: fix(ai): align patch suggestion final phase with workflow stamp
+663e9f10 HEAD@{714}: checkout: moving from master to codex/apply-python-doc-suggestion-wave1
+76206b27 HEAD@{715}: checkout: moving from codex/select-post-pr202-patch-suggestions to master
+76206b27 HEAD@{716}: checkout: moving from master to codex/select-post-pr202-patch-suggestions
+76206b27 HEAD@{717}: checkout: moving from master to master
+76206b27 HEAD@{718}: pull --ff-only origin master: Fast-forward
+3cc7d327 HEAD@{719}: checkout: moving from master to master
+3cc7d327 HEAD@{720}: checkout: moving from codex/apply-python-doc-suggestion-wave1 to master
+663e9f10 HEAD@{721}: pull --ff-only origin codex/apply-python-doc-suggestion-wave1: Fast-forward
+b5ecb58c HEAD@{722}: checkout: moving from codex/add-post-pr202-final-run-evidence to codex/apply-python-doc-suggestion-wave1
+3c696557 HEAD@{723}: commit: test(ai): add post-pr202 all-all final run evidence
+3cc7d327 HEAD@{724}: checkout: moving from master to codex/add-post-pr202-final-run-evidence
+3cc7d327 HEAD@{725}: checkout: moving from master to master
+3cc7d327 HEAD@{726}: pull --ff-only origin master: Fast-forward
+19e2e5b2 HEAD@{727}: checkout: moving from codex/all-all-area-diverse-selection-followup to master
+99097d13 HEAD@{728}: commit: fix(ai): prioritize patchable doc-python recommendations
+d084205a HEAD@{729}: commit: fix(ai): propagate all-all patch note limits
+f1fac12a HEAD@{730}: commit: fix(ai): add python-python consistency coverage
+0850aa85 HEAD@{731}: commit: fix(ai): diversify all-all patch note selection
+19e2e5b2 HEAD@{732}: checkout: moving from codex/doc-python-wave1-all-all-followup to codex/all-all-area-diverse-selection-followup
+19e2e5b2 HEAD@{733}: checkout: moving from master to codex/doc-python-wave1-all-all-followup
+19e2e5b2 HEAD@{734}: checkout: moving from master to master
+19e2e5b2 HEAD@{735}: pull --ff-only origin master: Fast-forward
+29a63e34 HEAD@{736}: checkout: moving from codex/all-all-availability-aware-quality-gate to master
+be47027e HEAD@{737}: commit: fix(ai): add availability-aware all-all quality gate
+19a7defe HEAD@{738}: checkout: moving from codex/apply-pr200-patch-notes-doc-consistency to codex/all-all-availability-aware-quality-gate
+19a7defe HEAD@{739}: commit: docs(ai): apply pr200 doc-python consistency fixes
+29a63e34 HEAD@{740}: checkout: moving from codex/apply-pr200-patch-notes-doc-consistency to codex/apply-pr200-patch-notes-doc-consistency
+29a63e34 HEAD@{741}: branch: Reset to origin/master
+29a63e34 HEAD@{742}: checkout: moving from master to codex/apply-pr200-patch-notes-doc-consistency
+29a63e34 HEAD@{743}: pull --ff-only origin master: Fast-forward
+6e6ee2df HEAD@{744}: checkout: moving from codex/provider-mesh-runtime-extract-p1 to master
+1a3fe1f8 HEAD@{745}: commit: chore(ai): remove superseded local validation evidence from pr198
+fb13460a HEAD@{746}: checkout: moving from codex/provider-mesh-runtime-extract-p1 to codex/provider-mesh-runtime-extract-p1
+fb13460a HEAD@{747}: pull --ff-only origin codex/provider-mesh-runtime-extract-p1: Fast-forward
+2bedf33b HEAD@{748}: checkout: moving from codex/local-full-toolbox-sync-20260507-145154 to codex/provider-mesh-runtime-extract-p1
+b750a63b HEAD@{749}: commit: test(ai): add pr200 final quality evidence
+90f6c8df HEAD@{750}: pull: Fast-forward
+3ac6d9dc HEAD@{751}: commit: fix(ai): align runtime tool usage telemetry reporting
+09d38bae HEAD@{752}: commit: feat(ai): improve full-toolbox patch notes quality telemetry
+2bedf33b HEAD@{753}: checkout: moving from codex/provider-mesh-runtime-extract-p1 to codex/local-full-toolbox-sync-20260507-145154
+2bedf33b HEAD@{754}: commit: feat(ai): add patch notes quality product
+a7db5f18 HEAD@{755}: pull --rebase origin codex/provider-mesh-runtime-extract-p1 (finish): returning to refs/heads/codex/provider-mesh-runtime-extract-p1
+a7db5f18 HEAD@{756}: pull --rebase origin codex/provider-mesh-runtime-extract-p1 (pick): test(ai): validate non-blocking patch quality gate
+0f31fe6d HEAD@{757}: pull --rebase origin codex/provider-mesh-runtime-extract-p1 (start): checkout 0f31fe6dbd0da565f9abcc6cc66aabe82c3828dc
+6bcbc217 HEAD@{758}: commit: test(ai): validate non-blocking patch quality gate
+c4c1d73f HEAD@{759}: commit: feat(ai): add non-blocking patch plan quality product gate
+2ea8c812 HEAD@{760}: commit: perf(ai): use dynamic CPU process workers for repository consistency
+e631310b HEAD@{761}: commit: perf(ai): reuse repository consistency scan manifest with file metadata
+b9ee7283 HEAD@{762}: commit: refactor(ai): extract provider mesh heap gpu0 npu helpers
+b1a9736a HEAD@{763}: commit: refactor(ai): extract provider mesh Python runtime helpers
+6e6ee2df HEAD@{764}: checkout: moving from master to codex/provider-mesh-runtime-extract-p1
+6e6ee2df HEAD@{765}: checkout: moving from master to master
+6e6ee2df HEAD@{766}: pull --ff-only origin master: Fast-forward
+9f0c5b9e HEAD@{767}: checkout: moving from codex/md-bundle-telemetry-refactor to master
+848262d5 HEAD@{768}: commit: test(ai): add python normalization provider evidence
+010ab607 HEAD@{769}: checkout: moving from codex/md-bundle-telemetry-refactor to codex/md-bundle-telemetry-refactor
+010ab607 HEAD@{770}: commit: fix(ai): normalize provider subprocess Python and PowerShell arrays
+d2498fc7 HEAD@{771}: commit: fix(validation): treat generated evidence doc links as nonfatal
+eaede797 HEAD@{772}: commit: test(ai): add effective MD loop provider evidence
+e34d080d HEAD@{773}: commit: docs(ai): document deferred NPU provider governance
+219fca8d HEAD@{774}: commit: fix(ai): forward deferred NPU mode through unified launcher
+e74ebbcf HEAD@{775}: commit: fix(ai): keep NPU peer support non-blocking
+d85b22ef HEAD@{776}: commit (merge): merge: align Codex docs with main runtime architecture
+c55fc5c7 HEAD@{777}: reset: moving to HEAD
+c55fc5c7 HEAD@{778}: checkout: moving from codex/md-bundle-telemetry-refactor to codex/md-bundle-telemetry-refactor
+c55fc5c7 HEAD@{779}: commit: feat(ai): promote python live provider mesh workflow
+41a46e5d HEAD@{780}: commit: feat(ai): wire provider mesh start barrier
+7c679836 HEAD@{781}: commit: feat(ai): wire live runtime heap into full toolbox telemetry
+bcabedf0 HEAD@{782}: commit: feat(ai): add live runtime heap provider signal helpers
+9d9fad2f HEAD@{783}: commit: docs: prune stale local ai task snapshots
+5308f5bf HEAD@{784}: commit: docs: prune superseded legacy execution plans
+2c93778b HEAD@{785}: commit: fix(workflow): recover JSON sidecar for report reads
+b161df96 HEAD@{786}: commit: feat(ai): wire runtime heap telemetry into full toolbox loop
+a28ac93a HEAD@{787}: commit: feat(ai): add runtime heap GPU peer exchange telemetry
+8a681988 HEAD@{788}: commit: fix(ai): preserve heap broker request source lanes
+a1080836 HEAD@{789}: commit: fix(ai): route heap broker results to provider lanes
+437f4491 HEAD@{790}: commit: feat(ai): add runtime heap collaboration telemetry
+744e33ee HEAD@{791}: commit: feat(ai): add runtime heap validation bridge
+c2c2c464 HEAD@{792}: commit: feat(ai): add runtime heap broker bridge
+00e5e02b HEAD@{793}: commit: fix(ai): support payload files for provider runtime heap
+86d3809f HEAD@{794}: pull: Fast-forward
+82d9b6ee HEAD@{795}: commit: fix(workflow): report JSON read context in full toolbox loop
+cbe1c1ae HEAD@{796}: commit: fix(workflow): preserve unified launcher phase report map
+0857f2ae HEAD@{797}: commit: feat(ai): formalize provider broker loop contract
+536fe63b HEAD@{798}: commit: feat(ai): promote peer mesh lanes into final product summary
+beea3309 HEAD@{799}: commit: feat(ai): separate peer mesh operational lanes from workload usability
+59b8b1de HEAD@{800}: commit: feat(ai): expose peer mesh visibility and nonblocking npu support
+cbdab16a HEAD@{801}: commit: fix(ai): separate declared and broker tool execution counts
+21780659 HEAD@{802}: commit: fix(ai): expose peer broker source visibility in handoff
+c66b04b0 HEAD@{803}: commit: fix(ai): classify peer broker telemetry sources
+06310656 HEAD@{804}: commit: feat(ai): wire GPU peer exchange NPU support
+e4a1953c HEAD@{805}: commit: feat(ai): add production GPU peer exchange lane
+d49fa104 HEAD@{806}: pull --ff-only origin codex/md-bundle-telemetry-refactor: Fast-forward
+4c6cdbfb HEAD@{807}: rebase (finish): returning to refs/heads/codex/md-bundle-telemetry-refactor
+4c6cdbfb HEAD@{808}: rebase (start): checkout origin/codex/md-bundle-telemetry-refactor
+46960efd HEAD@{809}: commit: fix(ai): promote GPU0 to companion worker lane
+177d6b69 HEAD@{810}: commit: fix(ai): harden GPU0 provider support telemetry and acceptance gate
+d02db746 HEAD@{811}: commit: fix(ai): add GPU0 provider support lane and full0to10 acceptance gate
+8c200966 HEAD@{812}: commit: fix(docs): repair compact evidence links for full0to10 acceptance
+44bae20b HEAD@{813}: checkout: moving from codex/md-bundle-telemetry-refactor to codex/md-bundle-telemetry-refactor
+44bae20b HEAD@{814}: pull --ff-only origin codex/md-bundle-telemetry-refactor: Fast-forward
+8d79083e HEAD@{815}: checkout: moving from codex/md-bundle-telemetry-refactor to codex/md-bundle-telemetry-refactor
+8d79083e HEAD@{816}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-gpu0_full0to10_quick_20260506-181501 to codex/md-bundle-telemetry-refactor
+9f0c5b9e HEAD@{817}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-gpu0_full0to10_quick_20260506-181501
+9f0c5b9e HEAD@{818}: checkout: moving from codex/md-bundle-telemetry-refactor to master
+8d79083e HEAD@{819}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-gpu0_full0to10_quick_20260506-180824 to codex/md-bundle-telemetry-refactor
+8d79083e HEAD@{820}: pull --ff-only origin codex/md-bundle-telemetry-refactor: Fast-forward
+9f0c5b9e HEAD@{821}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-gpu0_full0to10_quick_20260506-180824
+9f0c5b9e HEAD@{822}: checkout: moving from codex/md-bundle-telemetry-refactor to master
+a4dd45b5 HEAD@{823}: commit: fix(ai): expose GPU0 launcher flags and codify production tool rule
+84b83355 HEAD@{824}: commit: fix(ai): enforce full-run phase visibility and activate OpenVINO GPU0 lane
+b83d82db HEAD@{825}: checkout: moving from codex/md-bundle-telemetry-refactor to codex/md-bundle-telemetry-refactor
+b83d82db HEAD@{826}: commit: fix(ai): detect provider execution in task pipeline telemetry
+6e4f2645 HEAD@{827}: commit: feat(ai): add hardware lane policy contract
+77bc1acf HEAD@{828}: pull --ff-only origin codex/md-bundle-telemetry-refactor: Fast-forward
+0cf7c975 HEAD@{829}: checkout: moving from codex/md-bundle-telemetry-refactor to codex/md-bundle-telemetry-refactor
+0cf7c975 HEAD@{830}: commit: test(ai): add strict provider evidence contract
+eb46bd95 HEAD@{831}: checkout: moving from codex/provider-strict-md-telemetry-20260506-162137 to codex/md-bundle-telemetry-refactor
+9f0c5b9e HEAD@{832}: checkout: moving from master to codex/provider-strict-md-telemetry-20260506-162137
+9f0c5b9e HEAD@{833}: checkout: moving from codex/md-bundle-telemetry-refactor to master
+eb46bd95 HEAD@{834}: commit: fix(ai): enforce strict provider evidence contract
+40db558b HEAD@{835}: checkout: moving from codex/md-bundle-telemetry-refactor to codex/md-bundle-telemetry-refactor
+40db558b HEAD@{836}: commit: test(ai): add full access md telemetry evidence
+78e2d44a HEAD@{837}: checkout: moving from local/sync-local-work-20260506-155340 to codex/md-bundle-telemetry-refactor
+9f0c5b9e HEAD@{838}: checkout: moving from codex/full-access-md-telemetry-20260506-154554 to local/sync-local-work-20260506-155340
+9f0c5b9e HEAD@{839}: checkout: moving from master to codex/full-access-md-telemetry-20260506-154554
+9f0c5b9e HEAD@{840}: pull --ff-only origin master: Fast-forward
+da6c6ff7 HEAD@{841}: checkout: moving from codex/md-bundle-telemetry-refactor to master
+78e2d44a HEAD@{842}: commit: docs(ai): add full access telemetry refactor task
+37e65a55 HEAD@{843}: commit: test(ai): refresh markdown telemetry evidence after sync
+188db243 HEAD@{844}: merge origin/master: Merge made by the 'ort' strategy.
+f3c638ce HEAD@{845}: commit: feat(ai): harden markdown pipeline telemetry bundle
+e75bf342 HEAD@{846}: checkout: moving from codex/full0to10-foundation-report-only-local to codex/md-bundle-telemetry-refactor
+e75bf342 HEAD@{847}: commit: feat(ai): build task-scoped review bundle for markdown pipeline
+56d55184 HEAD@{848}: commit: feat(ai): add full0to10 report-only foundation checks
+da6c6ff7 HEAD@{849}: checkout: moving from master to codex/full0to10-foundation-report-only-local
+da6c6ff7 HEAD@{850}: commit: docs(ai): refresh md code coherence after restored semantic mapper
+57e9f52d HEAD@{851}: commit: fix(docs): restore basename-aware semantic md coherence mapper
+e415af78 HEAD@{852}: commit: docs(ai): refresh md code coherence semantic state
+8290f756 HEAD@{853}: commit: fix(docs): restore semantic md code coherence mapper
+313ebe81 HEAD@{854}: reset: moving to HEAD
+313ebe81 HEAD@{855}: reset: moving to origin/master
+8580037f HEAD@{856}: checkout: moving from codex/evidence-full0to10-quick-20260506-004242-v2 to master
+543e6ec4 HEAD@{857}: commit (amend): docs(ai): add Full0To10 quick evidence bundle 20260506-004242
+8580037f HEAD@{858}: checkout: moving from master to codex/evidence-full0to10-quick-20260506-004242-v2
+8580037f HEAD@{859}: commit: docs(ai): add Full0To10 quick evidence bundle 20260506-004242
+34e5f5ae HEAD@{860}: commit: docs(ai): add Full0To10 quick evidence bundle 20260506-004242
+313ebe81 HEAD@{861}: checkout: moving from codex/evidence-full0to10-quick-20260506-004242 to master
+313ebe81 HEAD@{862}: checkout: moving from master to codex/evidence-full0to10-quick-20260506-004242
+313ebe81 HEAD@{863}: checkout: moving from codex/unified-launcher-external-controls to master
+313ebe81 HEAD@{864}: checkout: moving from master to codex/unified-launcher-external-controls
+313ebe81 HEAD@{865}: pull --ff-only origin master: Fast-forward
+379dbd06 HEAD@{866}: checkout: moving from codex/unified-local-ai-refactor-launcher to master
+0d395854 HEAD@{867}: commit: docs(ai): refresh md code coherence after basename ref fix
+293e8f59 HEAD@{868}: commit: fix(docs): handle rootless and basename markdown refs
+763161bf HEAD@{869}: commit: docs(ai): refresh md code coherence after generated doc skip
+31a01897 HEAD@{870}: commit: fix(docs): skip generated coherence docs during reference scan
+9ccca481 HEAD@{871}: commit: docs(ai): refresh md code coherence after relative ref fix
+df7ae205 HEAD@{872}: commit: fix(docs): resolve markdown refs relative to source document
+bb48f96e HEAD@{873}: commit: feat(ai): add LightFull0To10 final product quality package
+e7f13858 HEAD@{874}: commit: docs(ai): mark md code coherence tools as very good
+66aef69d HEAD@{875}: commit: feat(ai): add LightFull0To10 memory visibility and provider feedback
+4e607c6d HEAD@{876}: commit: docs(ai): refresh md code coherence after command classifier
+2ccf6755 HEAD@{877}: commit: fix(docs): classify missing documented commands by source context
+e0d2dd08 HEAD@{878}: commit: feat(ai): normalize OpenVINO device visibility fields
+224ff4f1 HEAD@{879}: commit: docs(ai): refresh md code coherence after pruning
+495da391 HEAD@{880}: commit: fix(docs): reduce md code coherence false positives
+16ee69dd HEAD@{881}: commit: docs(ai): remove superseded handoff markdown
+24d3a8a7 HEAD@{882}: commit: feat(ai): validate LightFull0To10 provider telemetry semantics
+c0445d46 HEAD@{883}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+3358d236 HEAD@{884}: checkout: moving from codex/md-code-coherence-patches to codex/unified-local-ai-refactor-launcher
+49240338 HEAD@{885}: reset: moving to HEAD
+49240338 HEAD@{886}: reset: moving to HEAD
+49240338 HEAD@{887}: commit: docs(ai): refresh code-aware md coherence reports
+a349b1b1 HEAD@{888}: commit: fix(docs): reduce md code coherence false positives
+3358d236 HEAD@{889}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/md-code-coherence-patches
+3358d236 HEAD@{890}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+3358d236 HEAD@{891}: commit: fix(workflow): add RepoRoot support for LightFull0To10 launcher
+ee66718c HEAD@{892}: commit: docs(ai): add generated code-aware markdown maps
+2367993c HEAD@{893}: commit: fix(docs): rewrite md code coherence tools with safe file payloads
+f19c740f HEAD@{894}: commit: feat(workflow): add Full0To10 unified light profile gate
+283de918 HEAD@{895}: commit: docs(ai): add generated code-aware markdown maps
+0f425431 HEAD@{896}: commit: feat(workflow): add Full0To10 light profile promotion
+5c024181 HEAD@{897}: commit: docs(ai): add code-aware markdown coherence tooling
+4db3f75d HEAD@{898}: commit: fix(workflow): repair Full0To10 light evidence markdown rendering
+f29a4214 HEAD@{899}: commit: docs(ai): add markdown line budget local handoff
+972acb12 HEAD@{900}: commit: docs(ai): split full-run doctrine markdown
+016b1255 HEAD@{901}: commit: docs(ai): enforce markdown line budget with recursive split
+7d33f47e HEAD@{902}: commit: docs(ai): add markdown line budget tooling
+ae3bdf58 HEAD@{903}: commit: feat(ai): add Full0To10 repo quality packet and markdown budget chain
+47277fcd HEAD@{904}: commit: feat(ai): add Full0To10 track input contract
+22d85829 HEAD@{905}: commit: fix(workflow): harden Full0To10 operational guardrails
+cd71488a HEAD@{906}: commit: fix(ai): normalize OpenVINO NPU and GPU0 device visibility
+55194927 HEAD@{907}: commit: feat(ai): add Full0To10 provider execution bridge gate
+c0aaef0b HEAD@{908}: commit: feat(ai): add Full0To10 provider invocation dry-run plan
+c32f85d2 HEAD@{909}: commit: feat(ai): add Full0To10 provider governor run permit
+ee1e4777 HEAD@{910}: commit: feat(ai): add Full0To10 accelerator control plane
+5616bb91 HEAD@{911}: commit: feat(ai): add Full0To10 final tool product assembler
+99ac3ab5 HEAD@{912}: commit: feat(ai): add Full0To10 effective use optimization quality product
+885b3826 HEAD@{913}: commit: fix(ai): restore workload quality report-dir semantics
+5b584031 HEAD@{914}: commit: fix(workflow): make Full0To10 quality supervisor safe by default
+39fbf5c8 HEAD@{915}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260505-215046 to codex/unified-local-ai-refactor-launcher
+379dbd06 HEAD@{916}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260505-215046
+379dbd06 HEAD@{917}: checkout: moving from codex/unified-local-ai-refactor-launcher to master
+39fbf5c8 HEAD@{918}: commit: feat(workflow): integrate Full0To10 quality supervisor
+b8b26eb0 HEAD@{919}: commit: feat(ai): add Full0To10 quality stack preflight
+6371b65e HEAD@{920}: commit: feat(ai): add Full0To10 quality readiness gate
+ba272c7d HEAD@{921}: commit: fix(ai): complete and quarantine Markdown split shadow tool
+20fd8c83 HEAD@{922}: commit: fix(ai): harden Markdown split shadow filenames
+271103df HEAD@{923}: commit: feat(ai): add controlled Full0To10 refactor applier
+dc82b9ad HEAD@{924}: commit: feat(ai): add Full0To10 auto-refactor hardware planner
+9b7541a7 HEAD@{925}: commit: feat(ai): add Full0To10 runtime memory tool registry
+b12b2aa7 HEAD@{926}: commit: feat(ai): add SQLite memory embedding cache and hybrid search
+6705b522 HEAD@{927}: commit: feat(ai): add Full0To10 SQLite FTS memory core
+b20bb808 HEAD@{928}: commit: feat(ai): add Full0To10 hardware tool capability probe
+27426866 HEAD@{929}: commit: feat(workflow): add unified Full0To10 supervisor gate
+650854e4 HEAD@{930}: commit: feat(ai): add Full0To10 manifest contract gate
+fc00dd21 HEAD@{931}: commit: feat(ai): add Full0To10 bundle contract validation lane
+f817d8d9 HEAD@{932}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+4cbfaf5a HEAD@{933}: pull --rebase origin codex/unified-local-ai-refactor-launcher (finish): returning to refs/heads/codex/unified-local-ai-refactor-launcher
+4cbfaf5a HEAD@{934}: pull --rebase origin codex/unified-local-ai-refactor-launcher (pick): test(ai): add unused useful tool promotion run evidence
+027ffea8 HEAD@{935}: pull --rebase origin codex/unified-local-ai-refactor-launcher (start): checkout 027ffea86a2735cff18140cecfdf41c9626d224a
+17609c6c HEAD@{936}: reset: moving to HEAD
+17609c6c HEAD@{937}: commit: test(ai): add unused useful tool promotion run evidence
+46cbf088 HEAD@{938}: commit: docs(ai): add unused useful code and tool promotion task
+de6272fe HEAD@{939}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+de6272fe HEAD@{940}: commit: docs(chatgpt): add refactor reuse full-run handoff
+ca410288 HEAD@{941}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+320e59b0 HEAD@{942}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+320e59b0 HEAD@{943}: commit: docs(ai): add refactor reuse planning task
+029b7ad2 HEAD@{944}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+ea88d14b HEAD@{945}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+ea88d14b HEAD@{946}: commit: fix(validation): avoid invalid escape warnings in command examples
+013af906 HEAD@{947}: commit: fix(workflow): add execution-tail disable switch
+3d6cb133 HEAD@{948}: commit: fix(workflow): disable transcript tail for smoke runs
+2acb0a95 HEAD@{949}: checkout: moving from master to codex/unified-local-ai-refactor-launcher
+379dbd06 HEAD@{950}: checkout: moving from master to master
+379dbd06 HEAD@{951}: checkout: moving from codex/unified-local-ai-refactor-launcher to master
+2acb0a95 HEAD@{952}: checkout: moving from codex/local-ai-smoke-20260505-133346 to codex/unified-local-ai-refactor-launcher
+379dbd06 HEAD@{953}: checkout: moving from master to codex/local-ai-smoke-20260505-133346
+379dbd06 HEAD@{954}: checkout: moving from codex/unified-local-ai-refactor-launcher to master
+2acb0a95 HEAD@{955}: commit: fix(workflow): accept launcher startup check report args
+285780f6 HEAD@{956}: checkout: moving from codex/local-ai-smoke-20260505-132740 to codex/unified-local-ai-refactor-launcher
+379dbd06 HEAD@{957}: checkout: moving from master to codex/local-ai-smoke-20260505-132740
+379dbd06 HEAD@{958}: checkout: moving from codex/unified-local-ai-refactor-launcher to master
+285780f6 HEAD@{959}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+30c3dd7b HEAD@{960}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+30c3dd7b HEAD@{961}: commit: fix(ai): include full-toolbox diagnostics in shared bundle
+da8d6d38 HEAD@{962}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+da8d6d38 HEAD@{963}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+ce81c706 HEAD@{964}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+ce81c706 HEAD@{965}: commit: test(ai): add project-tool registry planning evidence
+baa9b265 HEAD@{966}: commit: docs(ai): add project tool registry generation task
+c420c5c5 HEAD@{967}: commit: fix(ai): improve provider diagnostics and patch-plan target hygiene
+cfb53a4f HEAD@{968}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+cfb53a4f HEAD@{969}: commit: test(ai): add broker-validated full-run production evidence
+e487acfc HEAD@{970}: commit: docs(ai): remove superseded code refactor procedure
+a85bbf47 HEAD@{971}: commit: fix(ai): preserve broker report in final runtime telemetry
+64c7710c HEAD@{972}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+469722a2 HEAD@{973}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+469722a2 HEAD@{974}: commit: test(ai): add post-broker full-run production evidence
+fa1b75fe HEAD@{975}: commit: feat(ai): complete full-run provider bundle and broker telemetry
+b41f61eb HEAD@{976}: commit: docs(ai): define production AI-to-AI bundle standard
+d1cd2125 HEAD@{977}: commit: test(ai): add full-run toolbox evidence bundle
+8465c519 HEAD@{978}: commit: test(ai): add full-run telemetry evidence
+48eb2554 HEAD@{979}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260505-000215 to codex/unified-local-ai-refactor-launcher
+379dbd06 HEAD@{980}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260505-000215
+379dbd06 HEAD@{981}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260504-235750 to master
+48eb2554 HEAD@{982}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+379dbd06 HEAD@{983}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260504-235750
+379dbd06 HEAD@{984}: checkout: moving from codex/unified-local-ai-refactor-launcher to master
+48eb2554 HEAD@{985}: commit: fix(ai): initialize launcher output dirs before early failures
+4f8ab699 HEAD@{986}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260504-234824 to codex/unified-local-ai-refactor-launcher
+379dbd06 HEAD@{987}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260504-234824
+379dbd06 HEAD@{988}: checkout: moving from codex/unified-local-ai-refactor-launcher to master
+4f8ab699 HEAD@{989}: commit: fix(ai): wire full-run output dir launcher contract
+9898c719 HEAD@{990}: commit: docs(ai): normalize full-run procedure encoding
+549ca4bc HEAD@{991}: commit: docs(ai): link full-run root launcher reference
+5667f238 HEAD@{992}: reset: moving to 5667f238c05da736a515cfcb4f1f0fcfcde644a5
+5667f238 HEAD@{993}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+b5e4bc8e HEAD@{994}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260504-233106 to codex/unified-local-ai-refactor-launcher
+242b512a HEAD@{995}: commit: docs(ai): link full-run root launcher reference
+379dbd06 HEAD@{996}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260504-233106
+379dbd06 HEAD@{997}: checkout: moving from codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260504-232134 to master
+3fa47ca3 HEAD@{998}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+379dbd06 HEAD@{999}: checkout: moving from master to codex/local-ai-agent_state_chunks_context_pack_contract_evidence_full_validation_json_md_official_patch_specs_provider_python-20260504-232134
+379dbd06 HEAD@{1000}: checkout: moving from codex/unified-local-ai-refactor-launcher to master
+b5e4bc8e HEAD@{1001}: commit: docs(ai): align full run policy to all-lanes activation
+7030328e HEAD@{1002}: commit: fix(ai): escape provider fallback markdown strings
+05be0951 HEAD@{1003}: commit: fix(ai): wire strict provider artifacts through integrated lane
+97da9889 HEAD@{1004}: commit: fix(ai): enforce strict tool activation for real runs
+f0ab7ce5 HEAD@{1005}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+f0ab7ce5 HEAD@{1006}: pull --ff-only: Fast-forward
+e482250b HEAD@{1007}: pull --ff-only: Fast-forward
+30613568 HEAD@{1008}: reset: moving to HEAD
+30613568 HEAD@{1009}: commit: fix(ai): accept timestamped ai packet folders in workload quality gate
+346ed6aa HEAD@{1010}: commit: docs(ai): repair datastamp procedure and patch delivery policy
+61126761 HEAD@{1011}: commit: fix(ai): keep ai packet directories out of context files
+85b5615e HEAD@{1012}: commit: fix(ai): pass ai packets dir to workload quality gate
+625a4743 HEAD@{1013}: commit: fix(ai): expose ai packets dir without breaking launcher parse
+9d4ecab3 HEAD@{1014}: commit: fix(ai): use global datastamp for ai packets
+fea25fbc HEAD@{1015}: commit: feat(ai): add prod switch for launcher debug tail evidence
+4f00d33f HEAD@{1016}: commit: fix(ai): make startup check report contract compliant
+173ed749 HEAD@{1017}: commit: docs(ai): add unified local AI launcher validation evidence
+1901df59 HEAD@{1018}: commit: feat(ai): add unified local AI refactor launcher
+fc7e0124 HEAD@{1019}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+fc7e0124 HEAD@{1020}: pull --ff-only origin codex/unified-local-ai-refactor-launcher: Fast-forward
+e09abbf2 HEAD@{1021}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+e09abbf2 HEAD@{1022}: commit: feat(workflow): inherit legacy full toolbox 0-to-10 controls
+7002b20b HEAD@{1023}: commit: fix(workflow): make full 0-to-10 dry-run tolerate planned quality report
+3529bd39 HEAD@{1024}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+3529bd39 HEAD@{1025}: commit: fix(workflow): normalize launcher and gitignore line endings
+1f03325d HEAD@{1026}: commit: fix(workflow): bootstrap venv and avoid Python REPL in unified launcher
+de02df00 HEAD@{1027}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+de02df00 HEAD@{1028}: commit: fix(workflow): align unified launcher with 0-10 Python env policy
+9339ead5 HEAD@{1029}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+9339ead5 HEAD@{1030}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+9339ead5 HEAD@{1031}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+9339ead5 HEAD@{1032}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+9339ead5 HEAD@{1033}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+9339ead5 HEAD@{1034}: pull --ff-only: Fast-forward
+5d141673 HEAD@{1035}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+5d141673 HEAD@{1036}: commit: fix(workflow): harden unified launcher strict-mode arrays
+a3ea2e35 HEAD@{1037}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+a3ea2e35 HEAD@{1038}: pull --ff-only: Fast-forward
+fcf2f6c3 HEAD@{1039}: checkout: moving from codex/unified-local-ai-refactor-launcher to codex/unified-local-ai-refactor-launcher
+fcf2f6c3 HEAD@{1040}: checkout: moving from codex/docs-index-missing-md-triage to codex/unified-local-ai-refactor-launcher
+d74bc606 HEAD@{1041}: checkout: moving from codex/docs-index-missing-md-triage to codex/docs-index-missing-md-triage
+d74bc606 HEAD@{1042}: checkout: moving from codex/docs-index-missing-md-triage to codex/docs-index-missing-md-triage
+d74bc606 HEAD@{1043}: checkout: moving from master to codex/docs-index-missing-md-triage
+379dbd06 HEAD@{1044}: pull --ff-only origin master: Fast-forward
+edceb591 HEAD@{1045}: checkout: moving from codex/fix-markdown-inventory-classification to master
+2cb376fe HEAD@{1046}: checkout: moving from codex/fix-markdown-inventory-classification to codex/fix-markdown-inventory-classification
+2cb376fe HEAD@{1047}: checkout: moving from codex/docs-md-obsolete-pruning-20260504-083640 to codex/fix-markdown-inventory-classification
+edceb591 HEAD@{1048}: checkout: moving from master to codex/docs-md-obsolete-pruning-20260504-083640
+edceb591 HEAD@{1049}: checkout: moving from codex/docs-md-obsolete-pruning-20260504-083640 to master
+edceb591 HEAD@{1050}: checkout: moving from master to codex/docs-md-obsolete-pruning-20260504-083640
+edceb591 HEAD@{1051}: checkout: moving from master to master
+edceb591 HEAD@{1052}: pull --ff-only origin master: Fast-forward
+83f894db HEAD@{1053}: checkout: moving from codex/workflow-md-refactor-10min-runner to master
+68c73291 HEAD@{1054}: checkout: moving from master to codex/workflow-md-refactor-10min-runner
+83f894db HEAD@{1055}: checkout: moving from codex/workflow-md-refactor-10min-runner to master
+68c73291 HEAD@{1056}: checkout: moving from codex/workflow-md-refactor-10min-runner to codex/workflow-md-refactor-10min-runner
+68c73291 HEAD@{1057}: checkout: moving from codex/docs-md-obsolete-pruning-20260504-083438 to codex/workflow-md-refactor-10min-runner
+83f894db HEAD@{1058}: checkout: moving from master to codex/docs-md-obsolete-pruning-20260504-083438
+83f894db HEAD@{1059}: checkout: moving from codex/docs-md-obsolete-pruning-20260504-083438 to master
+83f894db HEAD@{1060}: checkout: moving from master to codex/docs-md-obsolete-pruning-20260504-083438
+83f894db HEAD@{1061}: checkout: moving from codex/workflow-md-refactor-10min-runner to master
+68c73291 HEAD@{1062}: checkout: moving from master to codex/workflow-md-refactor-10min-runner
+83f894db HEAD@{1063}: checkout: moving from master to master
+83f894db HEAD@{1064}: pull --ff-only origin master: Fast-forward
+c3af33f6 HEAD@{1065}: checkout: moving from codex/docs-local-machine-validation-lane to master
+90a83e30 HEAD@{1066}: pull --ff-only: Fast-forward
+600cee60 HEAD@{1067}: checkout: moving from codex/docs-local-machine-validation-lane to codex/docs-local-machine-validation-lane
+600cee60 HEAD@{1068}: checkout: moving from master to codex/docs-local-machine-validation-lane
+c3af33f6 HEAD@{1069}: pull --ff-only origin master: Fast-forward
+b3a9ceb5 HEAD@{1070}: checkout: moving from codex/docs-md-full-review-line-reduction to master
+b9816223 HEAD@{1071}: pull --ff-only: Fast-forward
+84b63bd6 HEAD@{1072}: checkout: moving from codex/docs-md-full-review-line-reduction to codex/docs-md-full-review-line-reduction
+84b63bd6 HEAD@{1073}: checkout: moving from master to codex/docs-md-full-review-line-reduction
+b3a9ceb5 HEAD@{1074}: pull --ff-only origin master: Fast-forward
+165deb7d HEAD@{1075}: checkout: moving from codex/docs-md-map-pruning-governance to master
+873b658f HEAD@{1076}: checkout: moving from codex/infinite-full-toolbox-issue-sweep to codex/docs-md-map-pruning-governance
+ca0cae73 HEAD@{1077}: commit: fix(ai): keep Ollama enabled for runs and add PR180 evidence
+5dc5e1ab HEAD@{1078}: checkout: moving from codex/infinite-full-toolbox-issue-sweep to codex/infinite-full-toolbox-issue-sweep
+5dc5e1ab HEAD@{1079}: commit: docs(ai): start infinite full toolbox issue sweep
+165deb7d HEAD@{1080}: checkout: moving from master to codex/infinite-full-toolbox-issue-sweep
+165deb7d HEAD@{1081}: checkout: moving from master to master
+165deb7d HEAD@{1082}: pull origin master: Fast-forward
+af7c40d7 HEAD@{1083}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to master
+120c8933 HEAD@{1084}: commit: test(ai): add regenerated python line count evidence
+a8c35b41 HEAD@{1085}: commit: fix(ai): make full toolbox handoff deterministic and telemetry explicit
+29580135 HEAD@{1086}: commit: test(ai): add full toolbox run evidence 20260503-223900
+0f5585a2 HEAD@{1087}: commit: fix(ai): repair GPU runner provider error hardening
+1192d96b HEAD@{1088}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+1192d96b HEAD@{1089}: commit: fix(ai): harden GPU runner provider error handling
+17f24a37 HEAD@{1090}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+17f24a37 HEAD@{1091}: commit: chore(ai): finalize toolbox context rebuild after manual purge
+44da2d0f HEAD@{1092}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+44da2d0f HEAD@{1093}: commit: chore(ai): purge Blender manual context from default repo memory
+e13c91cd HEAD@{1094}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+e13c91cd HEAD@{1095}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+e13c91cd HEAD@{1096}: commit: fix(ai): avoid semantic chunk filename collisions
+1a2af026 HEAD@{1097}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+1a2af026 HEAD@{1098}: commit: fix(ai): avoid semantic chunk filename collisions
+c75151b7 HEAD@{1099}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+c75151b7 HEAD@{1100}: commit: feat(ai): add semantic cloud handoff chunks
+72d27817 HEAD@{1101}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+72d27817 HEAD@{1102}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+72d27817 HEAD@{1103}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+72d27817 HEAD@{1104}: commit: test(ai): refresh recovered full toolbox evidence bundle
+048395cd HEAD@{1105}: commit: fix(ai): remove artificial patch-plan truncation
+98659391 HEAD@{1106}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+98659391 HEAD@{1107}: commit: test(ai): add recovered full toolbox evidence with runtime tool telemetry
+a2cbcbc8 HEAD@{1108}: commit: fix(ai): pass patch-plan cap through decision loop wrapper
+3e8279b3 HEAD@{1109}: commit: feat(ai): add runtime tool usage telemetry
+0ef70593 HEAD@{1110}: commit: feat(ai): treat provider failures as advisory with explicit planning caps
+af7c40d7 HEAD@{1111}: checkout: moving from codex/full-toolbox-provider-advisory-and-caps to codex/full-toolbox-provider-advisory-and-caps
+af7c40d7 HEAD@{1112}: checkout: moving from master to codex/full-toolbox-provider-advisory-and-caps
+af7c40d7 HEAD@{1113}: pull --ff-only origin master: Fast-forward
+14998ef6 HEAD@{1114}: checkout: moving from codex/substantive-repository-consistency-recommendations to master
+5a4456e1 HEAD@{1115}: commit: test(ai): refresh full toolbox telemetry summary evidence
+f8f2458a HEAD@{1116}: commit: test(ai): add full toolbox substantive planning telemetry evidence
+1d6e9fc5 HEAD@{1117}: pull --rebase origin codex/substantive-repository-consistency-recommendations: Fast-forward
+ba64d87d HEAD@{1118}: checkout: moving from codex/substantive-repository-consistency-recommendations to codex/substantive-repository-consistency-recommendations
+ba64d87d HEAD@{1119}: checkout: moving from codex/substantive-repository-consistency-recommendations to codex/substantive-repository-consistency-recommendations
+ba64d87d HEAD@{1120}: checkout: moving from codex/substantive-repository-consistency-recommendations to codex/substantive-repository-consistency-recommendations
+ba64d87d HEAD@{1121}: pull --ff-only origin codex/substantive-repository-consistency-recommendations: Fast-forward
+0da88f82 HEAD@{1122}: checkout: moving from codex/substantive-repository-consistency-recommendations to codex/substantive-repository-consistency-recommendations
+0da88f82 HEAD@{1123}: commit: feat(ai): prioritize substantive repository consistency planning
+14998ef6 HEAD@{1124}: checkout: moving from codex/substantive-repository-consistency-recommendations to codex/substantive-repository-consistency-recommendations
+14998ef6 HEAD@{1125}: checkout: moving from master to codex/substantive-repository-consistency-recommendations
+14998ef6 HEAD@{1126}: checkout: moving from master to master
+14998ef6 HEAD@{1127}: pull --ff-only origin master: Fast-forward
+928e04cc HEAD@{1128}: checkout: moving from codex/repository-consistency-map-phase-timing to master
+9d29912b HEAD@{1129}: pull --ff-only origin codex/repository-consistency-map-phase-timing: Fast-forward
+bab92862 HEAD@{1130}: checkout: moving from codex/repository-consistency-map-phase-timing to codex/repository-consistency-map-phase-timing
+bab92862 HEAD@{1131}: commit: perf(ai): add phase timing to repository consistency mapper
+928e04cc HEAD@{1132}: checkout: moving from codex/repository-consistency-map-phase-timing to codex/repository-consistency-map-phase-timing
+928e04cc HEAD@{1133}: checkout: moving from codex/repository-consistency-map-phase-timing to codex/repository-consistency-map-phase-timing
+928e04cc HEAD@{1134}: checkout: moving from codex/repository-consistency-map-phase-timing to codex/repository-consistency-map-phase-timing
+928e04cc HEAD@{1135}: checkout: moving from master to codex/repository-consistency-map-phase-timing
+928e04cc HEAD@{1136}: pull --ff-only origin master: Fast-forward
+e5f6ba5c HEAD@{1137}: checkout: moving from codex/repository-consistency-map-smoke-reuse-timing to master
+d508faba HEAD@{1138}: checkout: moving from codex/repository-consistency-map-smoke-reuse-timing to codex/repository-consistency-map-smoke-reuse-timing
+d508faba HEAD@{1139}: commit: perf(workflow): reuse repository consistency map in smoke
+ff817d29 HEAD@{1140}: checkout: moving from codex/repository-consistency-map-smoke-reuse-timing to codex/repository-consistency-map-smoke-reuse-timing
+ff817d29 HEAD@{1141}: checkout: moving from master to codex/repository-consistency-map-smoke-reuse-timing
+e5f6ba5c HEAD@{1142}: pull --ff-only origin master: Fast-forward
+8c9dad8e HEAD@{1143}: checkout: moving from codex/full-toolbox-repository-consistency-map-wiring to master
+33246e01 HEAD@{1144}: pull --ff-only origin codex/full-toolbox-repository-consistency-map-wiring: Fast-forward
+79197063 HEAD@{1145}: checkout: moving from codex/full-toolbox-repository-consistency-map-wiring to codex/full-toolbox-repository-consistency-map-wiring
+79197063 HEAD@{1146}: commit: perf(ai): add bounded workers to repository consistency mapper
+d649c1b8 HEAD@{1147}: checkout: moving from codex/full-toolbox-repository-consistency-map-wiring to codex/full-toolbox-repository-consistency-map-wiring
+d649c1b8 HEAD@{1148}: commit: fix(workflow): make repository consistency map mandatory in full toolbox loop
+d21ab7b6 HEAD@{1149}: checkout: moving from codex/full-toolbox-repository-consistency-map-wiring to codex/full-toolbox-repository-consistency-map-wiring
+d21ab7b6 HEAD@{1150}: checkout: moving from codex/full-toolbox-repository-consistency-map-wiring to codex/full-toolbox-repository-consistency-map-wiring
+d21ab7b6 HEAD@{1151}: commit: feat(workflow): feed repository consistency map into full toolbox loop
+8c9dad8e HEAD@{1152}: checkout: moving from master to codex/full-toolbox-repository-consistency-map-wiring
+8c9dad8e HEAD@{1153}: pull --ff-only origin master: Fast-forward
+0d605dd7 HEAD@{1154}: checkout: moving from master to master
+0d605dd7 HEAD@{1155}: checkout: moving from codex/repository-consistency-mapper to master
+bce476da HEAD@{1156}: checkout: moving from codex/apply-md-python-consistency-bundle to codex/repository-consistency-mapper
+39ed763c HEAD@{1157}: commit: docs(ai): normalize md-python consistency managed blocks
+0d605dd7 HEAD@{1158}: checkout: moving from master to codex/apply-md-python-consistency-bundle
+0d605dd7 HEAD@{1159}: checkout: moving from master to master
+0d605dd7 HEAD@{1160}: commit: test(ai): add md-python consistency evidence
+69d279d9 HEAD@{1161}: checkout: moving from master to master
+69d279d9 HEAD@{1162}: pull --ff-only origin master: Fast-forward
+8e493052 HEAD@{1163}: checkout: moving from codex/update-0-to-10-full-toolbox-procedure to master
+df0f9faf HEAD@{1164}: checkout: moving from master to codex/update-0-to-10-full-toolbox-procedure
+8e493052 HEAD@{1165}: pull --ff-only origin master: Fast-forward
+fe6065a3 HEAD@{1166}: checkout: moving from codex/patch-plan-bundle-builder to master
+cd850303 HEAD@{1167}: commit: docs(ai): apply review patch bundle notes
+f9a09770 HEAD@{1168}: pull --ff-only: Fast-forward
+2252b3ea HEAD@{1169}: checkout: moving from codex/patch-plan-bundle-builder to codex/patch-plan-bundle-builder
+2252b3ea HEAD@{1170}: checkout: moving from master to codex/patch-plan-bundle-builder
+fe6065a3 HEAD@{1171}: pull --ff-only origin master: Fast-forward
+2f485340 HEAD@{1172}: checkout: moving from codex/agent-review-decision-loop to master
+28ddc004 HEAD@{1173}: commit: test(ai): add integrated warning-policy full toolbox evidence
+62859f95 HEAD@{1174}: pull --ff-only: Fast-forward
+a774ab48 HEAD@{1175}: commit: fix(workflow): treat recovered base workflow diagnostics as nonfatal
+4375f63e HEAD@{1176}: pull --ff-only: Fast-forward
+e9d78c49 HEAD@{1177}: commit: fix(workflow): align full toolbox decision loop memory reload
+83c96161 HEAD@{1178}: pull --ff-only: Fast-forward
+496ed255 HEAD@{1179}: checkout: moving from codex/agent-review-decision-loop to codex/agent-review-decision-loop
+496ed255 HEAD@{1180}: commit: test(ai): add full toolbox decision-loop evidence
+66da832e HEAD@{1181}: checkout: moving from codex/agent-review-decision-loop to codex/agent-review-decision-loop
+66da832e HEAD@{1182}: checkout: moving from master to codex/agent-review-decision-loop
+2f485340 HEAD@{1183}: pull --ff-only origin master: Fast-forward
+d557323e HEAD@{1184}: checkout: moving from codex/deterministic-recommendation-synthesizer to master
+8d4bc854 HEAD@{1185}: commit: docs(ai): apply deterministic review patch plans
+f0226b97 HEAD@{1186}: checkout: moving from master to codex/deterministic-recommendation-synthesizer
+d557323e HEAD@{1187}: pull --ff-only origin master: Fast-forward
+795f11ba HEAD@{1188}: checkout: moving from codex/schema-repair-retry-round-default-fix to master
+cc6b5e88 HEAD@{1189}: commit: fix(ai): initialize schema repair retry before round serialization
+795f11ba HEAD@{1190}: checkout: moving from master to codex/schema-repair-retry-round-default-fix
+795f11ba HEAD@{1191}: checkout: moving from master to master
+795f11ba HEAD@{1192}: pull --ff-only origin master: Fast-forward
+3588089a HEAD@{1193}: checkout: moving from codex/schema-repair-retry-bootstrap-fix to master
+01f6cb6f HEAD@{1194}: commit: fix(ai): keep schema repair retry counters out of broker bootstrap
+3588089a HEAD@{1195}: checkout: moving from master to codex/schema-repair-retry-bootstrap-fix
+3588089a HEAD@{1196}: pull --ff-only origin master: Fast-forward
+ba927931 HEAD@{1197}: checkout: moving from codex/schema-repair-retry-pass to master
+2aa271b7 HEAD@{1198}: commit: feat(ai): add schema repair retry pass
+ba927931 HEAD@{1199}: checkout: moving from master to codex/schema-repair-retry-pass
+ba927931 HEAD@{1200}: pull --ff-only origin master: Fast-forward
+f2087a56 HEAD@{1201}: checkout: moving from codex/schema-repair-provider-context to master
+e1688b33 HEAD@{1202}: commit: feat(ai): convert tool feedback into schema repair context
+f2087a56 HEAD@{1203}: checkout: moving from master to codex/schema-repair-provider-context
+f2087a56 HEAD@{1204}: pull --ff-only origin master: Fast-forward
+d6964e1a HEAD@{1205}: checkout: moving from codex/npu-runtime-tool-fallback to master
+d64b58ec HEAD@{1206}: commit: feat(ai): let NPU auditor request runtime tools
+ac0631c4 HEAD@{1207}: checkout: moving from codex/adaptive-runtime-tool-telemetry to codex/npu-runtime-tool-fallback
+ac0631c4 HEAD@{1208}: commit: feat(ai): propagate GPU tool telemetry and adapt NPU lane
+d6964e1a HEAD@{1209}: checkout: moving from master to codex/adaptive-runtime-tool-telemetry
+d6964e1a HEAD@{1210}: pull --ff-only origin master: Fast-forward
+4f52cd24 HEAD@{1211}: checkout: moving from codex/runtime-tool-feedback-loop to master
+532829e1 HEAD@{1212}: commit: feat(ai): feed runtime tool results into provider rounds
+4f52cd24 HEAD@{1213}: checkout: moving from master to codex/runtime-tool-feedback-loop
+4f52cd24 HEAD@{1214}: pull --ff-only origin master: Fast-forward
+172e2af5 HEAD@{1215}: checkout: moving from codex/deterministic-runtime-tool-fallback to master
+f0c4dfea HEAD@{1216}: commit: fix(ai): trigger deterministic runtime tool fallback
+172e2af5 HEAD@{1217}: checkout: moving from master to codex/deterministic-runtime-tool-fallback
+172e2af5 HEAD@{1218}: pull --ff-only origin master: Fast-forward
+285433a7 HEAD@{1219}: checkout: moving from codex/share-runtime-tool-guidance-gpu-npu to master
+676fbfbb HEAD@{1220}: commit: feat(ai): share runtime tool guidance across providers
+285433a7 HEAD@{1221}: checkout: moving from master to codex/share-runtime-tool-guidance-gpu-npu
+285433a7 HEAD@{1222}: checkout: moving from master to master
+285433a7 HEAD@{1223}: pull --ff-only origin master: Fast-forward
+8ff00e46 HEAD@{1224}: checkout: moving from codex/guide-gpu-planner-tool-requests to master
+463dcca6 HEAD@{1225}: commit: feat(ai): guide GPU planner runtime tool requests
+8ff00e46 HEAD@{1226}: checkout: moving from master to codex/guide-gpu-planner-tool-requests
+8ff00e46 HEAD@{1227}: pull --ff-only origin master: Fast-forward
+75f942b4 HEAD@{1228}: checkout: moving from codex/add-post-pr157-provider-broker-evidence to master
+e83d8ce6 HEAD@{1229}: commit: test(ai): add post-PR157 provider broker evidence
+75f942b4 HEAD@{1230}: checkout: moving from master to codex/add-post-pr157-provider-broker-evidence
+75f942b4 HEAD@{1231}: pull --ff-only origin master: Fast-forward
+199bf0fa HEAD@{1232}: checkout: moving from codex/fix-orchestrator-runtime-broker-diagnostics to master
+c9d150ee HEAD@{1233}: commit: fix(ai): surface runtime broker bootstrap in orchestrator diagnostics
+199bf0fa HEAD@{1234}: checkout: moving from master to codex/fix-orchestrator-runtime-broker-diagnostics
+199bf0fa HEAD@{1235}: checkout: moving from master to master
+199bf0fa HEAD@{1236}: pull --ff-only origin master: Fast-forward
+8ec96d9f HEAD@{1237}: checkout: moving from codex/reuse-json-text-report-helpers to master
+93685278 HEAD@{1238}: commit: refactor(ai): reuse shared JSON/text report helpers
+8ec96d9f HEAD@{1239}: checkout: moving from master to codex/reuse-json-text-report-helpers
+8ec96d9f HEAD@{1240}: checkout: moving from master to master
+8ec96d9f HEAD@{1241}: checkout: moving from master to master
+8ec96d9f HEAD@{1242}: checkout: moving from master to master
+8ec96d9f HEAD@{1243}: checkout: moving from master to master
+8ec96d9f HEAD@{1244}: pull --ff-only origin master: Fast-forward
+7101f6a1 HEAD@{1245}: checkout: moving from codex/finish-line-count-helper-reuse to master
+245eafe4 HEAD@{1246}: commit: refactor(ai): finish line-count helper reuse
+7101f6a1 HEAD@{1247}: checkout: moving from master to codex/finish-line-count-helper-reuse
+7101f6a1 HEAD@{1248}: checkout: moving from master to master
+7101f6a1 HEAD@{1249}: checkout: moving from master to master
+7101f6a1 HEAD@{1250}: pull --ff-only origin master: Fast-forward
+ac13dc90 HEAD@{1251}: checkout: moving from codex/reuse-line-count-helpers to master
+f2b05419 HEAD@{1252}: commit: refactor(ai): reuse shared line-count helpers
+ac13dc90 HEAD@{1253}: checkout: moving from master to codex/reuse-line-count-helpers
+ac13dc90 HEAD@{1254}: checkout: moving from master to master
+ac13dc90 HEAD@{1255}: pull --ff-only origin master: Fast-forward
+566254bd HEAD@{1256}: checkout: moving from codex/complex-provider-toolbox-integrated-evidence to master
+f4cd28c2 HEAD@{1257}: commit: test(ai): add integrated provider toolbox evidence
+566254bd HEAD@{1258}: checkout: moving from master to codex/complex-provider-toolbox-integrated-evidence
+566254bd HEAD@{1259}: checkout: moving from master to master
+566254bd HEAD@{1260}: checkout: moving from codex/complex-local-ai-provider-backed-evidence to master
+520e15fa HEAD@{1261}: checkout: moving from master to codex/complex-local-ai-provider-backed-evidence
+566254bd HEAD@{1262}: pull --ff-only origin master: Fast-forward
+08513fdf HEAD@{1263}: checkout: moving from local/complex-provider-toolbox-v1-20260503-095655 to master
+08513fdf HEAD@{1264}: checkout: moving from master to local/complex-provider-toolbox-v1-20260503-095655
+08513fdf HEAD@{1265}: checkout: moving from codex/complex-local-ai-provider-backed-evidence to master
+520e15fa HEAD@{1266}: commit: fix(workflow): keep local AI dry-run context files array-safe
+64bb04f0 HEAD@{1267}: checkout: moving from codex/complex-local-ai-provider-backed-evidence to codex/complex-local-ai-provider-backed-evidence
+64bb04f0 HEAD@{1268}: pull --ff-only origin codex/complex-local-ai-provider-backed-evidence: Fast-forward
+295b5db4 HEAD@{1269}: checkout: moving from codex/complex-local-ai-provider-backed-evidence to codex/complex-local-ai-provider-backed-evidence
+295b5db4 HEAD@{1270}: commit: test(ai): add provider-backed complex local AI evidence
+08513fdf HEAD@{1271}: checkout: moving from master to codex/complex-local-ai-provider-backed-evidence
+08513fdf HEAD@{1272}: pull --ff-only origin master: Fast-forward
+e387a8e1 HEAD@{1273}: checkout: moving from codex/complex-local-ai-tool-usage-evidence to master
+4a8aebff HEAD@{1274}: commit: test(ai): add complex local AI tool usage evidence
+e387a8e1 HEAD@{1275}: checkout: moving from master to codex/complex-local-ai-tool-usage-evidence
+e387a8e1 HEAD@{1276}: checkout: moving from master to master
+e387a8e1 HEAD@{1277}: pull --ff-only origin master: Fast-forward
+a31ddff7 HEAD@{1278}: checkout: moving from codex/super-report-utils-line-count-refactor to master
+0180812c HEAD@{1279}: commit: refactor(ai): centralize report JSON and line-count helpers
+a31ddff7 HEAD@{1280}: checkout: moving from master to codex/super-report-utils-line-count-refactor
+a31ddff7 HEAD@{1281}: checkout: moving from codex/reuse-report-utils-json-write-smoke to master
+a31ddff7 HEAD@{1282}: checkout: moving from master to codex/reuse-report-utils-json-write-smoke
+a31ddff7 HEAD@{1283}: checkout: moving from master to master
+a31ddff7 HEAD@{1284}: pull --ff-only origin master: Fast-forward
+6b53e33a HEAD@{1285}: checkout: moving from codex/local-ai-input-audit-support to master
+7edc9d03 HEAD@{1286}: commit: feat(ai): support local AI audit input in startup preflight
+6b53e33a HEAD@{1287}: checkout: moving from master to codex/local-ai-input-audit-support
+6b53e33a HEAD@{1288}: checkout: moving from master to master
+6b53e33a HEAD@{1289}: pull --ff-only origin master: Fast-forward
+ef6f1145 HEAD@{1290}: checkout: moving from codex/refactor-duplication-audit-tool to master
+e02526c0 HEAD@{1291}: commit: feat(ai): add reusable refactor duplication audit tool
+ef6f1145 HEAD@{1292}: checkout: moving from master to codex/refactor-duplication-audit-tool
+ef6f1145 HEAD@{1293}: checkout: moving from master to master
+ef6f1145 HEAD@{1294}: pull --ff-only origin master: Fast-forward
+1927920c HEAD@{1295}: checkout: moving from codex/shared-toolbox-refactor-duplication-evidence to master
+c42f8d63 HEAD@{1296}: commit: test(ai): add shared toolbox refactor duplication audit evidence
+1927920c HEAD@{1297}: checkout: moving from master to codex/shared-toolbox-refactor-duplication-evidence
+1927920c HEAD@{1298}: pull --ff-only origin master: Fast-forward
+4cfabf0a HEAD@{1299}: checkout: moving from codex/shared-toolbox-refactor-duplication-task to master
+23a53894 HEAD@{1300}: checkout: moving from master to codex/shared-toolbox-refactor-duplication-task
+4cfabf0a HEAD@{1301}: checkout: moving from master to master
+4cfabf0a HEAD@{1302}: pull --ff-only origin master: Fast-forward
+d3f50927 HEAD@{1303}: checkout: moving from codex/shared-toolbox-bundle-builder-local to master
+baaa85ca HEAD@{1304}: commit: refactor(ai): move shared toolbox chunking into evidence bundle layer
+079d3604 HEAD@{1305}: commit: feat(ai): add recursive shared toolbox bundle discovery
+b983c03e HEAD@{1306}: checkout: moving from codex/shared-toolbox-bundle-builder-local to codex/shared-toolbox-bundle-builder-local
+b983c03e HEAD@{1307}: commit: feat(ai): add shared toolbox AI-to-AI bundle builder
+d3f50927 HEAD@{1308}: checkout: moving from master to codex/shared-toolbox-bundle-builder-local
+d3f50927 HEAD@{1309}: checkout: moving from codex/shared-toolbox-bundle-builder to master
+d3f50927 HEAD@{1310}: checkout: moving from master to codex/shared-toolbox-bundle-builder
+d3f50927 HEAD@{1311}: checkout: moving from master to master
+d3f50927 HEAD@{1312}: pull --ff-only origin master: Fast-forward
+79ef8b20 HEAD@{1313}: checkout: moving from codex/shared-toolbox-ai-to-ai-evidence to master
+3d98eb46 HEAD@{1314}: commit: test(ai): add shared toolbox AI-to-AI evidence bundle
+23937960 HEAD@{1315}: checkout: moving from codex/docs-0-to-10-optional-memory-reload to codex/shared-toolbox-ai-to-ai-evidence
+23937960 HEAD@{1316}: commit: docs(ai): add optional memory reload to 0-10 procedure
+79ef8b20 HEAD@{1317}: checkout: moving from master to codex/docs-0-to-10-optional-memory-reload
+79ef8b20 HEAD@{1318}: reset: moving to HEAD
+79ef8b20 HEAD@{1319}: checkout: moving from master to master
+79ef8b20 HEAD@{1320}: checkout: moving from master to master
+79ef8b20 HEAD@{1321}: checkout: moving from master to master
+79ef8b20 HEAD@{1322}: pull --ff-only origin master: Fast-forward
+eb5ec1db HEAD@{1323}: checkout: moving from codex/shared-runtime-toolbox-evidence-bundle to master
+eb5ec1db HEAD@{1324}: checkout: moving from master to codex/shared-runtime-toolbox-evidence-bundle
+eb5ec1db HEAD@{1325}: commit: test(ai): add shared runtime toolbox evidence bundle
+8e7f0a9f HEAD@{1326}: checkout: moving from master to master
+8e7f0a9f HEAD@{1327}: pull --ff-only origin master: Fast-forward
+4b0eb9bb HEAD@{1328}: checkout: moving from master to master
+4b0eb9bb HEAD@{1329}: pull --ff-only origin master: Fast-forward
+2ad4a3b4 HEAD@{1330}: checkout: moving from codex/orchestrator-gpu-runtime-tool-routing to master
+2fd700c0 HEAD@{1331}: commit: refactor(ai): route GPU runtime tool requests through orchestrator
+2ad4a3b4 HEAD@{1332}: checkout: moving from master to codex/orchestrator-gpu-runtime-tool-routing
+2ad4a3b4 HEAD@{1333}: checkout: moving from master to master
+2ad4a3b4 HEAD@{1334}: checkout: moving from master to master
+2ad4a3b4 HEAD@{1335}: pull --ff-only origin master: Fast-forward
+220b6385 HEAD@{1336}: checkout: moving from codex/npu-runtime-tool-execution-broker to master
+308ea5aa HEAD@{1337}: commit: feat(ai): execute NPU runtime tool requests through broker
+220b6385 HEAD@{1338}: checkout: moving from master to codex/npu-runtime-tool-execution-broker
+220b6385 HEAD@{1339}: checkout: moving from master to master
+220b6385 HEAD@{1340}: checkout: moving from master to master
+220b6385 HEAD@{1341}: pull --ff-only origin master: Fast-forward
+6fd64d5f HEAD@{1342}: checkout: moving from codex/npu-tool-requests-contract to master
+a8845101 HEAD@{1343}: commit: feat(ai): add NPU runtime tool request contract
+6fd64d5f HEAD@{1344}: checkout: moving from master to codex/npu-tool-requests-contract
+6fd64d5f HEAD@{1345}: checkout: moving from master to master
+6fd64d5f HEAD@{1346}: pull --ff-only origin master: Fast-forward
+b98f10fe HEAD@{1347}: checkout: moving from codex/fix-orchestrator-runtime-bootstrap-arg to master
+547ef5fb HEAD@{1348}: commit: fix(ai): add orchestrator runtime bootstrap parser flag
+b98f10fe HEAD@{1349}: checkout: moving from master to codex/fix-orchestrator-runtime-bootstrap-arg
+b98f10fe HEAD@{1350}: pull --ff-only origin master: Fast-forward
+0ecd290a HEAD@{1351}: checkout: moving from codex/npu-runtime-toolbox-context to master
+eb96e503 HEAD@{1352}: commit: feat(ai): expose runtime toolbox context to NPU auditor
+0ecd290a HEAD@{1353}: checkout: moving from master to codex/npu-runtime-toolbox-context
+0ecd290a HEAD@{1354}: checkout: moving from master to master
+0ecd290a HEAD@{1355}: reset: moving to origin/master
+e24ef48c HEAD@{1356}: checkout: moving from master to master
+e24ef48c HEAD@{1357}: commit: fix(ai): initialize runtime broker per-tool memory guardrails
+6623a0ed HEAD@{1358}: checkout: moving from master to master
+6623a0ed HEAD@{1359}: pull --ff-only origin master: Fast-forward
+b01dcb59 HEAD@{1360}: checkout: moving from codex/provider-empty-bootstrap-reporting to master
+219ba76e HEAD@{1361}: commit: fix(ai): report provider empty responses and bootstrap failures accurately
+b01dcb59 HEAD@{1362}: checkout: moving from master to codex/provider-empty-bootstrap-reporting
+b01dcb59 HEAD@{1363}: checkout: moving from codex/wire-gpu-json-contract-runner to master
+b01dcb59 HEAD@{1364}: checkout: moving from master to codex/wire-gpu-json-contract-runner
+b01dcb59 HEAD@{1365}: checkout: moving from master to master
+b01dcb59 HEAD@{1366}: pull --ff-only origin master: Fast-forward
+87f2f9bc HEAD@{1367}: checkout: moving from codex/provider-empty-response-diagnostics to master
+a9cde9a3 HEAD@{1368}: commit: fix(ai): classify empty GPU and NPU provider responses
+87f2f9bc HEAD@{1369}: checkout: moving from master to codex/provider-empty-response-diagnostics
+87f2f9bc HEAD@{1370}: checkout: moving from master to master
+87f2f9bc HEAD@{1371}: checkout: moving from master to master
+87f2f9bc HEAD@{1372}: pull --ff-only origin master: Fast-forward
+9fde4ba2 HEAD@{1373}: checkout: moving from codex/unlock-controlled-persistent-sqlite-memory to master
+2ee418c3 HEAD@{1374}: commit: feat(ai): unlock controlled persistent SQLite memory writes
+9fde4ba2 HEAD@{1375}: checkout: moving from master to codex/unlock-controlled-persistent-sqlite-memory
+9fde4ba2 HEAD@{1376}: checkout: moving from master to master
+9fde4ba2 HEAD@{1377}: pull --ff-only origin master: Fast-forward
+a8a2f700 HEAD@{1378}: checkout: moving from codex/runtime-tool-bootstrap-before-gpu-planning to master
+93a1f1a5 HEAD@{1379}: commit: feat(ai): add runtime tool bootstrap before GPU planning
+a8a2f700 HEAD@{1380}: checkout: moving from master to codex/runtime-tool-bootstrap-before-gpu-planning
+a8a2f700 HEAD@{1381}: checkout: moving from master to master
+a8a2f700 HEAD@{1382}: checkout: moving from master to master
+a8a2f700 HEAD@{1383}: checkout: moving from master to master
+a8a2f700 HEAD@{1384}: checkout: moving from master to master
+a8a2f700 HEAD@{1385}: checkout: moving from master to master
+a8a2f700 HEAD@{1386}: pull --ff-only origin master: Fast-forward
+b7eec236 HEAD@{1387}: checkout: moving from codex/execute-runtime-tool-requests-through-broker to master
+37bfbd71 HEAD@{1388}: commit: feat(ai): execute planner runtime tool requests through broker
+b7eec236 HEAD@{1389}: checkout: moving from master to codex/execute-runtime-tool-requests-through-broker
+b7eec236 HEAD@{1390}: checkout: moving from master to master
+b7eec236 HEAD@{1391}: checkout: moving from master to master
+b7eec236 HEAD@{1392}: pull --ff-only origin master: Fast-forward
+723ccf39 HEAD@{1393}: checkout: moving from codex/ai-runtime-tools-all-levels to master
+44877c57 HEAD@{1394}: commit: feat(ai): propagate runtime tool capabilities across planner layers
+723ccf39 HEAD@{1395}: Branch: renamed refs/heads/codex/ai-runtime-tools-all-levels to refs/heads/codex/ai-runtime-tools-all-levels
+723ccf39 HEAD@{1397}: Branch: renamed refs/heads/codex/gpu-planner-tool-requests-contract to refs/heads/codex/ai-runtime-tools-all-levels
+723ccf39 HEAD@{1399}: checkout: moving from master to codex/gpu-planner-tool-requests-contract
+723ccf39 HEAD@{1400}: checkout: moving from master to master
+723ccf39 HEAD@{1401}: checkout: moving from master to master
+723ccf39 HEAD@{1402}: pull --ff-only origin master: Fast-forward
+b000a9b5 HEAD@{1403}: checkout: moving from codex/full-memory-tool-regeneration-evidence-20260502-225859 to master
+f3d4fdc4 HEAD@{1404}: commit: test(ai): add full memory tool regeneration evidence bundle
+b000a9b5 HEAD@{1405}: checkout: moving from master to codex/full-memory-tool-regeneration-evidence-20260502-225859
+b000a9b5 HEAD@{1406}: pull --ff-only origin master: Fast-forward
+b431b028 HEAD@{1407}: checkout: moving from codex/fix-full-memory-regeneration-validation to master
+fe308ac3 HEAD@{1408}: commit: fix(workflow): scope full memory regeneration validation reports
+b431b028 HEAD@{1409}: checkout: moving from master to codex/fix-full-memory-regeneration-validation
+b431b028 HEAD@{1410}: checkout: moving from master to master
+b431b028 HEAD@{1411}: pull --ff-only origin master: Fast-forward
+9b9f3b4e HEAD@{1412}: checkout: moving from codex/full-memory-tool-regeneration-workflow to master
+4fd711e5 HEAD@{1413}: pull --ff-only origin codex/full-memory-tool-regeneration-workflow: Fast-forward
+9b9f3b4e HEAD@{1414}: checkout: moving from codex/full-memory-tool-regeneration-workflow to codex/full-memory-tool-regeneration-workflow
+9b9f3b4e HEAD@{1415}: checkout: moving from master to codex/full-memory-tool-regeneration-workflow
+9b9f3b4e HEAD@{1416}: checkout: moving from master to master
+9b9f3b4e HEAD@{1417}: checkout: moving from master to master
+9b9f3b4e HEAD@{1418}: pull --ff-only origin master: Fast-forward
+f7f0e7e4 HEAD@{1419}: checkout: moving from codex/memory-routing-policy-runtime-tools to master
+08899a28 HEAD@{1420}: commit: feat(ai): add memory routing policy for runtime tools
+f7f0e7e4 HEAD@{1421}: checkout: moving from master to codex/memory-routing-policy-runtime-tools
+f7f0e7e4 HEAD@{1422}: checkout: moving from master to master
+f7f0e7e4 HEAD@{1423}: pull --ff-only origin master: Fast-forward
+16d4c4dc HEAD@{1424}: checkout: moving from codex/runtime-sqlite-operational-memory to master
+94e345e6 HEAD@{1425}: commit: feat(ai): add operational SQLite runtime memory tool
+16d4c4dc HEAD@{1426}: checkout: moving from master to codex/runtime-sqlite-operational-memory
+16d4c4dc HEAD@{1427}: checkout: moving from master to master
+16d4c4dc HEAD@{1428}: checkout: moving from master to master
+16d4c4dc HEAD@{1429}: pull --ff-only origin master: Fast-forward
+b395702c HEAD@{1430}: checkout: moving from codex/runtime-tool-broker-report-only to master
+6437069a HEAD@{1431}: commit: feat(ai): add report-only runtime tool broker
+b395702c HEAD@{1432}: checkout: moving from master to codex/runtime-tool-broker-report-only
+b395702c HEAD@{1433}: checkout: moving from master to master
+b395702c HEAD@{1434}: pull --ff-only origin master: Fast-forward
+e65a6b9a HEAD@{1435}: checkout: moving from codex/code-refactor-ai-to-ai-evidence-20260502-215518 to master
+8f77b924 HEAD@{1436}: commit: test(ai): add code refactor AI-to-AI evidence bundle
+e65a6b9a HEAD@{1437}: checkout: moving from master to codex/code-refactor-ai-to-ai-evidence-20260502-215518
+e65a6b9a HEAD@{1438}: checkout: moving from master to master
+e65a6b9a HEAD@{1439}: pull --ff-only origin master: Fast-forward
+5dfd1274 HEAD@{1440}: checkout: moving from master to master
+5dfd1274 HEAD@{1441}: pull --ff-only origin master: Fast-forward
+56bb6b0a HEAD@{1442}: checkout: moving from codex/update-refactor-entry-handoff to master
+47ee6baa HEAD@{1443}: checkout: moving from master to codex/update-refactor-entry-handoff
+56bb6b0a HEAD@{1444}: checkout: moving from master to master
+56bb6b0a HEAD@{1445}: pull --ff-only origin master: Fast-forward
+bf47e3e4 HEAD@{1446}: checkout: moving from codex/wire-gpu-json-contract-runner to master
+aa3f66a7 HEAD@{1447}: commit: feat(ai): wire GPU planner JSON contract into runner diagnostics
+bf47e3e4 HEAD@{1448}: checkout: moving from codex/wire-gpu-json-contract-runner to codex/wire-gpu-json-contract-runner
+bf47e3e4 HEAD@{1449}: branch: Reset to origin/master
+bf47e3e4 HEAD@{1450}: checkout: moving from master to codex/wire-gpu-json-contract-runner
+bf47e3e4 HEAD@{1451}: checkout: moving from master to master
+bf47e3e4 HEAD@{1452}: checkout: moving from master to master
+bf47e3e4 HEAD@{1453}: pull --ff-only origin master: Fast-forward
+1d42078c HEAD@{1454}: commit: test(ai): add balanced project complete AI-to-AI evidence bundle
+1093be33 HEAD@{1455}: checkout: moving from master to master
+1093be33 HEAD@{1456}: pull --ff-only origin master: Fast-forward
+28c600a6 HEAD@{1457}: checkout: moving from master to master
+28c600a6 HEAD@{1458}: pull --ff-only origin master: Fast-forward
+59e1099b HEAD@{1459}: checkout: moving from codex/integrate-gpu-json-contract to master
+becba12a HEAD@{1460}: commit: test(ai): add PR114 gpu json contract replay evidence
+f39179d2 HEAD@{1461}: checkout: moving from master to codex/integrate-gpu-json-contract
+59e1099b HEAD@{1462}: checkout: moving from master to master
+59e1099b HEAD@{1463}: pull --ff-only origin master: Fast-forward
+f3c8c6c9 HEAD@{1464}: checkout: moving from codex/gpu-npu-balanced-run-profile to master
+145202fc HEAD@{1465}: checkout: moving from codex/gpu-npu-balanced-run-profile to codex/gpu-npu-balanced-run-profile
+145202fc HEAD@{1466}: pull --ff-only origin codex/gpu-npu-balanced-run-profile: Fast-forward
+c0536cfb HEAD@{1467}: checkout: moving from codex/gpu-npu-balanced-run-profile to codex/gpu-npu-balanced-run-profile
+c0536cfb HEAD@{1468}: commit: test(ai): add PR113 gpu npu sync evidence after fix
+0b7864f5 HEAD@{1469}: checkout: moving from codex/gpu-npu-balanced-run-profile to codex/gpu-npu-balanced-run-profile
+0b7864f5 HEAD@{1470}: pull --ff-only origin codex/gpu-npu-balanced-run-profile: Fast-forward
+2fc93bb2 HEAD@{1471}: checkout: moving from codex/gpu-npu-balanced-run-profile to codex/gpu-npu-balanced-run-profile
+2fc93bb2 HEAD@{1472}: commit: test(ai): add PR113 gpu npu sync evidence bundle
+dacd95f8 HEAD@{1473}: checkout: moving from master to codex/gpu-npu-balanced-run-profile
+f3c8c6c9 HEAD@{1474}: checkout: moving from codex/gpu-json-contract-hardening to master
+fa686988 HEAD@{1475}: pull --ff-only origin master: Fast-forward
+af7942da HEAD@{1476}: commit: test(ai): add PR112 gpu json contract evidence bundle
+da1dfd8c HEAD@{1477}: pull --ff-only origin codex/gpu-json-contract-hardening: Fast-forward
+626e9bbb HEAD@{1478}: checkout: moving from codex/gpu-json-contract-hardening to codex/gpu-json-contract-hardening
+626e9bbb HEAD@{1479}: pull --ff-only origin codex/gpu-json-contract-hardening: Fast-forward
+7d7a2b60 HEAD@{1480}: checkout: moving from codex/gpu-json-contract-hardening to codex/gpu-json-contract-hardening
+7d7a2b60 HEAD@{1481}: pull --ff-only origin codex/gpu-json-contract-hardening: Fast-forward
+b4667de1 HEAD@{1482}: checkout: moving from codex/gpu-json-contract-hardening to codex/gpu-json-contract-hardening
+b4667de1 HEAD@{1483}: checkout: moving from master to codex/gpu-json-contract-hardening
+f3c8c6c9 HEAD@{1484}: pull --ff-only origin master: Fast-forward
+76f99cfb HEAD@{1485}: checkout: moving from master to master
+76f99cfb HEAD@{1486}: checkout: moving from codex/gpu-repair-failure-recommendation to master
+e04806f1 HEAD@{1487}: pull --ff-only origin master: Fast-forward
+598b9522 HEAD@{1488}: commit: test(ai): add PR111 gpu repair failure evidence bundle
+fe9e11e1 HEAD@{1489}: checkout: moving from codex/gpu-repair-failure-recommendation to codex/gpu-repair-failure-recommendation
+fe9e11e1 HEAD@{1490}: checkout: moving from master to codex/gpu-repair-failure-recommendation
+76f99cfb HEAD@{1491}: pull --ff-only origin master: Fast-forward
+e133698c HEAD@{1492}: commit: test(ai): add project complete AI-to-AI evidence bundle
+7fa80a1a HEAD@{1493}: checkout: moving from master to master
+7fa80a1a HEAD@{1494}: pull --ff-only origin master: Fast-forward
+9e4a9c1b HEAD@{1495}: checkout: moving from master to master
+9e4a9c1b HEAD@{1496}: checkout: moving from master to master
+9e4a9c1b HEAD@{1497}: checkout: moving from master to master
+9e4a9c1b HEAD@{1498}: commit: test: add heavy prototype review evidence bundle
+384165a0 HEAD@{1499}: checkout: moving from master to master
+384165a0 HEAD@{1500}: pull --ff-only origin master: Fast-forward
+15bb557a HEAD@{1501}: checkout: moving from codex/design-code-patch-plan-lane to master
+00d4ce16 HEAD@{1502}: pull --ff-only origin codex/design-code-patch-plan-lane: Fast-forward
+6b9e5838 HEAD@{1503}: commit: refactor(ai): wire github evidence bundle orchestrator
+8a8662c5 HEAD@{1504}: pull --ff-only origin codex/design-code-patch-plan-lane: Fast-forward
+41338966 HEAD@{1505}: checkout: moving from codex/design-code-patch-plan-lane to codex/design-code-patch-plan-lane
+41338966 HEAD@{1506}: commit: test: add enriched PR109 static code plan evidence
+f1ae2c67 HEAD@{1507}: pull --ff-only origin codex/design-code-patch-plan-lane: Fast-forward
+b625f512 HEAD@{1508}: checkout: moving from codex/design-code-patch-plan-lane to codex/design-code-patch-plan-lane
+b625f512 HEAD@{1509}: commit: test: add PR109 static code plan evidence bundle
+49abaa2f HEAD@{1510}: pull --ff-only origin codex/design-code-patch-plan-lane: Fast-forward
+e2e79c87 HEAD@{1511}: checkout: moving from codex/design-code-patch-plan-lane to codex/design-code-patch-plan-lane
+e2e79c87 HEAD@{1512}: commit (amend): test: add PR109 code interpreter and agnostic evidence
+1df70fbe HEAD@{1513}: commit (amend): test: add PR109 code interpreter and agnostic evidence
+de5f9494 HEAD@{1514}: rebase (finish): returning to refs/heads/codex/design-code-patch-plan-lane
+de5f9494 HEAD@{1515}: rebase (pick): test: add PR109 code interpreter and agnostic evidence
+d063655c HEAD@{1516}: rebase (start): checkout origin/codex/design-code-patch-plan-lane
+28b07c28 HEAD@{1517}: checkout: moving from codex/design-code-patch-plan-lane to codex/design-code-patch-plan-lane
+28b07c28 HEAD@{1518}: commit: test: add PR109 code interpreter and agnostic evidence
+ce7272ee HEAD@{1519}: pull --ff-only origin codex/design-code-patch-plan-lane: Fast-forward
+8008125e HEAD@{1520}: checkout: moving from codex/doc-contract-drift-crossrefs to codex/design-code-patch-plan-lane
+77673a79 HEAD@{1521}: checkout: moving from master to codex/doc-contract-drift-crossrefs
+15bb557a HEAD@{1522}: checkout: moving from local/macro-pr108-pr109-integration to master
+48efe61e HEAD@{1523}: reset: moving to HEAD
+48efe61e HEAD@{1524}: commit: test: add macro validation evidence for PR 108 and 109
+3a6c127b HEAD@{1525}: commit (merge): test: stack PR 109 for local macro validation
+3613f7a4 HEAD@{1526}: commit (merge): test: stack PR 108 for local macro validation
+15bb557a HEAD@{1527}: checkout: moving from master to local/macro-pr108-pr109-integration
+15bb557a HEAD@{1528}: checkout: moving from codex/design-code-patch-plan-lane to master
+8008125e HEAD@{1529}: checkout: moving from codex/doc-contract-drift-crossrefs to codex/design-code-patch-plan-lane
+77673a79 HEAD@{1530}: checkout: moving from master to codex/doc-contract-drift-crossrefs
+15bb557a HEAD@{1531}: pull --ff-only origin master: Fast-forward
+2d2e2b96 HEAD@{1532}: checkout: moving from codex/docs-final-state-review to master
+0c2177bf HEAD@{1533}: commit: docs: sync final local ai documentation state
+2d2e2b96 HEAD@{1534}: checkout: moving from master to codex/docs-final-state-review
+2d2e2b96 HEAD@{1535}: commit: test(ai): add final evidence bundle builder smoke
+1b298b6f HEAD@{1536}: checkout: moving from master to master
+1b298b6f HEAD@{1537}: checkout: moving from master to master
+1b298b6f HEAD@{1538}: pull --ff-only origin master: Fast-forward
+a3c724f4 HEAD@{1539}: checkout: moving from codex/include-patch-plans-in-evidence-bundle to master
+e851b647 HEAD@{1540}: commit: test(ai): add evidence bundle builder smoke
+37e9c505 HEAD@{1541}: pull --ff-only origin codex/include-patch-plans-in-evidence-bundle: Fast-forward
+a3c724f4 HEAD@{1542}: checkout: moving from master to codex/include-patch-plans-in-evidence-bundle
+a3c724f4 HEAD@{1543}: checkout: moving from codex/include-patch-plans-in-evidence-bundle to master
+a3c724f4 HEAD@{1544}: checkout: moving from master to codex/include-patch-plans-in-evidence-bundle
+a3c724f4 HEAD@{1545}: commit: docs(ai): add agent review patch plan summary
+59d7164e HEAD@{1546}: commit: test(ai): add full gpu planner fallback evidence
+249928a9 HEAD@{1547}: checkout: moving from master to master
+249928a9 HEAD@{1548}: commit: test(ai): add gpu planner fallback verification evidence
+b55b0df5 HEAD@{1549}: checkout: moving from master to master
+b55b0df5 HEAD@{1550}: checkout: moving from master to master
+b55b0df5 HEAD@{1551}: checkout: moving from master to master
+b55b0df5 HEAD@{1552}: pull --ff-only origin master: Fast-forward
+16fe9916 HEAD@{1553}: checkout: moving from master to master
+16fe9916 HEAD@{1554}: reset: moving to origin/master
+3e23046f HEAD@{1555}: checkout: moving from master to master
+3e23046f HEAD@{1556}: commit: fix(ai): route ready evidence to fallback patch plan
+16fe9916 HEAD@{1557}: checkout: moving from master to master
+16fe9916 HEAD@{1558}: commit: fix(ai): normalize GPU planner script encoding
+cffe2327 HEAD@{1559}: commit: fix(ai): harden GPU planner evidence readiness diagnostics
+ba481f57 HEAD@{1560}: checkout: moving from master to master
+ba481f57 HEAD@{1561}: checkout: moving from master to master
+ba481f57 HEAD@{1562}: pull --ff-only origin master: Fast-forward
+3cd8a7bf HEAD@{1563}: checkout: moving from master to master
+3cd8a7bf HEAD@{1564}: checkout: moving from master to master
+3cd8a7bf HEAD@{1565}: pull --ff-only origin master: Fast-forward
+72c2c911 HEAD@{1566}: checkout: moving from codex/improve-gpu-planner-nonempty-recommendations to master
+4ee9c43e HEAD@{1567}: pull --ff-only: Fast-forward
+c0dca7c8 HEAD@{1568}: commit: test(ai): add gpu planner nonempty recommendations evidence bundle
+b9e8b122 HEAD@{1569}: commit: docs(ai): add gpu planner recommendation diagnostics task
+72c2c911 HEAD@{1570}: checkout: moving from master to codex/improve-gpu-planner-nonempty-recommendations
+72c2c911 HEAD@{1571}: checkout: moving from master to master
+72c2c911 HEAD@{1572}: pull --ff-only origin master: Fast-forward
+26d7a68b HEAD@{1573}: checkout: moving from codex/apply-agent-review-doc-patch-plan to master
+ba4dede8 HEAD@{1574}: checkout: moving from codex/apply-agent-review-doc-patch-plan to codex/apply-agent-review-doc-patch-plan
+ba4dede8 HEAD@{1575}: commit: docs(ai): document patch plan validation evidence contracts
+95d6c34f HEAD@{1576}: pull --ff-only: Fast-forward
+819f79c7 HEAD@{1577}: checkout: moving from codex/apply-agent-review-doc-patch-plan to codex/apply-agent-review-doc-patch-plan
+819f79c7 HEAD@{1578}: commit: fix(ai): keep patch plan evidence bundle task-scoped
+f3a39a81 HEAD@{1579}: checkout: moving from codex/apply-agent-review-doc-patch-plan to codex/apply-agent-review-doc-patch-plan
+f3a39a81 HEAD@{1580}: commit: test(ai): refresh agent review doc patch plan evidence
+9c192d6b HEAD@{1581}: pull --ff-only: Fast-forward
+d2f98b99 HEAD@{1582}: checkout: moving from codex/apply-agent-review-doc-patch-plan to codex/apply-agent-review-doc-patch-plan
+d2f98b99 HEAD@{1583}: commit: test(ai): add agent review doc patch plan evidence
+b32ad82c HEAD@{1584}: pull --ff-only: Fast-forward
+26d7a68b HEAD@{1585}: checkout: moving from master to codex/apply-agent-review-doc-patch-plan
+26d7a68b HEAD@{1586}: pull --ff-only origin master: Fast-forward
+ae6fda94 HEAD@{1587}: checkout: moving from master to master
+ae6fda94 HEAD@{1588}: checkout: moving from codex/agent-review-evidence-sufficiency to master
+81acba56 HEAD@{1589}: pull --ff-only: Fast-forward
+da2815bb HEAD@{1590}: pull --ff-only: Fast-forward
+eaecc4e1 HEAD@{1591}: pull --ff-only origin codex/agent-review-evidence-sufficiency: Fast-forward
+dff9dd95 HEAD@{1592}: pull --ff-only origin codex/agent-review-evidence-sufficiency: Fast-forward
+abd6e030 HEAD@{1593}: pull --ff-only origin codex/agent-review-evidence-sufficiency: Fast-forward
+c2dc0e42 HEAD@{1594}: rebase (finish): returning to refs/heads/codex/agent-review-evidence-sufficiency
+c2dc0e42 HEAD@{1595}: rebase (pick): feat(validation): add evidence sufficiency smoke test
+25c0c28a HEAD@{1596}: rebase (pick): feat(ai): add review evidence sufficiency analyzer
+ae6fda94 HEAD@{1597}: rebase (start): checkout master
+5d15705f HEAD@{1598}: checkout: moving from master to codex/agent-review-evidence-sufficiency
+ae6fda94 HEAD@{1599}: pull --ff-only origin master: Fast-forward
+543c8e3c HEAD@{1600}: checkout: moving from codex/agent-review-evidence-sufficiency to master
+5d15705f HEAD@{1601}: checkout: moving from codex/refine-megalithic-path-and-symbol-signal to codex/agent-review-evidence-sufficiency
+6fdea1e7 HEAD@{1602}: pull --ff-only origin codex/refine-megalithic-path-and-symbol-signal: Fast-forward
+868a8d88 HEAD@{1603}: checkout: moving from master to codex/refine-megalithic-path-and-symbol-signal
+543c8e3c HEAD@{1604}: pull --ff-only origin master: Fast-forward
+f18d8988 HEAD@{1605}: checkout: moving from codex/agnostic-tool-inventory-integration to master
+4691f14b HEAD@{1606}: checkout: moving from codex/agnostic-tool-inventory-integration to codex/agnostic-tool-inventory-integration
+4691f14b HEAD@{1607}: pull --ff-only origin codex/agnostic-tool-inventory-integration: Fast-forward
+2adf7f21 HEAD@{1608}: checkout: moving from master to codex/agnostic-tool-inventory-integration
+f18d8988 HEAD@{1609}: pull --ff-only origin master: Fast-forward
+156a4cc5 HEAD@{1610}: checkout: moving from codex/agent-memory-inventory to master
+20075e12 HEAD@{1611}: pull --ff-only origin codex/agent-memory-inventory: Fast-forward
+57e00202 HEAD@{1612}: checkout: moving from master to codex/agent-memory-inventory
+156a4cc5 HEAD@{1613}: pull --ff-only origin master: Fast-forward
+955b37ad HEAD@{1614}: checkout: moving from codex/refine-megalithic-review-signal to master
+50990f1b HEAD@{1615}: pull --ff-only origin codex/refine-megalithic-review-signal: Fast-forward
+6d823547 HEAD@{1616}: checkout: moving from master to codex/refine-megalithic-review-signal
+955b37ad HEAD@{1617}: checkout: moving from master to master
+955b37ad HEAD@{1618}: checkout: moving from master to master
+955b37ad HEAD@{1619}: pull --ff-only origin master: Fast-forward
+e3717ff9 HEAD@{1620}: checkout: moving from codex/megalithic-review-integration to master
+ad104aa9 HEAD@{1621}: checkout: moving from master to codex/megalithic-review-integration
+e3717ff9 HEAD@{1622}: checkout: moving from master to master
+e3717ff9 HEAD@{1623}: pull --ff-only origin master: Fast-forward
+8724668d HEAD@{1624}: checkout: moving from codex/megalithic-repo-review to master
+d53c311b HEAD@{1625}: pull --ff-only origin codex/megalithic-repo-review: Fast-forward
+52952205 HEAD@{1626}: checkout: moving from master to codex/megalithic-repo-review
+8724668d HEAD@{1627}: pull --ff-only origin master: Fast-forward
+02e56570 HEAD@{1628}: checkout: moving from codex/fix-code-contract-drift-literals to master
+7a1b4227 HEAD@{1629}: checkout: moving from master to codex/fix-code-contract-drift-literals
+02e56570 HEAD@{1630}: checkout: moving from master to master
+02e56570 HEAD@{1631}: pull --ff-only origin master: Fast-forward
+c9fbdc5c HEAD@{1632}: checkout: moving from codex/code-contract-drift-analyzer to master
+92050fe6 HEAD@{1633}: checkout: moving from master to codex/code-contract-drift-analyzer
+c9fbdc5c HEAD@{1634}: pull --ff-only origin master: Fast-forward
+8e87c0d6 HEAD@{1635}: checkout: moving from codex/docs-ai-workload-quality-gate to master
+f36eb03a HEAD@{1636}: commit: docs: apply AI workload quality gate drift fixes
+1a687e9b HEAD@{1637}: pull --ff-only origin codex/docs-ai-workload-quality-gate: Fast-forward
+fc651a9d HEAD@{1638}: checkout: moving from master to codex/docs-ai-workload-quality-gate
+8e87c0d6 HEAD@{1639}: checkout: moving from master to master
+8e87c0d6 HEAD@{1640}: pull --ff-only origin master: Fast-forward
+044aa2c2 HEAD@{1641}: checkout: moving from codex/promote-ai-workload-quality-gate to master
+0250278a HEAD@{1642}: pull --ff-only origin codex/promote-ai-workload-quality-gate: Fast-forward
+0c3979af HEAD@{1643}: pull --ff-only origin codex/promote-ai-workload-quality-gate: Fast-forward
+03f0b5ce HEAD@{1644}: checkout: moving from codex/promote-ai-workload-quality-gate to codex/promote-ai-workload-quality-gate
+03f0b5ce HEAD@{1645}: checkout: moving from master to codex/promote-ai-workload-quality-gate
+044aa2c2 HEAD@{1646}: pull --ff-only origin master: Fast-forward
+57ce44e3 HEAD@{1647}: checkout: moving from codex/local-ai-core-tool-activation to master
+fe4f4364 HEAD@{1648}: commit: test: add local ai core tool activation evidence
+30c99b9b HEAD@{1649}: pull --ff-only origin codex/local-ai-core-tool-activation: Fast-forward
+7c1820d5 HEAD@{1650}: checkout: moving from master to codex/local-ai-core-tool-activation
+57ce44e3 HEAD@{1651}: checkout: moving from master to master
+57ce44e3 HEAD@{1652}: pull --ff-only origin master: Fast-forward
+adac952a HEAD@{1653}: checkout: moving from codex/p3-full-context-golden-docs-contract to master
+91ee3c1d HEAD@{1654}: checkout: moving from master to codex/p3-full-context-golden-docs-contract
+adac952a HEAD@{1655}: checkout: moving from master to master
+adac952a HEAD@{1656}: pull --ff-only origin master: Fast-forward
+0819826a HEAD@{1657}: checkout: moving from codex/p5-selected-chunks-evidence-standard-block to master
+6d40f3b6 HEAD@{1658}: commit: test: add p5 selected chunks evidence bundle
+bc357607 HEAD@{1659}: checkout: moving from master to codex/p5-selected-chunks-evidence-standard-block
+0819826a HEAD@{1660}: checkout: moving from master to master
+0819826a HEAD@{1661}: pull --ff-only origin master: Fast-forward
+4d0e26fd HEAD@{1662}: checkout: moving from codex/full-context-golden-wrapper-preset to master
+51b75865 HEAD@{1663}: checkout: moving from master to codex/full-context-golden-wrapper-preset
+4d0e26fd HEAD@{1664}: pull --ff-only origin master: Fast-forward
+e6b994ad HEAD@{1665}: checkout: moving from codex/reusable-enrichment-plan-helper to master
+a2182147 HEAD@{1666}: checkout: moving from master to codex/reusable-enrichment-plan-helper
+e6b994ad HEAD@{1667}: pull --ff-only origin master: Fast-forward
+6d7cc4aa HEAD@{1668}: checkout: moving from codex/npu-knowledge-broker-context-oracle to master
+552eaa3e HEAD@{1669}: checkout: moving from master to codex/npu-knowledge-broker-context-oracle
+6d7cc4aa HEAD@{1670}: pull --ff-only origin master: Fast-forward
+3a0d27b9 HEAD@{1671}: checkout: moving from codex/adapter-manifest-validator to master
+e6d26d25 HEAD@{1672}: pull --ff-only origin codex/adapter-manifest-validator: Fast-forward
+56f1b5d8 HEAD@{1673}: checkout: moving from codex/adapter-manifest-validator to codex/adapter-manifest-validator
+56f1b5d8 HEAD@{1674}: pull --ff-only origin codex/adapter-manifest-validator: Fast-forward
+3a0d27b9 HEAD@{1675}: checkout: moving from master to codex/adapter-manifest-validator
+3a0d27b9 HEAD@{1676}: checkout: moving from codex/adapter-manifest-validator to master
+3a0d27b9 HEAD@{1677}: checkout: moving from master to codex/adapter-manifest-validator
+3a0d27b9 HEAD@{1678}: checkout: moving from master to master
+3a0d27b9 HEAD@{1679}: checkout: moving from master to master
+3a0d27b9 HEAD@{1680}: checkout: moving from master to master
+3a0d27b9 HEAD@{1681}: pull --ff-only origin master: Fast-forward
+ef6da71e HEAD@{1682}: checkout: moving from codex/docs-current-state-sync to master
+d2ad8ac5 HEAD@{1683}: commit: docs: sync current local ai project state
+ef6da71e HEAD@{1684}: checkout: moving from master to codex/docs-current-state-sync
+ef6da71e HEAD@{1685}: pull --ff-only origin master: Fast-forward
+8d54481a HEAD@{1686}: checkout: moving from codex/full-context-golden-proposal-generator to master
+e5f6e544 HEAD@{1687}: checkout: moving from master to codex/full-context-golden-proposal-generator
+8d54481a HEAD@{1688}: pull --ff-only origin master: Fast-forward
+868fd8d5 HEAD@{1689}: checkout: moving from codex/full-context-golden-proposal-contract to master
+8b386c46 HEAD@{1690}: checkout: moving from master to codex/full-context-golden-proposal-contract
+868fd8d5 HEAD@{1691}: checkout: moving from master to master
+868fd8d5 HEAD@{1692}: pull --ff-only origin master: Fast-forward
+16259fa1 HEAD@{1693}: checkout: moving from codex/full-context-golden-evidence to master
+0375bf20 HEAD@{1694}: commit: test(ai): add full-context golden path evidence
+16259fa1 HEAD@{1695}: checkout: moving from master to codex/full-context-golden-evidence
+16259fa1 HEAD@{1696}: checkout: moving from codex/full-context-ai-npu-golden-run to master
+16259fa1 HEAD@{1697}: checkout: moving from master to codex/full-context-ai-npu-golden-run
+16259fa1 HEAD@{1698}: checkout: moving from master to master
+16259fa1 HEAD@{1699}: checkout: moving from master to master
+16259fa1 HEAD@{1700}: pull --ff-only origin master: Fast-forward
+477a5afe HEAD@{1701}: checkout: moving from master to master
+477a5afe HEAD@{1702}: pull --ff-only origin master: Fast-forward
+fc73820c HEAD@{1703}: checkout: moving from codex/wire-selected-chunks-evidence to master
+61c7fa73 HEAD@{1704}: commit: test(ai): add selected chunks wrapper evidence smoke
+acfa3813 HEAD@{1705}: checkout: moving from master to codex/wire-selected-chunks-evidence
+fc73820c HEAD@{1706}: pull --ff-only origin master: Fast-forward
+2fbca522 HEAD@{1707}: checkout: moving from codex/selected-chunks-validator-evidence to master
+7a393a2a HEAD@{1708}: commit: test(ai): add selected chunks focused evidence
+350b3270 HEAD@{1709}: checkout: moving from master to codex/selected-chunks-validator-evidence
+2fbca522 HEAD@{1710}: checkout: moving from master to master
+2fbca522 HEAD@{1711}: checkout: moving from master to master
+2fbca522 HEAD@{1712}: pull --ff-only origin master: Fast-forward
+c6f84ffb HEAD@{1713}: checkout: moving from codex/selected-chunks-real-evidence to master
+bdbf55eb HEAD@{1714}: commit: test(ai): add selected chunks real context evidence
+c6f84ffb HEAD@{1715}: checkout: moving from master to codex/selected-chunks-real-evidence
+c6f84ffb HEAD@{1716}: checkout: moving from master to master
+c6f84ffb HEAD@{1717}: pull --ff-only origin master: Fast-forward
+0e0b309a HEAD@{1718}: checkout: moving from codex/select-semantic-chunks-context to master
+08ebba2e HEAD@{1719}: checkout: moving from master to codex/select-semantic-chunks-context
+0e0b309a HEAD@{1720}: pull --ff-only origin master: Fast-forward
+b7558101 HEAD@{1721}: checkout: moving from codex/enrichment-real-context-evidence to master
+a1452729 HEAD@{1722}: commit: test(ai): add enrichment real context evidence
+b7558101 HEAD@{1723}: checkout: moving from master to codex/enrichment-real-context-evidence
+b7558101 HEAD@{1724}: checkout: moving from master to master
+b7558101 HEAD@{1725}: pull --ff-only origin master: Fast-forward
+c318b0da HEAD@{1726}: checkout: moving from codex/dedupe-local-ai-context-files to master
+78d8abab HEAD@{1727}: checkout: moving from codex/context-pack-enrichment-evidence to codex/dedupe-local-ai-context-files
+0d6cb77a HEAD@{1728}: commit: test(ai): add selected review context pack evidence
+c318b0da HEAD@{1729}: checkout: moving from master to codex/context-pack-enrichment-evidence
+c318b0da HEAD@{1730}: pull --ff-only origin master: Fast-forward
+c34b65a1 HEAD@{1731}: checkout: moving from codex/local-ai-wrapper-context-enrichment to master
+437effad HEAD@{1732}: merge master: Merge made by the 'ort' strategy.
+7e42050b HEAD@{1733}: checkout: moving from master to codex/local-ai-wrapper-context-enrichment
+c34b65a1 HEAD@{1734}: pull --ff-only origin master: Fast-forward
+6b9e3a88 HEAD@{1735}: checkout: moving from codex/local-ai-wrapper-context-enrichment to master
+7e42050b HEAD@{1736}: checkout: moving from master to codex/local-ai-wrapper-context-enrichment
+6b9e3a88 HEAD@{1737}: pull --ff-only origin master: Fast-forward
+1516c850 HEAD@{1738}: checkout: moving from codex/selected-review-workflow-ai-tools to master
+7736f066 HEAD@{1739}: commit: test(ai): add selected workflow ai tools review evidence
+1516c850 HEAD@{1740}: checkout: moving from master to codex/selected-review-workflow-ai-tools
+1516c850 HEAD@{1741}: checkout: moving from master to master
+1516c850 HEAD@{1742}: checkout: moving from master to master
+1516c850 HEAD@{1743}: pull --ff-only origin master: Fast-forward
+eedd98b4 HEAD@{1744}: checkout: moving from codex/consistency-local-ai-contracts-evidence to master
+1600ea6d HEAD@{1745}: commit: test(ai): add local AI consistency review evidence
+eedd98b4 HEAD@{1746}: checkout: moving from codex/consistency-local-ai-contracts to codex/consistency-local-ai-contracts-evidence
+eedd98b4 HEAD@{1747}: checkout: moving from master to codex/consistency-local-ai-contracts
+eedd98b4 HEAD@{1748}: checkout: moving from master to master
+eedd98b4 HEAD@{1749}: pull --ff-only origin master: Fast-forward
+4dc086b3 HEAD@{1750}: checkout: moving from master to master
+4dc086b3 HEAD@{1751}: pull --ff-only origin master: Fast-forward
+f874f0d6 HEAD@{1752}: checkout: moving from codex/multistep-heavy-run-evidence to master
+6a675291 HEAD@{1753}: commit: test(workflow): add issue62 multistep heavy run evidence
+f874f0d6 HEAD@{1754}: checkout: moving from codex/next-local-ai-task to codex/multistep-heavy-run-evidence
+f874f0d6 HEAD@{1755}: checkout: moving from master to codex/next-local-ai-task
+f874f0d6 HEAD@{1756}: checkout: moving from master to master
+f874f0d6 HEAD@{1757}: pull --ff-only origin master: Fast-forward
+85250027 HEAD@{1758}: checkout: moving from codex/hybrid-local-pipeline-runner to master
+043309a0 HEAD@{1759}: pull --ff-only origin codex/hybrid-local-pipeline-runner: Fast-forward
+7316749e HEAD@{1760}: checkout: moving from codex/hybrid-multistep-evidence-fix to codex/hybrid-local-pipeline-runner
+83edebfd HEAD@{1761}: commit: test(workflow): add hybrid multistep evidence fix validation
+f9d6e490 HEAD@{1762}: checkout: moving from codex/hybrid-multistep-evidence-fix to codex/hybrid-multistep-evidence-fix
+f9d6e490 HEAD@{1763}: checkout: moving from codex/hybrid-local-pipeline-runner to codex/hybrid-multistep-evidence-fix
+7316749e HEAD@{1764}: commit: test(workflow): add real gpu npu hybrid pipeline evidence
+f4acc877 HEAD@{1765}: checkout: moving from codex/hybrid-local-pipeline-runner to codex/hybrid-local-pipeline-runner
+f4acc877 HEAD@{1766}: checkout: moving from codex/hybrid-local-pipeline-runner to codex/hybrid-local-pipeline-runner
+f4acc877 HEAD@{1767}: commit: test(workflow): add hybrid local pipeline runner evidence
+04db5197 HEAD@{1768}: checkout: moving from master to codex/hybrid-local-pipeline-runner
+85250027 HEAD@{1769}: checkout: moving from codex/hybrid-local-pipeline-runner to master
+04db5197 HEAD@{1770}: checkout: moving from master to codex/hybrid-local-pipeline-runner
+85250027 HEAD@{1771}: checkout: moving from codex/hybrid-local-pipeline-runner to master
+04db5197 HEAD@{1772}: checkout: moving from master to codex/hybrid-local-pipeline-runner
+85250027 HEAD@{1773}: pull --ff-only origin master: Fast-forward
+69aa6a8f HEAD@{1774}: checkout: moving from codex/docs-congruence-cleanup-issue57 to master
+206db5d7 HEAD@{1775}: commit: docs(plan): complete selective planner execution plan
+69aa6a8f HEAD@{1776}: checkout: moving from master to codex/docs-congruence-cleanup-issue57
+69aa6a8f HEAD@{1777}: checkout: moving from master to master
+69aa6a8f HEAD@{1778}: checkout: moving from master to master
+69aa6a8f HEAD@{1779}: checkout: moving from codex/docs-congruence-cleanup to master
+69aa6a8f HEAD@{1780}: checkout: moving from master to codex/docs-congruence-cleanup
+69aa6a8f HEAD@{1781}: checkout: moving from codex/docs-congruence-cleanup to master
+f88c8453 HEAD@{1782}: checkout: moving from master to codex/docs-congruence-cleanup
+69aa6a8f HEAD@{1783}: checkout: moving from master to master
+69aa6a8f HEAD@{1784}: pull --ff-only origin master: Fast-forward
+6d97dca9 HEAD@{1785}: checkout: moving from master to master
+6d97dca9 HEAD@{1786}: checkout: moving from master to master
+6d97dca9 HEAD@{1787}: pull --ff-only origin master: Fast-forward
+84412aa7 HEAD@{1788}: checkout: moving from master to master
+84412aa7 HEAD@{1789}: checkout: moving from master to master
+84412aa7 HEAD@{1790}: pull --ff-only origin master: Fast-forward
+f88c8453 HEAD@{1791}: checkout: moving from master to master
+f88c8453 HEAD@{1792}: checkout: moving from codex/docs-congruence-cleanup to master
+f88c8453 HEAD@{1793}: checkout: moving from master to codex/docs-congruence-cleanup
+f88c8453 HEAD@{1794}: pull --ff-only origin master: Fast-forward
+4519ec3b HEAD@{1795}: checkout: moving from codex/selective-planner-prototype to master
+1b808d9d HEAD@{1796}: commit: test(ai): add selective planner real gpu npu evidence
+7b18ed7d HEAD@{1797}: checkout: moving from master to codex/selective-planner-prototype
+4519ec3b HEAD@{1798}: checkout: moving from master to master
+4519ec3b HEAD@{1799}: pull --ff-only origin master: Fast-forward
+46fc9ae3 HEAD@{1800}: checkout: moving from codex/dry-run-matrix-evidence to master
+f0728489 HEAD@{1801}: commit: feat(ai): add dry-run matrix evidence bundle
+46fc9ae3 HEAD@{1802}: checkout: moving from master to codex/dry-run-matrix-evidence
+46fc9ae3 HEAD@{1803}: pull --ff-only origin master: Fast-forward
+27358d06 HEAD@{1804}: checkout: moving from codex/ai-context-pack-prototype to master
+32be6922 HEAD@{1805}: commit: feat(ai): add context pack prototype
+27358d06 HEAD@{1806}: checkout: moving from master to codex/ai-context-pack-prototype
+27358d06 HEAD@{1807}: pull --ff-only origin master: Fast-forward
+2b383574 HEAD@{1808}: checkout: moving from codex/patch-spec-review-promotion to master
+5541fed8 HEAD@{1809}: commit: feat(ai): promote reviewed patch specs
+2b383574 HEAD@{1810}: checkout: moving from master to codex/patch-spec-review-promotion
+2b383574 HEAD@{1811}: pull --ff-only origin master: Fast-forward
+2e934e43 HEAD@{1812}: checkout: moving from codex/proposal-patch-spec-writer to master
+40b25491 HEAD@{1813}: rebase (finish): returning to refs/heads/codex/proposal-patch-spec-writer
+40b25491 HEAD@{1814}: rebase (pick): feat(ai): build proposal patch spec drafts
+78c2deef HEAD@{1815}: rebase (start): checkout origin/master
+d18bc456 HEAD@{1816}: commit: feat(ai): build proposal patch spec drafts
+e74bddb9 HEAD@{1817}: checkout: moving from codex/suggestion-artifact-contracts to codex/proposal-patch-spec-writer
+e74bddb9 HEAD@{1818}: commit: feat(ai): validate repository suggestion proposals
+2e934e43 HEAD@{1819}: checkout: moving from master to codex/suggestion-artifact-contracts
+2e934e43 HEAD@{1820}: pull --ff-only origin master: Fast-forward
+a80d66b0 HEAD@{1821}: checkout: moving from ai/evidence-schema-contracts to master
+0f31e210 HEAD@{1822}: commit: feat(validation): add github evidence bundle contracts
+a80d66b0 HEAD@{1823}: checkout: moving from master to ai/evidence-schema-contracts
+a80d66b0 HEAD@{1824}: commit: test: add master post-merge gpu npu evidence
+7d633802 HEAD@{1825}: pull --ff-only: Fast-forward
+0d3e2fc8 HEAD@{1826}: checkout: moving from master to master
+0d3e2fc8 HEAD@{1827}: checkout: moving from master to master
+0d3e2fc8 HEAD@{1828}: checkout: moving from master to master
+0d3e2fc8 HEAD@{1829}: pull --ff-only origin master: Fast-forward
+3b4023ae HEAD@{1830}: checkout: moving from ai/workload-quality-routing-npu-remediation to master
+5ed2c6a5 HEAD@{1831}: commit: test: add real npu smoke evidence v2
+7d6ff553 HEAD@{1832}: pull --ff-only: Fast-forward
+73e6d9eb HEAD@{1833}: commit: test: add parallel gpu npu multistep evidence
+50c64786 HEAD@{1834}: pull --ff-only: Fast-forward
+023a92fd HEAD@{1835}: commit: test: add parallel gpu npu multistep evidence
+9dd4bc5e HEAD@{1836}: pull --ff-only: Fast-forward
+aee008b6 HEAD@{1837}: checkout: moving from ai/workload-quality-routing-npu-remediation to ai/workload-quality-routing-npu-remediation
+aee008b6 HEAD@{1838}: pull --ff-only: Fast-forward
+80a69a3a HEAD@{1839}: checkout: moving from ai/workload-quality-routing-npu-remediation to ai/workload-quality-routing-npu-remediation
+80a69a3a HEAD@{1840}: checkout: moving from master to ai/workload-quality-routing-npu-remediation
+3b4023ae HEAD@{1841}: pull --ff-only: Fast-forward
+607e3a72 HEAD@{1842}: pull --ff-only: Fast-forward
+951e1931 HEAD@{1843}: pull --ff-only: Fast-forward
+685d5dfb HEAD@{1844}: pull --ff-only: Fast-forward
+9fa32ca2 HEAD@{1845}: pull --ff-only: Fast-forward
+42de68ac HEAD@{1846}: commit: Regenerate AI indexes after provider result reporting
+49920272 HEAD@{1847}: pull --ff-only: Fast-forward
+19d27333 HEAD@{1848}: pull --ff-only: Fast-forward
+5fe6b0b9 HEAD@{1849}: pull --ff-only: Fast-forward
+3c6eb081 HEAD@{1850}: pull --ff-only: Fast-forward
+4fbd8ffd HEAD@{1851}: checkout: moving from master to master
+4fbd8ffd HEAD@{1852}: commit: Regenerate AI indexes after agnostic AI packet integration
+c1735dd0 HEAD@{1853}: pull --ff-only: Fast-forward
+3f9253d8 HEAD@{1854}: pull --ff-only: Fast-forward
+5dae625f HEAD@{1855}: checkout: moving from master to master
+5dae625f HEAD@{1856}: commit: Regenerate AI indexes after post 47 documentation reconciliation
+422a6a45 HEAD@{1857}: pull --ff-only: Fast-forward
+50dd9536 HEAD@{1858}: checkout: moving from codex/npu-pipeline-decomposition-phase-1 to master
+b3077b83 HEAD@{1859}: checkout: moving from master to codex/npu-pipeline-decomposition-phase-1
+50dd9536 HEAD@{1860}: commit: Regenerate AI indexes after status documentation updates
+22402163 HEAD@{1861}: pull --ff-only: Fast-forward
+b7e1ec85 HEAD@{1862}: checkout: moving from master to master
+b7e1ec85 HEAD@{1863}: commit: chore: regenerate ai and npu indexes after docs update
+6f05c0a1 HEAD@{1864}: checkout: moving from master to master
+6f05c0a1 HEAD@{1865}: merge docs/ai-reference-onboarding: Merge made by the 'ort' strategy.
+014a6a06 HEAD@{1866}: checkout: moving from docs/ai-reference-onboarding to master
+16aca90a HEAD@{1867}: checkout: moving from master to docs/ai-reference-onboarding
+014a6a06 HEAD@{1868}: pull --ff-only origin master: Fast-forward
+1bbc6e50 HEAD@{1869}: checkout: moving from codex/npu-output-policy-provider-preflight to master
+37b04e26 HEAD@{1870}: commit: chore: regenerate ai and npu indexes
+e8f6228e HEAD@{1871}: commit: refactor(npu): guard runtime outputs and preflight reports
+1bbc6e50 HEAD@{1872}: checkout: moving from master to codex/npu-output-policy-provider-preflight
+1bbc6e50 HEAD@{1873}: pull --ff-only origin master: Fast-forward
+63902e07 HEAD@{1874}: checkout: moving from codex/npu-runtime-context-artifact-wiring to master
+ed0163f1 HEAD@{1875}: commit: chore: regenerate ai and npu indexes
+68bf58c7 HEAD@{1876}: commit: refactor(npu): wire context and artifact helpers
+63902e07 HEAD@{1877}: checkout: moving from master to codex/npu-runtime-context-artifact-wiring
+63902e07 HEAD@{1878}: pull --ff-only origin master: Fast-forward
+11fb151d HEAD@{1879}: checkout: moving from codex/npu-runtime-prompt-payload-wiring to master
+24b3638b HEAD@{1880}: commit: chore: regenerate ai and npu indexes
+b24c55f1 HEAD@{1881}: commit: refactor(npu): wire runtime prompt payload helpers
+11fb151d HEAD@{1882}: checkout: moving from master to codex/npu-runtime-prompt-payload-wiring
+11fb151d HEAD@{1883}: pull --ff-only origin master: Fast-forward
+baccb0c3 HEAD@{1884}: checkout: moving from codex/npu-runtime-contract-path-wiring to master
+c0c74cd3 HEAD@{1885}: commit: chore: regenerate ai and npu indexes
+483e610a HEAD@{1886}: commit: refactor(npu): wire runtime contract path helpers
+baccb0c3 HEAD@{1887}: checkout: moving from master to codex/npu-runtime-contract-path-wiring
+baccb0c3 HEAD@{1888}: pull --ff-only origin master: Fast-forward
+7efadabf HEAD@{1889}: checkout: moving from codex/npu-pipeline-runtime-io-wiring to master
+361c4b48 HEAD@{1890}: commit: chore: regenerate ai and npu indexes
+4990458d HEAD@{1891}: commit: refactor(npu): wire runtime io helpers
+7efadabf HEAD@{1892}: checkout: moving from master to codex/npu-pipeline-runtime-io-wiring
+7efadabf HEAD@{1893}: pull --ff-only origin master: Fast-forward
+d40d9c92 HEAD@{1894}: checkout: moving from codex/npu-pipeline-decomposition-away-batch to master
+86758a83 HEAD@{1895}: commit: Regenerate AI indexes for NPU helper contracts
+d86f876f HEAD@{1896}: checkout: moving from codex/npu-pipeline-decomposition-away-batch to codex/npu-pipeline-decomposition-away-batch
+d86f876f HEAD@{1897}: checkout: moving from master to codex/npu-pipeline-decomposition-away-batch
+d40d9c92 HEAD@{1898}: checkout: moving from master to master
+d40d9c92 HEAD@{1899}: pull --ff-only origin master: Fast-forward
+4be46b6b HEAD@{1900}: checkout: moving from codex/npu-pipeline-decomposition-phase-2 to master
+805515d4 HEAD@{1901}: pull --rebase origin codex/npu-pipeline-decomposition-phase-2 (finish): returning to refs/heads/codex/npu-pipeline-decomposition-phase-2
+805515d4 HEAD@{1902}: pull --rebase origin codex/npu-pipeline-decomposition-phase-2 (pick): Regenerate AI indexes for NPU pipeline IO helpers
+c614ae1f HEAD@{1903}: pull --rebase origin codex/npu-pipeline-decomposition-phase-2 (start): checkout c614ae1f2fa083a026f2f78277116384cf47c615
+972ca5fb HEAD@{1904}: commit: Regenerate AI indexes for NPU pipeline IO helpers
+4be46b6b HEAD@{1905}: checkout: moving from codex/npu-pipeline-decomposition-phase-2 to codex/npu-pipeline-decomposition-phase-2
+4be46b6b HEAD@{1906}: checkout: moving from master to codex/npu-pipeline-decomposition-phase-2
+4be46b6b HEAD@{1907}: checkout: moving from master to master
+4be46b6b HEAD@{1908}: checkout: moving from master to master
+4be46b6b HEAD@{1909}: pull --ff-only origin master: Fast-forward
+d649d142 HEAD@{1910}: checkout: moving from codex/npu-pipeline-decomposition-phase-1 to master
+b3077b83 HEAD@{1911}: commit: Regenerate AI indexes for NPU pipeline scaffold
+305a17e1 HEAD@{1912}: checkout: moving from codex/npu-pipeline-decomposition-phase-1 to codex/npu-pipeline-decomposition-phase-1
+305a17e1 HEAD@{1913}: checkout: moving from master to codex/npu-pipeline-decomposition-phase-1
+d649d142 HEAD@{1914}: pull --ff-only origin master: Fast-forward
+9656b008 HEAD@{1915}: checkout: moving from codex/ai-pipeline-report-contracts to master
+672151d3 HEAD@{1916}: commit: chore: regenerate ai and npu indexes
+ba35ac86 HEAD@{1917}: commit: docs: add github-only continuation guide
+1476371a HEAD@{1918}: commit: chore: regenerate ai and npu indexes
+5e99e325 HEAD@{1919}: commit: feat(validation): add ai pipeline report contracts
+9656b008 HEAD@{1920}: checkout: moving from master to codex/ai-pipeline-report-contracts
+9656b008 HEAD@{1921}: pull --ff-only origin master: Fast-forward
+e575ec22 HEAD@{1922}: checkout: moving from codex/validation-report-consistency-phase2 to master
+2c9b665f HEAD@{1923}: commit: chore: regenerate ai and npu indexes
+23438a51 HEAD@{1924}: commit: fix(validation): align report root fields
+e575ec22 HEAD@{1925}: checkout: moving from master to codex/validation-report-consistency-phase2
+e575ec22 HEAD@{1926}: pull --ff-only origin master: Fast-forward
+33898312 HEAD@{1927}: checkout: moving from codex/core-before-app-boundary to master
+0574800a HEAD@{1928}: merge origin/master: Merge made by the 'ort' strategy.
+6297e938 HEAD@{1929}: commit: chore: regenerate ai and npu indexes
+c488155a HEAD@{1930}: commit: docs: define app-agnostic core boundary
+33898312 HEAD@{1931}: checkout: moving from master to codex/core-before-app-boundary
+33898312 HEAD@{1932}: checkout: moving from codex/matrix-planned-only-wording to master
+4447a4f6 HEAD@{1933}: commit: test(ai): clarify dry-run matrix planned-only cases
+33898312 HEAD@{1934}: checkout: moving from master to codex/matrix-planned-only-wording
+33898312 HEAD@{1935}: pull --ff-only origin master: Fast-forward
+f79edef9 HEAD@{1936}: checkout: moving from codex/github-only-next-steps to master
+5cdc37a1 HEAD@{1937}: commit: chore: regenerate ai and npu indexes
+d5adf3ff HEAD@{1938}: commit: fix(validation): ignore stdout captures in report contract
+699d6a86 HEAD@{1939}: checkout: moving from master to codex/github-only-next-steps
+f79edef9 HEAD@{1940}: checkout: moving from codex/github-only-next-steps to master
+f79edef9 HEAD@{1941}: checkout: moving from master to codex/github-only-next-steps
+f79edef9 HEAD@{1942}: pull --ff-only origin master: Fast-forward
+c164d4cf HEAD@{1943}: checkout: moving from codex/generated-python-policy to master
+97bad1b3 HEAD@{1944}: commit: chore: regenerate ai and npu indexes
+2b68ca29 HEAD@{1945}: commit: docs(validation): wire generated python policy
+a16184a0 HEAD@{1946}: commit: feat(validation): add generated python policy
+c164d4cf HEAD@{1947}: checkout: moving from master to codex/generated-python-policy
+c164d4cf HEAD@{1948}: pull origin master: Fast-forward
+26029986 HEAD@{1949}: checkout: moving from codex/path-policy-report-inputs to master
+ae6b37b1 HEAD@{1950}: commit: chore: regenerate ai and npu indexes
+05f36b4a HEAD@{1951}: commit: feat(validation): scan artifact reports for generated paths
+26029986 HEAD@{1952}: checkout: moving from master to codex/path-policy-report-inputs
+26029986 HEAD@{1953}: pull origin master: Fast-forward
+a6453088 HEAD@{1954}: checkout: moving from codex/generic-artifact-path-policy to master
+dc1cdf82 HEAD@{1955}: commit: chore: regenerate ai and npu indexes
+cbb2ca30 HEAD@{1956}: commit: docs(validation): wire artifact path policy into workflow
+98312a2b HEAD@{1957}: commit: feat(validation): add generated artifact path policy
+a6453088 HEAD@{1958}: checkout: moving from master to codex/generic-artifact-path-policy
+a6453088 HEAD@{1959}: pull origin master: Fast-forward
+20971429 HEAD@{1960}: checkout: moving from validation-dry-run-matrix-contract to master
+0fdfba04 HEAD@{1961}: commit: chore: regenerate ai and npu indexes
+d16b7143 HEAD@{1962}: commit: docs(ai): record td-006 local validation
+7310bd8b HEAD@{1963}: checkout: moving from master to validation-dry-run-matrix-contract
+20971429 HEAD@{1964}: checkout: moving from master to master
+20971429 HEAD@{1965}: pull --ff-only origin master: Fast-forward
+12c4e8bf HEAD@{1966}: checkout: moving from docs-generic-policy-boundary to master
+e5a90671 HEAD@{1967}: checkout: moving from master to docs-generic-policy-boundary
+12c4e8bf HEAD@{1968}: checkout: moving from master to master
+12c4e8bf HEAD@{1969}: pull --ff-only origin master: Fast-forward
+5b81b5d1 HEAD@{1970}: checkout: moving from docs-align-ai-validation-state to master
+858fc5f2 HEAD@{1971}: commit: chore: regenerate ai and npu indexes
+96e8a829 HEAD@{1972}: checkout: moving from master to docs-align-ai-validation-state
+5b81b5d1 HEAD@{1973}: checkout: moving from master to master
+5b81b5d1 HEAD@{1974}: pull --ff-only origin master: Fast-forward
+910f5ce1 HEAD@{1975}: checkout: moving from validation-generated-blender-policy to master
+8c05cd20 HEAD@{1976}: checkout: moving from validation-generated-blender-policy to validation-generated-blender-policy
+8c05cd20 HEAD@{1977}: checkout: moving from master to validation-generated-blender-policy
+910f5ce1 HEAD@{1978}: checkout: moving from master to master
+910f5ce1 HEAD@{1979}: pull --ff-only origin master: Fast-forward
+d1a47621 HEAD@{1980}: checkout: moving from ai-delegate-ollama-model-json to master
+24fe398e HEAD@{1981}: checkout: moving from master to ai-delegate-ollama-model-json
+d1a47621 HEAD@{1982}: checkout: moving from master to master
+d1a47621 HEAD@{1983}: pull --ff-only origin master: Fast-forward
+fe51464f HEAD@{1984}: checkout: moving from ai-model-json-parser to master
+00dd2474 HEAD@{1985}: checkout: moving from master to ai-model-json-parser
+fe51464f HEAD@{1986}: checkout: moving from master to master
+fe51464f HEAD@{1987}: pull --ff-only origin master: Fast-forward
+2ff6ed27 HEAD@{1988}: checkout: moving from validation-agent-state-packet-contract to master
+3ee72ac2 HEAD@{1989}: checkout: moving from master to validation-agent-state-packet-contract
+2ff6ed27 HEAD@{1990}: pull --rebase origin master: Fast-forward
+17f36161 HEAD@{1991}: checkout: moving from master to master
+17f36161 HEAD@{1992}: checkout: moving from master to master
+17f36161 HEAD@{1993}: pull --ff-only origin master: Fast-forward
+3d55a127 HEAD@{1994}: checkout: moving from ai-agent-state-packet-touchpoint to master
+1132de9b HEAD@{1995}: checkout: moving from ai-agent-state-pipeline-touchpoint-design to ai-agent-state-packet-touchpoint
+3d55a127 HEAD@{1996}: checkout: moving from master to ai-agent-state-pipeline-touchpoint-design
+3d55a127 HEAD@{1997}: checkout: moving from master to master
+3d55a127 HEAD@{1998}: pull --rebase origin master: Fast-forward
+7d1ae930 HEAD@{1999}: checkout: moving from master to master
+7d1ae930 HEAD@{2000}: pull --rebase origin master: Fast-forward
+6b5ca6f5 HEAD@{2001}: checkout: moving from docs-refresh-project-consciousness-20260429 to master
+d79118f7 HEAD@{2002}: checkout: moving from docs-refresh-project-consciousness-20260429 to docs-refresh-project-consciousness-20260429
+d79118f7 HEAD@{2003}: commit: chore: regenerate ai and npu indexes
+2884f528 HEAD@{2004}: checkout: moving from master to docs-refresh-project-consciousness-20260429
+6b5ca6f5 HEAD@{2005}: commit: chore: regenerate npu code context
+62478874 HEAD@{2006}: commit: chore: update local project state
+7160967d HEAD@{2007}: commit (amend): chore: regenerate ai and npu indexes
+d93d7f30 HEAD@{2008}: commit: chore: regenerate ai and npu indexes
+528f1f92 HEAD@{2009}: commit: feat(ai): add generic agent state memory packets
+263ba901 HEAD@{2010}: commit: docs: add reusable codex project handoff
+bacd694f HEAD@{2011}: commit: chore: regenerate ai and npu indexes
+ce4632eb HEAD@{2012}: commit: fix(validation): include refactor consistency checks in local runner
+fc77941e HEAD@{2013}: commit: chore: regenerate ai and npu indexes
+ec3b6174 HEAD@{2014}: pull --rebase origin master: Fast-forward
+ca9e21db HEAD@{2015}: commit: chore: regenerate ai and npu indexes
+17613c2f HEAD@{2016}: pull --rebase origin master: Fast-forward
+07ef2956 HEAD@{2017}: commit: chore: regenerate ai and npu indexes
+3ad8a5f2 HEAD@{2018}: pull --rebase origin master (finish): returning to refs/heads/master
+3ad8a5f2 HEAD@{2019}: pull --rebase origin master (pick): chore: regenerate ai and npu indexes
+2e3996a8 HEAD@{2020}: pull --rebase origin master (start): checkout 2e3996a8668ddf4c9ddf68c2cc29e46751cbf14d
+9c4a9aa7 HEAD@{2021}: commit: chore: regenerate ai and npu indexes
+4737051d HEAD@{2022}: pull --rebase origin master (finish): returning to refs/heads/master
+4737051d HEAD@{2023}: pull --rebase origin master (pick): chore: regenerate ai and npu indexes
+36eeafb9 HEAD@{2024}: pull --rebase origin master (start): checkout 36eeafb95e9804d0f46cbed09d28b5edc06c5810
+1b954d11 HEAD@{2025}: commit: chore: regenerate ai and npu indexes
+2e9e394d HEAD@{2026}: pull --rebase origin master: Fast-forward
+da398130 HEAD@{2027}: pull --rebase origin master: Fast-forward
+7cdc6105 HEAD@{2028}: pull --rebase origin master: Fast-forward
+82d7a8f2 HEAD@{2029}: pull --rebase origin master: Fast-forward
+d37e4dff HEAD@{2030}: pull --rebase origin master: Fast-forward
+248c6d86 HEAD@{2031}: pull --rebase origin master: Fast-forward
+26d04832 HEAD@{2032}: commit: chore: regenerate ai and npu indexes
+c36d6586 HEAD@{2033}: pull --rebase origin master: Fast-forward
+6c7338fd HEAD@{2034}: commit: chore: regenerate ai and npu indexes
+5ddb5c13 HEAD@{2035}: commit: docs: add AI onboarding guide
+2502fecc HEAD@{2036}: merge origin/master: Fast-forward
+da57a1c1 HEAD@{2037}: commit: chore: regenerate ai and npu indexes
+6d315680 HEAD@{2038}: pull --rebase origin master: Fast-forward
+cea63fec HEAD@{2039}: commit: chore: regenerate ai and npu indexes
+83bd90e0 HEAD@{2040}: commit: chore: regenerate ai and npu indexes
+6599abfe HEAD@{2041}: pull --rebase origin master: Fast-forward
+097412d0 HEAD@{2042}: commit: chore: regenerate ai and npu indexes
+5d058934 HEAD@{2043}: pull --rebase origin master (finish): returning to refs/heads/master
+5d058934 HEAD@{2044}: pull --rebase origin master (pick): chore: add repository line ending policy
+a2aaae2d HEAD@{2045}: pull --rebase origin master (start): checkout a2aaae2dc0d898e3e7757b04a52d78d8c1ca2177
+86296e72 HEAD@{2046}: commit: chore: add repository line ending policy
+b61920cf HEAD@{2047}: commit: chore: regenerate ai and npu indexes
+cc813a3a HEAD@{2048}: pull --ff-only origin master: Fast-forward
+e8f23693 HEAD@{2049}: commit: chore: regenerate ai and npu indexes
+9da4bb3f HEAD@{2050}: pull --ff-only origin master: Fast-forward
+b35397b5 HEAD@{2051}: commit: chore: update full project
+65a875e9 HEAD@{2052}: reset: moving to HEAD
+65a875e9 HEAD@{2053}: pull --rebase origin master: Fast-forward
+6972ab3c HEAD@{2054}: commit: chore: update full project
+dbe6c54a HEAD@{2055}: reset: moving to HEAD
+dbe6c54a HEAD@{2056}: reset: moving to HEAD
+dbe6c54a HEAD@{2057}: pull --rebase origin master: Fast-forward
+da504a0f HEAD@{2058}: commit: chore: update full project
+d1082d80 HEAD@{2059}: reset: moving to HEAD
+d1082d80 HEAD@{2060}: reset: moving to HEAD
+d1082d80 HEAD@{2061}: pull --rebase origin master: Fast-forward
+31a799c5 HEAD@{2062}: commit: chore: update generated project data
+95f8c3ec HEAD@{2063}: reset: moving to HEAD
+95f8c3ec HEAD@{2064}: reset: moving to HEAD
+95f8c3ec HEAD@{2065}: pull --rebase origin master: Fast-forward
+fa77b6e9 HEAD@{2066}: checkout: moving from master to master
+fa77b6e9 HEAD@{2067}: commit: chore: update generated data
+bcbda2a1 HEAD@{2068}: reset: moving to HEAD
+bcbda2a1 HEAD@{2069}: checkout: moving from master to master
+bcbda2a1 HEAD@{2070}: commit: chore: update project files
+b6e4e24a HEAD@{2071}: rebase (finish): returning to refs/heads/master
+b6e4e24a HEAD@{2072}: rebase (pick): chore: update app-generated technical data
+35b5bff9 HEAD@{2073}: rebase (start): checkout origin/master
+e41fe59a HEAD@{2074}: checkout: moving from master to master
+e41fe59a HEAD@{2075}: checkout: moving from master to master
+e41fe59a HEAD@{2076}: commit: chore: update app-generated technical data
+b47d2c7a HEAD@{2077}: pull origin master: Fast-forward
+eda28dcb HEAD@{2078}: checkout: moving from master to master
+eda28dcb HEAD@{2079}: pull origin master: Fast-forward
+6b18f0b2 HEAD@{2080}: checkout: moving from master to master
+6b18f0b2 HEAD@{2081}: pull origin master: Fast-forward
+395101d7 HEAD@{2082}: checkout: moving from master to master
+395101d7 HEAD@{2083}: pull origin master: Fast-forward
+140cac58 HEAD@{2084}: checkout: moving from master to master
+140cac58 HEAD@{2085}: pull origin master: Fast-forward
+d3a1caed HEAD@{2086}: pull origin master: Fast-forward
+8e0753fe HEAD@{2087}: pull origin master: Fast-forward
+525b5e22 HEAD@{2088}: pull origin master: Fast-forward
+53e29814 HEAD@{2089}: pull origin master: Fast-forward
+f38e497d HEAD@{2090}: pull origin master: Fast-forward
+2e3ba8bf HEAD@{2091}: pull origin master: Fast-forward
+3cecee4d HEAD@{2092}: commit: chore: update app-generated technical data
+8e028634 HEAD@{2093}: commit: assets direcrtory2
+fcaa8076 HEAD@{2094}: commit: assets direcrtory
+644c145b HEAD@{2095}: pull origin master: Fast-forward
+47f2672b HEAD@{2096}: commit: Remove tracked backup Python files
+db818df3 HEAD@{2097}: pull origin master: Fast-forward
+ca919bb2 HEAD@{2098}: pull origin master: Fast-forward
+9b05d5b3 HEAD@{2099}: pull origin master: Fast-forward
+53cce366 HEAD@{2100}: commit: Fix Blender 5.1 material node compatibility
+2185bb94 HEAD@{2101}: commit: Remove generated project code chunks from repository
+81dd2031 HEAD@{2102}: commit: Sync Blender audio project updates
+fe49633b HEAD@{2103}: commit: Update gitignore for generated AI and NPU artifacts
+32af2fce HEAD@{2104}: commit: Exclude NPU cache and chunk folders
+22a5918d HEAD@{2105}: commit: Apply Blender script updates
+1368d2c9 HEAD@{2106}: commit: feat: Aggiunto logging e gestione degli errori nel main_v61b.py
+9639824a HEAD@{2107}: commit (initial): Initial Blender scripting baseline
